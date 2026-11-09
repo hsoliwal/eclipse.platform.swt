@@ -1,0 +1,131 @@
+[
+  {
+    "argv": [
+      "/tmp/m3-toolchain/jdk-21.0.12.1+1/bin/java",
+      "-version"
+    ],
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/tmp/m3-toolchain/jdk-21.0.12.1+1/bin/javac",
+      "--release",
+      "21",
+      "-proc:none",
+      "-Xlint:all",
+      "-cp",
+      "/tmp/swt-scrollbar-callback-base-classes-20261017",
+      "-d",
+      "/tmp/swt-scrollbar-callback-proof-20261017/received-native/before/classes",
+      "/tmp/swt-paintgraph-recovery-20261017/bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java"
+    ],
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/tmp/m3-toolchain/jdk-21.0.12.1+1/bin/javac",
+      "--release",
+      "21",
+      "-proc:none",
+      "-Xlint:all",
+      "-Werror",
+      "-cp",
+      "/tmp/swt-scrollbar-callback-proof-20261017/received-native/before/classes:/tmp/swt-scrollbar-callback-base-classes-20261017:/tmp/m3-toolchain/jtreg-7.3.1+1/jtreg/lib/junit-platform-console-standalone-1.9.2.jar",
+      "-d",
+      "/tmp/swt-scrollbar-callback-proof-20261017/received-native/before/classes",
+      "/tmp/swt-scrollbar-callback-20261017/tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java"
+    ],
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/tmp/m3-toolchain/jdk-21.0.12.1+1/bin/javap",
+      "-classpath",
+      "/tmp/swt-scrollbar-callback-proof-20261017/received-native/before/classes:/tmp/swt-scrollbar-callback-base-classes-20261017",
+      "-package",
+      "-s",
+      "org.eclipse.swt.widgets.ScrollBar"
+    ],
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/tmp/m3-toolchain/jdk-21.0.12.1+1/bin/java",
+      "-Xmx512m",
+      "-Djava.library.path=/tmp/swt-native-viewport-20261017",
+      "-jar",
+      "/tmp/m3-toolchain/jtreg-7.3.1+1/jtreg/lib/junit-platform-console-standalone-1.9.2.jar",
+      "--class-path",
+      "/tmp/swt-scrollbar-callback-proof-20261017/received-native/before/classes:/tmp/swt-scrollbar-callback-base-classes-20261017",
+      "--select-class",
+      "org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk",
+      "--reports-dir",
+      "/tmp/swt-scrollbar-callback-proof-20261017/received-native/before/junit-reports",
+      "--details",
+      "tree",
+      "--disable-ansi-colors"
+    ],
+    "exit_code": 1
+  },
+  {
+    "argv": [
+      "/tmp/m3-toolchain/jdk-21.0.12.1+1/bin/javac",
+      "--release",
+      "21",
+      "-proc:none",
+      "-Xlint:all",
+      "-cp",
+      "/tmp/swt-scrollbar-callback-base-classes-20261017",
+      "-d",
+      "/tmp/swt-scrollbar-callback-proof-20261017/received-native/after/classes",
+      "/tmp/swt-scrollbar-callback-20261017/bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java"
+    ],
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/tmp/m3-toolchain/jdk-21.0.12.1+1/bin/javac",
+      "--release",
+      "21",
+      "-proc:none",
+      "-Xlint:all",
+      "-Werror",
+      "-cp",
+      "/tmp/swt-scrollbar-callback-proof-20261017/received-native/after/classes:/tmp/swt-scrollbar-callback-base-classes-20261017:/tmp/m3-toolchain/jtreg-7.3.1+1/jtreg/lib/junit-platform-console-standalone-1.9.2.jar",
+      "-d",
+      "/tmp/swt-scrollbar-callback-proof-20261017/received-native/after/classes",
+      "/tmp/swt-scrollbar-callback-20261017/tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java"
+    ],
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/tmp/m3-toolchain/jdk-21.0.12.1+1/bin/javap",
+      "-classpath",
+      "/tmp/swt-scrollbar-callback-proof-20261017/received-native/after/classes:/tmp/swt-scrollbar-callback-base-classes-20261017",
+      "-package",
+      "-s",
+      "org.eclipse.swt.widgets.ScrollBar"
+    ],
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/tmp/m3-toolchain/jdk-21.0.12.1+1/bin/java",
+      "-Xmx512m",
+      "-Djava.library.path=/tmp/swt-native-viewport-20261017",
+      "-jar",
+      "/tmp/m3-toolchain/jtreg-7.3.1+1/jtreg/lib/junit-platform-console-standalone-1.9.2.jar",
+      "--class-path",
+      "/tmp/swt-scrollbar-callback-proof-20261017/received-native/after/classes:/tmp/swt-scrollbar-callback-base-classes-20261017",
+      "--select-class",
+      "org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk",
+      "--reports-dir",
+      "/tmp/swt-scrollbar-callback-proof-20261017/received-native/after/junit-reports",
+      "--details",
+      "tree",
+      "--disable-ansi-colors"
+    ],
+    "exit_code": 0
+  }
+]

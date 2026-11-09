@@ -1,0 +1,58 @@
+{
+  "schema": "SYNEXIA_VIEWPORT_EXPORTED_MIRROR_QUALIFICATION_V1",
+  "publication_status": "PENDING_CANONICAL_PUBLICATION",
+  "source_mirror": "/tmp/viewport-callback-mirrors-20261017/swt-scrollbar/recipe",
+  "qualification_mirror": "/tmp/viewport-callback-mirror-verification-20261017/recipe",
+  "fresh_offline_java21_sdk_tests": 5,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "receiver_command": [
+    "python3",
+    "/tmp/viewport-callback-mirror-verification-20261017/recipe/receive.py",
+    "--target",
+    "/tmp/swt-scrollbar-callback-20261017",
+    "--check"
+  ],
+  "receiver_exit_code": 0,
+  "receiver_result": "M3_SDK_RESULTS_RECEIVER_PASS mode=check targets=4 changes=0",
+  "product_writes": 0,
+  "source_binding": "All SDK source inputs are checked by the thin receiver before result admission. Fresh proof uses the exact 21-file exported authoring mirror.",
+  "files": [
+    {
+      "path": "MAVEN.json",
+      "sha256": "ea32d816d58efb9626641bf1d6f15f278efd5486e7708f7128bfa2ac50651c03",
+      "bytes": 668
+    },
+    {
+      "path": "SDK_INPUTS.tsv",
+      "sha256": "81209f5b67352956e3c4a6f0b8f94f9efd79ea0d4214bb1d5e3b7753c7105172",
+      "bytes": 2539
+    },
+    {
+      "path": "SDK_RESULTS.tsv",
+      "sha256": "c7e0b211a0eb1d98f23359e3e4b448e254a38e961e578813e36662bdbc401a9c",
+      "bytes": 820
+    },
+    {
+      "path": "TEST-com.synexia.rewrite.M3TaskRecipeTest.xml",
+      "sha256": "fb6f9fd749ff9418b3902da0b1601237c1a32906f5230a01271d52ff2607cae0",
+      "bytes": 13381
+    },
+    {
+      "path": "com.synexia.rewrite.M3TaskRecipeTest.txt",
+      "sha256": "dd00cd3d6ad8411a01598961d1d5a51da3d0852d7f653a412b50e8945e31a238",
+      "bytes": 322
+    },
+    {
+      "path": "maven.log",
+      "sha256": "a61e7057bc1cf4b9255acfb1d92889ecb5aa9c7f404d07ac6a6aae0e83128240",
+      "bytes": 2463
+    },
+    {
+      "path": "receiver-check.log",
+      "sha256": "7322ed6b22769797164bb5988b5108dc9162b16eff61ab01ecb837042bb4e72f",
+      "bytes": 60
+    }
+  ]
+}

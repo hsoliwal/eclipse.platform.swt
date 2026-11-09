@@ -1,0 +1,28 @@
+/tmp/swt-paintgraph-recovery-20261017/bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java:361: warning: [lossy-conversions] implicit cast from double to int in compound assignment is possibly lossy
+			rect.x += origin_x[0];
+			                  ^
+/tmp/swt-paintgraph-recovery-20261017/bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java:362: warning: [lossy-conversions] implicit cast from double to int in compound assignment is possibly lossy
+			rect.y += origin_y[0];
+			                  ^
+/tmp/swt-paintgraph-recovery-20261017/bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java:366: warning: [lossy-conversions] implicit cast from double to int in compound assignment is possibly lossy
+			rect.x -= origin_x[0];
+			                  ^
+/tmp/swt-paintgraph-recovery-20261017/bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java:367: warning: [lossy-conversions] implicit cast from double to int in compound assignment is possibly lossy
+			rect.y -= origin_y[0];
+			                  ^
+/tmp/swt-paintgraph-recovery-20261017/bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java:480: warning: [lossy-conversions] implicit cast from double to int in compound assignment is possibly lossy
+			rect.x += origin_x[0];
+			                  ^
+/tmp/swt-paintgraph-recovery-20261017/bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java:481: warning: [lossy-conversions] implicit cast from double to int in compound assignment is possibly lossy
+			rect.y += origin_y[0];
+			                  ^
+/tmp/swt-paintgraph-recovery-20261017/bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java:485: warning: [lossy-conversions] implicit cast from double to int in compound assignment is possibly lossy
+			rect.x -= origin_x[0];
+			                  ^
+/tmp/swt-paintgraph-recovery-20261017/bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java:486: warning: [lossy-conversions] implicit cast from double to int in compound assignment is possibly lossy
+			rect.y -= origin_y[0];
+			                  ^
+/tmp/swt-paintgraph-recovery-20261017/bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java:903: warning: [cast] redundant cast to int
+	value = (int) Math.min (value, (int)(adjustment.upper - adjustment.lower));
+	        ^
+9 warnings

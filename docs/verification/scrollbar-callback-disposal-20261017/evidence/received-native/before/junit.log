@@ -1,0 +1,203 @@
+
+Thanks for using JUnit! Support its development at https://junit.org/sponsoring
+
+╷
+├─ JUnit Jupiter ✔
+│  └─ Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk ✔
+│     ├─ visibilityListenerFailurePropagatesWithoutFollowingResize() ✔
+│     ├─ showListenerMayDisposeOwnerBeforeFirstPaint() ✘ Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+│     ├─ hideListenerMayDisposeOnlyScrollBarAndOwnerStillReceivesResize() ✘ Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+│     ├─ showListenerMayDisposeOnlyScrollBarAndOwnerStillReceivesResize() ✘ Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+│     ├─ normalVisibilityIsSynchronousIdempotentAndSelectionNeutral() ✔
+│     ├─ nestedVisibilityDisposalStopsEveryOutstandingOwnerResize() ✘ Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+│     ├─ nestedResizeDisposalStopsTheOuterOwnerResize() ✘ Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+│     ├─ nestedScrollBarDisposalRetainsBothLiveOwnerResizeNotifications() ✘ Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+│     ├─ liveNestedVisibilityRetainsEventOrderAndTheLatestVisibility() ✔
+│     ├─ hideListenerMayDisposeOwner() ✘ Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+│     ├─ resizeListenerMayDisposeOwnerAfterNormalVisibilityNotification() ✔
+│     └─ displayFilterMayDisposeOwnerBeforeTheVisibilityListener() ✘ Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+├─ JUnit Vintage ✔
+└─ JUnit Platform Suite ✔
+
+Failures (8):
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk:showListenerMayDisposeOwnerBeforeFirstPaint()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk', methodName = 'showListenerMayDisposeOwnerBeforeFirstPaint', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+       org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:53)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+       org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3136)
+       [...]
+     Caused by: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.eclipse.swt.widgets.ScrollBar.setVisible(ScrollBar.java:984)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.lambda$assertOwnerDisposal$1(Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java:40)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk:hideListenerMayDisposeOnlyScrollBarAndOwnerStillReceivesResize()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk', methodName = 'hideListenerMayDisposeOnlyScrollBarAndOwnerStillReceivesResize', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+       org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:53)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+       org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3136)
+       [...]
+     Caused by: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.eclipse.swt.widgets.ScrollBar.setVisible(ScrollBar.java:984)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.lambda$assertScrollBarDisposal$3(Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java:60)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk:showListenerMayDisposeOnlyScrollBarAndOwnerStillReceivesResize()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk', methodName = 'showListenerMayDisposeOnlyScrollBarAndOwnerStillReceivesResize', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+       org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:53)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+       org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3136)
+       [...]
+     Caused by: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.eclipse.swt.widgets.ScrollBar.setVisible(ScrollBar.java:984)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.lambda$assertScrollBarDisposal$3(Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java:60)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk:nestedVisibilityDisposalStopsEveryOutstandingOwnerResize()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk', methodName = 'nestedVisibilityDisposalStopsEveryOutstandingOwnerResize', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+       org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:53)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+       org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3136)
+       [...]
+     Caused by: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.eclipse.swt.widgets.ScrollBar.setVisible(ScrollBar.java:984)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.lambda$nestedVisibilityDisposalStopsEveryOutstandingOwnerResize$4(Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java:74)
+       org.eclipse.swt.widgets.EventTable.sendEvent(EventTable.java:111)
+       org.eclipse.swt.widgets.Display.sendEvent(Display.java:6320)
+       org.eclipse.swt.widgets.Widget.sendEvent(Widget.java:1723)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk:nestedResizeDisposalStopsTheOuterOwnerResize()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk', methodName = 'nestedResizeDisposalStopsTheOuterOwnerResize', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+       org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:53)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+       org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3136)
+       [...]
+     Caused by: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.eclipse.swt.widgets.ScrollBar.setVisible(ScrollBar.java:984)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.lambda$nestedResizeDisposalStopsTheOuterOwnerResize$9(Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java:88)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk:nestedScrollBarDisposalRetainsBothLiveOwnerResizeNotifications()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk', methodName = 'nestedScrollBarDisposalRetainsBothLiveOwnerResizeNotifications', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+       org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:53)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+       org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3136)
+       [...]
+     Caused by: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.eclipse.swt.widgets.ScrollBar.setVisible(ScrollBar.java:984)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.lambda$nestedScrollBarDisposalRetainsBothLiveOwnerResizeNotifications$10(Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java:97)
+       org.eclipse.swt.widgets.EventTable.sendEvent(EventTable.java:111)
+       org.eclipse.swt.widgets.Display.sendEvent(Display.java:6320)
+       org.eclipse.swt.widgets.Widget.sendEvent(Widget.java:1723)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk:hideListenerMayDisposeOwner()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk', methodName = 'hideListenerMayDisposeOwner', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+       org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:53)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+       org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3136)
+       [...]
+     Caused by: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.eclipse.swt.widgets.ScrollBar.setVisible(ScrollBar.java:984)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.lambda$assertOwnerDisposal$1(Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java:40)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk:displayFilterMayDisposeOwnerBeforeTheVisibilityListener()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk', methodName = 'displayFilterMayDisposeOwnerBeforeTheVisibilityListener', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+       org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:53)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+       org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3136)
+       [...]
+     Caused by: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Scrollable.sendEvent(int)" because "this.parent" is null
+       org.eclipse.swt.widgets.ScrollBar.setVisible(ScrollBar.java:984)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.lambda$displayFilterMayDisposeOwnerBeforeTheVisibilityListener$18(Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java:158)
+       org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+       [...]
+
+Test run finished after 1846 ms
+[         4 containers found      ]
+[         0 containers skipped    ]
+[         4 containers started    ]
+[         0 containers aborted    ]
+[         4 containers successful ]
+[         0 containers failed     ]
+[        12 tests found           ]
+[         0 tests skipped         ]
+[        12 tests started         ]
+[         0 tests aborted         ]
+[         4 tests successful      ]
+[         8 tests failed          ]
+
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:699081): Gdk-CRITICAL **: 06:37:10.872: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:699081): Gdk-CRITICAL **: 06:37:10.916: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:699081): Gdk-CRITICAL **: 06:37:10.971: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:699081): Gdk-CRITICAL **: 06:37:11.035: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:699081): Gdk-CRITICAL **: 06:37:11.103: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:699081): Gdk-CRITICAL **: 06:37:11.160: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:699081): Gdk-CRITICAL **: 06:37:11.234: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:699081): Gdk-CRITICAL **: 06:37:11.285: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:699081): Gdk-CRITICAL **: 06:37:11.347: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:699081): Gdk-CRITICAL **: 06:37:11.400: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:699081): Gdk-CRITICAL **: 06:37:11.456: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:699081): Gdk-CRITICAL **: 06:37:11.495: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)

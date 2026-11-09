@@ -1,0 +1,284 @@
+{
+  "SPDX-FileCopyrightText": "2026 Hitesh Soliwal and Contributors to the Synexia Project",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "schema": "SWT_CALLBACK_DOCUMENTED_EVIDENCE_V1",
+  "files": [
+    {
+      "path": "evidence/MIRROR_SOURCE_BINDING.json",
+      "sha256": "6ce2f13f82db2cfa4d1ab801073d6ab7ef44ed3a1de1559231ce3d807579ce86",
+      "git_blob": "1bfca6866ae94b9eae8be9d4abeef6683477c1ea",
+      "bytes": 4492
+    },
+    {
+      "path": "evidence/PARENT_CANONICAL_REVISION.json",
+      "sha256": "f66248e896578b0821ec377da0cbfe3a6035ca2b2595de4698f1062a75ab36cc",
+      "git_blob": "cc443a194caac643185f148f4a9b02628c161054",
+      "bytes": 3092
+    },
+    {
+      "path": "evidence/full-gtk-parent/full-gtk-before-command.json",
+      "sha256": "08d124d3e43f2cb7be8e315270c59ea4443b06dc0631f485ccdaf3df35368d90",
+      "git_blob": "795f8079a85bc57e8d2e5dbcb1d01cba8b1587ba",
+      "bytes": 224
+    },
+    {
+      "path": "evidence/full-gtk-parent/full-gtk-before-compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/full-gtk-parent/full-gtk-before-inputs.json",
+      "sha256": "e0e18a814258c8036f15720bfef02c1b9c6549e2b1c382ce7c36398956497ef9",
+      "git_blob": "7bb975ffbc4c7200789cb65cafe2377c907e34ad",
+      "bytes": 107509
+    },
+    {
+      "path": "evidence/full-gtk-parent/full-gtk-before-resources.json",
+      "sha256": "df3ad3cf95aeb7a22189183cbd88bba2e58cf1b8566339f97e7aa295556e706f",
+      "git_blob": "27e38a1fa391dc5cf63f0e1027fa25784b1ba01f",
+      "bytes": 1434
+    },
+    {
+      "path": "evidence/full-gtk-parent/full-gtk-before.args",
+      "sha256": "9a8343e8a6df9664f78893d8e1221285990f92e97735eec0370e25761888987c",
+      "git_blob": "129fc6d8af792927635bf5d725ac35df1fd459ab",
+      "bytes": 71469
+    },
+    {
+      "path": "evidence/pinned-mirror-export.log",
+      "sha256": "b2c8fcce35488e22c55eba75f87e0a2024a3691397f0cad3920146d62b9b373a",
+      "git_blob": "475907dd5a430fe48e5f561017c7aa4307ad3811",
+      "bytes": 115
+    },
+    {
+      "path": "evidence/qualified-mirror/MAVEN.json",
+      "sha256": "ea32d816d58efb9626641bf1d6f15f278efd5486e7708f7128bfa2ac50651c03",
+      "git_blob": "e90fea4649be670e69723c05b895d63e7cfc81c2",
+      "bytes": 668
+    },
+    {
+      "path": "evidence/qualified-mirror/QUALIFICATION.json",
+      "sha256": "a06c8880f6d077b9eb5b7d5c0181edb19200b61b8464c0167fb915a760e03167",
+      "git_blob": "89238c736ca9ef0980d7d948dfc2e2f127216bf1",
+      "bytes": 1986
+    },
+    {
+      "path": "evidence/qualified-mirror/SDK_INPUTS.tsv",
+      "sha256": "81209f5b67352956e3c4a6f0b8f94f9efd79ea0d4214bb1d5e3b7753c7105172",
+      "git_blob": "49a6601c188212eb354fd8b25def88c0183caf4c",
+      "bytes": 2539
+    },
+    {
+      "path": "evidence/qualified-mirror/SDK_RESULTS.tsv",
+      "sha256": "c7e0b211a0eb1d98f23359e3e4b448e254a38e961e578813e36662bdbc401a9c",
+      "git_blob": "6997df822137522a1fb1574dec4f595206aed127",
+      "bytes": 820
+    },
+    {
+      "path": "evidence/qualified-mirror/TEST-com.synexia.rewrite.M3TaskRecipeTest.xml",
+      "sha256": "fb6f9fd749ff9418b3902da0b1601237c1a32906f5230a01271d52ff2607cae0",
+      "git_blob": "440016bee7f3f5bf32e9054cebd1f2ea90d6043f",
+      "bytes": 13381
+    },
+    {
+      "path": "evidence/qualified-mirror/com.synexia.rewrite.M3TaskRecipeTest.txt",
+      "sha256": "dd00cd3d6ad8411a01598961d1d5a51da3d0852d7f653a412b50e8945e31a238",
+      "git_blob": "cfa5158d3de570aedc115c58b4d2e79b166ab706",
+      "bytes": 322
+    },
+    {
+      "path": "evidence/qualified-mirror/maven.log",
+      "sha256": "a61e7057bc1cf4b9255acfb1d92889ecb5aa9c7f404d07ac6a6aae0e83128240",
+      "git_blob": "2ef132ea5af5203586389fbf942bab4bf1d27ace",
+      "bytes": 2463
+    },
+    {
+      "path": "evidence/qualified-mirror/receiver-check.log",
+      "sha256": "7322ed6b22769797164bb5988b5108dc9162b16eff61ab01ecb837042bb4e72f",
+      "git_blob": "701520017ca24e1048710fc3d7d725555773220e",
+      "bytes": 60
+    },
+    {
+      "path": "evidence/qualified-targets.json",
+      "sha256": "b6e658b6e634e9e9c1de678bf7e944cfb0aa627a3f622e60c9967ec1c3b9f831",
+      "git_blob": "0f4bfdb31b8c185871c5f208066a5e834aa44626",
+      "bytes": 1424
+    },
+    {
+      "path": "evidence/received-evidence-manifest.json",
+      "sha256": "9b0fce88a1f9ee129aaac5a772df97264fab6fc1b5f4224629aad867c8afb2ec",
+      "git_blob": "fba0bd1cc0c6268c566a14ae55951040f99f32d5",
+      "bytes": 3056
+    },
+    {
+      "path": "evidence/received-native/after/api.txt",
+      "sha256": "1dac29e3cdc706fcd713fc5b56427fca9b06d9e6b17821e35ec19fdb78a7ed72",
+      "git_blob": "8a70a16fc2e099f5e6fdbb53d6550547deaf7b93",
+      "bytes": 2917
+    },
+    {
+      "path": "evidence/received-native/after/junit-reports/TEST-junit-jupiter.xml",
+      "sha256": "ba8a5da36efd19f885357ec5b134287b8fe96aafee1d87b96adf1800df6cebeb",
+      "git_blob": "f82c30245d984c0e1e6477d9bcf324fc428de3d1",
+      "bytes": 9992
+    },
+    {
+      "path": "evidence/received-native/after/junit-reports/TEST-junit-platform-suite.xml",
+      "sha256": "933be35f3961ceaff3dd0dee2662de1f6d7c676549d45eeb0f632805cd1456df",
+      "git_blob": "4ca8710e4086e2f11cb039d4f79cf2cdb2a56ee3",
+      "bytes": 3966
+    },
+    {
+      "path": "evidence/received-native/after/junit-reports/TEST-junit-vintage.xml",
+      "sha256": "87ca4ce228e72e8d858ba1aef36ec4cba575beb11ca4ec10ab501d7b95971649",
+      "git_blob": "a847b249acdbe3c5d255914529d94fb5fad48de0",
+      "bytes": 3949
+    },
+    {
+      "path": "evidence/received-native/after/junit.log",
+      "sha256": "627bb88c444142237fb8a902f62867094e8b62d24c4a6d9883598d3f053f3dcb",
+      "git_blob": "ae9fbf0609a9869aee53f2b25b4db3a18ff32002",
+      "bytes": 7754
+    },
+    {
+      "path": "evidence/received-native/after/owner-compile.log",
+      "sha256": "08e6f8491f99091a02e963f4f461dabab70b89c76b02262fe8f9bcdf09eccf05",
+      "git_blob": "c9fc9cb64453f02a85df055cce4568144e9fbd0c",
+      "bytes": 2442
+    },
+    {
+      "path": "evidence/received-native/after/test-compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/received-native/before/api.txt",
+      "sha256": "1dac29e3cdc706fcd713fc5b56427fca9b06d9e6b17821e35ec19fdb78a7ed72",
+      "git_blob": "8a70a16fc2e099f5e6fdbb53d6550547deaf7b93",
+      "bytes": 2917
+    },
+    {
+      "path": "evidence/received-native/before/junit-reports/TEST-junit-jupiter.xml",
+      "sha256": "1586495d17b61883d07202137cba5ce83047bc43f0d0b39cc96b90385df3a470",
+      "git_blob": "522978cae8c1afe8699419ade8c125d6d13197f1",
+      "bytes": 86726
+    },
+    {
+      "path": "evidence/received-native/before/junit-reports/TEST-junit-platform-suite.xml",
+      "sha256": "096c8148941729d137bffb7adbf832b9204489219b23bd52b08d6168c8f65138",
+      "git_blob": "d560f0b8e1c1170ab2bb9d2f018cf278833c9a79",
+      "bytes": 3968
+    },
+    {
+      "path": "evidence/received-native/before/junit-reports/TEST-junit-vintage.xml",
+      "sha256": "c3316d157bb75294d1c6e32587f55a0b38a95d7ab1985bc032012f748bf511af",
+      "git_blob": "39973cccb68fc0ea9f3597e8b04b7918836e4d81",
+      "bytes": 3951
+    },
+    {
+      "path": "evidence/received-native/before/junit.log",
+      "sha256": "b589ae01bcfa214b261671965451fc9f9180e84325568d052ac38343c8e5a8d7",
+      "git_blob": "a49480f319f4300513896aae1b6addc34be2bda7",
+      "bytes": 21278
+    },
+    {
+      "path": "evidence/received-native/before/owner-compile.log",
+      "sha256": "e7dc0e47432fd48b8b9b4360ab6f639bd113742879603c31085d0b23af47fda8",
+      "git_blob": "46289dbe8caed82dffc60c5771cf656f4370e0d6",
+      "bytes": 2451
+    },
+    {
+      "path": "evidence/received-native/before/test-compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/received-native/commands.json",
+      "sha256": "695650c52c6730f3472d8cb24405528fe509ac75b860c9882810b96f65b29fec",
+      "git_blob": "e0bd592c9660364f90cdea8cdece0fb1993b7017",
+      "bytes": 4568
+    },
+    {
+      "path": "evidence/received-native/dependency-inputs.json",
+      "sha256": "ff1455718c1c9909575307e5779a3371e3ba1b706e32521bb73a6287a7db7ee5",
+      "git_blob": "a0d9357aa785046b168899a11cd4f2c000bb5174",
+      "bytes": 135455
+    },
+    {
+      "path": "evidence/received-native/java-version.txt",
+      "sha256": "5b4412738541184e84f6b2d7520d4f4a7c2a455f60650491464c61adcbbbdeb0",
+      "git_blob": "4499c4f6735137facd37a56dd81418ec9c69f13d",
+      "bytes": 205
+    },
+    {
+      "path": "evidence/received-native/result.json",
+      "sha256": "a434cff12e7331e30fc3392ece431d6c987649591514faf6efe8466c6aac1868",
+      "git_blob": "86191a8398fb14422ed9a018ea7fb49d2e6a9c77",
+      "bytes": 1031
+    },
+    {
+      "path": "evidence/receiver-apply.log",
+      "sha256": "b3b02bf362ebf041830d7f641e4e635b58a4c069b00f89308070ea3254762f6a",
+      "git_blob": "870dcd3414c684ee87d5a8ce75db0f0f3a37b3e4",
+      "bytes": 60
+    },
+    {
+      "path": "evidence/receiver-check.log",
+      "sha256": "7322ed6b22769797164bb5988b5108dc9162b16eff61ab01ecb837042bb4e72f",
+      "git_blob": "701520017ca24e1048710fc3d7d725555773220e",
+      "bytes": 60
+    },
+    {
+      "path": "evidence/sdk/MAVEN.json",
+      "sha256": "0f2889baab485963a6d40e35b9e68ae3ac03e33769f861823c5cf68e16032aeb",
+      "git_blob": "e8e17e9ed24d3195827ffe7bafa1f4101cd18df6",
+      "bytes": 507
+    },
+    {
+      "path": "evidence/sdk/SDK_INPUTS.tsv",
+      "sha256": "81209f5b67352956e3c4a6f0b8f94f9efd79ea0d4214bb1d5e3b7753c7105172",
+      "git_blob": "49a6601c188212eb354fd8b25def88c0183caf4c",
+      "bytes": 2539
+    },
+    {
+      "path": "evidence/sdk/SDK_RESULTS.tsv",
+      "sha256": "c7e0b211a0eb1d98f23359e3e4b448e254a38e961e578813e36662bdbc401a9c",
+      "git_blob": "6997df822137522a1fb1574dec4f595206aed127",
+      "bytes": 820
+    },
+    {
+      "path": "evidence/sdk/TEST-com.synexia.rewrite.M3TaskRecipeTest.xml",
+      "sha256": "70ab8ca5ef4f0167479c52538bfeba4aa99c1bba0b3e95a034ffcb87265fb9f3",
+      "git_blob": "0bb2b8a30a06c805cd925e56432ea2dcdf7db701",
+      "bytes": 14074
+    },
+    {
+      "path": "evidence/sdk/java.patch",
+      "sha256": "512b74b75d17da8f9f515e4cb654308558541f29aaa794a5d7905044dd98ab8f",
+      "git_blob": "c37503826ed59583b8cf5adb32bf3f21b6f70ca4",
+      "bytes": 11185
+    },
+    {
+      "path": "evidence/sdk/maven.log",
+      "sha256": "3e7619b8c591c1510a3fd9d297405c5790ffef355d39971bbf716b3402c4a187",
+      "git_blob": "fb527a450540096205ed3919c6aa7f655912f62b",
+      "bytes": 2599
+    },
+    {
+      "path": "evidence/sdk/text.patch",
+      "sha256": "e0db1d5f098aaf3e68238e476979485dea5789f85b7dfe43eb828c4e682e5fa6",
+      "git_blob": "4dcae236fb8ff2a4bdf3106de6255cadd5bd4a31",
+      "bytes": 5503
+    },
+    {
+      "path": "verification/run-native-callback-proof.py",
+      "sha256": "99a47c78b1f256acb5a5d99fd24129c941955cd2f67f8bd3fb1d0bea90738b33",
+      "git_blob": "f45edb0bb3ee0880b5a0e6a52decd819834d75e3",
+      "bytes": 7814
+    }
+  ],
+  "scope": "Exact proof receipts and driver bytes; compiled classes and native binaries are intentionally excluded. Recipe source custody is separately bound by recipe/SYNEXIA_HANDOFF.json."
+}
