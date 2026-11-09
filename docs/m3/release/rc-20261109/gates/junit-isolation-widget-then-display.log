@@ -1,0 +1,207 @@
+stty: /dev/tty: No such device or address
+org.eclipse.swt.widgets.Display.isSystemDarkTheme(): true
+org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display#test_setCursorLocationLorg_eclipse_swt_graphics_Point(TestInfo): actual == Point {0, 0}
+org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display#test_setCursorLocationII(TestInfo): actual == Point {0, 0}
+╷
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  ├─ Test_org_eclipse_swt_widgets_Button ✔
+│  │  ├─ test_setDataLjava_lang_StringLjava_lang_Object() ✔
+│  │  ├─ test_isDisposed() ✔
+│  │  ├─ test_addListenerILorg_eclipse_swt_widgets_Listener() ✔
+│  │  ├─ test_removeListenerILorg_eclipse_swt_widgets_Listener() ✔
+│  │  ├─ test_notifyListenersILorg_eclipse_swt_widgets_Event() ✔
+│  │  ├─ test_toString() ✔
+│  │  ├─ test_getDisplay() ✔
+│  │  ├─ test_setDataLjava_lang_Object() ✔
+│  │  ├─ test_addDisposeListenerLorg_eclipse_swt_events_DisposeListener() ✔
+│  │  ├─ test_setCaptureZ() ✔
+│  │  ├─ test_isEnabled() ✔
+│  │  ├─ test_NoExceptionsThrownInFillLayout() ✔
+│  │  ├─ test_setForegroundDisposedColorLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_addFocusListenerLorg_eclipse_swt_events_FocusListener() ✔
+│  │  ├─ test_addMouseTrackListenerMouseHoverAdapterLorg_eclipse_swt_events_MouseTrackLis... ✔
+│  │  ├─ test_getBorderWidth() ✔
+│  │  ├─ test_setBoundsIIII() ✔
+│  │  ├─ test_addFocusListenerFocusGainedAdapterLorg_eclipse_swt_events_FocusListener() ✔
+│  │  ├─ test_setTextDirection() ✔
+│  │  ├─ test_addControlListenerLorg_eclipse_swt_events_ControlListener() ✔
+│  │  ├─ test_setRedrawZ() ✔
+│  │  ├─ test_pack() ✔
+│  │  ├─ test_setForegroundLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_redrawIIIIZ() ✔
+│  │  ├─ test_moveAboveLorg_eclipse_swt_widgets_Control() ✔
+│  │  ├─ test_addControlListenerControlMovedAdapterLorg_eclipse_swt_events_ControlListene... ✔
+│  │  ├─ test_addControlListenerControlResizedAdapterLorg_eclipse_swt_events_ControlListe... ✔
+│  │  ├─ test_toControlII() ✔
+│  │  ├─ test_setMenuLorg_eclipse_swt_widgets_Menu() ✔
+│  │  ├─ test_setLocationLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_setToolTipTextLjava_lang_String() ✔
+│  │  ├─ test_computeSizeII() ✔
+│  │  ├─ test_setVisibleZ() ✔
+│  │  ├─ test_setEnabledZ() ✔
+│  │  ├─ test_toControlLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_redraw() ✔
+│  │  ├─ test_setFontLorg_eclipse_swt_graphics_Font() ✔
+│  │  ├─ test_update() ✔
+│  │  ├─ test_toDisplayII() ✔
+│  │  ├─ test_setBackgroundAlphaLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_getLocation() ✔
+│  │  ├─ test_isVisible() ✔
+│  │  ├─ test_setBoundsLorg_eclipse_swt_graphics_Rectangle() ✔
+│  │  ├─ test_addKeyListenerKeyReleasedAdapterLorg_eclipse_swt_events_KeyListener() ✔
+│  │  ├─ test_requestLayoutL() ✔
+│  │  ├─ test_ExceptionsThrownInDisposeListenerDontPreventDisposal() ✔
+│  │  ├─ test_toDisplayLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_addTraverseListenerLorg_eclipse_swt_events_TraverseListener() ✔
+│  │  ├─ test_addMouseListenerLorg_eclipse_swt_events_MouseListener() ✔
+│  │  ├─ test_addPaintListenerLorg_eclipse_swt_events_PaintListener() ✔
+│  │  ├─ test_setSizeII() ✔
+│  │  ├─ test_setCursorLorg_eclipse_swt_graphics_Cursor() ✔
+│  │  ├─ test_getShell() ✔
+│  │  ├─ test_getParent() ✔
+│  │  ├─ test_addKeyListenerKeyPressedAdapterLorg_eclipse_swt_events_KeyListener() ✔
+│  │  ├─ test_moveBelowLorg_eclipse_swt_widgets_Control() ✔
+│  │  ├─ test_setLocationII() ✔
+│  │  ├─ test_getMonitor() ✔
+│  │  ├─ test_setParentLorg_eclipse_swt_widgets_Composite() ✔
+│  │  ├─ test_setBackgroundDisposedColorLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_addMouseTrackListenerLorg_eclipse_swt_events_MouseTrackListener() ✔
+│  │  ├─ test_setBackgroundLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_setSizeLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_traverseI() ✔
+│  │  ├─ test_addMouseTrackListenerMouseEnterAdapterLorg_eclipse_swt_events_MouseTrackLis... ✔
+│  │  ├─ test_setLayoutDataLjava_lang_Object() ✔
+│  │  ├─ test_addKeyListenerLorg_eclipse_swt_events_KeyListener() ✔
+│  │  ├─ test_addFocusListenerFocusLostAdapterLorg_eclipse_swt_events_FocusListener() ✔
+│  │  ├─ test_setBackgroundSameColorAgain() ✔
+│  │  ├─ test_setForegroundAlphaLorg_eclipse_swt_graphics_Color() ■ Assumption failed: Alpha support for foreground colors does not exist on Win32
+│  │  ├─ test_addHelpListenerLorg_eclipse_swt_events_HelpListener() ✔
+│  │  ├─ test_addMouseTrackListenerMouseExitAdapterLorg_eclipse_swt_events_MouseTrackList... ✔
+│  │  ├─ test_getAccessible() ✔
+│  │  ├─ test_isReparentable() ✔
+│  │  ├─ test_packZ() ✔
+│  │  ├─ test_addMouseMoveListenerLorg_eclipse_swt_events_MouseMoveListener() ✔
+│  │  ├─ test_isFocusControl() ✔
+│  │  ├─ test_setForegroundAlphaCheckButton() ■ Assumption failed: Alpha support for foreground colors does not exist on Win32
+│  │  ├─ test_setBackgroundCheckButton() ✔
+│  │  ├─ test_setForegroundRadioButton() ✔
+│  │  ├─ test_setTextLjava_lang_String() ✔
+│  │  ├─ test_setAlignmentI() ✔
+│  │  ├─ test_setOrientation() ✔
+│  │  ├─ test_addSelectionListenerLorg_eclipse_swt_events_SelectionListener() ✔
+│  │  ├─ test_addSelectionListenerWidgetSelectedAdapterLorg_eclipse_swt_events_SelectionL... ✔
+│  │  ├─ test_setForegroundCheckButton() ✔
+│  │  ├─ test_consistency_DragDetect() ✔
+│  │  ├─ test_setBackgroundAlphaRadioButton() ✔
+│  │  ├─ test_setFocus() ✔
+│  │  ├─ test_computeSize_largerWithLargeCustomFont() ✔
+│  │  ├─ test_consistency_MouseSelection() ✔
+│  │  ├─ test_consistency_MenuDetect() ✔
+│  │  ├─ test_setImageLorg_eclipse_swt_graphics_Image() ✔
+│  │  ├─ test_setBackgroundAlphaCheckButton() ✔
+│  │  ├─ test_setForegroundAlphaRadiokButton() ■ Assumption failed: Alpha support for foreground colors does not exist Win32
+│  │  ├─ test_setBackgroundRadioButton() ✔
+│  │  ├─ test_consistency_EnterSelection() ✔
+│  │  ├─ test_Bug381668() ↷ Test works fine locally but fails to get correct focus on automated builds.
+│  │  ├─ test_consistency_SpaceSelection() ✔
+│  │  ├─ test_computeSizeIIZ() ✔
+│  │  ├─ test_ConstructorLorg_eclipse_swt_widgets_CompositeI() ✔
+│  │  ├─ test_setSelectionZ() ✔
+│  │  └─ test_traverseCheckButton() ✔
+│  └─ Test_org_eclipse_swt_widgets_Display ✔
+│     ├─ test_syncExecLjava_lang_Runnable_dispose() ✔
+│     ├─ test_syncCall_dispose() ✔
+│     ├─ test_setDataLjava_lang_StringLjava_lang_Object() ✔
+│     ├─ test_setAppNameLjava_lang_String() ✔
+│     ├─ test_isDisposed() ✔
+│     ├─ test_manyDispose() ✔
+│     ├─ test_syncCall_SWTException() ✔
+│     ├─ test_addListenerILorg_eclipse_swt_widgets_Listener() ✔
+│     ├─ test_getWarnings() ✔
+│     ├─ test_setSynchronizerLorg_eclipse_swt_widgets_Synchronizer() ✔
+│     ├─ test_removeFilterILorg_eclipse_swt_widgets_Listener() ✔
+│     ├─ test_syncExecLjava_lang_Runnable() ✔
+│     ├─ test_getDoubleClickTime() ✔
+│     ├─ test_syncCall_RuntimeException() ✔
+│     ├─ test_setWarningsZ() ✔
+│     ├─ test_beep() ✔
+│     ├─ test_wake() ✔
+│     ├─ test_syncCall_Exception() ✔
+│     ├─ test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlII() ✔
+│     ├─ test_getSystemColorI() ✔
+│     ├─ test_asyncExecLjava_lang_Runnable_dispose() ✔
+│     ├─ test_getSystemFont() ✔
+│     ├─ test_isSystemDarkTheme() ✔
+│     ├─ test_getDPI() ✔
+│     ├─ test_getDismissalAlignment() ✔
+│     ├─ test_syncCall_concurrentCallable_Exception() ✔
+│     ├─ test_readAndDispatch() ✔
+│     ├─ test_getClientArea() ✔
+│     ├─ test_update() ✔
+│     ├─ test_getPrimaryMonitor() ✔
+│     ├─ test_postLorg_eclipse_swt_widgets_Event() ✘ Display#post failed, probably because screen is not rendered (bug 407862) or because Shell is not focussed ==> expected: <true> but was: <false>
+│     ├─ test_Constructor() ✔
+│     ├─ test_getBounds() ✔
+│     ├─ test_getCursorLocation() ✔
+│     ├─ test_setCursorLocationLorg_eclipse_swt_graphics_Point(TestInfo) ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_DeviceData() ✔
+│     ├─ test_syncCall() ✔
+│     ├─ test_getActiveShell() ✔
+│     ├─ test_removeListenerILorg_eclipse_swt_widgets_Listener() ✔
+│     ├─ test_getDepth() ✔
+│     ├─ test_getFocusControl() ✔
+│     ├─ test_getCursorControl() ✔
+│     ├─ test_getSyncThread() ✔
+│     ├─ test_Executor() ✔
+│     ├─ test_getShells() ✔
+│     ├─ test_wakeBeforeSleepIsNotLost() ✔
+│     ├─ test_getThread() ✔
+│     ├─ test_getCurrent() ✔
+│     ├─ test_addFilterILorg_eclipse_swt_widgets_Listener() ✔
+│     ├─ test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlLorg_ecl... ✔
+│     ├─ test_disposeExecLjava_lang_Runnable() ✔
+│     ├─ test_getDefault() ✔
+│     ├─ test_timerExecILjava_lang_Runnable() ✔
+│     ├─ test_setCursorLocationII(TestInfo) ✔
+│     ├─ test_findDisplayLjava_lang_Thread() ✔
+│     ├─ test_syncCall_concurrentCallable() ✔
+│     ├─ test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlLorg_ecl... ✔
+│     ├─ test_setDataLjava_lang_Object() ✔
+│     ├─ test_asyncExecLjava_lang_Runnable() ✔
+│     ├─ test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlIIII() ✔
+│     ├─ test_getIconDepth() ✔
+│     ├─ test_getFontListLjava_lang_StringZ() ✔
+│     ├─ test_getMonitors() ✔
+│     ├─ test_close() ✔
+│     └─ test_sleep() ✔
+└─ JUnit Vintage ✔
+
+Failures (1):
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_postLorg_eclipse_swt_widgets_Event()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_postLorg_eclipse_swt_widgets_Event', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: Display#post failed, probably because screen is not rendered (bug 407862) or because Shell is not focussed ==> expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_postLorg_eclipse_swt_widgets_Event(Test_org_eclipse_swt_widgets_Display.java:1100)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+Test run finished after 23596 ms
+[         5 containers found      ]
+[         0 containers skipped    ]
+[         5 containers started    ]
+[         0 containers aborted    ]
+[         5 containers successful ]
+[         0 containers failed     ]
+[       168 tests found           ]
+[         1 tests skipped         ]
+[       167 tests started         ]
+[         3 tests aborted         ]
+[       163 tests successful      ]
+[         1 tests failed          ]
+
