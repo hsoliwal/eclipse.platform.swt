@@ -8,7 +8,8 @@ resource-lifetime problem; use Platform UI for JFace viewers and workbench parts
 
 [Source map](#swt-source-map) · [Concepts](#swt-key-concepts) ·
 [Quickstart](#swt-quickstart) · [Example](#swt-worked-example) ·
-[Development guide](docs/DEVELOPMENT_GUIDE.md) · [Fork release-readiness gates](docs/RELEASE_READINESS.md)
+[Development guide](docs/DEVELOPMENT_GUIDE.md) · [Fork release-readiness gates](docs/RELEASE_READINESS.md) ·
+[Candidate packaging and naming](docs/RELEASE_PACKAGING.md)
 
 ## SWT source map
 

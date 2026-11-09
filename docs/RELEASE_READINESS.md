@@ -74,12 +74,25 @@ python3 -m unittest discover -s tools/release -p 'test_*.py' -v
 python3 tools/release/readiness.py --root .
 ```
 
-After running *all six* real backend matrix jobs, export their complete
-JUnit XML trees and a source-pinned aggregated JaCoCo XML. The following
-command is a **template**, not a command that has been run here:
+Source-only mode keeps this invocation and succeeds when its source anchors
+are present; it always reports `surface_ready: false` and
+`release_admitted: false`. The Python tests use synthetic fixtures. Their
+coverage measures this verifier, not SWT widgets or native backends. The
+independent Java candidate-packaging suite is described in the
+[packaging guide](RELEASE_PACKAGING.md).
+
+After running *all six* real backend matrix jobs for one immutable source
+commit and one workflow run/attempt, export their complete JUnit XML trees
+and the aggregated JaCoCo XML. Capture the report-binding manifest with those
+reports. Keep reports, the manifest and verifier output **outside the source
+checkout**. The following command is a **template**, not a command that has
+been run here; replace `FULL_LOWERCASE_RELEASE_COMMIT` with the expected
+40-character commit ID from the release workflow:
 
 ```sh
 python3 tools/release/readiness.py --root . --release \
+  --source-sha FULL_LOWERCASE_RELEASE_COMMIT \
+  --evidence-manifest /evidence/report-binding.json \
   --junit gtk3-x11=/evidence/gtk3-x11 \
   --junit gtk4-x11=/evidence/gtk4-x11 \
   --junit gtk4-wayland=/evidence/gtk4-wayland \
@@ -89,12 +102,158 @@ python3 tools/release/readiness.py --root . --release \
   --jacoco /evidence/jacoco.xml --min-line 0.90 --min-branch 0.90
 ```
 
-It fails closed on missing backend reports, failures, missing JaCoCo counters
-or low coverage. Its `surface_ready` is **only this documentation/naming and
-reported-test surface**. It cannot verify that the external reports were
-produced for the exact release commit; capture the commit, Maven/JDK/OS/arch,
-native hash, report SHA-256, command and workflow run ID in a separately
-reviewed source-bound release evidence manifest before publishing.
+Release mode requires both new arguments. It checks that `--root` is the Git
+worktree root, `HEAD` equals the expected commit, and Git reports no staged,
+unstaged, deleted or nonignored untracked files. Ignored build outputs remain
+outside this cleanliness check; it does not prove complete build-input
+provenance. Missing/failed backend tests, all-skipped backends, missing JaCoCo
+counters and coverage below 90% still fail independently of manifest binding.
+
+### Source/report binding contract
+
+The manifest is strict JSON with no duplicate or unknown keys. Its top-level
+fields are:
+
+| Field | Required value |
+| --- | --- |
+| `schema` | `SWT_REPORT_BINDING_V1` |
+| `repository` | `hsoliwal/eclipse.platform.swt` |
+| `source_sha` | The same full lowercase commit as `--source-sha` and the checked-out `HEAD` |
+| `run_id` | A positive integer GitHub Actions run ID |
+| `run_attempt` | A positive integer run attempt |
+| `run_url` | Exactly `https://github.com/hsoliwal/eclipse.platform.swt/actions/runs/<run_id>/attempts/<run_attempt>` |
+| `junit` | An object with exactly the six backend keys in the matrix below |
+| `jacoco` | The coverage binding record described below |
+
+Each `junit` record must contain exactly `backend`, `source_sha`, `run_id`,
+`run_attempt`, and `files`. The backend value must equal its object key. Source,
+run and attempt must match the top-level values, including integer types.
+For example, the **template for the `win32` record** is:
+
+```json
+{
+  "backend": "win32",
+  "source_sha": "<full lowercase release commit>",
+  "run_id": 123456789,
+  "run_attempt": 2,
+  "files": [
+    {
+      "path": "TEST-org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.xml",
+      "sha256": "<64 lowercase SHA-256 characters>"
+    }
+  ]
+}
+```
+
+Supply a record for every backend; this example is not a complete manifest:
+
+| Required JUnit key | Backend identity |
+| --- | --- |
+| `gtk3-x11` | GTK3 on X11 |
+| `gtk4-x11` | GTK4 on X11 |
+| `gtk4-wayland` | GTK4 on Wayland |
+| `win32` | Windows Win32 |
+| `cocoa-x86_64` | macOS Intel |
+| `cocoa-aarch64` | macOS ARM |
+
+`files` must exactly inventory the parser's `TEST-*.xml` files beneath the
+corresponding `--junit` directory. Paths are relative, canonical POSIX paths
+using `/`; an explicit XML-file argument uses that file's basename. Each entry
+has exactly `path` and `sha256`. Order does not matter. Missing, additional,
+duplicated, renamed or changed reports fail. Symlinks and reuse of a physical
+report file through another input are refused. Identical report bytes copied
+between backend inputs also fail; each backend must supply its own reports.
+The verifier parses and hashes the same byte snapshot for each XML file.
+
+The `jacoco` record contains exactly `source_sha`, `run_id`, `run_attempt`,
+`backends`, and `files`. Its source/run/attempt must match the top-level values.
+Its `backends` must be this ordered list:
+
+```json
+["gtk3-x11", "gtk4-x11", "gtk4-wayland", "win32", "cocoa-x86_64", "cocoa-aarch64"]
+```
+
+Its `files` contains exactly one `path`/`sha256` entry for the basename and bytes
+of the `--jacoco` XML. A correct report binding cannot waive test failures or
+coverage floors, and report-wide coverage cannot establish per-atom scope.
+
+### What a successful result establishes
+
+`surface_ready: true` means only that naming/source anchors, supplied report
+results, thresholds, clean checkout and **declared content binding** agree.
+`report_binding` records the checked commit, manifest digest and run identity,
+and explicitly reports `producer_authenticity: "not-verified"`. The tool makes
+no GitHub API query or signature verification. A consistent caller-written
+manifest can describe synthetic reports; it does not prove that the reports
+were produced by the named backend, source revision or workflow. Do not
+manufacture a receipt after the fact to turn arbitrary XML into qualification.
+
+The result therefore **always contains `release_admitted: false`**, including
+when the process exits zero. It also names the remaining release gates. A
+publisher must not treat this tool's exit code or `surface_ready` as product
+release authorization. Independently authenticate the producer/run/artifact
+provenance and review the exact commit, Maven/JDK/OS/architecture, native
+hashes, build/test commands and instrumentation scope before using the report
+set as runtime evidence. API/JNI, native/UI, visible-screen and resource gates
+remain separate requirements below.
+
+## CI source identity and evidence scope
+
+The [release-surface workflow](../.github/workflows/m3-release-readiness.yml)
+uses the same source selection in both jobs: the explicit PR head for
+`pull_request`, or the event commit for `push` and `workflow_dispatch`.
+GitHub's default PR checkout and `github.sha` identify the temporary merge
+commit, so neither is substituted for a PR-head evidence identity. See
+[GitHub's event contract](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request).
+Both jobs assert the checked-out `HEAD`, record `SOURCE_COMMIT` and
+`SOURCE_TREE`, and upload those records with their test/report artifacts.
+Artifact names include the selected full source SHA and `run_attempt`, so
+a retry preserves the previous attempt's evidence.
+
+The following describes configured applicability, subject to GitHub accepting
+and scheduling the event. PR and push events must also match a path filter:
+
+| Event | Source checked by this workflow | Jobs in this workflow |
+| --- | --- | --- |
+| PR targeting `release/**` | PR head commit | Source verifier and Java candidate packager |
+| PR targeting `master` | PR head commit | Source verifier; the master packaging gate is in `build-swt-jars.yml` |
+| Push to `release/**` | Pushed commit | Source verifier and Java candidate packager |
+| Push to `master` | Pushed commit | Source verifier; the master packaging gate is in `build-swt-jars.yml` |
+| Manual dispatch | Selected event commit | Source verifier and Java candidate packager |
+
+PR and push filters include both release-tool directories, their guides,
+the source naming/documentation anchors and both packaging/readiness workflow
+files. A release-branch push containing only a packager or packaging-guide
+change therefore reaches the candidate job. Checking an explicit PR head
+does not qualify a later merge result: merge the current base additively and
+repeat qualification on the final release commit. The source records are
+review aids, not authenticated native-backend report receipts.
+
+### Current validation limits (2026-11-07)
+
+A local clean Git merge of candidate head
+`4a7539049ea84d72fb545abdb648bcb4389aa93b` and release base
+`ffae7cacb52a9c1670a557f6eff92c324bf0ca9c` produced tree
+`0decfeef523c5f36013f2f59f211b5755790a232`, matching GitHub's merge tree.
+Before the CI/documentation corrections in this section, that tree passed
+all **39** verifier unit tests and source-anchor inspection, then a fresh
+Java 21 Maven `clean verify` passed all **33** candidate-packager tests with
+**173/176 lines (98.30%)** and **123/132 branches (93.18%)** covered.
+Those counters cover the candidate packaging tool only. Neither its source,
+POM nor test module changed in the CI/documentation corrections. The source
+inspection still reports `surface_ready: false`, `release_admitted: false`
+and all six native backends pending. GTK development packages and Xvfb were
+unavailable in this workspace, so no native/GUI qualification was performed.
+
+Hosted execution remains a separate gate. At 2026-11-07 12:00 UTC,
+[PR #323](https://github.com/hsoliwal/eclipse.platform.swt/pull/323)'s published
+head `4a7539049ea84d72fb545abdb648bcb4389aa93b` and its then-current merge ref
+had zero Actions runs and zero check runs. The repository's workflow list
+did not include `m3-release-readiness.yml`, and its metadata endpoint returned
+404. These observations do not establish why a run was absent. Configuring
+branch/path selection and validating it locally does not prove that GitHub
+registered or executed the workflow. Require actual successful hosted job
+records and artifacts for the final source before clearing this gate.
 
 ## Coordination with current release-preparation PRs (2026-11-07)
 
