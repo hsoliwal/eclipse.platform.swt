@@ -1,5 +1,5 @@
 source	pr	sha	action	effect	notes
-candidate:m3/release-candidate-20261109	#335	2baae691aa	CANDIDATE	master 4fb49875cc + #325 forward + re-lands + release fixes	built for m3-superset-20261109; forward decisions in docs/m3/release/rc-20261109/FORWARD_325.tsv
+candidate:m3/release-candidate-20261109	#335	5f23935a2a	CANDIDATE	master 4fb49875cc + #325 forward + re-lands + release fixes	built for m3-superset-20261109; forward decisions in docs/m3/release/rc-20261109/FORWARD_325.tsv
 forward:release/java-jni-naming-coverage-20261108	#325	64453d9bc0	FORWARDED	35 files +5328/-135	open PR; cherry-picked onto master 378a99d346 as dc2d921a05, 13 conflicts resolved per hunk; carries #323
 pr:m3/swt-api-version-maven-align-20261004	#27	ac7e310b3363	MERGED	30 files +52080/-0	2026-11-06T05:51:43Z base=master; [SUPERSEDED by #26] Align SWT Maven version with 3.136 bundle API
 pr:codex/java2d-recovery-20261012	#112	32e667d22ae4	MERGED	10 files +1685/-15	2026-10-13T03:32:07Z base=master; Restore SWT Java2DCanvas with bounded viewport rendering
