@@ -1,0 +1,16 @@
+F:\m3-scratch\rc-20261109\swt\bundles\org.eclipse.swt\Eclipse SWT GPU M3\win32\org\eclipse\swt\internal\gpu\m3\Replay.java:177: error: cannot find symbol
+			builder.moveTo (a [p] + offset, a [p + 1] + offset);
+			       ^
+  symbol:   method moveTo(float,float)
+  location: variable builder of type Path
+F:\m3-scratch\rc-20261109\swt\bundles\org.eclipse.swt\Eclipse SWT GPU M3\win32\org\eclipse\swt\internal\gpu\m3\Replay.java:178: error: cannot find symbol
+			for (int k = 1; k < count; k++) builder.lineTo (a [p + 2 * k] + offset, a [p + 2 * k + 1] + offset);
+			                                       ^
+  symbol:   method lineTo(float,float)
+  location: variable builder of type Path
+F:\m3-scratch\rc-20261109\swt\bundles\org.eclipse.swt\Eclipse SWT GPU M3\win32\org\eclipse\swt\internal\gpu\m3\Replay.java:179: error: cannot find symbol
+			if ((op & OpStream.OPEN) == 0) builder.closePath ();
+			                                      ^
+  symbol:   method closePath()
+  location: variable builder of type Path
+3 errors
