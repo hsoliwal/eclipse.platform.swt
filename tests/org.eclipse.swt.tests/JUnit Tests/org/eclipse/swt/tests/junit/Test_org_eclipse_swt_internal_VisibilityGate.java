@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.custom.TreeEditor;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -37,6 +39,12 @@ import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Scrollable;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeItem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -289,6 +297,60 @@ public class Test_org_eclipse_swt_internal_VisibilityGate {
 		while (System.currentTimeMillis () < end) {
 			if (!display.readAndDispatch ()) Thread.sleep (5);
 		}
+	}
+
+	@Test
+	public void test_hiddenTableAndTreeEditorsArmNoRelayoutTimer () throws Exception {
+		Composite page = new Composite (shell, SWT.NONE);
+		page.setLayout (new FillLayout ());
+		Table table = new Table (page, SWT.BORDER);
+		new TableColumn (table, SWT.NONE).setWidth (120);
+		TableItem row = new TableItem (table, SWT.NONE);
+		Text cell = new Text (table, SWT.NONE);
+		TableEditor tableEditor = new TableEditor (table);
+		tableEditor.grabHorizontal = true;
+		Tree tree = new Tree (page, SWT.BORDER);
+		TreeItem node = new TreeItem (tree, SWT.NONE);
+		node.setText ("node");
+		Text label = new Text (tree, SWT.NONE);
+		TreeEditor treeEditor = new TreeEditor (tree);
+		treeEditor.grabHorizontal = true;
+		shell.open ();
+		SwtTestUtil.processEvents ();
+		tableEditor.setEditor (cell, row, 0);
+		treeEditor.setEditor (label, node);
+		assertEquals (1, timers ("org.eclipse.swt.custom.TableEditor"), "shown: the relayout timer");
+		assertEquals (1, timers ("org.eclipse.swt.custom.TreeEditor"), "shown: the relayout timer");
+		page.setVisible (false);
+		for (int i = 0; i < 50; i++) {
+			tableEditor.setItem (row);
+			treeEditor.setItem (node);
+		}
+		assertEquals (0, timers ("org.eclipse.swt.custom.TableEditor"), "hidden: no relayout timer");
+		assertEquals (0, timers ("org.eclipse.swt.custom.TreeEditor"), "hidden: no relayout timer");
+		assertEquals (1, table.getListeners (VisibilityGate.CATCH_UP).length, "one catch-up listener per editor");
+		page.setVisible (true);
+		SwtTestUtil.processEvents ();
+		assertEquals (row.getBounds (0).y, cell.getBounds ().y, "the table editor is on its row");
+		assertEquals (node.getBounds ().y, label.getBounds ().y, "the tree editor is on its row");
+		tableEditor.dispose ();
+		treeEditor.dispose ();
+		assertEquals (0, table.getListeners (VisibilityGate.CATCH_UP).length, "dispose removes the listener");
+		assertEquals (0, tree.getListeners (VisibilityGate.CATCH_UP).length, "dispose removes the listener");
+	}
+
+	/* pending timers whose runnable class starts with the prefix (win32 Display.timerList) */
+	int timers (String prefix) throws ReflectiveOperationException {
+		java.lang.reflect.Field field = Display.class.getDeclaredField ("timerList");
+		field.setAccessible (true);
+		Runnable [] list = (Runnable []) field.get (display);
+		int count = 0;
+		if (list != null) {
+			for (Runnable timer : list) {
+				if (timer != null && timer.getClass ().getName ().startsWith (prefix)) count++;
+			}
+		}
+		return count;
 	}
 
 	static boolean marqueeParked (ProgressBar bar) throws ReflectiveOperationException {
