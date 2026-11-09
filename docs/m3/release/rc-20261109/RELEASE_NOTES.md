@@ -75,6 +75,19 @@ All 16 failures are classified; none is introduced by the candidate:
 
 The official-SWT 3.135.0 oracle (`oracle/`) settled the three disputed expectations. The caret after a shrink was a test error. The zero-height caret was an SWT error and is fixed. The hidden Table top is SWT and still open. The JNI checker reported 0 diagnostics.
 
+## Known issues (pre-existing on master)
+
+These 7 Display tests fail on master `4fb49875cc` too. The candidate adds no failure. Root causes and next steps are in `PRE_EXISTING_DEFECTS.tsv`; the fixes continue on `m3/swt-known-issues-20261109`.
+
+| Test | Root cause |
+| --- | --- |
+| VirtualPageSource.test_treeBulkChildCountIsBatchedWithPreciseDamageOnly | A page-source facade created by the API gets no SetData before a native expand. Its row has no expander (cChildren 0), so TVM_EXPAND never sends TVN_ITEMEXPANDING. |
+| Combo_ViewportAcceptance.editTextMatchFindsTheFirstLogicalRow | When the drop-down opens after an edit-text match, it shows the native bar of the resident rows (0..100) instead of the logical bar (0..99999). The logical bar is not reapplied on the show path. |
+| List_ViewportAcceptance.spliceOutsideTheWindowTouchesNoNativeRow | Replacing 3 rows with 2 inside the window costs 56 native row operations (bound 7). The list viewport rebuilds instead of deleting 3 and inserting 2. |
+| Table_Splice.hiddenTableAppliesOneWindowPatchWhenShown | Showing a hidden Table with a pending window patch takes 2 paint passes instead of 1. |
+| Tree_ViewportDeltas.hiddenTreeAppliesOnePatchOnShow, treeInAHiddenParentAppliesOnePatchOnShow | While parked, the dispose and expand deltas still send 279 TreeView messages (196 TVM_GETITEM, 42 TVM_GETNEXTITEM, 39 TVM_DELETEITEM); the bound is 4 x resident rows + 16. The item-height part (1,660 messages) is already fixed. |
+| Table_Splice.spliceAnswersLikeTheItemApi | Hidden Table top index: official SWT keeps a stale top while hidden (43 after removing rows above, 39 after show), but the M3Model hidden splice answers the logical top at once. The hidden ListView rule needs an official-jar matrix before it can be encoded. |
+
 ## Included pull requests since 2026-10-13 (204)
 
 MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: the merge is on the candidate and its content was already there. CONTAINED: the PR head is an ancestor of the candidate. RE-LANDED: the PR was merged into another PR's branch, never reached master, and was folded into this candidate. CARRIED: its content arrives through #325. Source: `LEDGER.tsv` (also in the jar as `META-INF/m3/LEDGER.tsv`).
