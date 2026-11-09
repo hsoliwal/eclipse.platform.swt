@@ -5,7 +5,7 @@ Usage: release_notes.py <LEDGER.tsv> <STACKED_NOT_ON_MASTER.tsv> <out.md>
 """
 import sys
 
-INCLUDED = ("MERGED", "MERGED_NOOP", "CONTAINED")
+INCLUDED = ("MERGED", "MERGED_NOOP", "CONTAINED", "RE-LANDED", "CARRIED")
 
 
 def main():
@@ -14,33 +14,31 @@ def main():
     prs = [r for r in rows if r[0].startswith("pr:")]
     inc = [r for r in prs if r[3] in INCLUDED]
     exc = [r for r in prs if r[3] not in INCLUDED]
-    own = {l.split("\t")[0]: l.rstrip("\n").split("\t") for l in open(stacked, encoding="utf-8")}
+    st = [l.rstrip("\n").split("\t") for l in open(stacked, encoding="utf-8")]
+    head, st = st[0], st[1:]
+    col = {name: i for i, name in enumerate(head)}
 
     def title(r):
         notes = r[5].split("; ", 1)
         t = notes[1] if len(notes) > 1 else notes[0]
-        return t.split("; added-line presence")[0].replace("|", "/")
-
-    def date(r):
-        return r[5][:10]
+        return t.split("; ")[0].replace("|", "/")
 
     lines = [f"## Included pull requests since 2026-10-13 ({len(inc)})", "",
              "MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: the merge is on the candidate "
-             "and its content was already there. CONTAINED: the PR head is an ancestor of the candidate. "
-             "Source: `LEDGER.tsv` (also in the jar as `META-INF/m3/LEDGER.tsv`).", "",
+             "and its content was already there. CONTAINED: the PR head is an ancestor of the candidate. RE-LANDED: the PR "
+             "was merged into another PR's branch, never reached master, and was folded into this candidate. CARRIED: its "
+             "content arrives through #325. Source: `LEDGER.tsv` (also in the jar as `META-INF/m3/LEDGER.tsv`).", "",
              "| PR | merged | class | effect | title |", "| --- | --- | --- | --- | --- |"]
-    lines += [f"| {r[1]} | {date(r)} | {r[3]} | {r[4]} | {title(r)} |" for r in inc]
-    lines += ["", f"## Merged pull requests whose content is not on master ({len(exc)})", "",
-              "These were merged into another PR's branch (stacked PRs, or Initiative 31 prototype lines), not into master. "
-              "The table measures each PR's own added lines (25 characters or longer) against the candidate.", "",
-              "| PR | merged into | own added lines present | title |", "| --- | --- | --- | --- |"]
+    lines += [f"| {r[1]} | {r[5][:10]} | {r[3]} | {r[4]} | {title(r)} |" for r in inc]
+    lines += ["", f"## Merged pull requests not applicable to master ({len(exc)})", "",
+              "| PR | outcome | proof |", "| --- | --- | --- |"]
+    by_pr = {s[col["pr"]]: s for s in st}
     for r in exc:
-        o = own.get(r[1])
-        pres = o[3] if o else "n/a (initiative31 prototype line)"
-        base = r[5].split("base=", 1)[1].split(";", 1)[0]
-        lines.append(f"| {r[1]} | {base} | {pres} | {title(r)} |")
+        s = by_pr.get(r[1])
+        lines.append(f"| {r[1]} | {s[col['outcome']] if s else r[3]} | {(s[col['proof']] if s else r[5]).replace('|', '/')} |")
+    lines += ["", "Re-landed and carried PRs, with their own-line presence before and after, are in `STACKED_NOT_ON_MASTER.tsv`."]
     open(out, "w", encoding="utf-8", newline="\n").write("\n".join(lines) + "\n")
-    print(f"included={len(inc)} not_on_master={len(exc)}")
+    print(f"included={len(inc)} not_applicable={len(exc)}")
 
 
 if __name__ == "__main__":

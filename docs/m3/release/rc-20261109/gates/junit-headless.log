@@ -1,16 +1,16 @@
 stty: /dev/tty: No such device or address
-LAZY-METRIC	selection_10M	select_all_ms	0.082
-LAZY-METRIC	selection_10M	invert_ms	0.015
-LAZY-METRIC	selection_10M	shift_click_ms	1.014
-LAZY-METRIC	selection_cutover	k=1000	bits=false	scatter_ms=3.0	invert_ms=0.015	toArray_ms=14.8
-LAZY-METRIC	selection_cutover	k=10000	bits=false	scatter_ms=17.4	invert_ms=0.014	toArray_ms=16.6
-LAZY-METRIC	selection_cutover	k=50000	bits=true	scatter_ms=39.7	invert_ms=2.793	toArray_ms=72.5
-LAZY-METRIC	selection_cutover	k=156250	bits=true	scatter_ms=20.6	invert_ms=0.743	toArray_ms=52.7
-LAZY-METRIC	selection_cutover	k=300000	bits=true	scatter_ms=42.7	invert_ms=0.281	toArray_ms=46.4
-LAZY-METRIC	selection_cutover	k=1000000	bits=true	scatter_ms=136.6	invert_ms=0.133	toArray_ms=37.1
-LAZY-METRIC	check_all_10M_ms	4.559
-LAZY-METRIC	uncheck_all_10M_ms	1.591
-LAZY-METRIC	insert_shift_10M_ms	1.100
+LAZY-METRIC	selection_10M	select_all_ms	0.030
+LAZY-METRIC	selection_10M	invert_ms	0.009
+LAZY-METRIC	selection_10M	shift_click_ms	0.056
+LAZY-METRIC	selection_cutover	k=1000	bits=false	scatter_ms=1.0	invert_ms=0.004	toArray_ms=18.3
+LAZY-METRIC	selection_cutover	k=10000	bits=false	scatter_ms=4.8	invert_ms=0.009	toArray_ms=15.3
+LAZY-METRIC	selection_cutover	k=50000	bits=true	scatter_ms=19.4	invert_ms=1.224	toArray_ms=54.1
+LAZY-METRIC	selection_cutover	k=156250	bits=true	scatter_ms=23.3	invert_ms=0.086	toArray_ms=52.1
+LAZY-METRIC	selection_cutover	k=300000	bits=true	scatter_ms=62.1	invert_ms=0.230	toArray_ms=48.2
+LAZY-METRIC	selection_cutover	k=1000000	bits=true	scatter_ms=133.5	invert_ms=0.085	toArray_ms=37.3
+LAZY-METRIC	check_all_10M_ms	4.705
+LAZY-METRIC	uncheck_all_10M_ms	1.821
+LAZY-METRIC	insert_shift_10M_ms	1.057
 ╷
 ├─ JUnit Platform Suite ✔
 ├─ JUnit Jupiter ✔
@@ -216,7 +216,7 @@ LAZY-METRIC	insert_shift_10M_ms	1.100
 │  │  ├─ linearCoordinateOracleRejectsHiddenAncestry() ✔
 │  │  └─ hundredThousandMaterializedSiblingsMatchTheLinearWalk() ✔
 │  ├─ Test_VirtualBitLanes ✔
-│  │  ├─ test_selection10MillionRowsTimingsAndCutover() 22410 ms ✔
+│  │  ├─ test_selection10MillionRowsTimingsAndCutover() ✔
 │  │  ├─ test_blockCacheReservesEvictsLeastRecentAndProtectsCurrentFrame() ✔
 │  │  ├─ test_randomDifferentialAgainstBooleanRows() ✔
 │  │  ├─ test_hybridSelectionDifferentialAcrossRepresentationSwitches() ✔
@@ -228,7 +228,7 @@ LAZY-METRIC	insert_shift_10M_ms	1.100
 │     └─ maximumLogicalCountUsesConstantNativeModelStateAndResetInvalidatesIter() ■ Assumption failed: assumption is not true
 └─ JUnit Vintage ✔
 
-Test run finished after 41127 ms
+Test run finished after 11030 ms
 [        25 containers found      ]
 [         0 containers skipped    ]
 [        25 containers started    ]

@@ -1,2 +1,2 @@
 platform	fragment	jdk	release	source_dirs	sources	classes	rc	errors	warnings	seconds	source_commit
-cocoa	org.eclipse.swt.cocoa.macosx.aarch64	javac 21.0.9	21	24	821	1129	0	0	0	54	4f82a7a9ab922e955d2a52c740d9956e0b6833c4
+cocoa	org.eclipse.swt.cocoa.macosx.aarch64	javac 21.0.9	21	24	821	1129	0	0	0	31	55ccfce4799725b322a9a72ef47bdfbf78d4e698

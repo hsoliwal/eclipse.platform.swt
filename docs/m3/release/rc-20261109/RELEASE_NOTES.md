@@ -3,14 +3,22 @@
 
 Release candidate `m3-superset-20261109`. It is unsigned, published only as a draft release, and has no tag.
 
-- Jar: `org.eclipse.swt.win32.win32.x86_64-m3-superset-20261109.jar`, SHA-256 `b9a3d521d176865c5edcf917ba3f0d0881498ff6066b790c5ef5919664903b7b`
-- Built from branch `m3/release-candidate-20261109` (PR #335) at product source commit `4f82a7a9ab922e955d2a52c740d9956e0b6833c4`
-- Base: master `4fb49875cc` (#334). Forwarded on top: #325, which also carries #323. Test-isolation fix: the two M3 differential classes now dispose their Display.
+- Jar: `org.eclipse.swt.win32.win32.x86_64-m3-superset-20261109.jar`, SHA-256 `6073f2dad2752363972335fe0e36efa5643ed07d124a5ebad8b8e672916d5795`
+- Built from branch `m3/release-candidate-20261109` (PR #335) at product source commit `55ccfce4799725b322a9a72ef47bdfbf78d4e698`
+- Base: master `4fb49875cc` (#334, which includes #327-#334). Forwarded on top: #325, which also carries #323.
+- Re-landed: #183, #190 + #220, #221 and #239. These PRs were merged into other PR branches and never reached master. Each was a clean 3-way fold, and api_loss_audit reported 0 lost declarations. See `STACKED_NOT_ON_MASTER.tsv`.
+- Release fixes:
+  - Test_Display now starts on a thread with no Display.
+  - The M3 differential tests release their Display.
+  - The SVG fragment, M3 backend and Skija are on the gate classpath.
+  - The test bundle declares its Skija imports.
+  - The gpu.m3 module's Skija pins now match the version its sources compile against (0.116.3; the module did not build before).
+  - Three stale tests are fixed, and the VirtualPageSource fixture is fixed.
+  - Tree page-source rows stay facade-free when painted (win32).
+  - All 330 test classes are reachable from AllTests.
 - OSGi identity: `org.eclipse.swt.win32.win32.x86_64` `3.138.0.m3-superset-20261109`. The fragment host, BREE `JavaSE-21` and `Export-Package` are taken unchanged from the fork manifest.
-- Natives: the fork's own `binaries/org.eclipse.swt.win32.win32.x86_64` (4975r19) and `WebView2Loader.dll`. The 20261013.2 build used the official 3.135.0 natives instead.
-- Resources: fork package resources, including the M3 SVG glyphs and skins, and the localized `SWTMessages*.properties` (renamed from `._properties`). Legal files come from `binaries/legal_files/win32.win32`.
-- `META-INF/m3/MAPPING.tsv` lists every shipped entry with its source path, git blob, origin (FORK, FORK_RESOURCE or FORK_NATIVE) and SHA-256. It also lists the 9 official 3.135.0 classes that are not shipped, all private nested or internal.
-- `META-INF/m3/LEDGER.tsv` has one row per PR merged since 2026-10-13, classified against the candidate, plus the candidate and #325 forward rows.
+- Natives: the fork's own `binaries/org.eclipse.swt.win32.win32.x86_64` (4975r19) and `WebView2Loader.dll`.
+- `META-INF/m3/MAPPING.tsv` lists every shipped entry with its source path, git blob, origin and SHA-256. `META-INF/m3/LEDGER.tsv` has one row per PR merged since 2026-10-13, classified against the candidate.
 
 ## Gate summary
 
@@ -19,62 +27,61 @@ Full table: [CHECKLIST.md](CHECKLIST.md).
 | # | Gate | Status |
 | --- | --- | --- |
 | 1 | #325 forwarded onto current master | PASS |
-| 2 | No public API lost in the fold | PASS |
-| 3 | javac `--release 21` win32 | PASS |
-| 4 | javac `--release 21` GTK (linux x86_64 source set) | PASS |
-| 5 | javac `--release 21` Cocoa (macOS aarch64 source set) | PASS |
-| 6 | JUnit sources compile (`--release 21`) | PASS |
-| 7 | Headless JUnit, win32, final jar | PASS |
-| 8 | Display JUnit, win32, fork natives 4975r19, final jar: no failure introduced by the candidate | PASS |
-| 8b | Display JUnit: zero failures | FAIL |
-| 9 | `-Xcheck:jni` diagnostics in every JUnit JVM | PASS |
-| 10 | JNI glue consistent with Java natives (all platforms) | PASS |
-| 11 | #325 release tool self-tests (Linux, as in CI) | PASS |
-| 12 | Release surface (naming, module name, mandatory registrations) | PASS |
-| 13 | Default-suite non-regression | PASS |
-| 14 | Default-suite completeness (`--release`) | FAIL |
-| 15 | Mandatory sparse-state classes executed | PASS |
-| 16 | Java 21 preflight | PASS |
-| 17 | #325 headless Java 21 contract | PASS |
-| 18 | Superset jar + MAPPING/LEDGER + SHA-256 | PASS |
-| 19 | M3 exact report gate (`REPORT_GATE.md`: 245 viewport + 244 original) | PENDING |
-| 20 | Instrumented line/branch coverage (90% per changed atom) | PENDING |
-| 21 | Native builds and JUnit on GTK3/GTK4/Wayland and macOS | PENDING |
-| 22 | Test bundle builds `m3gc/` tests | FAIL |
-| 23 | OSGi visibility of `org.eclipse.swt.m3` and new internal packages | HOLD |
-| 24 | Merged PRs whose content never reached master | HOLD |
-| 25 | GitHub Actions CI on the candidate | PENDING |
-| 26 | AllBrowserTests (Edge/WebView2) | PENDING |
+| 2 | Merged PRs that never reached master | PASS |
+| 3 | No public API lost (every fold and fix) | PASS |
+| 4 | javac `--release 21` win32 / GTK / Cocoa | PASS |
+| 5 | M3 render/GPU backend compiles (Skija 0.116.3) and the gpu.m3 module builds | PASS |
+| 6 | JUnit sources compile (`--release 21`), including m3gc | PASS |
+| 7 | Headless JUnit | PASS |
+| 8 | m3gc (M3 GC over Skija) | PASS |
+| 9 | Display JUnit: default suite (AllTests without AllBrowserTests), fork natives 4975r19 | FAIL (19 real failures, all pre-existing) |
+| 10 | Display failures: none caused by the environment or the harness | FAIL (9, environment of the invisible desktop) |
+| 11 | `-Xcheck:jni` diagnostics | PASS |
+| 12 | JNI glue consistent with the Java natives (all platforms) | PASS |
+| 13 | #325 release tool self-tests | PASS |
+| 14 | Release surface (naming, module name, mandatory registrations) | PASS |
+| 15 | Default-suite completeness (`audit_suite_inventory --release`) | PASS |
+| 16 | Mandatory sparse-state classes executed | PASS |
+| 17 | Java 21 preflight (no Java 22+ API) | PASS |
+| 18 | #325 headless Java 21 contract (re-landed ItemBitSet) | PASS |
+| 19 | Superset jar + MAPPING/LEDGER + SHA-256 | PASS |
+| 20 | M3 exact two-mode report gate (`REPORT_GATE.md`) | PENDING |
+| 21 | Instrumented line/branch coverage (90% per changed atom) | PENDING |
+| 22 | Native builds and JUnit on GTK3/GTK4/Wayland and macOS | PENDING |
+| 23 | AllBrowserTests (Edge/WebView2) | PENDING |
+| 24 | OSGi Export-Package of `org.eclipse.swt.m3` and the new internal packages | HOLD (user decision) |
+| 25 | GitHub Actions CI | HOLD (user: "Enable workflows") |
+| 26 | Merge | HOLD (user: merge #335) |
 
-## Test results (Windows 11, JDK 21.0.9, `-Xcheck:jni`, invisible desktop)
+## Test results (Windows 11, JDK 21.0.9, `-Xcheck:jni`, strict checks, invisible desktop)
 
 | Run | Found | Passed | Failed | Aborted (assumption) | Skipped (`@Disabled`) | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
 | Headless (22 classes) | 190 | 187 | 0 | 3 (GTK-only) | 0 | `gates/junit-headless.*` |
-| Display (`AllNonBrowserTests` + 4 top-level `AllTests` classes) | 5,135 | 4,951 | 82 | 82 | 3 | `gates/junit-display.*`, `gates/DISPLAY_FAILURES.tsv` |
-| Master `4fb49875cc` baseline, same selection and harness | 5,109 | 4,935 | 83 | 71 | 3 | `gates/master-baseline/junit-master-display.*` |
-| `Test_org_eclipse_swt_widgets_Display` alone | 65 | 64 | 1 (input) | 0 | 0 | `gates/junit-rerun-display-alone.*` |
-| SVG classes with `org.eclipse.swt.svg` + JSVG 2.1.0 | 121 | 121 | 0 | 0 | 0 | `gates/junit-svg-fragment.*` |
+| m3gc (AllM3GcTests, M3 backend + Skija 0.116.3) | 97 | 97 | 0 | 0 | 0 | `gates/junit-m3gc.*` |
+| Display: AllTests without AllBrowserTests (330 classes reachable) | 6,264 | 6,040 | 28 | 176 | 3 | `gates/junit-display.*`, `gates/DISPLAY_FAILURES.tsv` |
 
-Every one of the 82 Display failures is classified, and none is introduced by the candidate. The candidate also fixes `Test_M3ItemRange.test_duplicateAtMaximumIntCoalescesOnce`, which still fails on master.
+The 28 Display failures are all classified, and none is introduced by the candidate:
 
 | Class | Count | Reason and evidence |
 | --- | --- | --- |
-| HARNESS_ORDER | 61 | `Test_org_eclipse_swt_widgets_Display` needs a thread with no Display. In the single-JVM console run, the nested suites run first, and every widget class leaves the default Display. Attribution runs: Button then Display gives 61 failures; M3 differentials then Display gives 61. Alone it is 64/65. |
-| ENV_SVG_FRAGMENT | 8 | The optional SVG fragment was not on the classpath. With it, 121/121 pass. |
-| PRE_EXISTING_MASTER | 7 | `VirtualPageSource` (4), `StyledText_PagedContent` (1), `Java2DCanvas` Region retention (1) and `M3SortFilterWidgets` filter row (1). Master `4fb49875cc` fails the same 7 tests with the same messages: `gates/master-baseline/`. |
-| ENV_INPUT_HIDDEN_DESKTOP | 5 | Text (2), DateTime (2) and StyledText (1) depend on `Display.post` or focus traversal. Real input does not reach the invisible test desktop. |
-| ENV_CLIPBOARD | 1 | `TextTransfer` `blank_non_empty`: "cannot open system clipboard", because another process held the shared OS clipboard. It passed in the first Display run. |
+| PRE_EXISTING_MASTER | 16 | Same tests and messages on master `4fb49875cc` in the same harness: viewport acceptance and visibility tests (Tree/Table/List/Combo viewport, AllWidgets_HiddenViewport) among the newly wired classes, and the VirtualPageSource bulk batch. Root cause and next step in `PRE_EXISTING_DEFECTS.tsv`. |
+| UPSTREAM_KNOWN_FAILING | 3 | CoolItem. Upstream AllWidgetTests lists it as `// Failing test` (0ef6051a20). |
+| ENV_INPUT_HIDDEN_DESKTOP | 7 | Display.post, focus traversal and shell activation do not reach the invisible test desktop. |
+| ENV_CLIPBOARD | 2 | Another process held the shared OS clipboard; both tests passed in earlier runs. |
 
-In addition, the `AllNonBrowserTests` suite-level leak detector reports "1 leaks found" (container failure; master 4fb49875cc reports the same, so it is pre-existing).
+The `AllNonBrowserTests` suite-level leak detector reports "1 leaks found", on master as well. The JNI checker reported 0 diagnostics in every JVM.
 
-The M3-differential attribution run was made at `88f03ae386`, before commit `4f82a7a9ab` made those two classes dispose their Display. That fix is necessary but not sufficient: the Button attribution run at `4f82a7a9ab` shows that every widget class leaves the default Display behind. A Maven or Tycho run may order the engines differently.
+Fixed in this candidate, compared with master in the same harness:
+- 61 HARNESS_ORDER failures: Test_Display now releases the thread's Display.
+- 8 ENV_SVG failures: the SVG fragment and JSVG are on the gate classpath.
+- 9 Tracker failures: the test now releases the Tracker.
+- 6 of 7 earlier pre-existing failures: StyledText_PagedContent, Java2DCanvas, M3SortFilterWidgets, and three VirtualPageSource tests (Tree page-source facades and the swap fixture).
+- The M3ItemRange MAX_VALUE test (#325).
 
-The JNI checker (`-Xcheck:jni`) reported 0 diagnostics in every JVM.
+## Included pull requests since 2026-10-13 (204)
 
-## Included pull requests since 2026-10-13 (198)
-
-MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: the merge is on the candidate and its content was already there. CONTAINED: the PR head is an ancestor of the candidate. Source: `LEDGER.tsv` (also in the jar as `META-INF/m3/LEDGER.tsv`).
+MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: the merge is on the candidate and its content was already there. CONTAINED: the PR head is an ancestor of the candidate. RE-LANDED: the PR was merged into another PR's branch, never reached master, and was folded into this candidate. CARRIED: its content arrives through #325. Source: `LEDGER.tsv` (also in the jar as `META-INF/m3/LEDGER.tsv`).
 
 | PR | merged | class | effect | title |
 | --- | --- | --- | --- | --- |
@@ -85,7 +92,7 @@ MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: 
 | #115 | 2026-10-13 | MERGED | 40 files +17403/-22 | StyledText: viewport architecture for very long text (applies Synexia #10808 postimages) |
 | #116 | 2026-10-13 | MERGED | 3 files +682/-0 | Add platform-neutral VirtualListModel and VirtualListWidth (List viewport atoms L1, L2) |
 | #117 | 2026-10-13 | MERGED | 11 files +948/-3 | Add VirtualRowExtents (variable row extents) and a GWT compile gate for the shared viewpor |
-| #118 | 2026-10-13 | MERGED | 37 files +26460/-82 | StyledText: every API under the viewport; the widget is the viewport (applies Synexia #108 |
+| #118 | 2026-10-13 | MERGED | 37 files +26460/-82 | StyledText: every API under the viewport |
 | #119 | 2026-10-13 | MERGED | 65 files +12942/-130 | m3: lazy data source, lazy tree children, lazy tab content (design first) |
 | #120 | 2026-10-13 | MERGED | 20 files +15742/-56 | StyledText: no measurement, layout, timer or redraw work while not visible (applies Synexi |
 | #121 | 2026-10-13 | MERGED | 3 files +1121/-0 | Add ViewportDamageRegion and ViewportDamageRecorder: pixel-exact damage model fed by RFB r |
@@ -93,7 +100,7 @@ MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: 
 | #123 | 2026-10-13 | MERGED | 26 files +16074/-199 | StyledText: scroll by blit, no full repaints for caret and selection, packed selection (le |
 | #124 | 2026-10-13 | MERGED | 33 files +2794/-4 | m3: win32 visibility gate — no paint/layout work for widgets that cannot be seen |
 | #125 | 2026-10-13 | MERGED | 53 files +6294/-0 | examples: Superset Viewport Showcase and Viewport Test Matrix runner |
-| #126 | 2026-10-13 | MERGED_NOOP | content already on first parent | Retained GPU planes beneath win32 GC (packed-int caches, RFB damage, Skija backend; off by |
+| #126 | 2026-10-13 | MERGED_NOOP | content already on first parent | Retained GPU planes beneath win32 GC (packed-int caches, RFB damage, Skija backend |
 | #127 | 2026-10-13 | MERGED_NOOP | content already on first parent | m3: leaf 2 planes, box model, damage hook, debounce (win32) |
 | #128 | 2026-10-13 | MERGED_NOOP | content already on first parent | m3: leaf 3 layout and resize (no-op bounds skip, ResizeBench) |
 | #129 | 2026-10-13 | MERGED_NOOP | content already on first parent | List/Combo/CCombo: native owner-data viewport for SWT.VIRTUAL (win32 LBS_NODATA) |
@@ -146,9 +153,11 @@ MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: 
 | #179 | 2026-10-16 | CONTAINED | PR head is an ancestor of the candidate | fix(project31): intrinsic Table/Tree header viewport geometry and paint cleanup |
 | #180 | 2026-10-16 | CONTAINED | PR head is an ancestor of the candidate | perf(list): avoid full-list snapshots in original stock renderer |
 | #181 | 2026-10-16 | CONTAINED | PR head is an ancestor of the candidate | fix(project31): prevent stale selection and hover state in original Table/Tree renderers |
+| #183 | 2026-10-16 | RE-LANDED | merged into m3/sparse-state-safety-20261014 | perf(swt): binary RUN lookup in original ItemBitSet, preserving sparse-state safety |
 | #184 | 2026-10-16 | MERGED | 1 files +32/-21 | Fix TreeItem removeAll reentry without per-item storage |
 | #185 | 2026-10-16 | MERGED | 4 files +338/-3 | perf(swt): adaptive live dirty-word traversal in original paint graph |
 | #186 | 2026-10-16 | MERGED | 1 files +120/-0 | docs: expand SWT homepage with concepts and practical entry points |
+| #190 | 2026-10-16 | RE-LANDED | merged into m3/original-viewport-paint-dirty-word-scan-20261015 | fix(swt): failure-atomic node/edge backing in original ViewportPaintGraph |
 | #192 | 2026-10-16 | CONTAINED | PR head is an ancestor of the candidate | fix(swt/tree): admit generic Selection only for actual row mouse presses |
 | #193 | 2026-10-16 | MERGED | 2 files +19/-11 | StyledText tests: keep measured shells unoccluded (visibility gate, API differential) |
 | #194 | 2026-10-16 | CONTAINED | PR head is an ancestor of the candidate | Initiative31 integration: merge #154-#181 onto prototype-skija (viewport-first resolutions |
@@ -156,7 +165,7 @@ MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: 
 | #196 | 2026-10-16 | MERGED | 22 files +3314/-0 | Tree as a mediated viewport (win32), default mode: TreeViewport, WidgetMode switch, record |
 | #197 | 2026-10-16 | MERGED | 3 files +49/-0 | Tree viewport: order-statistic sibling index for row mapping |
 | #198 | 2026-10-16 | MERGED | 5 files +466/-0 | All widgets as viewports: plan, measured native limits, scrollable-Composite plane geometr |
-| #199 | 2026-10-16 | MERGED | 35 files +5104/-23 | List/Combo viewport (win32): resident list box, logical bar; viewport by default |
+| #199 | 2026-10-16 | MERGED | 35 files +5104/-23 | List/Combo viewport (win32): resident list box, logical bar |
 | #200 | 2026-10-16 | MERGED | 18 files +2724/-1 | Table viewport (win32): owner-data ListView as the native viewport, shaped like the Tree v |
 | #201 | 2026-10-17 | MERGED_NOOP | content already on first parent | Viewport programme integration: Tree, Table, List, scrollables, StyledText mode, harness ( |
 | #202 | 2026-10-17 | MERGED | 11 files +970/-129 | Render modes: drawn planes (custom, skija, gpu) for Tree, Table, List + cross-mode benchma |
@@ -176,12 +185,14 @@ MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: 
 | #217 | 2026-10-17 | MERGED | 2 files +158/-0 | test(viewport): prove native row-window overflow rejection without changing SWT sources |
 | #218 | 2026-10-17 | MERGED | 2 files +136/-0 | [M3][Draft][Test] Guard SWT Tree logical selectAll across cold viewport rows |
 | #219 | 2026-10-17 | MERGED | 61 files +7243/-2 | Fix hidden Tree accessibility coordinates and preserve complete PR history |
+| #220 | 2026-10-17 | RE-LANDED | merged into m3/viewport-refinement-20261017 | Recover failure-atomic paint-graph growth without replacing viewport history |
+| #221 | 2026-10-17 | RE-LANDED | merged into m3/viewport-paintgraph-recovery-20261017 | Guard GTK scrollbar visibility notifications after callback disposal |
 | #222 | 2026-10-17 | MERGED | 2 files +66/-0 | [M3][Draft] Pin Synexia recipe custody and public-fork receiving inventory |
 | #223 | 2026-10-18 | MERGED | 3 files +140/-0 | test(swt): execute canonical Synexia bootstrap inventory through OpenRewrite SDK |
 | #224 | 2026-10-19 | MERGED | 3 files +66/-1 | [M3] Restore bootstrap runtime and pin canonical recipe ownership |
 | #225 | 2026-10-19 | MERGED | 26 files +1355/-0 | Advance recipe source custody to com.synexia |
 | #226 | 2026-10-19 | MERGED | 662 files +37277/-2412 | Synexia attribution and M3 naming re-applied after integration round 6 |
-| #227 | 2026-10-19 | MERGED | 76 files +10164/-6 | Enhanced M3 API: map of 46 capabilities; M3ItemRange, M3ScrollInfo, M3TextSegments |
+| #227 | 2026-10-19 | MERGED | 76 files +10164/-6 | Enhanced M3 API: map of 46 capabilities |
 | #228 | 2026-10-19 | MERGED | 17 files +3060/-0 | Tree viewport: JUnit coverage toward 99% (headless + hidden-desktop UI tests, COVERAGE_GAP |
 | #229 | 2026-10-19 | MERGED | 3 files +111/-2 | fix(viewport): preserve resident Table/List window bounds on overflowing edits |
 | #230 | 2026-10-19 | MERGED | 3 files +111/-2 | converge(swt): preserve native Table/List viewport bounds after overflowing edits |
@@ -191,6 +202,7 @@ MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: 
 | #235 | 2026-10-21 | MERGED | 31 files +4554/-0 | M3 label interning, short-label immediates and tree path ids (internal collections, Java o |
 | #236 | 2026-10-21 | MERGED | 14 files +1513/-0 | [Draft] Fix full-range scrollbar scaling and hit geometry through canonical recipe |
 | #237 | 2026-10-21 | MERGED | 2 files +49/-6 | fix(swt): receive exact full-range scrollbar geometry with 5.7M Java21 checks |
+| #239 | 2026-10-21 | RE-LANDED | merged into m3/swt-interning-20261019 | chore(swt): preserve interning widget benchmark source |
 | #240 | 2026-10-21 | MERGED | 12 files +516/-64 | perf(SWT): rewrite original EventTable with M3 indexed dynamic-array high-water slots |
 | #241 | 2026-10-21 | MERGED | 1 files +1/-0 | Restore the existing full-range scrollbar proof runtime closure |
 | #242 | 2026-10-22 | MERGED | 5 files +136/-0 | M3AST: apply source-sealed original compiler Maven receiver |
@@ -248,7 +260,7 @@ MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: 
 | #298 | 2026-11-06 | MERGED | 2 files +81/-0 | Tree viewport: a virtual tree whose rows fit reads 0 on every vertical bar value, as stock |
 | #300 | 2026-11-06 | MERGED | 2 files +133/-3 | Tree viewport: SWT.EmptinessChanged follows stock item ids (M3-EMPTINESS parity) |
 | #302 | 2026-10-31 | MERGED | 38 files +2060/-102 | Leaf 18: ship M3 in the product - one M3 fragment, sealed API filters, notice, artifact + |
-| #303 | 2026-11-06 | MERGED | 5 files +949/-0 | M3FilterRow follows moves of the row and the control; filter-row test waits for the filter |
+| #303 | 2026-11-06 | MERGED | 5 files +949/-0 | M3FilterRow follows moves of the row and the control |
 | #304 | 2026-10-31 | MERGED | 45 files +1704/-66 | Real-app fidelity: background parity, drawn-row images/grid/truncation/offset, RTL M3 canv |
 | #305 | 2026-11-06 | MERGED | 2 files +31/-8 | M3TreeWalk asks each parent for its child count once (M3RowMath linear on plain trees, mat |
 | #306 | 2026-11-06 | MERGED | 8 files +591/-0 | Enhanced API M3-LOG (leaf 24): M3Log structured access to SWT's asynchronous log |
@@ -267,6 +279,7 @@ MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: 
 | #320 | 2026-11-06 | MERGED | 122 files +3774/-993 | Sync upstream eclipse-platform master (supersedes #319) |
 | #321 | 2026-11-09 | MERGED | 6 files +618/-2 | Release hardening: SWT naming, JUnit integrity and instrumented coverage intake |
 | #322 | 2026-11-09 | MERGED | 17 files +1251/-3 | SWT release preparation: preserve naming and require executed M3 coverage |
+| #323 | 2026-11-09 | CARRIED | merged into release/prep-naming-docs-coverage-20261107 | Prepare SWT release packaging, readiness and source-bound evidence |
 | #324 | 2026-11-09 | MERGED | 15 files +1492/-17 | Prepare SWT M3 release naming, docs, and test coverage |
 | #326 | 2026-11-09 | MERGED | 1 files +1/-0 | [Win32] Restore OS.LVM_GETITEMSTATE: master does not compile on win32 |
 | #327 | 2026-11-09 | MERGED | 2 files +20/-6 | [Win32] Visibility gate: catch up a control with deferred work when its geometry changes |
@@ -277,22 +290,16 @@ MERGED: the merge commit is on the candidate and changes the tree. MERGED_NOOP: 
 | #333 | 2026-11-09 | MERGED | 3 files +82/-0 | [Win32] Occlusion tracker: park while no shell of the Display is visible (every-widget H) |
 | #334 | 2026-11-09 | MERGED | 2 files +48/-0 | CTabFolder: no posted tab update while the folder cannot be seen (every-widget H) |
 
-## Merged pull requests whose content is not on master (13)
+## Merged pull requests not applicable to master (7)
 
-These were merged into another PR's branch (stacked PRs, or Initiative 31 prototype lines), not into master. The table measures each PR's own added lines (25 characters or longer) against the candidate.
+| PR | outcome | proof |
+| --- | --- | --- |
+| #182 | NOT_APPLICABLE (initiative31 line) | SkijaGC.java change on the I31 Skija branch; master renamed the Skija owner (#212/#311) |
+| #187 | NOT_APPLICABLE (initiative31 line) | Drawing.java on the I31 Skija branch |
+| #188 | NOT_APPLICABLE (initiative31 line) | CustomComposite.java on the I31 branch |
+| #189 | NOT_APPLICABLE (initiative31 line) | DefaultListRenderer.java on the I31 branch |
+| #191 | NOT_APPLICABLE (owner absent) | its 3 files are the Initiative 31 drawn Tree/TreeItem under Eclipse SWT/common/widgets plus a RECEIVER note; master has no common Tree.java (git ls-tree HEAD: 0 matches); base m3/initiative31-tree-demand-mediation-20261015 belongs to the initiative31 prototype line |
+| #231 | NOT_APPLICABLE (initiative31 line) | merged into the I31 SWT-on-Swing prototype branch |
+| #238 | NOT_APPLICABLE (initiative31 line) | Eclipse SWT/swing sources of the I31 SWT-on-Swing prototype |
 
-| PR | merged into | own added lines present | title |
-| --- | --- | --- | --- |
-| #182 | m3/initiative31-tree-demand-mediation-20261015 | 0/3 | fix(skija): close original SWT SkijaGC Paint on failed draw callbacks |
-| #183 | m3/sparse-state-safety-20261014 | 1/12 | perf(swt): binary RUN lookup in original ItemBitSet, preserving sparse-state safety |
-| #187 | m3/initiative31-skija-paint-lease-20261015 | 0/30 | fix(swt): retain Drawing ownership repair on the current Initiative31 Skija branch |
-| #188 | m3/initiative31-drawing-continuity-20261015 | 0/7 | fix(project31): keep shared widget geometry valid and guard color access before mutation |
-| #189 | m3/initiative31-tree-demand-mediation-20261015 | 0/21 | perf(list): guarded paint window inside original Initiative31 List renderer |
-| #190 | m3/original-viewport-paint-dirty-word-scan-20261015 | 1/185 | fix(swt): failure-atomic node/edge backing in original ViewportPaintGraph |
-| #191 | m3/initiative31-tree-demand-mediation-20261015 | 1/93 | fix(swt): suppress duplicate generic release Selection after original Tree CHECK/disclosur |
-| #220 | m3/viewport-refinement-20261017 | 1646/2793 | Recover failure-atomic paint-graph growth without replacing viewport history |
-| #221 | m3/viewport-paintgraph-recovery-20261017 | 1647/9141 | Guard GTK scrollbar visibility notifications after callback disposal |
-| #231 | initiative31/prototype-swing/swing | n/a (initiative31 prototype line) | Initiative 31 (SWT on Swing): viewport mode for Tree, Table and List |
-| #238 | m3/initiative31-swing-viewport-20261019 | 0/54 | chore(swt): preserve initiative31 viewport sources |
-| #239 | m3/swt-interning-20261019 | 2/15 | chore(swt): preserve interning widget benchmark source |
-| #323 | release/prep-naming-docs-coverage-20261107 | 1203/1211 | Prepare SWT release packaging, readiness and source-bound evidence |
+Re-landed and carried PRs, with their own-line presence before and after, are in `STACKED_NOT_ON_MASTER.tsv`.

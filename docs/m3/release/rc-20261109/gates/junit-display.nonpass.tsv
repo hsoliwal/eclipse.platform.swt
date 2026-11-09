@@ -1,16 +1,12 @@
 mark	node	parent	test	message
 FAIL	container	JUnit Platform Suite	AllNonBrowserTests	1 leaks found, the first is:
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_graphics_GC	test_drawImageLorg_eclipse_swt_graphics_ImageIIII_withTransform()	Unsupported or unrecognized format [No SVG rasterizer found]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_graphics_GC	test_drawImageLorg_eclipse_swt_graphics_ImageIIII_withTransform_zeroTargetSize()	Unsupported or unrecognized format [No SVG rasterizer found]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_graphics_Image	test_drawImageAtSize_cacheIsReusedAtNonDefaultZoom()	Unsupported or unrecognized format [No SVG rasterizer found]
-FAIL	leaf	JUnit Jupiter/Test_M3SortFilterWidgets	test_filterRowFollowsColumnsAndFilters()	expected: <true> but was: <false>
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CCombo	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CCombo	test_copy()	expected: <23123456> but was: <123456>
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CLabel	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CTabFolder	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
 SKIP	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CTabFolder	test_checkSize()	Currently failing due to Bug 507611. E.g: Height is 50 instead of being at least 59
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_StyledText	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
 FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_StyledText	test_backspaceAndDelete()	expected: <true> but was: <false>
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_StyledText_PagedContent	test_wrapThenLargeSetTextMeasuresOnlyTheWindow()	lineSizes
 ABORT	container	AllWidgetTests/JUnit Jupiter	Test_org_eclipse_swt_custom_StyledText_ApiScale	Assumption failed: opt-in: -Dswt.styledtext.scaleTest=true (1M lines, about 1.2 GB heap)
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Button	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Button	test_setForegroundAlphaCheckButton()	Assumption failed: Alpha support for foreground colors does not exist on Win32
@@ -45,10 +41,23 @@ ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List	test_setForegroundAlp
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ProgressBar	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Sash	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Scale	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk	visibilityListenerFailurePropagatesWithoutFollowingResize()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk	showListenerMayDisposeOwnerBeforeFirstPaint()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk	hideListenerMayDisposeOnlyScrollBarAndOwnerStillReceivesResize()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk	showListenerMayDisposeOnlyScrollBarAndOwnerStillReceivesResize()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk	normalVisibilityIsSynchronousIdempotentAndSelectionNeutral()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk	nestedVisibilityDisposalStopsEveryOutstandingOwnerResize()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk	nestedResizeDisposalStopsTheOuterOwnerResize()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk	nestedScrollBarDisposalRetainsBothLiveOwnerResizeNotifications()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk	liveNestedVisibilityRetainsEventOrderAndTheLatestVisibility()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk	hideListenerMayDisposeOwner()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk	resizeListenerMayDisposeOwnerAfterNormalVisibilityNotification()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk	displayFilterMayDisposeOwnerBeforeTheVisibilityListener()	Assumption failed: assumption is not true
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrolledComposite	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Shell	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Shell	test_degenerateSizeDoesNotExpandShell()	Assumption failed: assumption is not true
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Shell	test_setMinimumSizeII_setMaximumSizeII_bothHold()	Assumption failed: clamping a programmatic resize to the maximum size is only covered on GTK3
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Shell	test_Issue450_NoShellActivateOnSetFocus()	Shell did not activate ==> expected: <null> but was: <Shell {shell2} [layout=GridLayout {marginWidth=5 marginHeight=5 horizontalSpacing=5 verticalSpacing=5}]>
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Shell	test_onTopChildShellDeactivatedByFocusInParent()	Assumption failed: an ON_TOP child shell is a GtkPopover only on GTK4
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Shell	test_setMaximumSizeII_setSizeAboveMaximumIsClamped()	Assumption failed: clamping a programmatic resize to the maximum size is only covered on GTK3
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Shell	test_setMaximumSizeII_resetAllowsLargerSize()	Assumption failed: resetting the maximum size with 0 is only covered on GTK3
@@ -70,10 +79,102 @@ ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree	test_virtualWin32Inde
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree	test_virtualWin32RootInsertionRestoresOnlyRequiredPrefix()	Assumption failed: white-box test of the native frontier that the win32 Tree viewport replaces
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree	test_virtualWin32QueuedFrontierHonorsLogicalShrink()	Assumption failed: white-box test of the native frontier that the win32 Tree viewport replaces
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_CoordinateVisibilityGtk	selectedRowsExcludeCollapsedCoordinatesAndRetainPublicItemIdentity()	Assumption failed: assumption is not true
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_treePaintNeverMaterializesRowsWithoutApiCalls()	root rows painted without TreeItems ==> expected: <0> but was: <22>
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_treeUnknownChildrenFetchedOnExpandWithMaskBitPlaceholder()	the loading child is a mask bit, not a TreeItem ==> expected: <22> but was: <29>
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_treeBulkChildCountIsBatchedWithPreciseDamageOnly()	class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource cannot access a member of class org.eclipse.swt.widgets.Tree with package access
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain()	evicted blocks were swapped out ==> expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_treeBulkChildCountIsBatchedWithPreciseDamageOnly()	only an operation larger than one screen is batched ==> expected: <1> but was: <0>
+ABORT	leaf	JUnit Jupiter/StyledTextViewportProofTest	test_tenMillionLinesWordWrap()	Assumption failed: opt-in proof lane
+ABORT	leaf	JUnit Jupiter/StyledTextViewportProofTest	test_tenMillionLinesFixedHeight()	Assumption failed: opt-in proof lane
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CCombo_Virtual	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CTabFolder_OptimizationBench	measure()	Assumption failed: -Dswt.allwidgets.bench=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CTabFolder_ScaleOracle	measure()	Assumption failed: -Dswt.ctabfolder.oracle=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CTabFolder_ViewportDifferential	recordedAgainstReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_ScrolledComposite_OptimizationBench	measure()	Assumption failed: -Dswt.allwidgets.bench=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_StyledText_ViewportDifferential	recordedAgainstReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	unselectedCTabFolderTab()	ctabfolder-tab: pixel 14,3 ==> expected: <RGB {0, 144, 0}> but was: <RGB {0, 143, 0}>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	collapsedExpandItem()	expandbar-collapsed: pixel 14,3 ==> expected: <RGB {0, 144, 0}> but was: <RGB {0, 143, 0}>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	scrolledCompositeChildScrolledOut()	scrolledcomposite: paint passes after the show ==> expected: <1> but was: <2>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	expandItemScrolledOut()	expandbar-scrolled: catch-up events after the show ==> expected: <1> but was: <0>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	zeroSize()	zero-size: pixel 14,3 ==> expected: <RGB {0, 144, 0}> but was: <RGB {0, 143, 0}>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	minimizedShell()	minimized-shell: pixel 14,3 ==> expected: <RGB {0, 144, 0}> but was: <RGB {0, 143, 0}>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	stackLayoutPageUnderTheTop()	stacklayout: pixel 14,3 ==> expected: <RGB {0, 144, 0}> but was: <RGB {0, 143, 0}>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance	editTextMatchFindsTheFirstLogicalRow()	the last page is on top ==> expected: <0..99999/20@99980> but was: <0..100/20@81>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportDifferential	editableComboAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportDifferential	readOnlyComboAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportDifferential	readOnlyComboWithVerifyAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportDifferential	closedDeltasAnswerLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_CoolBar_ViewportDifferential	recordedAgainstReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_CoolItem	test_setControlLorg_eclipse_swt_widgets_Control()	expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_CoolItem	test_getBounds()	expected: <86> but was: <11>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_CoolItem	test_setSizeII()	expected: <Point {50, 50}> but was: <Point {11, 50}>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnDeltaRepaint	treeDeltasRepaintOnlyTheirRows()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnDeltaRepaint	listDeltasRepaintOnlyTheirRows()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnDeltaRepaint	tableDeltasRepaintOnlyTheirRows()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnHiddenViewport	treeHiddenDeltasPaintOnceOnShow()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnHiddenViewport	tableHiddenDeltasPaintOnceOnShow()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnHiddenViewport	listHiddenDeltasPaintOnceOnShow()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnRenderThread	tableFramesComeFromTheRenderThread()	Assumption failed: a drawn mode with -Dswt.drawn.renderThread=true only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnRenderThread	listFramesComeFromTheRenderThread()	Assumption failed: a drawn mode with -Dswt.drawn.renderThread=true only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnRenderThread	treeFramesComeFromTheRenderThread()	Assumption failed: a drawn mode with -Dswt.drawn.renderThread=true only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnResizeSweep	listResizeIsADelta()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnResizeSweep	tableResizeIsADelta()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnResizeSweep	treeResizeIsADelta()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ExpandBar_OptimizationBench	measure()	Assumption failed: -Dswt.allwidgets.bench=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ExpandBar_ScaleOracle	measure()	Assumption failed: -Dswt.expandbar.oracle=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ExpandBar_ViewportDifferential	recordedAgainstReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportAcceptance	spliceOutsideTheWindowTouchesNoNativeRow()	native row operations of a removal above the window with an anchor: 99 ==> expected: <true> but was: <false>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	hiddenDeltasAnswerLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	zoomWhileScrolledAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	resizeAndFontWhileScrolledAnswerLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	singleSelectionListAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	extendedSelectionListAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	setItemCountAnswersLikeTheOriginal()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	simpleMultiSelectionListAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_Virtual	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_GeometryDifferential	recordedAgainstReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrolledComposite_ViewportDifferential	recordedAgainstStock()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_DrawnInteraction	fastScrollAndTypingUnderModelChurn()	Assumption failed: a drawn mode (custom, m3, gpu) only
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_Splice	hiddenTableAppliesOneWindowPatchWhenShown() 42466 ms	paint passes after showing ==> expected: <1> but was: <2>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_Splice	spliceAnswersLikeTheItemApi()	at 17 removed 4 inserted 0 top 43 selection [] hidden ==> expected: <count 58 top 43 selection [] focus -1 mark -1 texts row 0 row 1 row 2 row 3 row 4 row 5 row 6 row 7 row 8 row 9 row 10 row 11 row 12 row 13 row 14 row 
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_StockItems	armsNoApiSequenceReaches()	Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_StockItems	guardsOfTheStockStore()	Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_StockItems	denseStoreGrowsScansAndShrinks()	Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_StockItems	keyedStoreLooksUpGrowsAndCompacts()	Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_StockItems	growsByHalfWhileRedrawIsOff()	Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_ViewportDifferential	seededScriptsAnswerLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Text_OptimizationBench	measure()	Assumption failed: -Dswt.allwidgets.bench=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Text_ScaleOracle	measure()	Assumption failed: -Dswt.text.oracle=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ToolBar_OptimizationBench	measure()	Assumption failed: -Dswt.allwidgets.bench=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ToolBar_ScaleOracle	measure()	Assumption failed: -Dswt.toolbar.oracle=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom	glyphsAreCrispAndSeamlessAtTheZoom()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportCoverage	mediatedItemQueriesGuardTheirArguments()	Assumption failed: Tree viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportCoverage	focusWithoutACaretLandsOnTheLogicalTopRow()	Assumption failed: Tree viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportCoverage	collapsingOverTheCaretSelectsTheCollapsedRow()	Assumption failed: Tree viewport mediation is not active in this build
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportCoverage	aSingleTreeSelectsTheCaretAfterRemoval()	the native caret move on deletion deselects ==> expected: <0> but was: <1>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportCoverage	theLastDisposalReleasesTheImageList()	Assumption failed: Tree viewport mediation is not active in this build
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDeltas	treeInAHiddenParentAppliesOnePatchOnShow()	TVM messages while hidden: 1939 (0x111C=1660 0x113E=196 0x110A=42 0x1101=39 0x110B=1 0x113F=1) ==> expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDeltas	hiddenTreeAppliesOnePatchOnShow()	TVM messages while hidden: 1939 (0x111C=1660 0x113E=196 0x110A=42 0x1101=39 0x110B=1 0x113F=1) ==> expected: <true> but was: <false>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDifferential	seededScriptsWithCustomDrawAnswerLikeStockSwt()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDifferential	seededScriptsWithPresentationAnswerLikeStockSwt()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDifferential	seededExpansionKeysAnswerLikeStockSwt()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDifferential	seededSplicesAnswerLikeStockSwt()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDifferential	seededScriptsWithCheckAndColumnsAnswerLikeStockSwt()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDifferential	seededScriptsAnswerLikeStockSwt()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportEdges	customDrawSurvivesTheTreeBecomingEmpty()	Assumption failed: Tree viewport mediation is not active in this build
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportEdges	keysOnEmptyAndZeroHeightTrees()	the caret is the off-window anchor ==> expected: <root 20> but was: <null>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportEdges	selectionsWithNullEntries()	Assumption failed: Tree viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScaleClassic	tree1MillionNodes()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScaleClassic	ctabFolder50HeavyTabsEager()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScaleClassic	tabFolder50HeavyTabsEager()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScaleClassic	table10MillionRowsSlowSource()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScalePaged	tree1MillionNodes()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScalePaged	ctabFolder50HeavyTabsLazy()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScalePaged	table10MillionRowsSlowSource()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScalePaged	treeBillionNodesFlatHeap()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScalePaged	tabFolder50HeavyTabsLazy()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/ViewportScreenshotRegressionTest	test_logicalScrolledContentSnapshotsAtTenMillionRows()	Assumption failed: viewport screenshot lane disabled
+ABORT	leaf	JUnit Jupiter/ViewportScreenshotRegressionTest	test_capturePathsReleaseGraphicsOnSuccessAndFailure()	Assumption failed: viewport screenshot lane disabled
+ABORT	leaf	JUnit Jupiter/ViewportScreenshotRegressionTest	test_swtScreenCaptureTracksVisiblePixels()	Assumption failed: viewport screenshot lane disabled
+ABORT	leaf	JUnit Jupiter/ViewportScreenshotRegressionTest	test_viewportScreenshotRegression()	Assumption failed: viewport screenshot lane disabled
+ABORT	leaf	JUnit Jupiter/ViewportScreenshotRegressionTest	test_boundedTableSnapshotsUseLogicalScrollbarAndOverscan()	Assumption failed: viewport screenshot lane disabled
+ABORT	leaf	JUnit Jupiter/ViewportScreenshotRegressionTest	test_screenCaptureRejectsInvalidTargets()	Assumption failed: viewport screenshot lane disabled
 ABORT	leaf	JUnit Jupiter/Test_M3BulkUpdatesDifferential	virtualWidgetsAnswerLikeTheOfficialJar()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
 ABORT	leaf	JUnit Jupiter/Test_M3BulkUpdatesDifferential	plainWidgetsAnswerLikeTheOfficialJar()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
 ABORT	leaf	JUnit Jupiter/Test_M3DiffApplyDifferential	listBesideAVirtualTableAnswersLikeTheOfficialJar()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
@@ -85,79 +186,15 @@ ABORT	leaf	JUnit Jupiter/Test_M3ScrollBarModelDifferential	virtualWidgetsAnswerL
 ABORT	leaf	JUnit Jupiter/Test_M3ScrollBarModelDifferential	plainWidgetsAnswerLikeTheOfficialJar()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
 ABORT	leaf	JUnit Jupiter/Test_M3ScrollMementoDifferential	virtualWidgetsAnswerLikeTheOfficialJar()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
 ABORT	leaf	JUnit Jupiter/Test_M3ScrollMementoDifferential	plainWidgetsAnswerLikeTheOfficialJar()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_syncExecLjava_lang_Runnable_dispose()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_syncCall_dispose()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_setDataLjava_lang_StringLjava_lang_Object()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_isDisposed()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_manyDispose()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_syncCall_SWTException()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_addListenerILorg_eclipse_swt_widgets_Listener()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getWarnings()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_setSynchronizerLorg_eclipse_swt_widgets_Synchronizer()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_removeFilterILorg_eclipse_swt_widgets_Listener()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_syncExecLjava_lang_Runnable()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getDoubleClickTime()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_syncCall_RuntimeException()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_setWarningsZ()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_beep()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_syncCall_Exception()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlII()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getSystemColorI()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_asyncExecLjava_lang_Runnable_dispose()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getSystemFont()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getDPI()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getDismissalAlignment()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_syncCall_concurrentCallable_Exception()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getClientArea()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_update()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getPrimaryMonitor()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_postLorg_eclipse_swt_widgets_Event()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_Constructor()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getBounds()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getCursorLocation()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_setCursorLocationLorg_eclipse_swt_graphics_Point(TestInfo)	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_ConstructorLorg_eclipse_swt_graphics_DeviceData()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_syncCall()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getActiveShell()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_removeListenerILorg_eclipse_swt_widgets_Listener()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getDepth()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getFocusControl()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getCursorControl()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getSyncThread()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_Executor()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getShells()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_wakeBeforeSleepIsNotLost()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getThread()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getCurrent()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_addFilterILorg_eclipse_swt_widgets_Listener()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	container	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlLorg_ecl...	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_disposeExecLjava_lang_Runnable()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getDefault()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_timerExecILjava_lang_Runnable()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_setCursorLocationII(TestInfo)	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_findDisplayLjava_lang_Thread()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_syncCall_concurrentCallable()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	container	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlLorg_ecl...	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_setDataLjava_lang_Object()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_asyncExecLjava_lang_Runnable()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlIIII()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getIconDepth()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getFontListLjava_lang_StringZ()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_getMonitors()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_close()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_sleep()	Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_awt_Java2DCanvas	test_ownedNativeResourcesReturnToBaselineAndObserverDetectsRetention()	transient Image/GC/Region/Transform must be disposed: [Region {RegionHandle[handle=906237861, zoom=100]}, Image {{100=org.eclipse.swt.graphics.Image$DestroyableImageHandle@69ea7bb1}}, Region {RegionHandle[handle=32047165
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_postLorg_eclipse_swt_widgets_Event()	Display#post failed, probably because screen is not rendered (bug 407862) or because Shell is not focussed ==> expected: <true> but was: <false>
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_awt_Java2DCanvas	test_screenPanCoverUncoverEqualsFreshFrame()	Assumption failed: viewport screenshot lane disabled
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_dnd_Clipboard	test_setContentsBothClipboards()	Assumption failed: assumption is not true
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_dnd_Clipboard	test_getContentsBothClipboards()	Assumption failed: assumption is not true
 SKIP	leaf	JUnit Jupiter/Test_org_eclipse_swt_dnd_FileTransfer	test_nativeToJava()	Disabled on operating system: Windows 11 ==> AWT's DataFlavor.javaFileListFlavor used to test this method is not quite
-FAIL	container	Test_org_eclipse_swt_dnd_TextTransfer/test_javaToNative(String, String)	blank_non_empty	Failed while running thread
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_internal_SVGRasterizer	test_ConstructorLorg_eclipse_swt_graphics_Device_ImageFileNameProvider()	Unsupported or unrecognized format [No SVG rasterizer found]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_internal_SVGRasterizer	test_currentColorAtTargetSize()	Unsupported or unrecognized format [No SVG rasterizer found]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_internal_SVGRasterizer	test_currentColor()	Unsupported or unrecognized format [No SVG rasterizer found]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_internal_SVGRasterizer	test_ConstructorLorg_eclipse_swt_graphics_Device_ImageDataProvider()	Unsupported or unrecognized format [No SVG rasterizer found]
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_internal_SVGRasterizer	test_ConstructorLorg_eclipse_swt_graphics_Device_InputStream()	Unsupported or unrecognized format [No SVG rasterizer found]
+FAIL	container	Test_org_eclipse_swt_dnd_TextTransfer/test_javaToNative(String, String)	emoji_grinning_face	Failed while running thread
 ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_program_Program	test_getImageData_scalesWithZoom()	Assumption failed: only GTK3 looks program icons up by size
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_internal_laf_M3SystemTheme_OptimizationBench	measure()	Assumption failed: -Dswt.allwidgets.bench=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_internal_render_ThreadRole	eachRoleRunsWhatItOwnsOnly()	Assumption failed: run with -Dswt.m3.threadCheck=true
 ABORT	leaf	JUnit Jupiter/Test_ViewportBoundsGtk	treeHiddenAncestorCannotResurrectAllocatedPage()	Assumption failed: GTK3 native viewport producer qualification
 ABORT	leaf	JUnit Jupiter/Test_ViewportBoundsGtk	treeZeroWidthThenReopenPreservesIdentityInBothModels()	Assumption failed: GTK3 native viewport producer qualification
 ABORT	leaf	JUnit Jupiter/Test_ViewportBoundsGtk	treeZeroHeightRejectsStalePageAndRestoresDemandCallbacks()	Assumption failed: GTK3 native viewport producer qualification
@@ -168,4 +205,7 @@ ABORT	leaf	JUnit Jupiter/Test_ViewportTableAdjustment	settledPhysicalScrollingRe
 ABORT	leaf	JUnit Jupiter/Test_ViewportTableAdjustment	resizeAndShortOrEmptyModelsSettleWithReadyNativeGeometry()	Assumption failed: assumption is not true
 ABORT	leaf	JUnit Jupiter/Test_ViewportTextLifecycle	parentDisposalReleasesEditorsAndDispatchesOneDisposeEvent()	Assumption failed: assumption is not true
 ABORT	leaf	JUnit Jupiter/Test_ViewportTextLifecycle	singleAndMultilineEditorsReturnNativeRegistrationsToBaseline()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_VirtualNativeTableModel	sameGenerationDoesNotMakeIterBelongToAnotherModel()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_VirtualNativeTableModel	logicalCellAllocationRejectsForeignModelAndClearsOutput()	Assumption failed: assumption is not true
+ABORT	leaf	JUnit Jupiter/Test_VirtualNativeTableModel	maximumLogicalCountUsesConstantNativeModelStateAndResetInvalidatesIter()	Assumption failed: assumption is not true
 ABORT	container	JUnit Jupiter	ViewportResourceRegressionTest	Assumption failed: Dedicated resource gate is opt-in

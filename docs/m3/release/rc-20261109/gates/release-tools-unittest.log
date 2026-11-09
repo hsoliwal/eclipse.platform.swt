@@ -1,88 +1,16 @@
-test_all_registered_after_repair (test_audit_suite_inventory.SuiteInventoryTest.test_all_registered_after_repair) ... ok
-test_commented_entries_do_not_count_as_registration (test_audit_suite_inventory.SuiteInventoryTest.test_commented_entries_do_not_count_as_registration) ... ok
-test_known_baseline_debt_is_visible_without_false_completion (test_audit_suite_inventory.SuiteInventoryTest.test_known_baseline_debt_is_visible_without_false_completion) ... ok
-test_missing_selected_class_fails (test_audit_suite_inventory.SuiteInventoryTest.test_missing_selected_class_fails) ... ok
-test_new_test_without_default_suite_entry_fails (test_audit_suite_inventory.SuiteInventoryTest.test_new_test_without_default_suite_entry_fails) ... ok
-test_removed_reviewed_source_fails (test_audit_suite_inventory.SuiteInventoryTest.test_removed_reviewed_source_fails) ... ok
-test_both_classes_have_executed (test_check_junit_coverage.JunitEvidenceTest.test_both_classes_have_executed) ... ok
-test_failure_is_not_pass (test_check_junit_coverage.JunitEvidenceTest.test_failure_is_not_pass) ... ok
-test_missing_class_is_not_coverage (test_check_junit_coverage.JunitEvidenceTest.test_missing_class_is_not_coverage) ... ok
-test_no_reports_is_not_pass (test_check_junit_coverage.JunitEvidenceTest.test_no_reports_is_not_pass) ... ok
-test_skip_is_not_pass (test_check_junit_coverage.JunitEvidenceTest.test_skip_is_not_pass) ... ok
-test_existing_unregistered_test_is_a_blocker (test_check_release_surface.ReleaseSurfaceTest.test_existing_unregistered_test_is_a_blocker) ... ok
-test_source_without_a_junit_test_is_a_blocker (test_check_release_surface.ReleaseSurfaceTest.test_source_without_a_junit_test_is_a_blocker) ... ok
-test_valid_naming_and_suite_registration (test_check_release_surface.ReleaseSurfaceTest.test_valid_naming_and_suite_registration) ... ok
-test_wrong_module_name_is_a_blocker (test_check_release_surface.ReleaseSurfaceTest.test_wrong_module_name_is_a_blocker) ... ok
-test_cli_writes_honest_json_and_release_mode_refuses (test_headless_coverage_audit.HeadlessCoverageAuditTest.test_cli_writes_honest_json_and_release_mode_refuses) ... ok
-test_duplicate_json_keys_are_refused (test_headless_coverage_audit.HeadlessCoverageAuditTest.test_duplicate_json_keys_are_refused) ... ok
-test_forged_totals_and_sha_are_refused (test_headless_coverage_audit.HeadlessCoverageAuditTest.test_forged_totals_and_sha_are_refused) ... ok
-test_historical_head_and_missing_platform_never_pass (test_headless_coverage_audit.HeadlessCoverageAuditTest.test_historical_head_and_missing_platform_never_pass) ... ok
-test_invalid_status_test_counts_and_limits_are_refused (test_headless_coverage_audit.HeadlessCoverageAuditTest.test_invalid_status_test_counts_and_limits_are_refused) ... ok
-test_malformed_counts_and_duplicate_rows_are_refused (test_headless_coverage_audit.HeadlessCoverageAuditTest.test_malformed_counts_and_duplicate_rows_are_refused) ... ok
-test_real_counts_report_deficit_without_qualifying_release (test_headless_coverage_audit.HeadlessCoverageAuditTest.test_real_counts_report_deficit_without_qualifying_release) ... ok
-test_recorded_test_manifest_rejects_missing_or_duplicate_entries (test_headless_coverage_audit.HeadlessCoverageAuditTest.test_recorded_test_manifest_rejects_missing_or_duplicate_entries) ... ok
-test_recorded_test_mutation_is_reported_as_stale (test_headless_coverage_audit.HeadlessCoverageAuditTest.test_recorded_test_mutation_is_reported_as_stale) ... ok
-test_recorded_test_path_refuses_escape_and_symlink (test_headless_coverage_audit.HeadlessCoverageAuditTest.test_recorded_test_path_refuses_escape_and_symlink) ... ok
-test_untrusted_paths_and_symlinks_are_refused (test_headless_coverage_audit.HeadlessCoverageAuditTest.test_untrusted_paths_and_symlinks_are_refused) ... ok
-test_actual_source_preserves_jni_instrumentation_and_platform_flags (test_jni_workflow.JniWorkflowContract.test_actual_source_preserves_jni_instrumentation_and_platform_flags) ... ok
-test_disabled_native_tests_are_rejected (test_jni_workflow.JniWorkflowContract.test_disabled_native_tests_are_rejected) ... ok
-test_duplicate_jni_argument_is_rejected (test_jni_workflow.JniWorkflowContract.test_duplicate_jni_argument_is_rejected) ... ok
-test_each_required_argument_cannot_be_removed (test_jni_workflow.JniWorkflowContract.test_each_required_argument_cannot_be_removed) ... ok
-test_missing_diagnostic_artifacts_are_rejected (test_jni_workflow.JniWorkflowContract.test_missing_diagnostic_artifacts_are_rejected) ... ok
-test_wrong_execution_phase_is_rejected (test_jni_workflow.JniWorkflowContract.test_wrong_execution_phase_is_rejected) ... ok
-test_allowed_dependencies_and_glibc_version_order_pass (test_native_dependency_check.NativeDependencyCheck.test_allowed_dependencies_and_glibc_version_order_pass) ... FAIL
-test_disallowed_dependency_fails_before_version_check (test_native_dependency_check.NativeDependencyCheck.test_disallowed_dependency_fails_before_version_check) ... FAIL
-test_glibc_overflow_fails_and_reports_greatest_version (test_native_dependency_check.NativeDependencyCheck.test_glibc_overflow_fails_and_reports_greatest_version) ... FAIL
-test_no_dependencies_or_glibc_symbols_pass (test_native_dependency_check.NativeDependencyCheck.test_no_dependencies_or_glibc_symbols_pass) ... FAIL
-test_objdump_failure_preserves_status_and_cleans_private_file (test_native_dependency_check.NativeDependencyCheck.test_objdump_failure_preserves_status_and_cleans_private_file) ... FAIL
-test_overlapping_invocations_keep_distinct_private_version_files (test_native_dependency_check.NativeDependencyCheck.test_overlapping_invocations_keep_distinct_private_version_files) ... FAIL
-test_readelf_failure_preserves_status_without_creating_tempfile (test_native_dependency_check.NativeDependencyCheck.test_readelf_failure_preserves_status_without_creating_tempfile) ... <frozen ntpath>:121: ResourceWarning: unclosed file <_io.FileIO name=3 mode='rb' closefd=True>
+................................FFFFFFFF....C:\Program Files\Python312\Lib\threading.py:1050: ResourceWarning: unclosed file <_io.FileIO name=3 mode='rb' closefd=True>
+  self._tstate_lock = _set_sentinel()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-<frozen ntpath>:121: ResourceWarning: unclosed file <_io.FileIO name=4 mode='rb' closefd=True>
+C:\Program Files\Python312\Lib\threading.py:1050: ResourceWarning: unclosed file <_io.FileIO name=4 mode='rb' closefd=True>
+  self._tstate_lock = _set_sentinel()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-<frozen ntpath>:121: ResourceWarning: unclosed file <_io.FileIO name=5 mode='rb' closefd=True>
+C:\Program Files\Python312\Lib\threading.py:1050: ResourceWarning: unclosed file <_io.FileIO name=5 mode='rb' closefd=True>
+  self._tstate_lock = _set_sentinel()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-<frozen ntpath>:121: ResourceWarning: unclosed file <_io.FileIO name=6 mode='rb' closefd=True>
+C:\Program Files\Python312\Lib\threading.py:1050: ResourceWarning: unclosed file <_io.FileIO name=6 mode='rb' closefd=True>
+  self._tstate_lock = _set_sentinel()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-FAIL
-test_space_containing_library_filename_is_one_argument (test_native_dependency_check.NativeDependencyCheck.test_space_containing_library_filename_is_one_argument) ... FAIL
-test_all_skipped_backend_blocks_release_surface (test_readiness.ReadinessTest.test_all_skipped_backend_blocks_release_surface) ... ok
-test_all_skipped_backend_is_not_executed (test_readiness.ReadinessTest.test_all_skipped_backend_is_not_executed) ... ok
-test_binding_cannot_replace_junit_failures_or_coverage_floor (test_readiness.ReadinessTest.test_binding_cannot_replace_junit_failures_or_coverage_floor) ... ok
-test_binding_cli_outputs_content_binding_without_release_admission (test_readiness.ReadinessTest.test_binding_cli_outputs_content_binding_without_release_admission) ... ok
-test_binding_refuses_hardlinks_and_copied_backend_reports (test_readiness.ReadinessTest.test_binding_refuses_hardlinks_and_copied_backend_reports) ... ok
-test_binding_refuses_incomplete_unknown_or_duplicate_manifest_fields (test_readiness.ReadinessTest.test_binding_refuses_incomplete_unknown_or_duplicate_manifest_fields) ... ok
-test_binding_refuses_invalid_duplicate_and_incomplete_report_inventory (test_readiness.ReadinessTest.test_binding_refuses_invalid_duplicate_and_incomplete_report_inventory) ... ok
-test_binding_refuses_manifest_identity_and_run_inconsistency (test_readiness.ReadinessTest.test_binding_refuses_manifest_identity_and_run_inconsistency) ... ok
-test_binding_refuses_report_substitution_extra_and_missing_files (test_readiness.ReadinessTest.test_binding_refuses_report_substitution_extra_and_missing_files) ... ok
-test_binding_refuses_staged_unstaged_and_deleted_tracked_source (test_readiness.ReadinessTest.test_binding_refuses_staged_unstaged_and_deleted_tracked_source) ... ok
-test_binding_refuses_substituted_jacoco (test_readiness.ReadinessTest.test_binding_refuses_substituted_jacoco) ... ok
-test_binding_refuses_untracked_source_but_allows_ignored_build_outputs (test_readiness.ReadinessTest.test_binding_refuses_untracked_source_but_allows_ignored_build_outputs) ... ok
-test_binding_refuses_wrong_head_non_git_source_and_subdirectory (test_readiness.ReadinessTest.test_binding_refuses_wrong_head_non_git_source_and_subdirectory) ... ok
-test_binding_requires_full_lowercase_expected_sha (test_readiness.ReadinessTest.test_binding_requires_full_lowercase_expected_sha) ... ok
-test_bound_report_flags_are_paired_even_in_source_mode (test_readiness.ReadinessTest.test_bound_report_flags_are_paired_even_in_source_mode) ... ok
-test_bound_synthetic_surface_still_cannot_admit_product_release (test_readiness.ReadinessTest.test_bound_synthetic_surface_still_cannot_admit_product_release) ... ok
-test_cli_argument_validation_and_json_output (test_readiness.ReadinessTest.test_cli_argument_validation_and_json_output) ... ok
-test_complete_synthetic_surface_is_not_product_evidence (test_readiness.ReadinessTest.test_complete_synthetic_surface_is_not_product_evidence) ... ok
-test_directory_requires_real_test_report_names (test_readiness.ReadinessTest.test_directory_requires_real_test_report_names) ... ok
-test_duplicate_backend_paths_are_refused (test_readiness.ReadinessTest.test_duplicate_backend_paths_are_refused) ... ok
-test_duplicate_jacoco_counter_types_are_refused (test_readiness.ReadinessTest.test_duplicate_jacoco_counter_types_are_refused) ... ok
-test_evaluate_reports_unknown_backend_and_bad_inputs (test_readiness.ReadinessTest.test_evaluate_reports_unknown_backend_and_bad_inputs) ... ok
-test_failed_junit_and_insufficient_branch_coverage_block (test_readiness.ReadinessTest.test_failed_junit_and_insufficient_branch_coverage_block) ... ok
-test_inconsistent_reported_counts_are_refused (test_readiness.ReadinessTest.test_inconsistent_reported_counts_are_refused) ... ok
-test_invalid_or_empty_junit_fails_closed (test_readiness.ReadinessTest.test_invalid_or_empty_junit_fails_closed) ... ok
-test_jacoco_counts_and_missing_branch (test_readiness.ReadinessTest.test_jacoco_counts_and_missing_branch) ... ok
-test_jacoco_invalid_root_and_counts_refused (test_readiness.ReadinessTest.test_jacoco_invalid_root_and_counts_refused) ... ok
-test_junit_and_jacoco_hash_the_same_snapshot_they_parse (test_readiness.ReadinessTest.test_junit_and_jacoco_hash_the_same_snapshot_they_parse) ... ok
-test_junit_counts_separate_skips_and_failures (test_readiness.ReadinessTest.test_junit_counts_separate_skips_and_failures) ... ok
-test_junit_missing_names_errors_and_bad_aggregation (test_readiness.ReadinessTest.test_junit_missing_names_errors_and_bad_aggregation) ... ok
-test_junit_refuses_symlink_inputs_and_nonregular_inventory (test_readiness.ReadinessTest.test_junit_refuses_symlink_inputs_and_nonregular_inventory) ... ok
-test_main_script_entrypoint_is_read_only (test_readiness.ReadinessTest.test_main_script_entrypoint_is_read_only) ... ok
-test_manifest_naming_and_source_anchors (test_readiness.ReadinessTest.test_manifest_naming_and_source_anchors) ... ok
-test_missing_backend_and_coverage_block_release (test_readiness.ReadinessTest.test_missing_backend_and_coverage_block_release) ... ok
-test_missing_manifest_is_reported (test_readiness.ReadinessTest.test_missing_manifest_is_reported) ... ok
-test_nested_aggregate_suite_does_not_double_count (test_readiness.ReadinessTest.test_nested_aggregate_suite_does_not_double_count) ... ok
-test_release_cannot_disable_coverage_thresholds (test_readiness.ReadinessTest.test_release_cannot_disable_coverage_thresholds) ... usage: python.exe -m unittest [-h] [--root ROOT] [--release] [--junit JUNIT]
+................................usage: python.exe -m unittest [-h] [--root ROOT] [--release] [--junit JUNIT]
                               [--jacoco JACOCO] [--source-sha SOURCE_SHA]
                               [--evidence-manifest EVIDENCE_MANIFEST]
                               [--min-line MIN_LINE] [--min-branch MIN_BRANCH]
@@ -94,10 +22,7 @@ usage: python.exe -m unittest [-h] [--root ROOT] [--release] [--junit JUNIT]
                               [--min-line MIN_LINE] [--min-branch MIN_BRANCH]
                               [--json-out JSON_OUT]
 python.exe -m unittest: error: coverage minimum must be finite and between zero and one
-ok
-test_source_only_never_becomes_release_ready (test_readiness.ReadinessTest.test_source_only_never_becomes_release_ready) ... ok
-test_unattributed_aggregate_suite_uses_testcase_counts (test_readiness.ReadinessTest.test_unattributed_aggregate_suite_uses_testcase_counts) ... ok
-
+...
 ======================================================================
 FAIL: test_allowed_dependencies_and_glibc_version_order_pass (test_native_dependency_check.NativeDependencyCheck.test_allowed_dependencies_and_glibc_version_order_pass)
 ----------------------------------------------------------------------
@@ -170,6 +95,6 @@ AssertionError: 0 != 127 : /bin/bash: F:\m3-scratch\rc-20261109\swt\bundles\org.
 
 
 ----------------------------------------------------------------------
-Ran 79 tests in 20.235s
+Ran 79 tests in 20.527s
 
 FAILED (failures=8)
