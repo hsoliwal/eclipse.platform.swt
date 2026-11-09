@@ -5,9 +5,16 @@ SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
 
 ## Candidate identity and current status
 
-The source baseline for this preparation is
-`hsoliwal/eclipse.platform.swt@62460082d7caa06b21c49da99abbab53f73b3ffc`
-(7 November 2026 inspection). The candidate remains **HOLD** until the complete
+The upstream source baseline for this preparation is
+`hsoliwal/eclipse.platform.swt@62460082d7caa06b21c49da99abbab53f73b3ffc`.
+The inspected PR #324 preparation head is
+`494247dc23f4115abf5a3bb358c5f6eeb8831d21` (7 November 2026 inspection).
+Its Java test inputs are byte-identical to the reviewed report-contract
+snapshot `b0b91b4d9ae468adef48ec6255a83acbd2e5df3b`; the newer commits
+change the historical audit and documentation. The unapplied supplement adds
+four RowExtents methods and binds their changed test-source hash separately.
+These inputs do not identify
+the final integrated commit. The candidate remains **HOLD** until the complete
 candidate commit, native artifacts and platform test results are bound together.
 A successful packaging job or an old per-widget report does not close that gate.
 
@@ -22,7 +29,9 @@ selection. It does not rename public APIs, OSGi identities or native entry point
 | Bundle and automatic module | Keep `org.eclipse.swt` and existing platform fragment names |
 | Current source version | `3.138.0.qualifier` / Maven `3.138.0-SNAPSHOT`; this is not a published version |
 | Native loader version | Keep the source-derived SWT major/minor/revision and matching generated native version |
-| CI Windows/macOS package | `swt-windows-macos.zip`, artifact `swt-windows-macos-bundle` |
+| CI primary candidate artifact | `swt-windows-macos-candidate-<full-source-sha>-attempt-<run-attempt>` |
+| Candidate ZIP and checksum | `swt-windows-macos-candidate-<first-12-source-sha>.zip` and its `.sha256` sidecar |
+| Deprecated aggregate alias | `swt-all-platforms-bundle` containing the byte-identical `swt-all-platforms.zip` |
 | Donor identifiers | Retain them in provenance, licences, binding dependencies and existing interoperability APIs |
 
 SWT terminology remains Canvas, GC, Image, Control, Table, Tree, ScrollBar and
@@ -58,9 +67,11 @@ branches in `M3ColumnFilter` (30), `M3ColumnSort` (9),
 denominators. The aggregate 87.24% also fails the release floor.
 The branch contains new boundary JUnit tests, including
 `test_duplicateAtMaximumIntCoalescesOnce`, which is **expected to fail**
-against the current coalescing source due to signed 32-bit adjacency
-overflow. Fix both source comparisons through an executed, source-sealed
-canonical Synexia recipe, then rerun the focused and default suites.
+against the unmodified PR #324 coalescing source due to signed 32-bit
+adjacency overflow. The release supplement widens both adjacency bounds
+and preserves the regression. That repaired source intentionally differs
+from the historical production hash. Qualify the repair through an executed,
+source-sealed canonical Synexia recipe, then rerun the focused and default suites.
 The read-only [coverage audit](../../tools/release/headless_coverage_audit.py)
 reports test-input drift and source hashes; it never qualifies the product.
 
@@ -83,6 +94,13 @@ its Eclipse-run environment as JavaSE-25 and Javadoc source level 25. See the
 The workflow can also be started with `workflow_dispatch` for a frozen candidate
 commit. The parent is still a SNAPSHOT coordinate, so record the resolved parent
 identity again for each release campaign.
+
+For release qualification, set the reusable build workflow's optional
+`strict_javadoc` input to `true` on Java 25 legs. It adds
+`-Pjavadoc -DfailOnJavadocErrors=true`; the default remains `false` for existing
+callers. Archive the resolved effective POM showing `failOnError=true`, the
+Javadoc log and the generated API artifact. Enabling the existing `api_check`
+input alone does not override the SWT bundle's permissive Javadoc property.
 
 The [matrix](../../.github/workflows/maven.yml) runs the existing
 [build workflow](../../.github/workflows/build.yml). Native builds and JUnit run
@@ -108,15 +126,17 @@ native binaries are build outputs and are not committed by this preparation.
 
 ## Test selection and coverage
 
-The default chain is `AllTests` -> `AllNonBrowserTests` -> `AllWidgetTests`.
-The last suite now explicitly includes all **26 ordinary `Test_M3*` classes**
-currently present in the live test source tree, exposing their **216 `@Test`
-methods** to normal test discovery. Those numbers are a source inventory, not an
-executed pass count or a percentage of SWT coverage.
+`AllTests` reaches the **26 ordinary `Test_M3*` classes** through
+`AllNonBrowserTests` -> `AllWidgetTests`; their **228 proposed `@Test` methods** retain
+that single selection path. `AllNonBrowserTests` also selects
+`AllM3DifferentialTests` with the seven classes below (13 methods), plus
+`Test_org_eclipse_swt_internal_render_RowPaintRetention` (4 methods). The scoped
+release inventory is **34 classes and 245 methods**, each selected once. These
+are source counts, not an executed pass count or a percentage of SWT coverage.
 
-The following specialized suites remain explicit jobs:
+The differential suite adds these existing classes to default discovery:
 
-| Suite | Required evidence / reason for separate execution |
+| Class | Required evidence / campaign scope |
 | --- | --- |
 | `Test_M3BulkUpdatesDifferential` | Official SWT recording, then candidate replay |
 | `Test_M3DiffApplyDifferential` | Official SWT recording, then candidate replay |
@@ -131,6 +151,30 @@ and treat it as an independent official oracle. Use the existing
 [differential harness](VIEWPORT_DIFFERENTIAL_HARNESS.md) and preserve oracle jar,
 recording, candidate, mode, platform and JVM identities. Run viewport and original
 modes in separate JVMs because mode selection is a startup contract.
+
+Recording generation remains a separate official-reference stage. Missing
+recordings can make the existing comparison tests skip; neither registration nor
+a green Maven exit with those skips establishes release acceptance. After the
+platform test stage, the [exact M3 report gate](release/REPORT_GATE.md) requires
+all 245 methods to pass in viewport mode. Original mode requires 244 passes and
+only the existing `Test_M3RowMath.test_millionRowVirtualTreeAnswersFromTheLanes`
+skip. All 11 recorded-oracle methods must pass in both modes.
+
+Adding the differential suite and retention class intentionally expands normal
+`AllTests` discovery. The seeded million-row campaign now runs when `AllTests`
+is selected; its time/memory budget and the complete new suite path require
+platform qualification before this selection change is accepted for release.
+The three added boundary methods in the reviewed PR #324 source remain
+required, including `Test_M3ItemRange.test_duplicateAtMaximumIntCoalescesOnce`.
+The coalescing repair widens the adjacency bound in both run counting and
+emission; preserve the regression and regenerate current source-bound Java
+and coverage evidence. The earlier 77-test headless receipt does not include
+these additions or qualify the repaired implementation. No resource budget
+or existing test body is changed by this supplement. Four additional
+RowExtents methods cover SMART and AUTO alignment, exact anchoring boundaries and
+sparse maximum row counts with long offsets. Their source proposal and the
+independent Java17 model harness do not establish a JUnit/provider pass or
+measured line/branch coverage; those require current executed evidence.
 
 See [the test guide](../../tests/org.eclipse.swt.tests/Readme.md) for focused
 commands and [enhanced API coverage](enhanced-api/coverage/COVERAGE.md) for the
@@ -162,6 +206,16 @@ independent release gates where safe, not by choosing a single branch's
 overwrite or dropping a test. Produce a file-by-file before/after/selection
 receipt for every nontrivial conflict.
 
+PR #323 at `72781d5ef8703140ad28ca0d0df485daf1470ec8` is now based on
+PR #321 at `ffae7cacb52a9c1670a557f6eff92c324bf0ca9c`. Its upstream
+[readiness workflow and guide](../RELEASE_READINESS.md#ci-source-identity-and-evidence-scope)
+already integrate both source capture and candidate packaging. Both jobs
+explicitly select and assert the PR head or event commit, retain source commit
+and tree records, and name artifacts by source and run attempt. Release-branch
+pushes also run the packager. Preserve that workflow; the earlier local
+workflow-union replacement is superseded. These records do not authenticate
+a platform producer or admit the product release.
+
 After convergence, re-run the product in this order: source/version/notice
 inventory → naming and OSGi/JNI source parity → Java 21 and Java 25
 compilation → default and specialized JUnit tests including the
@@ -176,12 +230,30 @@ authorized by this integration plan alone.**
 
 ## Packaging and release evidence
 
-The existing [JAR packaging workflow](../../.github/workflows/build-swt-jars.yml)
-builds with `-DskipTests=true`. Its combined archive is now named for the platforms
-it actually includes: Windows and macOS. Linux jobs remain disabled there while
-the existing older-glibc build route is reconciled; the archive makes no Linux
-availability claim. `BUILD.txt` records the exact source commit, included platform
-families and the fact that tests were skipped by that workflow.
+The selected [candidate packaging workflow](../../.github/workflows/build-swt-jars.yml)
+builds native JARs with `-DskipTests=true`; its separate candidate-packager check
+runs that tool's JUnit and JaCoCo gate. The primary artifact identifies the full
+source SHA and producing run attempt. Its ZIP contains only the declared Windows
+and macOS candidates; Linux jobs remain disabled while the existing older-glibc
+build route is reconciled. Neither the primary name nor the retained aggregate
+alias establishes Linux availability.
+
+Follow the [candidate packaging guide](../RELEASE_PACKAGING.md) for the exact
+five-platform inventory, source markers, runtime fragment/host identities, numeric
+bundle versions, native-payload checks, JAR entry integrity and input hashes.
+The archive contains `candidate-manifest.json`, `CANDIDATE-STATUS.txt` and
+`SHA256SUMS`; its external `.zip.sha256` binds the complete ZIP. The manifest
+labels this same downstream SWT repository `SWT (M3 fork)` and records
+`candidate-unqualified`, the full source SHA, producing run/attempt URL, file
+hashes and the unverified native-test/coverage state. The first-12-SHA ZIP suffix
+is a convenience; use the full SHA in the manifest as the identity.
+
+The deprecated aggregate ZIP remains byte-identical to the primary candidate for
+existing consumers. This selected contract supersedes the alternative
+`swt-windows-macos-bundle` / `swt-windows-macos.zip` / `BUILD.txt` naming proposed
+in PR #324. Choosing these artifact names does not rename Java/JNI/OSGi APIs,
+allocate a release version, qualify a combined workflow or establish SWT runtime
+coverage. The packager's synthetic JAR tests qualify only the packaging tool.
 
 Before promotion, retain all of the following for the same candidate:
 
@@ -204,3 +276,7 @@ Before promotion, retain all of the following for the same candidate:
 
 This document prepares the candidate and its evidence requirements. Tag creation,
 release publication and a GA compatibility statement follow executed gates.
+
+## Integrated receiving candidate
+
+The current additive receiving scope and unresolved OSGi/native gates are recorded in [the integration contract](release/INTEGRATION.md).

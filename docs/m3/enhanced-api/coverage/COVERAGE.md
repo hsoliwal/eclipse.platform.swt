@@ -23,11 +23,23 @@ M3TokenVocabulary. The unexecuted native install/widget paths remain uncovered.
 These numbers do not meet the programme's 99% line/branch target, and no
 historical run is substituted for those missing executions.
 
-`AllWidgetTests` now selects the 26 ordinary M3 contract classes (216 test
-methods in the source inventory) so they participate in normal native CI. The
-seven specialized recording/scale differential classes retain explicit separate
-execution. See [the test guide](../../../../tests/org.eclipse.swt.tests/Readme.md)
-and [release requirements](../../RELEASE.md).
+The reviewed PR #324 test source at
+`b0b91b4d9ae468adef48ec6255a83acbd2e5df3b` contains 26 ordinary M3 contract
+classes with 219 methods, selected by `AllWidgetTests`; those Java inputs
+are unchanged at preparation head `494247dc23f4115abf5a3bb358c5f6eeb8831d21`.
+The release supplement
+also selects seven differential classes (13 methods) and RowPaintRetention
+(4 methods), originally giving 34 classes / 236 methods. The current
+unapplied supplement adds four RowExtents methods, giving 26 ordinary
+classes / 223 methods and 34 total classes / 240 methods. SMART and AUTO alignment,
+exact anchoring boundaries and sparse maximum row counts are the new
+coverage targets. Any focused Java17 JUnit and JaCoCo results require separate
+source/test/classfile-bound reports and do not qualify Java21/25, the default
+suite or native backends. An independent model harness is not instrumentation. Independent official recording generation remains separate
+from candidate replay. These source counts do
+not revise the historical 77-test execution above. See
+[the test guide](../../../../tests/org.eclipse.swt.tests/Readme.md) and
+[release requirements](../../RELEASE.md).
 
 ## Reproducible gap audit and new regression tests
 
@@ -47,7 +59,9 @@ python3 tools/release/headless_coverage_audit.py --root . \
 ### Source and test-input hash verification
 
 A read-only SHA-256 comparison against this branch's GitHub source was completed
-on 2026-11-07. All **10/10 measured production source inputs** still match
+on 2026-11-07 for unmodified preparation head
+`494247dc23f4115abf5a3bb358c5f6eeb8831d21`, before the release supplement
+repairs M3ItemRange. All **10/10 measured production source inputs** still match
 the original focused receipt. Of its **9 recorded JUnit test source files**,
 **7 match** and two have changed through this release-preparation branch:
 
@@ -82,12 +96,14 @@ under unchanged denominators, not predicted results of the new tests.
 On this release-preparation branch, `Test_M3RowExtents` adds negative range
 endpoint, zero-length edit, reset and reinsert cases, while `Test_M3ItemRange`
 adds safe upper-int positive controls **and an explicit release-blocking
-regression** for duplicate `Integer.MAX_VALUE` indices. The latter is expected
-to fail on the present source because the coalescing adjacency check overflows;
-this is not a recorded test run. These additions have **not** been counted in
-the 77/77 execution receipt. Repair the implementation through the authorized
-source-sealed recipe, then run the failing and passing controls together and
-regenerate the current source-pinned JaCoCo numerator and denominator.
+regression** for duplicate `Integer.MAX_VALUE` indices. The release repair
+widens the adjacency bound in both run counting and emission while retaining
+the regression unchanged. These additions and the repaired owner have
+**not** been counted in the 77/77 execution receipt. Qualify the repair through
+the authorized source-sealed recipe, then run the regression and passing
+controls together and regenerate current source-pinned JaCoCo counters.
+The historical receipt intentionally fails source-hash validation against
+the repaired M3ItemRange; keep it as historical evidence, not current coverage.
 
 The per-file gap workflow uploads exact source commit/tree and audit JSON,
 but is **not** a substitute for Java21/JNI/platform tests or a current-head

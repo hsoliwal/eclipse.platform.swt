@@ -620,4 +620,80 @@ public class Test_M3ColumnSort {
 		sort.setParents (null);
 		assertThrows (IllegalArgumentException.class, () -> sort.child (-1, 0));
 	}
+
+	@Test
+	public void test_duplicateKeysStayStableAcrossFilterAndSourceEdits () {
+		for (int direction : new int [] {SWT.UP, SWT.DOWN}) {
+			List<Integer> values = new ArrayList<> ();
+			List<Boolean> kept = new ArrayList<> ();
+			for (int row = 0; row < 130; row++) {
+				values.add (row % 3);
+				kept.add (row % 2 == 0);
+			}
+			values.set (64, Integer.MIN_VALUE);
+			values.set (65, Integer.MAX_VALUE);
+			M3ColumnFilter filter = new M3ColumnFilter (1, values.size (), null);
+			filter.setValues (0, row -> kept.get (row) ? 1 : 0, 1);
+			M3ColumnSort sort = new M3ColumnSort (1, filter);
+			sort.setKey (0, M3ColumnKey.ofInts (values::get));
+			sort.setSortKeys (new int [] {0}, new int [] {direction});
+			assertStableFilteredOrder (sort, values, kept, direction);
+			kept.set (64, false);
+			kept.set (65, true);
+			values.set (1, 0);
+			kept.set (1, true);
+			filter.rowsChanged (65, 64, 1, 65);
+			assertStableFilteredOrder (sort, values, kept, direction);
+			values.add (63, 0);
+			kept.add (63, true);
+			values.add (64, 0);
+			kept.add (64, true);
+			filter.rowsInserted (63, 2);
+			assertStableFilteredOrder (sort, values, kept, direction);
+			values.subList (64, 67).clear ();
+			kept.subList (64, 67).clear ();
+			filter.rowsRemoved (64, 3);
+			assertStableFilteredOrder (sort, values, kept, direction);
+			filter.clearAll ();
+			Collections.fill (kept, true);
+			assertStableFilteredOrder (sort, values, kept, direction);
+		}
+	}
+
+	/* Independent stable collection sort; source identity breaks ties in either direction. */
+	private static void assertStableFilteredOrder (M3ColumnSort sort, List<Integer> values, List<Boolean> kept, int direction) {
+		List<Integer> expected = new ArrayList<> ();
+		for (int row = 0; row < values.size (); row++) {
+			if (kept.get (row)) expected.add (row);
+		}
+		Comparator<Integer> key = Comparator.comparingInt (values::get);
+		if (direction == SWT.DOWN) key = key.reversed ();
+		expected.sort (key.thenComparingInt (Integer::intValue));
+		assertArrayEquals (expected.stream ().mapToInt (Integer::intValue).toArray (), order (sort));
+		for (int row = 0; row < values.size (); row++) assertEquals (expected.indexOf (row), sort.unmap (row));
+		assertInverse (sort);
+	}
+
+	@Test
+	public void test_rejectedSortKeysPreserveTheViewAndCopyInputs () {
+		int [] values = {2, 1, 1, Integer.MIN_VALUE, Integer.MAX_VALUE};
+		M3ColumnSort sort = new M3ColumnSort (2, values.length);
+		sort.setKey (0, M3ColumnKey.ofInts (row -> values [row]));
+		int [] columns = {0}, directions = {SWT.UP};
+		sort.setSortKeys (columns, directions);
+		columns [0] = 1;
+		directions [0] = SWT.DOWN;
+		int [] expected = {3, 1, 2, 0, 4};
+		assertArrayEquals (expected, order (sort));
+		assertThrows (IllegalArgumentException.class, () -> sort.setSortKeys (new int [] {0, 1}, new int [] {SWT.UP, SWT.UP}));
+		assertArrayEquals (expected, order (sort));
+		assertThrows (IllegalArgumentException.class, () -> sort.setSortKeys (new int [] {0, 0}, new int [] {SWT.DOWN, SWT.UP}));
+		assertArrayEquals (expected, order (sort));
+		assertThrows (IllegalArgumentException.class, () -> sort.setSortKeys (new int [] {0}, new int [] {SWT.NONE}));
+		assertArrayEquals (expected, order (sort));
+		assertEquals (1, sort.getSortKeyCount ());
+		assertEquals (0, sort.getSortColumn (0));
+		assertEquals (SWT.UP, sort.getSortDirection (0));
+		assertInverse (sort);
+	}
 }

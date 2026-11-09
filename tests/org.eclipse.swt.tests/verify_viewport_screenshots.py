@@ -155,11 +155,14 @@ def check_java2d(output):
     return receipt
 
 
-def qualified_suite(report, class_name, expected_names):
+def qualified_suite(report, class_name, expected_names, *, expected_skips=()):
+    """Require exact method outcomes; existing callers continue to forbid all skips."""
+    expected_skips = set(expected_skips)
+    require(expected_skips <= set(expected_names), 'Expected skip is not an expected method')
     suite = ET.parse(report).getroot()
     counts = {key: int(suite.get(key, '-1')) for key in ('tests', 'failures', 'errors', 'skipped')}
-    require(counts == {'tests': len(expected_names), 'failures': 0, 'errors': 0, 'skipped': 0},
-            'JUnit counters: ' + str(counts))
+    require(counts == {'tests': len(expected_names), 'failures': 0, 'errors': 0,
+                       'skipped': len(expected_skips)}, 'JUnit counters: ' + str(counts))
     cases = list(suite.iter('testcase'))
     require(len(cases) == len(expected_names), 'JUnit testcase count disagrees with counters')
     seen = set()
@@ -167,11 +170,16 @@ def qualified_suite(report, class_name, expected_names):
         name = case.get('name', '').removesuffix('()')
         require(case.get('classname') == class_name, 'Unexpected JUnit class')
         require(name in expected_names and name not in seen, 'Missing, duplicate or unexpected JUnit method: ' + name)
-        require(not any(case.find(tag) is not None for tag in ('failure', 'error', 'skipped')),
+        require(not any(case.find(tag) is not None for tag in ('failure', 'error')),
                 'Unqualified JUnit method: ' + name)
+        skipped = list(case.findall('skipped'))
+        require(len(skipped) == (1 if name in expected_skips else 0),
+                'Unexpected or missing JUnit skip: ' + name)
         seen.add(name)
-    require(not any(list(suite.iter(tag)) for tag in ('failure', 'error', 'skipped')),
-            'JUnit report contains failed or skipped execution')
+    require(not any(list(suite.iter(tag)) for tag in ('failure', 'error')),
+            'JUnit report contains failed execution')
+    require(len(list(suite.iter('skipped'))) == len(expected_skips),
+            'JUnit report contains an unexpected skipped execution')
     return counts
 
 

@@ -1,0 +1,1377 @@
+{
+  "schema": "SYNEXIA_QUALIFIED_PRODUCT_RESULTS_V1",
+  "copyright": "2026 Hitesh Soliwal and Contributors to the Synexia Project",
+  "license": "Apache-2.0; preserves per-file product and upstream rights",
+  "kind": "passive_product_output_traceability",
+  "repository": "hsoliwal/eclipse.platform.swt",
+  "baseline_commit": "62460082d7caa06b21c49da99abbab53f73b3ffc",
+  "status": "HOLD",
+  "release_ready": false,
+  "provides_release_gate_evidence": false,
+  "source_authority": {
+    "repository": "hsoliwal/com.synexia",
+    "commit": "bd34c366f6d151fe4bab992a1c955f8dc393e7b7",
+    "review": "https://github.com/hsoliwal/com.synexia/pull/16890",
+    "task_path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108",
+    "candidate_source_root": "43df1275bbad27069d82f36830a3308b2e1b648420a1d70c56a75cf8406292bf",
+    "qualification_base_commit": "fc48d05e149d66dbfa46c65229780ef1cab7743c",
+    "scope": "Published primary 82-output task only; detached follow-up evidence is outside this commit.",
+    "references": [
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/QUALIFICATION.json",
+        "sha256": "3a43d6931226bb780b9d048c22c68c65b389c313b09f84ec8e6b17637783e5da",
+        "git_blob": "a26a80d2245b29db66f96e0a7b8d9170fbe8e6a2",
+        "bytes": 6625,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/QUALIFICATION.json"
+      },
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/SOURCE_SEAL.tsv",
+        "sha256": "43df1275bbad27069d82f36830a3308b2e1b648420a1d70c56a75cf8406292bf",
+        "git_blob": "72d084cd1130f284de55f76db45610968efa2d6a",
+        "bytes": 69695,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/SOURCE_SEAL.tsv"
+      },
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/POSTIMAGES.tsv",
+        "sha256": "11da15aa7bdbd5df9e11c28560ccf275e7845e47b3a6243d8d82846671036661",
+        "git_blob": "216730d4eb3ab4c30c48b139508ce4767859ee12",
+        "bytes": 13995,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/POSTIMAGES.tsv"
+      },
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/EXECUTION.tsv",
+        "sha256": "2acfae0f6a0d05d6b3016cb6c92112fa330ffcbd90bd507bd3aa3d6b308cc0cc",
+        "git_blob": "91429ada7ddd6e3c2461525b68806da68302f2f2",
+        "bytes": 350,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/EXECUTION.tsv"
+      },
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/sdk-qualification-junit.xml",
+        "sha256": "f2b208c23ab12845dac1fcdacb3cd31cb44c7a683de2832bd2b7a7a403c3d525",
+        "git_blob": "becb395648daed894d08b9b5a658900b20ca091b",
+        "bytes": 24512,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/sdk-qualification-junit.xml"
+      },
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/sdk-materialization-junit.xml",
+        "sha256": "9dd45f54f2e4f95f5e1c8497d96e3eb2144744c22070ff4354dd0357324afc3d",
+        "git_blob": "e1f0e08c8c548d6007bc2654c8e0398aab73045a",
+        "bytes": 22507,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/sdk-materialization-junit.xml"
+      },
+      {
+        "path": "synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedTextSnapshotRecipe.java",
+        "sha256": "a3f37d3afc9d110e2ce1abcc5cd560a19694a93021e37cbf266a449fedd88467",
+        "git_blob": "11ac99b9de6856f39a0529f97238979e75eee3e7",
+        "bytes": 47969,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedTextSnapshotRecipe.java"
+      },
+      {
+        "path": "synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedJavaSnapshotRecipe.java",
+        "sha256": "8086edabe37358c7812bbe0c15d881e5062771c8ea1626d1c64ce49331b049f0",
+        "git_blob": "32d221395a4625b752e9f59b74b80607200582a8",
+        "bytes": 46103,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedJavaSnapshotRecipe.java"
+      },
+      {
+        "path": "synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedYamlSnapshotRecipe.java",
+        "sha256": "468b261599a55e266b709e8fdf28c2bb81020d85a129adedada1da5fcb0a5def",
+        "git_blob": "6bbf7714b1d16f19c005851bfe014e7d6e23ef4c",
+        "bytes": 14568,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedYamlSnapshotRecipe.java"
+      },
+      {
+        "path": "synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedPomSnapshotRecipe.java",
+        "sha256": "0f65e6c019a5d2b87f5a73925eaf0d401afc9341af056c20a684a509bc7a6ec4",
+        "git_blob": "a66dff32cc08656c84805eb1346e1e91b97ecd06",
+        "bytes": 11625,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedPomSnapshotRecipe.java"
+      }
+    ]
+  },
+  "recipe_executions": [
+    {
+      "task": "m3-release-preparation-20261108",
+      "actual_openrewrite_sdk": true,
+      "openrewrite_version": "8.48.0",
+      "java": "Eclipse Temurin 21.0.13+9",
+      "maven": "3.9.16",
+      "qualification_junit_tests": 5,
+      "materialization_junit_tests": 1,
+      "refusal_cases": 137,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "product_outputs": 82,
+      "groups": 11,
+      "fixed_point": true,
+      "worker_widths": [
+        1,
+        2
+      ],
+      "orders": [
+        "serial",
+        "reversed",
+        "two_workers"
+      ],
+      "exact_postimage_hashes_verified": true,
+      "qualification": {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/QUALIFICATION.json",
+        "sha256": "3a43d6931226bb780b9d048c22c68c65b389c313b09f84ec8e6b17637783e5da",
+        "git_blob": "a26a80d2245b29db66f96e0a7b8d9170fbe8e6a2",
+        "bytes": 6625,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/QUALIFICATION.json"
+      },
+      "source_manifest": {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/SOURCE_SEAL.tsv",
+        "sha256": "43df1275bbad27069d82f36830a3308b2e1b648420a1d70c56a75cf8406292bf",
+        "git_blob": "72d084cd1130f284de55f76db45610968efa2d6a",
+        "bytes": 69695,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/SOURCE_SEAL.tsv"
+      },
+      "output_manifest": {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/POSTIMAGES.tsv",
+        "sha256": "11da15aa7bdbd5df9e11c28560ccf275e7845e47b3a6243d8d82846671036661",
+        "git_blob": "216730d4eb3ab4c30c48b139508ce4767859ee12",
+        "bytes": 13995,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/POSTIMAGES.tsv"
+      },
+      "execution_manifest": {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/EXECUTION.tsv",
+        "sha256": "2acfae0f6a0d05d6b3016cb6c92112fa330ffcbd90bd507bd3aa3d6b308cc0cc",
+        "git_blob": "91429ada7ddd6e3c2461525b68806da68302f2f2",
+        "bytes": 350,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/EXECUTION.tsv"
+      },
+      "qualification_junit_report": {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/sdk-qualification-junit.xml",
+        "sha256": "f2b208c23ab12845dac1fcdacb3cd31cb44c7a683de2832bd2b7a7a403c3d525",
+        "git_blob": "becb395648daed894d08b9b5a658900b20ca091b",
+        "bytes": 24512,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/sdk-qualification-junit.xml"
+      },
+      "materialization_junit_report": {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/sdk-materialization-junit.xml",
+        "sha256": "9dd45f54f2e4f95f5e1c8497d96e3eb2144744c22070ff4354dd0357324afc3d",
+        "git_blob": "e1f0e08c8c548d6007bc2654c8e0398aab73045a",
+        "bytes": 22507,
+        "url": "https://github.com/hsoliwal/com.synexia/blob/bd34c366f6d151fe4bab992a1c955f8dc393e7b7/synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-20261108/evidence/sdk-8.48.0/sdk-materialization-junit.xml"
+      }
+    }
+  ],
+  "files": [
+    {
+      "path": ".github/workflows/build-swt-jars.yml",
+      "source_sha256": "3f21b2fc26ebcb76bf1d12e891878ee3f8113ae96ded16a2de6870d3590e19c1",
+      "postimage_sha256": "307657cdfd0686f2e29637e68f75cf70566b73e1c14b6b82f20a069632e49a82",
+      "source_git_blob_sha1": "2ffbbdfc2cb5397d6ea2855b4fe5dc2a6b05bcce",
+      "postimage_git_blob_sha1": "a0143c0c6ab082a2c8ef73201d6200b632c0bd91",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-yaml"
+      ]
+    },
+    {
+      "path": ".github/workflows/build.yml",
+      "source_sha256": "0f198c2af2e7561c8027ea6a2055fa9f361fdf2e5a5a02fba36af7b41dfbf245",
+      "postimage_sha256": "61aeb86db86f518502ce5c2eafd814b91916b3cd6d0c1c0fd170e815e3ef3a12",
+      "source_git_blob_sha1": "60eb5bcc219329385935e0b3042a28f623d6d009",
+      "postimage_git_blob_sha1": "5fc669aa2ae154ac1d0c27f2cf95193a1bb0f0f6",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-yaml"
+      ]
+    },
+    {
+      "path": ".github/workflows/m3-release-readiness.yml",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "6758e5514f62c4e81dc6f9c571b7613882fbc53256757d1474958cdc848ca165",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "c2f13d2e2c36433088c8889f83a5b67929117abc",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-yaml"
+      ]
+    },
+    {
+      "path": ".github/workflows/m3-swt-coverage-audit.yml",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "ec119ef5ca42a9c5b57212b45e1773de6a63db2a4a941472ea2d37602afb1488",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "ec3c663225fc15a1881d72cc0d278c4cf3ceb03d",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-yaml"
+      ]
+    },
+    {
+      "path": ".github/workflows/maven.yml",
+      "source_sha256": "c1013f2fcc40751858b73fb3594831a14ed329975a25e14dd1e4c6adbda04360",
+      "postimage_sha256": "04044d5562d4d5cb13e8cb5c34232c9a2cb16604f12ea3b3b39918f9ef6da3f2",
+      "source_git_blob_sha1": "829b62f0efbbbeb0c98138bf4c4e2cc6c5c996a5",
+      "postimage_git_blob_sha1": "107317cf43c3ade82618ac7e0b52d274ed25c2e8",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-yaml"
+      ]
+    },
+    {
+      "path": ".github/workflows/pr-checks.yml",
+      "source_sha256": "18a260c59e9a6fc60bf14a065d4a1d929496ca3ce7315ae442e89b54a6f3550c",
+      "postimage_sha256": "aa84e857bd1b93d554a1d2ddd9b7f1abf0667ad7471f2675ccad8c7631fdd922",
+      "source_git_blob_sha1": "b89ad04b3b29175bdd34465b8228df37b4c0a430",
+      "postimage_git_blob_sha1": "5bea5e209d1d3e9d7422e8ec0abcb130a6385961",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-yaml"
+      ]
+    },
+    {
+      "path": ".github/workflows/release-preflight.yml",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "47be6e348f9ca00aacd189cdf2af4ad51a398a7985ad4955d4a541cdc55f8ca8",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "7b16933919741ca1c6f4cb99a65a6affbed44622",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-yaml"
+      ]
+    },
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "7fef4871cb74188b0cfd9ea183c3836847f05f0f9ea4462e58bb155239dfd104",
+      "postimage_sha256": "061590e53e51e3cbec0dc739a9648f287d21a8557f13b183b9400c4c8a23e04c",
+      "source_git_blob_sha1": "e0ebc6f23d970a7c381eb514200924f99f276513",
+      "postimage_git_blob_sha1": "48c9134ebfd574d93db72e2c585883598d272b65",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text",
+        "swt-release-matrix-docs-20261108"
+      ],
+      "primary_postimage_sha256": "04745a278364fc4d89182877cf3d06a8bc162ac36c9732e06ef8a6559c8b9a63",
+      "primary_postimage_git_blob_sha1": "2258262e661a30b04c256f68bfc7973010210edb",
+      "followup_source_root": "f2c4a8630464f0753ac79d3d7859dbe66f60301e31c3fbd718926c1648bec920"
+    },
+    {
+      "path": "README.md",
+      "source_sha256": "30a30ec9d0db6bfd7993c1b82c9b71f31817a76f9ad1e8ffbe18ff895893a69c",
+      "postimage_sha256": "d089dd58229055f0ef06f928634112cac062e6ffd935a20ce913cf22fcdb7f49",
+      "source_git_blob_sha1": "410a6827327f5ca30d7284c052bf82aefa99f1f2",
+      "postimage_git_blob_sha1": "442173b74131d0a7d3ee8cda18f90237087c800e",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT PI/gtk/library/check_dependencies.sh",
+      "source_sha256": "5ebb7ac419f30373cacfeb6cff276267624634f28d21869bfd41ba727db6a23f",
+      "postimage_sha256": "cb6dc161198b5be2a99cbee251d03bbe8e6b57f85f749476c0717c0068872e54",
+      "source_git_blob_sha1": "88edb34cf3026942dbc6415666a2bd8616a65dc4",
+      "postimage_git_blob_sha1": "cfa55f35309d4ed55e56ea82ff0b8e9bdb73def2",
+      "source_mode": "100755",
+      "mode": "100755",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/M3ItemRange.java",
+      "source_sha256": "2bc799b65fa54183aef02438f2f18c55ff31726cbfa0d670fadaf3e45654be2b",
+      "postimage_sha256": "7a5709b7d06602a90284c27ecf6257539694dd988419ca1a9928b8f437d996d5",
+      "source_git_blob_sha1": "29e8b42fff262f0c78848e2df10b24055faf12b7",
+      "postimage_git_blob_sha1": "ca8d80eee4ccb80a451664d5848e50484ebc395d",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    },
+    {
+      "path": "docs/RELEASE_PACKAGING.md",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "dcc7a3059a0cdba7f75ef53f8d2881bf29e31259b9af0b5d895c7f4baa90dca3",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "d3cffd65d52ef754919d60a2b12963852a747b0e",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "docs/RELEASE_PREPARATION.md",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "bd51e73febb0719d4ede1738b6579381886b2d1e31a8fa6057eeaa972ab67f1d",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "9e728986cc9ace4f2c79742a99020a9a48484c0f",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text",
+        "swt-release-matrix-docs-20261108"
+      ],
+      "primary_postimage_sha256": "7beceac29b33ec83291e075c4d6c42edefd0835762a631f1635bce3c7c28b533",
+      "primary_postimage_git_blob_sha1": "ffe9999d0d5969f7d83a2591d2cafff34a7b24c6",
+      "followup_source_root": "f2c4a8630464f0753ac79d3d7859dbe66f60301e31c3fbd718926c1648bec920"
+    },
+    {
+      "path": "docs/RELEASE_READINESS.md",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "1cda45e260bf7618f2763a5d1329f4a9aadfa32646d2d34cf414ed2704bc2cde",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "dc739bdfef09965e0bd90f8463f18ca4ad40ae28",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "docs/m3/README.md",
+      "source_sha256": "3d547074af0e6103b4d302d6c2b46ffe9ee01f928cd15f6106a469c994f1bb8b",
+      "postimage_sha256": "5e4c1d50778505e92cf7da16e4b5a605b5ee37ec6acd6a468a94b14de1c569d9",
+      "source_git_blob_sha1": "6d1051eec4ff23fde38b384827ef3deb70cfa7bd",
+      "postimage_git_blob_sha1": "a9b19286f63fb1f0470061d54c8f5c7d8ecf67e4",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "docs/m3/RELEASE.md",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "a6b4c7057b814062b92b0b4cd7fe46cafdc98a215a6040742c81d0ad6b77f6d1",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "c782d2208f090467c13e6cba4e7d25a9e91c3a58",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "docs/m3/enhanced-api/coverage/COVERAGE.md",
+      "source_sha256": "8945f7e875cf2ee1eb682d048138a0d92de769e7972151d095c4c0912c1f7fa5",
+      "postimage_sha256": "0335cd40e634549677da81393b396bd6bc38ca223093a472192c06a3bd5dfd3e",
+      "source_git_blob_sha1": "f325094de8ed180ff965409942eb2ef89186afdf",
+      "postimage_git_blob_sha1": "79569dd0780be523e267d1e42fedd9ef905d81c7",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "docs/m3/enhanced-api/coverage/HEADLESS_20261107.json",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "9f8c55de534c306e6b2cdcd395f2f84de18b9b0e3a2da9f12452d9df8807cb0e",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "d470108bf1cde2b274cff5ae030032f12e6bedb5",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "docs/m3/release/INTEGRATION.md",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "7209007eb1c35586adf5dd96847ddd12a74b777bc43a857fb2aded64fd94afc3",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "af623f8c656d11c6456a8a30100200a90cfb4668",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "docs/m3/release/REPORT_GATE.md",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "2a5e7244e1a97e9bd5659bf61aa36ce4ad488fcd6d0400c33c8d2666e031ba39",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "490f33201225f48e60f1ccd9c0c5fd31d05e4e43",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "m3/qualification/release-preparation-20261107/RECEIVER_RECEIPT.json",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "86ced13163d9fa737384d2cba914a823610c1c0fad0573396474f4cfcf7a9ff5",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "1c4efaaa34502367eadeb267d75fc97268fb4ead",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/AllM3DifferentialTests.java",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "1e0985d41dcd34d94c43f04f1a605294dbb11a48a8204876e86bd7916d9b0022",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "bf26350be63721b9a10a09cc3793f41d406f297e",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/AllNonBrowserTests.java",
+      "source_sha256": "21a0e0166a6a5b90b0fa196b13a28809ab7e24bba1c794681303fd1da5b147ea",
+      "postimage_sha256": "51de2eb4b59ff62986b49ff2eefdd21c652b3bf27e5dca65263979dc148f0068",
+      "source_git_blob_sha1": "2cf0138a00a60f7ec74eb8dc530e40b4cdeda967",
+      "postimage_git_blob_sha1": "9cc22647b245b08b2ca0be4f3a3cfeeac05783c8",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/AllTests.java",
+      "source_sha256": "605e35d5833e5cbebd3d69ea4bb6b29a4ad3c3c1d2bc84030d5f7b34b0e5d31a",
+      "postimage_sha256": "356b9eddb81c0567396dc12006bd6eadf61974a7a456bb9e2c0c898e46206c32",
+      "source_git_blob_sha1": "b307030fb55161c68e39334f43c6ff89d407e862",
+      "postimage_git_blob_sha1": "43c6107dd29c37e40554c85565436b03168eb20a",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/AllWidgetTests.java",
+      "source_sha256": "7d5d332d1ba3bb34ef840eacca3c710e434a0cf0396a91ebe5a73fac720b235c",
+      "postimage_sha256": "1c1eecdc6d9977c29a911843b5aa4385f2afb9562360959596cb242d11ebc98e",
+      "source_git_blob_sha1": "4146e078eeca67a49e620fde8424056d481c1685",
+      "postimage_git_blob_sha1": "9de1789a21f759c15ce909cea158918682504c34",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_ItemBitSetDifferential.java",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "14213d8623ddb23e1ba5e1c58ea45b1b0bd9f0da8db09d2217c75fcf54169a5a",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "a8317682c6e3c48ec314308be5b9ec35c57f6163",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ColumnFilter.java",
+      "source_sha256": "448c57e6b02d3a9553411f11d3e42253d6f89c7b843b4cddacd49625df3543cf",
+      "postimage_sha256": "b781c88390f0ce4f6e6cde12059c11a27e5124eeb74b513c2d4f0e75c1c2e750",
+      "source_git_blob_sha1": "6d5b29bead52f012f11cfab523a8a88978da5de7",
+      "postimage_git_blob_sha1": "97947fefc3ac868a1513350129b487aad448a394",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ColumnSort.java",
+      "source_sha256": "f5ba6de087f0e99ad02b82909ddfe61368fbb4bab01917282e2135ba3a6ca3b6",
+      "postimage_sha256": "f631a14b18df92626b475a1758057cae1330dd4df462d1be0bfb96c20a3c968f",
+      "source_git_blob_sha1": "014a0b34a31798c945f3b3a006c6cfdaad49835f",
+      "postimage_git_blob_sha1": "12725a41e5db8a35b926ee19c431ee9a8826d154",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ItemRange.java",
+      "source_sha256": "80bbef121d897524cad974ea2093b6691ba5c999015e4747ee32bfcf745dc23e",
+      "postimage_sha256": "a7ec3d89bec8e17085b3f67e49cc6c0f29315ce49903f7fccbf1e3197fc05027",
+      "source_git_blob_sha1": "628299324d98bc88836b511052deb1dd398b7712",
+      "postimage_git_blob_sha1": "003c376004d905932f9dc76d2e451f5d03f2df16",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3RowExtents.java",
+      "source_sha256": "035b2a9f11c53b59f5c69d4efccea9e44d77dc6248ae943923df1451d3aec089",
+      "postimage_sha256": "e8599e6f71b80d030771c32a7ad32725111fad5295aebe1566262492d3a42fe8",
+      "source_git_blob_sha1": "14fa65a4676991290952875aea4cbfdc9e5ae792",
+      "postimage_git_blob_sha1": "ce51f940097124fe6c7f2a6eacc06a1f33f8c315",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/Readme.md",
+      "source_sha256": "8cc63aefdaa8da68ac91fdef587a62aca3f0fd93c7cb2b255fdeac0554176e73",
+      "postimage_sha256": "79de3707fc504d951a8f1cd72fd3f4470943ffda23e6643b33586dd9bc155282",
+      "source_git_blob_sha1": "2dd82fc67d624f876a4cafc5aaa8a5b94e0a8252",
+      "postimage_git_blob_sha1": "fe7b53a1ccf484a117e3abb750aac58b12fcc70a",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/m3-test-report-contract.json",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "ac0d13c0d4f6217a3fa0de77d3e190c6e79e117fa02ad72dd5442d2fc24ee453",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "4af0f6b192d2af12beb90fb820d97f9f5e212104",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/pom.xml",
+      "source_sha256": "2899464097d8f2163df217f1b56454acad07b6f932b9274b0aab4618f39d9c04",
+      "postimage_sha256": "571a7c90350dad6424e53b715fd4d4c29714c8f0215ea8262ef75fa5a5265e13",
+      "source_git_blob_sha1": "e5a469d124aa1e51655d38a2847c1becb3547b14",
+      "postimage_git_blob_sha1": "3d879900cf5daa4f9f99091623aa8866c067f401",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-pom"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/test_verify_m3_test_reports.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "d56d3c069f53fd5445faa0d361be7f2064bea9857e08f2b4f2d4f025554b2a97",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "48c5207c5db0862a7dad6ac2ef2e13b273bc35f7",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/verify_m3_test_reports.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "6ca41d7a6370f07f428870ab41bf68248fd94191a5f44547282ffff8024b5a03",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "3291b22dc0cc3d486418ad79b4208c581a744b11",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/verify_viewport_screenshots.py",
+      "source_sha256": "46261d6bccdae53027631c0ab6175f08c978f0a687e0b4f74f9783c5331017a3",
+      "postimage_sha256": "2530d4fc00222cd970d2ad6ff524c6b41e66dba59be8bf1f165fe286a241026d",
+      "source_git_blob_sha1": "547f9fde0827a6fc0fddc36c8b5582a15cca656c",
+      "postimage_git_blob_sha1": "fc7e6b7ecdc40a6e9eabaf458bb8d42ff8ff46c5",
+      "source_mode": "100644",
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/audit_suite_inventory.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "bfee150ff9386fc0a4ab7d0875a448a689fba08caeeb820fd2a9b8f908982c0a",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "28f8cda1c0f650c7be5173aa42402a2fa682883c",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/check_junit_coverage.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "fe8b6c3bfcb4c39a2664ca813a7d07b3847e30f912d6ccb3fef6c0efcb528172",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "2aeb7e8764f39a3aaccc3ba87b2be180c546d8e0",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/check_release_surface.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "9a25c2ca73560fc4be9bb765d733c79381aa437664abb4f8b313605e37673730",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "459186ffd27bc4e1196730d360f66d524c417469",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/headless_coverage_audit.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "a09585f7ab7925425f0fdd31f16d72ccaa381d1dc005758dcbfd12fc4d457e73",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "990ae4f8fa400875f5eef45419ed685c7acb75e3",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/java/org/eclipse/swt/internal/residency/M3SwtHeadlessContract.java",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "938a31e5904ae12c0de1b9755c945b2119c7e8a6d02a2833cdcf0644be1d9cb0",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "1ee116ecc5db979cc96072d7439ab78fdd4c271c",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    },
+    {
+      "path": "tools/release/readiness.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "4fb52bdc9415c290a7ad06c74d46e8e342bff954c7d6c8e03d12d24562f896ca",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "9a7c5809f057dbf427938d2c3e3ab0204eac1589",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/run_headless_java21.sh",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "7b2c356cb6a5fe15e32e0121133950144d7bd32febdf1045bd4de60e72610fbb",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "21b591c24dec64c0a3f24ed257fcfdd6b22e3e57",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/test_audit_suite_inventory.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "3baccbb6095cd8f1be3302069a7bce6c3017edf1de92aedccc25e2df2e8dee34",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "eaa0a8fa9f04b1901e03a856ef833c556077e869",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/test_check_junit_coverage.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "bfd67f50963d8ceb939caf95626560d45e44cdcd5aadedb7b9792d3f6663d44c",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "57c328cc3da596c6934db8d31f7936ce047c02ce",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/test_check_release_surface.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "778761018a3e5b7f90d4cd5eb5731df3c344cb3dcfb0f05a82a8b5a5d2bee157",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "e711a5e8f0a4f99014ac5207e9ba7e84974a8936",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/test_headless_coverage_audit.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "ce88869557c548aa96d118f6f06ee2d9b7d1b4bed1fdea3276371c6c346d81a1",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "89ef828c75d44d888edc30d1ee1604dacc8b5552",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/test_jni_workflow.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "d15c9ce565f08477a6d4313c344e08826e8a7193c8c31e8b082941b742c57319",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "c9bc440c64bd9b07c3afe021dce58408c91c9f01",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/test_native_dependency_check.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "f265c0b286221037c3a34b8e182ccbee171d43b7fb94f745134ae20575f4da08",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "fe0954046b13fd2a009c966c4d01eafec833cc61",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/test_readiness.py",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "c8ece7a331bc2a044e2d42c22943ad392ecebd09737011d5f3e4219b33467c3e",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "f80c54779df3a4ad358457903f5f6b601c4c6ced",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/release/unreferenced-suite-baseline.txt",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "02d5a295f3d4a39b0993764ef430a8ca8273a00531170f3fe25ba2eb3209afb6",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "e5a71d6e5e9b84f34c8cf00516283d59a5e6d8cf",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/swt-release/pom.xml",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "3cd7809f5c8a5b7ca1cdc20df162bd0f2ae9765398e24a2a2b33a38ddd4a6c9d",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "6b50b40683f44d8868c53aeeb84eabcf7a214442",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-text"
+      ]
+    },
+    {
+      "path": "tools/swt-release/src/main/java/org/eclipse/swt/tools/release/SwtCandidateBundle.java",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "add812727468fb7bf7dcfab63af3fcb8567275e58e375529553c5ad0bb0f7ca4",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "b80187700388e0ba7e3e86cd60e2ef51833f7231",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    },
+    {
+      "path": "tools/swt-release/src/test/java/org/eclipse/swt/tools/release/SwtCandidateBundleTest.java",
+      "source_sha256": "ABSENT",
+      "postimage_sha256": "b7b043b12e8af94f3a1800cda3015a2b727f8822072097b511a98f38f9d438c1",
+      "source_git_blob_sha1": null,
+      "postimage_git_blob_sha1": "447331b1efa4f900cdb582a635530560684f4971",
+      "source_mode": null,
+      "mode": "100644",
+      "datasets": [
+        "swt-release-java"
+      ]
+    }
+  ],
+  "covered_output_count": 54,
+  "recorded_product_gates": {
+    "schema": "SWT_RECEIVING_QUALIFICATION_RESULT_V1",
+    "status": "SCOPED_QUALIFICATION_PASS_RELEASE_HOLD",
+    "repository": "hsoliwal/eclipse.platform.swt",
+    "base_revision": "62460082d7caa06b21c49da99abbab53f73b3ffc",
+    "canonical_primary_source_root": "43df1275bbad27069d82f36830a3308b2e1b648420a1d70c56a75cf8406292bf",
+    "canonical_engine": "org.openrewrite:rewrite-core:8.48.0",
+    "primary_fixture_manifest_sha256": "2dbfa2606d96a3cfb118f842b22bdbe5cf715dd78e396ec8294f92393fd932a9",
+    "primary_postimages": 54,
+    "complete_regular_file_worktree": 12057,
+    "public_api_export_changed": false,
+    "native_c_sources_changed": 0,
+    "native_binaries_for_git": false,
+    "compiled": {
+      "jdk": "21.0.13+9-LTS",
+      "java_release": 21,
+      "production_java_sources": 682,
+      "production_classfiles": 1020,
+      "all_classfiles": 1093,
+      "m3_contract_classes": 34,
+      "m3_contract_methods": 245,
+      "m3_test_and_helper_sources": 36,
+      "total_test_and_helper_java_sources": 40,
+      "production_warnings": 151,
+      "test_and_tool_warnings": 0,
+      "osgi_provider_qualified": false
+    },
+    "executed": {
+      "primary_swt_methods": 96,
+      "disjoint_scale_swt_methods": 2,
+      "unique_swt_methods": 98,
+      "m3_contract_methods": 91,
+      "sparse_state_junit_methods": 7,
+      "packager_junit_invocations": 33,
+      "packager_junit_methods": 22,
+      "unique_junit_invocations": 131,
+      "release_python_fixture_methods": 79,
+      "m3_report_python_fixture_methods": 31,
+      "sparse_runtime_assertions": 2321,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "aborted": 0,
+      "target_tests_replayed_for_census_recovery": false
+    },
+    "coverage": {
+      "primary_ten_owner_counters": {
+        "BRANCH": {
+          "covered": 761,
+          "missed": 93
+        },
+        "CLASS": {
+          "covered": 12,
+          "missed": 0
+        },
+        "COMPLEXITY": {
+          "covered": 582,
+          "missed": 87
+        },
+        "INSTRUCTION": {
+          "covered": 6152,
+          "missed": 615
+        },
+        "LINE": {
+          "covered": 936,
+          "missed": 88
+        },
+        "METHOD": {
+          "covered": 219,
+          "missed": 17
+        }
+      },
+      "per_owner": [
+        {
+          "source": "M3Collation.java",
+          "source_sha256": "9fc5a3a65f393d94d968b0bbaad048365196d960e0d5e489936e72cdd34ae93e",
+          "lines": {
+            "covered": 14,
+            "missed": 1
+          },
+          "branches": {
+            "covered": 17,
+            "missed": 1
+          },
+          "line_floor_percent": 90,
+          "branch_floor_percent": 90,
+          "line_floor_pass": true,
+          "branch_floor_pass": true
+        },
+        {
+          "source": "M3ColumnFilter.java",
+          "source_sha256": "b16ad6afe1343a6ef19df6dc5647914b277a406afbc820e677c61e5a9b6007af",
+          "lines": {
+            "covered": 261,
+            "missed": 60
+          },
+          "branches": {
+            "covered": 193,
+            "missed": 42
+          },
+          "line_floor_percent": 90,
+          "branch_floor_percent": 90,
+          "line_floor_pass": false,
+          "branch_floor_pass": false
+        },
+        {
+          "source": "M3ColumnSort.java",
+          "source_sha256": "10cd1be618b26330d5f4b638380185a0d4bdbdf74bca1f609dc6d3449aa625d3",
+          "lines": {
+            "covered": 136,
+            "missed": 25
+          },
+          "branches": {
+            "covered": 74,
+            "missed": 18
+          },
+          "line_floor_percent": 90,
+          "branch_floor_percent": 90,
+          "line_floor_pass": false,
+          "branch_floor_pass": false
+        },
+        {
+          "source": "M3ItemRange.java",
+          "source_sha256": "7a5709b7d06602a90284c27ecf6257539694dd988419ca1a9928b8f437d996d5",
+          "lines": {
+            "covered": 51,
+            "missed": 0
+          },
+          "branches": {
+            "covered": 59,
+            "missed": 9
+          },
+          "line_floor_percent": 90,
+          "branch_floor_percent": 90,
+          "line_floor_pass": true,
+          "branch_floor_pass": false
+        },
+        {
+          "source": "M3Patch.java",
+          "source_sha256": "ba3fe219dc4a6e4123259141ccd6fe01a6f03dbcaac1be5a37483155ec4b0cc6",
+          "lines": {
+            "covered": 174,
+            "missed": 2
+          },
+          "branches": {
+            "covered": 126,
+            "missed": 10
+          },
+          "line_floor_percent": 90,
+          "branch_floor_percent": 90,
+          "line_floor_pass": true,
+          "branch_floor_pass": true
+        },
+        {
+          "source": "M3RowExtents.java",
+          "source_sha256": "8915c078b9891b500d5567657ffaf0ba695c3761340762f75cf68805c10ee239",
+          "lines": {
+            "covered": 54,
+            "missed": 0
+          },
+          "branches": {
+            "covered": 35,
+            "missed": 7
+          },
+          "line_floor_percent": 90,
+          "branch_floor_percent": 90,
+          "line_floor_pass": true,
+          "branch_floor_pass": false
+        },
+        {
+          "source": "M3TextMatch.java",
+          "source_sha256": "7580874e9b1b27f6d78388520740dc45f13e48fb053aefbda4096f0e8c6a5fba",
+          "lines": {
+            "covered": 92,
+            "missed": 0
+          },
+          "branches": {
+            "covered": 121,
+            "missed": 2
+          },
+          "line_floor_percent": 90,
+          "branch_floor_percent": 90,
+          "line_floor_pass": true,
+          "branch_floor_pass": true
+        },
+        {
+          "source": "M3TextSegments.java",
+          "source_sha256": "d960d4783add97cc418f01a83855168916a4b04b822b35a61a7a8739fe80f07d",
+          "lines": {
+            "covered": 66,
+            "missed": 0
+          },
+          "branches": {
+            "covered": 57,
+            "missed": 1
+          },
+          "line_floor_percent": 90,
+          "branch_floor_percent": 90,
+          "line_floor_pass": true,
+          "branch_floor_pass": true
+        },
+        {
+          "source": "M3TokenMatch.java",
+          "source_sha256": "3aed4a74415af68772cc863c414c2db2a7ed039871280235aaba41e39d678965",
+          "lines": {
+            "covered": 23,
+            "missed": 0
+          },
+          "branches": {
+            "covered": 33,
+            "missed": 1
+          },
+          "line_floor_percent": 90,
+          "branch_floor_percent": 90,
+          "line_floor_pass": true,
+          "branch_floor_pass": true
+        },
+        {
+          "source": "M3TokenVocabulary.java",
+          "source_sha256": "07b2f11094989cca046b40911015c6592eed0a05accbce5370c3a2ae1e63c4a1",
+          "lines": {
+            "covered": 65,
+            "missed": 0
+          },
+          "branches": {
+            "covered": 46,
+            "missed": 2
+          },
+          "line_floor_percent": 90,
+          "branch_floor_percent": 90,
+          "line_floor_pass": true,
+          "branch_floor_pass": true
+        }
+      ],
+      "failed_90_percent_owners": [
+        "M3ColumnFilter.java",
+        "M3ColumnSort.java",
+        "M3ItemRange.java",
+        "M3RowExtents.java"
+      ],
+      "history_comparison_source_hashes_identical": true,
+      "historical_delta_only_not_pooled": [
+        {
+          "source": "M3RowExtents.java",
+          "line_covered_delta": 0,
+          "branch_covered_delta": 0
+        },
+        {
+          "source": "M3ItemRange.java",
+          "line_covered_delta": 0,
+          "branch_covered_delta": 0
+        },
+        {
+          "source": "M3TextMatch.java",
+          "line_covered_delta": 0,
+          "branch_covered_delta": 0
+        },
+        {
+          "source": "M3TokenVocabulary.java",
+          "line_covered_delta": 0,
+          "branch_covered_delta": 0
+        },
+        {
+          "source": "M3TokenMatch.java",
+          "line_covered_delta": 0,
+          "branch_covered_delta": 0
+        },
+        {
+          "source": "M3Patch.java",
+          "line_covered_delta": 0,
+          "branch_covered_delta": 0
+        },
+        {
+          "source": "M3ColumnSort.java",
+          "line_covered_delta": 0,
+          "branch_covered_delta": 0
+        },
+        {
+          "source": "M3ColumnFilter.java",
+          "line_covered_delta": 10,
+          "branch_covered_delta": 11
+        },
+        {
+          "source": "M3TextSegments.java",
+          "line_covered_delta": 0,
+          "branch_covered_delta": 0
+        },
+        {
+          "source": "M3Collation.java",
+          "line_covered_delta": 0,
+          "branch_covered_delta": 0
+        }
+      ],
+      "rowextents_pair_counters": {
+        "BRANCH": {
+          "covered": 138,
+          "missed": 26
+        },
+        "CLASS": {
+          "covered": 2,
+          "missed": 0
+        },
+        "COMPLEXITY": {
+          "covered": 113,
+          "missed": 26
+        },
+        "INSTRUCTION": {
+          "covered": 1206,
+          "missed": 83
+        },
+        "LINE": {
+          "covered": 226,
+          "missed": 0
+        },
+        "METHOD": {
+          "covered": 55,
+          "missed": 0
+        }
+      },
+      "packager_counters": {
+        "BRANCH": {
+          "covered": 123,
+          "missed": 9
+        },
+        "CLASS": {
+          "covered": 3,
+          "missed": 0
+        },
+        "COMPLEXITY": {
+          "covered": 76,
+          "missed": 9
+        },
+        "INSTRUCTION": {
+          "covered": 1133,
+          "missed": 23
+        },
+        "LINE": {
+          "covered": 173,
+          "missed": 3
+        },
+        "METHOD": {
+          "covered": 19,
+          "missed": 0
+        }
+      },
+      "packager_95_line_90_branch_gate": "PASS",
+      "scale_three_owner_counters": {
+        "BRANCH": {
+          "covered": 157,
+          "missed": 184
+        },
+        "CLASS": {
+          "covered": 3,
+          "missed": 0
+        },
+        "COMPLEXITY": {
+          "covered": 112,
+          "missed": 167
+        },
+        "INSTRUCTION": {
+          "covered": 1923,
+          "missed": 1403
+        },
+        "LINE": {
+          "covered": 280,
+          "missed": 231
+        },
+        "METHOD": {
+          "covered": 49,
+          "missed": 56
+        }
+      },
+      "scale_coverage_separate": true,
+      "historical_execution_data_pooled": false
+    },
+    "native": {
+      "source_files_exact_master": 68,
+      "translation_units": 26,
+      "source_built_elf_libraries": 7,
+      "binary_dependency_gate": "PASS",
+      "glibc_ceiling": "2.34",
+      "allowlist_changed": false,
+      "private_tmp_clean": true,
+      "checker_fixtures_in_primary_python_suite": 8,
+      "separate_root_checker_fixture_execution": 8,
+      "checker_duplicate_execution_not_counted_as_unique_coverage": true,
+      "native_loading": "NOT_EXECUTED",
+      "gui_runtime": "HOLD_AF_UNIX_BIND_EPERM"
+    },
+    "scale": {
+      "sizes": [
+        1000,
+        10000,
+        100000,
+        1000000
+      ],
+      "independent_reference_and_delta_assertions": "PASS",
+      "timing_observations": 32,
+      "timing_benchmark_or_resource_budget_claim": false
+    },
+    "remaining_gates": [
+      "143 native GUI methods and11 recording-dependent methods (154 of245 M3 contract methods remain unexecuted).",
+      "Public org.eclipse.swt.m3 export remains absent; preserve OSGi export/API lock and PR322 release checks.",
+      "Four ten-scope owners still below their per-owner90% line/branch floors; no waiver.",
+      "Actual native loading, X11/Wayland UI, GTK4, Windows, Cocoa, Java25 and exact installed M3JDK21 image qualification.",
+      "Full source-bound245-method release validator with required properties and qualified recordings; ordinary matrix declaration is insufficient.",
+      "Viewport capture/pixels, CPU/heap/native RSS, resource budgets, installed distribution/signing/promotion gates."
+    ],
+    "scope_note": "Data-only acceptance input for detached canonical provenance. Actual published canonical commit binding must be supplied after publication; this file allocates no commit or release.",
+    "preserved_failure": "Original local test-receipt census failure retained; verified existing XML after adding its14 parameterized invocation expectations. No tests rerun.",
+    "source_manifest_sha256": "2dbfa2606d96a3cfb118f842b22bdbe5cf715dd78e396ec8294f92393fd932a9",
+    "final_result_sha256": "dc238743b4ab403b6fd61c20df6ff7cd7ac8704a40c2adf74ca297fba338470b"
+  },
+  "detached_followup_evidence": {
+    "repository": "hsoliwal/com.synexia",
+    "outside_primary_authority": true,
+    "publication_commit_asserted": false,
+    "binding": "These existing artifacts are sealed by SHA-256 and canonical-relative path. The later published canonical follow-up commit and receiving PR metadata supply the immutable publication link; this receipt does not invent that future commit.",
+    "documentation_execution": {
+      "status": "PASS_ACTUAL_SDK_DOCUMENTATION_EXECUTION",
+      "selected_crate": "swt-release-matrix-docs-20261108",
+      "candidate_source_root": "f2c4a8630464f0753ac79d3d7859dbe66f60301e31c3fbd718926c1648bec920",
+      "actual_openrewrite_sdk": true,
+      "openrewrite_version": "8.48.0",
+      "strict_offline_java21_compile": "PASS",
+      "qualification_junit_tests": 1,
+      "materialization_junit_tests": 1,
+      "refusal_cases": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "fixed_point": true,
+      "targets": 2,
+      "orders": [
+        "serial",
+        "reversed",
+        "two_workers"
+      ],
+      "artifacts": [
+        {
+          "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/sdk-docs/SOURCE_SEAL.tsv",
+          "sha256": "f2c4a8630464f0753ac79d3d7859dbe66f60301e31c3fbd718926c1648bec920",
+          "bytes": 6687
+        },
+        {
+          "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/sdk-docs/POSTIMAGES.tsv",
+          "sha256": "b7146d2771cf960af04fd213fff5498c13dcd4f1e1fb597379cf0a28d3bdcccd",
+          "bytes": 336
+        },
+        {
+          "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/sdk-docs/EXECUTION.tsv",
+          "sha256": "dc699259bd7acd860522c9bdbbd1bd5b8033fc426009196818143c7447418f17",
+          "bytes": 316
+        },
+        {
+          "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/sdk-docs/qualified.tsv",
+          "sha256": "df08debb89a0a706fd4ebaab9c7cbe629b5b34c2ae5f8d9f8af1c2bb780098ba",
+          "bytes": 217
+        },
+        {
+          "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/sdk-docs/refusals.tsv",
+          "sha256": "c2e5a6684f29b408a2d55f15fb6d1e1f5bdaf07c0c9559d6c9d67b192dcfbedd",
+          "bytes": 168
+        },
+        {
+          "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/sdk-docs/49-docs-distinct-lint.log",
+          "sha256": "e1f1983c7f014345de85e82b903e3f767e3e42c5f06580becd52e8694249efe5",
+          "bytes": 133
+        },
+        {
+          "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/sdk-docs/50-docs-distinct-compile.log",
+          "sha256": "74e6dc96291058350a20664144ae69b2a14b2932e17d9c4ab0d34a19299ed040",
+          "bytes": 1554
+        },
+        {
+          "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/sdk-docs/51-docs-distinct-qualification.log",
+          "sha256": "44787d77a1edd338fda7a11db09a7b3cdcf6cdadba3026e6a3c59c6792e7505e",
+          "bytes": 1612
+        },
+        {
+          "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/sdk-docs/52-docs-materialization.log",
+          "sha256": "61e42030e35cbb8e3e04dd0ae15e30f87b13a3e42f2ae5b85ab072d37f4efb26",
+          "bytes": 1614
+        },
+        {
+          "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/sdk-docs/qualification-junit.xml",
+          "sha256": "e599d670aa41b3aabd12be6169be8a877aaa5e730e7bf7b69559ac53b179026e",
+          "bytes": 19895
+        },
+        {
+          "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/sdk-docs/materialization-junit.xml",
+          "sha256": "9d393c5b9465caee1d206808954874c413ce8305d373e99aa704aefcf3e5616a",
+          "bytes": 19903
+        }
+      ],
+      "primary_commit": "bd34c366f6d151fe4bab992a1c955f8dc393e7b7",
+      "outside_primary_authority": true,
+      "publication_commit_asserted": false,
+      "product_behavior_tests_replayed": false
+    },
+    "artifacts": [
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/sdk-docs/RESULT.json",
+        "sha256": "6077a753109f05084d5b211f02ed1c48e0c0350d76b9f503b427d9ae96509acb",
+        "bytes": 3595
+      },
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/receivers/SWT_TARGET_ACCEPTANCE.json",
+        "sha256": "804b29c069d21585aa52a9b757ba831edf85158b8578d47105eabb96a4fb7e6a",
+        "bytes": 11693
+      },
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/receivers/swt/FINAL_RESULT.json",
+        "sha256": "dc238743b4ab403b6fd61c20df6ff7cd7ac8704a40c2adf74ca297fba338470b",
+        "bytes": 22817
+      },
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/held-review/README.txt",
+        "sha256": "729b312a57f6bfba25ef37a45a93762dd3641bbaf41ab702379d1c1675aa94fa",
+        "bytes": 361
+      },
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-release-preparation-receipts-20261108/evidence/held-review/osgi-m3-export.patch",
+        "sha256": "954bd8cfa09c7d63174087d39d8b14274d009167d8b0f528f883da292ada9f08",
+        "bytes": 354
+      }
+    ]
+  },
+  "held_public_api_review": {
+    "status": "UNAPPLIED",
+    "path": "bundles/org.eclipse.swt/META-INF/MANIFEST.MF",
+    "proposal": "Add org.eclipse.swt.m3 to Export-Package only after a separate public-API unlock and provider qualification.",
+    "included_in_product_outputs": false
+  },
+  "hosted_ci": {
+    "executed_here": false,
+    "passing_checks_claimed": false
+  },
+  "release_status": "DRAFT_REQUIRES_REMAINING_PRODUCT_AND_PLATFORM_GATES",
+  "canonical_admission": "HOLD_EXISTING_307_MEMBER_INDEX_EXCEEDS_256_LIMIT;_SCOPED_CHANGED_PATH_PROOF_ONLY",
+  "remaining_gates": [
+    "143 native GUI methods and11 recording-dependent methods (154 of245 M3 contract methods remain unexecuted).",
+    "Public org.eclipse.swt.m3 export remains absent; preserve OSGi export/API lock and PR322 release checks.",
+    "Four ten-scope owners still below their per-owner90% line/branch floors; no waiver.",
+    "Actual native loading, X11/Wayland UI, GTK4, Windows, Cocoa, Java25 and exact installed M3JDK21 image qualification.",
+    "Full source-bound245-method release validator with required properties and qualified recordings; ordinary matrix declaration is insufficient.",
+    "Viewport capture/pixels, CPU/heap/native RSS, resource budgets, installed distribution/signing/promotion gates."
+  ],
+  "receipt_dataset": "swt-release-passive-receipt-20261108",
+  "receipt_recipe_id": "com.synexia.rewrite.M3HashPinnedTextSnapshotRecipe",
+  "self_provenance": {
+    "path": "m3/qualification/release-preparation-20261108/RECEIVER_RECEIPT.json",
+    "covered_by_this_receipt": false
+  },
+  "receipt_evidence_note": "Primary SDK evidence belongs only to the real published primary commit. The two-document correction and target evidence are separate detached hash-bound artifacts. This later receipt-only SDK emission has its own canonical report, supplied by the later canonical commit and receiving PR; this JSON does not claim its own hash, execution result or future enclosing commit.",
+  "scope": "The 54 listed logical outputs retain original-master preimages. Two final documentation hashes come from the executed follow-up. No product Java, native source, API export or coverage floor was changed by this receipt."
+}

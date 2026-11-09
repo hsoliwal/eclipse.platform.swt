@@ -1,0 +1,534 @@
+{
+  "schemaVersion": 1,
+  "reviewedSource": {
+    "repository": "hsoliwal/eclipse.platform.swt",
+    "commit": "62460082d7caa06b21c49da99abbab53f73b3ffc",
+    "commitRole": "frozen receiving base; sourceSha256 binds each exact proposed receiving test body",
+    "proposal": "Additive PR321/322/323/324 integration plus prior reviewed receiving fixes and five deterministic Filter/Sort tests; require fresh candidate execution",
+    "modifiedSources": [
+      "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ColumnFilter.java",
+      "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ColumnSort.java",
+      "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ItemRange.java",
+      "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3RowExtents.java"
+    ]
+  },
+  "classes": [
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3BulkUpdates",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3BulkUpdates.java",
+      "sourceSha256": "83930d88cac085b43dfb24a6751fcb4573dd19048bc566b665634f2f84e2e8af",
+      "recordingRequired": false,
+      "methods": [
+        "test_anExceptionLeavesNothingFrozen",
+        "test_argumentsAreChecked",
+        "test_listResultsEqualTheUnbatchedEdits",
+        "test_nestedRunsResumeAtTheOuterEnd",
+        "test_nothingIsPaintedWhileTheEditsRun",
+        "test_oneEmptinessAnnouncementWithTheFinalCount",
+        "test_tableResultsEqualTheUnbatchedEdits",
+        "test_theEditsMayDisposeTheWidget",
+        "test_treeResultsEqualTheUnbatchedEdits",
+        "test_virtualTableRemovingColdRowsEqualsTheUnbatchedEdits"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3BulkUpdatesDifferential",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3BulkUpdatesDifferential.java",
+      "sourceSha256": "1aa68de7c20669f4b4cab380521fb26ce928fa34080e8bb3e2a212e6415e6857",
+      "recordingRequired": true,
+      "methods": [
+        "plainWidgetsAnswerLikeTheOfficialJar",
+        "virtualWidgetsAnswerLikeTheOfficialJar"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3CheckState",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3CheckState.java",
+      "sourceSha256": "b208f6e532c5847e791e18e185655a7cb73c4a2bdaaaa4f08f9cb242e71826c3",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_digInFollowsUserToggles",
+        "test_partialAndFullAncestors",
+        "test_randomTogglesAgreeWithTheOracle",
+        "test_treeWithoutCheckIsUnchanged"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3Collation",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3Collation.java",
+      "sourceSha256": "2bb00d6a6ba463f6556bc70ad61531db2af1397a8c11011feb8e02cc2fe1f23d",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_keysAreCompactLanes",
+        "test_localeDifferencesAreVisible",
+        "test_signAgreesWithTheCollator",
+        "test_sortedOrderIsStableAndAscending"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3ColumnFilter",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ColumnFilter.java",
+      "sourceSha256": "b781c88390f0ce4f6e6cde12059c11a27e5124eeb74b513c2d4f0e75c1c2e750",
+      "recordingRequired": false,
+      "methods": [
+        "test_ancestorCycleFallbackKeepsOnlyReachableRows",
+        "test_argumentChecks",
+        "test_changeEventsAndDamage",
+        "test_incrementalEditsEqualAReference",
+        "test_invalidUpdatedParentFailsAndResetRecovers",
+        "test_multiColumnCriterionAndLogic",
+        "test_sourceEditsAreDeltasThatReplay",
+        "test_synchronousGenerationAndCriterionCopies",
+        "test_textCriteriaPerColumn",
+        "test_treeChainWithSortedSiblings",
+        "test_treeInsertMakesALaterAncestorEnter",
+        "test_treeKeepsAncestorsOfMatches",
+        "test_treeValueUpdatesAreDeltasThatReplay",
+        "test_typingRefinementsEqualAFreshEvaluation",
+        "test_valueChangesWithoutStatusChangeSkipTheFullPass",
+        "test_valueLists",
+        "test_windowClipsDamage",
+        "test_windowRangesAndChangeDescriptions"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3ColumnSort",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ColumnSort.java",
+      "sourceSha256": "f631a14b18df92626b475a1758057cae1330dd4df462d1be0bfb96c20a3c968f",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentChecks",
+        "test_cellTextDefaultKey",
+        "test_collationAndComparatorKeysOnTheRadixPath",
+        "test_collatorEqualTextsShareARank",
+        "test_duplicateKeysStayStableAcrossFilterAndSourceEdits",
+        "test_identityWithoutKeys",
+        "test_keyValueEdgeCases",
+        "test_largeKeyValuesTakeTheRadixPath",
+        "test_multiKeyOrder",
+        "test_rejectedSortKeysPreserveTheViewAndCopyInputs",
+        "test_singleKeysBothDirectionsSmallAndLarge",
+        "test_singleMoveDamage",
+        "test_sourceEditsStayEqualToAFullSort",
+        "test_stableTiesKeepSourceOrderInBothDirections",
+        "test_textKeysWithCollatorAndRowComparator",
+        "test_toggleCycleAndAccumulate",
+        "test_treeFilterEditsKeepTheSiblingIndex",
+        "test_treeModeSortsSiblings",
+        "test_treeValueUpdatesKeepTheSiblingIndex",
+        "test_viewChainsListenersAndForeignInputs"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3DiffApply",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3DiffApply.java",
+      "sourceSha256": "d3fcf63971ad2c207c7cdb7fd90fe6506c2d16433f239a51453759510fbb2664",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_largeReorderIsFast",
+        "test_listAgreesWithTheOracleOnRandomDiffs",
+        "test_listHandlesEmptyAndDisjointSets",
+        "test_tableInsertOnlyDiffRemovesNothing",
+        "test_tableKeepsTheItemsAndStateOfKeptRows",
+        "test_treeRootsKeepTheirExpansionAndChildren",
+        "test_virtualTableFillsInsertedRowsThroughSetData"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3DiffApplyDifferential",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3DiffApplyDifferential.java",
+      "sourceSha256": "1d7d9b8b5c31b3f6247ab768ed2fb4ea1329649d809645c7cfbc07ab0b699d6c",
+      "recordingRequired": true,
+      "methods": [
+        "listBesideAVirtualTableAnswersLikeTheOfficialJar",
+        "plainWidgetsAnswerLikeTheOfficialJar"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3Emptiness",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3Emptiness.java",
+      "sourceSha256": "8993fd777e105afc0dc78b37f0ee07e07a6107dcfda2fdd516110b8d1dfe48b8",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_listFailedOperationsAreReportedByTheNextChange",
+        "test_listReportsEveryZeroCrossingOnce",
+        "test_listenerMayChangeATableInsideTheEvent",
+        "test_listenerMayChangeTheWidget",
+        "test_listenersStartFromTheCurrentStateAndCanBeRemoved",
+        "test_randomOperationsAgreeWithTheCountOracle",
+        "test_removedListListenerHearsNothing",
+        "test_stockTreeEventIsUnchangedAndSeparate",
+        "test_tableReportsEveryZeroCrossingOnce",
+        "test_treeCountsRootsOnly",
+        "test_virtualTableReportsCountChanges",
+        "test_virtualTreeReportsCountChanges"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3FilterAsync",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3FilterAsync.java",
+      "sourceSha256": "8da1fe6f106dd50b01c8d5bdf82436a0a7a11d9ffc5773e9b6c4ed3aaaeb58ce",
+      "recordingRequired": false,
+      "methods": [
+        "test_asyncEditsLogicParentsAndBackToSynchronous",
+        "test_hiddenViewportAppliesOnceOnShow",
+        "test_slowModelIsSupersededMidComputation",
+        "test_supersededGenerationsNeverApply",
+        "test_typingOverAMillionRowsStaysResponsive",
+        "test_workerFailureSurfacesOnTheUserInterfaceThread"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3ItemRange",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ItemRange.java",
+      "sourceSha256": "a7ec3d89bec8e17085b3f67e49cc6c0f29315ce49903f7fccbf1e3197fc05027",
+      "recordingRequired": false,
+      "methods": [
+        "test_coalesceBuildsNormalForm",
+        "test_coalesceLeavesTheArgumentUntouched",
+        "test_containsAndIntersection",
+        "test_duplicateAtMaximumIntCoalescesOnce",
+        "test_equalsHashCodeToString",
+        "test_ofNormalizesEmpty",
+        "test_upperIntBoundaryAndNonAdjacentRuns",
+        "test_valueAndEmptiness"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3ItemSelection",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ItemSelection.java",
+      "sourceSha256": "4a10ffa4bd2f98eb47b4ee4a588d8df065ad53238cbeec2742aabb8623559de5",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_deepTreeRowOrder",
+        "test_listSelectionRanges",
+        "test_listVisibleRangeFollowsTopIndexAndHeight",
+        "test_modeCodesFollowTheStartupModeOrder",
+        "test_modeFollowsTheStartupProperties",
+        "test_modeOfSubclassesUsesTheSwtClassGate",
+        "test_tableSelectAndDeselectRanges",
+        "test_tableSelectionRangesMatchIndices",
+        "test_tableSetSelectionRangesRoundTripWithoutScrolling",
+        "test_tableSingleSelectionRanges",
+        "test_tableVisibleRangeMatchesItemBounds",
+        "test_tableVisibleRangeOfEmptyAndTinyTables",
+        "test_treeSelectAndDeselectRanges",
+        "test_treeSelectionRangesPerParent",
+        "test_treeSetSelectionRangesReplacesTheSelection",
+        "test_treeVisibleRangeAndItemsMatchTheRowOrder",
+        "test_treeVisibleRangeOfAZeroHeightTree",
+        "test_treeVisibleRangeOfEmptyAndCollapsedTrees"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3Model",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3Model.java",
+      "sourceSha256": "816eb31e9a0e3871744aa1d013dbf202b95d049808b5182a42ce57537afd66a2",
+      "recordingRequired": false,
+      "methods": [
+        "test_aDeltaOutsideTheWindowKeepsTheTopRowAndAsksNoLabels",
+        "test_idsAndArguments",
+        "test_listEqualsStockEdits",
+        "test_tableEqualsStockEdits",
+        "test_treeEqualsStockEdits",
+        "test_virtualTableEqualsStockEdits"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3Patch",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3Patch.java",
+      "sourceSha256": "9980913c798b6d1974136f405725de9a674de63ca7fc8785e60c5e6aa20a0aae",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_builderRunsAndUpdates",
+        "test_diffIsMinimalAndReplays"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3Prefetch",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3Prefetch.java",
+      "sourceSha256": "86e35f9fa256d17e124ee46f9ed89f16e5fa28021426efa7431dd00ffa755536",
+      "recordingRequired": false,
+      "methods": [
+        "test_aHiddenTableAnnouncesNothing",
+        "test_argumentsAreChecked",
+        "test_listAndTreeListenersCanBeRemoved",
+        "test_listFollowsItsWindow",
+        "test_marginsWidenTheAnnouncedRange",
+        "test_onlyTheFirstListenerHearsTheWholeWindow",
+        "test_removedListenersHearNothingAndANewOneStartsWhole",
+        "test_tableAnnouncesTheWindowAndOnlyWhatMoved",
+        "test_treeFollowsItsWindow"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3ProxyModel",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ProxyModel.java",
+      "sourceSha256": "e506a49e38cde11eb16575037ae55ce065e61e9313483f89ca3ea1572fb7aaea",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_chainsEqualTheirComposition",
+        "test_editsTakeEffectAtRefresh",
+        "test_identityModel",
+        "test_listBinding",
+        "test_sortByCollationKeys",
+        "test_staleSetDataBeyondTheViewIsIgnored",
+        "test_virtualTableAsksTheSourceRows"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3ProxyModelDifferential",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ProxyModelDifferential.java",
+      "sourceSha256": "cc2429ed8bbed0db4fd242b5739ec725c9657a4b22c38d5dfb588e066294d69d",
+      "recordingRequired": true,
+      "methods": [
+        "boundVirtualTableAnswersLikeTheOfficialJar"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3Residency",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3Residency.java",
+      "sourceSha256": "e060bcd3cf37b198e4b2e871aeccfbbef50a74555112bc64cc8655ae65292db5",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_heldFacadesStayBoundedWhileScrolling",
+        "test_isMaterializedNeverMakesAnItem",
+        "test_listWindowCoversTheVisibleRowsAndIsBounded",
+        "test_plainTableHasAnItemForEveryRow",
+        "test_plainTableRowsHaveNoItemUntilAskedWithTheViewport",
+        "test_tableWindowCoversTheVisibleRowsAndIsBounded",
+        "test_treeWindowCoversTheVisibleRowsAndIsBounded",
+        "test_virtualTableIsStockAndFullyResident"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3RowExtents",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3RowExtents.java",
+      "sourceSha256": "e8599e6f71b80d030771c32a7ad32725111fad5295aebe1566262492d3a42fe8",
+      "recordingRequired": false,
+      "methods": [
+        "test_anchoringDistinguishesFirstMeasurementAndExactBoundaries",
+        "test_anchoringKeepsTheContentInView",
+        "test_argumentsAreChecked",
+        "test_autoAlignmentMovesOnlyToNearestRevealBoundary",
+        "test_negativeEndpointBranchesAndZeroLengthEdits",
+        "test_randomEditsAgreeWithNaivePrefixSums",
+        "test_scrollOffsets",
+        "test_smartAlignmentKeepsRevealedOffsetsAndCentersOthers",
+        "test_sparseMaximumRowCountKeepsLongOffsetsThroughEdits",
+        "test_visibleRangeIsExact"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3RowMath",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3RowMath.java",
+      "sourceSha256": "72aff402ccddc84b8023a5c3af3623b6ca1e15a3f173e5c404c748087f378df6",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_extentsAreRowTimesHeightAndMatchTheBounds",
+        "test_millionRowVirtualTreeAnswersFromTheLanes",
+        "test_plainTreeAgreesWithTheWalk",
+        "test_plainTreeFollowsStructuralChanges",
+        "test_virtualTreeAgreesWithTheWalk",
+        "test_walkOverManyPlainRootsIsLinear",
+        "test_walkStopsAtTheEndOfAPlainTree"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3RowMathDifferential",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3RowMathDifferential.java",
+      "sourceSha256": "be791590a9b77e607c77f7129324105b6f0a90cfa80624eb3db55ba46bc97b80",
+      "recordingRequired": true,
+      "methods": [
+        "plainTreeAnswersLikeTheOfficialWalk",
+        "virtualTreeAnswersLikeTheOfficialWalk"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3ScrollBarModel",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ScrollBarModel.java",
+      "sourceSha256": "04565b0d7383a02039c5c6a3d699df95ecaf461ae0e5c93899bbff315b986756",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_callerLaneIsFilledInPlace",
+        "test_laneEqualsTheGettersOfEveryKind"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3ScrollBarModelDifferential",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ScrollBarModelDifferential.java",
+      "sourceSha256": "b3628209773dc46df319fec4fd020c1ac6018360536f411475528cadfff13f68",
+      "recordingRequired": true,
+      "methods": [
+        "plainWidgetsAnswerLikeTheOfficialJar",
+        "virtualWidgetsAnswerLikeTheOfficialJar"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3ScrollMemento",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ScrollMemento.java",
+      "sourceSha256": "f49c5b90433b9305278864f70373d8e7331532e8320218a4af99ada53e7cec5c",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_emptyWidgets",
+        "test_foreignLongsAreIgnored",
+        "test_remapKeepsTheAnchorRowOnTop",
+        "test_removalBelowTheAnchorKeepsIt",
+        "test_restoreClampsToTheRows",
+        "test_restoreReturnsToTheSavedTopRow",
+        "test_treeAnchorIsAVisibleRow"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3ScrollMementoDifferential",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ScrollMementoDifferential.java",
+      "sourceSha256": "61804cabc9590d81632fc5e41a064355be431e221d27facb2c843e8b83b991ea",
+      "recordingRequired": true,
+      "methods": [
+        "plainWidgetsAnswerLikeTheOfficialJar",
+        "virtualWidgetsAnswerLikeTheOfficialJar"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3Scrolling",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3Scrolling.java",
+      "sourceSha256": "6b831f5c7cdbdc3e50a2728c34b6d085156630e2cb087c5149ca958f769121fa",
+      "recordingRequired": false,
+      "methods": [
+        "test_listScrollInfoAndScrollTo",
+        "test_tableEmptyAndErrors",
+        "test_tableScrollInfoMatchesTheWidget",
+        "test_tableScrollToBottomShowsTheRowAsTheLastFullRow",
+        "test_tableScrollToCenterPutsTheRowInTheMiddle",
+        "test_tableScrollToMinDistanceIsTheShowItemRule",
+        "test_tableScrollToTop",
+        "test_treeErrors",
+        "test_treeScrollInfoCountsVisibleRows",
+        "test_treeScrollToAlignments",
+        "test_treeScrollToExpandsCollapsedAncestorsWithoutEvents"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3SortFilterDifferential",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3SortFilterDifferential.java",
+      "sourceSha256": "fb60bbe927c7964ca5d729f8fa21e0a5fd562c6f308aca8b131b2e2daa454926",
+      "recordingRequired": false,
+      "methods": [
+        "test_differentialUpToAMillionRows",
+        "test_randomScriptsOnSmallSources"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3SortFilterWidgets",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3SortFilterWidgets.java",
+      "sourceSha256": "2e93592cdd62deb999bffe41bf9427bd702c2fa3161286a74e3348bc89d531df",
+      "recordingRequired": false,
+      "methods": [
+        "test_filterPopupEditsTheColumnFilter",
+        "test_filterRowFollowsColumnsAndFilters",
+        "test_headerClicksSortWithShiftAndShowPriorities",
+        "test_virtualTableAsksOnlyForResidentRows",
+        "test_virtualTreeFollowsTheSortedFilteredTree"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3TextMatch",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3TextMatch.java",
+      "sourceSha256": "bda43af9b30ce0c360c17f087b78730f8ca95768fba85351b46b06cb4e565051",
+      "recordingRequired": false,
+      "methods": [
+        "test_checkAndErrors",
+        "test_containsStartsWithExact",
+        "test_regexMatchesTheWholeText",
+        "test_tokensAndNegation",
+        "test_wildcardAgainstRegexTranslation",
+        "test_wildcardMatchesTheWholeText"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3TextSegments",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3TextSegments.java",
+      "sourceSha256": "97b7a0f41edd37f17a341eb1bff0836f3ec644fd0bc396de1a9c051a6c62e15d",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_boundariesAreACopyAndLanesAreBounded",
+        "test_emptyText",
+        "test_graphemesKeepCombiningMarksTogether",
+        "test_lineBreaksAndSentencesMatchTheJdkIterator",
+        "test_localeIsPassedToTheIterator",
+        "test_segmentAtMapsOffsetsToSegments",
+        "test_wordsMatchTheJdkIteratorAndFlagWords"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3TokenMatch",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3TokenMatch.java",
+      "sourceSha256": "cb643618ab3a138ba7e96db2b3858a9cfd833ad4eb7a4a3ac5181adb35287243",
+      "recordingRequired": false,
+      "methods": [
+        "test_indexOfAgreesWithANaiveSearch",
+        "test_indexOfFindsTheFirstOccurrence",
+        "test_presenceMaskUsesTheCursorFactsRule",
+        "test_tokensOfOtherKindsAndErrors",
+        "test_tokensOfWordSegmentsMatchLikeTheWords",
+        "test_unknownMatchesNothing",
+        "test_vocabularyArgumentsAreChecked",
+        "test_vocabularyAssignsDenseStableIds",
+        "test_vocabularyFoldsCaseWhenAsked",
+        "test_vocabularyIsBoundedAndAgreesWithAMapOracle",
+        "test_vocabularyResolvesHashCollisions"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3TypeAhead",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3TypeAhead.java",
+      "sourceSha256": "a5bae6192f6048e50fda4db7c8f1ebb9c5af475ed11d4a3843b7063f57e8c5c7",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_tableAgreesWithALinearScan",
+        "test_tableLaneSearchMakesNoItem",
+        "test_treeSearchesTheVisibleRows",
+        "test_virtualTableAndListAgreeWithALinearScan"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_M3VisibilityObserver",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_M3VisibilityObserver.java",
+      "sourceSha256": "1eab6666f0aa04a94dbf1b856a8c152ce409301646c6a287754df689f86f9c60",
+      "recordingRequired": false,
+      "methods": [
+        "test_argumentsAreChecked",
+        "test_listAndTreeListenersCanBeRemoved",
+        "test_listReportsWhatEntersAndLeaves",
+        "test_removedListenersHearNothing",
+        "test_tableReportsWhatEntersAndLeaves",
+        "test_treeReportsExpansion"
+      ]
+    },
+    {
+      "class": "org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_RowPaintRetention",
+      "source": "JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_internal_render_RowPaintRetention.java",
+      "sourceSha256": "8ffe9ad0918376adef1da6ec3cacddc4ad2ae171a1a02aa817987bd128b79459",
+      "recordingRequired": false,
+      "methods": [
+        "negativeLegacyCountIsNotNewlyRejected",
+        "repeatedGrowShrinkAndZeroReleaseAllPreviousActiveReferences",
+        "shrinkReleasesInactivePayloadWithoutReplacingLanes",
+        "snapshotReadReleasesOlderWideRowAndPreservesActiveSerialization"
+      ]
+    }
+  ]
+}

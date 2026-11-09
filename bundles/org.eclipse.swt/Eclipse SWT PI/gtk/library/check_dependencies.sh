@@ -29,7 +29,7 @@ mygrep() { grep "$@" || test $? = 1; }
 # Check for permitted libraries using `readelf -d` looking for shared
 # libraries that are listed as needed. e.g. lines like:
 #  0x0000000000000001 (NEEDED)             Shared library: [libpthread.so.0]
-readelf -d ${FILE} | mygrep -E '\(NEEDED\)' | while read needed; do
+readelf -d "${FILE}" | mygrep -E '\(NEEDED\)' | while read needed; do
     needed=${needed//*Shared library: [/}
     needed=${needed//]*/}
     if [[ ! " ${ALLOWED_LIBS} " =~ " ${needed} " ]]; then
@@ -42,14 +42,17 @@ done
 # from relocations match @GLIBC_*, the versions are sorted with the max
 # allowed version added to the list too. And then we check the last entry in
 # the list to make sure it is == to max allowed version.
-objdump -R ${FILE} | mygrep @GLIBC_ | while read version; do
-    echo ${version//*@GLIBC_}
-done > /tmp/version_check
-echo ${ALLOWED_GLIBC_VERSION} >> /tmp/version_check
-max_version_in_use=$(cat /tmp/version_check | sort --unique --version-sort | tail -n1)
+VERSION_FILE=$(mktemp "${TMPDIR:-/tmp}/swt-version-check.XXXXXX")
+trap 'rm -f -- "$VERSION_FILE"' EXIT
+
+objdump -R "${FILE}" | mygrep @GLIBC_ | while read version; do
+    echo "${version//*@GLIBC_}"
+done > "$VERSION_FILE"
+echo "${ALLOWED_GLIBC_VERSION}" >> "$VERSION_FILE"
+max_version_in_use=$(sort --unique --version-sort "$VERSION_FILE" | tail -n1)
 if [ "$max_version_in_use" != "$ALLOWED_GLIBC_VERSION" ]; then
     echo "ERROR: $FILE has dependency on glibc greater than allowed version of ${ALLOWED_GLIBC_VERSION} for at least the following symbols"
     # This only lists greatest version number symbols
-    objdump -R ${FILE} | grep @GLIBC_${max_version_in_use}
+    objdump -R "${FILE}" | grep "@GLIBC_${max_version_in_use}"
     exit 1
 fi

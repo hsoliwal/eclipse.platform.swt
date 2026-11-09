@@ -47,6 +47,7 @@ public class AllNonBrowserTests {
 			// Groups of tests
 			AllGraphicsTests.class, //
 			AllWidgetTests.class, //
+			AllM3DifferentialTests.class, //
 			// Rest of tests alphabetically
 			DPIUtilTests.class, //
 			Test_org_eclipse_swt_accessibility_Accessible.class, //
@@ -81,6 +82,7 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_events_VerifyEvent.class, //
 			Test_org_eclipse_swt_internal_ViewportGcProxy.class, //
 			Test_org_eclipse_swt_internal_SVGRasterizer.class, //
+			Test_org_eclipse_swt_internal_render_RowPaintRetention.class, //
 			Test_org_eclipse_swt_layout_BorderLayout.class, //
 			Test_org_eclipse_swt_layout_FormAttachment.class, //
 			Test_org_eclipse_swt_layout_GridData.class, //

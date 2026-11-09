@@ -9,9 +9,10 @@ resource-lifetime problem; use Platform UI for JFace viewers and workbench parts
 [Source map](#swt-source-map) · [Concepts](#swt-key-concepts) ·
 [Quickstart](#swt-quickstart) · [Example](#swt-worked-example) ·
 [Development guide](docs/DEVELOPMENT_GUIDE.md) ·
-[Release preparation and coverage](docs/m3/RELEASE.md)
-[Development guide](docs/DEVELOPMENT_GUIDE.md) · [Release preparation](docs/RELEASE_PREPARATION.md)
-[Development guide](docs/DEVELOPMENT_GUIDE.md) · [Fork release-readiness gates](docs/RELEASE_READINESS.md)
+[Release preparation and coverage](docs/m3/RELEASE.md) ·
+[Fork release-readiness gates](docs/RELEASE_READINESS.md) ·
+[Candidate packaging and naming](docs/RELEASE_PACKAGING.md) ·
+[Release preparation and suite inventory](docs/RELEASE_PREPARATION.md)
 
 ## SWT source map
 
@@ -285,8 +286,9 @@ https://www.eclipse.org/setups/installer/?url=https://raw.githubusercontent.com/
 - [tests/](tests/) contains the common SWT test bundle and native-platform
   test fragments. The [root POM](pom.xml) selects the platform-specific test modules
 
-The current [matrix workflow](.github/workflows/maven.yml) selects JDK 25;
-its [build workflow](.github/workflows/build.yml) selects Maven 3.9.16.
+The current [matrix workflow](.github/workflows/maven.yml) is configured for
+JDK 21 and JDK 25; API/Javadoc checks use selected JDK 25 legs. Its
+[build workflow](.github/workflows/build.yml) selects Maven 3.9.16.
 Use those checked-in values to reproduce that lane. Older platform notes
 include historical JDK versions and last-tested dates; they are not a promise
 that the current reactor builds with those older JDKs.

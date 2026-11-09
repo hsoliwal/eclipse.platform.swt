@@ -1,0 +1,41 @@
+file	hunk_or_scope	decision	reason
+.github/workflows/build-swt-jars.yml	1	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+.github/workflows/build-swt-jars.yml	2	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+.github/workflows/build-swt-jars.yml	3	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+.github/workflows/build-swt-jars.yml	4	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+.github/workflows/build-swt-jars.yml	5	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+.github/workflows/build-swt-jars.yml	6	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+.github/workflows/build-swt-jars.yml	7	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+.github/workflows/build.yml	1	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+.github/workflows/m3-release-readiness.yml	2	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+.github/workflows/m3-release-readiness.yml	3	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+.github/workflows/m3-release-readiness.yml	4	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+docs/RELEASE_PREPARATION.md	2	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+docs/RELEASE_READINESS.md	4	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+docs/m3/README.md	1	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+docs/m3/RELEASE.md	4	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+docs/m3/RELEASE.md	6	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+docs/m3/RELEASE.md	7	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+docs/m3/RELEASE.md	9	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+tests/org.eclipse.swt.tests/Readme.md	3	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+tools/release/readiness.py	2	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+tools/release/readiness.py	8	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+tools/release/readiness.py	9	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+tools/release/test_readiness.py	1	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+tools/release/test_readiness.py	5	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+tools/release/test_readiness.py	6	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+tools/release/test_readiness.py	7	theirs(#325)	master lines contained in #325 hunk (line-set subset)
+README.md	1	theirs(#325)	#325 link row is the de-duplicated union of master's three link lines
+docs/RELEASE_PREPARATION.md	1	theirs(#325)	merged maven.yml matrix is java ['21','25']; #325 wording matches the merged file
+AGENTS.md	1,2	theirs(#325)	same Java 21+25 matrix fact as above
+tests/org.eclipse.swt.tests/Readme.md	1,2	theirs(#325)	#325 AllNonBrowserTests selects AllM3DifferentialTests; master text described the pre-#325 suite
+docs/m3/enhanced-api/coverage/COVERAGE.md	1,2,3	theirs(#325)	#325 carries the M3ItemRange MAX_VALUE repair; master text described the unrepaired source
+tools/release/readiness.py	whole	theirs(#325)	master == #321 head ffae7cacb52a; #325 descends from #323 (stacked on #321)
+tools/release/test_readiness.py	whole	theirs(#325)	master == #321 head; #325 descends via #323
+docs/RELEASE_READINESS.md	whole	theirs(#325)	master == #321 head; #325 = #323 + 19/-1
+.github/workflows/m3-release-readiness.yml	whole	theirs(#325)	master == #321 head; #325 descends via #323
+docs/m3/RELEASE.md	whole	theirs(#325)	master == #324 f4673cd9b5; all f4673 additions present in #325 (0 missing)
+.github/workflows/build-swt-jars.yml	8,9	theirs(#325)+union	#325 SwtCandidateBundle supersedes #324 manual zip and keeps #324 artifact alias; master 'List downloaded artifacts' step kept
+OS.java (win32)	#326	ours(master)	#326 LVM_GETITEMSTATE restore kept (not touched by #325)
+#323 content	72781d5ef870	taken via #325	#323 merged into #321's branch after #321 landed (stacked-PR trap); not on master; #325 carries it
+#327-#333	-	skipped	peer drafts (every-widget H), not on master at cut 378a99d34612; pending user merge

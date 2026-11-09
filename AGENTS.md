@@ -43,7 +43,7 @@ Instead, rely on the GitHub PR workflows created for each platform to test the c
 ### Technology Stack
 - **Build Tool**: Maven with Tycho plugin
 - **Java API/runtime minimum**: JavaSE-21 per `bundles/org.eclipse.swt/META-INF/MANIFEST.MF`.
-- **CI build JDK**: the current `.github/workflows/maven.yml` matrix uses Temurin Java 25; this is **not** proof of runtime compatibility on Java 21.
+- **CI build JDKs**: the current `.github/workflows/maven.yml` matrix configures Temurin Java 21 and Java 25; runtime compatibility requires successful source-bound execution for each claimed platform.
 - **Supported Architectures**: x86_64, aarch64, loongarch64, ppc64le, riscv64
 
 ### Build Commands
@@ -137,7 +137,7 @@ mvn verify -pl :THE_BUNDLE_WITH_THE_ACTUAL_TEST -am -DskipNativeTests=false -Dsu
 
 ### CI/CD
 - GitHub Actions runs builds on Linux, Windows, and macOS
-- The current matrix builds/test-runs with Java 25 on Linux, Windows and macOS. The declared JavaSE-21 runtime minimum requires separately exercised Java 21 compatibility evidence before release.
+- The current matrix configures Java 21 and Java 25 on Linux, Windows and macOS. The declared JavaSE-21 runtime minimum requires successful Java 21 compatibility evidence before release.
 - A test source not selected by `AllTests` (or a documented focused CI lane) is not executed coverage. Run `python3 tools/release/audit_suite_inventory.py --root . --strict` to audit the full default-suite graph; the release mode additionally requires no remaining omissions.
 - Native, GUI, Javadoc, JNI, resource/disposal, and executed Surefire evidence must pass on every claimed platform. Keep missing or disabled lanes PENDING.
 - All required tests must pass before merge
