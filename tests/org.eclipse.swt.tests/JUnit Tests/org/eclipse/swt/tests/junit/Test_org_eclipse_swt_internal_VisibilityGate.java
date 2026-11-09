@@ -364,6 +364,30 @@ public class Test_org_eclipse_swt_internal_VisibilityGate {
 		assertEquals (50_000, list.getTopIndex ());
 	}
 
+	@Test
+	public void test_occlusionTrackerParksWhileNoShellIsVisible () throws Exception {
+		java.lang.reflect.Field field = Display.class.getDeclaredField ("occlusionTracker");
+		field.setAccessible (true);
+		Object tracker = field.get (display);
+		assumeTrue (tracker != null, "occlusion tracking is off");
+		java.lang.reflect.Field parked = tracker.getClass ().getDeclaredField ("parked");
+		parked.setAccessible (true);
+		for (Shell other : display.getShells ()) {
+			if (other.isVisible ()) other.setVisible (false);
+		}
+		spin (800);
+		assertTrue (parked.getBoolean (tracker), "no shell visible: the tracker parks");
+		shell.open ();
+		spin (300);
+		assertFalse (parked.getBoolean (tracker), "a shown shell wakes the tracker");
+		shell.setMinimized (true);
+		spin (800);
+		assertTrue (parked.getBoolean (tracker), "the only shell minimized: the tracker parks");
+		shell.setMinimized (false);
+		spin (300);
+		assertFalse (parked.getBoolean (tracker), "a restored shell wakes the tracker");
+	}
+
 	/* pending timers whose runnable class starts with the prefix (win32 Display.timerList) */
 	int timers (String prefix) throws ReflectiveOperationException {
 		java.lang.reflect.Field field = Display.class.getDeclaredField ("timerList");

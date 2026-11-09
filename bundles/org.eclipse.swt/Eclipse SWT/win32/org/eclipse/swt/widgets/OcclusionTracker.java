@@ -51,6 +51,15 @@ final class OcclusionTracker implements Runnable {
 	final Display display;
 	final int threadId;
 	volatile boolean running = true;
+	/**
+	 * True while the tracker waits because no shell of the Display is visible and nothing is published; the UI
+	 * thread wakes it ({@link #wake}) when a shell is shown, moved, sized or restacked.
+	 */
+	volatile boolean parked;
+	final Object parking = new Object ();
+	/** Visible top-level shells found by the last pass (tracker thread). */
+	int lastOurs;
+	static final int PARK_TIMEOUT_MS = 5000;
 	/** Published occluded HWNDs, replaced (never mutated) by the tracker thread. */
 	volatile long [] published = new long [0];
 	/** UI-thread copy of the last applied set. */
@@ -80,6 +89,17 @@ final class OcclusionTracker implements Runnable {
 
 	void stop () {
 		running = false;
+		wake ();
+	}
+
+	/** UI thread: ends a park. Lock-free unless the tracker is parked. */
+	void wake () {
+		if (parked) {
+			synchronized (parking) {
+				parked = false;
+				parking.notifyAll ();
+			}
+		}
 	}
 
 	@Override
@@ -99,6 +119,10 @@ final class OcclusionTracker implements Runnable {
 					if (!post ()) {
 						return;
 					}
+				}
+				if (lastOurs == 0 && next.length == 0) {
+					park (); // no shell of the Display visible: no desktop walk every SLOW_MS //FLLDCIM: MARK — every-widget Shell H (occlusion tracker)
+					continue;
 				}
 				sleep (count > 0 || next.length > 0 ? FAST_MS : SLOW_MS);
 			}
@@ -141,6 +165,7 @@ final class OcclusionTracker implements Runnable {
 	 */
 	int pass (long covered, long tmp) {
 		int nOurs = collectOurs ();
+		lastOurs = nOurs;
 		if (nOurs == 0) {
 			return 0;
 		}
@@ -342,6 +367,27 @@ final class OcclusionTracker implements Runnable {
 			}
 		}
 		return true;
+	}
+
+	/*
+	 * Waits until a shell is shown (wake), the Display stops, or the safety timeout passes. parked is published
+	 * before the re-check, so a shell shown after the re-check finds parked set and notifies; one shown before it is
+	 * found by the re-check.
+	 */
+	void park () {
+		synchronized (parking) {
+			parked = true;
+			if (!running || collectOurs () > 0) {
+				parked = false;
+				return;
+			}
+			try {
+				parking.wait (PARK_TIMEOUT_MS);
+			} catch (InterruptedException ex) {
+				running = false;
+			}
+			parked = false;
+		}
 	}
 
 	void sleep (int ms) {

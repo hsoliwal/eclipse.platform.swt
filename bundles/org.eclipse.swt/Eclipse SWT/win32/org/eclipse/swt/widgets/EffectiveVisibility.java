@@ -249,6 +249,7 @@ final class EffectiveVisibility {
 		boolean geometry = (flags & (OS.SWP_NOMOVE | OS.SWP_NOSIZE)) != (OS.SWP_NOMOVE | OS.SWP_NOSIZE) || (flags & GEOMETRY_FLAGS) != 0;
 		if (c instanceof Shell shell && (geometry || (flags & OS.SWP_NOZORDER) == 0)) {
 			clearOccluded (shell);
+			wakeOcclusionTracker (shell.display);
 		}
 		if (geometry) {
 			invalidate (c);
@@ -262,6 +263,17 @@ final class EffectiveVisibility {
 		invalidate (c);
 		if (visible) {
 			VisibilityCatchUp.requestSweep (c.display);
+			if (c instanceof Shell) {
+				wakeOcclusionTracker (c.display);
+			}
+		}
+	}
+
+	/** A shell was shown, moved, sized or restacked: a tracker parked while no shell was visible runs again. */
+	static void wakeOcclusionTracker (Display d) {
+		OcclusionTracker tracker = d.occlusionTracker;
+		if (tracker != null) {
+			tracker.wake ();
 		}
 	}
 
