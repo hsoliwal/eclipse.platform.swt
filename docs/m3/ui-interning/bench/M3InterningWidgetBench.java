@@ -228,7 +228,7 @@ public final class M3InterningWidgetBench {
 			}
 		}
 		int expected = paths.size ();
-		for (String scheme : new String [] {"treepath-hash-4247", "m3-path-trie", "treepath-hash-4247", "m3-path-trie"}) {
+		for (String scheme : new String [] {"m3-path-trie", "treepath-hash-4247", "m3-path-trie", "treepath-hash-4247", "m3-path-trie", "treepath-hash-4247"}) {
 			long [] samples = new long [5];
 			long allocated = 0, items = 0;
 			for (int k = 0; k < samples.length; k++) {
@@ -286,22 +286,29 @@ public final class M3InterningWidgetBench {
 		return new long [] {restored, items};
 	}
 
-	/** Trie: resolve only the flagged index paths, parents first; no other item is touched. */
+	/**
+	 * Trie: resolve only the flagged index paths, in row order (a parent before its
+	 * children, top to bottom, as the item walk does); no other item is touched.
+	 */
 	static long [] restoreFromTrie (Tree tree, M3TreePathTrie trie) {
 		long [] counts = new long [2];
 		int [] segments = new int [2];
-		for (int depth = 1; depth <= 2; depth++) {
-			int level = depth;
-			trie.forEachFlagged (M3TreePathTrie.EXPANDED, path -> {
-				if (trie.depth (path) != level) return;
-				trie.segments (path, segments);
-				TreeItem item = tree.getItem (segments [0]);
-				if (level == 2) item = item.getItem (segments [1]);
-				counts [1] += level;
-				item.setItemCount (level == 1 ? CHILDREN : GRANDCHILDREN);
-				item.setExpanded (true);
-				counts [0]++;
-			});
+		long [] order = new long [trie.size ()];
+		int [] count = new int [1];
+		trie.forEachFlagged (M3TreePathTrie.EXPANDED, path -> {
+			int depth = trie.segments (path, segments);
+			long key = (long) segments [0] << 21 | (depth == 2 ? segments [1] + 1 : 0);
+			order [count [0]++] = key << 32 | path;
+		});
+		Arrays.sort (order, 0, count [0]);
+		for (int i = 0; i < count [0]; i++) {
+			int path = (int) order [i], depth = trie.segments (path, segments);
+			TreeItem item = tree.getItem (segments [0]);
+			if (depth == 2) item = item.getItem (segments [1]);
+			counts [1] += depth;
+			item.setItemCount (depth == 1 ? CHILDREN : GRANDCHILDREN);
+			item.setExpanded (true);
+			counts [0]++;
 		}
 		return counts;
 	}
