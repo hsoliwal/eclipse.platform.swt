@@ -1,0 +1,2 @@
+== git diff --exit-code after mvn -N -Pjni-generator exec:exec@run-jni-generator (JDK 25.0.4.1)
+exit=0

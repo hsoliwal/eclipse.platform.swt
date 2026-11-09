@@ -51,4 +51,46 @@ test_binding_refuses_staged_unstaged_and_deleted_tracked_source (test_readiness.
 test_binding_refuses_substituted_jacoco (test_readiness.ReadinessTest.test_binding_refuses_substituted_jacoco) ... ok
 test_binding_refuses_untracked_source_but_allows_ignored_build_outputs (test_readiness.ReadinessTest.test_binding_refuses_untracked_source_but_allows_ignored_build_outputs) ... ok
 test_binding_refuses_wrong_head_non_git_source_and_subdirectory (test_readiness.ReadinessTest.test_binding_refuses_wrong_head_non_git_source_and_subdirectory) ... ok
-test_binding_requires_full_lowercase_expected_sha (test_readiness.ReadinessTest.test_binding_requires_full_lowercase_expected_sha) ... 
+test_binding_requires_full_lowercase_expected_sha (test_readiness.ReadinessTest.test_binding_requires_full_lowercase_expected_sha) ... ok
+test_bound_report_flags_are_paired_even_in_source_mode (test_readiness.ReadinessTest.test_bound_report_flags_are_paired_even_in_source_mode) ... ok
+test_bound_synthetic_surface_still_cannot_admit_product_release (test_readiness.ReadinessTest.test_bound_synthetic_surface_still_cannot_admit_product_release) ... ok
+test_cli_argument_validation_and_json_output (test_readiness.ReadinessTest.test_cli_argument_validation_and_json_output) ... ok
+test_complete_synthetic_surface_is_not_product_evidence (test_readiness.ReadinessTest.test_complete_synthetic_surface_is_not_product_evidence) ... ok
+test_directory_requires_real_test_report_names (test_readiness.ReadinessTest.test_directory_requires_real_test_report_names) ... ok
+test_duplicate_backend_paths_are_refused (test_readiness.ReadinessTest.test_duplicate_backend_paths_are_refused) ... ok
+test_duplicate_jacoco_counter_types_are_refused (test_readiness.ReadinessTest.test_duplicate_jacoco_counter_types_are_refused) ... ok
+test_evaluate_reports_unknown_backend_and_bad_inputs (test_readiness.ReadinessTest.test_evaluate_reports_unknown_backend_and_bad_inputs) ... ok
+test_failed_junit_and_insufficient_branch_coverage_block (test_readiness.ReadinessTest.test_failed_junit_and_insufficient_branch_coverage_block) ... ok
+test_inconsistent_reported_counts_are_refused (test_readiness.ReadinessTest.test_inconsistent_reported_counts_are_refused) ... ok
+test_invalid_or_empty_junit_fails_closed (test_readiness.ReadinessTest.test_invalid_or_empty_junit_fails_closed) ... ok
+test_jacoco_counts_and_missing_branch (test_readiness.ReadinessTest.test_jacoco_counts_and_missing_branch) ... ok
+test_jacoco_invalid_root_and_counts_refused (test_readiness.ReadinessTest.test_jacoco_invalid_root_and_counts_refused) ... ok
+test_junit_and_jacoco_hash_the_same_snapshot_they_parse (test_readiness.ReadinessTest.test_junit_and_jacoco_hash_the_same_snapshot_they_parse) ... ok
+test_junit_counts_separate_skips_and_failures (test_readiness.ReadinessTest.test_junit_counts_separate_skips_and_failures) ... ok
+test_junit_missing_names_errors_and_bad_aggregation (test_readiness.ReadinessTest.test_junit_missing_names_errors_and_bad_aggregation) ... ok
+test_junit_refuses_symlink_inputs_and_nonregular_inventory (test_readiness.ReadinessTest.test_junit_refuses_symlink_inputs_and_nonregular_inventory) ... ok
+test_main_script_entrypoint_is_read_only (test_readiness.ReadinessTest.test_main_script_entrypoint_is_read_only) ... ok
+test_manifest_naming_and_source_anchors (test_readiness.ReadinessTest.test_manifest_naming_and_source_anchors) ... ok
+test_missing_backend_and_coverage_block_release (test_readiness.ReadinessTest.test_missing_backend_and_coverage_block_release) ... ok
+test_missing_manifest_is_reported (test_readiness.ReadinessTest.test_missing_manifest_is_reported) ... ok
+test_nested_aggregate_suite_does_not_double_count (test_readiness.ReadinessTest.test_nested_aggregate_suite_does_not_double_count) ... ok
+test_release_cannot_disable_coverage_thresholds (test_readiness.ReadinessTest.test_release_cannot_disable_coverage_thresholds) ... usage: python3 -m unittest [-h] [--root ROOT] [--release] [--junit JUNIT]
+                           [--jacoco JACOCO] [--source-sha SOURCE_SHA]
+                           [--evidence-manifest EVIDENCE_MANIFEST]
+                           [--min-line MIN_LINE] [--min-branch MIN_BRANCH]
+                           [--json-out JSON_OUT]
+python3 -m unittest: error: release minimum cannot be lowered below 90% line and branch
+usage: python3 -m unittest [-h] [--root ROOT] [--release] [--junit JUNIT]
+                           [--jacoco JACOCO] [--source-sha SOURCE_SHA]
+                           [--evidence-manifest EVIDENCE_MANIFEST]
+                           [--min-line MIN_LINE] [--min-branch MIN_BRANCH]
+                           [--json-out JSON_OUT]
+python3 -m unittest: error: coverage minimum must be finite and between zero and one
+ok
+test_source_only_never_becomes_release_ready (test_readiness.ReadinessTest.test_source_only_never_becomes_release_ready) ... ok
+test_unattributed_aggregate_suite_uses_testcase_counts (test_readiness.ReadinessTest.test_unattributed_aggregate_suite_uses_testcase_counts) ... ok
+
+----------------------------------------------------------------------
+Ran 79 tests in 347.917s
+
+OK

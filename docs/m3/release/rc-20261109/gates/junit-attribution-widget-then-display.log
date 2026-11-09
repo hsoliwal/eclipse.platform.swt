@@ -1,0 +1,985 @@
+stty: /dev/tty: No such device or address
+org.eclipse.swt.widgets.Display.isSystemDarkTheme(): true
+╷
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  ├─ Test_org_eclipse_swt_widgets_Button ✔
+│  │  ├─ test_setDataLjava_lang_StringLjava_lang_Object() ✔
+│  │  ├─ test_isDisposed() ✔
+│  │  ├─ test_addListenerILorg_eclipse_swt_widgets_Listener() ✔
+│  │  ├─ test_removeListenerILorg_eclipse_swt_widgets_Listener() ✔
+│  │  ├─ test_notifyListenersILorg_eclipse_swt_widgets_Event() ✔
+│  │  ├─ test_toString() ✔
+│  │  ├─ test_getDisplay() ✔
+│  │  ├─ test_setDataLjava_lang_Object() ✔
+│  │  ├─ test_addDisposeListenerLorg_eclipse_swt_events_DisposeListener() ✔
+│  │  ├─ test_setCaptureZ() ✔
+│  │  ├─ test_isEnabled() ✔
+│  │  ├─ test_NoExceptionsThrownInFillLayout() ✔
+│  │  ├─ test_setForegroundDisposedColorLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_addFocusListenerLorg_eclipse_swt_events_FocusListener() ✔
+│  │  ├─ test_addMouseTrackListenerMouseHoverAdapterLorg_eclipse_swt_events_MouseTrackLis... ✔
+│  │  ├─ test_getBorderWidth() ✔
+│  │  ├─ test_setBoundsIIII() ✔
+│  │  ├─ test_addFocusListenerFocusGainedAdapterLorg_eclipse_swt_events_FocusListener() ✔
+│  │  ├─ test_setTextDirection() ✔
+│  │  ├─ test_addControlListenerLorg_eclipse_swt_events_ControlListener() ✔
+│  │  ├─ test_setRedrawZ() ✔
+│  │  ├─ test_pack() ✔
+│  │  ├─ test_setForegroundLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_redrawIIIIZ() ✔
+│  │  ├─ test_moveAboveLorg_eclipse_swt_widgets_Control() ✔
+│  │  ├─ test_addControlListenerControlMovedAdapterLorg_eclipse_swt_events_ControlListene... ✔
+│  │  ├─ test_addControlListenerControlResizedAdapterLorg_eclipse_swt_events_ControlListe... ✔
+│  │  ├─ test_toControlII() ✔
+│  │  ├─ test_setMenuLorg_eclipse_swt_widgets_Menu() ✔
+│  │  ├─ test_setLocationLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_setToolTipTextLjava_lang_String() ✔
+│  │  ├─ test_computeSizeII() ✔
+│  │  ├─ test_setVisibleZ() ✔
+│  │  ├─ test_setEnabledZ() ✔
+│  │  ├─ test_toControlLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_redraw() ✔
+│  │  ├─ test_setFontLorg_eclipse_swt_graphics_Font() ✔
+│  │  ├─ test_update() ✔
+│  │  ├─ test_toDisplayII() ✔
+│  │  ├─ test_setBackgroundAlphaLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_getLocation() ✔
+│  │  ├─ test_isVisible() ✔
+│  │  ├─ test_setBoundsLorg_eclipse_swt_graphics_Rectangle() ✔
+│  │  ├─ test_addKeyListenerKeyReleasedAdapterLorg_eclipse_swt_events_KeyListener() ✔
+│  │  ├─ test_requestLayoutL() ✔
+│  │  ├─ test_ExceptionsThrownInDisposeListenerDontPreventDisposal() ✔
+│  │  ├─ test_toDisplayLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_addTraverseListenerLorg_eclipse_swt_events_TraverseListener() ✔
+│  │  ├─ test_addMouseListenerLorg_eclipse_swt_events_MouseListener() ✔
+│  │  ├─ test_addPaintListenerLorg_eclipse_swt_events_PaintListener() ✔
+│  │  ├─ test_setSizeII() ✔
+│  │  ├─ test_setCursorLorg_eclipse_swt_graphics_Cursor() ✔
+│  │  ├─ test_getShell() ✔
+│  │  ├─ test_getParent() ✔
+│  │  ├─ test_addKeyListenerKeyPressedAdapterLorg_eclipse_swt_events_KeyListener() ✔
+│  │  ├─ test_moveBelowLorg_eclipse_swt_widgets_Control() ✔
+│  │  ├─ test_setLocationII() ✔
+│  │  ├─ test_getMonitor() ✔
+│  │  ├─ test_setParentLorg_eclipse_swt_widgets_Composite() ✔
+│  │  ├─ test_setBackgroundDisposedColorLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_addMouseTrackListenerLorg_eclipse_swt_events_MouseTrackListener() ✔
+│  │  ├─ test_setBackgroundLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_setSizeLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_traverseI() ✔
+│  │  ├─ test_addMouseTrackListenerMouseEnterAdapterLorg_eclipse_swt_events_MouseTrackLis... ✔
+│  │  ├─ test_setLayoutDataLjava_lang_Object() ✔
+│  │  ├─ test_addKeyListenerLorg_eclipse_swt_events_KeyListener() ✔
+│  │  ├─ test_addFocusListenerFocusLostAdapterLorg_eclipse_swt_events_FocusListener() ✔
+│  │  ├─ test_setBackgroundSameColorAgain() ✔
+│  │  ├─ test_setForegroundAlphaLorg_eclipse_swt_graphics_Color() ■ Assumption failed: Alpha support for foreground colors does not exist on Win32
+│  │  ├─ test_addHelpListenerLorg_eclipse_swt_events_HelpListener() ✔
+│  │  ├─ test_addMouseTrackListenerMouseExitAdapterLorg_eclipse_swt_events_MouseTrackList... ✔
+│  │  ├─ test_getAccessible() ✔
+│  │  ├─ test_isReparentable() ✔
+│  │  ├─ test_packZ() ✔
+│  │  ├─ test_addMouseMoveListenerLorg_eclipse_swt_events_MouseMoveListener() ✔
+│  │  ├─ test_isFocusControl() ✔
+│  │  ├─ test_setForegroundAlphaCheckButton() ■ Assumption failed: Alpha support for foreground colors does not exist on Win32
+│  │  ├─ test_setBackgroundCheckButton() ✔
+│  │  ├─ test_setForegroundRadioButton() ✔
+│  │  ├─ test_setTextLjava_lang_String() ✔
+│  │  ├─ test_setAlignmentI() ✔
+│  │  ├─ test_setOrientation() ✔
+│  │  ├─ test_addSelectionListenerLorg_eclipse_swt_events_SelectionListener() ✔
+│  │  ├─ test_addSelectionListenerWidgetSelectedAdapterLorg_eclipse_swt_events_SelectionL... ✔
+│  │  ├─ test_setForegroundCheckButton() ✔
+│  │  ├─ test_consistency_DragDetect() ✔
+│  │  ├─ test_setBackgroundAlphaRadioButton() ✔
+│  │  ├─ test_setFocus() ✔
+│  │  ├─ test_computeSize_largerWithLargeCustomFont() ✔
+│  │  ├─ test_consistency_MouseSelection() ✔
+│  │  ├─ test_consistency_MenuDetect() ✔
+│  │  ├─ test_setImageLorg_eclipse_swt_graphics_Image() ✔
+│  │  ├─ test_setBackgroundAlphaCheckButton() ✔
+│  │  ├─ test_setForegroundAlphaRadiokButton() ■ Assumption failed: Alpha support for foreground colors does not exist Win32
+│  │  ├─ test_setBackgroundRadioButton() ✔
+│  │  ├─ test_consistency_EnterSelection() ✔
+│  │  ├─ test_Bug381668() ↷ Test works fine locally but fails to get correct focus on automated builds.
+│  │  ├─ test_consistency_SpaceSelection() ✔
+│  │  ├─ test_computeSizeIIZ() ✔
+│  │  ├─ test_ConstructorLorg_eclipse_swt_widgets_CompositeI() ✔
+│  │  ├─ test_setSelectionZ() ✔
+│  │  └─ test_traverseCheckButton() ✔
+│  └─ Test_org_eclipse_swt_widgets_Display ✔
+│     ├─ test_syncExecLjava_lang_Runnable_dispose() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_syncCall_dispose() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_setDataLjava_lang_StringLjava_lang_Object() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_setAppNameLjava_lang_String() ✔
+│     ├─ test_isDisposed() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_manyDispose() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_syncCall_SWTException() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_addListenerILorg_eclipse_swt_widgets_Listener() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getWarnings() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_setSynchronizerLorg_eclipse_swt_widgets_Synchronizer() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_removeFilterILorg_eclipse_swt_widgets_Listener() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_syncExecLjava_lang_Runnable() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getDoubleClickTime() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_syncCall_RuntimeException() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_setWarningsZ() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_beep() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_wake() ✔
+│     ├─ test_syncCall_Exception() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlII() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getSystemColorI() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_asyncExecLjava_lang_Runnable_dispose() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getSystemFont() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_isSystemDarkTheme() ✔
+│     ├─ test_getDPI() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getDismissalAlignment() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_syncCall_concurrentCallable_Exception() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_readAndDispatch() ✔
+│     ├─ test_getClientArea() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_update() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getPrimaryMonitor() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_postLorg_eclipse_swt_widgets_Event() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_Constructor() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getBounds() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getCursorLocation() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_setCursorLocationLorg_eclipse_swt_graphics_Point(TestInfo) ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_DeviceData() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_syncCall() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getActiveShell() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_removeListenerILorg_eclipse_swt_widgets_Listener() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getDepth() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getFocusControl() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getCursorControl() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getSyncThread() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_Executor() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getShells() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_wakeBeforeSleepIsNotLost() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getThread() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getCurrent() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_addFilterILorg_eclipse_swt_widgets_Listener() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlLorg_ecl... ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_disposeExecLjava_lang_Runnable() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getDefault() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_timerExecILjava_lang_Runnable() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_setCursorLocationII(TestInfo) ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_findDisplayLjava_lang_Thread() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_syncCall_concurrentCallable() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlLorg_ecl... ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_setDataLjava_lang_Object() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_asyncExecLjava_lang_Runnable() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlIIII() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getIconDepth() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getFontListLjava_lang_StringZ() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_getMonitors() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     ├─ test_close() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+│     └─ test_sleep() ✘ Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+└─ JUnit Vintage ✔
+
+Failures (61):
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_syncExecLjava_lang_Runnable_dispose()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_syncExecLjava_lang_Runnable_dispose', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_syncExecLjava_lang_Runnable_dispose(Test_org_eclipse_swt_widgets_Display.java:1432)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_syncCall_dispose()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_syncCall_dispose', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_syncCall_dispose(Test_org_eclipse_swt_widgets_Display.java:1453)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_setDataLjava_lang_StringLjava_lang_Object()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_setDataLjava_lang_StringLjava_lang_Object', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_setDataLjava_lang_StringLjava_lang_Object(Test_org_eclipse_swt_widgets_Display.java:1298)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_isDisposed()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_isDisposed', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_isDisposed(Test_org_eclipse_swt_widgets_Display.java:1659)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_manyDispose()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_manyDispose', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_manyDispose(Test_org_eclipse_swt_widgets_Display.java:1652)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_syncCall_SWTException()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_syncCall_SWTException', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_syncCall_SWTException(Test_org_eclipse_swt_widgets_Display.java:1487)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_addListenerILorg_eclipse_swt_widgets_Listener()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_addListenerILorg_eclipse_swt_widgets_Listener', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_addListenerILorg_eclipse_swt_widgets_Listener(Test_org_eclipse_swt_widgets_Display.java:132)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getWarnings()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getWarnings', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getWarnings(Test_org_eclipse_swt_widgets_Display.java:1635)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_setSynchronizerLorg_eclipse_swt_widgets_Synchronizer()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_setSynchronizerLorg_eclipse_swt_widgets_Synchronizer', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_setSynchronizerLorg_eclipse_swt_widgets_Synchronizer(Test_org_eclipse_swt_widgets_Display.java:1315)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_removeFilterILorg_eclipse_swt_widgets_Listener()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_removeFilterILorg_eclipse_swt_widgets_Listener', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_removeFilterILorg_eclipse_swt_widgets_Listener(Test_org_eclipse_swt_widgets_Display.java:1176)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_syncExecLjava_lang_Runnable()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_syncExecLjava_lang_Runnable', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_syncExecLjava_lang_Runnable(Test_org_eclipse_swt_widgets_Display.java:1420)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getDoubleClickTime()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getDoubleClickTime', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getDoubleClickTime(Test_org_eclipse_swt_widgets_Display.java:388)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_syncCall_RuntimeException()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_syncCall_RuntimeException', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_syncCall_RuntimeException(Test_org_eclipse_swt_widgets_Display.java:1463)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_setWarningsZ()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_setWarningsZ', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_setWarningsZ(Test_org_eclipse_swt_widgets_Display.java:1667)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_beep()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_beep', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_beep(Test_org_eclipse_swt_widgets_Display.java:235)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_syncCall_Exception()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_syncCall_Exception', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_syncCall_Exception(Test_org_eclipse_swt_widgets_Display.java:1475)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlII()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlII', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlII(Test_org_eclipse_swt_widgets_Display.java:551)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getSystemColorI()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getSystemColorI', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getSystemColorI(Test_org_eclipse_swt_widgets_Display.java:510)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_asyncExecLjava_lang_Runnable_dispose()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_asyncExecLjava_lang_Runnable_dispose', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_asyncExecLjava_lang_Runnable_dispose(Test_org_eclipse_swt_widgets_Display.java:217)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getSystemFont()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getSystemFont', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getSystemFont(Test_org_eclipse_swt_widgets_Display.java:530)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getDPI()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getDPI', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getDPI(Test_org_eclipse_swt_widgets_Display.java:1601)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getDismissalAlignment()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getDismissalAlignment', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getDismissalAlignment(Test_org_eclipse_swt_widgets_Display.java:377)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_syncCall_concurrentCallable_Exception()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_syncCall_concurrentCallable_Exception', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_syncCall_concurrentCallable_Exception(Test_org_eclipse_swt_widgets_Display.java:1508)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getClientArea()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getClientArea', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getClientArea(Test_org_eclipse_swt_widgets_Display.java:320)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_update()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_update', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_update(Test_org_eclipse_swt_widgets_Display.java:1559)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getPrimaryMonitor()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getPrimaryMonitor', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getPrimaryMonitor(Test_org_eclipse_swt_widgets_Display.java:445)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_postLorg_eclipse_swt_widgets_Event()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_postLorg_eclipse_swt_widgets_Event', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_postLorg_eclipse_swt_widgets_Event(Test_org_eclipse_swt_widgets_Display.java:1068)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_Constructor()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_Constructor', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_Constructor(Test_org_eclipse_swt_widgets_Display.java:73)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getBounds()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getBounds', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getBounds(Test_org_eclipse_swt_widgets_Display.java:309)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getCursorLocation()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getCursorLocation', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getCursorLocation(Test_org_eclipse_swt_widgets_Display.java:352)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_setCursorLocationLorg_eclipse_swt_graphics_Point(TestInfo)
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_setCursorLocationLorg_eclipse_swt_graphics_Point', methodParameterTypes = 'org.junit.jupiter.api.TestInfo']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_setCursorLocationLorg_eclipse_swt_graphics_Point(Test_org_eclipse_swt_widgets_Display.java:1256)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_ConstructorLorg_eclipse_swt_graphics_DeviceData()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_ConstructorLorg_eclipse_swt_graphics_DeviceData', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_ConstructorLorg_eclipse_swt_graphics_DeviceData(Test_org_eclipse_swt_widgets_Display.java:83)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_syncCall()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_syncCall', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_syncCall(Test_org_eclipse_swt_widgets_Display.java:1442)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getActiveShell()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getActiveShell', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getActiveShell(Test_org_eclipse_swt_widgets_Display.java:276)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_removeListenerILorg_eclipse_swt_widgets_Listener()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_removeListenerILorg_eclipse_swt_widgets_Listener', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_removeListenerILorg_eclipse_swt_widgets_Listener(Test_org_eclipse_swt_widgets_Display.java:1204)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getDepth()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getDepth', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getDepth(Test_org_eclipse_swt_widgets_Display.java:1613)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getFocusControl()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getFocusControl', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getFocusControl(Test_org_eclipse_swt_widgets_Display.java:399)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getCursorControl()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getCursorControl', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getCursorControl(Test_org_eclipse_swt_widgets_Display.java:341)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getSyncThread()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getSyncThread', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getSyncThread(Test_org_eclipse_swt_widgets_Display.java:467)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_Executor()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_Executor', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_Executor(Test_org_eclipse_swt_widgets_Display.java:172)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getShells()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getShells', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getShells(Test_org_eclipse_swt_widgets_Display.java:453)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_wakeBeforeSleepIsNotLost()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_wakeBeforeSleepIsNotLost', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_wakeBeforeSleepIsNotLost(Test_org_eclipse_swt_widgets_Display.java:1579)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getThread()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getThread', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getThread(Test_org_eclipse_swt_widgets_Display.java:541)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getCurrent()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getCurrent', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getCurrent(Test_org_eclipse_swt_widgets_Display.java:331)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_addFilterILorg_eclipse_swt_widgets_Listener()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_addFilterILorg_eclipse_swt_widgets_Listener', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_addFilterILorg_eclipse_swt_widgets_Listener(Test_org_eclipse_swt_widgets_Display.java:104)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_graphics_Point()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_graphics_Point', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_graphics_Point(Test_org_eclipse_swt_widgets_Display.java:803)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_disposeExecLjava_lang_Runnable()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_disposeExecLjava_lang_Runnable', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_disposeExecLjava_lang_Runnable(Test_org_eclipse_swt_widgets_Display.java:253)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getDefault()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getDefault', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getDefault(Test_org_eclipse_swt_widgets_Display.java:367)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_timerExecILjava_lang_Runnable()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_timerExecILjava_lang_Runnable', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_timerExecILjava_lang_Runnable(Test_org_eclipse_swt_widgets_Display.java:1520)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_setCursorLocationII(TestInfo)
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_setCursorLocationII', methodParameterTypes = 'org.junit.jupiter.api.TestInfo']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_setCursorLocationII(Test_org_eclipse_swt_widgets_Display.java:1229)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_findDisplayLjava_lang_Thread()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_findDisplayLjava_lang_Thread', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_findDisplayLjava_lang_Thread(Test_org_eclipse_swt_widgets_Display.java:266)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_syncCall_concurrentCallable()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_syncCall_concurrentCallable', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_syncCall_concurrentCallable(Test_org_eclipse_swt_widgets_Display.java:1497)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_graphics_Rectangle()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_graphics_Rectangle', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_graphics_Rectangle(Test_org_eclipse_swt_widgets_Display.java:933)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_setDataLjava_lang_Object()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_setDataLjava_lang_Object', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_setDataLjava_lang_Object(Test_org_eclipse_swt_widgets_Display.java:1285)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_asyncExecLjava_lang_Runnable()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_asyncExecLjava_lang_Runnable', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_asyncExecLjava_lang_Runnable(Test_org_eclipse_swt_widgets_Display.java:156)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlIIII()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlIIII', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_mapLorg_eclipse_swt_widgets_ControlLorg_eclipse_swt_widgets_ControlIIII(Test_org_eclipse_swt_widgets_Display.java:676)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getIconDepth()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getIconDepth', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getIconDepth(Test_org_eclipse_swt_widgets_Display.java:409)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getFontListLjava_lang_StringZ()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getFontListLjava_lang_StringZ', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getFontListLjava_lang_StringZ(Test_org_eclipse_swt_widgets_Display.java:1623)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_getMonitors()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_getMonitors', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_getMonitors(Test_org_eclipse_swt_widgets_Display.java:420)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_close()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_close', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_close(Test_org_eclipse_swt_widgets_Display.java:245)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Display:test_sleep()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display', methodName = 'test_sleep', methodParameterTypes = '']
+    => org.eclipse.swt.SWTException: Invalid thread access Another Display is already associated by this thread: Thread[#1,main,5,main]
+       org.eclipse.swt.SWT.error(SWT.java:5066)
+       org.eclipse.swt.widgets.Display.checkDisplay(Display.java:1024)
+       org.eclipse.swt.widgets.Display.create(Display.java:1104)
+       org.eclipse.swt.graphics.Device.<init>(Device.java:136)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:642)
+       org.eclipse.swt.widgets.Display.<init>(Display.java:633)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.test_sleep(Test_org_eclipse_swt_widgets_Display.java:1368)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+Test run finished after 8346 ms
+[         5 containers found      ]
+[         0 containers skipped    ]
+[         5 containers started    ]
+[         0 containers aborted    ]
+[         5 containers successful ]
+[         0 containers failed     ]
+[       168 tests found           ]
+[         1 tests skipped         ]
+[       167 tests started         ]
+[         3 tests aborted         ]
+[       103 tests successful      ]
+[        61 tests failed          ]
+

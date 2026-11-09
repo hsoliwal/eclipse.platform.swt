@@ -1,0 +1,2 @@
+name	start	end	rc	jni_check_diagnostics	selectors
+display	2026-11-09T16:30:24+05:30	2026-11-09T16:40:33+05:30	1	0	--select-class org.eclipse.swt.tests.junit.Test_ViewportBoundsGtk --select-class org.eclipse.swt.tests.junit.Test_ViewportTableAdjustment --select-class org.eclipse.swt.tests.junit.Test_ViewportTextLifecycle --select-class org.eclipse.swt.tests.junit.ViewportResourceRegressionTest --select-class org.eclipse.swt.tests.junit.AllNonBrowserTests

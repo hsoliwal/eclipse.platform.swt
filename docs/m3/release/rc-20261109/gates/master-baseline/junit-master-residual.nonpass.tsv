@@ -1,0 +1,9 @@
+mark	node	parent	test	message
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_treePaintNeverMaterializesRowsWithoutApiCalls()	root rows painted without TreeItems ==> expected: <0> but was: <22>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_treeUnknownChildrenFetchedOnExpandWithMaskBitPlaceholder()	the loading child is a mask bit, not a TreeItem ==> expected: <22> but was: <29>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_treeBulkChildCountIsBatchedWithPreciseDamageOnly()	class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource cannot access a member of class org.eclipse.swt.widgets.Tree with package access
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain()	evicted blocks were swapped out ==> expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_StyledText_PagedContent	test_wrapThenLargeSetTextMeasuresOnlyTheWindow()	lineSizes
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_awt_Java2DCanvas	test_ownedNativeResourcesReturnToBaselineAndObserverDetectsRetention()	transient Image/GC/Region/Transform must be disposed: [Region {RegionHandle[handle=537139212, zoom=100]}, Region {RegionHandle[handle=3338931149, zoom=100]}, Region {RegionHandle[handle=419697638, zoom=100]}, Image {{100
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_awt_Java2DCanvas	test_screenPanCoverUncoverEqualsFreshFrame()	Assumption failed: viewport screenshot lane disabled
+FAIL	leaf	JUnit Jupiter/Test_M3SortFilterWidgets	test_filterRowFollowsColumnsAndFilters()	expected: <true> but was: <false>

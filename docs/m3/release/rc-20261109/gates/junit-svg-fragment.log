@@ -1,0 +1,147 @@
+stty: /dev/tty: No such device or address
+JPEG datastream contains no image
+JPEG datastream contains no image
+╷
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  ├─ Test_org_eclipse_swt_internal_SVGRasterizer ✔
+│  │  ├─ test_ConstructorLorg_eclipse_swt_graphics_Device_ImageFileNameProvider() ✔
+│  │  ├─ test_currentColorAtTargetSize() ✔
+│  │  ├─ test_currentColor() ✔
+│  │  ├─ test_ConstructorLorg_eclipse_swt_graphics_Device_ImageDataProvider() ✔
+│  │  └─ test_ConstructorLorg_eclipse_swt_graphics_Device_InputStream() ✔
+│  ├─ Test_org_eclipse_swt_graphics_GC ✔
+│  │  ├─ test_drawRoundRectangleIIIIII() ✔
+│  │  ├─ test_fillRectangleIIII() ✔
+│  │  ├─ test_textExtentLjava_lang_StringI_lineDelimiterVariants() ✔
+│  │  ├─ test_isDisposed() ✔
+│  │  ├─ test_drawTextLjava_lang_StringIII() ✔
+│  │  ├─ test_drawTextLjava_lang_StringIIZ() ✔
+│  │  ├─ test_textExtentLjava_lang_String() ✔
+│  │  ├─ test_fillOvalIIII() ✔
+│  │  ├─ test_copyAreaIIIIII() ✔
+│  │  ├─ test_drawStringLjava_lang_StringIIZ() ✔
+│  │  ├─ test_bug493455_drawImageAlpha_srcPos() ✔
+│  │  ├─ test_drawRectangleIIII() ✔
+│  │  ├─ test_copyAreaLorg_eclipse_swt_graphics_ImageII() ✔
+│  │  ├─ test_drawOvalIIII() ✔
+│  │  ├─ test_fillArcIIIIII() ✔
+│  │  ├─ test_setLineDash$I() ✔
+│  │  ├─ test_drawImageLorg_eclipse_swt_graphics_ImageII() ✔
+│  │  ├─ test_hashCode() ✔
+│  │  ├─ test_getClipping() ✔
+│  │  ├─ test_drawPointII() ✔
+│  │  ├─ test_setForegroundLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_drawImageLorg_eclipse_swt_graphics_ImageIIII_withTransform() ✔
+│  │  ├─ test_drawImageLorg_eclipse_swt_graphics_ImageIIIIIIII() ✔
+│  │  ├─ test_stringExtentLjava_lang_String() ✔
+│  │  ├─ test_setLineAttributes$I() ✔
+│  │  ├─ test_setLineStyleI() ✔
+│  │  ├─ test_ConstructorLorg_eclipse_swt_graphics_DrawableI() ✔
+│  │  ├─ test_drawPolygon$I() ✔
+│  │  ├─ test_drawLineIIII() ✔
+│  │  ├─ test_setLineWidthI() ✔
+│  │  ├─ test_getClippingRegion_respectsTransformAndPreservesHoles() ✔
+│  │  ├─ test_drawImage_nonAutoScalableGC_bug_2504() ✔
+│  │  ├─ test_fillRectangleLorg_eclipse_swt_graphics_Rectangle() ✔
+│  │  ├─ test_noMemoryLeakAfterDispose() ✔
+│  │  ├─ test_getCharWidthC() ✔
+│  │  ├─ test_drawImage_doesNotReReadImageFileAtNonDefaultZoom() ✔
+│  │  ├─ test_setFontLorg_eclipse_swt_graphics_Font() ✔
+│  │  ├─ test_setClippingIIII() ✔
+│  │  ├─ test_equalsLjava_lang_Object() ✔
+│  │  ├─ test_getFontMetrics() ✔
+│  │  ├─ test_drawImageLorg_eclipse_swt_graphics_ImageIIII_withTransform_zeroTargetSize() ✔
+│  │  ├─ test_copyAreaIIIIII_overlapingSourceTarget() ✔
+│  │  ├─ test_drawImageLorg_eclipse_swt_graphics_ImageIIII_ImageDataAtSizeProvider(int) ✔
+│  │  │  ├─ [1] 0 ✔
+│  │  │  ├─ [2] 1 ✔
+│  │  │  ├─ [3] 2 ✔
+│  │  │  └─ [4] -1 ✔
+│  │  ├─ test_isClipped() ✔
+│  │  ├─ test_dispose() ✔
+│  │  ├─ test_bug1288_createGCFromImageFromNonDisplayThread() ✔
+│  │  ├─ test_setXORModeZ() ✔
+│  │  ├─ test_drawImageLorg_eclipse_swt_graphics_ImageIIII() ✔
+│  │  ├─ test_fillRoundRectangleIIIIII() ✔
+│  │  ├─ test_textExtentLjava_lang_StringI() ✔
+│  │  ├─ test_getAdvanceWidthC() ✔
+│  │  ├─ test_getStyle() ✔
+│  │  ├─ test_drawFocusIIII() ✔
+│  │  ├─ test_drawTextLjava_lang_StringII() ✔
+│  │  ├─ test_drawStringLjava_lang_StringII() ✔
+│  │  ├─ test_drawArcIIIIII() ✔
+│  │  ├─ test_fillGradientRectangle_doesNotChangeLaterDrawing() ✔
+│  │  ├─ test_setLineDash$I_withDeviceScaling() ✔
+│  │  ├─ test_getFontMetrics_notAffectedByTransform() ✔
+│  │  ├─ test_drawRectangleLorg_eclipse_swt_graphics_Rectangle() ✔
+│  │  ├─ test_toString() ✔
+│  │  ├─ test_textExtentLjava_lang_StringI_disabledLineDelimiter() ✔
+│  │  ├─ test_drawPolyline$I() ✔
+│  │  ├─ test_setBackgroundLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_drawImageLorg_eclipse_swt_graphics_ImageIIII_ImageDataProvider() ✔
+│  │  ├─ test_fillGradientRectangleIIIIZ() ✔
+│  │  ├─ test_fillPolygon$I() ✔
+│  │  ├─ test_ConstructorLorg_eclipse_swt_graphics_Drawable() ✔
+│  │  ├─ test_drawLine_noSingularitiesIn45DregreeRotation() ✔
+│  │  ├─ test_setLineAttributes$I_withDeviceScaling() ✔
+│  │  ├─ test_drawImageLorg_eclipse_swt_graphics_ImageIIII_ImageDataAtSizeProvider_invali... ✔
+│  │  ├─ test_setClippingLorg_eclipse_swt_graphics_Rectangle() ✔
+│  │  ├─ test_setLineWidthI_withDeviceScaling() ✔
+│  │  └─ test_drawImage_emptyImage() ✔
+│  └─ Test_org_eclipse_swt_graphics_Image ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_DeviceLorg_eclipse_swt_graphics_int_in... ✔
+│     ├─ test_drawImageAtSize_reevaluatesSizabilityWhenFileNameChanges() ✔
+│     ├─ test_isDisposed() ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_Device_ImageFileNameProvider() ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_DeviceImageI_fileNameProvider() ✔
+│     ├─ test_drawImageAtSize_cacheIsReusedAtNonDefaultZoom() ✔
+│     ├─ test_hashCode() ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_DeviceII() ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_Device_ImageGcDrawer() ✔
+│     ├─ test_getImageData_fromImageForCustomImageData() ✔
+│     ├─ test_getImageData_fromFiles() ✔
+│     ├─ test_getImageData_fromImage() ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_DeviceLorg_eclipse_swt_graphics_Rectan... ✔
+│     ├─ test_getImageData_changingImageDataDoesNotAffectImage() ✔
+│     ├─ test_drawImageAtSize_doesNotReReadFileOfNonSizableFormat() ✔
+│     ├─ test_getImageData_100() ✔
+│     ├─ test_getImageData_125() ✔
+│     ├─ test_getImageData_150() ✔
+│     ├─ test_getImageData_200() ✔
+│     ├─ test_equalsLjava_lang_Object() ✔
+│     ├─ test_imageDataSameViaProviderAndSimpleData() ✔
+│     ├─ test_updateWidthHeightAfterDPIChange() ✔
+│     ├─ test_bug566545_efficientGrayscaleImage() ✔
+│     ├─ test_getBounds() ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_DeviceLjava_io_InputStream() ✔
+│     ├─ test_getImageDataCurrentZoom() ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_Device_ImageDataAtSizeProvider() ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_DeviceImageI_inputStream() ✔
+│     ├─ test_toString() ✔
+│     ├─ test_setBackgroundLorg_eclipse_swt_graphics_Color() ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_DeviceLjava_lang_String() ✔
+│     ├─ test_gcOnImageGcDrawer_imageDataAtNonDeviceZoom() ✔
+│     ├─ test_getBoundsInPixels() ✔
+│     ├─ test_getBackground() ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_Device_ImageDataProvider() ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_DeviceLorg_eclipse_swt_graphics_ImageD... ✔
+│     ├─ test_ConstructorLorg_eclipse_swt_graphics_DeviceLorg_eclipse_swt_graphics_ImageD... ✔
+│     ├─ test_imageDataIsCached() ✔
+│     └─ test_imageDataSameViaDifferentProviders() ✔
+└─ JUnit Vintage ✔
+
+Test run finished after 4500 ms
+[         7 containers found      ]
+[         0 containers skipped    ]
+[         7 containers started    ]
+[         0 containers aborted    ]
+[         7 containers successful ]
+[         0 containers failed     ]
+[       121 tests found           ]
+[         0 tests skipped         ]
+[       121 tests started         ]
+[         0 tests aborted         ]
+[       121 tests successful      ]
+[         0 tests failed          ]
+

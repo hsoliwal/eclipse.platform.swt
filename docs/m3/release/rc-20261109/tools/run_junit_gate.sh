@@ -18,7 +18,7 @@ bash C:/m3-superset/tools/ui_lock.sh "rc-20261109-$NAME" bash C:/m3-superset/too
 rc=$?
 end=$(date -Iseconds)
 sed 's/\x1b\[[0-9;]*m//g' "$LOG" > "$EV/junit-$NAME.log"
-cp "$RUN"/reports/TEST-*.xml "$EV/" 2>/dev/null && for f in "$EV"/TEST-junit-*.xml; do [ -f "$f" ] && mv "$f" "${f%.xml}-$NAME.xml"; done
+for f in "$RUN"/reports/TEST-*.xml; do [ -f "$f" ] && b=$(basename "$f" .xml) && cp "$f" "$EV/$b-$NAME.xml"; done
 grep -E '^\[ +[0-9]+ (tests|containers) [a-z]+ +\]' "$EV/junit-$NAME.log" | sed -E 's/^\[ +([0-9]+) ([a-z]+) ([a-z]+) +\]/\2_\3\t\1/' > "$EV/junit-$NAME.counts.tsv"
 jni=$(grep -c -E 'WARNING in native method|FATAL ERROR in native method|JNI warning' "$EV/junit-$NAME.log")
 printf 'name\tstart\tend\trc\tjni_check_diagnostics\tselectors\n%s\t%s\t%s\t%s\t%s\t%s\n' "$NAME" "$start" "$end" "$rc" "$jni" "$*" > "$EV/junit-$NAME.summary.tsv"

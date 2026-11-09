@@ -31,12 +31,8 @@ def tree(c):
 
 def shortstat(a, b):
     out = git("diff", "--shortstat", a, b)[1]
-    nums = collections.defaultdict(int)
-    for part in out.split(","):
-        part = part.strip()
-        if part:
-            n, word = part.split(" ", 1)
-            nums[word.split()[0].rstrip("s")] += int(n)
+    import re
+    nums = {k: int(m.group(1)) if (m := re.search(rf"(\d+) {k}", out)) else 0 for k in ("file", "insertion", "deletion")}
     return f"{nums['file']} files +{nums['insertion']}/-{nums['deletion']}" if out else "0 files"
 
 
