@@ -77,6 +77,9 @@ public class Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport {
 				gc.setBackground (gc.getDevice ().getSystemColor (SWT.COLOR_WHITE + (value & 7)));
 				gc.fillRectangle (0, y, area.width, ROW);
 				gc.setForeground (gc.getDevice ().getSystemColor (SWT.COLOR_BLACK));
+				//FLLDCIM: TOP - the oracle compares a window capture with an Image GC; text smoothing differs between the
+				//FLLDCIM: TOP - two DCs (sub-pixel blend on screen, grayscale offscreen), so draw the label unsmoothed
+				gc.setTextAntialias (SWT.OFF);
 				gc.drawText (Integer.toString (value), 4, y, true);
 			}
 		}
