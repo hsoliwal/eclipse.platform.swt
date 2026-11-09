@@ -87,6 +87,41 @@ public class Test_M3ItemRange {
 		assertArrayEquals (new int [] {9, 1, 1, 4}, indices);
 	}
 
+
+	@Test
+	public void test_upperIntBoundaryAndNonAdjacentRuns () {
+		/* Source indices can reach int's positive limit; the adjacency check must not
+		 * overflow when the largest valid index is the final member of a range. */
+		int last = Integer.MAX_VALUE;
+		M3ItemRange tail = M3ItemRange.of (last - 1, last);
+		assertEquals (2, tail.size ());
+		assertTrue (tail.contains (last));
+		assertFalse (tail.contains (last - 2));
+		assertArrayEquals (new M3ItemRange [] {tail},
+			M3ItemRange.coalesce (new int [] {last - 1, last}));
+		assertArrayEquals (new M3ItemRange [] {
+			M3ItemRange.of (last - 2, last - 2), M3ItemRange.of (last, last)
+		}, M3ItemRange.coalesce (new int [] {last, last - 2}));
+		assertEquals (2, M3ItemRange.countOf (new M3ItemRange [] {
+			M3ItemRange.of (last - 2, last - 2), M3ItemRange.of (last, last)
+		}));
+		assertEquals (M3ItemRange.of (last, last),
+			tail.intersection (M3ItemRange.of (last, last)));
+	}
+
+
+
+	@Test
+	public void test_duplicateAtMaximumIntCoalescesOnce () {
+		/* Release-blocking regression: int overflow in +1 must not split duplicates.
+		 * The current implementation needs the canonical source-pinned recipe fix. */
+		int last = Integer.MAX_VALUE;
+		M3ItemRange [] ranges = M3ItemRange.coalesce (new int [] {last, last});
+		assertArrayEquals (new M3ItemRange [] {M3ItemRange.of (last, last)}, ranges);
+		assertEquals (1, M3ItemRange.countOf (ranges));
+	}
+
+
 	@Test
 	public void test_equalsHashCodeToString () {
 		M3ItemRange same = new M3ItemRange (1, 2);

@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "product": "SWT M3",
+  "inspection_date": "2026-11-07",
+  "status": "PASS_FOCUSED_HEADLESS_ONLY",
+  "release_status": "HOLD",
+  "source_repository": "hsoliwal/eclipse.platform.swt",
+  "source_commit": "62460082d7caa06b21c49da99abbab53f73b3ffc",
+  "scope": "Nine existing JUnit test classes; ten explicitly named production source files including their nested classes. Not whole-SWT coverage.",
+  "java_compile": {
+    "release": 21,
+    "gtk_production_sources": 682,
+    "production_errors": 0,
+    "production_lint": "existing warnings, not Werror clean",
+    "ordinary_m3_test_classes": 26,
+    "test_compile_errors": 0,
+    "test_compile_warnings": 0,
+    "native_build": "NOT_RUN"
+  },
+  "execution": {
+    "runtime": "Temurin 21.0.13+9-LTS",
+    "junit_platform": "1.14.4",
+    "jacoco": "0.8.15",
+    "platform_source_set": "gtk.linux.x86_64",
+    "mode": "default startup properties",
+    "native_display_created": false,
+    "tests_found": 77,
+    "tests_started": 77,
+    "tests_succeeded": 77,
+    "tests_failed": 0,
+    "tests_skipped": 0,
+    "tests_aborted": 0,
+    "runtime_version_output": [
+      "openjdk version \"21.0.13\" 2026-10-20 LTS",
+      "OpenJDK Runtime Environment Temurin-21.0.13+9 (build 21.0.13+9-LTS)",
+      "OpenJDK 64-Bit Server VM Temurin-21.0.13+9 (build 21.0.13+9-LTS, mixed mode, sharing)"
+    ]
+  },
+  "test_inputs": [
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3Collation.java",
+      "sha256": "2bb00d6a6ba463f6556bc70ad61531db2af1397a8c11011feb8e02cc2fe1f23d"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ColumnFilter.java",
+      "sha256": "448c57e6b02d3a9553411f11d3e42253d6f89c7b843b4cddacd49625df3543cf"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ColumnSort.java",
+      "sha256": "f5ba6de087f0e99ad02b82909ddfe61368fbb4bab01917282e2135ba3a6ca3b6"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ItemRange.java",
+      "sha256": "80bbef121d897524cad974ea2093b6691ba5c999015e4747ee32bfcf745dc23e"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3Patch.java",
+      "sha256": "9980913c798b6d1974136f405725de9a674de63ca7fc8785e60c5e6aa20a0aae"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3RowExtents.java",
+      "sha256": "035b2a9f11c53b59f5c69d4efccea9e44d77dc6248ae943923df1451d3aec089"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3TextMatch.java",
+      "sha256": "bda43af9b30ce0c360c17f087b78730f8ca95768fba85351b46b06cb4e565051"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3TextSegments.java",
+      "sha256": "97b7a0f41edd37f17a341eb1bff0836f3ec644fd0bc396de1a9c051a6c62e15d"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3TokenMatch.java",
+      "sha256": "cb643618ab3a138ba7e96db2b3858a9cfd833ad4eb7a4a3ac5181adb35287243"
+    }
+  ],
+  "source_counters": [
+    {
+      "source": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/m3/M3Collation.java",
+      "source_sha256": "9fc5a3a65f393d94d968b0bbaad048365196d960e0d5e489936e72cdd34ae93e",
+      "line": {
+        "covered": 14,
+        "missed": 1
+      },
+      "branch": {
+        "covered": 17,
+        "missed": 1
+      }
+    },
+    {
+      "source": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/m3/M3ColumnFilter.java",
+      "source_sha256": "b16ad6afe1343a6ef19df6dc5647914b277a406afbc820e677c61e5a9b6007af",
+      "line": {
+        "covered": 251,
+        "missed": 70
+      },
+      "branch": {
+        "covered": 182,
+        "missed": 53
+      }
+    },
+    {
+      "source": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/m3/M3ColumnSort.java",
+      "source_sha256": "10cd1be618b26330d5f4b638380185a0d4bdbdf74bca1f609dc6d3449aa625d3",
+      "line": {
+        "covered": 136,
+        "missed": 25
+      },
+      "branch": {
+        "covered": 74,
+        "missed": 18
+      }
+    },
+    {
+      "source": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/m3/M3Patch.java",
+      "source_sha256": "ba3fe219dc4a6e4123259141ccd6fe01a6f03dbcaac1be5a37483155ec4b0cc6",
+      "line": {
+        "covered": 174,
+        "missed": 2
+      },
+      "branch": {
+        "covered": 126,
+        "missed": 10
+      }
+    },
+    {
+      "source": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/m3/M3TextMatch.java",
+      "source_sha256": "7580874e9b1b27f6d78388520740dc45f13e48fb053aefbda4096f0e8c6a5fba",
+      "line": {
+        "covered": 92,
+        "missed": 0
+      },
+      "branch": {
+        "covered": 121,
+        "missed": 2
+      }
+    },
+    {
+      "source": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/m3/M3TextSegments.java",
+      "source_sha256": "d960d4783add97cc418f01a83855168916a4b04b822b35a61a7a8739fe80f07d",
+      "line": {
+        "covered": 66,
+        "missed": 0
+      },
+      "branch": {
+        "covered": 57,
+        "missed": 1
+      }
+    },
+    {
+      "source": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/m3/M3TokenMatch.java",
+      "source_sha256": "3aed4a74415af68772cc863c414c2db2a7ed039871280235aaba41e39d678965",
+      "line": {
+        "covered": 23,
+        "missed": 0
+      },
+      "branch": {
+        "covered": 33,
+        "missed": 1
+      }
+    },
+    {
+      "source": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/m3/M3TokenVocabulary.java",
+      "source_sha256": "07b2f11094989cca046b40911015c6592eed0a05accbce5370c3a2ae1e63c4a1",
+      "line": {
+        "covered": 65,
+        "missed": 0
+      },
+      "branch": {
+        "covered": 46,
+        "missed": 2
+      }
+    },
+    {
+      "source": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/M3ItemRange.java",
+      "source_sha256": "2bc799b65fa54183aef02438f2f18c55ff31726cbfa0d670fadaf3e45654be2b",
+      "line": {
+        "covered": 51,
+        "missed": 0
+      },
+      "branch": {
+        "covered": 59,
+        "missed": 9
+      }
+    },
+    {
+      "source": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/M3RowExtents.java",
+      "source_sha256": "8915c078b9891b500d5567657ffaf0ba695c3761340762f75cf68805c10ee239",
+      "line": {
+        "covered": 54,
+        "missed": 0
+      },
+      "branch": {
+        "covered": 30,
+        "missed": 12
+      }
+    }
+  ],
+  "scoped_totals": {
+    "line": {
+      "covered": 926,
+      "missed": 98,
+      "total": 1024,
+      "percent": 90.4297
+    },
+    "branch": {
+      "covered": 745,
+      "missed": 109,
+      "total": 854,
+      "percent": 87.2365
+    }
+  },
+  "new_default_suite_inventory": {
+    "classes": 26,
+    "test_methods": 216,
+    "executed_in_this_run": 77,
+    "specialized_differential_classes": 7
+  },
+  "tool_artifacts": [
+    {
+      "name": "jacocoagent-0.8.15.jar",
+      "sha256": "fb5b0036a0899ea97edfa0fc2c7985b55f3f7c5695028163e5e60d4f3cf6075d"
+    },
+    {
+      "name": "jacococli-0.8.15.jar",
+      "sha256": "d2b74b20b415163c1f53261e7c5ef4445b788327094208ff821e0c2baf9bc8f1"
+    },
+    {
+      "name": "junit-platform-console-standalone-1.14.4.jar",
+      "sha256": "7c6968cbcaf4301c729f202b23b7d736c5d88be625fc7d27ad5d746146a8bc28"
+    }
+  ],
+  "evidence_hashes": {
+    "gtk-compile.log": "d13fe5e640244801618769db09dfd7558b7930ceb0f3e17f89b56efd560f4b10",
+    "m3-test-compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "headless-tests.log": "bd3114b67e4dfb0da0fced52a60b9e6f37f3b04da9faa633d5b151c16068ee80",
+    "m3-headless.exec": "9eb31bbe49aefc4050fc33711db153b5b93dba7060152f4e6127ac1ab1822806",
+    "jacoco-headless.xml": "548d5f07922f41356e7bd64721c4d7a3d59e32a9cb85b38799faa0cfc4894948",
+    "jacoco-headless.csv": "a2baa10af7d9a19dfdb664d19827c05bbd0fdf9a1255d0ad9175444f75dbf264",
+    "all-bundle-java-inputs-sha256.tsv": "4b5584801f2f0e134e2ca7dce52b1624c904acd8434daadd652497065ba8fd8a",
+    "eclipse-platform-parent-4.42.0-20261106.230639-146.pom": "075de6084f1f10339e831a89ec837bd2a018bcd996a931a6a62d2a09e2e7a586"
+  },
+  "not_qualified": [
+    "complete AllTests runtime",
+    "native GTK/Windows/Cocoa execution",
+    "Windows ARM64 tests",
+    "full Tycho reactor",
+    "hosted CI",
+    "whole-SWT line/branch coverage",
+    "screen capture/accessibility/IME/DPI",
+    "native memory/CPU/RSS budgets",
+    "complete distribution notices",
+    "official-jar differential and scale campaigns"
+  ]
+}

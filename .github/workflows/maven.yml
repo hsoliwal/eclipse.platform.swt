@@ -14,6 +14,7 @@ concurrency:
     cancel-in-progress: true
 
 on:
+  workflow_dispatch:
   push:
     branches: [ master ]
     # Documentation and M3 evidence records are not Maven inputs (no pom, bundle,
@@ -85,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: ['25']
+        java: ['21', '25']
         gtk: [gtk3, gtk4]
         gdk_backend: [x11, wayland]
         exclude:
@@ -98,8 +99,9 @@ jobs:
       native: gtk.linux.x86_64
       gtk: ${{ matrix.gtk }}
       gdk_backend: ${{ matrix.gdk_backend }}
+      # Parent API/Javadoc tooling requires Java 25; Java 21 legs build and execute tests.
       # All Linux jobs build the same Java sources, so check the API and javadoc only once
-      api_check: ${{ matrix.gtk == 'gtk3' && matrix.gdk_backend == 'x11' }}
+      api_check: ${{ matrix.java == '25' && matrix.gtk == 'gtk3' && matrix.gdk_backend == 'x11' }}
       performance: ${{ contains(github.event.pull_request.labels.*.name, 'performance') }}
       runtodotests: ${{ contains(github.event.pull_request.labels.*.name, 'runtodotests') }}
 
@@ -111,13 +113,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: ['25']
+        java: ['21', '25']
     uses: ./.github/workflows/build.yml
     with:
       runner: windows-latest
       java: ${{ matrix.java }}
       native: win32.win32.x86_64
-      api_check: true
+      api_check: ${{ matrix.java == '25' }}
       performance: ${{ contains(github.event.pull_request.labels.*.name, 'performance') }}
       runtodotests: ${{ contains(github.event.pull_request.labels.*.name, 'runtodotests') }}
 
@@ -129,7 +131,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: ['25']
+        java: ['21', '25']
         arch: [x86_64, aarch64]
     uses: ./.github/workflows/build.yml
     with:
@@ -137,6 +139,6 @@ jobs:
       java: ${{ matrix.java }}
       native: cocoa.macosx.${{ matrix.arch }}
       # Both macOS fragments compile the same Java sources, so check the API and javadoc only once
-      api_check: ${{ matrix.arch == 'aarch64' }}
+      api_check: ${{ matrix.java == '25' && matrix.arch == 'aarch64' }}
       performance: ${{ contains(github.event.pull_request.labels.*.name, 'performance') }}
       runtodotests: ${{ contains(github.event.pull_request.labels.*.name, 'runtodotests') }}
