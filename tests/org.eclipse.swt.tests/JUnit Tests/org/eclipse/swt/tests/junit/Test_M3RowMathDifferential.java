@@ -34,6 +34,14 @@ import org.junit.jupiter.api.*;
  * </p>
  */
 public class Test_M3RowMathDifferential {
+	//FLLDCIM: TOP — test isolation: release the default Display this class used, so later classes in the same
+	//FLLDCIM: TOP — suite (Test_org_eclipse_swt_widgets_Display) can create their own Display on this thread
+	@AfterAll
+	static void disposeDefaultDisplay () {
+		Display display = Display.getCurrent ();
+		if (display != null && !display.isDisposed ()) display.dispose ();
+	}
+
 	static final boolean OFFICIAL = "official".equals (ViewportDifferential.reference ("Tree"));
 
 	static final class Scene {
