@@ -1,16 +1,16 @@
 stty: /dev/tty: No such device or address
-LAZY-METRIC	selection_10M	select_all_ms	0.030
-LAZY-METRIC	selection_10M	invert_ms	0.009
-LAZY-METRIC	selection_10M	shift_click_ms	0.056
-LAZY-METRIC	selection_cutover	k=1000	bits=false	scatter_ms=1.0	invert_ms=0.004	toArray_ms=18.3
-LAZY-METRIC	selection_cutover	k=10000	bits=false	scatter_ms=4.8	invert_ms=0.009	toArray_ms=15.3
-LAZY-METRIC	selection_cutover	k=50000	bits=true	scatter_ms=19.4	invert_ms=1.224	toArray_ms=54.1
-LAZY-METRIC	selection_cutover	k=156250	bits=true	scatter_ms=23.3	invert_ms=0.086	toArray_ms=52.1
-LAZY-METRIC	selection_cutover	k=300000	bits=true	scatter_ms=62.1	invert_ms=0.230	toArray_ms=48.2
-LAZY-METRIC	selection_cutover	k=1000000	bits=true	scatter_ms=133.5	invert_ms=0.085	toArray_ms=37.3
-LAZY-METRIC	check_all_10M_ms	4.705
-LAZY-METRIC	uncheck_all_10M_ms	1.821
-LAZY-METRIC	insert_shift_10M_ms	1.057
+LAZY-METRIC	selection_10M	select_all_ms	0.041
+LAZY-METRIC	selection_10M	invert_ms	0.011
+LAZY-METRIC	selection_10M	shift_click_ms	0.062
+LAZY-METRIC	selection_cutover	k=1000	bits=false	scatter_ms=1.2	invert_ms=0.004	toArray_ms=13.4
+LAZY-METRIC	selection_cutover	k=10000	bits=false	scatter_ms=3.5	invert_ms=0.007	toArray_ms=13.7
+LAZY-METRIC	selection_cutover	k=50000	bits=true	scatter_ms=20.1	invert_ms=1.113	toArray_ms=50.6
+LAZY-METRIC	selection_cutover	k=156250	bits=true	scatter_ms=36.7	invert_ms=0.158	toArray_ms=51.4
+LAZY-METRIC	selection_cutover	k=300000	bits=true	scatter_ms=24.8	invert_ms=0.073	toArray_ms=48.2
+LAZY-METRIC	selection_cutover	k=1000000	bits=true	scatter_ms=91.2	invert_ms=0.091	toArray_ms=36.4
+LAZY-METRIC	check_all_10M_ms	2.610
+LAZY-METRIC	uncheck_all_10M_ms	0.863
+LAZY-METRIC	insert_shift_10M_ms	0.706
 ╷
 ├─ JUnit Platform Suite ✔
 ├─ JUnit Jupiter ✔
@@ -228,7 +228,7 @@ LAZY-METRIC	insert_shift_10M_ms	1.057
 │     └─ maximumLogicalCountUsesConstantNativeModelStateAndResetInvalidatesIter() ■ Assumption failed: assumption is not true
 └─ JUnit Vintage ✔
 
-Test run finished after 11030 ms
+Test run finished after 21491 ms
 [        25 containers found      ]
 [         0 containers skipped    ]
 [        25 containers started    ]

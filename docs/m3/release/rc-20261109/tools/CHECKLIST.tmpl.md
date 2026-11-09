@@ -14,7 +14,7 @@ PASS means executed, with the result shown. FAIL means executed and not met. PEN
 | --- | --- | --- | --- | --- |
 | 1 | #325 forwarded onto current master | PASS | 13 conflicts resolved per hunk, with lineage proofs. #323 is carried; #327-#334 are included through master. | `FORWARD_325.tsv` |
 | 2 | Merged PRs that never reached master | PASS | Re-landed: #183, #190 + #220, #221 and #239, with own-line presence now 100%. #191 and 6 Initiative 31 PRs are NOT_APPLICABLE, with proof. #323 is CARRIED. | `STACKED_NOT_ON_MASTER.tsv`, `relands/` |
-| 3 | No public API lost (every fold and fix) | PASS | api_loss_audit lost=0 for each re-land and for the Tree fix. The only official 3.135.0 classes not shipped are 9 private nested or internal classes. | `relands/api-loss-*.tsv`, `META-INF/m3/MAPPING.tsv` |
+| 3 | No public API lost (every fold and fix) | PASS | api_loss_audit lost=0 for each re-land and for every fix this round. The only official 3.135.0 classes not shipped are 9 private nested or internal classes. | `relands/api-loss-*.tsv`, `META-INF/m3/MAPPING.tsv` |
 | 4 | javac `--release 21` win32 / GTK / Cocoa | PASS | 893 / 682 / 821 sources, 0 errors | `gates/javac-{win32,gtk,cocoa}.*` |
 | 5 | M3 render/GPU backend compiles (Skija 0.116.3) and the gpu.m3 module builds | PASS | 34 sources, 0 errors. `mvn package` BUILD SUCCESS after aligning the pins; before, the module failed with 3 errors against its pinned 0.143.18. | `gates/javac-m3-backend.*`, `gates/gpu-m3-mvn-0.116.3.log`, `gates/javac-gpu-m3-0.143.18.log` |
 | 6 | JUnit sources compile (`--release 21`), including m3gc | PASS | 418 sources, 0 errors. The only exclusion is the 9 `performance/` sources, which need org.eclipse.test.performance. | `gates/javac-tests.summary.tsv` |
@@ -31,6 +31,7 @@ PASS means executed, with the result shown. FAIL means executed and not met. PEN
 | 17 | Java 21 preflight (no Java 22+ API) | PASS | 27 BREE headers, all JavaSE-21. Numeric POM release values are <= 21. All jar classes are major 65. javac `--release 21` is gate 4. | `gates/java21-preflight.tsv` |
 | 18 | #325 headless Java 21 contract (re-landed ItemBitSet) | PASS | `M3_SWT_HEADLESS_JAVA21_PASS checks=2321` | `gates/headless-java21/` |
 | 19 | Superset jar + MAPPING/LEDGER + SHA-256 | PASS | 1,373 classes, 65 fork resources and 6 fork natives, each hashed in MAPPING. LEDGER classifies 211 PRs. The released jar and the tested jar differ only in `META-INF/m3/LEDGER.tsv`. | release assets, `LEDGER.tsv` |
+| 19b | Official-SWT oracle for disputed expectations | PASS | The official 3.135.0 jar and natives were run on this machine (oracle/). The Tree caret after shrink was a test error and is fixed. The zero-height caret was an SWT error and is fixed (anchor kept). The hidden Table top is SWT and still open. | `oracle/` |
 | 20 | M3 exact two-mode report gate (`REPORT_GATE.md`) | PENDING | Needs a qualified official-SWT recording directory and per-class Surefire XML; the 11 recorded-oracle methods abort without one | `../release/REPORT_GATE.md` |
 | 21 | Instrumented line/branch coverage (90% per changed atom) | PENDING | JaCoCo was not run | `../RELEASE.md` |
 | 22 | Native builds and JUnit on GTK3/GTK4/Wayland and macOS | PENDING | No Linux display or macOS host is available here, and hosted CI is disabled | `../release/INTEGRATION.md` |

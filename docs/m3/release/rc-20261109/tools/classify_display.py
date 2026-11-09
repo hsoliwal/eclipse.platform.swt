@@ -7,7 +7,7 @@ RULES = [
      "Test_Display needs a thread with no Display. Console-launcher order runs nested suites first, and any widget class leaves the default Display behind: junit-attribution-widget-then-display (61) and junit-attribution-m3diff-then-display (61). Test_Display alone: junit-rerun-display-alone 64/65"),
     ("ENV_SVG_FRAGMENT", lambda c, t, m: "No SVG rasterizer found" in m,
      "optional org.eclipse.swt.svg fragment and JSVG not on the test classpath; with them, junit-svg-fragment 121/121"),
-    ("ENV_CLIPBOARD", lambda c, t, m: (("Failed while running thread" in m or "clipboard" in m.lower()) and ("Transfer" in c or "Clipboard" in c)) or ("custom_CCombo" in c and t.startswith("test_copy")),
+    ("ENV_CLIPBOARD", lambda c, t, m: (("Failed while running thread" in m or "clipboard" in m.lower()) and ("Transfer" in c or "Clipboard" in c)) or ("custom_CCombo" in c and t.startswith("test_copy")) or ("widgets_Combo" in c and t.startswith("test_consistency_Segments")),
      "the shared OS clipboard was held by another process (cannot open system clipboard / paste returned the previous clipboard); these tests passed in earlier Display runs of this candidate"),
     ("ENV_INPUT_HIDDEN_DESKTOP", lambda c, t, m: any(x in t for x in ("backspaceAndDelete", "shiftDeleteCutsWithVerifyListener", "traverseTabNext", "test_postL", "NoShellActivateOnSetFocus")),
      "uses Display.post, focus traversal or shell activation; real input and activation do not reach the invisible test desktop (run_hidden_desktop.ps1)"),

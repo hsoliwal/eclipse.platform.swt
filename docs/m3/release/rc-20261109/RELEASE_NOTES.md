@@ -3,8 +3,8 @@
 
 Release candidate `m3-superset-20261109`. It is unsigned, published only as a draft release, and has no tag.
 
-- Jar: `org.eclipse.swt.win32.win32.x86_64-m3-superset-20261109.jar`, SHA-256 `6073f2dad2752363972335fe0e36efa5643ed07d124a5ebad8b8e672916d5795`
-- Built from branch `m3/release-candidate-20261109` (PR #335) at product source commit `55ccfce4799725b322a9a72ef47bdfbf78d4e698`
+- Jar: `org.eclipse.swt.win32.win32.x86_64-m3-superset-20261109.jar`, SHA-256 `e522b8f0f9a85c0ede35ce646ad914f918e3a6f445ea1a6b1253bcfb89b58844`
+- Built from branch `m3/release-candidate-20261109` (PR #335) at product source commit `ef31ad3b7fc85b2f25592636aff4cd94530991fb`
 - Base: master `4fb49875cc` (#334, which includes #327-#334). Forwarded on top: #325, which also carries #323.
 - Re-landed: #183, #190 + #220, #221 and #239. These PRs were merged into other PR branches and never reached master. Each was a clean 3-way fold, and api_loss_audit reported 0 lost declarations. See `STACKED_NOT_ON_MASTER.tsv`.
 - Release fixes:
@@ -16,6 +16,9 @@ Release candidate `m3-superset-20261109`. It is unsigned, published only as a dr
   - Three stale tests are fixed, and the VirtualPageSource fixture is fixed.
   - Tree page-source rows stay facade-free when painted (win32).
   - All 330 test classes are reachable from AllTests.
+  - Visibility gate (win32): a moved container catches up its dirty descendants; ExpandBar children moved by ScrollWindowEx are seen.
+  - TreeViewport: a parked tree sends no item-height query per delta; a parked tree that can take keys keeps its caret anchor (official oracle).
+  - Test corrections: the HiddenViewport pixel oracle, the Tree caret after shrink (official oracle) and the List splice measurement. The three CoolItem tests upstream marks failing are @Disabled with the upstream citation.
 - OSGi identity: `org.eclipse.swt.win32.win32.x86_64` `3.138.0.m3-superset-20261109`. The fragment host, BREE `JavaSE-21` and `Export-Package` are taken unchanged from the fork manifest.
 - Natives: the fork's own `binaries/org.eclipse.swt.win32.win32.x86_64` (4975r19) and `WebView2Loader.dll`.
 - `META-INF/m3/MAPPING.tsv` lists every shipped entry with its source path, git blob, origin and SHA-256. `META-INF/m3/LEDGER.tsv` has one row per PR merged since 2026-10-13, classified against the candidate.
@@ -34,7 +37,7 @@ Full table: [CHECKLIST.md](CHECKLIST.md).
 | 6 | JUnit sources compile (`--release 21`), including m3gc | PASS |
 | 7 | Headless JUnit | PASS |
 | 8 | m3gc (M3 GC over Skija) | PASS |
-| 9 | Display JUnit: default suite (AllTests without AllBrowserTests), fork natives 4975r19 | FAIL (19 real failures, all pre-existing) |
+| 9 | Display JUnit: default suite (AllTests without AllBrowserTests), fork natives 4975r19 | FAIL (7 real failures, all pre-existing on master) |
 | 10 | Display failures: none caused by the environment or the harness | FAIL (9, environment of the invisible desktop) |
 | 11 | `-Xcheck:jni` diagnostics | PASS |
 | 12 | JNI glue consistent with the Java natives (all platforms) | PASS |
@@ -45,6 +48,7 @@ Full table: [CHECKLIST.md](CHECKLIST.md).
 | 17 | Java 21 preflight (no Java 22+ API) | PASS |
 | 18 | #325 headless Java 21 contract (re-landed ItemBitSet) | PASS |
 | 19 | Superset jar + MAPPING/LEDGER + SHA-256 | PASS |
+| 19b | Official-SWT oracle for disputed expectations | PASS |
 | 20 | M3 exact two-mode report gate (`REPORT_GATE.md`) | PENDING |
 | 21 | Instrumented line/branch coverage (90% per changed atom) | PENDING |
 | 22 | Native builds and JUnit on GTK3/GTK4/Wayland and macOS | PENDING |
@@ -58,26 +62,18 @@ Full table: [CHECKLIST.md](CHECKLIST.md).
 | Run | Found | Passed | Failed | Aborted (assumption) | Skipped (`@Disabled`) | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
 | Headless (22 classes) | 190 | 187 | 0 | 3 (GTK-only) | 0 | `gates/junit-headless.*` |
-| m3gc (AllM3GcTests, M3 backend + Skija 0.116.3) | 97 | 97 | 0 | 0 | 0 | `gates/junit-m3gc.*` |
-| Display: AllTests without AllBrowserTests (330 classes reachable) | 6,264 | 6,040 | 28 | 176 | 3 | `gates/junit-display.*`, `gates/DISPLAY_FAILURES.tsv` |
+| m3gc (AllM3GcTests) | 97 | 97 | 0 | 0 | 0 | `gates/junit-m3gc.*` |
+| Display: AllTests without AllBrowserTests (330 classes) | 6,264 | 6,049 | 16 | 176 | 6 | `gates/junit-display.*`, `gates/DISPLAY_FAILURES.tsv` |
 
-The 28 Display failures are all classified, and none is introduced by the candidate:
+All 16 failures are classified; none is introduced by the candidate:
 
 | Class | Count | Reason and evidence |
 | --- | --- | --- |
-| PRE_EXISTING_MASTER | 16 | Same tests and messages on master `4fb49875cc` in the same harness: viewport acceptance and visibility tests (Tree/Table/List/Combo viewport, AllWidgets_HiddenViewport) among the newly wired classes, and the VirtualPageSource bulk batch. Root cause and next step in `PRE_EXISTING_DEFECTS.tsv`. |
-| UPSTREAM_KNOWN_FAILING | 3 | CoolItem. Upstream AllWidgetTests lists it as `// Failing test` (0ef6051a20). |
-| ENV_INPUT_HIDDEN_DESKTOP | 7 | Display.post, focus traversal and shell activation do not reach the invisible test desktop. |
-| ENV_CLIPBOARD | 2 | Another process held the shared OS clipboard; both tests passed in earlier runs. |
+| PRE_EXISTING_MASTER | 7 | The same tests fail on master `4fb49875cc`. Table_Splice: the hidden top and the hidden double paint. Tree_ViewportDeltas: hidden traffic (2). List: the inside-window splice. Combo: the logical bar after an edit-text match. VirtualPageSource: the bulk batch. Root causes and next steps are in `PRE_EXISTING_DEFECTS.tsv`. |
+| ENV_INPUT_HIDDEN_DESKTOP | 6 | Display.post and focus traversal do not reach the invisible test desktop. |
+| ENV_CLIPBOARD | 3 | The shared OS clipboard was held by another process; these tests passed in earlier runs. |
 
-The `AllNonBrowserTests` suite-level leak detector reports "1 leaks found", on master as well. The JNI checker reported 0 diagnostics in every JVM.
-
-Fixed in this candidate, compared with master in the same harness:
-- 61 HARNESS_ORDER failures: Test_Display now releases the thread's Display.
-- 8 ENV_SVG failures: the SVG fragment and JSVG are on the gate classpath.
-- 9 Tracker failures: the test now releases the Tracker.
-- 6 of 7 earlier pre-existing failures: StyledText_PagedContent, Java2DCanvas, M3SortFilterWidgets, and three VirtualPageSource tests (Tree page-source facades and the swap fixture).
-- The M3ItemRange MAX_VALUE test (#325).
+The official-SWT 3.135.0 oracle (`oracle/`) settled the three disputed expectations. The caret after a shrink was a test error. The zero-height caret was an SWT error and is fixed. The hidden Table top is SWT and still open. The JNI checker reported 0 diagnostics.
 
 ## Included pull requests since 2026-10-13 (204)
 
