@@ -1,0 +1,244 @@
+stty: /dev/tty: No such device or address
+LAZY-METRIC	selection_10M	select_all_ms	0.182
+LAZY-METRIC	selection_10M	invert_ms	0.024
+LAZY-METRIC	selection_10M	shift_click_ms	0.158
+LAZY-METRIC	selection_cutover	k=1000	bits=false	scatter_ms=3.0	invert_ms=0.018	toArray_ms=66.8
+LAZY-METRIC	selection_cutover	k=10000	bits=false	scatter_ms=12.6	invert_ms=0.017	toArray_ms=26.1
+LAZY-METRIC	selection_cutover	k=50000	bits=true	scatter_ms=47.3	invert_ms=2.293	toArray_ms=100.1
+LAZY-METRIC	selection_cutover	k=156250	bits=true	scatter_ms=40.9	invert_ms=0.197	toArray_ms=72.9
+LAZY-METRIC	selection_cutover	k=300000	bits=true	scatter_ms=68.9	invert_ms=0.135	toArray_ms=60.0
+LAZY-METRIC	selection_cutover	k=1000000	bits=true	scatter_ms=152.8	invert_ms=0.126	toArray_ms=50.8
+LAZY-METRIC	check_all_10M_ms	5.843
+LAZY-METRIC	uncheck_all_10M_ms	2.278
+LAZY-METRIC	insert_shift_10M_ms	1.402
+╷
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  ├─ Test_M3Collation ✔
+│  │  ├─ test_keysAreCompactLanes() ✔
+│  │  ├─ test_sortedOrderIsStableAndAscending() ✔
+│  │  ├─ test_signAgreesWithTheCollator() ✔
+│  │  ├─ test_argumentsAreChecked() ✔
+│  │  └─ test_localeDifferencesAreVisible() ✔
+│  ├─ Test_M3ColumnFilter ✔
+│  │  ├─ test_treeValueUpdatesAreDeltasThatReplay() ✔
+│  │  ├─ test_textCriteriaPerColumn() ✔
+│  │  ├─ test_sourceEditsAreDeltasThatReplay() ✔
+│  │  ├─ test_windowRangesAndChangeDescriptions() ✔
+│  │  ├─ test_changeEventsAndDamage() ✔
+│  │  ├─ test_argumentChecks() ✔
+│  │  ├─ test_treeInsertMakesALaterAncestorEnter() ✔
+│  │  ├─ test_typingRefinementsEqualAFreshEvaluation() ✔
+│  │  ├─ test_treeKeepsAncestorsOfMatches() ✔
+│  │  ├─ test_synchronousGenerationAndCriterionCopies() ✔
+│  │  ├─ test_valueLists() ✔
+│  │  ├─ test_ancestorCycleFallbackKeepsOnlyReachableRows() ✔
+│  │  ├─ test_multiColumnCriterionAndLogic() ✔
+│  │  ├─ test_incrementalEditsEqualAReference() ✔
+│  │  ├─ test_treeChainWithSortedSiblings() ✔
+│  │  ├─ test_invalidUpdatedParentFailsAndResetRecovers() ✔
+│  │  ├─ test_valueChangesWithoutStatusChangeSkipTheFullPass() ✔
+│  │  └─ test_windowClipsDamage() ✔
+│  ├─ Test_M3ColumnSort ✔
+│  │  ├─ test_largeKeyValuesTakeTheRadixPath() ✔
+│  │  ├─ test_singleMoveDamage() ✔
+│  │  ├─ test_rejectedSortKeysPreserveTheViewAndCopyInputs() ✔
+│  │  ├─ test_keyValueEdgeCases() ✔
+│  │  ├─ test_duplicateKeysStayStableAcrossFilterAndSourceEdits() ✔
+│  │  ├─ test_stableTiesKeepSourceOrderInBothDirections() ✔
+│  │  ├─ test_treeModeSortsSiblings() ✔
+│  │  ├─ test_collatorEqualTextsShareARank() ✔
+│  │  ├─ test_sourceEditsStayEqualToAFullSort() ✔
+│  │  ├─ test_argumentChecks() ✔
+│  │  ├─ test_singleKeysBothDirectionsSmallAndLarge() ✔
+│  │  ├─ test_toggleCycleAndAccumulate() ✔
+│  │  ├─ test_viewChainsListenersAndForeignInputs() ✔
+│  │  ├─ test_collationAndComparatorKeysOnTheRadixPath() ✔
+│  │  ├─ test_textKeysWithCollatorAndRowComparator() ✔
+│  │  ├─ test_multiKeyOrder() ✔
+│  │  ├─ test_treeFilterEditsKeepTheSiblingIndex() ✔
+│  │  ├─ test_treeValueUpdatesKeepTheSiblingIndex() ✔
+│  │  ├─ test_identityWithoutKeys() ✔
+│  │  └─ test_cellTextDefaultKey() ✔
+│  ├─ Test_M3ItemRange ✔
+│  │  ├─ test_duplicateAtMaximumIntCoalescesOnce() ✔
+│  │  ├─ test_coalesceLeavesTheArgumentUntouched() ✔
+│  │  ├─ test_upperIntBoundaryAndNonAdjacentRuns() ✔
+│  │  ├─ test_containsAndIntersection() ✔
+│  │  ├─ test_ofNormalizesEmpty() ✔
+│  │  ├─ test_equalsHashCodeToString() ✔
+│  │  ├─ test_coalesceBuildsNormalForm() ✔
+│  │  └─ test_valueAndEmptiness() ✔
+│  ├─ Test_M3Patch ✔
+│  │  ├─ test_diffIsMinimalAndReplays() ✔
+│  │  ├─ test_argumentsAreChecked() ✔
+│  │  └─ test_builderRunsAndUpdates() ✔
+│  ├─ Test_M3RowExtents ✔
+│  │  ├─ test_scrollOffsets() ✔
+│  │  ├─ test_autoAlignmentMovesOnlyToNearestRevealBoundary() ✔
+│  │  ├─ test_visibleRangeIsExact() ✔
+│  │  ├─ test_randomEditsAgreeWithNaivePrefixSums() ✔
+│  │  ├─ test_anchoringDistinguishesFirstMeasurementAndExactBoundaries() ✔
+│  │  ├─ test_sparseMaximumRowCountKeepsLongOffsetsThroughEdits() ✔
+│  │  ├─ test_anchoringKeepsTheContentInView() ✔
+│  │  ├─ test_negativeEndpointBranchesAndZeroLengthEdits() ✔
+│  │  ├─ test_smartAlignmentKeepsRevealedOffsetsAndCentersOthers() ✔
+│  │  └─ test_argumentsAreChecked() ✔
+│  ├─ Test_M3TextMatch ✔
+│  │  ├─ test_checkAndErrors() ✔
+│  │  ├─ test_tokensAndNegation() ✔
+│  │  ├─ test_containsStartsWithExact() ✔
+│  │  ├─ test_regexMatchesTheWholeText() ✔
+│  │  ├─ test_wildcardAgainstRegexTranslation() ✔
+│  │  └─ test_wildcardMatchesTheWholeText() ✔
+│  ├─ Test_M3TextSegments ✔
+│  │  ├─ test_boundariesAreACopyAndLanesAreBounded() ✔
+│  │  ├─ test_emptyText() ✔
+│  │  ├─ test_graphemesKeepCombiningMarksTogether() ✔
+│  │  ├─ test_wordsMatchTheJdkIteratorAndFlagWords() ✔
+│  │  ├─ test_segmentAtMapsOffsetsToSegments() ✔
+│  │  ├─ test_lineBreaksAndSentencesMatchTheJdkIterator() ✔
+│  │  ├─ test_argumentsAreChecked() ✔
+│  │  └─ test_localeIsPassedToTheIterator() ✔
+│  ├─ Test_M3TokenMatch ✔
+│  │  ├─ test_unknownMatchesNothing() ✔
+│  │  ├─ test_tokensOfWordSegmentsMatchLikeTheWords() ✔
+│  │  ├─ test_vocabularyAssignsDenseStableIds() ✔
+│  │  ├─ test_indexOfFindsTheFirstOccurrence() ✔
+│  │  ├─ test_vocabularyArgumentsAreChecked() ✔
+│  │  ├─ test_vocabularyIsBoundedAndAgreesWithAMapOracle() ✔
+│  │  ├─ test_presenceMaskUsesTheCursorFactsRule() ✔
+│  │  ├─ test_vocabularyFoldsCaseWhenAsked() ✔
+│  │  ├─ test_indexOfAgreesWithANaiveSearch() ✔
+│  │  ├─ test_tokensOfOtherKindsAndErrors() ✔
+│  │  └─ test_vocabularyResolvesHashCollisions() ✔
+│  ├─ Test_ItemBitSetDifferential ✔
+│  │  ├─ testCrossContainerBoundariesAndClears() ✔
+│  │  ├─ testFullRunToBitmapAndBack() ✔
+│  │  └─ testSeededMutationDifferential() ✔
+│  ├─ Test_ItemBitSetMaximumPosition ✔
+│  │  ├─ bitmapRunEndClampsBeforeAddingLastChunkBase() ✔
+│  │  ├─ shiftingLastChunkDoesNotLoseSetRows() ✔
+│  │  ├─ runEndClampsBeforeAddingLastChunkBase() ✔
+│  │  └─ smallRebasedOracleCoversLimitsAndContainerBoundaries() ✔
+│  ├─ Test_ViewportBounds ✔
+│  │  ├─ commonLayoutAdapterPropagatesEmptyWidth() ✔
+│  │  ├─ exhaustiveSmallLayoutsMatchIndependentFixedPointFields() ✔
+│  │  ├─ scrollbarConsumingAllWidthAdmitsNoRows() ✔
+│  │  ├─ solvedEmptyBodyFeedsAnEmptyRowWindow() ✔
+│  │  ├─ zeroWidthWithPositiveHeightAdmitsNoRows() ✔
+│  │  ├─ zeroHeightAndPriorEmptyWindowCorrectionRemainEffective() ✔
+│  │  ├─ exhaustiveSmallLayoutsEnforceTwoDimensionalVisibility() ✔
+│  │  ├─ seededIntegerAndLongExtremaMatchIndependentOracle() ✔
+│  │  ├─ collapseMutationAndReopenRetainLogicalAnchor() ✔
+│  │  ├─ largeNonemptyOverscanRetainsExplicitIntOverflowContract() ✔
+│  │  └─ invalidGeometryRetainsExistingExceptionContract() ✔
+│  ├─ Test_ViewportRowWindow ✔
+│  │  ├─ collapseAndReopenRestoreAnchorAndOrdinaryOverscan() ✔
+│  │  ├─ defaultViewportDoesNotPaintBeforeLayout() ✔
+│  │  ├─ nonemptyWindowsMatchIndependentClippedIntervalOracle() ✔
+│  │  ├─ navigationAndModelEditsStayEmptyWhileCollapsed() ✔
+│  │  ├─ emptyViewportSuppressesOverscanAtStartMiddleAndTail() ✔
+│  │  ├─ flatPlannerRetainsBoundedNonemptyWindow() ✔
+│  │  ├─ flatPlannerUsesEmptySharedWindowForZeroHeightGeometry() ✔
+│  │  ├─ emptyModelRefillRetainsRequestedVisibleCapacity() ✔
+│  │  ├─ queriesAndRejectedUpdatesPreserveWindowState() ✔
+│  │  └─ collapsedLongExtremaRemainEmptyWithoutOverflow() ✔
+│  ├─ Test_ViewportDamage ✔
+│  │  ├─ rfbFullUpdateIsAFullRepaintAndDesktopSizeResizesTheViewport() ✔
+│  │  ├─ recorderTracksPaintedVersusMovedAndFullRepaints() ✔
+│  │  ├─ protectedAreaHitsAreCountedApartFromFullRepaints() ✔
+│  │  ├─ regionRejectsOutOfRangeAndBadIndex() ✔
+│  │  ├─ pointRoundingIsFloorForStartAndCeilForEndAtEveryZoom() ✔
+│  │  ├─ regionMatchesPixelOracleOnRandomRectangles() ✔
+│  │  ├─ endFrameChecksDamageAgainstTheExpectedArea() ✔
+│  │  ├─ recorderCapsStoredFramesButKeepsTotals() ✔
+│  │  ├─ overflowCollapsesToTheBoundingBox() ✔
+│  │  ├─ rfbFeedRejectsMalformedMessages() ✔
+│  │  ├─ touchingPointRectanglesNeverLeaveAGapOrCountAPixelTwice() ✔
+│  │  ├─ protectedAreaInPointsRoundsLikeDamage() ✔
+│  │  ├─ rejectedCopiesPreserveDamageAndAccounting() ✔
+│  │  ├─ framesAreRingsWithoutGapsOrOverlapsAndNestWithTheBoxModel() ✔
+│  │  ├─ pointRectangleContainsTheExactScaledRectangleWithinOnePixelPerEdge() ✔
+│  │  ├─ adjacentRectanglesMergeAndRepeatsAddNothing() ✔
+│  │  ├─ blitScrollPaintsOnlyTheExposedStrip() ✔
+│  │  └─ copyDamagesOnlyTheDestination() ✔
+│  ├─ Test_ViewportDamageSubset ✔
+│  │  ├─ subsetMatchesEveryPairOfSmallPixelMasks() ✔
+│  │  ├─ coalescedRegionsCompareAgainstDistinctRegions() ✔
+│  │  ├─ subsetQueriesPreserveGeometryAndCopyMetrics() ✔
+│  │  ├─ publicCoverageQueryValidationRemainsUnchanged() ✔
+│  │  ├─ maximumSupportedUnionKeepsExactLongAreaAndContainment() ✔
+│  │  ├─ collapsedLargeRegionsMatchIndependentAreaOracle() ✔
+│  │  ├─ largeDomainSubsetsMatchIndependentJava2D() ✔
+│  │  ├─ emptyAndNullBehaviorRemainsCompatible() ✔
+│  │  ├─ coalescedHorizontalRegionsRemainSubsetsOfThemselves() ✔
+│  │  ├─ coalescedVerticalRegionsRemainSubsetsOfThemselves() ✔
+│  │  └─ subsetRejectsHolesWhenBoundsAreEqual() ✔
+│  ├─ Test_ViewportDamageRecorderClipping ✔
+│  │  ├─ protectedOverscanCannotHideAFullVisibleRepaint() ✔
+│  │  ├─ emptyHugeViewportIsNeverAFullRepaint() ✔
+│  │  ├─ largeThresholdsMatchBigIntegerOracle() ✔
+│  │  ├─ copiesKeepTheirProtectedDiagnosticsWithoutBecomingPaint() ✔
+│  │  ├─ thresholdRoundsUpToTheNextWholePixel() ✔
+│  │  ├─ resizingClipsOldProtectedGeometryForRepaintAccounting() ✔
+│  │  └─ clippedProtectedCoverageMatchesIndependentPixelSets() ✔
+│  ├─ Test_ViewportSelectionEnumeration ✔
+│  │  ├─ everySmallSelectionInBothRepresentations() ✔
+│  │  ├─ seededMutationSequencesMatchIndependentList() ✔
+│  │  ├─ maximumLogicalCountWithTinyComplementOutput() ✔
+│  │  ├─ invalidMutationsDoNotChangeSelection() ✔
+│  │  ├─ adjacentExclusionsAndEmptyRangesKeepEndpoints() ✔
+│  │  └─ alternatingHolesProduceSortedFreshOutput() ✔
+│  ├─ Test_VirtualTreeTopology ✔
+│  │  ├─ deepReleaseShiftsOnlySurvivingSiblingCoordinates() ✔
+│  │  ├─ boundedRemovalPermutationsMatchIndependentModelAndNativeSnapshot() ✔
+│  │  ├─ seededSiblingInsertRemovePreservesBranchesAndNativeColumns() ✔
+│  │  ├─ deepFlagQueryStopsAtSubtreeBoundary() ✔
+│  │  ├─ maximumCoordinateReleaseRetainsExistingBoundaryBehavior() ✔
+│  │  ├─ deepForgetPreservesLogicalCoordinateAndOtherBranch() ✔
+│  │  ├─ shiftGenerationAndUnknownParentFailureAreStable() ✔
+│  │  ├─ siblingOverflowRetainsIdOrderedPartialUpdates() ✔
+│  │  └─ deepPruneRetainsParentAndRefreshesVisibleWeights() ✔
+│  ├─ Test_VirtualTreeWindow ✔
+│  │  ├─ oversizedGeometryIsRejectedBeforeMutatingTreeWindow() ✔
+│  │  ├─ frozenSparseForestPermutationsMatchIndependentPreorder() ✔
+│  │  ├─ nativeOverscanPressureOraclePreservesVisibleAndCapacity() ✔
+│  │  ├─ hugeNativeScrollSelectionUsesActualLongRowOwner() ✔
+│  │  ├─ coldGapsAndLongOffsetsNeverMaterializeLogicalSiblings() ✔
+│  │  ├─ windowsAreFreshAfterExpansionRebindAndPruning() ✔
+│  │  ├─ deepWindowUnwindsWithoutRecursiveStackOrSiblingExpansion() ✔
+│  │  ├─ nativeTreeGeometryAutomaticallyAdmitsBoundedOverscan() ✔
+│  │  ├─ logicalGrowthCannotInvalidatePaintBudgetAfterLayout() ✔
+│  │  └─ emptyUnknownAndInvalidWindowContractsSurvive() ✔
+│  ├─ Test_VirtualTreeOrderStatistic ✔
+│  │  ├─ randomScriptsAtRandomDepthsMatchTheLinearWalk() ✔
+│  │  ├─ linearCoordinateOracleRejectsHiddenAncestry() ✔
+│  │  └─ hundredThousandMaterializedSiblingsMatchTheLinearWalk() 10806 ms ✔
+│  ├─ Test_VirtualBitLanes ✔
+│  │  ├─ test_selection10MillionRowsTimingsAndCutover() ✔
+│  │  ├─ test_blockCacheReservesEvictsLeastRecentAndProtectsCurrentFrame() ✔
+│  │  ├─ test_randomDifferentialAgainstBooleanRows() ✔
+│  │  ├─ test_hybridSelectionDifferentialAcrossRepresentationSwitches() ✔
+│  │  ├─ test_untouchedLaneAllocatesNothing() ✔
+│  │  └─ test_checkAll10MillionRowsIsWordWise() ✔
+│  └─ Test_VirtualNativeTableModel ✔
+│     ├─ sameGenerationDoesNotMakeIterBelongToAnotherModel() ■ Assumption failed: assumption is not true
+│     ├─ logicalCellAllocationRejectsForeignModelAndClearsOutput() ■ Assumption failed: assumption is not true
+│     └─ maximumLogicalCountUsesConstantNativeModelStateAndResetInvalidatesIter() ■ Assumption failed: assumption is not true
+└─ JUnit Vintage ✔
+
+Test run finished after 24169 ms
+[        25 containers found      ]
+[         0 containers skipped    ]
+[        25 containers started    ]
+[         0 containers aborted    ]
+[        25 containers successful ]
+[         0 containers failed     ]
+[       190 tests found           ]
+[         0 tests skipped         ]
+[       190 tests started         ]
+[         3 tests aborted         ]
+[       187 tests successful      ]
+[         0 tests failed          ]
+
