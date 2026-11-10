@@ -1,0 +1,2 @@
+mark	node	parent	test	message
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CCombo	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32

@@ -1,0 +1,180 @@
+stty: /dev/tty: No such device or address
+Pixel (0,0): R=0 G=0 B=255
+Pixel (0,0): R=0 G=0 B=255
+Pixel (0,0) alpha: 128
+[MethodCall [className=surface-canvas, methodName=drawLine, params=[10.5, 20.5, 30.5, 40.5, PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=235135639, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawLine, params=[15.0, 30.0, 45.0, 60.0, PaintData [color=-1, strokeWidth=1.5, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=365159063, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawLine, params=[20.0, 40.0, 60.0, 80.0, PaintData [color=-1, strokeWidth=2.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=495182487, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawArc, params=[10, 20, 40, 60, -45, -90, false, PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=235135639, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawArc, params=[15, 30, 60, 90, -45, -90, false, PaintData [color=-1, strokeWidth=1.5, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=365159063, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawArc, params=[20, 40, 80, 120, -45, -90, false, PaintData [color=-1, strokeWidth=2.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=495182487, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawOval, params=[Rect(_left=10.5, _top=20.5, _right=40.5, _bottom=60.5), PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=235135639, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawOval, params=[Rect(_left=15.0, _top=30.0, _right=60.0, _bottom=90.0), PaintData [color=-1, strokeWidth=1.5, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=365159063, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawOval, params=[Rect(_left=20.0, _top=40.0, _right=80.0, _bottom=120.0), PaintData [color=-1, strokeWidth=2.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=495182487, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawPath, params=[Path(_ptr=0x0), PaintData [color=-1, strokeWidth=1.0, strokeMiter=1000.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=-75636073, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawPath, params=[Path(_ptr=0x0), PaintData [color=-1, strokeWidth=1.5, strokeMiter=1000.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=54387351, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawPath, params=[Path(_ptr=0x0), PaintData [color=-1, strokeWidth=2.0, strokeMiter=1000.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=184410775, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawRect, params=[Rect(_left=10.0, _top=20.0, _right=11.0, _bottom=21.0), PaintData [color=-1, strokeWidth=0.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=1568924310, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawRect, params=[Rect(_left=15.0, _top=30.0, _right=16.0, _bottom=31.0), PaintData [color=-1, strokeWidth=0.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=1568924310, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawRect, params=[Rect(_left=20.0, _top=40.0, _right=21.0, _bottom=41.0), PaintData [color=-1, strokeWidth=0.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=1568924310, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawPath, params=[Path(_ptr=0x0), PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=235135639, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawPath, params=[Path(_ptr=0x0), PaintData [color=-1, strokeWidth=1.5, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=365159063, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawPath, params=[Path(_ptr=0x0), PaintData [color=-1, strokeWidth=2.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=495182487, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawPolygon, params=[[F@50468873, PaintData [color=-1, strokeWidth=1.5, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=365159063, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawPolygon, params=[[F@146587a2, PaintData [color=-1, strokeWidth=2.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=495182487, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawPolygon, params=[[F@5f0e9815, PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=235135639, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawRect, params=[Rect(_left=10.5, _top=20.5, _right=40.5, _bottom=60.5), PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=235135639, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawRect, params=[Rect(_left=15.0, _top=30.0, _right=60.0, _bottom=90.0), PaintData [color=-1, strokeWidth=1.5, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=365159063, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawRect, params=[Rect(_left=20.0, _top=40.0, _right=80.0, _bottom=120.0), PaintData [color=-1, strokeWidth=2.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=495182487, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawRRect, params=[RRect(_left=10.5, _top=20.5, _right=40.5, _bottom=60.5, _radii=[5.0, 5.0]), PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=235135639, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawRRect, params=[RRect(_left=15.0, _top=30.0, _right=60.0, _bottom=90.0, _radii=[7.5, 7.5]), PaintData [color=-1, strokeWidth=1.5, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=365159063, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=surface-canvas, methodName=drawRRect, params=[RRect(_left=20.0, _top=40.0, _right=80.0, _bottom=120.0, _radii=[10.0, 10.0]), PaintData [color=-1, strokeWidth=2.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=1, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=495182487, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=SurfaceDouble-child-0-canvas, methodName=clear, params=[0]], MethodCall [className=SurfaceDouble-child-0-canvas, methodName=drawRect, params=[Rect(_left=0.0, _top=0.0, _right=34.0, _bottom=15.0), PaintData [color=-16777216, strokeWidth=0.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=-1157444037, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-child-0-canvas, methodName=drawString, params=[World, 0, 11, FontData [name=Arial, weight=400, width=5, slant=0, ediging=2, size=12.0, scaleX=1.0, skewX=0.0], PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_IN, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=440147987, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-canvas, methodName=drawImage, params=[IM3ImageDouble [closed=false, height=15, width=55, name=SurfaceDouble-child-0-snapshot-0], 10, 20]]]
+[MethodCall [className=SurfaceDouble-child-0-canvas, methodName=clear, params=[0]], MethodCall [className=SurfaceDouble-child-0-canvas, methodName=drawRect, params=[Rect(_left=0.0, _top=0.0, _right=34.0, _bottom=15.0), PaintData [color=-16777216, strokeWidth=0.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=-1157444037, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-child-0-canvas, methodName=drawString, params=[World, 0, 11, FontData [name=Arial, weight=400, width=5, slant=0, ediging=2, size=12.0, scaleX=1.0, skewX=0.0], PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_IN, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=440147987, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-canvas, methodName=drawImage, params=[IM3ImageDouble [closed=false, height=15, width=55, name=SurfaceDouble-child-0-snapshot-0], 15, 30]]]
+[MethodCall [className=SurfaceDouble-child-0-canvas, methodName=clear, params=[0]], MethodCall [className=SurfaceDouble-child-0-canvas, methodName=drawRect, params=[Rect(_left=0.0, _top=0.0, _right=34.0, _bottom=15.0), PaintData [color=-16777216, strokeWidth=0.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=-1157444037, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-child-0-canvas, methodName=drawString, params=[World, 0, 11, FontData [name=Arial, weight=400, width=5, slant=0, ediging=2, size=12.0, scaleX=1.0, skewX=0.0], PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_IN, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=440147987, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-canvas, methodName=drawImage, params=[IM3ImageDouble [closed=false, height=15, width=55, name=SurfaceDouble-child-0-snapshot-0], 20, 40]]]
+[MethodCall [className=SurfaceDouble-child-0-canvas, methodName=clear, params=[0]], MethodCall [className=SurfaceDouble-child-0-canvas, methodName=drawRect, params=[Rect(_left=0.0, _top=0.0, _right=34.0, _bottom=15.0), PaintData [color=-16777216, strokeWidth=0.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=-1157444037, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-child-0-canvas, methodName=drawString, params=[World, 0, 11, FontData [name=Arial, weight=400, width=5, slant=0, ediging=2, size=12.0, scaleX=1.0, skewX=0.0], PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_IN, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=440147987, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-canvas, methodName=drawImage, params=[IM3ImageDouble [closed=false, height=15, width=55, name=SurfaceDouble-child-0-snapshot-0], 10, 20]]]
+[MethodCall [className=SurfaceDouble-child-0-canvas, methodName=clear, params=[0]], MethodCall [className=SurfaceDouble-child-0-canvas, methodName=drawRect, params=[Rect(_left=0.0, _top=0.0, _right=34.0, _bottom=15.0), PaintData [color=-16777216, strokeWidth=0.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=-1157444037, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-child-0-canvas, methodName=drawString, params=[World, 0, 11, FontData [name=Arial, weight=400, width=5, slant=0, ediging=2, size=12.0, scaleX=1.0, skewX=0.0], PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_IN, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=440147987, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-canvas, methodName=drawImage, params=[IM3ImageDouble [closed=false, height=15, width=55, name=SurfaceDouble-child-0-snapshot-0], 15, 30]]]
+[MethodCall [className=SurfaceDouble-child-0-canvas, methodName=clear, params=[0]], MethodCall [className=SurfaceDouble-child-0-canvas, methodName=drawRect, params=[Rect(_left=0.0, _top=0.0, _right=34.0, _bottom=15.0), PaintData [color=-16777216, strokeWidth=0.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=-1157444037, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-child-0-canvas, methodName=drawString, params=[World, 0, 11, FontData [name=Arial, weight=400, width=5, slant=0, ediging=2, size=12.0, scaleX=1.0, skewX=0.0], PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_IN, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=440147987, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-canvas, methodName=drawImage, params=[IM3ImageDouble [closed=false, height=15, width=55, name=SurfaceDouble-child-0-snapshot-0], 20, 40]]]
+[MethodCall [className=SurfaceDouble-canvas, methodName=drawRect, params=[Rect(_left=10.0, _top=20.0, _right=44.0, _bottom=35.0), PaintData [color=-16777216, strokeWidth=0.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=104171509, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-canvas, methodName=drawString, params=[World, 10, 31, FontData [name=Arial, weight=400, width=5, slant=0, ediging=2, size=12.0, scaleX=1.0, skewX=0.0], PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=-1026479908, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=SurfaceDouble-canvas, methodName=drawRect, params=[Rect(_left=15.0, _top=30.0, _right=49.0, _bottom=45.0), PaintData [color=-16777216, strokeWidth=0.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=104171509, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-canvas, methodName=drawString, params=[World, 15, 41, FontData [name=Arial, weight=400, width=5, slant=0, ediging=2, size=12.0, scaleX=1.0, skewX=0.0], PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=-1026479908, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+[MethodCall [className=SurfaceDouble-canvas, methodName=drawRect, params=[Rect(_left=20.0, _top=40.0, _right=54.0, _bottom=55.0), PaintData [color=-16777216, strokeWidth=0.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=false, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=104171509, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]], MethodCall [className=SurfaceDouble-canvas, methodName=drawString, params=[World, 20, 51, FontData [name=Arial, weight=400, width=5, slant=0, ediging=2, size=12.0, scaleX=1.0, skewX=0.0], PaintData [color=-1, strokeWidth=1.0, strokeMiter=4.0, strokeCap=0, strokeJoin=0, style=0, alpha=255, antiAlias=true, dither=false, shader=null, blendMode=SRC_OVER, pathEffect=null, imageFilter=null, colorFilter=null, maskFilter=null, hashCode()=-1026479908, getClass()=class org.eclipse.swt.tests.junit.m3gc.PaintData]]]]
+╷
+├─ JUnit Platform Suite ✔
+│  └─ AllM3GcTests ✔
+│     └─ JUnit Jupiter ✔
+│        ├─ Test_org_eclipse_swt_m3gc_RectangleConverter ✔
+│        │  ├─ testGetScaledOffsetValue() ✔
+│        │  ├─ testCreateScaledRectangle_Ints() ✔
+│        │  ├─ testCreateScaledRectangle_Rectangle() ✔
+│        │  ├─ testOffsetRectangle_RRect() ✔
+│        │  ├─ testScaleUpRectangle() ✔
+│        │  ├─ testCreateScaledRoundRectangle() ✔
+│        │  ├─ testOffsetRectangle_Rect() ✔
+│        │  └─ testCreateScaledRectangleWithOffset() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_RGBAEncoder ✔
+│        │  ├─ testDirect24BitMaskData() ✔
+│        │  ├─ testDirect24BitGlobalAlpha() ✔
+│        │  ├─ testDirect24BitNoTransparency() ✔
+│        │  ├─ testIndexed4BitNoTransparency() ✔
+│        │  ├─ testIndexed8BitNoTransparency() ✔
+│        │  ├─ testIndexed8BitMaskData() ✔
+│        │  ├─ testIndexed8BitTransparentPixel() ✔
+│        │  ├─ testIndexed8BitAlphaData() ✔
+│        │  ├─ testDirect24BitAlphaData() ✔
+│        │  └─ testIndexed1BitNoTransparency() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_M3ToSwtImageConvert ✔
+│        │  └─ testConvertSimpleRGBAImage() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_M3ToSwtImageConverter ✔
+│        │  ├─ testConvertSimpleRGBAImage() ✔
+│        │  ├─ testConvertAlphaHandling() ✔
+│        │  └─ testNullInput() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_drawLine ✔
+│        │  ├─ testDrawLine() ✔
+│        │  ├─ testDrawLine_Zoom150() ✔
+│        │  └─ testDrawLine_Zoom200() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_drawArc ✔
+│        │  ├─ testDrawArc() ✔
+│        │  ├─ testDrawArc_Zoom150() ✔
+│        │  └─ testDrawArc_Zoom200() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_drawOval ✔
+│        │  ├─ testDrawOval() ✔
+│        │  ├─ testDrawOval_Zoom150() ✔
+│        │  └─ testDrawOval_Zoom200() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_drawPath ✔
+│        │  ├─ testDrawPath() ✔
+│        │  ├─ testDrawPath_Zoom150() ✔
+│        │  └─ testDrawPath_Zoom200() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_drawPoint ✔
+│        │  ├─ testDrawPoint() ✔
+│        │  ├─ testDrawPoint_Zoom150() ✔
+│        │  └─ testDrawPoint_Zoom200() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_drawPolygon ✔
+│        │  ├─ testDrawPolygon() ✔
+│        │  ├─ testDrawPolygon_Zoom150() ✔
+│        │  └─ testDrawPolygon_Zoom200() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_drawPolyline ✔
+│        │  ├─ testDrawPolyline_Zoom150() ✔
+│        │  ├─ testDrawPolyline_Zoom200() ✔
+│        │  └─ testDrawPolyline() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_drawRectangle ✔
+│        │  ├─ testDrawRectangle_Rectangle() ✔
+│        │  ├─ testDrawRectangle() ✔
+│        │  ├─ testDrawRectangle_Zoom150() ✔
+│        │  └─ testDrawRectangle_Zoom200() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_drawRoundRectangle ✔
+│        │  ├─ testDrawRectangle() ✔
+│        │  ├─ testDrawRectangle_Zoom150() ✔
+│        │  └─ testDrawRectangle_Zoom200() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_drawString ✔
+│        │  ├─ testDrawString() ✔
+│        │  ├─ testDrawString_Zoom150() ✔
+│        │  └─ testDrawString_Zoom200() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_drawText ✔
+│        │  ├─ testDrawText() ✔
+│        │  ├─ testDrawText_Zoom150() ✔
+│        │  └─ testDrawText_Zoom200() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_drawText_NoCache ✔
+│        │  ├─ testDrawText() ✔
+│        │  ├─ testDrawText_Zoom150() ✔
+│        │  └─ testDrawText_Zoom200() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_DrawnCustomDraw ✔
+│        │  ├─ testMeasureThenEraseThenPaintPerCell() ✔
+│        │  ├─ testGCExtensionIsReusableAfterDispose() ✔
+│        │  ├─ testMeasureReadsTheListenerBoundsBackInPixels() ✔
+│        │  ├─ testClipIsTheCellInPointsScaledBackToPixels() ✔
+│        │  ├─ testNothingHookedSendsNothing() ✔
+│        │  ├─ testNoGCSendsNothing() ✔
+│        │  └─ testEraseDetailAndDoitAreTheOutcome() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_M3CanvasFactory ✔
+│        │  ├─ testCreateAnswersTheSelectedHandlerOrNull() ✔
+│        │  ├─ testStyleBitIsTheOneTheSeamChecks() ✔
+│        │  ├─ testBackendNeedsADrawnModeNotTheStyleBit() ✔
+│        │  ├─ testShippedSelectorIsOffWithoutTheProperty() ✔
+│        │  └─ testCanvasPropertySelectsTheMode() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_CanvasCoverage ✔
+│        │  ├─ testFactoryAppliesTheSelectorToTheCanvasClass() ✔
+│        │  ├─ testPerClassPropertyDecides() ✔
+│        │  ├─ testForeignCanvasesNeedTheStyleBit() ✔
+│        │  ├─ testAnyRequestedSeesGlobalAndPerWidgetKeys() ✔
+│        │  ├─ testDecorationsNever() ✔
+│        │  ├─ testEveryCanvasSubclassInADrawnMode() ✔
+│        │  ├─ testAnonymousClassesHaveNoPropertyOfTheirOwn() ✔
+│        │  └─ testDefaultAcceptIsTheInitiative31Rule() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_CanvasDamage ✔
+│        │  ├─ testMergedUnlessNoMergePaints() ✔
+│        │  ├─ testClipTouchesTheRegionOnly() ✔
+│        │  ├─ testRectanglesAndBounds() ✔
+│        │  ├─ testIntersectedWithThePaintRectangle() ✔
+│        │  ├─ testGrowsPastItsInitialCapacityAndResets() ✔
+│        │  └─ testNoRegionIsThePaintRectangle() ✔
+│        ├─ Test_org_eclipse_swt_m3gc_StrokeState ✔
+│        │  ├─ testDashOffsetShiftsACustomPattern() ✔
+│        │  ├─ testDefaultsKeepTheAdoptedContract() ✔
+│        │  ├─ testDrawPathKeepsTheDonorMiterUntilALimitIsGiven() ✔
+│        │  ├─ testDashOffsetIgnoredForPredefinedStyles() ✔
+│        │  ├─ testRoundTripStrokesWithTheStockMiter() ✔
+│        │  └─ testGivenMiterLimitReachesEveryStroke() ✔
+│        └─ Test_org_eclipse_swt_m3gc_CompositeCoverage ✔
+│           ├─ testPerClassPropertyDecidesForComposites() ✔
+│           ├─ testForeignTransparentAndMirroredCompositesStayStock() ✔
+│           ├─ testEveryCompositeInADrawnMode() ✔
+│           ├─ testFactoryAppliesTheSelectorToTheCompositeClass() ✔
+│           ├─ testDefaultCompositeAcceptIsOff() ✔
+│           └─ testCanvasesAreNeverDecidedHere() ✔
+├─ JUnit Jupiter ✔
+└─ JUnit Vintage ✔
+
+Test run finished after 688 ms
+[        27 containers found      ]
+[         0 containers skipped    ]
+[        27 containers started    ]
+[         0 containers aborted    ]
+[        27 containers successful ]
+[         0 containers failed     ]
+[        97 tests found           ]
+[         0 tests skipped         ]
+[        97 tests started         ]
+[         0 tests aborted         ]
+[        97 tests successful      ]
+[         0 tests failed          ]
+
