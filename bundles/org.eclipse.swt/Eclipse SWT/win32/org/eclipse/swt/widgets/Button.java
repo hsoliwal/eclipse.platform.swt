@@ -311,7 +311,7 @@ static int checkStyle (int style) {
 
 /**
  * test
- * @return ArrayList<String> styles
+ * @return {@code ArrayList<String>} styles
  * @since 3.131
  */
 public ArrayList<String> getStyles() {
