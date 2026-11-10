@@ -1,5 +1,7 @@
 source	pr	sha	action	effect	notes
-candidate:m3/swt-known-issues-20261110	#340	HEAD	CANDIDATE	master 4eb4f5c8e0 + known issues 3-6	built for m3-superset-20261110; evidence in docs/m3/release/known-issues-20261109/
+candidate:m3/swt-known-issues-20261110b	#342	HEAD	CANDIDATE	master f29eac6a4d + known issues 4-5	built for m3-superset-20261110; evidence in docs/m3/release/known-issues-20261109/ and docs/m3/release/m3-superset-20261110/
+pr:m3/swt-known-issues-20261110	#340	f29eac6a4d	MERGED	known issues 3 and 6	2026-11-10T09:00:44Z base=master; merged at fef5f00da1; issues 4-5 continue in #342
+pr:m3/ctabfolder-same-colour-20261110	#339	8cd2637495	MERGED	2 files +136/-0	2026-11-10T08:51:32Z base=master; CTabFolder: the colour in use repaints nothing (every-widget D)
 pr:m3/release-candidate-20261109	#335	b4579e0a34	MERGED	release candidate m3-superset-20261109	2026-11-10T01:53:23Z base=master
 pr:m3/swt-known-issues-20261109	#338	34bfcf7fb0	MERGED	24 files	2026-11-10T03:52:37Z base=master; known issues 1 (VirtualPageSource bulk batch) and 2 (Combo drop-down bar)
 pr:release/java-jni-naming-coverage-20261108	#325	4eb4f5c8e0	MERGED	unreferenced-suite baseline on top of the #335 forward	2026-11-10T03:53:28Z base=master; its content was already forwarded by #335
