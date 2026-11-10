@@ -426,6 +426,34 @@ public class Test_org_eclipse_swt_internal_VisibilityGate {
 		assertTrue (items [0].getBounds ().width > 0);
 	}
 
+	@Test
+	public void test_hiddenTableKeepsItsAppendsPendingUntilShown () throws Exception {
+		Composite page = new Composite (shell, SWT.NONE);
+		page.setLayout (new FillLayout ());
+		Table table = new Table (page, SWT.BORDER);
+		shell.open ();
+		spin (200);
+		java.lang.reflect.Field viewportField = Table.class.getDeclaredField ("viewport");
+		viewportField.setAccessible (true);
+		Object viewport = viewportField.get (table);
+		assumeTrue (viewport != null, "the Table viewport is off");
+		java.lang.reflect.Field pending = viewport.getClass ().getDeclaredField ("pending");
+		pending.setAccessible (true);
+		for (int i = 0; i < 100; i++) new TableItem (table, SWT.NONE).setText ("shown " + i);
+		spin (100);
+		assertEquals (0, pending.getInt (viewport), "shown: the posted flush counts the appends");
+		page.setVisible (false);
+		for (int i = 0; i < 1000; i++) new TableItem (table, SWT.NONE); // no setText: a text change is a message that observes the row
+		spin (100);
+		assertTrue (pending.getInt (viewport) > 0, "hidden: no native count change for the appends");
+		assertEquals (1100, table.getItemCount ());
+		page.setVisible (true);
+		spin (300);
+		assertEquals (0, pending.getInt (viewport), "shown: the first observing message counts them");
+		assertEquals (1100, table.getItemCount ());
+		assertEquals ("", table.getItem (1099).getText ());
+	}
+
 	/* pending timers whose runnable class starts with the prefix (win32 Display.timerList) */
 	int timers (String prefix) throws ReflectiveOperationException {
 		java.lang.reflect.Field field = Display.class.getDeclaredField ("timerList");

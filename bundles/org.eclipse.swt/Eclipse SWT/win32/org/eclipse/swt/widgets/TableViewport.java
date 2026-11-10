@@ -993,7 +993,11 @@ final class TableViewport {
 
 	private void flushQueued () {
 		flushQueued = false;
-		if (!table.isDisposed ()) flush ();
+		/*
+		 * Rule 24: no native count change for a Table nobody can see. The appends stay pending; the first message
+		 * that observes the rows (a query, or the first paint once the Table shows) flushes them (beforeMessage).
+		 */
+		if (!table.isDisposed () && !hidden ()) flush (); //FLLDCIM: MARK — every-widget Table H
 	}
 
 	/**
