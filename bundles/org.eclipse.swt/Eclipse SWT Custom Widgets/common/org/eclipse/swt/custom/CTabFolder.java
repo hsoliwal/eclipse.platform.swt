@@ -2605,7 +2605,10 @@ public void reskin(int flags) {
  */
 @Override
 public void setBackground (Color color) {
+	// the colour in use, without a gradient: nothing changes (no image rebuild, no repaint) //FLLDCIM: MARK — every-widget CTabFolder colour D
+	boolean same = color != null && gradientColors == null && !gradientVertical && color.equals(getBackground());
 	super.setBackground(color);
+	if (same) return;
 	gradientColors = null;
 	gradientPercents = null;
 	gradientVertical = false;
@@ -2980,7 +2983,10 @@ public void setFont(Font font) {
 }
 @Override
 public void setForeground (Color color) {
+	// the colour in use: the chevron, min and max images and the tabs stay as they are
+	boolean same = color != null && color.equals(getForeground());
 	super.setForeground(color);
+	if (same) return;
 	// Chevron painting is cached as image and only recreated if number of hidden tabs changed.
 	// To apply the new foreground color the image must be recreated with new foreground color.
 	// redraw() alone would only redraw the cached image with old color.
