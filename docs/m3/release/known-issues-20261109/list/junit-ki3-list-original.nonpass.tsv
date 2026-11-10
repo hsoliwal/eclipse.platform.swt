@@ -1,0 +1,32 @@
+mark	node	parent	test	message
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo	test_consistency_Segments()	expected: <123234> but was: <1234>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo	test_cut()	expected: <1456> but was: <123456>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo	test_setForegroundAlphaSimpleCombo()	Assumption failed: Alpha support for foreground colors does not exist on Win32
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo	test_setForegroundAlphaDropDownCombo()	Assumption failed: Alpha support for foreground colors does not exist on Win32
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance	droppedListScrollsAndCancelsOverLogicalRows()	Assumption failed: Combo viewport mediation is not active
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance	editTextMatchFindsTheFirstLogicalRow()	Assumption failed: Combo viewport mediation is not active
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance	keysAndTypeAheadReachRowsOutsideTheWindow()	Assumption failed: Combo viewport mediation is not active
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance	droppedResizeSweepMovesOnlyTheRowsEnteringOrLeaving()	Assumption failed: Combo viewport mediation is not active
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance	millionItemsKeepOneWindowNative()	Assumption failed: Combo viewport mediation is not active
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportDifferential	editableComboAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportDifferential	readOnlyComboAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportDifferential	readOnlyComboWithVerifyAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportDifferential	closedDeltasAnswerLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportAcceptance	scrollBarWheelAndKeysMoveTheLogicalTopLikeTheListBox()	Assumption failed: List viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportAcceptance	accessibilityLocatesHitTestsAndEnumeratesLogicalRows()	Assumption failed: List viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportAcceptance	accessibilityAnswersForLogicalRows()	Assumption failed: List viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportAcceptance	millionItemsKeepOneWindowNative()	Assumption failed: List viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportAcceptance	emptyAndTinyListsAnswerLikeTheListBox()	Assumption failed: List viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportAcceptance	spliceOutsideTheWindowTouchesNoNativeRow()	Assumption failed: List viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportAcceptance	resizeSweepMovesOnlyTheRowsEnteringOrLeaving()	Assumption failed: List viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportAcceptance	scrollingMovesOnlyTheChangedRows()	Assumption failed: List viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	hiddenDeltasAnswerLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	zoomWhileScrolledAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	resizeAndFontWhileScrolledAnswerLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	singleSelectionListAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	extendedSelectionListAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	setItemCountAnswersLikeTheOriginal()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	simpleMultiSelectionListAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_Virtual	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
