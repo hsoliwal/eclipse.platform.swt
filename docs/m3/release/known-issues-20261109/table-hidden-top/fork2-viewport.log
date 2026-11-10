@@ -1,0 +1,26 @@
+MATRIX2 swt 4975 win32 mode=viewport
+Q1 rows 62 visibleTop 0 target -10 | visible 0[sb 0 0..61/19] hidden 0[sb 0 0..61/19] set 0[sb 0 0..61/19] shown 0[sb 0 0..61/19]
+Q1 rows 62 visibleTop 0 target -1 | visible 0[sb 0 0..61/19] hidden 0[sb 0 0..61/19] set 0[sb 0 0..61/19] shown 0[sb 0 0..61/19]
+Q1 rows 62 visibleTop 0 target 5 | visible 0[sb 0 0..61/19] hidden 0[sb 0 0..61/19] set 5[sb 0 0..61/19] shown 5[sb 5 0..61/19]
+Q1 rows 62 visibleTop 0 target 30 | visible 0[sb 0 0..61/19] hidden 0[sb 0 0..61/19] set 30[sb 0 0..61/19] shown 30[sb 30 0..61/19]
+Q1 rows 62 visibleTop 20 target 10 | visible 20[sb 20 0..61/19] hidden 20[sb 20 0..61/19] set 10[sb 20 0..61/19] shown 10[sb 10 0..61/19]
+Q1 rows 62 visibleTop 20 target 19 | visible 20[sb 20 0..61/19] hidden 20[sb 20 0..61/19] set 19[sb 20 0..61/19] shown 19[sb 19 0..61/19]
+Q1 rows 62 visibleTop 20 target 25 | visible 20[sb 20 0..61/19] hidden 20[sb 20 0..61/19] set 25[sb 20 0..61/19] shown 25[sb 25 0..61/19]
+Q1 rows 62 visibleTop 20 target 50 | visible 20[sb 20 0..61/19] hidden 20[sb 20 0..61/19] set 43[sb 20 0..61/19] shown 43[sb 43 0..61/19]
+Q1 rows 62 visibleTop 43 target 33 | visible 43[sb 43 0..61/19] hidden 43[sb 43 0..61/19] set 33[sb 43 0..61/19] shown 33[sb 33 0..61/19]
+Q1 rows 62 visibleTop 43 target 42 | visible 43[sb 43 0..61/19] hidden 43[sb 43 0..61/19] set 42[sb 43 0..61/19] shown 42[sb 42 0..61/19]
+Q1 rows 62 visibleTop 43 target 48 | visible 43[sb 43 0..61/19] hidden 43[sb 43 0..61/19] set 43[sb 43 0..61/19] shown 43[sb 43 0..61/19]
+Q1 rows 62 visibleTop 43 target 73 | visible 43[sb 43 0..61/19] hidden 43[sb 43 0..61/19] set 43[sb 43 0..61/19] shown 43[sb 43 0..61/19]
+Q2 rows 62 | set 30 -> 30[sb 0 0..61/19] set 40 -> 40[sb 0 0..61/19] set 50 -> 50[sb 0 0..61/19] set 60 -> 60[sb 0 0..61/19] set 20 -> 60[sb 0 0..61/19] set 61 -> 61[sb 0 0..61/19] set 0 -> 61[sb 0 0..61/19] set 45 -> 61[sb 0 0..61/19] shown 43[sb 43 0..61/19]
+Q3 rows 62 top 40 at 5 -30 | t0 40[sb 0 0..61/19] remove 40[sb 0 0..61/19] setLast-1 40[sb 0 0..61/19] shown 13[sb 13 0..31/19] count 32
+Q3 rows 62 top 40 at 35 -20 | t0 40[sb 0 0..61/19] remove 40[sb 0 0..61/19] setLast-1 40[sb 0 0..61/19] shown 23[sb 23 0..41/19] count 42
+Q3 rows 62 top 10 at 0 -50 | t0 10[sb 0 0..61/19] remove 10[sb 0 0..61/19] setLast-1 10[sb 0 0..61/19] shown 0[sb 0 0..11/12] count 12
+Q4 rows 62 visibleTop 20 at 2 -3 +0 anchor 17 | remove 20[sb 20 0..61/19] insert 20[sb 20 0..61/19] set 17[sb 20 0..61/19] shown 17[sb 17 0..58/19]
+Q4 rows 62 visibleTop 20 at 2 -0 +3 anchor 23 | remove 20[sb 20 0..61/19] insert 20[sb 20 0..61/19] set 23[sb 20 0..61/19] shown 23[sb 23 0..64/19]
+Q4 rows 62 visibleTop 20 at 2 -3 +1 anchor 18 | remove 20[sb 20 0..61/19] insert 20[sb 20 0..61/19] set 18[sb 20 0..61/19] shown 18[sb 18 0..59/19]
+Q4 rows 62 visibleTop 20 at 22 -2 +0 anchor 20 | remove 20[sb 20 0..61/19] insert 20[sb 20 0..61/19] set 20[sb 20 0..61/19] shown 20[sb 20 0..59/19]
+Q4 rows 62 visibleTop 40 at 2 -3 +0 anchor 37 | remove 40[sb 40 0..61/19] insert 40[sb 40 0..61/19] set 37[sb 40 0..61/19] shown 37[sb 37 0..58/19]
+Q4 rows 62 visibleTop 40 at 2 -0 +3 anchor 43 | remove 40[sb 40 0..61/19] insert 40[sb 40 0..61/19] set 43[sb 40 0..61/19] shown 43[sb 43 0..64/19]
+Q4 rows 62 visibleTop 40 at 2 -3 +1 anchor 38 | remove 40[sb 40 0..61/19] insert 40[sb 40 0..61/19] set 38[sb 40 0..61/19] shown 38[sb 38 0..59/19]
+Q4 rows 62 visibleTop 40 at 42 -2 +0 anchor 40 | remove 40[sb 40 0..61/19] insert 40[sb 40 0..61/19] set 40[sb 40 0..61/19] shown 40[sb 40 0..59/19]
+Q5 rows 2000 top 900 hidden 900[sb 900 0..1999/19] | 89+3>903=903 1823-1>903=903 1538-3>903=903 360+1>904=904 1146+2>904=904 509-3>901=901 709+1>902=902 1047+3>902=902 406-2>900=900 643-1>899=899 940-1>899=899 1323-1>899=899 1112-3>899=899 1396-3>899=899 544+3>902=902 1206-3>902=902 923-1>902=902 165-2>900=900 267+2>902=902 1940+3>902=902 1602+3>902=902 1251-1>902=902 430-3>899=899 458+1>900=900 1203+3>900=900 892+2>902=902 840-3>899=899 1227+2>899=899 932+3>899=899 597+3>902=902 1659+3>902=902 486-2>900=900 692-1>899=899 1238-3>899=899 1883+1>899=899 280+3>902=902 1948-2>902=902 1564+3>902=902 1203+1>902=902 922-1>902=902 326-2>900=900 1493-1>900=900 1166+1>900=900 802+1>901=901 1179-3>901=901 1594+3>901=901 297-1>900=900 688-2>898=898 508+2>900=900 511-2>898=898 458-1>897=897 1242+3>897=897 862-3>894=894 212+3>897=897 1812-3>897=897 1930-2>897=897 566-1>896=896 539+2>898=898 778+2>900=900 1250-3>900=900 | shown 900[sb 900 0..1998/19] count 1999

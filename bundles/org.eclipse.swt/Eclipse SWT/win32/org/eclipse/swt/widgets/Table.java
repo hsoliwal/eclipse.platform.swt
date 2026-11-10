@@ -6008,6 +6008,11 @@ public void setTopIndex (int index) {
     if (!painted && hooks(SWT.MeasureItem)) {
         hitTestSelection(index, 0, 0);
     }
+	//FLLDCIM: TOP - a dirty viewport of a ListView that is not visible scrolls by the hidden LVM_SCROLL rule (official matrix, TableViewport.scrollHidden)
+	if (viewport != null && viewport.scrollHidden (index)) {
+		updateVirtualViewport ();
+		return;
+	}
 
 	/*
 	* Bug in Windows.  For some reason, LVM_SCROLL refuses to

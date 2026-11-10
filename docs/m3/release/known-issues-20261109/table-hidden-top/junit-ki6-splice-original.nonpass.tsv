@@ -1,0 +1,3 @@
+mark	node	parent	test	message
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_Splice	hiddenTableAppliesOneWindowPatchWhenShown()	Assumption failed: the hidden viewport is the win32 viewport's
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_Splice	runsOutsideTheVisibleRowsCostNoNativeRowOperation()	Assumption failed: the Table splices only with the win32 viewport
