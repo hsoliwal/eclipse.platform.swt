@@ -1,0 +1,66 @@
+mark	node	parent	test	message
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportAcceptance	spliceOutsideTheWindowTouchesNoNativeRow()	native row operations of a removal above the window with an anchor: 99 ==> expected: <true> but was: <false>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	hiddenDeltasAnswerLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	zoomWhileScrolledAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	resizeAndFontWhileScrolledAnswerLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	singleSelectionListAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	extendedSelectionListAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	setItemCountAnswersLikeTheOriginal()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_ViewportDifferential	simpleMultiSelectionListAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_List_Virtual	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrollBar_GeometryDifferential	recordedAgainstReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ScrolledComposite_ViewportDifferential	recordedAgainstStock()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_DrawnInteraction	fastScrollAndTypingUnderModelChurn()	Assumption failed: a drawn mode (custom, m3, gpu) only
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_Splice	hiddenTableAppliesOneWindowPatchWhenShown() 44405 ms	paint passes after showing ==> expected: <1> but was: <2>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_Splice	spliceAnswersLikeTheItemApi()	at 17 removed 4 inserted 0 top 43 selection [] hidden ==> expected: <count 58 top 43 selection [] focus -1 mark -1 texts row 0 row 1 row 2 row 3 row 4 row 5 row 6 row 7 row 8 row 9 row 10 row 11 row 12 row 13 row 14 row 
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_StockItems	armsNoApiSequenceReaches()	Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_StockItems	guardsOfTheStockStore()	Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_StockItems	denseStoreGrowsScansAndShrinks()	Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_StockItems	keyedStoreLooksUpGrowsAndCompacts()	Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_StockItems	growsByHalfWhileRedrawIsOff()	Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_ViewportDifferential	seededScriptsAnswerLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Text_OptimizationBench	measure()	Assumption failed: -Dswt.allwidgets.bench=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Text_ScaleOracle	measure()	Assumption failed: -Dswt.text.oracle=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ToolBar_OptimizationBench	measure()	Assumption failed: -Dswt.allwidgets.bench=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ToolBar_ScaleOracle	measure()	Assumption failed: -Dswt.toolbar.oracle=true is not set
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tracker	test_setDataLjava_lang_StringLjava_lang_Object()	expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tracker	test_isDisposed()	expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tracker	test_addListenerILorg_eclipse_swt_widgets_Listener()	expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tracker	test_removeListenerILorg_eclipse_swt_widgets_Listener()	expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tracker	test_notifyListenersILorg_eclipse_swt_widgets_Event()	expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tracker	test_toString()	expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tracker	test_getDisplay()	expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tracker	test_setDataLjava_lang_Object()	expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tracker	test_addDisposeListenerLorg_eclipse_swt_events_DisposeListener()	expected: <true> but was: <false>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom	glyphsAreCrispAndSeamlessAtTheZoom()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportCoverage	mediatedItemQueriesGuardTheirArguments()	Assumption failed: Tree viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportCoverage	focusWithoutACaretLandsOnTheLogicalTopRow()	Assumption failed: Tree viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportCoverage	collapsingOverTheCaretSelectsTheCollapsedRow()	Assumption failed: Tree viewport mediation is not active in this build
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportCoverage	aSingleTreeSelectsTheCaretAfterRemoval()	the native caret move on deletion deselects ==> expected: <0> but was: <1>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportCoverage	theLastDisposalReleasesTheImageList()	Assumption failed: Tree viewport mediation is not active in this build
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDeltas	treeInAHiddenParentAppliesOnePatchOnShow()	TVM messages while hidden: 1939 (0x111C=1660 0x113E=196 0x110A=42 0x1101=39 0x110B=1 0x113F=1) ==> expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDeltas	hiddenTreeAppliesOnePatchOnShow()	TVM messages while hidden: 1939 (0x111C=1660 0x113E=196 0x110A=42 0x1101=39 0x110B=1 0x113F=1) ==> expected: <true> but was: <false>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDifferential	seededScriptsWithCustomDrawAnswerLikeStockSwt()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDifferential	seededScriptsWithPresentationAnswerLikeStockSwt()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDifferential	seededExpansionKeysAnswerLikeStockSwt()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDifferential	seededSplicesAnswerLikeStockSwt()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDifferential	seededScriptsWithCheckAndColumnsAnswerLikeStockSwt()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportDifferential	seededScriptsAnswerLikeStockSwt()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportEdges	customDrawSurvivesTheTreeBecomingEmpty()	Assumption failed: Tree viewport mediation is not active in this build
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportEdges	keysOnEmptyAndZeroHeightTrees()	the caret is the off-window anchor ==> expected: <root 20> but was: <null>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Tree_ViewportEdges	selectionsWithNullEntries()	Assumption failed: Tree viewport mediation is not active in this build
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScaleClassic	tree1MillionNodes()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScaleClassic	ctabFolder50HeavyTabsEager()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScaleClassic	tabFolder50HeavyTabsEager()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScaleClassic	table10MillionRowsSlowSource()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScalePaged	tree1MillionNodes()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScalePaged	ctabFolder50HeavyTabsLazy()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScalePaged	table10MillionRowsSlowSource()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScalePaged	treeBillionNodesFlatHeap()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource_ScalePaged	tabFolder50HeavyTabsLazy()	Assumption failed: scale run disabled
+ABORT	leaf	JUnit Jupiter/ViewportScreenshotRegressionTest	test_logicalScrolledContentSnapshotsAtTenMillionRows()	Assumption failed: viewport screenshot lane disabled
+ABORT	leaf	JUnit Jupiter/ViewportScreenshotRegressionTest	test_capturePathsReleaseGraphicsOnSuccessAndFailure()	Assumption failed: viewport screenshot lane disabled
+ABORT	leaf	JUnit Jupiter/ViewportScreenshotRegressionTest	test_swtScreenCaptureTracksVisiblePixels()	Assumption failed: viewport screenshot lane disabled
+ABORT	leaf	JUnit Jupiter/ViewportScreenshotRegressionTest	test_viewportScreenshotRegression()	Assumption failed: viewport screenshot lane disabled
+ABORT	leaf	JUnit Jupiter/ViewportScreenshotRegressionTest	test_boundedTableSnapshotsUseLogicalScrollbarAndOverscan()	Assumption failed: viewport screenshot lane disabled
+ABORT	leaf	JUnit Jupiter/ViewportScreenshotRegressionTest	test_screenCaptureRejectsInvalidTargets()	Assumption failed: viewport screenshot lane disabled

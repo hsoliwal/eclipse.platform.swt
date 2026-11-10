@@ -1,0 +1,27 @@
+[
+  {
+    "source": "bundles/org.eclipse.swt/Eclipse SWT PI/gtk/org/eclipse/swt/internal/gtk/swt_theming_fixes_gtk_4_0_0.css",
+    "class_path": "org/eclipse/swt/internal/gtk/swt_theming_fixes_gtk_4_0_0.css",
+    "sha256": "e163910d6555db763f991168c71dae0a5d1616f2313324a3e5437292c7cc3860"
+  },
+  {
+    "source": "bundles/org.eclipse.swt/Eclipse SWT PI/gtk/org/eclipse/swt/internal/gtk/swt_theming_fixes_gtk_3_20.css",
+    "class_path": "org/eclipse/swt/internal/gtk/swt_theming_fixes_gtk_3_20.css",
+    "sha256": "fc08700fee50e533cbd0e8042e4709645a489524dcecfa69b2568c00b64d4198"
+  },
+  {
+    "source": "bundles/org.eclipse.swt/Eclipse SWT PI/gtk/org/eclipse/swt/internal/gtk/swt_functional_gtk_3_20.css",
+    "class_path": "org/eclipse/swt/internal/gtk/swt_functional_gtk_3_20.css",
+    "sha256": "c44822bdafc57596ca13f730568a279f8832d72e397b39dfd5a5336cb5c6aecc"
+  },
+  {
+    "source": "bundles/org.eclipse.swt/Eclipse SWT PI/gtk/org/eclipse/swt/internal/gtk/swt_theming_fixes_gtk_3_24_5.css",
+    "class_path": "org/eclipse/swt/internal/gtk/swt_theming_fixes_gtk_3_24_5.css",
+    "sha256": "df819e2e0fe40fb63b1758e01effd21e72bd0706ae7982402ee23e7a50cb1957"
+  },
+  {
+    "source": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/SWTMessages.properties",
+    "class_path": "org/eclipse/swt/internal/SWTMessages.properties",
+    "sha256": "ca15c205cd47b745c16f07c595ecc6c89bdc8a9a8ea0dd9e272f0e38b346fcf9"
+  }
+]

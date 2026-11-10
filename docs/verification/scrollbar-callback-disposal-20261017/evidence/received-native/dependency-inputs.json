@@ -1,0 +1,3364 @@
+{
+  "junit_console": {
+    "path": "/tmp/m3-toolchain/jtreg-7.3.1+1/jtreg/lib/junit-platform-console-standalone-1.9.2.jar",
+    "sha256": "004a478c2d40f8f524af27ff579d9459d57beb5c1db8ec1dfb9621cc506f75d3"
+  },
+  "native_libraries": [
+    {
+      "path": "/tmp/swt-native-viewport-20261017/libswt-atk-gtk-4975r10.so",
+      "sha256": "ff2855d483fc997f2692a0f9d6e3775eb90743db49e53a576c42a7d60797eb34"
+    },
+    {
+      "path": "/tmp/swt-native-viewport-20261017/libswt-awt-gtk-4975r10.so",
+      "sha256": "6fba450120f753344e4a52ea6c731118d4272c325c16363ce7e65a22aa74b68d"
+    },
+    {
+      "path": "/tmp/swt-native-viewport-20261017/libswt-cairo-gtk-4975r10.so",
+      "sha256": "9831d69a167f8f939da8ed49eeefda34638b99753d08c05b589696003d3283e5"
+    },
+    {
+      "path": "/tmp/swt-native-viewport-20261017/libswt-glx-gtk-4975r10.so",
+      "sha256": "1d7ed632ecc66cccaeaacf3cddd59737c74055aceed22a2213b822614737cfed"
+    },
+    {
+      "path": "/tmp/swt-native-viewport-20261017/libswt-gtk-4975r10.so",
+      "sha256": "37e0fdf931b6edf192729c74ff9fb4e75233a7d7546d72c91a729fc4f44f3685"
+    },
+    {
+      "path": "/tmp/swt-native-viewport-20261017/libswt-pi3-gtk-4975r10.so",
+      "sha256": "25f405825a7e90afd21eb34e893df662048a36cf77e4809a8aa4de64b34210c2"
+    },
+    {
+      "path": "/tmp/swt-native-viewport-20261017/libswt-webkit-gtk-4975r10.so",
+      "sha256": "c1d23d9a5b8d30fdfb5fe0e8c28a3114e11978b141b1e76b03dfa442a0418d4a"
+    }
+  ],
+  "swt_base_classes": [
+    {
+      "path": "org/eclipse/swt/SWT.class",
+      "sha256": "426bd8ac91300444d42ce66d0f8a6e62517116d309c2754759b5281cc3e64f6a"
+    },
+    {
+      "path": "org/eclipse/swt/SWTError.class",
+      "sha256": "1acdc3e5e2e7873f38917efd4ba7971fe83423f72fda988c86d022f42e4ee8da"
+    },
+    {
+      "path": "org/eclipse/swt/SWTException.class",
+      "sha256": "37dabb0842370de1a263e718b0fc262e23437f9e6c0188decf22ab2680bafae8"
+    },
+    {
+      "path": "org/eclipse/swt/SwtCallable.class",
+      "sha256": "9ce901540e1eb060c1e692f2626ca5bf6007b316e39f76f3c5fe0a22d56ff22e"
+    },
+    {
+      "path": "org/eclipse/swt/SwtRunnable.class",
+      "sha256": "2a1119b67f34caee3b6b65237ab94c918dd359b8f4be19f46377e13c7a1d2ebf"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/ACC.class",
+      "sha256": "d5261aa1b5835ac3c7e086d364dc39c95af9f05e8c1c484e5f87bdc5f05a440e"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/Accessible$Relation.class",
+      "sha256": "1f23dd2c24cc73ba075607a7963d87e2433458d0168653be8518fc473a3d1bab"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/Accessible.class",
+      "sha256": "249985f8d1ca1f4ae0c8e3655e837498db83df13d128ac69284e674854f9d3de"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleActionAdapter.class",
+      "sha256": "aae270304408456855cb0368d091c4e6845e9bcf906d0f2030c3593133004e0e"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleActionEvent.class",
+      "sha256": "5bdb727cb8673a4190a072ad02a0b350028083b77e3709f8b32f3b9d94972f6a"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleActionListener.class",
+      "sha256": "853b32c1d8904c610601692a876f45d4508a8b60ef192c81ab1067f0e902f565"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleAdapter.class",
+      "sha256": "4d3babf8e7aa050c1d3e31834d734eb224e160943b5aef552ee84dbf4030e24a"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleAttributeAdapter.class",
+      "sha256": "6c15a3d00df17e1c2f0ada4276fc35bf164e021705430a1befee81b4592901a2"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleAttributeEvent.class",
+      "sha256": "d5cb0dfeb7faebc51a250c26d59d870090e5a04e88d679f51d9efb3253cea449"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleAttributeListener.class",
+      "sha256": "9546995e0df709e573150ef9423f0aedde90dbb0585f35207a85356ea5436432"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleControlAdapter.class",
+      "sha256": "abf55a8498b6561ee54f7079d3a2ecdf8f8cf155beddf4b5acf7082d5b0fb05b"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleControlEvent.class",
+      "sha256": "b9d9ba1406e5e035fae96734d2530d167e1dc87a3724bef1718e59a0ca79c174"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleControlListener.class",
+      "sha256": "c1c6d8e395230236f7b452c4151460a8c57d0472ba9944a9e2c15c2427109255"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleEditableTextAdapter.class",
+      "sha256": "1962066feeed8c29a312d6fb5c368d0cbf1f7a6394cbf2e90e088a8430381715"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleEditableTextEvent.class",
+      "sha256": "b0f3c36613328f55fc77af9978a7232c4330e6a74129f88d2b1a7aba0bbdf527"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleEditableTextListener.class",
+      "sha256": "02988b24f173d2e200c6900c90949de1fc3eb5830106d64b7d878dd38d8a0d6d"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleEvent.class",
+      "sha256": "552e33c577527f312104a01eb5f5234aff479564cd312d68be37ffd7bd90b5cc"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleHyperlinkAdapter.class",
+      "sha256": "31bdf5c30162505b41b38816e52415e62fd021b55ea5c30a19076b1d5904a8dd"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleHyperlinkEvent.class",
+      "sha256": "13d6485b4e944c299fe65932219eee50ccc2e78cd474c2569e459097bd575ac5"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleHyperlinkListener.class",
+      "sha256": "2e397226bda78b27751e07fe9edd5294f4895fe1a3fbcbc3ddae9c428c546693"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleListener$1.class",
+      "sha256": "85a1e07d616b5065f0ba2ba3a30908ead70b57437f204df2e54af672b95dc0cc"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleListener$2.class",
+      "sha256": "4a1cadcd66dfd2654a0bf7484302e0657feeffd99bbe41e6240b450b0c735aa1"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleListener$3.class",
+      "sha256": "e7eafb0cf93f57dbaefb7b537ed2b6463504b28d277ac714b6fcb1d1081d7e78"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleListener$4.class",
+      "sha256": "c4fb25982016a3bbcd3c7353e6a8cc6d3d4394a0842a096dfb80d135f4b71238"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleListener.class",
+      "sha256": "8d6f99ebb7408834d694a54d74bb899fd7b790872c6346a72a5a824c7c5803b0"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleObject.class",
+      "sha256": "dc9ed8f08f28b54b79bf7d787394b870c16d9c32078bae99b050af225a8a3142"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleTableAdapter.class",
+      "sha256": "134774364177f70669b7157f63a18626f68f10d9d41e2b88283292738593b0b2"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleTableCellAdapter.class",
+      "sha256": "e4c486dafd20cc264486f202c772139dc32902fc2df248d63bdee64872e2cdb8"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleTableCellEvent.class",
+      "sha256": "ecb6645fd6066ff2ac7933be0e91855d9990e15d6dc82e2aca83a899c0e4aa77"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleTableCellListener.class",
+      "sha256": "2b540326a10ace0e1e6507c1d11c980d5b5dce7a2cabe2c245baf4bd8c40a0df"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleTableEvent.class",
+      "sha256": "86984b84531d7a1db6a55c1ac4a9f8b6317cdaa0245fec713c4b0489eb7e665c"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleTableListener.class",
+      "sha256": "133aec8cc51811b1183aac621b14b15beec2906e7dcdcfadf5daa6e9edbccd8f"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleTextAdapter.class",
+      "sha256": "bc74fa7156b79edc99f59dfd61ca1708aafd0c88451e90e7d176bf444274beac"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleTextAttributeEvent.class",
+      "sha256": "80a4ca7761b5acd18feb3b6d2d258f58b197adf3a44b4a4850a73c3ee7267df4"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleTextEvent.class",
+      "sha256": "b3c143e9044f0f61eb30ca265cc69e5f90fe7f41709cb625f5c8861a155d15de"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleTextExtendedAdapter.class",
+      "sha256": "a5084b81d3269e55b235ad2ca46fa18187189950f86d0b71b84741b2b12cc748"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleTextExtendedListener.class",
+      "sha256": "7d01bb177f5874fc0a049af9162e4fc4d028328a4588353e782256906c62807d"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleTextListener.class",
+      "sha256": "23dd5f43a00ad22b5c7def9b64137af082edb85c32f97e958b64b0eb21393599"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleValueAdapter.class",
+      "sha256": "afd32797539d7aa2f9862437216dcbd0eb25d4f3971a6b22ec098fd2695f3d48"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleValueEvent.class",
+      "sha256": "2472327d830b6888e9e9597cbbbbf57f9ae56995be09ae243f9264378d0532f2"
+    },
+    {
+      "path": "org/eclipse/swt/accessibility/AccessibleValueListener.class",
+      "sha256": "d32b4f1c2cd058795ec63353c3747c9b2726a7fa5106912c2ac803b21f68d6fe"
+    },
+    {
+      "path": "org/eclipse/swt/awt/Java2DCanvas$BarState.class",
+      "sha256": "7cfbd073a0868b9160b296ea4e0f3f33eb10457e6ec204c568433132aa94b3bc"
+    },
+    {
+      "path": "org/eclipse/swt/awt/Java2DCanvas.class",
+      "sha256": "dcd9432c4292714846f500a32c9b69f1bd3b7a6b406d04b3893a72cf2fe80dab"
+    },
+    {
+      "path": "org/eclipse/swt/awt/Java2DSurface.class",
+      "sha256": "478e8ac374f205b36011d034eb3a0d9f9abf59684871b57cc7c426508b9497d3"
+    },
+    {
+      "path": "org/eclipse/swt/awt/SWT_AWT$1.class",
+      "sha256": "fc1d6c9baf768abed5ff9bb532751e263b1bb677969ff46b54d6ebd9b6048ffc"
+    },
+    {
+      "path": "org/eclipse/swt/awt/SWT_AWT.class",
+      "sha256": "dcd6003caf5219a571ad8aa36fad4a12185c958bde4568167b149c5f4a0dafba"
+    },
+    {
+      "path": "org/eclipse/swt/browser/AuthenticationEvent.class",
+      "sha256": "fec421b4e13283f30b5fcdb7844e5874276dafc92262b81bebdaa949eaffa8a9"
+    },
+    {
+      "path": "org/eclipse/swt/browser/AuthenticationListener.class",
+      "sha256": "d6946dcdcd837b1f525652df8af50a9491b736d134da52911540abd6869d9d6f"
+    },
+    {
+      "path": "org/eclipse/swt/browser/Browser$WebViewUnavailableDialog$DialogOption.class",
+      "sha256": "d55d14d57eb9bce9527daa64960d9362c75a52c5e324e607959aeec862dfb6ca"
+    },
+    {
+      "path": "org/eclipse/swt/browser/Browser$WebViewUnavailableDialog.class",
+      "sha256": "d6693577d967f57a60ad5dbf8d9438a3c6ce7e2a2057e7effed66be0ce29e636"
+    },
+    {
+      "path": "org/eclipse/swt/browser/Browser.class",
+      "sha256": "efcdaac472bb093e7e40e08330c60a582b244b7a90a7e7934b7a11da84921527"
+    },
+    {
+      "path": "org/eclipse/swt/browser/BrowserFactory.class",
+      "sha256": "b4420c75f0545c001f02f25ab9b289d74f9698808b45141cc7fe15487a662cfa"
+    },
+    {
+      "path": "org/eclipse/swt/browser/BrowserFunction.class",
+      "sha256": "4d0f806fdddb65db7c9ed91d2b412cd34c4778ce7c80a92387c24b7f83c48ba0"
+    },
+    {
+      "path": "org/eclipse/swt/browser/CloseWindowListener.class",
+      "sha256": "723567876cfaa9267b73747d96b748381884169ad4cf704e5a193e89c5aa46e3"
+    },
+    {
+      "path": "org/eclipse/swt/browser/JSON$Reader$Control.class",
+      "sha256": "089d2369db8e88dbc14c44e39a638fc1f0abd2107b1e4a5ab63f424e6b49ad0f"
+    },
+    {
+      "path": "org/eclipse/swt/browser/JSON$Reader.class",
+      "sha256": "db330fde5b8403a9229529ccf02f03e7a3b1658abd06a6906b3e43e048abf9a6"
+    },
+    {
+      "path": "org/eclipse/swt/browser/JSON$Writer.class",
+      "sha256": "62aee205ce0b6ee444afa9390bf4d6bb205864627a9752a26ae10a2deb0c3f24"
+    },
+    {
+      "path": "org/eclipse/swt/browser/JSON.class",
+      "sha256": "ab73dbbc9c64b7b57c8b82ca6548a300b22c7253546808d239a3b1153fd7906e"
+    },
+    {
+      "path": "org/eclipse/swt/browser/LocationAdapter.class",
+      "sha256": "221cff1d1fc4a58e83139289ce48912ee7d6c694b973b3d539e92f837e5eaac0"
+    },
+    {
+      "path": "org/eclipse/swt/browser/LocationEvent.class",
+      "sha256": "2214d9aad6a8af46ce753b8e7827c7ac1af8d9db2672027b37a1ce21a39bc8ae"
+    },
+    {
+      "path": "org/eclipse/swt/browser/LocationListener$1.class",
+      "sha256": "9adfae050f22978cc5b084b45fff75b6e887afddd99ccd799b100dc405e1076a"
+    },
+    {
+      "path": "org/eclipse/swt/browser/LocationListener$2.class",
+      "sha256": "8812f47f4ad7408aa70d4d9bebfdf1a9cdba66ec9b3bccf3424c42cfad389868"
+    },
+    {
+      "path": "org/eclipse/swt/browser/LocationListener.class",
+      "sha256": "0b4cc82201e7c08bee4ea4f096b9ab49baac95fa5728e52b95c6168d26dbd1a9"
+    },
+    {
+      "path": "org/eclipse/swt/browser/OpenWindowListener.class",
+      "sha256": "1630bcc1b846d2f886efca51d3434145ccd9d2f17bcd2cfa82b023bfbe5bc28b"
+    },
+    {
+      "path": "org/eclipse/swt/browser/ProgressAdapter.class",
+      "sha256": "97b1d3ef09b4545f637feb4a498771e2ec98aa2e65ff70c2643e81fa936e21d1"
+    },
+    {
+      "path": "org/eclipse/swt/browser/ProgressEvent.class",
+      "sha256": "0e358cfacb3bf625050a05f78593f4ec780e2b5de5d7d04d982ea9a7fec34fd0"
+    },
+    {
+      "path": "org/eclipse/swt/browser/ProgressListener$1.class",
+      "sha256": "8377157ad377fb0f0cfb5b1e76d8a692f8ca4e11599a989d9f172e99a5199dcb"
+    },
+    {
+      "path": "org/eclipse/swt/browser/ProgressListener$2.class",
+      "sha256": "32ee9eb8c50fe194aa47531b8d23e719165de95071a33568efabaea61eb421e6"
+    },
+    {
+      "path": "org/eclipse/swt/browser/ProgressListener.class",
+      "sha256": "224eb65f1cd1e526ec9a2e7eda3f1bb1dbc66d55657996b7d266f4b73a9037ed"
+    },
+    {
+      "path": "org/eclipse/swt/browser/StatusTextEvent.class",
+      "sha256": "1ca333d72739ae2820cac7fae0f9cffba0469ec8876abf59dcfc6161b3971ef4"
+    },
+    {
+      "path": "org/eclipse/swt/browser/StatusTextListener.class",
+      "sha256": "46b3451c42e1ffced84b9b1c0821f2eef6b31a47e111cc8920daf824b4cbb4b8"
+    },
+    {
+      "path": "org/eclipse/swt/browser/TitleEvent.class",
+      "sha256": "ff9d2c02df987002e38ecea8d8222aef58b5e9237bade27e83c9cabef5984356"
+    },
+    {
+      "path": "org/eclipse/swt/browser/TitleListener.class",
+      "sha256": "00146383bb824bb7d7218d4a712f8dcb6fc0d2e30a6ea6bdb8cf3baaa20ee7a1"
+    },
+    {
+      "path": "org/eclipse/swt/browser/VisibilityWindowAdapter.class",
+      "sha256": "3cfbf08c31a79e4c2b30460adcd9b5cfc54fb1b720b39b51695d469d3a27cc83"
+    },
+    {
+      "path": "org/eclipse/swt/browser/VisibilityWindowListener$1.class",
+      "sha256": "337fc74dc8c9cbd1df6ae52c9c467a5aba0c8154b7a231b2ef8722f4bd28ffc3"
+    },
+    {
+      "path": "org/eclipse/swt/browser/VisibilityWindowListener$2.class",
+      "sha256": "d66e32d79fbf8aed7ae6bf5ee86f7c7f2f6ff6d21059872cfbbe0d8e8f819aa5"
+    },
+    {
+      "path": "org/eclipse/swt/browser/VisibilityWindowListener.class",
+      "sha256": "a777154a1d73fe3ff13b1aeeb656f9fab842b7c0106ba80fd111a943d737f8b2"
+    },
+    {
+      "path": "org/eclipse/swt/browser/WebBrowser$EvaluateFunction.class",
+      "sha256": "97612bcc3d53aa3825622f022e4b87eef2f723f1d560ef3221658b08f42ff3c8"
+    },
+    {
+      "path": "org/eclipse/swt/browser/WebBrowser.class",
+      "sha256": "f88e26a740ba43991cb0096649783c002b96c40939c48ba2f600dab28be03478"
+    },
+    {
+      "path": "org/eclipse/swt/browser/WebKit$1.class",
+      "sha256": "537e6dbf5ee68c603feb562108dc4a6d424f0aea9ba69925bbc1977f154bfbc1"
+    },
+    {
+      "path": "org/eclipse/swt/browser/WebKit$2.class",
+      "sha256": "43c6ac215fbf70cf02c4b0d10aca672474c621d0f28906e7cc13ee1be5ac99aa"
+    },
+    {
+      "path": "org/eclipse/swt/browser/WebKit$Webkit2AsyncToSync$CallBackMap.class",
+      "sha256": "1fede23c76861f1f3e034c1aa2599624144159b4fbb7f6ba453e46bbff4ea03f"
+    },
+    {
+      "path": "org/eclipse/swt/browser/WebKit$Webkit2AsyncToSync$Webkit2AsyncReturnObj.class",
+      "sha256": "7c8593fa0f899a8157bdef850d29ac2214f9fb6ed72b21d498a4ea5e52a955e2"
+    },
+    {
+      "path": "org/eclipse/swt/browser/WebKit$Webkit2AsyncToSync.class",
+      "sha256": "42fca95ea6fde0dba14646b1a5ca16edf5c253877309078089aa52406986fb54"
+    },
+    {
+      "path": "org/eclipse/swt/browser/WebKit.class",
+      "sha256": "637fcdaa9c964d0c2fc910d6197e1974080c8326f3f0d2a12bb86facfab42d51"
+    },
+    {
+      "path": "org/eclipse/swt/browser/WindowEvent.class",
+      "sha256": "15934207bbb1971bc1db55b6c1f557213b6e929ade31f1d024162feccc2f4cb4"
+    },
+    {
+      "path": "org/eclipse/swt/custom/AnimatedProgress.class",
+      "sha256": "7f5f85c16856be9268e446a148f3a80ca320e2ef890b51f67f4f4bc9ba68cebc"
+    },
+    {
+      "path": "org/eclipse/swt/custom/BidiSegmentEvent.class",
+      "sha256": "9a7689df8cbc7d676bd2d4884c25e4fc129a5d355cd3031ebcc682f45bf94256"
+    },
+    {
+      "path": "org/eclipse/swt/custom/BidiSegmentListener.class",
+      "sha256": "890f9da972b554a6836e37683dacb452725dbf897fb0befb89ae4871488d8f90"
+    },
+    {
+      "path": "org/eclipse/swt/custom/Bullet.class",
+      "sha256": "cc80fd9acf1852b334f99d05b29299550b4a81041e5f967256056e7375f224be"
+    },
+    {
+      "path": "org/eclipse/swt/custom/BusyIndicator$1.class",
+      "sha256": "afe691cf15e2af68e047d7b482fcea94c48fafb704e7a651b6081e845a31ff62"
+    },
+    {
+      "path": "org/eclipse/swt/custom/BusyIndicator.class",
+      "sha256": "87ebc9ab0b3985fe0dc0c2682973b000ee1a68d69e98386b49dff5a412dda490"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CBanner.class",
+      "sha256": "a8dbcff5971b50793b04e2b8e005fc50ea38eb881692b8a5c2629d5a8b51e382"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CBannerLayout.class",
+      "sha256": "6b8254d824110f3ac43f39f3109427e3b6496055a595ee37efa030366286a103"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CCombo$1.class",
+      "sha256": "e48981d7bb357a2415f1f48dc81f0525fb04f9593594f3352ee4f4007d5c534a"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CCombo$2.class",
+      "sha256": "bc088dc61d27e0b4177646b29ef60fdf4846305472b3ddfcce2ff12d4f77771d"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CCombo$3.class",
+      "sha256": "727f9505f288633149f408fa0a80b9529d98403cc96dd72afbf743cf8e54d701"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CCombo$4.class",
+      "sha256": "b613b293b0ee687d50591eca9db46da4300baa96042e9c0b7ed9cea3c54dde5c"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CCombo$5.class",
+      "sha256": "b78dbf83b427b70d1aaec402d8068c6f2702baf28bcd6ed5a3074544d6c8cd76"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CCombo$6.class",
+      "sha256": "e19df9529453937068ffe37b66f9998ac50e9512ebbf8476de4160ece742d7bb"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CCombo.class",
+      "sha256": "10f6730a03ee8a4b256bf74f9e1be0841669a570832d23642a5b2ce5f9d86ce1"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CLabel$1.class",
+      "sha256": "43b075d8eb349d91b23e90db3392478ea068cc87aa26441307240a7101990aa9"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CLabel$2.class",
+      "sha256": "732a7caf763fb7f120309155fe80a08deb15d03a745225a01e04fbe138a9ee90"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CLabel.class",
+      "sha256": "632bf47684a133ffbb4e04b0c68d70f627aa8ade76a143881051cd011ab4bdf2"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CLayoutData.class",
+      "sha256": "a62986f427c034fddbaee02143e96ca84091b46e13152ef2d9e6d89d36e16601"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder$1.class",
+      "sha256": "fce459e31b8fbc4ec5ef7fded939d4027ddefaffa7357c38cb1f869aaff3a484"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder$2.class",
+      "sha256": "596444513c39289eed5fd9edaaedda5537be0b354a4f8578f8358bd626e8151f"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder$3.class",
+      "sha256": "e4a91e77be423b05eb336a2109fecdb6651eb28c5597da8b4f976fe539adc563"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder$4.class",
+      "sha256": "7a61ba0edf59df310a74e313b0e5dad1ba351ef3c9955f6205b3987858171784"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder$5.class",
+      "sha256": "0534ee8c287c43730baf0787c17c7e595a1e55d89ac82e76a4590ffcc7520d57"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder$6.class",
+      "sha256": "bfc20cb052aa49f2afc132fef1b63e1dffbef99f9b26dd6ffc2103df826fbc07"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder$7.class",
+      "sha256": "b23313d17b43d7dc2be7f36c1f8cb69fe260e91358f518f96cb3455d45cc874c"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder.class",
+      "sha256": "7ff53448015687937e6c412a6739a9561f5a0d4d5f2010aaa9791ebdc7d2dc66"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder2Adapter.class",
+      "sha256": "0fcdb6a8662ac7e00e7e9877918bc04f93275ee4e067fbc7b1d4d6e748adc572"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder2Listener$1.class",
+      "sha256": "c6b3cc8aa7794e631529639169654c98b4123585d8ae5a400a069896614a36fe"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder2Listener$2.class",
+      "sha256": "0ae6e1b335922b6430b17d4fcb1fcec22aa8f532d4133d57b18c7f792d6a8814"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder2Listener$3.class",
+      "sha256": "f6f356ea05f777b60f6f9458678a469a15776cd679179e80fe7ddc7a03e111d2"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder2Listener$4.class",
+      "sha256": "8718c1ab886d21ce97e06998c0b9b185f7029eeb9c61c0a6d253a9b88d18a0c8"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder2Listener$5.class",
+      "sha256": "14461ff9104d798db54cfba1ffe9202550d800de183c0586f29d82433eaf1c33"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder2Listener$6.class",
+      "sha256": "957e4a0c0ef58056d1e5ef4306d7be4a0d4a766688774eb360d5a70a93da6d54"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolder2Listener.class",
+      "sha256": "684dd6a4561f71027022e8062146942ab6c179721e5a33e3111be72fcfaf77a0"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolderAdapter.class",
+      "sha256": "b37f7bba03ba1cbb5961be078e4c7ae5c01bcde669ef3b5fff17b0af2b2c51eb"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolderEvent.class",
+      "sha256": "dfc0e160705ab7d95000fc6ac871f781fbad1dfa8c7cd0f3f1403d8b49ed5b1a"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolderLayout.class",
+      "sha256": "3fd03b6c289177eb1774325878194d291dbffb528cb469a1f4e8e5a893d14068"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolderListener.class",
+      "sha256": "f8d0659d1d41fba3d0137aac2a0bffe9ed5d1b2c5f23a1d3ff8cef2d337c503b"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabFolderRenderer.class",
+      "sha256": "2d903f754da1b1a9e33b7ec53dff9cf2b8457a38b194b5f594401f09c56c4691"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CTabItem.class",
+      "sha256": "32031132ff73d8413122ea8f719239e8f7dcfa4bbe81e39368a121cbe27bdd1c"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CaretEvent.class",
+      "sha256": "173bc61ff976b05829ec1352f794c99f003ad632663f2fa233794c9287e6a098"
+    },
+    {
+      "path": "org/eclipse/swt/custom/CaretListener.class",
+      "sha256": "8b4f4feee264b82e6376f83a658b014ec7918d339f45639aaa4919c6c98d8266"
+    },
+    {
+      "path": "org/eclipse/swt/custom/ControlEditor.class",
+      "sha256": "16db0b3bf74335292cc534a54180fc9bbce749139a7a370b98d2cf87f1c07890"
+    },
+    {
+      "path": "org/eclipse/swt/custom/DefaultContent.class",
+      "sha256": "50805a0f7f1b5d89fc1652664c0f49436ff8a9f7b16436893facc2a08cb2116b"
+    },
+    {
+      "path": "org/eclipse/swt/custom/ExtendedModifyEvent.class",
+      "sha256": "b2dcfee8f3195d086e1700b0c619ad32ae410734b22e86cfe5698ab3cbf2d64c"
+    },
+    {
+      "path": "org/eclipse/swt/custom/ExtendedModifyListener.class",
+      "sha256": "1a987032957c428ba2015463bf934f19e2a514de1e8013d76c862df634dfbabb"
+    },
+    {
+      "path": "org/eclipse/swt/custom/HTMLWriter.class",
+      "sha256": "59e8306e46b807ee80e8490cc2db2285165bd6a2b6e19d852b36cf4cdddf82b3"
+    },
+    {
+      "path": "org/eclipse/swt/custom/LineBackgroundEvent.class",
+      "sha256": "da48ea953df858cb9ae8202b567a716db206af80c4440b61427180be514bf429"
+    },
+    {
+      "path": "org/eclipse/swt/custom/LineBackgroundListener.class",
+      "sha256": "d31b390260e688609304492cc33c161a54e0ad13b7208a838b2ee7e4d221fd95"
+    },
+    {
+      "path": "org/eclipse/swt/custom/LineStyleEvent.class",
+      "sha256": "f256b5320022d6f6710c2e46333cf339fa99d8a17ec4e7f387c479815c4ec66a"
+    },
+    {
+      "path": "org/eclipse/swt/custom/LineStyleListener.class",
+      "sha256": "448f599f2080d250290849f3f340e6c9547e1e26857aba20a06cd87c5a9edc5c"
+    },
+    {
+      "path": "org/eclipse/swt/custom/MouseNavigator.class",
+      "sha256": "e443f18e5f6a1cb1a40a402643b8de91d63da4118bc337041802f0362909c070"
+    },
+    {
+      "path": "org/eclipse/swt/custom/MovementEvent.class",
+      "sha256": "932c11b48848ac7a18e873441935cedd9a97fdb58bf39c222d7b1ffc5da10a6c"
+    },
+    {
+      "path": "org/eclipse/swt/custom/MovementListener.class",
+      "sha256": "a8543c0ff8d01ea7aafa2b0c9f3e74202109f23705b36364e9e2fe3c3ddc2215"
+    },
+    {
+      "path": "org/eclipse/swt/custom/PagedContent$1.class",
+      "sha256": "5b2d8a374582152f12916f07c60f5350512e0a72a2c69a9e87d401915c675dee"
+    },
+    {
+      "path": "org/eclipse/swt/custom/PagedContent$Node.class",
+      "sha256": "23bb75229900495bf32d7273fd5a56d6752df8b8ed5a68d2ec84dbd3089a0afc"
+    },
+    {
+      "path": "org/eclipse/swt/custom/PagedContent$Pair.class",
+      "sha256": "4e8583a8095c45f6cfd8d33ce9e4367eb28013ffc55a84426ded1a2647832533"
+    },
+    {
+      "path": "org/eclipse/swt/custom/PagedContent.class",
+      "sha256": "3bf550df711f8b8852ee814027fb4f620131fd496de074761a35e94c7c4796fe"
+    },
+    {
+      "path": "org/eclipse/swt/custom/PaintObjectEvent.class",
+      "sha256": "f0fa8ec6be22ebdfdade137f19404f17af33880ef9badb6dd190faa4da5b04f5"
+    },
+    {
+      "path": "org/eclipse/swt/custom/PaintObjectListener.class",
+      "sha256": "e3b9148ceb6001c01322911bc667e4806e128ab39ddcb1a4c10bd0f1fb00ddb0"
+    },
+    {
+      "path": "org/eclipse/swt/custom/PopupList$1.class",
+      "sha256": "4d3977eaf652fe5f8caa8f8abf61362cd7f43e5d2ba66b02ecc4de913c6ee5ca"
+    },
+    {
+      "path": "org/eclipse/swt/custom/PopupList$2.class",
+      "sha256": "e4979e7a4959077e37c5f9b93a51c0279aa1041b53e32bf8cce1a3fead84c2f9"
+    },
+    {
+      "path": "org/eclipse/swt/custom/PopupList.class",
+      "sha256": "c589685cacde068632090f2f69f53ffe3983591f9b00e811f7fcc6ca42d7acae"
+    },
+    {
+      "path": "org/eclipse/swt/custom/RTFWriter.class",
+      "sha256": "74002d4b1c5f837951bd0fccd42a10bda5312f22aad6ab565d227a43ac3015fc"
+    },
+    {
+      "path": "org/eclipse/swt/custom/ST.class",
+      "sha256": "6d7c1380316b04d440d68ee4959d1214d743a0fbdbadbb768ca235cab73a9daa"
+    },
+    {
+      "path": "org/eclipse/swt/custom/SashForm.class",
+      "sha256": "940fd5f68c4218ba2576f96898c8de3556d2d518dc9a590d7d782797cc1a53f8"
+    },
+    {
+      "path": "org/eclipse/swt/custom/SashFormData.class",
+      "sha256": "7331e1c2dde0d29a0d16861eb220a3d4321f7591760068ced11e732c494084e0"
+    },
+    {
+      "path": "org/eclipse/swt/custom/SashFormLayout.class",
+      "sha256": "e41c3c3c585f1025616ada6fa738bcab6713547a7c78cae57051864f7b23f8ca"
+    },
+    {
+      "path": "org/eclipse/swt/custom/ScrolledComposite.class",
+      "sha256": "7baa986bb75777d7e33e0e0c3d069efea794b4cb792d5617f2747910da46e82e"
+    },
+    {
+      "path": "org/eclipse/swt/custom/ScrolledCompositeLayout.class",
+      "sha256": "bef1aee234c7424f124871f6ee9be031844734e19859140b24de4f61d1e6e035"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StackLayout.class",
+      "sha256": "9a9f7559acda2db19c7f866b3784936620d55d1e81a3d54b1be67e9ebfeb2bea"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StylePolicy$1.class",
+      "sha256": "1d956920424fc664119cad936350bfbbf6207240fe922ee943fec7bc16896d3f"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StylePolicy$2.class",
+      "sha256": "e6e49cb867b9d88e8525362a09d554a7245bf468f34a00aac5a63025aa6d28a9"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StylePolicy$3.class",
+      "sha256": "22ce8afa4f63a10c4982804137e0bc0567a669dc2f3db041c4b3870b4a394904"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StylePolicy$4.class",
+      "sha256": "d20d2efe0759e5ae16907cfcae854bf544101d920f87c360ba80fdd0a7c028e3"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StylePolicy$5.class",
+      "sha256": "dcdf179458a6b3fea1c2785e49863346fd3059d5a055dc1a1388cd8aedcac4e1"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StylePolicy$6.class",
+      "sha256": "d6a9308bba1263f24fd339c81484ec081aaa1287b6f2011ac8325c7c1b4d313b"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StylePolicy$7.class",
+      "sha256": "4948e85c4d5fa41357f999fdc1e041b2db50e7ba7c8f7cd2eb3d133ab485bb43"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StylePolicy$8.class",
+      "sha256": "b328bda25d452d7ff19765dd057de5ff2513b89d3d688844af0e6f3bb7c98b9f"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StylePolicy.class",
+      "sha256": "d113412ec7aa3972e3fe0da7e7a474da51282b747a490f87d3385c2aa369f312"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyleRange.class",
+      "sha256": "c77963ed67c301385657efb23985f6f966d8a033ac244ad7a51aa2be5e72dc17"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledText$1.class",
+      "sha256": "4fd5672cec26b111c7048613385ab82709dfb4b636864a878bfb18ac42303bd2"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledText$10.class",
+      "sha256": "17f99a602f653ce7170a7270630915417e263a1d03095bd43779bf234371b0f6"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledText$2.class",
+      "sha256": "2ebe8380f52d90a28f70a2e2b2a23a41c6f227721e6aab987505b80a17b8427c"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledText$3.class",
+      "sha256": "7e9762e37febd750e3b32050c5fcf7be2fabf9ba464e6c4d453e352a19946bf4"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledText$4.class",
+      "sha256": "9c602fbd751a8e00f1eb9aa7237ad52f99f14415a765361152efe19386a5ca81"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledText$5.class",
+      "sha256": "919e97aa88ec9305229934a199e291d34ce0bf2fd9316859d3c554bd6cdc8214"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledText$6.class",
+      "sha256": "0751393c82d8eb27a18174e0bde1437ddee59b7cb7f2ffac76ed8ede2cdf5279"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledText$7.class",
+      "sha256": "1806eea6c0e3380e6e00fd9613eac778ed914271d79f0987054a97d575b39580"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledText$8.class",
+      "sha256": "17540b584d68ec2cb343fb996e505006faf1c8637a7563694cec98e1b7c1e6c2"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledText$9.class",
+      "sha256": "7e9c7529671a2b3bdda25c80a79cdff59e5c33430c1c7f5eb5d54fde4c95879b"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledText$Printing.class",
+      "sha256": "5d20120d3e43a5875ab2108badee1e77f6f8c1d9b69d683306bd70a1ff2a714c"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledText.class",
+      "sha256": "8c63cf98c7f72244fefd48dee3f4f8c15da1a0fb7a6c89ea2cc3e28644b23940"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledTextContent.class",
+      "sha256": "fb0a2cde7b97e9500cf0b34d1fa069049ca9c2717f9a20805218dc60ca0185fa"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledTextDropTargetEffect.class",
+      "sha256": "b160ff990e92861d8e82ce0c1e71e2498637a89f1d7e1f0544382a35d3d1ad09"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledTextEvent.class",
+      "sha256": "b0daadf0e12d00b1c0343ec9cb5807ec7c26af7f7cb1302dc9bcbbb1e5604142"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledTextLineSpacingProvider.class",
+      "sha256": "4112fd71d50f447ffa33b3ee68991020a0fd678d8c232c13c647f9633ef5e945"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledTextLineStore.class",
+      "sha256": "6fd8f009a17620e105c31524628298ab79b617b55137672ed60429f3feba93c2"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledTextListener.class",
+      "sha256": "893d2217cee2db1cf31d9ea0e5880821fa63ea4668a65cc952e01731e77dc627"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledTextPrintOptions.class",
+      "sha256": "cd27898cad8549e712ddc5b69824704e26cf96a46bcefe80605e8d4ea80b5a55"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledTextRenderer$1.class",
+      "sha256": "cb2ab83f66ac073d69446dc6b49c770ed76375c38c62eb84a89be15ba8e8d3a9"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledTextRenderer$2.class",
+      "sha256": "35ed1fbd142d8becd4c57d06d0f817d927c9c256090852e2aa4378570947fe79"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledTextRenderer.class",
+      "sha256": "228fad93eab6dc59214bcba5436df7f5cdfc3deae1b86650f36d0ecce93d9315"
+    },
+    {
+      "path": "org/eclipse/swt/custom/StyledTextWriterBase.class",
+      "sha256": "fc097c49f258ce38989732cc1064c6133d472835e1af73cb9d398cd78696acd5"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TableCursor$1.class",
+      "sha256": "dab470a3921ecdf8bf2d5b69316f75f312b9e71a13223a3bb3429e82bc16f0cc"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TableCursor$2.class",
+      "sha256": "095f0d47b70f4a5aa219108473fa14fb0b73a4396b06a13742f27c3e7dd0ea8f"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TableCursor.class",
+      "sha256": "e332a3db916a32ca11269e81540060798ec68c5f629333e575235fc595d24de1"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TableEditor$1.class",
+      "sha256": "56f464ae326ae533ade0d7b48c63de82150af3c622962e9e6db9e485c9c2b44c"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TableEditor.class",
+      "sha256": "3ff3892310b42011884b32fd5e7e4df6aed87203a5ef6a587368c4801801af6a"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TextChangeListener.class",
+      "sha256": "1b8c22e62d0aba6f54ff85f42c880e4d770aea20fa909e62c1f1882656f179ba"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TextChangedEvent.class",
+      "sha256": "2c420bff14e8e2e881a54b7180663a62c8ea0f944277ca82b16e880e76173d94"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TextChangingEvent.class",
+      "sha256": "4b4c855732c0701d06a26ec03e266ffab6f2560cce2b81a0bdbbc1c415d18c2a"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TextWriter.class",
+      "sha256": "0300149a96ad8d90cb07c6121117bf800f5598b165ccc8c05b4755d3712e29a0"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TreeCursor$1.class",
+      "sha256": "f2fccfb723d8cfb6ca7f87fd268b467d140e1af3298971d8002b6e0d62252855"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TreeCursor$2.class",
+      "sha256": "16a761936b078bf70f0576b7e88dbb556a293d975e419c6e6b56ef0947d23452"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TreeCursor.class",
+      "sha256": "75f50ff7ce2abc0fdb4f15c752231520a1fd27e84849387a0098b4a61157b326"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TreeEditor$1.class",
+      "sha256": "a596f47244bf058c444be72489af1adf552db02da92d5a7fe683bb4ffa43e5cd"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TreeEditor$2.class",
+      "sha256": "8f38e1e4363db04abf7baff63f32f90bc31188ff827b9d231b37f1473161ae87"
+    },
+    {
+      "path": "org/eclipse/swt/custom/TreeEditor.class",
+      "sha256": "45629dc5c84004f4b501e3c5d8d8baf2938aaa163f114a87dcf63fbf04af0f26"
+    },
+    {
+      "path": "org/eclipse/swt/custom/VerifyKeyListener.class",
+      "sha256": "3a42b947de263e89bab597ee8af4c4e4d8cae40b9a6d5b420830afad998a0688"
+    },
+    {
+      "path": "org/eclipse/swt/custom/ViewForm.class",
+      "sha256": "95b6b1eef7812a04aee2d2359bf7b0552582ec74bcbd33cd31e1b7bd375f917e"
+    },
+    {
+      "path": "org/eclipse/swt/custom/ViewFormLayout.class",
+      "sha256": "80431fde9a468bd5299b9908dde1dd62f5fb20d948922d62250f0a24e712161d"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/ByteArrayTransfer.class",
+      "sha256": "e4f2e8421a86c5eac6bd0312382b511117aa009c1d65a2eaf0b8cac35bd7b7af"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/Clipboard.class",
+      "sha256": "a152e9c9b9c364b77c75f3b124a149ab727cc66c991378df3d6bece8184ef793"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/ClipboardProxy.class",
+      "sha256": "39698b59de769cf9037427e5a257aecf94c904800aa1efd99e07cefe5ac6227e"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/ClipboardProxyGTK4$1.class",
+      "sha256": "e468e02707e9b858765f688bc26ce3c8e37a5f04997dc903eea8136061505156"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/ClipboardProxyGTK4$2.class",
+      "sha256": "d3e68804fa0b9c92c219689106820ceca497a50d20eff9aa448b84c7b05da201"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/ClipboardProxyGTK4.class",
+      "sha256": "98b437446a87ea36ba508bd3938deaf8ba748fcb0da8ac7ee6a03af142f4ff91"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/ContentProviders$1.class",
+      "sha256": "b373a06412f1f520768d898f6a963a42065d81e92f81d30ca622e25a47e6f25a"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/ContentProviders$2.class",
+      "sha256": "99e705a79a7c5434faec65ad029bf2ea5e283efb40bc9cc2f0f70bb952b00597"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/ContentProviders$CLIPBOARD_DATA.class",
+      "sha256": "d9771fe8147b605811431c8290f6d96df93d8bd8f0afc5a547f7872106734d4e"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/ContentProviders.class",
+      "sha256": "354f020b55b342144a20f5d8c80ba919989b6a2b2ff5dd59758a833a6c9240ca"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DND.class",
+      "sha256": "39641d949bfbfe7c77c5bdef1545640923f4a32ca6407bd0482f730cb43423d4"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DNDEvent.class",
+      "sha256": "ff4520ff2c43eb3897cb213c4874a4133f88ab63a3ff1478b5051686b2ab7e4e"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DNDListener.class",
+      "sha256": "1f0d8e76046e2e97ea3fd6c7120c40fe04f33986496e17eeb77ea9912b819c89"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DragSource.class",
+      "sha256": "013f67f67f5e787aded754d7fcf9f225b1236c2b2c0bfa405c8011d99ebae241"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DragSourceAdapter.class",
+      "sha256": "8e6f1c3a229313a9d111d6c3bbf70061efeeb3f1b2a9179691f2b7e1b4223685"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DragSourceEffect.class",
+      "sha256": "1616614be6e2583043f34f9330b16b8460e8561f0690652ffa000b1f2a32a649"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DragSourceEvent.class",
+      "sha256": "2079256d88ecf962d5ec2814861b502c58ac97b68b687e05d396784c5dbc17b5"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DragSourceListener.class",
+      "sha256": "24ab7db110d10e269442d15aace3e517aa6d25627f64eaa9bd3a6618e617a3fd"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DropTarget$1.class",
+      "sha256": "28cea2730f55e72ef26c98c87c2aac02560e347f154e9da6307e67ee1e7e7f5d"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DropTarget.class",
+      "sha256": "90ac1fedd9a38a796ab3269f6f7fcec633b3942af04b6660e3dc4bcd8c89019c"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DropTargetAdapter.class",
+      "sha256": "4f41be2cebdec89d851844338043cb776bcb32657b338949b819c39731b62325"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DropTargetEffect.class",
+      "sha256": "fc4cdd6015431df8cdeb0f128e6e745c6174ac86928046634ab3db24371111c5"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DropTargetEvent.class",
+      "sha256": "aee97c50da91a526cd2d4f10001bbccf201a7b070c42288a39d0357c515bca89"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/DropTargetListener.class",
+      "sha256": "5c2b195161a034e6cd8d0a3e2e87cf75e3504567b114b0db5304bb8c5eda8fba"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/FileTransfer.class",
+      "sha256": "727bfbf7a449c96734eaa144430fab50f1a51fb52117cdc9714b5da2f10d45e9"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/GdkContentDeserializer.class",
+      "sha256": "7a3aedef0cef49158ad4b037373f81202ecec9d1ed820009a0e45917f32d070d"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/GdkContentSerializer.class",
+      "sha256": "eaba52546f38837f1da9233bfe7b4d2a66d6b38b9dd6410db8a128206c0c4b85"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/HTMLTransfer.class",
+      "sha256": "47428c3a12f3460d473876e39edea20afb0ed1c6c1098520ac3966104449bfc2"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/ImageTransfer.class",
+      "sha256": "338928380fea906e993326925fb4a2780095155df516e88177a5adc77ddcf9ad"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/RTFTransfer.class",
+      "sha256": "46caee086bf124498dd5035253c41bdc758d21f23c2c9d37b4b7a4e84c9efac7"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/StylePolicy.class",
+      "sha256": "ac2c1292820d79e9749b95093815edbad9b557eb2eb5cd3efb2b27cd735f16b8"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/TableDragSourceEffect.class",
+      "sha256": "7506c028ca1c0a64f445c2244c3abfdd91fda2623375692621ef5cdb8ab3b045"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/TableDropTargetEffect.class",
+      "sha256": "1ec89436cf86fde17e8dba59b8af744bf8c5c84bef639763201e457df876db18"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/TextTransfer.class",
+      "sha256": "afa4ea40ce461eada0fd94e8546d4b5ff711db85848b7961cddf7377816ed154"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/Transfer.class",
+      "sha256": "3b597e1baa5c24f7682756777b76c020f28b3aa80661dc07bda71b7aa91fccbb"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/TransferData.class",
+      "sha256": "1020dc3d256be251d2f7aca51b711060df67f9a008dfd3516cb78b78f3d9a16b"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/TreeDragSourceEffect.class",
+      "sha256": "b00f00d0cc63958dee640c53e3e98fd88856c6a896158b67f48107a6b065a101"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/TreeDropTargetEffect.class",
+      "sha256": "a7c247430cefbdb7e1d71f2506a6bb79ea8cd6b5b0d4c57f84f8ed19dff16650"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/TreeTableCommon.class",
+      "sha256": "629d2c0848879d1b25e25e247e014c6b3ad8e4a0e86df63267f1ddec3531ae4a"
+    },
+    {
+      "path": "org/eclipse/swt/dnd/URLTransfer.class",
+      "sha256": "fc42b634cca7aa855dae61f183d9c61b6ae52d7103e70b290a3830cf0585f4e4"
+    },
+    {
+      "path": "org/eclipse/swt/events/ArmEvent.class",
+      "sha256": "cd13cff9cacad6b0b12eeb53db18dd0802fcaa454d4cd122ee86702a828892ed"
+    },
+    {
+      "path": "org/eclipse/swt/events/ArmListener.class",
+      "sha256": "204dc6518c64a2bf9b6c2a5ae67107bc072a2b0b63a0a1297f86c8cb709f87b6"
+    },
+    {
+      "path": "org/eclipse/swt/events/ControlAdapter.class",
+      "sha256": "74f79051e129ffdb53547b64b3e1b2f4730c870d5b5792d7981014729c41acde"
+    },
+    {
+      "path": "org/eclipse/swt/events/ControlEvent.class",
+      "sha256": "748ae691c54cfeadc33283dc92d65805d277d1aee9d613ea39a01fa0ec4d81a8"
+    },
+    {
+      "path": "org/eclipse/swt/events/ControlListener$1.class",
+      "sha256": "4abae797e73b99f219f58187d553c095178b7fbf948f2b30a2c1cce8d99b26c6"
+    },
+    {
+      "path": "org/eclipse/swt/events/ControlListener$2.class",
+      "sha256": "35151739105b43f64a86668a016078559790df3538b0e96876cf8516ea3ea3fd"
+    },
+    {
+      "path": "org/eclipse/swt/events/ControlListener.class",
+      "sha256": "2caefb57ecc8d92489f98f90a04724786d2e1d76b5d12bc097d4ffecede7d168"
+    },
+    {
+      "path": "org/eclipse/swt/events/DisposeEvent.class",
+      "sha256": "eca9598fc274c6487542a1309cf94fbadebc5e55183f8aabf155e39ff9c64f27"
+    },
+    {
+      "path": "org/eclipse/swt/events/DisposeListener.class",
+      "sha256": "31eefee056651aa0a3ccc18ccf5bac3394a481dd87d90ebe6af1ce332a507938"
+    },
+    {
+      "path": "org/eclipse/swt/events/DragDetectEvent.class",
+      "sha256": "b4a1d5e89fff3508545ead8d4ba3b61a96aff7d1fd79fbfebb6f52dfd50e0ef9"
+    },
+    {
+      "path": "org/eclipse/swt/events/DragDetectListener.class",
+      "sha256": "8ca4b1d047a0701e82763197803c6a456cfe745b3a81e56495cccf177032e67c"
+    },
+    {
+      "path": "org/eclipse/swt/events/ExpandAdapter.class",
+      "sha256": "aac1b36147ca62081968a1817467775a4559f3afb9f07dec8c42ef88676a6ea5"
+    },
+    {
+      "path": "org/eclipse/swt/events/ExpandEvent.class",
+      "sha256": "9112f979ab6b16f056ff08291fbfbc8daf119f6d65a45fbe609006933cf60b3b"
+    },
+    {
+      "path": "org/eclipse/swt/events/ExpandListener$1.class",
+      "sha256": "edd45255564f69fdb39e6ff2f3c1ea635226a679e72a8abe1854ee897684ac61"
+    },
+    {
+      "path": "org/eclipse/swt/events/ExpandListener$2.class",
+      "sha256": "5d21cc5a34f1d1b0b1fcd25e3d8705e1953ae1e45b52f2e0054c099a3e705080"
+    },
+    {
+      "path": "org/eclipse/swt/events/ExpandListener.class",
+      "sha256": "72352f59c05c2c31c42c1749345aa0b54ebb0e5398ec8a2e59d7a22575577177"
+    },
+    {
+      "path": "org/eclipse/swt/events/FocusAdapter.class",
+      "sha256": "a252ea287e7c163be7eecb02285619421905bb928c6df3563d554157d29127c2"
+    },
+    {
+      "path": "org/eclipse/swt/events/FocusEvent.class",
+      "sha256": "0357dd70a348938f9ef359d6edbb8f8c8d13925c6283cffa645cf2fcd44aa92a"
+    },
+    {
+      "path": "org/eclipse/swt/events/FocusListener$1.class",
+      "sha256": "0a2e0c5fae13b8142a473fe44e3d35e41e87eb3aed0c1989d3b7c26b1a039b3e"
+    },
+    {
+      "path": "org/eclipse/swt/events/FocusListener$2.class",
+      "sha256": "60ab7dcd82e390f654461bbb8478469658bd17407c2b79419f8b5a1121c7b324"
+    },
+    {
+      "path": "org/eclipse/swt/events/FocusListener.class",
+      "sha256": "63ada5fc57693cd6fb9bb4ad1057e5f38d0f05a0ca3b446307dffb37b08d051c"
+    },
+    {
+      "path": "org/eclipse/swt/events/GestureEvent.class",
+      "sha256": "998460f1e24fc4da15c4ba696d96214b6c37d2a7ce88316a1eed95699e2b68f0"
+    },
+    {
+      "path": "org/eclipse/swt/events/GestureListener.class",
+      "sha256": "339be5038d9728eb5b1bf883dcda2892f8f2c244b4fd384501fd4f2030d12a3a"
+    },
+    {
+      "path": "org/eclipse/swt/events/HelpEvent.class",
+      "sha256": "77f2055affe620fb64d4746ea15853f2988b69cb53a43354f4dedd9891f19dea"
+    },
+    {
+      "path": "org/eclipse/swt/events/HelpListener.class",
+      "sha256": "53044e235d5e7eaff1ce1d301135435df8563a01afd15b2d1897ca541c269921"
+    },
+    {
+      "path": "org/eclipse/swt/events/KeyAdapter.class",
+      "sha256": "b2d8a7ff10e9e48a3130b23d3bdfe31754cb5e369bdc10631e29a2f88be01d6b"
+    },
+    {
+      "path": "org/eclipse/swt/events/KeyEvent.class",
+      "sha256": "8e97cd997770b3f8f5e8dc7cc38cd11c9983b94844b7d1ff82d4d25f7835628c"
+    },
+    {
+      "path": "org/eclipse/swt/events/KeyListener$1.class",
+      "sha256": "b5d2043c227a7b0e0bdffc5564f2fa83bbc07b19ce10130fecb1fcc153f348ec"
+    },
+    {
+      "path": "org/eclipse/swt/events/KeyListener$2.class",
+      "sha256": "eebbf7454c6ccf53d81d236e0b4f9dae3b5247f7d1535453ffb54b500c0bd4b6"
+    },
+    {
+      "path": "org/eclipse/swt/events/KeyListener.class",
+      "sha256": "a94691a447ddd9e4c9e2658f133837512b8ef9f11c39ec1535213f23c962682d"
+    },
+    {
+      "path": "org/eclipse/swt/events/MenuAdapter.class",
+      "sha256": "aff5cf82bdcab458b8aea3a5ee6c61d59ca2e123145961c17a126e57d9bf5bfb"
+    },
+    {
+      "path": "org/eclipse/swt/events/MenuDetectEvent.class",
+      "sha256": "9ce311a381d803f75dc984ccb1a7863649f6157d167dbe9d5b3ddeaf40aec8f4"
+    },
+    {
+      "path": "org/eclipse/swt/events/MenuDetectListener.class",
+      "sha256": "19945d36d8126181716b99ca3d9691d95d5c463e199a914a436b27d88e98cbfd"
+    },
+    {
+      "path": "org/eclipse/swt/events/MenuEvent.class",
+      "sha256": "3fa1d0345531a1eb673f08d03cb4765e7d17a25ef5d472aaa8ea233f2a85daf3"
+    },
+    {
+      "path": "org/eclipse/swt/events/MenuListener$1.class",
+      "sha256": "6701915bcea8d8270c320fc92148b6dfc8c563822728a6da302382971c082897"
+    },
+    {
+      "path": "org/eclipse/swt/events/MenuListener$2.class",
+      "sha256": "e58bfd271f235b861e27bb25fc300c917cb62159f2452e1966ec92da31bbce47"
+    },
+    {
+      "path": "org/eclipse/swt/events/MenuListener.class",
+      "sha256": "dfd5e8aa2b476330a675b4ad3b3cef80c69cc05d69150a784ee697da28af39f9"
+    },
+    {
+      "path": "org/eclipse/swt/events/ModifyEvent.class",
+      "sha256": "9937654b963099babc7766b52a23d81cb533c1d1fe51973c5c65997d46272a5a"
+    },
+    {
+      "path": "org/eclipse/swt/events/ModifyListener.class",
+      "sha256": "18a949ddd214cc1a7720e76fd4ae890d2615b15fb6c566fdbb61e1e56930430e"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseAdapter.class",
+      "sha256": "518d5c7a77d550ebbc80be08c240928bf7123ba9b05dd8e00dba4252267a3096"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseEvent.class",
+      "sha256": "71e2468e2cbb19b43682224c99cd12f2f7c9e093f1521dc690ce70ba12781b8d"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseListener$1.class",
+      "sha256": "7e48b948ef186de9e5b2258172db40c82f8fdfcbb8cce80bd26dbe6d6ff9629a"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseListener$2.class",
+      "sha256": "a95b54abf7e6525ea7f724862ca21c4b4e98df3f9a63cc4a4cfb0b4636c37fb4"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseListener$3.class",
+      "sha256": "cd1e75d9df2524001879ff0d7444efaaadde796e0426a10ed7c8c501ea946467"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseListener.class",
+      "sha256": "dd7cc752ddb0f3d4f6316fac26c7892e909a6b1332ff02dfa1e74c80468d3bb2"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseMoveListener.class",
+      "sha256": "7d855bd562fc78804a7a5c76249203adf608ff6a150a9e62fa86a65e5ddfb28e"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseTrackAdapter.class",
+      "sha256": "6e3244c822355482b6a9b88f3e76f1ff0679128cb6779183fb64762c88997b4d"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseTrackListener$1.class",
+      "sha256": "bd014fb85fde1fe0b7748ad9d06f86a67f6cb33f0a1bc58390e616f92a6adb0a"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseTrackListener$2.class",
+      "sha256": "e030a1a69a6cf475d4ce0314a5536affa6f0571e2642cd848feb2967871a08bb"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseTrackListener$3.class",
+      "sha256": "c285facd1ff3c5566edc9498effb08c4deef76f95571eb3ad31b3d2c54710a50"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseTrackListener.class",
+      "sha256": "999712a67b375be00eeddd0be908a9ebca95df3c4306ae26adba1fd088fbfe7e"
+    },
+    {
+      "path": "org/eclipse/swt/events/MouseWheelListener.class",
+      "sha256": "770fd29c4b7e1a90e84b49dc164532db1dc571b6a032c811f1122d803be1fb28"
+    },
+    {
+      "path": "org/eclipse/swt/events/PaintEvent.class",
+      "sha256": "9bf4dbc77e1e47436a0e95950d1dbc33539be806fb278c6d4cb74f486b780d26"
+    },
+    {
+      "path": "org/eclipse/swt/events/PaintListener.class",
+      "sha256": "4292c0e24596a75dedb210a87e16a6b694ab9d14a31b0bb93834f5aa3c13c44d"
+    },
+    {
+      "path": "org/eclipse/swt/events/SegmentEvent.class",
+      "sha256": "97c7eaa07a54c23d3f3dcec8d7d3cfc5b1f4550f43075119db45d95a78ad6168"
+    },
+    {
+      "path": "org/eclipse/swt/events/SegmentListener.class",
+      "sha256": "c25d57d0e1427717957260b1c2b9e1c59f9d93eb8545d2d9da791c2049a423f9"
+    },
+    {
+      "path": "org/eclipse/swt/events/SelectionAdapter.class",
+      "sha256": "91a30ba1efda1544647ae328b2526de65936bdb7a4323bc6902f1f759ca2501b"
+    },
+    {
+      "path": "org/eclipse/swt/events/SelectionEvent.class",
+      "sha256": "9b245340c97a923dd81a24be4099c6172067f3df9c28ced93bdae1d389fd9cc5"
+    },
+    {
+      "path": "org/eclipse/swt/events/SelectionListener$1.class",
+      "sha256": "673a0cdd4bccbbd187e32908e6ef99672b24e4e47fedacbdd0697c8009dd8541"
+    },
+    {
+      "path": "org/eclipse/swt/events/SelectionListener$2.class",
+      "sha256": "79a0b76433174c369ff68955f8856b0cd6813ea7c79040d8e4aec75161ce7245"
+    },
+    {
+      "path": "org/eclipse/swt/events/SelectionListener.class",
+      "sha256": "e52d2ad4c26f950eb1f7c85e65ecbb7e86ce1321769b6b8ab25dc2ff379bf6df"
+    },
+    {
+      "path": "org/eclipse/swt/events/ShellAdapter.class",
+      "sha256": "7cb65ccc7b7636edd653aec27a7f7f36a106a31b8188be58ffb9a6c95ba37f2d"
+    },
+    {
+      "path": "org/eclipse/swt/events/ShellEvent.class",
+      "sha256": "06fa33d0c165fceec25ebcbd72e5aa9a218e8d008ae5ebbc92c312d839c08054"
+    },
+    {
+      "path": "org/eclipse/swt/events/ShellListener$1.class",
+      "sha256": "aeb58438964aa87860101fa0cc969ae8c0017a2527927fbd6da9036e28f67594"
+    },
+    {
+      "path": "org/eclipse/swt/events/ShellListener$2.class",
+      "sha256": "2d8ac471ea2bf3cc82aefca9d9aa867c7a86fbc3f32e59500a7487e0df0efeb8"
+    },
+    {
+      "path": "org/eclipse/swt/events/ShellListener$3.class",
+      "sha256": "cc5b27f5eae6287cc16f507516e22c8cb6079049201d82a872f0f3e2a60be5bc"
+    },
+    {
+      "path": "org/eclipse/swt/events/ShellListener$4.class",
+      "sha256": "d920b5c33703eca680cd9aa11379d217855088b16f07d381035fbb5a64a5eb71"
+    },
+    {
+      "path": "org/eclipse/swt/events/ShellListener$5.class",
+      "sha256": "4c4135a3b3363f5027f374d1759c0db60b0f3017396bd550fd9474dc84b1d647"
+    },
+    {
+      "path": "org/eclipse/swt/events/ShellListener.class",
+      "sha256": "404952c6be5b16ccf786638550b5cd13c24ad3f1e25eda534418d75e474561c3"
+    },
+    {
+      "path": "org/eclipse/swt/events/TouchEvent.class",
+      "sha256": "12b8a0b3ac260c784bfb0d9ba4851087a409c7bf1e4cfb4e97cf2a70846669e3"
+    },
+    {
+      "path": "org/eclipse/swt/events/TouchListener.class",
+      "sha256": "461baab7dc0e8ec8b7be4c7f96c4ea2c15cbe79c5458b0164ba4eb1a16160efc"
+    },
+    {
+      "path": "org/eclipse/swt/events/TraverseEvent.class",
+      "sha256": "c673036bd8c2d32003d6727293fa69d6ef7f48345d131e213b16493ef0736b0d"
+    },
+    {
+      "path": "org/eclipse/swt/events/TraverseListener.class",
+      "sha256": "3e94664399de503040c040e9958b675898dbe619a425cf69939786a16e3c03be"
+    },
+    {
+      "path": "org/eclipse/swt/events/TreeAdapter.class",
+      "sha256": "7099d6b1a8bdca46a49d5a097b04050aa0abfb6791ac6643d7440de1b851e796"
+    },
+    {
+      "path": "org/eclipse/swt/events/TreeEvent.class",
+      "sha256": "ae05f57fe11a7dc187db3936b3912da20b5d5ca9f723e7953ee998ec78e50900"
+    },
+    {
+      "path": "org/eclipse/swt/events/TreeListener$1.class",
+      "sha256": "2cff3f6f2029ac7d9848405023459e735e23b99346f5a411c093f52099d7e25b"
+    },
+    {
+      "path": "org/eclipse/swt/events/TreeListener$2.class",
+      "sha256": "2a5dacd651dc798cd49c698225ab257c8199c0d1e34bc3f553f98bfb44d2c82d"
+    },
+    {
+      "path": "org/eclipse/swt/events/TreeListener.class",
+      "sha256": "8d958b9362027c883c85807c2d3165f3ecd5af5d89e2b36eddc035134683cf3a"
+    },
+    {
+      "path": "org/eclipse/swt/events/TypedEvent.class",
+      "sha256": "b4012896041adcb576e24c138dd84e48a06098b350e0e15c53b93f5a469078c9"
+    },
+    {
+      "path": "org/eclipse/swt/events/VerifyEvent.class",
+      "sha256": "9fcae389bd1edb55a347b5ed49f15c68415bbbe28b7ddce10972ca2fcc110356"
+    },
+    {
+      "path": "org/eclipse/swt/events/VerifyListener.class",
+      "sha256": "a62e3d6695618fe7af7bfaaf4ab3d5ef74555a21e95699af76bc604584b7dd47"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/AutoscalingMode.class",
+      "sha256": "649e324987d4cc0f9fb754e2350657e17517ff21db6a4c87fc1adb34a8cfe5ad"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Color.class",
+      "sha256": "7f45f7f7513770c8d54bc0dbdb8b6966400166c2f0b496aef68145ebd35caad3"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Cursor.class",
+      "sha256": "93d40fbb1a3de8d9da5f26eabd902e89a0493bcd4c34646766ecbb2168451be0"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Device.class",
+      "sha256": "50bf325301310e24edf90832c01e08f9064a62c88d44c5b6c7fb0ecf822e53d7"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/DeviceData.class",
+      "sha256": "806764a0aac2e250610f75c77c24a494b7a9763e7f2087f0b0aa4d06157e035e"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Drawable.class",
+      "sha256": "f9d8c2aaa575c9b787e255cbdedbbe0305f674df96c328c868a7925e11865769"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Font.class",
+      "sha256": "99d5c50ddaefcd3a64a9a5c4d09ec550e3209369b1d824cd1423eeda7c9b391d"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/FontData.class",
+      "sha256": "9f8277d73a4c2d19be402c987b6edb3b04450c493a99929fb807776ea4a5f145"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/FontMetrics.class",
+      "sha256": "7c3a39f5bd79303db98c135a9cd14b8f47323eef52e88c70cdce8b40510c2c7a"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/GC.class",
+      "sha256": "65fda8472a186a320181aa64027f2103470c11596c4974666d8b6d4f015a6ac3"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/GCData.class",
+      "sha256": "2d3ca62d2f6cf575c0de04c6c81cdd63cae277136f3adef4965f8dc0aab58790"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/GCStylePolicy.class",
+      "sha256": "deca7f7856940bf6cd2588bcd2cc237a123e11afbe4f8dc5ab5820e6cef6e7dd"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/GlyphMetrics.class",
+      "sha256": "2c1afef23c58669a2ee09b47152657f8be9d50c8a30f5931892d56ecb4588191"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Image$1.class",
+      "sha256": "f61001e967a446337ef0b5ad298e7ca47fac471fb2df993b2b5091f5c778acca"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Image$CachedImageAtSize.class",
+      "sha256": "824d1289266ef39678dce44abd057698494240905da0d584f1c3f663090c9327"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Image.class",
+      "sha256": "2c811729737100ae7c1ba319879704170ec61963dca383147984444a4c19e7c9"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/ImageData.class",
+      "sha256": "9488e012a97f4cc06b1f0454d2582f192e1c63d9065c2cabd7a2af61b58d32f3"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/ImageDataAtSizeProvider.class",
+      "sha256": "97b5b57999a0a08ef09c299b120c9192c49d944dd0e8a5512ec5bf2b413211a2"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/ImageDataLoader.class",
+      "sha256": "d531c9b42755f73cf85fad5dd1783ceae323efe15004e3b130790227ee1fe701"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/ImageDataProvider.class",
+      "sha256": "7f1f4b51269e9107c285c946bcd53c5aaef9ce90b553ba8b9c0067a5a3debf79"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/ImageFileNameProvider.class",
+      "sha256": "1b542930836e8fbf359722f54d22f197b7dffd2d4b041687437401cd51d3b029"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/ImageGcDrawer.class",
+      "sha256": "1af2a44c830167edc5a27d4f015d9bd0915547218b845448853c908b40c89091"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/ImageLoader.class",
+      "sha256": "46d2c69e3128f8f26c2185294b8abe693a5ca79d3c77eff95a06684b1e9a62ad"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/ImageLoaderEvent.class",
+      "sha256": "c8a92c3fb4a8102584967ea0d8b9793b11d3d465b0490a6f8a52d32bfc0b1c94"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/ImageLoaderListener.class",
+      "sha256": "0e55c8c6d7c21936a4e1a903f1ae21f9eca32bf47e9754d8b31a06fd99fd5778"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/LineAttributes.class",
+      "sha256": "7c2b946d8033ad321ebabe85d8e810daa7d9c5d9a9a67e9009606989c89f2461"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/PaletteData.class",
+      "sha256": "466a361e1f415ef5ed640e43200ab78fc3bfa9b8a2fa2ae8b105a859e2e614a1"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Path.class",
+      "sha256": "e0d2c0c5280579cdb2d6786e2fc78daf437e646fb7508013e673c29ceafbdaa0"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/PathData.class",
+      "sha256": "c27554dc6bcd95a8dc4c465065deca6b11a1540b16d2ab6b0bad8d829e4f7a57"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Pattern.class",
+      "sha256": "5e8b149a7d06ff4bd2e8d4a62094f7078a73b09924842ff8791d2143e10ab0af"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Point$OfFloat.class",
+      "sha256": "0d167b11c3d88a8342c7349cc1166f25dae070ba88709f84c2c05533b7bd05d6"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Point$WithMonitor.class",
+      "sha256": "ef45cc1ce438c8dadc29c8256ea0a840aa75654c409eedcc17266530c48b85ba"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Point.class",
+      "sha256": "aed57b846fdcf6b6281683cbcb8a1df275124cf6c091b092bae8f2ce1e9b64ca"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/RGB.class",
+      "sha256": "8cdf83017fabddd91d066c7ba7db4def8781a7390d329c421f9a1037c7219c34"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/RGBA.class",
+      "sha256": "f0c20bd39faad89b3aac901d8d7ed481c97a2c5fc2cfdc1a7a3a0f116bc3dd60"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Rectangle$OfFloat.class",
+      "sha256": "4a97a78fef366d1de92e4aaa60f60be2f269ae53e7b18e97eb4a8164d94d4389"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Rectangle$WithMonitor.class",
+      "sha256": "ba547838aae833ecae8a01ef7b391c73549e4324223f97ac054a31c42fa3e790"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Rectangle.class",
+      "sha256": "fdd9de7e6fb0033a204acfc1868056e58ef7eb41a523031ca200daec212074d5"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Region.class",
+      "sha256": "abe5ff90549ae5249acbfc4d592c3ade10e18be9edfeed97665c56cf00720f97"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Resource$ResourceTracker.class",
+      "sha256": "d18d821d1ea53cc878ba67b26ba3cc558a7519ac623f16bb1b8f1cb2dbceb670"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Resource$ResourceTrackerThreadFactory.class",
+      "sha256": "08c4b17de39e8783f73f144b6541be9b6e1c7e015ea9e4995c9dee13151b70b8"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Resource.class",
+      "sha256": "34c068542a8d84b2327a1b8c3b4afe4855f5e97ebe244f674d644561cb44f399"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/RoundingMode.class",
+      "sha256": "e9e5fe19e58083dc4071fbdd9b9687d362dd3ccf90eefe494d7559747c0d04f9"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/TextLayout$MetricsAdapter.class",
+      "sha256": "b10d5f743b67ac0afef2efc861879716802602e5ae1e9a23b0ba36357e45ef97"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/TextLayout$StyleItem.class",
+      "sha256": "ab7e160540d8fa930f14d4cf2b1d193bfc9a1843ba2a3322fc834eff9b57ab81"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/TextLayout.class",
+      "sha256": "8b47098481005c402557d0bbd1570dc7be5e35c78cd1e384c81cd828903f3b28"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/TextStyle.class",
+      "sha256": "d0d640afb7f5d4b8f3c8a577873059b880e4faf04628503cb93d31280e2ebcbd"
+    },
+    {
+      "path": "org/eclipse/swt/graphics/Transform.class",
+      "sha256": "6024874665200028abc0bd374e308bbdb3ea0d10ddc1ba57e0b6e7ccb56ed34d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/AsyncReadyCallback.class",
+      "sha256": "3c7006e24cf734efdee35afbefba26b7f2fdcf1733d8c03dbb3fd576cdc9250e"
+    },
+    {
+      "path": "org/eclipse/swt/internal/AutoScaleCalculation$AutoScale.class",
+      "sha256": "3c1c786c31af1c31e42fa7bcecf267fbb1eef61194d61b97e2513ad1104bccec"
+    },
+    {
+      "path": "org/eclipse/swt/internal/AutoScaleCalculation$AutoScaleExact.class",
+      "sha256": "429e1d0296e5961a2bc8dc267e1a24fb293239baeff7cdd1eb786c8ccd751135"
+    },
+    {
+      "path": "org/eclipse/swt/internal/AutoScaleCalculation$AutoScaleHalf.class",
+      "sha256": "3b3a5604fc2ff717cb6366fb21ca34c7e76ef79145aebfbc4a77b141406205e5"
+    },
+    {
+      "path": "org/eclipse/swt/internal/AutoScaleCalculation$AutoScaleInteger.class",
+      "sha256": "69882130df4e4514817fdb257c7d7112d095cc37099d0abd8b6d48415a14f3da"
+    },
+    {
+      "path": "org/eclipse/swt/internal/AutoScaleCalculation$AutoScaleNone.class",
+      "sha256": "7c9017373d0de73b4c519d943da4dbe60070f007f14e4c4efed0fc9e3216bd7c"
+    },
+    {
+      "path": "org/eclipse/swt/internal/AutoScaleCalculation$AutoScaleQuarter.class",
+      "sha256": "98d37f05b99e9a51a63484136a1943a4af78e811e860a6c1c807040d8ddf568d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/AutoScaleCalculation$AutoScaleValue.class",
+      "sha256": "eb181e021f53917ce7c507e911362297989da6a6e2bf99afc4e6c8b90be9b310"
+    },
+    {
+      "path": "org/eclipse/swt/internal/AutoScaleCalculation.class",
+      "sha256": "27383954ee55bb709f671157b8ba775c844940bf00d8e3cda7ca089b066edfae"
+    },
+    {
+      "path": "org/eclipse/swt/internal/BidiUtil.class",
+      "sha256": "0cf6a7a63ad9666f6c80bc062ae856824af6305f4f841a6817f59d4449f3da9a"
+    },
+    {
+      "path": "org/eclipse/swt/internal/C.class",
+      "sha256": "a486b19ac98f7c28dd3a1b8925dddeb645ea80026f8cc628c866aa1beeef0ce7"
+    },
+    {
+      "path": "org/eclipse/swt/internal/Callback.class",
+      "sha256": "89c446085742c868059df3e116a5362589ba20fd3c381cc5158c60f667dcb77f"
+    },
+    {
+      "path": "org/eclipse/swt/internal/Compatibility.class",
+      "sha256": "0a32b4f1aa96de6d594566f4a04207e3f65aad166eba1656fffc2476613e729e"
+    },
+    {
+      "path": "org/eclipse/swt/internal/Converter.class",
+      "sha256": "bde94c52e1edaec622febb7e69c2e2fcea9fbbce1d24dfb9e8796183442e3470"
+    },
+    {
+      "path": "org/eclipse/swt/internal/DPIUtil$1.class",
+      "sha256": "6d6c2e9a457415eb7d706af5e2f0fe88dc4a341dedd1a6b1df306db8bab58072"
+    },
+    {
+      "path": "org/eclipse/swt/internal/DPIUtil$AutoScaleMethod.class",
+      "sha256": "7cd07a0bafe122211bde6d4c807d1986e45a4554928a7b5dc6662ee213dc434d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/DPIUtil$ElementAtZoom.class",
+      "sha256": "3332a5be92658edb462ff716e80347ab57f33ef694f8b0cb8b453caee09a1a9e"
+    },
+    {
+      "path": "org/eclipse/swt/internal/DPIUtil$ImageDrawFunction.class",
+      "sha256": "d3462a1599d992ef8ef41b3fa78a135ec7fba088a176a36541a131cf13515158"
+    },
+    {
+      "path": "org/eclipse/swt/internal/DPIUtil.class",
+      "sha256": "34982b821663fb5374e7df4f620412d8d0687a83a0eabee7d7a6ced1a23a596a"
+    },
+    {
+      "path": "org/eclipse/swt/internal/DefaultExceptionHandler.class",
+      "sha256": "f74259d7e76bbba69e1b7c2b6aeab444b9f9035eaab0f44342ae8488c99d7699"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ExceptionStash.class",
+      "sha256": "b69962d95cf672cb367e3fb4b417ddda4df2f041be5855def9e602be61349aa0"
+    },
+    {
+      "path": "org/eclipse/swt/internal/GAsyncReadyCallbackHelper$Async.class",
+      "sha256": "e971e731aaaa19375b84fb3d4939aeb603ee704ec648c0a941bd8241e516d07d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/GAsyncReadyCallbackHelper.class",
+      "sha256": "a8a113b71d6e0a62bcecbd74842b6cdf1e2d12b501397b689aa27a58b0ae2306"
+    },
+    {
+      "path": "org/eclipse/swt/internal/GDBus$GDBusMethod.class",
+      "sha256": "40a929813d63167ba6e15cbf8be7c6a2d0794f7d0ab824d7df2c35b597927ded"
+    },
+    {
+      "path": "org/eclipse/swt/internal/GDBus.class",
+      "sha256": "97b996f759635d59bed55d701a9cd79aa6af88e92ec72e2c64a789842e02cadb"
+    },
+    {
+      "path": "org/eclipse/swt/internal/GTK4GlibFuture.class",
+      "sha256": "cbf1d6de4c2bc5c33ec72c9e9a001c5e1407f55067baa550516f18dc615dea0d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ImageList.class",
+      "sha256": "2c9412abfa82aaf6ed103f2149c03b8c553d43b0681ae97b53b3bfbe333041f9"
+    },
+    {
+      "path": "org/eclipse/swt/internal/LONG.class",
+      "sha256": "1b7a7331cd833ca327fb8563da18a156edd443164e0bbdc086c9dd668aa00999"
+    },
+    {
+      "path": "org/eclipse/swt/internal/Library.class",
+      "sha256": "57134dcd6890e56b4381a4f553312266da2bef747a1933a41e0aee5e7ba1d722"
+    },
+    {
+      "path": "org/eclipse/swt/internal/NativeImageLoader.class",
+      "sha256": "25dbd0ccbad45bf89cbe81bae666d15b81dbd4b4563b36952f928103c9f5486f"
+    },
+    {
+      "path": "org/eclipse/swt/internal/PackedHeapGrowth$1.class",
+      "sha256": "cfd20ae89e4779e08b0d2131a0f823475bf8aaa35f9a13d0db258ab82d572498"
+    },
+    {
+      "path": "org/eclipse/swt/internal/PackedHeapGrowth$Sampler.class",
+      "sha256": "13c2025c5baeb763478b51e55fada9f1825b14fa72d1ff2e5a6c4c98da94ca68"
+    },
+    {
+      "path": "org/eclipse/swt/internal/PackedHeapGrowth.class",
+      "sha256": "52f9bbe43224597986790329aaefa59ab57d62db2fc87880485cf37f9f8cf170"
+    },
+    {
+      "path": "org/eclipse/swt/internal/Platform.class",
+      "sha256": "e8ec3c5c5fe16091a22cb82a25ea3bfb2cd5bdb78c9f41cb73c438bb490110a3"
+    },
+    {
+      "path": "org/eclipse/swt/internal/SWTEventListener.class",
+      "sha256": "c20a7afbb5c1f68faace56d4198b0f80c3dacb0f5a88997b37a6e5e7e482d04b"
+    },
+    {
+      "path": "org/eclipse/swt/internal/SessionManagerDBus$IListener.class",
+      "sha256": "c68133a950054172973a5561c800cc6d6f7793f690cfdf7404e23d33901e927d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/SessionManagerDBus$ShutdownHook.class",
+      "sha256": "0291bb9fbe36f1684ee804f560095d375226e73f961a4d6b0a7ca2351ddca016"
+    },
+    {
+      "path": "org/eclipse/swt/internal/SessionManagerDBus.class",
+      "sha256": "ccd9c106661a74e383f020e656be01e42c41b3da2b541cadc705e5606987dfd6"
+    },
+    {
+      "path": "org/eclipse/swt/internal/StrictChecks.class",
+      "sha256": "4a78bdd554d4ce4db94162981c496f234c51f1b9557ce5be5c5d90dd89308a3f"
+    },
+    {
+      "path": "org/eclipse/swt/internal/SyncDialogUtil.class",
+      "sha256": "55eebe135e82a57c8e3b9bb0264c2eaa3c1f538666a7773983f7130ad2461d68"
+    },
+    {
+      "path": "org/eclipse/swt/internal/TransparencyColorImageGcDrawer.class",
+      "sha256": "451d62cdc94217387a92df1674cce16b4ef24fec287ce392f4487b8bf8560de2"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportDamageRecorder.class",
+      "sha256": "843b98567219de311bf82009757c2ff1f55da1b42838653f7a2239db05cda4be"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportDamageRegion.class",
+      "sha256": "42d74738fa6176c52ab3496659ab6d0b2a4830cc120dbf374f91d7f8cb23c4a5"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportGcProxy.class",
+      "sha256": "6e3145b040137ba5ff823d527380b890ad021ba00e75de263d8b1322b5067551"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportPaintGraph$Affine.class",
+      "sha256": "7b9a3b537571ef28e44ca58db87f3be7938284daff1507ed1b51f6b1896ca00b"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportPaintGraph$ReplayStats.class",
+      "sha256": "2a509f8a16c347889e2566502360c94034ea0e9122fea23a761cfbfcef67f507"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportPaintGraph.class",
+      "sha256": "8e051b386a7f48d709ac4d11780b0fe2aebf02594c1884c62a34554b0aaecb89"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportPrefetch$Bands.class",
+      "sha256": "fc1f72c2b404256ce3e21e4ee6146348be132cfb113d665d55c3d66489a4fbcd"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportPrefetch.class",
+      "sha256": "b54d1bd0184af06f96ca2554985f078ececfdbbe743f4398ce37735d8d728e37"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportRuntime$PixelLayout.class",
+      "sha256": "3024679b7b37142edddf839e3687e18c681043c29713c81ad5448dd9e30ba81d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportRuntime$RowLayout.class",
+      "sha256": "e5e3210b3b232f41733c9585c6a24598d6e7dcb2face3ad8b7df6170734ab5f8"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportRuntime$RowWindow.class",
+      "sha256": "2c2786c7d40d3c9895a0c161fd8128420a68ebf52cbfe6fa8ca8fd42b55a3e80"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportRuntime$Selection.class",
+      "sha256": "9248900c90a3bb7dc4b6c2bbd39e7e3d62503aabbb34cce79a0e2226067e8524"
+    },
+    {
+      "path": "org/eclipse/swt/internal/ViewportRuntime.class",
+      "sha256": "2c018ca7c3525f1860234d7db1a37eb6c74c3a16da966a9793b90628a1e1bf25"
+    },
+    {
+      "path": "org/eclipse/swt/internal/VisibilityGate$Port.class",
+      "sha256": "cc9373dad0b261a4977bc2ea785ccc0d206f49fc1610d865c490bf2e0c8bbed4"
+    },
+    {
+      "path": "org/eclipse/swt/internal/VisibilityGate.class",
+      "sha256": "4ec05756df89f3a218d0528c6a57086221410115fba8c9328f1feac965f19f90"
+    },
+    {
+      "path": "org/eclipse/swt/internal/WidgetMode.class",
+      "sha256": "2cd6d92e9462d3ba1815dd1f90dd48b2050091f1aec6ea6541f3fa971e3999e6"
+    },
+    {
+      "path": "org/eclipse/swt/internal/WidgetSpy$NonDisposedWidgetTracker.class",
+      "sha256": "19dd0d71c423539b0802befdd2dfc4a1daa33e6a16aec0cb1e020b59547d21bc"
+    },
+    {
+      "path": "org/eclipse/swt/internal/WidgetSpy$WidgetTracker.class",
+      "sha256": "f0c0ba79d1244a6abf0206b23828ccf64c63f45de2dc164aa24a085dbe96a354"
+    },
+    {
+      "path": "org/eclipse/swt/internal/WidgetSpy.class",
+      "sha256": "d06558760119e918195ba7095b3a474b9dc6730de6502f0a89e0deb2c8943012"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/ATK.class",
+      "sha256": "80c0bfedc1c15708dcb787fdc3300a926d6d961395e94aa5abde73baae607543"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/AtkActionIface.class",
+      "sha256": "e4a4016d7c32a773bff0f14f0e96aa418f07ed442d8ff40599250ecaaf145964"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/AtkAttribute.class",
+      "sha256": "b571d9d057ff0d2c4ad990871111103413d5c2df4767fea3a3047c39402ef1a4"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/AtkComponentIface.class",
+      "sha256": "0e65067f5bf21bebd5c1c1bdbd92bfecc4fb7ecba10709652980e9b8dc41f00f"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/AtkEditableTextIface.class",
+      "sha256": "5e27386b0bfa671020b149c445514d5014fc687408a7c9b8eab5a80d14a01cf8"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/AtkHypertextIface.class",
+      "sha256": "374422c2a6866efd3ce7459950f4377573e984e98b5b8b02c18a72adab55f201"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/AtkObjectClass.class",
+      "sha256": "0f81d673a8d363ca3752b31eb90e1b4d265973d0ccfdd23ccb794b583c5e0420"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/AtkSelectionIface.class",
+      "sha256": "49e0c6f5be937ecc151c393a2134140922c29d6f691685debc09992c395acf13"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/AtkTableIface.class",
+      "sha256": "3ca6942539fd33fbdf5f76c249dbc912b2ccc6e1f17174deb2a9d470d94e9f61"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/AtkTextIface.class",
+      "sha256": "1fe6771ecefa8924a34ebb9ca481edf4818594b2c47aec077a0b34792abea626"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/AtkTextRange.class",
+      "sha256": "405683dd236516a29239ec2670ef299eeb731209c24e337e3eb2bdcb5d1483fb"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/AtkTextRectangle.class",
+      "sha256": "f9491f7eb7b6d6e8e1b835ceb362a40cf3307239d75a78e14ef13a945216fb0a"
+    },
+    {
+      "path": "org/eclipse/swt/internal/accessibility/gtk/AtkValueIface.class",
+      "sha256": "15e98d831de96d9076c18ac8107cf54f84708a646b518e9d1467a27db3fab72e"
+    },
+    {
+      "path": "org/eclipse/swt/internal/cairo/Cairo.class",
+      "sha256": "fe142de94b0feef2b1d8a8d1b5353c002b896b992d47a881924b834fd41502a5"
+    },
+    {
+      "path": "org/eclipse/swt/internal/cairo/cairo_path_data_t.class",
+      "sha256": "156a046891081b19da9d9f39e39b8416d83ddf87bfe4c63f3354b1b392a43825"
+    },
+    {
+      "path": "org/eclipse/swt/internal/cairo/cairo_path_t.class",
+      "sha256": "a1d928dc2b6684827d2f4dd6f3b3586bcfe481680aca277b06ea1fdd24d227fb"
+    },
+    {
+      "path": "org/eclipse/swt/internal/cairo/cairo_rectangle_int_t.class",
+      "sha256": "fbb55dbcb4832f67b8d93444687f4eb3fb348bfdf89f739a0de20cf1d6da2256"
+    },
+    {
+      "path": "org/eclipse/swt/internal/dnd/gtk/ListDragSourceEffect.class",
+      "sha256": "9a5f1459225faf2a2e1939da8b10b147c036afa499c22af84f568a75068c1c84"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/FontTable.class",
+      "sha256": "ce58be1756b1ba7a50e7728ceef897e4a5ff35b1a33e83b0667b8386447400fb"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/GpuCounters.class",
+      "sha256": "4e2415e1a25dae4d9b13d8a1d54c54168684342f0597a8f3aba9ee00e4955da7"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/OpStream.class",
+      "sha256": "98a4f156c3403752ceb3b0aca7b5ca62d4fd31e56b4e402b79d8cd024392d294"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/PaintKeys.class",
+      "sha256": "efe750c8f1fac635281681789331ab6e3350dec2a7a704ff40cf343584ecb56a"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/PlaneBackend$Target.class",
+      "sha256": "d13c477232f00f7e7d57a54c13b8c99a4c62b426ea6eac739490a2935e11d2c8"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/PlaneBackend.class",
+      "sha256": "b900aff9d65d26904f8029106a7000f2f34cffaac45baea3ea367604c2bdf7f1"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/RectList.class",
+      "sha256": "1bcb75030220cb211ad0909b0dfb4c681c64ba707448a1ff8dc04712f6dc05a8"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/Rects.class",
+      "sha256": "71ac95843c90eea2303fe358d31156798b511858526a2bcd17dfa5f40329935d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/RetainedPlanes$DamageListener.class",
+      "sha256": "c1a67c7132dcdffcdbdadbdb008d0086466e74cc5abd803cedca52b9ce8cf61b"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/RetainedPlanes$Hook.class",
+      "sha256": "830d1cf7e5ad65248286875a2d1ae0e976e9bb70eee23671041f29fa31db1e5a"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/RetainedPlanes.class",
+      "sha256": "2a7f8de84ae70a5b8400e9102a512b45d308af695c0c14087e8dd1409b2d964f"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/RetainedSlots$Evictor.class",
+      "sha256": "fe6d102363a8ebed4e460ad570299da55de37c02e96252ac8ad3388711353303"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/RetainedSlots.class",
+      "sha256": "5825734f23c5a36e90c8f09cac96b486c35cfedc13a1668a7074b977b32f8620"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/TileGrid$Listener.class",
+      "sha256": "714e63d9f6604b115b1157fc7ddaea2456f8f06b98b728903ad5418247ec60ef"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gpu/TileGrid.class",
+      "sha256": "db2eae053669232cf04f0e248c806d99ec8ec38e5e6fe8bfec4decb57b16941d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GDK.class",
+      "sha256": "742b7c698e7dcedac2f30ac69970383fd82903a193b18efead6596784d53d46a"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GObjectClass.class",
+      "sha256": "d379c0273ee8398173e7cf33417c1ed30287b79931ebde3e142550cffeca59d9"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GTK.class",
+      "sha256": "e7088b2399a0b0802f30c62cc89e12236710a0fb166692a5e4680876985806d3"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GTypeInfo.class",
+      "sha256": "2c44b56974abfb40b3fa84869d8d091d73d8ff848aba2544ead8505165b4b6f9"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GdkKeymapKey.class",
+      "sha256": "2281a4e29fb8a1aa63337d59b7aa71771249eb728ca71d2e4027634e3f535b12"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GdkRGBA.class",
+      "sha256": "4b9ffee0256af6d981e965d6fff5853146d7091eda814341ac28b061069b57a0"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GdkRectangle.class",
+      "sha256": "b77c505b0daca1abb3849cb3da1fb43219571014e0560a256026d0ec61b953f3"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/Graphene.class",
+      "sha256": "5c653b124fbe02a103331d5d8fa61031c09bf1bdb5aced462657947d6c02d395"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GtkAdjustment.class",
+      "sha256": "67ef16482785294b952a45ed750330fed29a85559108e52d07b2c9c815f3d778"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GtkAllocation.class",
+      "sha256": "3e2fffe1a4602334b6e5b71bc7a1aea99955f58cf2b447a7db5722012f5dff4e"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GtkBorder.class",
+      "sha256": "84f2a5eaa6e770cdc87537c07aec6cb3fcf8e271d2ee13670efaf641d95d9d15"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GtkCellRendererClass.class",
+      "sha256": "97368b27b649a5e6aab00cb26360c3c48d086b8172b460aec52f888d369383ed"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GtkRequisition.class",
+      "sha256": "f409524060f22b003029559ae8e3aed89d892b12c96c9bc77c3e919d551bf2ed"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/GtkWidgetClass.class",
+      "sha256": "d3a326b0a0962fe0678541d2a25eceaf001cef341980f958b468ff6b480aabac"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/OS.class",
+      "sha256": "8971eda9b5f5cdcfac093fcb5123f80df00df190bcd548c2735abc13bf192b39"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/PangoAttrColor.class",
+      "sha256": "4690459062a3531bb302c84534534f080f63d0891678b7d16ad2ce468f584ea7"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/PangoAttrInt.class",
+      "sha256": "aad0e8eb4763598baa2f9ede03088cd57826a723eb4bfc3b480b4a03312bafc4"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/PangoAttribute.class",
+      "sha256": "0c5550d20e605d3325e038aa106238204dc390993d99a9c3344e9b408bbbfe87"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/PangoItem.class",
+      "sha256": "dcb9ef1a99a64bbe6d4813122fbe932bcd11f532a00546856274ec55147183ab"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/PangoLayoutLine.class",
+      "sha256": "c8b3d357be0219b4e98cdf8184d0cd63fae62e9f882af11e553c438616c23ea2"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/PangoLayoutRun.class",
+      "sha256": "cf5cc17f9b3edd06063f8af73228e098311766e4dda274aea9c1e22114e84c53"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/PangoLogAttr.class",
+      "sha256": "6153451e07c734b831187336ccad501e0c12ebe9d7e058a1b3d49faef9f5a264"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/PangoRectangle.class",
+      "sha256": "4631799eca43b2402c67c5229def08934602d68a4e58e9a661007fcf9a1d9e79"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/XAnyEvent.class",
+      "sha256": "119054fd999a9f357f8232f6cc473fab8535e9f036fd1dafbd713836a5859857"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/XEvent.class",
+      "sha256": "d98e2b417bbe9b3a97c58f737ea244d7c9ad00f5ff0e12fccddfe0033df8721c"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/XExposeEvent.class",
+      "sha256": "df20e517743f7c02d4d4c9533ecb3bcf62d4c4da7b397ceab561fe108896484d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/XFocusChangeEvent.class",
+      "sha256": "9739f3558f984e841a9e11d7a5c14ae93da180101a98a52f3d741451972eeb9c"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk3/GTK3.class",
+      "sha256": "1b57b836af2d2f78819da603a60b052148eb7c1e69179e7bf5e5a98e6002e9a4"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk3/GdkEvent.class",
+      "sha256": "c8e3a9753a17b594239da2a1944cab5bdfa99fea3b107c55b0aae705ab2bbe33"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk3/GdkEventButton.class",
+      "sha256": "6af43631e50fa970c23143fe780ed40eaa9cf9c7a12ff235e93f6ab55467aaae"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk3/GdkEventCrossing.class",
+      "sha256": "0279bcb28399a834d5e8da6e1dd62b1c812586057dbcd28e61dd0569f0c8ecfc"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk3/GdkEventFocus.class",
+      "sha256": "9cd22ea07e6e11b0c21da6c844503b45356d38709b74dbe969461628d28176d4"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk3/GdkEventKey.class",
+      "sha256": "538c856b93ea14fffaf0ba463a9e1d8662f313a397b76ec3178306a199813d6b"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk3/GdkEventMotion.class",
+      "sha256": "e2db7323b5c6a69cdefa21ae64a2e115cfb05744607a242587babe20290d8b0b"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk3/GdkEventWindowState.class",
+      "sha256": "3c64374b32549e223085d97384219b79ad387622017b0d5ffff3448dc8849d09"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk3/GdkGeometry.class",
+      "sha256": "9b597e482750a379a643122ac07e1b17d942eeac0efb79b06e51f74cf2ad5ef3"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk3/GdkWindowAttr.class",
+      "sha256": "2d984f879867c6a5a58e7b79e7711e749814be00d276372541535ceec2b98b40"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk3/GtkTargetEntry.class",
+      "sha256": "518d2227939b7664918745a9ef51b79bf04bf1acee6261d46a773e501b30e565"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk4/GTK4.class",
+      "sha256": "d258f5ee348919dc4afbe672688689173de2c2fe686cba14b074a6cf29f4f6b1"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/FileFormat$StaticImageFileFormat.class",
+      "sha256": "46d34ae0ad9581f77383fe73fa353c249e8fe8263887edde63a5d39395b2d184"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/FileFormat.class",
+      "sha256": "3f315b30ac1bf07f6e814556434856eed238bc2cc6e1f0550ebfa068a84849a0"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/GIFFileFormat.class",
+      "sha256": "e3b799055e3ae6bb78011fc6673df840f0ff36cdd15bff42bebd9148da4f6cb2"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/ImageColorTransformer.class",
+      "sha256": "4402d0077549b85ba59b39038b58e9be5851eef76a0acc9e7e1d4662c0d08d24"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGAppn.class",
+      "sha256": "6b11292dbca572faad2a6045c950f51d651ac228a3923663e986846c73ba8242"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGArithmeticConditioningTable.class",
+      "sha256": "952c658ff12edc35880b9204047e5efb61a4a689e417017f6babe8a2104ed873"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGComment.class",
+      "sha256": "56aed7b35f93494ad855d2b96e9fc5dc1ac11f3aefc6844341d8585fc884ca64"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$JHUFF_TBL.class",
+      "sha256": "e32ad7ccc5a10ce5ac0b4f737c67c29d5d2196718a5ee2ba956f9d2444df4412"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$JQUANT_TBL.class",
+      "sha256": "bba2d22aa7de44d539929e088cfcd51ca1ced8d068c23595c7f85d097d12e801"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$bitread_perm_state.class",
+      "sha256": "e2752241c40ff4477402ea207da2c7a90155b4cd62aa90af2fb6b160cef81f17"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$bitread_working_state.class",
+      "sha256": "2e39e3df476b64d98593bbca1abd89f000e1bbdd5523ee01196b9679bebbdcba"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$d_derived_tbl.class",
+      "sha256": "dd453daac1861aeb1afd6b40c255e344ce82fb7b50c382da15499231dcf00021"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$huff_entropy_decoder.class",
+      "sha256": "50851ef75c0a340c07697e642d0881b4e70f8fde9ef4a29bab3ebeb32c1fdfcb"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_color_deconverter.class",
+      "sha256": "e315acac40ee3969d1578a1fa3b93ab1190583190afe6abcd0e2e57208559151"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_color_quantizer.class",
+      "sha256": "cfa683a87da7649800d9f1df89e9764b460e943472aab0894883ea0a00c0a2a3"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_component_info.class",
+      "sha256": "905c9cb7a0e700bf0d49dfb942c1d456581f9ff22bfb0ed8eb9a738798d5d849"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_d_coef_controller.class",
+      "sha256": "39081f31db8ca1b09aed22b1598972161610ad2682a83bdabdd2141922969ab5"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_d_main_controller.class",
+      "sha256": "2e53bd5e8d3f355dc7692fedb4e970e44f62d39b63f0bb5581ae5d01b3fd3466"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_d_post_controller.class",
+      "sha256": "baa41ddff6d764a168d0ad6e16d8e95607af31248c41e6c7d2967934f8289125"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_decomp_master.class",
+      "sha256": "47ee4ce1f73b52ee57743d158498025299883f8a7de3ac7fe7eeb7d14bd77787"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_decompress_struct.class",
+      "sha256": "d52e785d239db4337592db377574c2000adae44a3bc67b0d2125acf0a85407fb"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_entropy_decoder.class",
+      "sha256": "ec496525f90d1e8abcbf3ae7352f531b5fb36eb55bd9e63fe3d803e378c1dfa9"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_input_controller.class",
+      "sha256": "0f2f3976a7f1c0394dcba23d4388fadd6e2e12426f5e529734a2a0b0ee7cc4ae"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_inverse_dct.class",
+      "sha256": "194c6fabb104adf8d754ee91d1d53ef8cef269b3d9366f7c172bcd04eccef85f"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_marker_reader.class",
+      "sha256": "210bbfb501a0b5fd8c3dec559137049fdbb9cc1dda8bc5521873ebe63a105fc5"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$jpeg_upsampler.class",
+      "sha256": "bffeeff6bac47aa916562ce47ea74396325e9a5154557cc340f77f7b756bb261"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$phuff_entropy_decoder.class",
+      "sha256": "9bfcbef756a4d294f78b1623785ecbb6757312b187e7aa09aacab8b87d85e433"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder$savable_state.class",
+      "sha256": "7a80c0f6a6169dcdaec15ccc776d1f041722c0e1264780d73dba6dd762b4e0d0"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGDecoder.class",
+      "sha256": "ff1d4d383427f6110fe991ef1a0f23162c9bdbb0da6f37bc936c1ca73dd72242"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGEndOfImage.class",
+      "sha256": "e16ccaf320e7717f68ff6554b087c37602addfb6890cfc27735d7a6410b3d0d3"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGFileFormat.class",
+      "sha256": "2e16afc9a852f6c7eee1bd0001b41aa756e7eaa7258d21ba551ffe05019cb801"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGFixedSizeSegment.class",
+      "sha256": "fd6df523a0d37abf3223e15b042bfcfa081d4c2ca783879fe099a791abffdeb6"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGFrameHeader.class",
+      "sha256": "40d722ced9a1d906cf7c419f751e085a377bc095469090e92cf1e042f25d1dcb"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGHuffmanTable.class",
+      "sha256": "5edce054257857e88d3df719a0b7588865c4a7b0cb53513eb672c206b218bc7a"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGQuantizationTable.class",
+      "sha256": "9fb1bcd636327adb4940937aa32c3a5223178f05452b07a8a5219748c8ca6d82"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGRestartInterval.class",
+      "sha256": "7bba925f6f56758410391e481656ccb03ce7b30b90b26ffb9717a615a059e5bb"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGScanHeader.class",
+      "sha256": "8f9a499b873efb2da740f6af5069e36036c7dd9fab57c741ef9ce70b261bf8b1"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGSegment.class",
+      "sha256": "41a279b5035a8923aa87c6ef36f454bb6c8f45f280436fe0d6e4fab38544e530"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGStartOfImage.class",
+      "sha256": "71c9e48a832f77438f2043b4f56e5ee8258a8b038f0da8b74222efdfb5ee66c7"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/JPEGVariableSizeSegment.class",
+      "sha256": "d4be2b627fe68fc3b7f5b23fcdcd9d3224b4840fb9a51eb1f367e6571de8d9f8"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/LEDataInputStream.class",
+      "sha256": "e44460f3ffe56ce636d7ab5ca73c01b4cb89cfe938e6ee755bb34f579523b89f"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/LEDataOutputStream.class",
+      "sha256": "a939f26ddc7390220f5a3f758afe5cc8182117bde628b739153bf0709922703a"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/LZWCodec.class",
+      "sha256": "2fdb08491333bcc9cf484b7b26fd973007976b9ea0ac60a43a03a469dcb713e4"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/LZWNode.class",
+      "sha256": "41d02c937d44e09df8f486d05d28665d16d1985624a29728185c32c8393f69f8"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/OS2BMPFileFormat.class",
+      "sha256": "1b0be45a9c9fc6045211bf6f44b31463c6dd2b52cdba199fa3def420a89b175c"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PNGFileFormat.class",
+      "sha256": "f238477ae7a18db59f4e62cfe331a716ff1a68b016b2856b3901704ba371e3cb"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngChunk.class",
+      "sha256": "5168f7ac1fafbc719bfdcd94372244ad51cec6368a7994a9bc86319b7ccb6c22"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngChunkReader.class",
+      "sha256": "2c1a8806496173fe71c8253840264df4487f29b1f9097fcd472c0f04a71338e6"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngDecodingDataStream.class",
+      "sha256": "1a5757bf25278b6d2a1e1997da68b52f6e1b354a3cb821fd52e0e29b38dd8ceb"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngEncoder.class",
+      "sha256": "706e2f0acef31295350d5151fc346b6d32d5d85e982493537d83c7f477d297ee"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngFileReadState.class",
+      "sha256": "5c20715cee21f222e2d2690dd37eac5e38030f02572d23f91bba2bcddc0b93a7"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngHuffmanTable$CodeLengthInfo.class",
+      "sha256": "9f2357f633d562a575c03dc474b4edddd29bb8931bc0afcd72b0f02b6ae4408b"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngHuffmanTable.class",
+      "sha256": "e53b1244ba47a9e768047ad06567c048582f9a2a38f1fa7393cd75868d99d737"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngHuffmanTables.class",
+      "sha256": "d752f0814e25330b7eb4da9d39a2a8eadf6a865c6cb2aada5727fc9f201c8898"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngIdatChunk.class",
+      "sha256": "135369d4691bf25f7302e887f9454e24c06b4edbba140b0d67a3baaa054b319e"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngIendChunk.class",
+      "sha256": "3fb5e020f9524c65f06cabe06b598491cb624d58257956c2c3dde491fd3740ab"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngIhdrChunk.class",
+      "sha256": "6340d8a92934914e37a6148800d2e13acb32bd1e096511484f52793c5b02f978"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngInputStream.class",
+      "sha256": "81ece805df8ba42a3e13a2b831993ce13dcbab4f0706c1f7699a641e20db9e9c"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngLzBlockReader.class",
+      "sha256": "dbb14c48aa6416b7b52c6db8dbf1b87a83448c44614ee818469b831ca9b39fc2"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngPlteChunk.class",
+      "sha256": "b0ca01ce2239bc82836e7e2d9bedd99affd3c83ec8c90ee121f0fcd9c24a9b0d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/PngTrnsChunk.class",
+      "sha256": "4cd49f8ffb4f44878144b6ec8105cf45af5eb99e5c59d41afd748a953aa37056"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/SVGFileFormat.class",
+      "sha256": "d88b671b907a546e8002d5365fa97927566e12255731d0915f400f6d27ae7513"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/SVGRasterizer.class",
+      "sha256": "304d31e4d02b172c836a16b0ba5ae1f660709b726327fdeecbd87c04a53d9db4"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/TIFFDirectory.class",
+      "sha256": "4876b8a080c2fa8078ac87f5d23f284bdb5dd1ae99fdd2bc7a07fae46001bea4"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/TIFFFileFormat.class",
+      "sha256": "baa87d813eab600cf669a1c0043d0f5a9bb125a67599e17beb86f272a6842094"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/TIFFModifiedHuffmanCodec.class",
+      "sha256": "32825404b3bc9826295a469068f6a7355eeb1d4afe41814374f4e3bf0bc3dcb2"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/TIFFRandomFileAccess.class",
+      "sha256": "0c9a69ec5a59c01bd16f3a0fa7cea2fb98911cf4cc19b8c3c5c2ce8f8babeabf"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/WinBMPFileFormat.class",
+      "sha256": "fb28219d578a98c6551bd633d4e0bfe76098017c8ed7111128e9f93dfb4a3a1c"
+    },
+    {
+      "path": "org/eclipse/swt/internal/image/WinICOFileFormat.class",
+      "sha256": "6d2d0300c7f5cad7977db8798a87c2e4e18a4a03445bf138668d30aba9c94174"
+    },
+    {
+      "path": "org/eclipse/swt/internal/opengl/glx/GLX.class",
+      "sha256": "8a77b60a60da9fccdef080beca9836089f95824ca3250ab72b9e136239477692"
+    },
+    {
+      "path": "org/eclipse/swt/internal/opengl/glx/XVisualInfo.class",
+      "sha256": "6b1fbc251981c70edc32211f33ac48a29850dfa5680f48afea7fed4b0dee2a3a"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemBitSet.class",
+      "sha256": "fec303eeb1b997dab25b4a22f96b5e6a1fa2b015c3b693d028ca2db8d0428211"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemDirectory.class",
+      "sha256": "7fff8649241cfd4c3b0865ae158da22a08e108b8ab1c403c042c9c217269d72e"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemLanes.class",
+      "sha256": "817db66a80a98a4a9111e77a031473deb331fc3977646f762f171da618a50840"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemRequests.class",
+      "sha256": "1eb6bb8333f6d44bd8ede0f179f847dd27d701883b58480f37345516843d402b"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemResidency$DataCodec.class",
+      "sha256": "b092bf1a24d287bf7bdf208ae2d91a7a339b924d093f694983afca02f359788f"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemResidency$DataSource.class",
+      "sha256": "f59ba1e16569ce05d57695e5232e26e7a5b69bcfebc533f1cd4fa16bc71e3fc0"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemResidency$HandleFactory.class",
+      "sha256": "47de9b432f937393a0e169c707f9ea39e7cd8640edf5918284757fa2c53ee43f"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemResidency$Pressure.class",
+      "sha256": "da8df77c689e27eb9dc2ffb4f76fbf35c68506f03dc686df7a4ac533443f2346"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemResidency$Sidecar.class",
+      "sha256": "3e42a412d0de0db276a2cd5e9061cba778abcac0369043e297d72c72f6e8e69f"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemResidency$SiteMetadata.class",
+      "sha256": "d2c5955e7eab78e81119546b83d4c361367aaa3bdb6bb54ba2a4bdf5949be6d7"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemResidency$Spill.class",
+      "sha256": "fca9b5795a44df871bb84e3dd25aaa862621ef630f8d543d4bb7cdd1748b2883"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemResidency.class",
+      "sha256": "240a0635d4d3d0422f8180deb261a31961fde73ddbfa7b54f33fd8851ea10c67"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemSlots.class",
+      "sha256": "79b28bcb6b0bc7ba1b9e16a09311c975bf400b2955f24416cc1c1e72c3e0b0dd"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemSparseTable.class",
+      "sha256": "3fac233c2e4b4cfe2d87d5146cb14449b1d1fef8c1b6c4807946ea826b625ea9"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemSwapPressure.class",
+      "sha256": "fbe1423ec4512dedeb16782ad1c2b9b8f3c6f445b793bd4faab01e6aa0340adc"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemSwapSpill$1.class",
+      "sha256": "7cc722b6e5bc10f3096e820a205ec8e032c6191e35adaf29990e38de24910263"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemSwapSpill.class",
+      "sha256": "00e8601a2cd6311fa03e759f742b62c8f3f8c8b1d00f1d763a949d092350e191"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemTreeShape$Path.class",
+      "sha256": "aac70cf31dad2cb9acbfa2aa4d9a2e9ed6e76630d3eddd7aa057ecdb983f1a6f"
+    },
+    {
+      "path": "org/eclipse/swt/internal/residency/ItemTreeShape.class",
+      "sha256": "993dc5d378877bcf82cdaee8a8830caf3fbf16b4f67b626e370555178825915d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/FileSwapStore.class",
+      "sha256": "1dd0d6210d86c3dfd36dbe595120b0f2f753404c6ca0b0ac9817d1719417d83b"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/JavaSwapPageBinaryOps.class",
+      "sha256": "97a4788596ab2ee3bb49424eb7c12972e1ad4d08c071599acabdde20f03ffa40"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/ParityCheckedSwapPageBinaryOps$Operation.class",
+      "sha256": "a44008cf9c52e0da23c72ba1e3346d65344179961f0c7fa91392999aa0b9eadf"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/ParityCheckedSwapPageBinaryOps.class",
+      "sha256": "08556a5f6e6274a2fd9816c603310dcb1df8419d79a97bbaf646e058c7307c02"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapBudgetPlane$Snapshot.class",
+      "sha256": "00686c89bf591959e7d37d0c3465ea4866fcb02ddf08698189e479f9b88fc2eb"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapBudgetPlane.class",
+      "sha256": "cf0aef7e6a1d20d1236fb411da0191ef03db04c518d5637b9e4269de13e7e2c5"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapPageBinaryOps.class",
+      "sha256": "166c4dd16b0853e436bad7fb4547b8636a1c21846a2ebf936864faf0b50cd9d1"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapPageBinaryOpsSelector.class",
+      "sha256": "d81debdc9b76c6971d97d79cf58db47e4cb8b028ed91a04deaf6d9c05caa4818"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapPressureController$Cgroup.class",
+      "sha256": "8533f992053bc156c7f016b7d4a382c370921d1451e63c57610cf927f44b0290"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapPressureController$Decision.class",
+      "sha256": "be265652e56f6f89add08780feb5d6592f0b6b4ec4ffdb5396e93dcd4a4cf2cd"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapPressureController$Sample.class",
+      "sha256": "dec06f73702353562882d1b144805f97b7f5d8f04ca00c92583ccd072c10349e"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapPressureController$Source.class",
+      "sha256": "f6569d0bf37d6840dac1b6c0d2e07ef8acb31e4c2dc97b5b2237d2a26e76e417"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapPressureController$SystemSource.class",
+      "sha256": "481d1569fb619e3e18f3cb81142e08a60cbd12f8545fa4412a722acd9686dcd0"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapPressureController.class",
+      "sha256": "40c24ee557353c360f31592c91f143f6f228914688987e9747239caf6ad4eca2"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapStore$Head.class",
+      "sha256": "5d05e066d19fb382b1ac235d098e01efa90bb4ce836cd2a6cfad25dabbae90a6"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapStore$Publication.class",
+      "sha256": "b38adeb72d601c0ff92ef36e94ee7a8f27c3ebc8082cb417f4124b9cdd26c16a"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/SwapStore.class",
+      "sha256": "730ee6d2f6c7b1ad325db9ef2485c5239072b1a4d1576f04a26773736eb35831"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache$Budget.class",
+      "sha256": "45ca70a81609ee6b05ec0c66d9f543dbd163bc986fcbd84ed836b4e17ad4522f"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache$CapacityException.class",
+      "sha256": "c43b715cb7d548fb22f0462121717048d78d5e26985291c92e21721bb8694ac0"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache$Codec.class",
+      "sha256": "0b1664e96e15f64c721f7968857657d683ea1df6affdb9dcaa97d57aa020e318"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache$DynamicStats.class",
+      "sha256": "9fc4922eaa08ddff5284ea6dea9dba9d9163065ce1bd5fba67f1ee4c5497ef7e"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache$Entry.class",
+      "sha256": "e1822d9f79030e111e47f15001121e3d55153cad6adf73e51d6ebf29ce50ee0b"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache$Lease.class",
+      "sha256": "61a37748c31bdef1886917005a4a6d49e44036425d5bd231110f24d2e6a9bd1c"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache$Loader.class",
+      "sha256": "b8904390c2a65ed35c8ebf7fcd82fb0756af1414b008134cd9532aa5e93ca9f6"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache$Policy.class",
+      "sha256": "1822657c85e217a8e2146130dbe9fd58eea84210f7034b096e94b6ea144930f3"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache$Pressure.class",
+      "sha256": "8ea1dc162754f81becad2a475b40f132d7830c75f05ca0ccf0869bfeec37fa03"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache$Ref.class",
+      "sha256": "75e86087187a0dd788327794a0176bf3627c5459bf063e74b155efb288602b33"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache$Stats.class",
+      "sha256": "70f927d3bbcc54dfa4c300ce8a1977ad5a56697dbbfe78f9b0bb9da663a0da15"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache$Tier.class",
+      "sha256": "060ffc7e24f0ffc9af262ba79136a6610cfceb74f1b2378a89acb297d6fcb64c"
+    },
+    {
+      "path": "org/eclipse/swt/internal/swap/TieredSwapCache.class",
+      "sha256": "539948d1cea4968cbddb5ed9ddd2455b9f789587739b01bc1a4c1838dfbb30fb"
+    },
+    {
+      "path": "org/eclipse/swt/internal/webkit/GdkRectangle.class",
+      "sha256": "5ba37600c8f4ec035e775e0520b4723d02bb036dd29fe89de173319f4121a05d"
+    },
+    {
+      "path": "org/eclipse/swt/internal/webkit/WebKitGTK.class",
+      "sha256": "2c3716eaf861966ff7c6097c2bbca7b446969473ad3be71123b72630f84deece"
+    },
+    {
+      "path": "org/eclipse/swt/layout/BorderData.class",
+      "sha256": "ef1db21662f590714527e77bfae92ee0c55d146a01cb8cf162209d5454aee5a1"
+    },
+    {
+      "path": "org/eclipse/swt/layout/BorderLayout.class",
+      "sha256": "fb5b98a7b665dbbd85027a0b989caeed38ae2bb92555fea188a6211d9312f92d"
+    },
+    {
+      "path": "org/eclipse/swt/layout/FillData.class",
+      "sha256": "7be5e5f56ae77db330739e1f9d0200a5a77ad62fbe7f7f700a40e05a7573e96d"
+    },
+    {
+      "path": "org/eclipse/swt/layout/FillLayout.class",
+      "sha256": "b6c47e505f849589743b0b15668e18b6314e17f37f81ce502dbd35d1f02b90ed"
+    },
+    {
+      "path": "org/eclipse/swt/layout/FormAttachment.class",
+      "sha256": "3be03250c0868e9b9e50c0af552199f980860da3e9763d9ce844ec2c9ad65df3"
+    },
+    {
+      "path": "org/eclipse/swt/layout/FormData.class",
+      "sha256": "d6216e16c4895a9098a4e79af05e427e217557f55fa03a2a0ed98b913db59da4"
+    },
+    {
+      "path": "org/eclipse/swt/layout/FormLayout.class",
+      "sha256": "72f887ecef4cd2bd6ca92abfbea83f5b23b57b4ec3304e982fdc850cfe54ea1e"
+    },
+    {
+      "path": "org/eclipse/swt/layout/GridData.class",
+      "sha256": "398e56f293913c8b247490cef118e3a84d8c5c56ba9c218dcae07d0f8ecdb2b2"
+    },
+    {
+      "path": "org/eclipse/swt/layout/GridLayout.class",
+      "sha256": "2da34fd9e74c9b251b23b8482eeccbe8f7c87fb953db051120eb29a8df32abf9"
+    },
+    {
+      "path": "org/eclipse/swt/layout/RowData.class",
+      "sha256": "1f7e7755c56c3eb462d42d980e217771e8ba3f92df8c19084215cfc3ddb96c1f"
+    },
+    {
+      "path": "org/eclipse/swt/layout/RowLayout.class",
+      "sha256": "9ec6144d92db697c7fe8d8083a4678747f513100845f092bc0909acdbb20a7fd"
+    },
+    {
+      "path": "org/eclipse/swt/layout/TabFolderLayout.class",
+      "sha256": "75d6a33529d7dec676144acd300251a49fa3f265c9db6b8b7e5085de7e1a7b9f"
+    },
+    {
+      "path": "org/eclipse/swt/opengl/GLCanvas.class",
+      "sha256": "81e06f64e56df3836dcbccac14d854a53b8275b15fde268fd418fcc99ca13553"
+    },
+    {
+      "path": "org/eclipse/swt/opengl/GLData.class",
+      "sha256": "8c4e0edf46746fd3a1d1c200f8da09e13946d290969f29d409b806ee74f526d3"
+    },
+    {
+      "path": "org/eclipse/swt/printing/PDFDocument$PDFDocumentData.class",
+      "sha256": "f37087d25aef10aa06448580836ee3858a2526fcccf1d5449955813fafa5c314"
+    },
+    {
+      "path": "org/eclipse/swt/printing/PDFDocument.class",
+      "sha256": "0673d73b6f6b9016191f176f3b28e094453afc3fd52a81172d4f8e49f32a25c2"
+    },
+    {
+      "path": "org/eclipse/swt/printing/PageSize.class",
+      "sha256": "b285f14f5cf7bbf729fb6d2e0e6d8ba44a2f0eb616f2c3ef8e0ddc083556e403"
+    },
+    {
+      "path": "org/eclipse/swt/printing/PrintDialog.class",
+      "sha256": "1db574c8db6c27214c043834941c954731ca8350144d3a1a127bab4e37ebcc1f"
+    },
+    {
+      "path": "org/eclipse/swt/printing/Printer.class",
+      "sha256": "463219e678b0b0dfb2701e5aa3e9ff046d476c67d46afb8e9e912fe84e4fabf2"
+    },
+    {
+      "path": "org/eclipse/swt/printing/PrinterData.class",
+      "sha256": "acfcb7a3704bf828e80f10d63b67f01bb7eaa534a69e282edc67484e6c634728"
+    },
+    {
+      "path": "org/eclipse/swt/printing/StyleBits.class",
+      "sha256": "47b79366204208691977c2ae0ead06aca5554161fe4dbe1137c00dec99e089af"
+    },
+    {
+      "path": "org/eclipse/swt/program/Program.class",
+      "sha256": "64e38ae283da3bd47d9af98a9c851760088b6f58b1298b61f83263ffe54b8022"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/BatchScope.class",
+      "sha256": "19fe112a33747a1087a41892730342ccffff5667b543ed55cc0052919cea2ec4"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Button.class",
+      "sha256": "18b1076cf79da5fa21a3b2d1bd6ba39caff58069e20f3456e8709580a0a24fee"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Canvas.class",
+      "sha256": "d4ba55b8b92d61c3c62d8df246d86c8a1639e0f1df1c5690de5c0fe28d3d7ca8"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Caret.class",
+      "sha256": "cfe1301da15794b54987234b198b6d7441f244833f2aaafb222a563fe2ada44c"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ColorDialog$1.class",
+      "sha256": "25c8caae010a8b813e047f9b71e85ab38260db241869e944a5e3e75b66288c0a"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ColorDialog.class",
+      "sha256": "f67798f2eb8fc8ef2d374414f6a45eb3507875147703baa745ee1fc08b052168"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Combo.class",
+      "sha256": "b8550afe8f2c408645e3353328f634701044c018c88833fe19a946e7016aff13"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Composite.class",
+      "sha256": "34f511c48fe19f696ab98378727f2f4e2835190b3cc65876398bffe30ad9c907"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Control.class",
+      "sha256": "d6ecc6c9bf850073d6d147daa901c8366d0543bb2f6154e5f43effcecc5277de"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/CoolBar.class",
+      "sha256": "bb2303f00ed043283b34c85ebe1c66f413d7c6e9b3adf669c53119911ebd2627"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/CoolItem.class",
+      "sha256": "0f3e0b8fbe7cc2c8255926fedba9176f3683d71ebb9778a04b0014956148dea2"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/DateTime$1.class",
+      "sha256": "01e1ec67bdb851d615e925b7c408f27206ecb79e01b20a43dd2a1ce45cd00b82"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/DateTime$2.class",
+      "sha256": "7a2aeec4f55b78963703413431a03535534f3c6469ea74a97b9758a6e9f26bf8"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/DateTime.class",
+      "sha256": "38408192a966fbd103b73c7b12f2d9b5268cd5984af18d396153055fbf90b2d1"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Decorations.class",
+      "sha256": "0ad5337735f847691437ad5a971c4651d8a28f5c05e65235b650d8aa11a724c2"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Dialog.class",
+      "sha256": "19d67abb2938d5921e49af8d5e2df3395a5f94b4710e573dbfc787441ffc869b"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/DirectoryDialog$1.class",
+      "sha256": "7e0ae27528eb25dd59110b8460c1c95fe39993d690e69f396f37655b1c2831a0"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/DirectoryDialog.class",
+      "sha256": "be22d98cad236745f1846fa7d09361c72ccc4d975e72f5c201f7d2b9af9af8b3"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Display$SessionManagerListener.class",
+      "sha256": "e0943d105b92891a9d984a646aac1759af3a95e1c51a2195b69752345db1af73"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Display.class",
+      "sha256": "a403ed8a9e64092b0b3a51321566cc8f12a3182c91d3b94164eb7c48e6ad625c"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Event.class",
+      "sha256": "002359c2383e36ca22ea850dc0efb6ffa417fa05356b5cbef9366bf888c22ef6"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/EventTable.class",
+      "sha256": "223a108c013b20f8d28cf715db0d99b0acc6d14c170cd2272bf5674a800e98c9"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ExpandBar.class",
+      "sha256": "129ef8d5e0b9ca9eae223af52267d46c8740524925cd615e37866f9cf34c176a"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ExpandItem.class",
+      "sha256": "a1f95cdc3267931da2dfbe84b5998e9b7c4ef0f702a51a079a2e63f66a4b802a"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/FileDialog$1.class",
+      "sha256": "b9a2a369a7ab6ad7f7f9ef8f0f3bd7a68b704d0cddb31ae9c565dc2fcc436dbf"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/FileDialog$2.class",
+      "sha256": "0c1f68bb1360ae9da1e7b521807ad523ef89ac3246ac362a0b8106a7007adca5"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/FileDialog$3.class",
+      "sha256": "3c9a98689c199d616f568470524810e10e565b97093beb5090b5bbb399927937"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/FileDialog.class",
+      "sha256": "b3ffb81fdee4cd7bc502f606204010b0c0ef7ea9529e25ecaab2b56b55a87a42"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/FontDialog$1.class",
+      "sha256": "bf0db2ddfe63bad3def34e5936e5e13df806771b230e0ab575558faffde602bd"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/FontDialog.class",
+      "sha256": "7c17db4682074552ee2c7a2476fbdcaad31deb88ac2bef78ab9b830e791dd55e"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Group.class",
+      "sha256": "7263c4d3bd552cdc64d65f15dfd404c3c400fb534b1ab94a99fb2396809836f4"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/IME.class",
+      "sha256": "d939850b55fb8ce26260c071297f6555f559423a99d35ae6622bff41cc30292d"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Item.class",
+      "sha256": "83d288c86cdf77a9c33f41f68722eec9ae3f651b54def19d07addac928b8654b"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Label.class",
+      "sha256": "7febf57ce6a3983c67c0e660a8ce22751753e0b19abff0d600b68e74ab271b17"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Layout.class",
+      "sha256": "363b56d793c7cea81beb8d755ae7ee89b9e06657edf0e2c7020c860713f450b7"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Link$1.class",
+      "sha256": "0b5d12ff4484b575ba71213532df33501c695f47751feb081dd35179db09cbcc"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Link$2.class",
+      "sha256": "80dea36f0840fc0c01b7f506c5d91862453205d7832ef9efb6f979b90906a23b"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Link.class",
+      "sha256": "8071b0a2e01f5e32d292e7cb4dcdeed834da5feadb6da461fe0d7eee769ebe85"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/List.class",
+      "sha256": "e3e4e7a7aaa57c48c562d3f41e004497b4b6d45833402f27ffe5e65686b48c7d"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Listener.class",
+      "sha256": "ee101dcf95aa25e4ee01fb3b87a692c3259eeec005c308daba6cc4775d97d4e3"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Menu$Section.class",
+      "sha256": "cbfdace2fca980ba848f3f7dceef4e5f7376d72dde9903447069feb89392e1f7"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Menu.class",
+      "sha256": "64cb5084ac7860f968d75432e7ab0c554f463847a6bea15405671627b3260df9"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/MenuItem$MaskKeysym.class",
+      "sha256": "2889cf6a10353229b95a51f8e6cbdd8bf6d644cf899759f506ee068518c93ec7"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/MenuItem.class",
+      "sha256": "eff75b9f88823be19a203b0da4804b9f92b1c28a7d0f613a02de7c8fceac578d"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/MessageBox.class",
+      "sha256": "26ebe15dc51d1d8b24239ff52c2b73a2f6f995e6deaba6b15a655b89331f792b"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Monitor.class",
+      "sha256": "4c4730c907394c826890b73ad11a75c67e6740042956373cba5dbfb30e4f0ba4"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ProgressBar.class",
+      "sha256": "1fd2ff8c608a15c26acb44ce3ad2419179d3c396ae1db93a08904fb65560a5e5"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/RunnableLock.class",
+      "sha256": "8209f9fd8a7d487ca48064c28b82b8a840e640a2ca95db344428676bfd8e4314"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Sash.class",
+      "sha256": "6c8ecb8228a83f18298d9aa7413ef1db65bf6651f788d6ef8d0c2570e9bef2e1"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Scale.class",
+      "sha256": "f1aeea767140c93c0148ce5f8f61acb0fa0bd5522f358f2b9ed902101ad27049"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ScrollBar.class",
+      "sha256": "80fc13de6ff6b4234abd37416daa3fc761316ae35c6f87a7c497a941e9243f98"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Scrollable.class",
+      "sha256": "8c035e17ca4c0586181f9238e547ac596b51998611c4baf595c3f61c05174d5f"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Shell.class",
+      "sha256": "2e7fc3d6e15740aab7f36b59915d193579ae57acfd616d53916394f325ae6d0e"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Slider.class",
+      "sha256": "df0ea56f5e601be776a35e4df67af077044f2b7fc1a47fe51c1a4f070c34ad9a"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Spinner.class",
+      "sha256": "b32ddfd3f13ca2fedda847de34a39f1059f2dc43c24b40d9594a9f35056244af"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/StyleBits.class",
+      "sha256": "04777e7646aab2f6f22869a5af4b7d1702fb2ee20c49a3a80fb79a885e9c82e5"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Synchronizer.class",
+      "sha256": "4c57a415a7290b17853f3c8329a20f078db54b7f5781dcc1aa61c4bf8b20b0df"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TabFolder.class",
+      "sha256": "c804db9f245db3f001708e8a7216a39f8efa80d88401bd26dd133fa88ee7ea8e"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TabItem.class",
+      "sha256": "105815090715f10cd39ea67dab58b3103975cd6de5dfa6e7f83391d489f98b12"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Table$1.class",
+      "sha256": "a7b1fe0f8ed6b69fd64188a14d07e282a99a8de191b6892f4feec85c86fc539a"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Table$2.class",
+      "sha256": "9f2add48b2d60aff4cc9c06eb000a1799dfba2f5e3eddd9418b6dcf1dc6f9e78"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Table$3.class",
+      "sha256": "7f6b139121fbb96c121cf2a57753f074d6dcd30759f41a800cd3593449e2deb2"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Table$4.class",
+      "sha256": "5c366616354bacb22101f07b5594d26327537cf66112e2f9154ff4afe303bd52"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Table$5.class",
+      "sha256": "c46480796d537420ae397538630c5104db27489ff0ca6c7985ecf0b26bc83bc3"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Table$6.class",
+      "sha256": "1ee52723a215c63de8d4b83cf6518fe3b4c0b1d28ab620016faac2d7193422f8"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Table$7.class",
+      "sha256": "598a7353de0e9853e9e820a8cce79113d90263caf1216bef3cae01364bdda634"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Table$8.class",
+      "sha256": "131858e7fd37e96de7b42cb0ed2351384a4ad5bee136982a6b420cab87d885dc"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Table$9.class",
+      "sha256": "bc2a5159eed79c2ee83f77059c2cea8e2302b2a17cb53379a61b1d4496941d59"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Table.class",
+      "sha256": "204aecbbdb6aa71e3a9745a6c119a5e665b4fb1469ca4e2f226a99fb497de56f"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TableColumn.class",
+      "sha256": "c893b0dd9b087020eba75928683c5a4594589dbfb8f67973f906bb8ae397c082"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TableItem.class",
+      "sha256": "fb61c4cb02110882b7368511a2f6c32a9681c69e37aa3416ef8fa57adb5577a6"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TaskBar.class",
+      "sha256": "6487d04604e601c33b2bd6b9c0ff7a4f4796e743338b46232cc8b380c53c9ced"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TaskItem.class",
+      "sha256": "468ad0c3b0838f516c31843612707e9652f81261f336b36c52c912397afea852"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Text.class",
+      "sha256": "42de2723d639616e33095a3b44330c909420d462dc1c993451f2deee8b5d4e45"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ToolBar.class",
+      "sha256": "5f0d750c09acf6881ef504f2a7f18ec9c5d7b269247348729ba311343ff62d1b"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ToolItem.class",
+      "sha256": "022400e224b888e23ce93cad6d8be7f6196e11322d92a1cc16aa93ed1d6f4c7d"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ToolTip.class",
+      "sha256": "4768ba2a8a3c5b374443d1505b03b2351bb65bbe7a0648392020286bfe509c88"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Touch.class",
+      "sha256": "133a62c0f7c3dd90ccba22c77d47e67977f45daf09ed9b13571bdb95f8ceed4e"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TouchSource.class",
+      "sha256": "ee971302742964437263d7dc024f7efb143538b551c133793fca7dd64d3318b0"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tracker.class",
+      "sha256": "10ab4cdcb925535361d71921184128bbdef374225b13c4457b10edfb8a5aca8f"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tray.class",
+      "sha256": "9773d98229890123f18418376f1d5ac8d3bf59dea7b83719ea7d89b6d50c0bee"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TrayItem.class",
+      "sha256": "aaaeaa8356242e1e6787785712286170c9fbe7f265b465a74c1af934ade15197"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tree$1.class",
+      "sha256": "493015904883acfae4ab8caa3c66f229c2e03d6f55f702396d653fbfe77cac67"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tree$2.class",
+      "sha256": "4a545d7f74ff1b1d741a460761cc6610469b015b7bb7c493e868425a3500f180"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tree$3.class",
+      "sha256": "18ff895c76e0de1b1f1def54f6c602a091c85bdfc3266547bf17c78200b678e7"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tree$4.class",
+      "sha256": "bb5e4dce8c53bc87d51f10b7ad8222442784d190d5b96a142dc37f3dbee19bae"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tree$5.class",
+      "sha256": "4b8e183876bcb8e97fdc75a89bd5628edb2dc861b2cd375c06eeaa0b4e5027c6"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tree$6.class",
+      "sha256": "197c52f60a93477e4fb7c632d25cf93693f9e1794a863812e51eb23f04c19cde"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tree$7.class",
+      "sha256": "5c664ba6a0bf8f024a54ff04858c0a2b3d5aa1a9ad2d57df30c0d67736022d10"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tree$8.class",
+      "sha256": "e61208d1f84088ef184c664b8084218ce98e59be19f3407f692f9c4da5f7544d"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tree$9.class",
+      "sha256": "02e5e4152da7a5a65105a1ad121b61a38988372fd2f0ab24e17c58da066c680e"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tree$VirtualNativeViewState.class",
+      "sha256": "ec88c774072506623885292bf6bff04551ca8082448cc72ce1a99041e1421708"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Tree.class",
+      "sha256": "c215ef1b8a170e660f31699f9f2b7e7c26497ba1bb73bbf0272fdd9a680a282e"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TreeColumn.class",
+      "sha256": "7d7a725fa1cecbc9716cb43d612b436a35978cbfe7621bce1babf8a65f7a2932"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TreeExpansionModel$Pending.class",
+      "sha256": "07ae4dc67811b79815dd85d34b6341a46ecb8dfa61b3322dad6c35f941f7e031"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TreeExpansionModel.class",
+      "sha256": "08f4c5a52733ec6879e8cb0b1b6208ac880b89c6bccd1a623e418034805fc9e2"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TreeItem.class",
+      "sha256": "4ed939fb973f39fd658a176c54f9dc8df636bed295a74c6e4ee04b8367f3dc94"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/TypedListener.class",
+      "sha256": "fb1240db1a71a06a6da117fda7fd4072d6aef6753f03efb7ef0e2f09ef0f4a3b"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ViewportAffineTransform$Bounds.class",
+      "sha256": "d693cd48bf7deed188d3376663d52dde7dcd52c04ed3b46efe3ea89c84852e30"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ViewportAffineTransform$Point.class",
+      "sha256": "49e33a7dec38f69f320577e5f640a59c335086aea5158a3e4e4e2f49424946fe"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ViewportAffineTransform.class",
+      "sha256": "648a3c6d4a6b7f7bc87222775d71fc96f3c864d009ed2898f71e616dc4674b1b"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ViewportLayerState.class",
+      "sha256": "e3ab584a4f79ade02b9b3139fb552bad666ad9a277dcf9aa64490c12ccd95b5e"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ViewportPaintGraph.class",
+      "sha256": "163f4aabd75ad29b0ee47bf96c278266d35ca4576492237500681d5f7703dae2"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ViewportScrollLayout$Result.class",
+      "sha256": "e0c4a87a64785e58c436dd33b8664dadeb26c8d699c461ca5e2e3ec309fddcc4"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/ViewportScrollLayout.class",
+      "sha256": "7fcf351331898f21499701703558fdc3faf7937822c0268d48868cbd293d0265"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualBitLanes.class",
+      "sha256": "e9a8340646e6a2be8b8b4dfa9ea5980fcda01fb7dc686e5e8e31245af283a952"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualBlockCache.class",
+      "sha256": "df3f77e94a5dc351dc2f0f1bf9471c4fc8477232f9b1139ce7eec63b3882c66d"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualBlockSpill.class",
+      "sha256": "ac6f98ac1e0dab75b6ba99a9ae905da17e5a1b3e6a83ed993d4c5f298b860708"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualBlockStore$Evictor.class",
+      "sha256": "fbbcca1ce595ddb647fd2bfcd8b337e913cf5fcebe5b953e082459ea30852b8c"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualBlockStore.class",
+      "sha256": "d236a4aa941c34dedaf248f474eee1f6691a4da2988a3f051f1b6bb55bed163e"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualGrowth.class",
+      "sha256": "2053b43bea832a0573884099ff1c19ca4a6e347e5fc6a1809f8a1ab356ba6c15"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualItemState.class",
+      "sha256": "46601378b894c529b71e57c61eaf97a4c664fd02334fe064a704833b56e607e9"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualItemStorage$IndexedConsumer.class",
+      "sha256": "3f352db7a9ed69093b21ae6e641249b2b7aefc34b2fab57110e38fb2112f0ded"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualItemStorage.class",
+      "sha256": "1207d7d847457f3b135481c9d66b8dbe990ff496572bf2187b8b9c42755e133f"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualListModel.class",
+      "sha256": "fa119776033f8a567d3640ae20022b21caa2834abd709f4c88383266b0dc9442"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualListWidth.class",
+      "sha256": "d4cc60b33099901003caf008e7a29903a2c5a0f07d1e60bb863e1ee361aee89c"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualPageHost.class",
+      "sha256": "de92821c3c75ac86df0404e0ed075892319aedc6fc2e8bfa7a9c9a42656ee103"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualPageSource$Fetcher.class",
+      "sha256": "aa889eb1bd2ab170fe2577607b0f1c71027715d27057a7e428f9db5b97316969"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualPageSource$Request.class",
+      "sha256": "87f28f398d2a34e2f8c79f93cac842dabe1a5214765c0bd362a774d25990fa36"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualPageSource.class",
+      "sha256": "5c200af9b24c0a4bcee5ca2bcc5e89a9e7e017ae1128f231bcf0268357d40677"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualRowExtents.class",
+      "sha256": "12d0a0f08fe31437eefee7577a6291412e865bb782a9339fff32795092e1c48d"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualRowWindowPlan.class",
+      "sha256": "83cc120764e965fd03c1676f1d4da8dc5f358eaef258aa62488ff2b8b478ea03"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualScrollMetrics.class",
+      "sha256": "4536511210794284bcbdf2ac07c5d3819ca415c57b887edb379b235176dc726c"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualSelectionModel.class",
+      "sha256": "a9a4d00c51e8fe8567c52a54d2064b3a470d969c64b9f077cdf1ed6032ee5f3f"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualTabContent.class",
+      "sha256": "55410a0f91ad129569ee1b0146b08d822f92b3f07e11778cc36115c63035f35f"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualTreeResidentPlan.class",
+      "sha256": "273c1e7394e897e8dcc74e098368485c19836e96621c604a1e341d38d572f09f"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualTreeTopology.class",
+      "sha256": "fa228cca533e62870f1c17b157676989a19d09ac50a65dc57e0154f3e402811f"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualTreeViewport.class",
+      "sha256": "759b007ea93b3e94268bb94581086d2a8757eaee0a3f9901dd31e67c1207a3f6"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualTreeVisibleProjection$Residency.class",
+      "sha256": "c09545a2a4386411269a7b6249d5e90d224e46f9d768319d5bf8207104a6c643"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualTreeVisibleProjection$Row.class",
+      "sha256": "3629e69ab9eaa75216139fbc492924a6d81a09f3c4268672fca596a0a3b2e311"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualTreeVisibleProjection.class",
+      "sha256": "971d66a658e074cccb36b067873a41cd4ae5b8db20b6be63f057ffca128f5048"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualViewportPlanner$HorizontalWindow.class",
+      "sha256": "b3a62355bbf1176a838583360da0089c66cf3d120044489f1d5d27c5a8ed96ad"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/VirtualViewportPlanner.class",
+      "sha256": "7cbe3ec14888d64989446075e6285dfb02f19706103f8578d32ecc932ee1f25c"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/Widget.class",
+      "sha256": "530b973ed1538921953adf3bbe092d02fe84e70efbf23b86e762073871325093"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$1.class",
+      "sha256": "1f1517256ea3036de5e4ece045815476a9f5e3d589b0a9c8edf727f7b812eb46"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$10.class",
+      "sha256": "67df54d9619c0b67beab73504d3c3eaa666d620637920e300066ca83268c0c03"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$11.class",
+      "sha256": "12c92e9541bb3900451681bddc5db64534e096d657ac1bdf6329cb5127ab04b2"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$12.class",
+      "sha256": "60cd1e970f76cb9e6f86ece2b2b4bd60dc0403ed30c97d4aca099b3b4e710205"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$13.class",
+      "sha256": "9e4ccd1b644b5916ebd195a5f397ce7d4a107cb17a72ce0a3371ba045d2f2647"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$14.class",
+      "sha256": "75cccdb117295b1265b5fe0217324c44002a513e8dd471902e96a1b828bfe735"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$15.class",
+      "sha256": "426cb8db7ef27f9966efbf09a17ff8f4906a9e229e90d3360320f20f9014419b"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$16.class",
+      "sha256": "7d62b1ec26491e107d06f0734e3c02830e4b765361d357d17f24d4173d6fbedf"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$17.class",
+      "sha256": "e852892a5bd8bf50091e7c0ba3abd4e3c41566f2c01361d08562e3da02cc8ae7"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$18.class",
+      "sha256": "9252fc7ecee6d1f3e1cc82648446487a0157c4e62237bed6e35e3a5fc0604640"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$19.class",
+      "sha256": "18c04963254dade021d6443582f9a6cd019a4c0646cfe4e1e8a5280ae6db3d6c"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$2.class",
+      "sha256": "c3ae6d3465184e84e29b25b6f0e424784bf8d1b687b842042e03cb59a63b51ac"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$20.class",
+      "sha256": "744c93019a55662a42958e3b526d940ee4a9ff103572acafdb2cc7b47a9f7347"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$21.class",
+      "sha256": "fd405f7bab652b3bb8fcd5456a69c560159a04ac7c696c3c6e316ebe316f6928"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$22.class",
+      "sha256": "3951f4152af573c824656eb8fd45c9a426751fb5c332afcfcd03327f55ead26b"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$23.class",
+      "sha256": "cb5b7c007620fe9d43213ef12b62f6b9785a2c79fbdf24d4b6ff519afdb2437f"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$24.class",
+      "sha256": "93aea070e9577f960fd5d7018e4a8c3e9e213a9b3ebed9d8cacbd417fc8f63b8"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$25.class",
+      "sha256": "9f3601d86949b5d31153239c1a612fa361d9edd0baecc15002297cae845b4722"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$26.class",
+      "sha256": "033e691322f2b1e5be879a1cf4c07928858550714b2f0dc3d18509b72389ea33"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$27.class",
+      "sha256": "b363d2a89ceb986e9ec35fa1d8b18d20c9de192b99b9401e9b94d27adfc77558"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$28.class",
+      "sha256": "769251a3af0f48efac7f108acfe126c22ffa82cbb7e5b8bf8edc42b8fe066876"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$29.class",
+      "sha256": "959561cac2e0211196cc60f531c6559a93347dc460be57e715abb98b0e2393d0"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$3.class",
+      "sha256": "4379718a6b5b0711543809a914265a9b5132fee48c27c2b870def0810f3565c1"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$30.class",
+      "sha256": "b50079cc6cb315fd666286d20e24711f9ebea685599db296d1e302d231cd54c7"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$31.class",
+      "sha256": "1441570a610800405b7fff7a7824e32d9ef6d5693df7ef7f057285a44fc85528"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$32.class",
+      "sha256": "3a2a6d953909a6790796e8e0acbca237a1cd8688f05b7f3ec66e0cfd6158ffc6"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$4.class",
+      "sha256": "e96b1e1f3f81d24a3fc8141b8c8a0c469543a30a4513fd0aaad7ad289e80dfcb"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$5.class",
+      "sha256": "b2e8937011d193edbed741074ddc854c5c0ec0dcea6a55eb15125162bce829c9"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$6.class",
+      "sha256": "7c820252b49b088988d389dea2e505c738c899758b6e0dd91a0e121d0182cb7d"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$7.class",
+      "sha256": "000f175534ef87bcd333afbf88e624206c608bb4da7479e7c2fbb149278d11a0"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$8.class",
+      "sha256": "c4ac74956872fb582b2e8e17157d909bb6c04e0fc8d658ab5f567ce111c22995"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy$9.class",
+      "sha256": "1612a51f1cabea9a96e639e9e70bd96f229dabdab0bdb2238f0b97a54b2c0a30"
+    },
+    {
+      "path": "org/eclipse/swt/widgets/WidgetStylePolicy.class",
+      "sha256": "bc259d80ce3cdc02747700d62548f9c22ff980addfe14cc0c64e5e9b7d789226"
+    }
+  ],
+  "swt_base_resources": [
+    {
+      "path": "org/eclipse/swt/internal/SWTMessages.properties",
+      "sha256": "ca15c205cd47b745c16f07c595ecc6c89bdc8a9a8ea0dd9e272f0e38b346fcf9"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/swt_functional_gtk_3_20.css",
+      "sha256": "c44822bdafc57596ca13f730568a279f8832d72e397b39dfd5a5336cb5c6aecc"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/swt_theming_fixes_gtk_3_20.css",
+      "sha256": "fc08700fee50e533cbd0e8042e4709645a489524dcecfa69b2568c00b64d4198"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/swt_theming_fixes_gtk_3_24_5.css",
+      "sha256": "df819e2e0fe40fb63b1758e01effd21e72bd0706ae7982402ee23e7a50cb1957"
+    },
+    {
+      "path": "org/eclipse/swt/internal/gtk/swt_theming_fixes_gtk_4_0_0.css",
+      "sha256": "e163910d6555db763f991168c71dae0a5d1616f2313324a3e5437292c7cc3860"
+    }
+  ]
+}

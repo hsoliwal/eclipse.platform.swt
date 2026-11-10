@@ -1,0 +1,6 @@
+mark	node	parent	test	message
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Button	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Button	test_setForegroundAlphaCheckButton()	Assumption failed: Alpha support for foreground colors does not exist on Win32
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Button	test_setForegroundAlphaRadiokButton()	Assumption failed: Alpha support for foreground colors does not exist Win32
+SKIP	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Button	test_Bug381668()	Test works fine locally but fails to get correct focus on automated builds.
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Display	test_postLorg_eclipse_swt_widgets_Event()	Display#post failed, probably because screen is not rendered (bug 407862) or because Shell is not focussed ==> expected: <true> but was: <false>

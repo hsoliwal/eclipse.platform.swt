@@ -175,3 +175,5 @@ Test_org_eclipse_swt_widgets_VirtualPageSource_ScaleClassic
 Test_org_eclipse_swt_widgets_VirtualPageSource_ScalePaged
 Test_org_eclipse_swt_widgets_Widget
 ViewportScreenshotRegressionTest
+# 2026-11-09 (release candidate m3-superset-20261109): every candidate class is reachable from AllTests;
+# the omission baseline is empty, so --strict rejects any class that becomes unreferenced again.

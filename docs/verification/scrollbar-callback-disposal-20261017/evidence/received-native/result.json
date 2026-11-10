@@ -1,0 +1,28 @@
+{
+  "driver_sha256": "99a47c78b1f256acb5a5d99fd24129c941955cd2f67f8bd3fb1d0bea90738b33",
+  "source_sha256": {
+    "before": "966855c88fbe0fa13c25b5df89ec62ddbead1850bc94ef935d27f9d2c83f15ca",
+    "after": "b2cc90ce5b7f3f706a758099eacdca8199cae5ac53f7b44cdb9beb779aa09966"
+  },
+  "test_sha256": "cf94333fc5329b963bade2d842fbcb0352a05342d9c0f2bee2b1b8715898488a",
+  "native_platform": "GTK3/X11 under caller-provided isolated Xvfb",
+  "junit": {
+    "before": {
+      "tests": 12,
+      "skipped": 0,
+      "failures": 8,
+      "errors": 0,
+      "passed": 4
+    },
+    "after": {
+      "tests": 12,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "passed": 12
+    }
+  },
+  "api": "PASS identical declared ScrollBar descriptors",
+  "compiler": "PASS Java21 production source; nine exact pre-existing warnings, zero new diagnostics; strict regression-test -Werror",
+  "scope": "Native GTK callback lifetime/event behavior. GTK4, Cocoa, Win32, whole-reactor and viewport performance/pixel acceptance not executed."
+}

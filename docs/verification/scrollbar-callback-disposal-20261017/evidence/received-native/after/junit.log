@@ -1,0 +1,89 @@
+
+Thanks for using JUnit! Support its development at https://junit.org/sponsoring
+
+╷
+├─ JUnit Jupiter ✔
+│  └─ Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk ✔
+│     ├─ visibilityListenerFailurePropagatesWithoutFollowingResize() ✔
+│     ├─ showListenerMayDisposeOwnerBeforeFirstPaint() ✔
+│     ├─ hideListenerMayDisposeOnlyScrollBarAndOwnerStillReceivesResize() ✔
+│     ├─ showListenerMayDisposeOnlyScrollBarAndOwnerStillReceivesResize() ✔
+│     ├─ normalVisibilityIsSynchronousIdempotentAndSelectionNeutral() ✔
+│     ├─ nestedVisibilityDisposalStopsEveryOutstandingOwnerResize() ✔
+│     ├─ nestedResizeDisposalStopsTheOuterOwnerResize() ✔
+│     ├─ nestedScrollBarDisposalRetainsBothLiveOwnerResizeNotifications() ✔
+│     ├─ liveNestedVisibilityRetainsEventOrderAndTheLatestVisibility() ✔
+│     ├─ hideListenerMayDisposeOwner() ✔
+│     ├─ resizeListenerMayDisposeOwnerAfterNormalVisibilityNotification() ✔
+│     └─ displayFilterMayDisposeOwnerBeforeTheVisibilityListener() ✔
+├─ JUnit Vintage ✔
+└─ JUnit Platform Suite ✔
+
+Test run finished after 1673 ms
+[         4 containers found      ]
+[         0 containers skipped    ]
+[         4 containers started    ]
+[         0 containers aborted    ]
+[         4 containers successful ]
+[         0 containers failed     ]
+[        12 tests found           ]
+[         0 tests skipped         ]
+[        12 tests started         ]
+[         0 tests aborted         ]
+[        12 tests successful      ]
+[         0 tests failed          ]
+
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:19.485: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:19.577: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:19.664: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:19.733: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:19.782: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:19.837: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:19.874: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:19.951: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:20.010: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:20.062: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:20.114: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:20.167: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+
+(SWT:700150): Gdk-CRITICAL **: 06:37:20.240: gdk_threads_set_lock_functions: assertion 'gdk_threads_lock == NULL && gdk_threads_unlock == NULL' failed
+SWT SessionManagerDBus: Failed to connect to org.gnome.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)
+SWT SessionManagerDBus: Failed to connect to org.xfce.SessionManager: Failed to execute child process “dbus-launch” (No such file or directory)

@@ -1,0 +1,50 @@
+stty: /dev/tty: No such device or address
+Nov 09, 2026 8:08:16 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: Combo window: rows 99899+101 of 100000, closed (101 native rows touched)
+Nov 09, 2026 8:08:16 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: Combo search 'exact': logical -1, native -1 of window 99899
+Nov 09, 2026 8:08:16 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: Combo search 'prefix': logical 99995, native 96 of window 99899
+Nov 09, 2026 8:08:16 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: Combo search 'prefix': logical 99995, native 96 of window 99899
+Nov 09, 2026 8:08:16 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: Combo search 'exact': logical -1, native -1 of window 99899
+Nov 09, 2026 8:08:16 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: Combo search 'prefix': logical 99995, native 96 of window 99899
+Nov 09, 2026 8:08:16 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: Combo search 'exact': logical 99995, native 96 of window 99899
+╷
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  └─ Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance ✔
+│     └─ editTextMatchFindsTheFirstLogicalRow() ✘ the last page is on top ==> expected: <0..99999/20@99980> but was: <0..100/20@81>
+└─ JUnit Vintage ✔
+
+Failures (1):
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance:editTextMatchFindsTheFirstLogicalRow()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance', methodName = 'editTextMatchFindsTheFirstLogicalRow', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: the last page is on top ==> expected: <0..99999/20@99980> but was: <0..100/20@81>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+       org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+       org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance.editTextMatchFindsTheFirstLogicalRow(Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance.java:227)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+Test run finished after 1520 ms
+[         4 containers found      ]
+[         0 containers skipped    ]
+[         4 containers started    ]
+[         0 containers aborted    ]
+[         4 containers successful ]
+[         0 containers failed     ]
+[         1 tests found           ]
+[         0 tests skipped         ]
+[         1 tests started         ]
+[         0 tests aborted         ]
+[         0 tests successful      ]
+[         1 tests failed          ]
+

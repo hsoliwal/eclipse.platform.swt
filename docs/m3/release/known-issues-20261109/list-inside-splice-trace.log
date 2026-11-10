@@ -1,0 +1,146 @@
+stty: /dev/tty: No such device or address
+Nov 10, 2026 8:02:53 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 0+51 of 100000, top 0 (51 native rows touched)
+Nov 10, 2026 8:02:53 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 0+51 of 100000, top 0 (51 native rows touched)
+Nov 10, 2026 8:02:53 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49975+76 of 100000, top 50000 (127 native rows touched)
+Nov 10, 2026 8:02:53 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49975+76 of 100000, top 50000 (127 native rows touched)
+Nov 10, 2026 8:02:53 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List splice at 10: -0 +1000, window touched
+Nov 10, 2026 8:02:53 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100001, top 50000 (50 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100027, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100053, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100079, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100105, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100131, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100157, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100183, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100209, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100235, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100261, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100287, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100313, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100339, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100365, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100391, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100417, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100443, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100469, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100495, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100521, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100547, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100573, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100599, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100625, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100651, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100677, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100703, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100729, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100755, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100781, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100807, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100833, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100859, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100885, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100911, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100937, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100963, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49950+126 of 100989, top 50000 (52 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 50975+76 of 101000, top 51000 (202 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List splice at 20: -500 +0, window touched
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List splice at 90000: -2000 +1000, outside the window
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 0+51 of 99500, top 0 (127 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 0+51 of 99500, top 0 (127 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49975+76 of 99500, top 50000 (127 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49975+76 of 99500, top 50000 (127 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List splice at 30: -10 +2, window touched
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49940+126 of 99491, top 49990 (50 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List window: rows 49942+126 of 99491, top 49992 (51 native rows touched)
+Nov 10, 2026 8:02:54 AM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINEST: List splice at 49994: -3 +2, window touched
+╷
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  └─ Test_org_eclipse_swt_widgets_List_ViewportAcceptance ✔
+│     └─ spliceOutsideTheWindowTouchesNoNativeRow() ✘ native row operations of a run inside the window: 56 ==> expected: <true> but was: <false>
+└─ JUnit Vintage ✔
+
+Failures (1):
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_List_ViewportAcceptance:spliceOutsideTheWindowTouchesNoNativeRow()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_List_ViewportAcceptance', methodName = 'spliceOutsideTheWindowTouchesNoNativeRow', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: native row operations of a run inside the window: 56 ==> expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_List_ViewportAcceptance.spliceOutsideTheWindowTouchesNoNativeRow(Test_org_eclipse_swt_widgets_List_ViewportAcceptance.java:501)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+Test run finished after 1241 ms
+[         4 containers found      ]
+[         0 containers skipped    ]
+[         4 containers started    ]
+[         0 containers aborted    ]
+[         4 containers successful ]
+[         0 containers failed     ]
+[         1 tests found           ]
+[         0 tests skipped         ]
+[         1 tests started         ]
+[         0 tests aborted         ]
+[         0 tests successful      ]
+[         1 tests failed          ]
+

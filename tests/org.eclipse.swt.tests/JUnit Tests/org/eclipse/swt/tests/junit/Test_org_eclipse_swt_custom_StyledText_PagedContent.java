@@ -155,11 +155,15 @@ public class Test_org_eclipse_swt_custom_StyledText_PagedContent {
 		Field rendererField = StyledText.class.getDeclaredField("renderer");
 		rendererField.setAccessible(true);
 		Object renderer = rendererField.get(styledText);
-		Field sizesField = renderer.getClass().getDeclaredField("lineSizes");
-		sizesField.setAccessible(true);
+		//FLLDCIM: TOP - the renderer keeps line sizes in StyledTextLineStore (int lanes, UNMEASURED = -1), not LineSizeInfo[]
+		Field storeField = renderer.getClass().getDeclaredField("store");
+		storeField.setAccessible(true);
+		Object store = storeField.get(renderer);
+		Field widthField = store.getClass().getDeclaredField("width");
+		widthField.setAccessible(true);
 		int measured = 0;
-		for (Object size : (Object[]) sizesField.get(renderer)) {
-			if (size != null) {
+		for (int width : (int[]) widthField.get(store)) {
+			if (width != -1) {
 				measured++;
 			}
 		}

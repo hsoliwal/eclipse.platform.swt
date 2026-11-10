@@ -1,0 +1,11 @@
+mark	node	parent	test	message
+ABORT	leaf	JUnit Jupiter/StyledTextViewportProofTest	test_tenMillionLinesWordWrap()	Assumption failed: opt-in proof lane
+ABORT	leaf	JUnit Jupiter/StyledTextViewportProofTest	test_tenMillionLinesFixedHeight()	Assumption failed: opt-in proof lane
+ABORT	leaf	JUnit Jupiter/Test_ItemResidencyPrint	printPixelHashIdenticalAfterRoundTrip()	Assumption failed: capture of 'before' cut off by the desktop after 5 attempts
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CCombo_Virtual	test_setForegroundAlphaLorg_eclipse_swt_graphics_Color()	Assumption failed: Alpha support for foreground colors does not exist on Win32
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CTabFolder_OptimizationBench	measure()	Assumption failed: -Dswt.allwidgets.bench=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CTabFolder_ScaleOracle	measure()	Assumption failed: -Dswt.ctabfolder.oracle=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_CTabFolder_ViewportDifferential	recordedAgainstReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_ScrolledComposite_OptimizationBench	measure()	Assumption failed: -Dswt.allwidgets.bench=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_custom_StyledText_ViewportDifferential	recordedAgainstReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_internal_laf_M3SystemTheme_OptimizationBench	measure()	Assumption failed: -Dswt.allwidgets.bench=true is not set

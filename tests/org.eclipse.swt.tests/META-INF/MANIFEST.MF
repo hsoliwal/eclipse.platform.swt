@@ -16,6 +16,8 @@ Require-Bundle: junit-jupiter-engine;bundle-version="[5.12.0,6.0.0)",
  org.eclipse.swt;bundle-version="3.120.0",
  org.eclipse.test;bundle-version="3.6.200",
  org.eclipse.test.performance;bundle-version="3.13.0"
+Import-Package: io.github.humbleui.skija;resolution:=optional,
+ io.github.humbleui.types;resolution:=optional
 Eclipse-BundleShape: dir
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Automatic-Module-Name: org.eclipse.swt.tests

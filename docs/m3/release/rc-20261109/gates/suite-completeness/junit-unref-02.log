@@ -1,0 +1,684 @@
+stty: /dev/tty: No such device or address
+Nov 09, 2026 5:36:53 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_SetItemCount pilot
+INFO: VIRTUAL Table pilot of 20000 rows: grow 1 ms, clear 1 ms, reload 2 ms
+Nov 09, 2026 5:36:53 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_SetItemCount refreshAMillionRows
+INFO: VIRTUAL Table of 1000000 rows: grow 12 ms, clear 5 ms, reload 5 ms
+Nov 09, 2026 5:36:54 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_SetItemCount pilot
+INFO: plain Table pilot of 20000 rows: grow 2 ms, clear 2 ms, reload 2 ms
+Nov 09, 2026 5:36:54 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_SetItemCount refreshAMillionRows
+INFO: plain Table of 1000000 rows: grow 12 ms, clear 14 ms, reload 4 ms
+Nov 09, 2026 5:37:46 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_Splice runsOutsideTheVisibleRowsCostNoNativeRowOperation
+INFO: splice outside the window: state messages 4; inside: row operations 16 (20 visible rows)
+Nov 09, 2026 5:37:49 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_Viewport appendsAreBatchedAndVisibleWhenAsked
+INFO: appendsAreBatchedAndVisibleWhenAsked: 20000 appends in 1393 ms
+WARNING: A restricted method in java.lang.foreign.SymbolLookup has been called
+WARNING: java.lang.foreign.SymbolLookup::libraryLookup has been called by the unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for this module
+
+Nov 09, 2026 5:37:57 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_ViewportDeltas columnSweepIsADeltaOfTheViewport
+INFO: columns: 50 steps, counters [0, 0, 120, 0]
+Nov 09, 2026 5:37:57 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_ViewportDeltas resizeSweep
+INFO: two columns: 50 sizes, top 50000 -> 50000, counters [0, 0, 120, 0]
+Nov 09, 2026 5:37:57 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_ViewportDeltas resizeSweep
+INFO: column-less: 50 sizes, top 50000 -> 50000, counters [0, 0, 120, 100000]
+Nov 09, 2026 5:38:02 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_NativeWork measure
+INFO: item.setItemCount 10000: 217 TVM messages, 12 ms (0x113E=201 0x1104=8 0x110A=5 0x111C=1 0x112D=1 0x113F=1)
+Nov 09, 2026 5:38:02 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_NativeWork measure
+INFO: expand 10000: 444 TVM messages, 19 ms (0x113E=214 0x110A=80 0x113F=53 0x1104=42 0x1101=25 0x1132=25 0x1102=2 0x111C=2 0x112D=1)
+Nov 09, 2026 5:38:02 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_NativeWork measure
+INFO: setTopItem middle of 10000: 628 TVM messages, 32 ms (0x113E=312 0x110A=111 0x113F=78 0x1104=59 0x1132=37 0x1101=28 0x110B=1 0x111C=1 0x112D=1)
+Nov 09, 2026 5:38:02 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_NativeWork measure
+INFO: collapse 10000: 426 TVM messages, 28 ms (0x113E=244 0x110A=50 0x1101=37 0x1104=34 0x1132=31 0x113F=26 0x111C=2 0x1102=1 0x112D=1)
+Nov 09, 2026 5:38:02 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_NativeWork measure
+INFO: item.setItemCount 100000: 217 TVM messages, 10 ms (0x113E=201 0x1104=8 0x110A=5 0x111C=1 0x112D=1 0x113F=1)
+Nov 09, 2026 5:38:02 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_NativeWork measure
+INFO: expand 100000: 444 TVM messages, 24 ms (0x113E=214 0x110A=80 0x113F=53 0x1104=42 0x1101=25 0x1132=25 0x1102=2 0x111C=2 0x112D=1)
+Nov 09, 2026 5:38:02 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_NativeWork measure
+INFO: setTopItem middle of 100000: 628 TVM messages, 37 ms (0x113E=312 0x110A=111 0x113F=78 0x1104=59 0x1132=37 0x1101=28 0x110B=1 0x111C=1 0x112D=1)
+Nov 09, 2026 5:38:02 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_NativeWork measure
+INFO: collapse 100000: 426 TVM messages, 28 ms (0x113E=244 0x110A=50 0x1101=37 0x1104=34 0x1132=31 0x113F=26 0x111C=2 0x1102=1 0x112D=1)
+Nov 09, 2026 5:38:02 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_NativeWork measure
+INFO: setItemCount 10000: 373 TVM messages, 17 ms (0x113E=163 0x110A=66 0x113F=63 0x1104=50 0x1132=29 0x111C=1 0x112D=1)
+Nov 09, 2026 5:38:03 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_NativeWork measure
+INFO: setItemCount 100000: 373 TVM messages, 19 ms (0x113E=163 0x110A=66 0x113F=63 0x1104=50 0x1132=29 0x111C=1 0x112D=1)
+Nov 09, 2026 5:38:03 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_UpstreamIssues getItemCountAndGetItemAreNotLinearInTheChildCount
+INFO: swt#882: 200 x getItemCount 0 ms, 200 x getItem (n - i) 0 ms, 200000 children
+Nov 09, 2026 5:38:03 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_UpstreamIssues setItemCountIsNotLinearInTheCount
+INFO: swt#208: setItemCount (1000000) 4 ms, setItemCount (10) 2 ms, item.setItemCount (200000) 1 ms
+Nov 09, 2026 5:38:15 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas assertDelta
+INFO: column-resize sweep: 50 steps, native inserts 0 (rows entering 0), deletes 0 (rows leaving 0), rows re-measured 0, TVM_SETITEM 0
+Nov 09, 2026 5:38:16 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas hiddenGate
+INFO: hidden gate (PARENT): 10000 deltas while hidden: 1939 TVM messages (0x111C=1660 0x113E=196 0x110A=42 0x1101=39 0x110B=1 0x113F=1), 0 paints
+Nov 09, 2026 5:38:16 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas hiddenGate
+INFO: hidden gate (PARENT): 1 paint passes after show
+Nov 09, 2026 5:38:16 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas hiddenGate
+INFO: hidden gate rows: top=root 681099 / 2 | root 681099 / 2 | root 21216 | new 862338 | new 716862 | root 200845 | root 228437 | root 93639 | new 672740 | new 114679 | root 779336 | new 224889 | new 511988 | new 511988 / 0 | root 446665 | root 941806 | root 941806 / 0 | root 941806 / 1 | root 941806 / 2 | root 941806 / 3 | root 941806 / 4 | root 941806 / 5 | root 941806 / 6
+Nov 09, 2026 5:38:17 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas hiddenGate
+INFO: hidden gate (TREE): 10000 deltas while hidden: 1939 TVM messages (0x111C=1660 0x113E=196 0x110A=42 0x1101=39 0x110B=1 0x113F=1), 0 paints
+Nov 09, 2026 5:38:17 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas hiddenGate
+INFO: hidden gate (TREE): 1 paint passes after show
+Nov 09, 2026 5:38:17 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas hiddenGate
+INFO: hidden gate rows: top=root 681099 / 2 | root 681099 / 2 | root 21216 | new 862338 | new 716862 | root 200845 | root 228437 | root 93639 | new 672740 | new 114679 | root 779336 | new 224889 | new 511988 | new 511988 / 0 | root 446665 | root 941806 | root 941806 / 0 | root 941806 / 1 | root 941806 / 2 | root 941806 / 3 | root 941806 / 4 | root 941806 / 5 | root 941806 / 6
+Nov 09, 2026 5:38:17 PM org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas assertDelta
+INFO: resize sweep: 50 steps, native inserts 274 (rows entering 274), deletes 243 (rows leaving 273), rows re-measured 181, TVM_SETITEM 201
+╷
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  ├─ Test_org_eclipse_swt_widgets_List_ViewportAcceptance ✔
+│  │  ├─ scrollBarWheelAndKeysMoveTheLogicalTopLikeTheListBox() ✔
+│  │  ├─ accessibilityLocatesHitTestsAndEnumeratesLogicalRows() ✔
+│  │  ├─ accessibilityAnswersForLogicalRows() ✔
+│  │  ├─ millionItemsKeepOneWindowNative() ✔
+│  │  ├─ emptyAndTinyListsAnswerLikeTheListBox() ✔
+│  │  ├─ spliceOutsideTheWindowTouchesNoNativeRow() ✘ native row operations of a removal above the window with an anchor: 99 ==> expected: <true> but was: <false>
+│  │  ├─ resizeSweepMovesOnlyTheRowsEnteringOrLeaving() ✔
+│  │  └─ scrollingMovesOnlyTheChangedRows() ✔
+│  ├─ Test_org_eclipse_swt_widgets_List_ViewportDifferential ✔
+│  │  ├─ hiddenDeltasAnswerLikeTheReference() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  │  ├─ zoomWhileScrolledAnswersLikeTheReference() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  │  ├─ resizeAndFontWhileScrolledAnswerLikeTheReference() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  │  ├─ singleSelectionListAnswersLikeTheReference() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  │  ├─ extendedSelectionListAnswersLikeTheReference() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  │  ├─ setItemCountAnswersLikeTheOriginal() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  │  └─ simpleMultiSelectionListAnswersLikeTheReference() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  ├─ Test_org_eclipse_swt_widgets_List_Virtual ✔
+│  │  ├─ test_setDataLjava_lang_StringLjava_lang_Object() ✔
+│  │  ├─ test_isDisposed() ✔
+│  │  ├─ test_addListenerILorg_eclipse_swt_widgets_Listener() ✔
+│  │  ├─ test_removeListenerILorg_eclipse_swt_widgets_Listener() ✔
+│  │  ├─ test_notifyListenersILorg_eclipse_swt_widgets_Event() ✔
+│  │  ├─ test_toString() ✔
+│  │  ├─ test_getDisplay() ✔
+│  │  ├─ test_setDataLjava_lang_Object() ✔
+│  │  ├─ test_addDisposeListenerLorg_eclipse_swt_events_DisposeListener() ✔
+│  │  ├─ test_setCaptureZ() ✔
+│  │  ├─ test_isEnabled() ✔
+│  │  ├─ test_NoExceptionsThrownInFillLayout() ✔
+│  │  ├─ test_setForegroundDisposedColorLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_addFocusListenerLorg_eclipse_swt_events_FocusListener() ✔
+│  │  ├─ test_addMouseTrackListenerMouseHoverAdapterLorg_eclipse_swt_events_MouseTrackLis... ✔
+│  │  ├─ test_getBorderWidth() ✔
+│  │  ├─ test_setBoundsIIII() ✔
+│  │  ├─ test_addFocusListenerFocusGainedAdapterLorg_eclipse_swt_events_FocusListener() ✔
+│  │  ├─ test_setTextDirection() ✔
+│  │  ├─ test_addControlListenerLorg_eclipse_swt_events_ControlListener() ✔
+│  │  ├─ test_setRedrawZ() ✔
+│  │  ├─ test_pack() ✔
+│  │  ├─ test_setForegroundLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_redrawIIIIZ() ✔
+│  │  ├─ test_moveAboveLorg_eclipse_swt_widgets_Control() ✔
+│  │  ├─ test_addControlListenerControlMovedAdapterLorg_eclipse_swt_events_ControlListene... ✔
+│  │  ├─ test_addControlListenerControlResizedAdapterLorg_eclipse_swt_events_ControlListe... ✔
+│  │  ├─ test_toControlII() ✔
+│  │  ├─ test_setMenuLorg_eclipse_swt_widgets_Menu() ✔
+│  │  ├─ test_setLocationLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_setToolTipTextLjava_lang_String() ✔
+│  │  ├─ test_computeSizeII() ✔
+│  │  ├─ test_setVisibleZ() ✔
+│  │  ├─ test_setEnabledZ() ✔
+│  │  ├─ test_toControlLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_redraw() ✔
+│  │  ├─ test_update() ✔
+│  │  ├─ test_toDisplayII() ✔
+│  │  ├─ test_setBackgroundAlphaLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_getLocation() ✔
+│  │  ├─ test_isVisible() ✔
+│  │  ├─ test_setFocus() ✔
+│  │  ├─ test_setBoundsLorg_eclipse_swt_graphics_Rectangle() ✔
+│  │  ├─ test_addKeyListenerKeyReleasedAdapterLorg_eclipse_swt_events_KeyListener() ✔
+│  │  ├─ test_requestLayoutL() ✔
+│  │  ├─ test_ExceptionsThrownInDisposeListenerDontPreventDisposal() ✔
+│  │  ├─ test_toDisplayLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_addTraverseListenerLorg_eclipse_swt_events_TraverseListener() ✔
+│  │  ├─ test_addMouseListenerLorg_eclipse_swt_events_MouseListener() ✔
+│  │  ├─ test_addPaintListenerLorg_eclipse_swt_events_PaintListener() ✔
+│  │  ├─ test_setSizeII() ✔
+│  │  ├─ test_setCursorLorg_eclipse_swt_graphics_Cursor() ✔
+│  │  ├─ test_getShell() ✔
+│  │  ├─ test_getParent() ✔
+│  │  ├─ test_addKeyListenerKeyPressedAdapterLorg_eclipse_swt_events_KeyListener() ✔
+│  │  ├─ test_moveBelowLorg_eclipse_swt_widgets_Control() ✔
+│  │  ├─ test_setLocationII() ✔
+│  │  ├─ test_getMonitor() ✔
+│  │  ├─ test_setParentLorg_eclipse_swt_widgets_Composite() ✔
+│  │  ├─ test_setBackgroundDisposedColorLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_addMouseTrackListenerLorg_eclipse_swt_events_MouseTrackListener() ✔
+│  │  ├─ test_setBackgroundLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_setSizeLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_traverseI() ✔
+│  │  ├─ test_addMouseTrackListenerMouseEnterAdapterLorg_eclipse_swt_events_MouseTrackLis... ✔
+│  │  ├─ test_setLayoutDataLjava_lang_Object() ✔
+│  │  ├─ test_addKeyListenerLorg_eclipse_swt_events_KeyListener() ✔
+│  │  ├─ test_addFocusListenerFocusLostAdapterLorg_eclipse_swt_events_FocusListener() ✔
+│  │  ├─ test_setBackgroundSameColorAgain() ✔
+│  │  ├─ test_setForegroundAlphaLorg_eclipse_swt_graphics_Color() ■ Assumption failed: Alpha support for foreground colors does not exist on Win32
+│  │  ├─ test_addHelpListenerLorg_eclipse_swt_events_HelpListener() ✔
+│  │  ├─ test_addMouseTrackListenerMouseExitAdapterLorg_eclipse_swt_events_MouseTrackList... ✔
+│  │  ├─ test_getAccessible() ✔
+│  │  ├─ test_isReparentable() ✔
+│  │  ├─ test_packZ() ✔
+│  │  ├─ test_addMouseMoveListenerLorg_eclipse_swt_events_MouseMoveListener() ✔
+│  │  ├─ test_isFocusControl() ✔
+│  │  ├─ test_computeTrimIIII() ✔
+│  │  ├─ test_getVerticalBar() ✔
+│  │  ├─ test_getClientArea() ✔
+│  │  ├─ test_getHorizontalBar() ✔
+│  │  ├─ test_getSelectionCount() ✔
+│  │  ├─ test_getSelectionIndex() ✔
+│  │  ├─ test_remove$I() ✔
+│  │  ├─ test_removeII() ✔
+│  │  ├─ test_selectAll() ✔
+│  │  ├─ test_setItemILjava_lang_String() ✔
+│  │  ├─ test_getSelectionIndices() ✔
+│  │  ├─ test_addSelectionListenerLorg_eclipse_swt_events_SelectionListener() ✔
+│  │  ├─ test_addSelectionListenerWidgetSelectedAdapterLorg_eclipse_swt_events_SelectionL... ✔
+│  │  ├─ test_addLjava_lang_StringI() ✔
+│  │  ├─ test_indexOfLjava_lang_StringI() ✔
+│  │  ├─ test_deselect$I() ✔
+│  │  ├─ test_deselectII() ✔
+│  │  ├─ test_isSelectedI() ✔
+│  │  ├─ test_consistency_DragDetect() ✔
+│  │  ├─ test_removeI() ✔
+│  │  ├─ test_setFontLorg_eclipse_swt_graphics_Font() ✔
+│  │  ├─ test_select$I() ✔
+│  │  ├─ test_selectII() ✔
+│  │  ├─ test_addLjava_lang_String() ✔
+│  │  ├─ test_setTopIndexI() ✔
+│  │  ├─ test_setSelection$I() ✔
+│  │  ├─ test_setSelectionII() ✔
+│  │  ├─ test_setSelection$Ljava_lang_String() ✔
+│  │  ├─ test_removeLjava_lang_String() ✔
+│  │  ├─ test_getItemHeight() ✔
+│  │  ├─ test_consistency_MouseSelection() ✔
+│  │  ├─ test_selectI() ✔
+│  │  ├─ test_getItemI() ✔
+│  │  ├─ test_getItems() ✔
+│  │  ├─ test_consistency_MenuDetect() ✔
+│  │  ├─ test_deselectAll() ✔
+│  │  ├─ test_showSelection() ✔
+│  │  ├─ test_consistency_KeySelection() ✔
+│  │  ├─ test_consistency_DoubleClick() ✔
+│  │  ├─ test_viewportRuntimeMirrorsPublicTopIndex() ✔
+│  │  ├─ test_getItemCount() ✔
+│  │  ├─ test_getTopIndex() ✔
+│  │  ├─ test_getItemHeight_returns_inconsistent_heights() ✔
+│  │  ├─ test_indexOfLjava_lang_String() ✔
+│  │  ├─ test_removeAll() ✔
+│  │  ├─ test_getSelection() ✔
+│  │  ├─ test_deselectI() ✔
+│  │  ├─ test_consistency_SpaceSelection() ✔
+│  │  ├─ test_computeSizeIIZ() ✔
+│  │  ├─ test_setItems$Ljava_lang_String() ✔
+│  │  ├─ test_ConstructorLorg_eclipse_swt_widgets_CompositeI() ✔
+│  │  ├─ test_getFocusIndex() ✔
+│  │  └─ test_setSelectionI() ✔
+│  ├─ Test_org_eclipse_swt_widgets_ScrollBar_GeometryDifferential ✔
+│  │  ├─ customMatchesNativeInOneRun() ✔
+│  │  └─ recordedAgainstReference() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  ├─ Test_org_eclipse_swt_widgets_ScrolledComposite_Viewport ✔
+│  │  ├─ originAndBarAgreeAtTheEnd() ✔
+│  │  ├─ moveAndResizeEventsFollowTheLogicalBounds() ✔
+│  │  ├─ aGcOutsidePaintDrawsInLogicalCoordinates() ✔
+│  │  ├─ scrollStepsPaintOnlyTheExposedStripAcrossRebases() ✔
+│  │  ├─ theEndOfTheContentIsShownWhereItBelongs() ✔
+│  │  ├─ aFarComboReportsTheNativeHeightOfAComboInRange() ✔
+│  │  ├─ theCaretIsPlacedAtItsLogicalLocation() ✔
+│  │  ├─ boundsAreLogicalPastTheNativeRange() ✔
+│  │  ├─ mouseAndPaintEventsAreLogical() ✔
+│  │  ├─ canvasScrollMovesLogicalRectangles() ✔
+│  │  └─ planesFollowAParentLargerThanTheVisibleCap() ✔
+│  ├─ Test_org_eclipse_swt_widgets_ScrolledComposite_ViewportDifferential ✔
+│  │  ├─ recordedAgainstStock() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  │  └─ shiftedFarContent() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Table_DrawnInteraction ✔
+│  │  └─ fastScrollAndTypingUnderModelChurn() ■ Assumption failed: a drawn mode (custom, m3, gpu) only
+│  ├─ Test_org_eclipse_swt_widgets_Table_ReentrantPaint ✔
+│  │  └─ test_setDataThatPaintsAgainFillsEveryRow() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Table_SetItemCount ✔
+│  │  ├─ refreshOfAMillionVirtualRowsStaysUnderBudget() ✔
+│  │  └─ refreshOfAMillionPlainRowsStaysUnderBudget() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Table_Splice ✔
+│  │  ├─ hiddenTableAppliesOneWindowPatchWhenShown() 44405 ms ✘ paint passes after showing ==> expected: <1> but was: <2>
+│  │  ├─ spliceAnswersLikeTheItemApi() ✘ at 17 removed 4 inserted 0 top 43 selection [] hidden ==> expected: <count 58 top 43 selection [] focus -1 mark -1 texts row 0 row 1 row 2 row 3 row 4 row 5 row 6 row 7 row 8 row 9 row 10 row 11 row 12 row 13 row 14 row 15 row 16 row 21 row 22 row 23 row 24 row 25 row 26 row 27 row 28 row 29 row 30 row 31 row 32 row 33 row 34 row 35 row 36 row 37 row 38 row 39 row 40 row 41 row 42 row 43 row 44 row 45 row 46 row 47 row 48 row 49 row 50 row 51 row 52 row 53 row 54 row 55 row 56 row 57 row 58 row 59 row 60 row 61> but was: <count 58 top 39 selection [] focus -1 mark -1 texts row 0 row 1 row 2 row 3 row 4 row 5 row 6 row 7 row 8 row 9 row 10 row 11 row 12 row 13 row 14 row 15 row 16 row 21 row 22 row 23 row 24 row 25 row 26 row 27 row 28 row 29 row 30 row 31 row 32 row 33 row 34 row 35 row 36 row 37 row 38 row 39 row 40 row 41 row 42 row 43 row 44 row 45 row 46 row 47 row 48 row 49 row 50 row 51 row 52 row 53 row 54 row 55 row 56 row 57 row 58 row 59 row 60 row 61>
+│  │  ├─ declinedRunsKeepTheItemApi() ✔
+│  │  └─ runsOutsideTheVisibleRowsCostNoNativeRowOperation() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Table_StockItems ✔
+│  │  ├─ armsNoApiSequenceReaches() ■ Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+│  │  ├─ guardsOfTheStockStore() ■ Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+│  │  ├─ denseStoreGrowsScansAndShrinks() ■ Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+│  │  ├─ keyedStoreLooksUpGrowsAndCompacts() ■ Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+│  │  └─ growsByHalfWhileRedrawIsOff() ■ Assumption failed: the R4_38 store is used only by a VIRTUAL Table of the original mode
+│  ├─ Test_org_eclipse_swt_widgets_Table_Viewport ✔
+│  │  ├─ aMillionPlainRowsHaveALogicalBar() ✔
+│  │  ├─ selectionFocusAndMarkShiftWithInsertsLikeNativeRows() ✔
+│  │  ├─ shrinkingTheCountMovesTheFocusToTheNewLastRow() ✔
+│  │  ├─ thumbBoundsFollowAnAppendBurst() ✔
+│  │  ├─ appendsAreBatchedAndVisibleWhenAsked() ✔
+│  │  ├─ packWithMeasureItemMeasuresEveryRow() ✔
+│  │  ├─ identitySurvivesInsertsAndRemovals() ✔
+│  │  ├─ textDirectionReachesEveryRow() ✔
+│  │  ├─ accessibilityAnswersEveryLogicalRow() ✔
+│  │  ├─ virtualStoreIsStockOnlyInTheOriginalMode() ✔
+│  │  ├─ setItemCountCreatesNoFacadeUntilAsked() ✔
+│  │  ├─ pixelsMatchAStockOwnerDataTable() ✔
+│  │  ├─ indexOfAfterAnInsertIsConstantTime() ✔
+│  │  ├─ aThrowingMeasureItemListenerLeavesNoFacadeWalk() ✔
+│  │  ├─ rowsKeepTheirStateWhenTheirFacadesAreReleased() ✔
+│  │  ├─ typeAheadSelectsLikeTheNativeList() ✔
+│  │  ├─ packMeasuresRowsOutOfView() ✔
+│  │  ├─ releasedRowsPaintTheirState() ✔
+│  │  └─ columnChangesMoveTheStateOfReleasedRows() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Table_ViewportArms ✔
+│  │  ├─ defensiveGuardsAnswerSafely() ✔
+│  │  ├─ bindFillsEveryLaneOfEveryColumn() ✔
+│  │  ├─ largeSelectionsStopTheTracks() ✔
+│  │  ├─ widthsAnswerEmptyTextsAndPassExplicitWidths() ✔
+│  │  ├─ facadesOutsideTheRowsAnswerDefensively() ✔
+│  │  ├─ facadeRequestsAndHoldsAnswerEveryState() ✔
+│  │  ├─ weakSlotsCoverOnlyTheRowsTheyKnow() ✔
+│  │  ├─ selectionTracksNestAndAnswerOnlyRealChanges() ✔
+│  │  ├─ notificationsCountOnlyChangedRows() ✔
+│  │  └─ paintHelpersAnswerEveryShape() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Table_ViewportBranches ✔
+│  │  ├─ paintFacadesReuseTheirCellArrays() ✔
+│  │  ├─ facadesBeyondTheRecentHoldStayReachable() ✔
+│  │  ├─ textDirectionReachesWeakAndFutureFacades() ✔
+│  │  ├─ packMediatesEmptyImageAndIndentRows() ✔
+│  │  ├─ releasedFacadesAreCollectible() ✔
+│  │  ├─ selectionSnapshotsStopBeyondTheirRowLimit() ✔
+│  │  └─ typeAheadAnswersEveryShapeOfTheNotification() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Table_ViewportDeltas ✔
+│  │  ├─ columnSweepIsADeltaOfTheViewport() ✔
+│  │  ├─ resizeSweepIsADeltaOfTheViewport() ✔
+│  │  └─ resizeSweepOfAColumnlessTableIsADeltaOfTheViewport() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Table_ViewportDifferential ✔
+│  │  └─ seededScriptsAnswerLikeTheReference() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  ├─ Test_org_eclipse_swt_widgets_Text_OptimizationBench ✔
+│  │  └─ measure() ■ Assumption failed: -Dswt.allwidgets.bench=true is not set
+│  ├─ Test_org_eclipse_swt_widgets_Text_ScaleOracle ✔
+│  │  └─ measure() ■ Assumption failed: -Dswt.text.oracle=true is not set
+│  ├─ Test_org_eclipse_swt_widgets_ToolBar_OptimizationBench ✔
+│  │  └─ measure() ■ Assumption failed: -Dswt.allwidgets.bench=true is not set
+│  ├─ Test_org_eclipse_swt_widgets_ToolBar_ScaleOracle ✔
+│  │  └─ measure() ■ Assumption failed: -Dswt.toolbar.oracle=true is not set
+│  ├─ Test_org_eclipse_swt_widgets_Tracker ✔
+│  │  ├─ test_setDataLjava_lang_StringLjava_lang_Object() ✘ expected: <true> but was: <false>
+│  │  ├─ test_isDisposed() ✘ expected: <true> but was: <false>
+│  │  ├─ test_addListenerILorg_eclipse_swt_widgets_Listener() ✘ expected: <true> but was: <false>
+│  │  ├─ test_removeListenerILorg_eclipse_swt_widgets_Listener() ✘ expected: <true> but was: <false>
+│  │  ├─ test_notifyListenersILorg_eclipse_swt_widgets_Event() ✘ expected: <true> but was: <false>
+│  │  ├─ test_toString() ✘ expected: <true> but was: <false>
+│  │  ├─ test_getDisplay() ✘ expected: <true> but was: <false>
+│  │  ├─ test_setDataLjava_lang_Object() ✘ expected: <true> but was: <false>
+│  │  └─ test_addDisposeListenerLorg_eclipse_swt_events_DisposeListener() ✘ expected: <true> but was: <false>
+│  ├─ Test_org_eclipse_swt_widgets_Tree_CaretMoveSelection ✔
+│  │  ├─ disposeOfTheCaretRowDeselectsTheMostRecentlySelectedRow() ✔
+│  │  ├─ childShrinkPastTheCaretMovesItAlongTheRemovedChildren() ✔
+│  │  ├─ longShrinkConsumesFromBothEnds() ✔
+│  │  ├─ rootShrinkWithTheCaretInAnExpandedRow() ✔
+│  │  ├─ disposeOfAnAncestorMovesTheCaretTwice() ✔
+│  │  ├─ theNewCaretKeepsItsSelection() ✔
+│  │  ├─ shrinkPastTheCaretDeselectsTheMostRecentlySelectedRow() ✔
+│  │  ├─ selectAllLeavesAlreadySelectedRowsInPlace() ✔
+│  │  ├─ movesWithoutOtherSelectedRowsLeaveNothingSelected() ✔
+│  │  └─ recencyIsTheSelectionOrderNotThePosition() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom ✔
+│  │  └─ glyphsAreCrispAndSeamlessAtTheZoom() ■ Assumption failed: a drawn mode (custom, m3, gpu) only
+│  ├─ Test_org_eclipse_swt_widgets_Tree_EmptinessChanged ✔
+│  │  ├─ test_removeAllKeepsTheIdCursor() ✔
+│  │  ├─ test_materializedRowsTakeIdsWithoutEvents() ✔
+│  │  └─ test_childrenAndColdRowsKeepTheirIds() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Tree_HiddenBar ✔
+│  │  ├─ test_rowsThatFitReadZero() ✔
+│  │  └─ test_scrollingBarIsUnchangedAndCollapseFitsAgain() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Tree_KeyCollapse ✔
+│  │  ├─ subtractWithTheTopInsideTheRow() ✔
+│  │  ├─ subtractWithTheTopBelowTheRow() ✔
+│  │  ├─ subtractWithTheRowAtTheTop() ✔
+│  │  ├─ leftInTheColumnsTree() ✔
+│  │  ├─ leftWithTheTopBelowTheRow() ✔
+│  │  ├─ subtractWithTheTopDeepInsideTheRow() ✔
+│  │  ├─ leftWithTheTopInsideTheRow() ✔
+│  │  └─ subtractInTheColumnsTree() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Tree_NativeWork ✔
+│  │  ├─ expandAndCollapseOfALargeSubtreeAreWindowBound() ✔
+│  │  └─ rootSetItemCountIsWindowBound() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Tree_UpstreamIssues ✔
+│  │  ├─ getItemCountAndGetItemAreNotLinearInTheChildCount() ✔
+│  │  └─ setItemCountIsNotLinearInTheCount() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Tree_Viewport ✔
+│  │  ├─ nativeRowsStayBoundedAtTopMiddleAndEnd() ✔
+│  │  ├─ setTopItemMovesTheLogicalTopAndTheBar() ✔
+│  │  ├─ printedPixelsMatchAPlainTreeAtTheSameTopRow() ✔
+│  │  ├─ scrollRoundTripReproducesStateAndPixels() ✔
+│  │  ├─ verticalBarCoversEveryLogicalRow() ✔
+│  │  ├─ virtualAndPlainTreesAnswerTheSame() ✔
+│  │  ├─ nestedExpansionRangeIsLogical() ✔
+│  │  └─ distantGetItemIsImmediateAndKeepsIdentity() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Tree_ViewportCoverage ✔
+│  │  ├─ anyModeAnswersTheVirtualBasics() ✔
+│  │  ├─ navigationKeysWithoutACaretStartAtTheEdges() ✔
+│  │  ├─ clearInvalidatesOnlyCachedRows() ✔
+│  │  ├─ selectionPatternsCoverColdRows() ✔
+│  │  ├─ mediatedItemQueriesGuardTheirArguments() ■ Assumption failed: Tree viewport mediation is not active in this build
+│  │  ├─ focusWithoutACaretLandsOnTheLogicalTopRow() ■ Assumption failed: Tree viewport mediation is not active in this build
+│  │  ├─ theFirstItemAndTheLastItemMoveEmptiness() ✔
+│  │  ├─ aTreeWithoutScrollBarsStillAnswersScrollMessages() ✔
+│  │  ├─ wheelMessagesScrollByLinesAndIgnoreAZeroDelta() ✔
+│  │  ├─ collapsingOverTheCaretSelectsTheCollapsedRow() ■ Assumption failed: Tree viewport mediation is not active in this build
+│  │  ├─ showItemExpandsCollapsedAncestorsNearestFirst() ✔
+│  │  ├─ aSingleTreeRefusesMultiSelections() ✔
+│  │  ├─ offWindowRowsAnswerGeometryThroughAProbe() ✔
+│  │  ├─ aSingleTreeSelectsTheCaretAfterRemoval() ✘ the native caret move on deletion deselects ==> expected: <0> but was: <1>
+│  │  ├─ disposingTheCaretRowMovesTheCaretLikeStock() ✔
+│  │  ├─ scrollBarMessagesOnTheViewportWindowScrollLogically() ✔
+│  │  ├─ rowsPastTheIntegerRangeKeepTheBarUsable() ✔
+│  │  ├─ caretKeysOnAnOffWindowAnchorMoveLogically() ✔
+│  │  ├─ nativeExpansionKeysFillTheChildrenInTime() ✔
+│  │  ├─ theLastDisposalReleasesTheImageList() ■ Assumption failed: Tree viewport mediation is not active in this build
+│  │  └─ columnsGiveAndTakeTheHorizontalRange() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Tree_ViewportDeltas ✔
+│  │  ├─ columnResizeSweepMovesOnlyTheRowsEnteringAndLeaving() ✔
+│  │  ├─ treeInAHiddenParentAppliesOnePatchOnShow() ✘ TVM messages while hidden: 1939 (0x111C=1660 0x113E=196 0x110A=42 0x1101=39 0x110B=1 0x113F=1) ==> expected: <true> but was: <false>
+│  │  ├─ hiddenTreeAppliesOnePatchOnShow() ✘ TVM messages while hidden: 1939 (0x111C=1660 0x113E=196 0x110A=42 0x1101=39 0x110B=1 0x113F=1) ==> expected: <true> but was: <false>
+│  │  └─ resizeSweepMovesOnlyTheRowsEnteringAndLeaving() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Tree_ViewportDifferential ✔
+│  │  ├─ seededScriptsWithCustomDrawAnswerLikeStockSwt() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  │  ├─ seededScriptsWithPresentationAnswerLikeStockSwt() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  │  ├─ seededExpansionKeysAnswerLikeStockSwt() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  │  ├─ seededSplicesAnswerLikeStockSwt() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  │  ├─ seededScriptsWithCheckAndColumnsAnswerLikeStockSwt() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  │  └─ seededScriptsAnswerLikeStockSwt() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  ├─ Test_org_eclipse_swt_widgets_Tree_ViewportEdges ✔
+│  │  ├─ clearsOfUnfilledAndUnshownRows() ✔
+│  │  ├─ customDrawSurvivesTheTreeBecomingEmpty() ■ Assumption failed: Tree viewport mediation is not active in this build
+│  │  ├─ childGuardsAndShrinkingTheCaretsSiblings() ✔
+│  │  ├─ selectAllSelectsColdRowsThatScrollIn() ✔
+│  │  ├─ collapsingWithoutAnyCaret() ✔
+│  │  ├─ rowsAppendedAfterSelectAllStayOutOfTheCount() ✔
+│  │  ├─ showItemWithAHeaderButNoColumnsMeasuresTheRow() ✔
+│  │  ├─ aListenerDisposingTheItemAbortsSetTopItem() ✔
+│  │  ├─ anInsertMarkOnARetiredRowIsForgotten() ✔
+│  │  ├─ aListenerDisposingTheTreeAbortsShowItem() ✔
+│  │  ├─ rowDataRequestsOutsideTheClientAreaAreDeclined() ✔
+│  │  ├─ nativeExpandMessagesKeepTheLogicalTop() ✔
+│  │  ├─ measureItemListenersWidenTheScrollRangeAndProbeOnce() ✔
+│  │  ├─ removingTheOnlyExpandedRootAndARowWithoutACaret() ✔
+│  │  ├─ offWindowCellsOfLaterColumnsKeepTheirHeaderPlace() ✔
+│  │  ├─ aHiddenHeaderTakesNoBodyHeight() ✔
+│  │  ├─ geometryWithRedrawOffOrInvisibleStillAnswers() ✔
+│  │  ├─ caretKeysAndMessagesAroundTheWindow() ✔
+│  │  ├─ keysOnEmptyAndZeroHeightTrees() ✘ the caret is the off-window anchor ==> expected: <root 20> but was: <null>
+│  │  ├─ rowsKnownToBeLeavesCarryNoExpander() ✔
+│  │  ├─ removingCaretRowsOffTheScreen() ✔
+│  │  ├─ selectionsWithNullEntries() ■ Assumption failed: Tree viewport mediation is not active in this build
+│  │  ├─ aListenerDisposingASelectedItemDuringSetSelection() ✔
+│  │  └─ threeLevelsExpandNearestFirstAndRestoreTheTop() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Tree_ViewportHandles ✔
+│  │  ├─ clearOutsideTheWindowLeavesRowsOnScreenAlone() ✔
+│  │  └─ itemsOutsideTheWindowNeverWriteTheCheckBoxOfAReusedRow() ✔
+│  ├─ Test_org_eclipse_swt_widgets_Tree_ViewportSelection ✔
+│  │  ├─ singleSelectionStyleDoesNotAcquireAnAllSelection() ✔
+│  │  ├─ selectAllSurvivesDistantViewportScrollAndDeselectAll() ✔
+│  │  ├─ selectAllIncludesColdLogicalRowsWithoutMaterializingThem() ✔
+│  │  └─ shrinkClampsSelectionAndAppendDoesNotSelectNewRows() ✔
+│  ├─ Test_org_eclipse_swt_widgets_ViewportPaintGraph ✔
+│  │  ├─ test_horizontalWindowRejectsInvalidGeometryAtomically() ✔
+│  │  ├─ test_horizontalWindowReusesDirectoryAndSkipsLongZeroWidthRuns() ✔
+│  │  ├─ test_partialPaintAndRepeatedInvalidationMatchReachabilityOracle() ✔
+│  │  ├─ test_paintGraphDirtyBoundsLayersAndDependencies() ✔
+│  │  ├─ test_layerPolicyVerticalScrollLeavesHeaderClean() ✔
+│  │  ├─ test_affineViewportTranslationAndInverse() ✔
+│  │  ├─ test_dirtyIntermediateDoesNotHideCleanDependant() ✔
+│  │  ├─ test_horizontalWindowKeepsLongPrecisionAtHugePartialColumns() ✔
+│  │  ├─ test_horizontalWindowRevealEmptyResizeAndReorder() ✔
+│  │  └─ test_horizontalWindowMatchesIndependentPixelRaster() ✔
+│  ├─ Test_org_eclipse_swt_widgets_VirtualPageSource_ScaleClassic ✔
+│  │  ├─ tree1MillionNodes() ■ Assumption failed: scale run disabled
+│  │  ├─ ctabFolder50HeavyTabsEager() ■ Assumption failed: scale run disabled
+│  │  ├─ tabFolder50HeavyTabsEager() ■ Assumption failed: scale run disabled
+│  │  └─ table10MillionRowsSlowSource() ■ Assumption failed: scale run disabled
+│  ├─ Test_org_eclipse_swt_widgets_VirtualPageSource_ScalePaged ✔
+│  │  ├─ tree1MillionNodes() ■ Assumption failed: scale run disabled
+│  │  ├─ ctabFolder50HeavyTabsLazy() ■ Assumption failed: scale run disabled
+│  │  ├─ table10MillionRowsSlowSource() ■ Assumption failed: scale run disabled
+│  │  ├─ treeBillionNodesFlatHeap() ■ Assumption failed: scale run disabled
+│  │  └─ tabFolder50HeavyTabsLazy() ■ Assumption failed: scale run disabled
+│  └─ ViewportScreenshotRegressionTest ✔
+│     ├─ test_logicalScrolledContentSnapshotsAtTenMillionRows() ■ Assumption failed: viewport screenshot lane disabled
+│     ├─ test_capturePathsReleaseGraphicsOnSuccessAndFailure() ■ Assumption failed: viewport screenshot lane disabled
+│     ├─ test_swtScreenCaptureTracksVisiblePixels() ■ Assumption failed: viewport screenshot lane disabled
+│     ├─ test_viewportScreenshotRegression() ■ Assumption failed: viewport screenshot lane disabled
+│     ├─ test_boundedTableSnapshotsUseLogicalScrollbarAndOverscan() ■ Assumption failed: viewport screenshot lane disabled
+│     └─ test_screenCaptureRejectsInvalidTargets() ■ Assumption failed: viewport screenshot lane disabled
+└─ JUnit Vintage ✔
+
+Failures (16):
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_List_ViewportAcceptance:spliceOutsideTheWindowTouchesNoNativeRow()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_List_ViewportAcceptance', methodName = 'spliceOutsideTheWindowTouchesNoNativeRow', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: native row operations of a removal above the window with an anchor: 99 ==> expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_List_ViewportAcceptance.spliceOutsideTheWindowTouchesNoNativeRow(Test_org_eclipse_swt_widgets_List_ViewportAcceptance.java:489)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Table_Splice:hiddenTableAppliesOneWindowPatchWhenShown()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_Splice', methodName = 'hiddenTableAppliesOneWindowPatchWhenShown', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: paint passes after showing ==> expected: <1> but was: <2>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+       org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+       org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_Splice.hiddenTableAppliesOneWindowPatchWhenShown(Test_org_eclipse_swt_widgets_Table_Splice.java:263)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Table_Splice:spliceAnswersLikeTheItemApi()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_Splice', methodName = 'spliceAnswersLikeTheItemApi', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: at 17 removed 4 inserted 0 top 43 selection [] hidden ==> expected: <count 58 top 43 selection [] focus -1 mark -1 texts row 0 row 1 row 2 row 3 row 4 row 5 row 6 row 7 row 8 row 9 row 10 row 11 row 12 row 13 row 14 row 15 row 16 row 21 row 22 row 23 row 24 row 25 row 26 row 27 row 28 row 29 row 30 row 31 row 32 row 33 row 34 row 35 row 36 row 37 row 38 row 39 row 40 row 41 row 42 row 43 row 44 row 45 row 46 row 47 row 48 row 49 row 50 row 51 row 52 row 53 row 54 row 55 row 56 row 57 row 58 row 59 row 60 row 61> but was: <count 58 top 39 selection [] focus -1 mark -1 texts row 0 row 1 row 2 row 3 row 4 row 5 row 6 row 7 row 8 row 9 row 10 row 11 row 12 row 13 row 14 row 15 row 16 row 21 row 22 row 23 row 24 row 25 row 26 row 27 row 28 row 29 row 30 row 31 row 32 row 33 row 34 row 35 row 36 row 37 row 38 row 39 row 40 row 41 row 42 row 43 row 44 row 45 row 46 row 47 row 48 row 49 row 50 row 51 row 52 row 53 row 54 row 55 row 56 row 57 row 58 row 59 row 60 row 61>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+       org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+       org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_Splice.scenario(Test_org_eclipse_swt_widgets_Table_Splice.java:149)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_Splice.spliceAnswersLikeTheItemApi(Test_org_eclipse_swt_widgets_Table_Splice.java:160)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tracker:test_setDataLjava_lang_StringLjava_lang_Object()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker', methodName = 'test_setDataLjava_lang_StringLjava_lang_Object', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.afterDispose(Test_org_eclipse_swt_widgets_Widget.java:104)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.tearDown(Test_org_eclipse_swt_widgets_Widget.java:99)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker.tearDown(Test_org_eclipse_swt_widgets_Tracker.java:24)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tracker:test_isDisposed()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker', methodName = 'test_isDisposed', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.afterDispose(Test_org_eclipse_swt_widgets_Widget.java:104)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.tearDown(Test_org_eclipse_swt_widgets_Widget.java:99)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker.tearDown(Test_org_eclipse_swt_widgets_Tracker.java:24)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tracker:test_addListenerILorg_eclipse_swt_widgets_Listener()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker', methodName = 'test_addListenerILorg_eclipse_swt_widgets_Listener', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.afterDispose(Test_org_eclipse_swt_widgets_Widget.java:104)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.tearDown(Test_org_eclipse_swt_widgets_Widget.java:99)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker.tearDown(Test_org_eclipse_swt_widgets_Tracker.java:24)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tracker:test_removeListenerILorg_eclipse_swt_widgets_Listener()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker', methodName = 'test_removeListenerILorg_eclipse_swt_widgets_Listener', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.afterDispose(Test_org_eclipse_swt_widgets_Widget.java:104)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.tearDown(Test_org_eclipse_swt_widgets_Widget.java:99)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker.tearDown(Test_org_eclipse_swt_widgets_Tracker.java:24)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tracker:test_notifyListenersILorg_eclipse_swt_widgets_Event()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker', methodName = 'test_notifyListenersILorg_eclipse_swt_widgets_Event', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.afterDispose(Test_org_eclipse_swt_widgets_Widget.java:104)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.tearDown(Test_org_eclipse_swt_widgets_Widget.java:99)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker.tearDown(Test_org_eclipse_swt_widgets_Tracker.java:24)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tracker:test_toString()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker', methodName = 'test_toString', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.afterDispose(Test_org_eclipse_swt_widgets_Widget.java:104)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.tearDown(Test_org_eclipse_swt_widgets_Widget.java:99)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker.tearDown(Test_org_eclipse_swt_widgets_Tracker.java:24)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tracker:test_getDisplay()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker', methodName = 'test_getDisplay', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.afterDispose(Test_org_eclipse_swt_widgets_Widget.java:104)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.tearDown(Test_org_eclipse_swt_widgets_Widget.java:99)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker.tearDown(Test_org_eclipse_swt_widgets_Tracker.java:24)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tracker:test_setDataLjava_lang_Object()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker', methodName = 'test_setDataLjava_lang_Object', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.afterDispose(Test_org_eclipse_swt_widgets_Widget.java:104)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.tearDown(Test_org_eclipse_swt_widgets_Widget.java:99)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker.tearDown(Test_org_eclipse_swt_widgets_Tracker.java:24)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tracker:test_addDisposeListenerLorg_eclipse_swt_events_DisposeListener()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker', methodName = 'test_addDisposeListenerLorg_eclipse_swt_events_DisposeListener', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.afterDispose(Test_org_eclipse_swt_widgets_Widget.java:104)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Widget.tearDown(Test_org_eclipse_swt_widgets_Widget.java:99)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tracker.tearDown(Test_org_eclipse_swt_widgets_Tracker.java:24)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       [...]
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tree_ViewportCoverage:aSingleTreeSelectsTheCaretAfterRemoval()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportCoverage', methodName = 'aSingleTreeSelectsTheCaretAfterRemoval', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: the native caret move on deletion deselects ==> expected: <0> but was: <1>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+       org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+       org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportCoverage.aSingleTreeSelectsTheCaretAfterRemoval(Test_org_eclipse_swt_widgets_Tree_ViewportCoverage.java:427)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tree_ViewportDeltas:treeInAHiddenParentAppliesOnePatchOnShow()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas', methodName = 'treeInAHiddenParentAppliesOnePatchOnShow', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: TVM messages while hidden: 1939 (0x111C=1660 0x113E=196 0x110A=42 0x1101=39 0x110B=1 0x113F=1) ==> expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas.hiddenGate(Test_org_eclipse_swt_widgets_Tree_ViewportDeltas.java:317)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas.treeInAHiddenParentAppliesOnePatchOnShow(Test_org_eclipse_swt_widgets_Tree_ViewportDeltas.java:263)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tree_ViewportDeltas:hiddenTreeAppliesOnePatchOnShow()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas', methodName = 'hiddenTreeAppliesOnePatchOnShow', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: TVM messages while hidden: 1939 (0x111C=1660 0x113E=196 0x110A=42 0x1101=39 0x110B=1 0x113F=1) ==> expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas.hiddenGate(Test_org_eclipse_swt_widgets_Tree_ViewportDeltas.java:317)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas.hiddenTreeAppliesOnePatchOnShow(Test_org_eclipse_swt_widgets_Tree_ViewportDeltas.java:258)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_Tree_ViewportEdges:keysOnEmptyAndZeroHeightTrees()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportEdges', methodName = 'keysOnEmptyAndZeroHeightTrees', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: the caret is the off-window anchor ==> expected: <root 20> but was: <null>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+       org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+       org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_ViewportEdges.keysOnEmptyAndZeroHeightTrees(Test_org_eclipse_swt_widgets_Tree_ViewportEdges.java:347)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+Test run finished after 101453 ms
+[        42 containers found      ]
+[         0 containers skipped    ]
+[        42 containers started    ]
+[         0 containers aborted    ]
+[        42 containers successful ]
+[         0 containers failed     ]
+[       348 tests found           ]
+[         0 tests skipped         ]
+[       348 tests started         ]
+[        49 tests aborted         ]
+[       283 tests successful      ]
+[        16 tests failed          ]
+

@@ -1,0 +1,2 @@
+name	start	end	rc	jni_check_diagnostics	selectors
+attribution-m3diff-then-display	2026-11-09T16:20:47+05:30	2026-11-09T16:20:51+05:30	1	0	--config=junit.jupiter.testclass.order.default=org.junit.jupiter.api.ClassOrderer$ClassName --select-class org.eclipse.swt.tests.junit.Test_M3ProxyModelDifferential --select-class org.eclipse.swt.tests.junit.Test_M3RowMathDifferential --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display

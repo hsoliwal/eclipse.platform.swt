@@ -30,6 +30,14 @@ import org.junit.jupiter.api.*;
  * the texts of the first rows.
  */
 public class Test_M3ProxyModelDifferential {
+	//FLLDCIM: TOP — test isolation: release the default Display this class used, so later classes in the same
+	//FLLDCIM: TOP — suite (Test_org_eclipse_swt_widgets_Display) can create their own Display on this thread
+	@AfterAll
+	static void disposeDefaultDisplay () {
+		Display display = Display.getCurrent ();
+		if (display != null && !display.isDisposed ()) display.dispose ();
+	}
+
 	static final class Scene {
 		final Shell shell;
 		final Table table;

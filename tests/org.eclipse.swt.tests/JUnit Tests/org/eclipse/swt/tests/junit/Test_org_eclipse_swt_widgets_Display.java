@@ -49,6 +49,7 @@ import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Synchronizer;
 import org.eclipse.test.Screenshots;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -67,6 +68,17 @@ private static boolean isRunningOnEclipseOrgHudson =
 		|| "genie.platform".equalsIgnoreCase(System.getProperty("user.name"));
 
 private static final boolean BUG_492569 = SwtTestUtil.isWindows && isRunningOnEclipseOrgHudson;
+
+//FLLDCIM: TOP - test isolation: every test here constructs its own Display, which SWT refuses while another
+//FLLDCIM: TOP - Display is bound to this thread. Earlier classes in the same JVM (any widget test via new Shell())
+//FLLDCIM: TOP - leave the default Display behind, so start this class on a thread with no Display.
+@BeforeAll
+public static void releaseDisplayOfThisThread() {
+	Display current = Display.getCurrent();
+	if (current != null && !current.isDisposed()) {
+		current.dispose();
+	}
+}
 
 @Test
 public void test_Constructor() {

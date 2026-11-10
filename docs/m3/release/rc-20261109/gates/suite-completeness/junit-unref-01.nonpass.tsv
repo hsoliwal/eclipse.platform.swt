@@ -1,0 +1,33 @@
+mark	node	parent	test	message
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_internal_render_ThreadRole	eachRoleRunsWhatItOwnsOnly()	Assumption failed: run with -Dswt.m3.threadCheck=true
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	unselectedCTabFolderTab()	ctabfolder-tab: pixel 14,3 ==> expected: <RGB {0, 144, 0}> but was: <RGB {0, 143, 0}>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	collapsedExpandItem()	expandbar-collapsed: pixel 14,3 ==> expected: <RGB {0, 144, 0}> but was: <RGB {0, 143, 0}>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	scrolledCompositeChildScrolledOut()	scrolledcomposite: paint passes after the show ==> expected: <1> but was: <2>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	expandItemScrolledOut()	expandbar-scrolled: catch-up events after the show ==> expected: <1> but was: <0>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	zeroSize()	zero-size: pixel 14,3 ==> expected: <RGB {0, 144, 0}> but was: <RGB {0, 143, 0}>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	minimizedShell()	minimized-shell: pixel 14,3 ==> expected: <RGB {0, 144, 0}> but was: <RGB {0, 143, 0}>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport	stackLayoutPageUnderTheTop()	stacklayout: pixel 14,3 ==> expected: <RGB {0, 144, 0}> but was: <RGB {0, 143, 0}>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance	editTextMatchFindsTheFirstLogicalRow()	the last page is on top ==> expected: <0..99999/20@99980> but was: <0..100/20@81>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportDifferential	editableComboAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportDifferential	readOnlyComboAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportDifferential	readOnlyComboWithVerifyAnswersLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Combo_ViewportDifferential	closedDeltasAnswerLikeTheReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_CoolBar_ViewportDifferential	recordedAgainstReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_CoolItem	test_setControlLorg_eclipse_swt_widgets_Control()	expected: <true> but was: <false>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_CoolItem	test_getBounds()	expected: <86> but was: <11>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_CoolItem	test_setSizeII()	expected: <Point {50, 50}> but was: <Point {11, 50}>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnDeltaRepaint	treeDeltasRepaintOnlyTheirRows()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnDeltaRepaint	listDeltasRepaintOnlyTheirRows()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnDeltaRepaint	tableDeltasRepaintOnlyTheirRows()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnHiddenViewport	treeHiddenDeltasPaintOnceOnShow()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnHiddenViewport	tableHiddenDeltasPaintOnceOnShow()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnHiddenViewport	listHiddenDeltasPaintOnceOnShow()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnRenderThread	tableFramesComeFromTheRenderThread()	Assumption failed: a drawn mode with -Dswt.drawn.renderThread=true only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnRenderThread	listFramesComeFromTheRenderThread()	Assumption failed: a drawn mode with -Dswt.drawn.renderThread=true only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnRenderThread	treeFramesComeFromTheRenderThread()	Assumption failed: a drawn mode with -Dswt.drawn.renderThread=true only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnResizeSweep	listResizeIsADelta()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnResizeSweep	tableResizeIsADelta()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_DrawnResizeSweep	treeResizeIsADelta()	Assumption failed: a drawn mode (custom, m3, gpu) only
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ExpandBar_OptimizationBench	measure()	Assumption failed: -Dswt.allwidgets.bench=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ExpandBar_ScaleOracle	measure()	Assumption failed: -Dswt.expandbar.oracle=true is not set
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_ExpandBar_ViewportDifferential	recordedAgainstReference()	Assumption failed: -Dswt.viewport.recording=<dir> is not set

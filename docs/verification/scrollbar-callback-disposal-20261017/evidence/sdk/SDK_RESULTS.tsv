@@ -1,0 +1,5 @@
+# OpenRewrite SDK Results; no template-copy materialization
+bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java	966855c88fbe0fa13c25b5df89ec62ddbead1850bc94ef935d27f9d2c83f15ca	b2cc90ce5b7f3f706a758099eacdca8199cae5ac53f7b44cdb9beb779aa09966
+tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/AllWidgetTests.java	486e76aa4145f86b342841c9eded7feb2a878b099b60d67db1a0b7a06fbef597	5ad5c035f36409a26be9d2f763b42bba7686f6ce5b46badc4d40fa59bf89c883
+tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java	ABSENT	cf94333fc5329b963bade2d842fbcb0352a05342d9c0f2bee2b1b8715898488a
+.m3/swt-scrollbar-callback-disposal-20261017/RECEIVER.md	ABSENT	a19a706f3ba03f828c2ca94b48535bd36d4ab08ef0cfd58707f3dfbd12c1b0f0

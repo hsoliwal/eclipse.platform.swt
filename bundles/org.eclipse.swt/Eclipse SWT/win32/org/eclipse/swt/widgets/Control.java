@@ -5830,11 +5830,16 @@ long windowProc (long hwnd, int msg, long wParam, long lParam) {
 		case OS.WM_UNINITMENUPOPUP:		result = WM_UNINITMENUPOPUP (wParam, lParam); break;
 		case OS.WM_UPDATEUISTATE:		result = WM_UPDATEUISTATE (wParam, lParam); break;
 		case OS.WM_VSCROLL:				result = WM_VSCROLL (wParam, lParam); break;
-		case OS.WM_WINDOWPOSCHANGED:
-			if (EffectiveVisibility.ENABLED && (hwnd == handle || hwnd == topHandle ())) {
-				EffectiveVisibility.windowPosChanged (this, lParam);
+		case OS.WM_WINDOWPOSCHANGED: {
+			boolean catchUp = EffectiveVisibility.ENABLED && (hwnd == handle || hwnd == topHandle ())
+				&& EffectiveVisibility.windowPosChanged (this, lParam);
+			result = WM_WINDOWPOSCHANGED (wParam, lParam);
+			if (catchUp && !isDisposed ()) {
+				//FLLDCIM: rule 25 - new geometry for a control with deferred work: catch up now, before the first paint
+				VisibilityCatchUp.shown (this);
 			}
-			result = WM_WINDOWPOSCHANGED (wParam, lParam); break;
+			break;
+		}
 		case OS.WM_WINDOWPOSCHANGING:	result = WM_WINDOWPOSCHANGING (wParam, lParam); break;
 		case OS.WM_XBUTTONDBLCLK:		result = WM_XBUTTONDBLCLK (wParam, lParam); break;
 		case OS.WM_XBUTTONDOWN:			result = WM_XBUTTONDOWN (wParam, lParam); break;

@@ -683,6 +683,7 @@ public class OS extends C {
 	public static final int LVM_GETITEM = 0x104b;
 	public static final int LVM_GETITEMCOUNT = 0x1004;
 	public static final int LVM_GETITEMRECT = 0x100e;
+	public static final int LVM_GETITEMSTATE = 0x102c;
 	public static final int LVM_GETNEXTITEM = 0x100c;
 	public static final int LVM_GETSELECTEDCOLUMN = LVM_FIRST + 174;
 	public static final int LVM_GETSELECTEDCOUNT = 0x1032;

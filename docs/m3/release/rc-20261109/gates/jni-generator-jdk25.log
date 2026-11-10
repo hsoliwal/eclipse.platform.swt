@@ -1,0 +1,18 @@
+[INFO] Scanning for projects...
+[INFO] Tycho Version:  5.0.4 (c4349ee27dfde2817dfc7121b5f84bfb9eeb0195)
+[INFO] Tycho Mode:     extension
+[INFO] Tycho Builder:  maven
+[INFO] Build Threads:  1
+[INFO] 
+[INFO] -------------< org.eclipse.platform:eclipse.platform.swt >--------------
+[INFO] Building eclipse.platform.swt 4.42.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- exec:3.6.4:exec (run-jni-generator) @ eclipse.platform.swt ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  22.566 s
+[INFO] Finished at: 2026-11-09T19:48:31+05:30
+[INFO] ------------------------------------------------------------------------

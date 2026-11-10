@@ -507,6 +507,10 @@ jobs:
       with:
         pattern: swt-{windows-x86_64,windows-aarch64,macos-x86_64,macos-aarch64,macos-universal}
         path: all-platforms
+    - name: List downloaded artifacts
+      run: |
+        echo "Downloaded artifacts:"
+        find all-platforms -type f
     - name: Validate identity and create candidate with checksums
       env:
         CANDIDATE_SOURCE_SHA: ${{ github.sha }}

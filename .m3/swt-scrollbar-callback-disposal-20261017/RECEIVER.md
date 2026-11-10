@@ -1,0 +1,86 @@
+<!-- SPDX-FileCopyrightText: 2026 Hitesh Soliwal and Contributors to the Synexia Project -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+# GTK ScrollBar visibility callback disposal — 2026-10-17
+
+`ScrollBar.setVisible` can synchronously invoke application Show/Hide listeners
+and display filters. They can dispose the scrollbar, its Scrollable owner, or
+reenter visibility changes whose Resize callbacks dispose that owner. The prior
+GTK implementation dereferenced the mutable `parent` field after those callbacks;
+scrollbar disposal clears that field.
+
+This successor captures the original Scrollable owner before changing native
+visibility, checks the scrollbar before sending its visibility event, and checks
+the captured owner immediately before Resize. A surviving owner still receives
+its client-area notification when only the scrollbar was disposed. Every nested
+call rechecks owner lifetime; an outer call cannot notify an owner disposed by an
+inner callback. Live nested event order, latest requested visibility, synchronous
+delivery, duplicate-request behavior and listener-exception propagation remain
+unchanged.
+
+## Source and recipe lineage
+
+The target is stacked after [SWT #219](https://github.com/hsoliwal/eclipse.platform.swt/pull/219)
+and [SWT #220](https://github.com/hsoliwal/eclipse.platform.swt/pull/220).
+Local qualification parent: `b42becc14a4522d5342649cb527bd5e70aa7c86b`.
+Published graph parent: `bff9c98564a575781d9a19f61dc5561c1d13ce2a`.
+The remote parent contains additional inherited documentation; these are separate
+commit/tree identities. The canonical packet binds the exact receiving source
+preimages and their remote provenance.
+
+Canonical owner: `hsoliwal/com.synexia`.
+New crate:
+`synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017`.
+Named recipe: `com.synexia.swt.ScrollBarCallbackDisposal20261017`.
+It reuses the established source-sealed OpenRewrite engines from canonical parent
+[Synexia #12108](https://github.com/hsoliwal/com.synexia/pull/12108),
+`a14a26e92fb65d0fbcd7f71e7ae1653222ccc439`. The new crate is a separately published
+successor. Its actual SDK, exact-output, fixed-point and refusal results are
+retained in the canonical packet before target reception.
+
+| Receiving source | SHA-256 |
+| --- | --- |
+| GTK ScrollBar before | `966855c88fbe0fa13c25b5df89ec62ddbead1850bc94ef935d27f9d2c83f15ca` |
+| GTK ScrollBar after | `b2cc90ce5b7f3f706a758099eacdca8199cae5ac53f7b44cdb9beb779aa09966` |
+| Suite before | `486e76aa4145f86b342841c9eded7feb2a878b099b60d67db1a0b7a06fbef597` |
+| Suite after | `5ad5c035f36409a26be9d2f763b42bba7686f6ce5b46badc4d40fa59bf89c883` |
+| Native regression class | `cf94333fc5329b963bade2d842fbcb0352a05342d9c0f2bee2b1b8715898488a` |
+
+The suite adds the callback regression next to the existing ScrollBar tests,
+preserving the coordinate-visibility and atomic-growth registrations. The frozen
+earlier source/recipe packets remain separate history.
+
+## Executed native evidence
+
+The real Java 21/GTK3/X11 test ran under an isolated Xvfb display, using native
+libraries built from this SWT lineage. The full 546-source GTK parent build and
+its five production message/CSS resources provided the supporting runtime.
+
+- Exact original ScrollBar: **12 tests, eight expected parent-null NPE failures,
+  four passing live-behavior controls, zero skipped**.
+- Exact candidate ScrollBar: **12 tests passed, zero failures/errors/skips**.
+- Cases include Show/Hide disposal of owner or scrollbar, display-filter disposal,
+  nested visibility disposal, inner Resize disposal, normal horizontal/vertical
+  visibility, idempotence, selection neutrality, latest nested visibility and
+  listener failure propagation.
+- Declared ScrollBar API descriptors are identical before/after.
+- Java 21 owner compilation retains exactly nine pre-existing diagnostics
+  (eight lossy conversions and one redundant cast), with no added warning. The
+  regression class compiles with `-Xlint:all -Werror`.
+
+The canonical `verification/run-native-callback-proof.py` binds both owner
+images, the exact regression source, actual JUnit discovery, the expected failure
+set and source of every negative control, and the final passing image. It retains
+executed argument arrays, logs, JUnit XML, native/library/class/resource hashes,
+and its own SHA-256 in the result. It refuses unrelated failures or skipped tests.
+It accepts a complete built SWT class/resource directory, native directory,
+Java home and real JUnit console jar, and runs inside a supplied X display.
+
+## Platform boundaries
+
+The production change is confined to GTK Java code; it adds no JNI declarations
+or native source. Cocoa also delivers visibility events followed by owner Resize,
+while Win32's visibility implementation ends after Show/Hide and documents
+possible disposal there. Their event paths were inspected but not changed or
+executed in this GTK qualification. GTK4, Cocoa and Win32 native acceptance,
+whole-reactor Tycho, screenshots and end-to-end viewport resource/performance
+gates are not claimed by these callback-lifetime tests.
