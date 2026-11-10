@@ -254,6 +254,11 @@ final class ListViewport {
 		boolean jump = plan.size () == 0 || wantEnd <= plan.first () || wantFirst >= plan.end ();
 		if (jump) {
 			rebuild (needFirst, needEnd - needFirst);
+		} else if (changeDepth > 0 && !bloated && plan.end () <= count) {
+			//FLLDCIM: MRL - rule 24: a model change inside the window tops up only the rows it took from the need range
+			//FLLDCIM: MRL - (a -3 +2 splice at the window edge refilled 51 rows to the overscan; it needs 1)
+			int nextFirst = Math.min (plan.first (), needFirst), nextEnd = Math.max (plan.end (), needEnd);
+			rebuild (nextFirst, nextEnd - nextFirst);
 		} else {
 			rebuild (wantFirst, wantEnd - wantFirst);
 		}
