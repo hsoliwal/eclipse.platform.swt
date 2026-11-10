@@ -7763,6 +7763,8 @@ long windowProc () {
 
 @Override
 long windowProc (long hwnd, int msg, long wParam, long lParam) {
+	//FLLDCIM: HPCPOP - the viewport keeps a resident-state capture until a message can change a resident row
+	if (viewport != null && hwnd == handle) viewport.nativeMessage (msg);
 	if (hwndHeader != 0 && hwnd == hwndHeader) {
 		switch (msg) {
 			case OS.WM_CONTEXTMENU: {
