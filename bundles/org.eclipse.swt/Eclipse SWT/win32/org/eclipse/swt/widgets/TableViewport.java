@@ -850,10 +850,68 @@ final class TableViewport {
 		return OS.IsIconic (table.getShell ().handle);
 	}
 
+	/*
+	 * A ListView that is not visible (official SWT 3.135.0, known-issues-20261109/table-hidden-top): row inserts and
+	 * removals keep LVM_GETTOPINDEX, and the vertical bar keeps the position and range it had when the window was hidden
+	 * (frozen). LVM_SCROLL then moves the top by clamp (nPos + dy, 0, nMax - nPage + 1) - nPos rows, so a hidden Table
+	 * scrolled at row 0 cannot scroll up. On show the ListView clamps the top to count - page. A dirty viewport of such a
+	 * Table answers the same top: the row edits keep it and scrollHidden applies the frozen-bar rule.
+	 */
+	private boolean barFrozen;
+	private int frozenPos, frozenMaxPos;
+	private final SCROLLINFO frozenInfo = new SCROLLINFO ();
+	/* LVM_SCROLL calls of one window patch made while the ListView is still not visible (each moves at most the frozen room) */
+	private static final int MAX_HIDDEN_SCROLLS = 64;
+
+	private void freezeBar (long hwnd) {
+		barFrozen = !OS.IsWindowVisible (hwnd);
+		frozenPos = frozenMaxPos = 0;
+		if (!barFrozen) return;
+		SCROLLINFO info = frozenInfo;
+		info.cbSize = SCROLLINFO.sizeof;
+		info.fMask = OS.SIF_ALL;
+		if (!OS.GetScrollInfo (hwnd, OS.SB_VERT, info)) return;
+		frozenPos = info.nPos;
+		frozenMaxPos = Math.max (0, info.nMax - Math.max (info.nPage - 1, 0));
+	}
+
+	/* the rows a hidden LVM_SCROLL of dy rows moves */
+	private int hiddenStep (int dy) {
+		return Math.max (0, Math.min (frozenPos + dy, frozenMaxPos)) - frozenPos;
+	}
+
+	/**
+	 * Table.setTopIndex of a dirty viewport whose ListView is not visible: the top moves as the hidden LVM_SCROLL moves
+	 * it, with no native work. Answers false when the native path applies (not dirty, visible, or no full row per page).
+	 */
+	boolean scrollHidden (int index) {
+		long hwnd = table.handle;
+		if (!dirty || !barFrozen || OS.IsWindowVisible (hwnd)) return false;
+		if (OS.SendMessage (hwnd, OS.LVM_GETCOUNTPERPAGE, 0, 0) <= 0) return false;
+		dirtyTop += hiddenStep (index - dirtyTop);
+		return true;
+	}
+
+	/* LVM_SCROLL to the patch's top; while still not visible in steps the frozen bar allows, as scrollHidden counted them */
+	private void scrollNative (long hwnd, int rows) {
+		int height = table.getItemHeightInPixels ();
+		if (!barFrozen || OS.IsWindowVisible (hwnd)) {
+			OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, rows * height);
+			return;
+		}
+		for (int i = 0; i < MAX_HIDDEN_SCROLLS && rows != 0; i++) {
+			int step = hiddenStep (rows);
+			if (step == 0) return;
+			OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, step * height);
+			rows -= step;
+		}
+	}
+
 	/** The splice of a hidden Table: lanes and items, and the rows of the window patch. */
 	void spliceHidden (int count, int at, int removed, int inserted) {
 		if (!dirty) beginDirty ();
-		dirtyTop = Math.min (TableSplice.anchored (dirtyTop, at, removed, inserted), count - removed + inserted - 1);
+		//FLLDCIM: TOP - a ListView that is not visible keeps its top index through row edits (official matrix)
+		if (!barFrozen) dirtyTop = Math.min (TableSplice.anchored (dirtyTop, at, removed, inserted), count - removed + inserted - 1);
 		if (dirtyFocus >= 0) dirtyFocus = TableSplice.moved (dirtyFocus, count, at, removed, inserted);
 		if (dirtyMark >= 0) dirtyMark = TableSplice.moved (dirtyMark, count, at, removed, inserted);
 	}
@@ -863,7 +921,8 @@ final class TableViewport {
 		long hwnd = table.handle;
 		pending = 0;
 		dirtyTop = Math.max (0, (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0));
-		dirtyFocus = (int) OS.SendMessage (hwnd, OS.LVM_GETNEXTITEM, -1, OS.LVNI_FOCUSED);
+		freezeBar (hwnd);
+		dirtyFocus =(int) OS.SendMessage (hwnd, OS.LVM_GETNEXTITEM, -1, OS.LVNI_FOCUSED);
 		dirtyMark = (int) OS.SendMessage (hwnd, LVM_GETSELECTIONMARK, 0, 0);
 		dirtySelection = false;
 		int row = -1;
@@ -880,6 +939,8 @@ final class TableViewport {
 			case OS.LVM_GETITEMCOUNT:
 				return cells.length ();
 			case OS.LVM_GETTOPINDEX:
+				/* shown since the bar froze: the ListView clamps its top on show, so the patch answers (the first observer) */
+				if (barFrozen && OS.IsWindowVisible (table.handle)) break;
 				return dirtyTop;
 			case OS.LVM_GETCOUNTPERPAGE:
 			case OS.LVM_GETSTRINGWIDTH:
@@ -924,7 +985,7 @@ final class TableViewport {
 			TableSplice.setFocus (hwnd, dirtyFocus);
 			if (dirtyMark >= 0) TableSplice.setMark (hwnd, dirtyMark);
 			int current = Math.max (0, (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0));
-			if (count > 0 && dirtyTop != current) OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, (dirtyTop - current) * table.getItemHeightInPixels ());
+			if (count > 0 && dirtyTop != current) scrollNative (hwnd, dirtyTop - current);
 		} finally {
 			if (redraw) OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
 			table.ignoreSelect = oldSelect;
