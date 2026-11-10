@@ -644,7 +644,13 @@ final class ComboViewport {
 				captureCaret ();
 				updateBar ();
 			}
-			case OS.WM_SIZE, OS.WM_WINDOWPOSCHANGED, OS.WM_SHOWWINDOW, OS.LB_SETTOPINDEX -> updateBar ();
+			case OS.WM_SHOWWINDOW, OS.WM_WINDOWPOSCHANGED -> {
+				//FLLDCIM: VIEWPORT - a drop-down shown with rows (SWP_SHOWWINDOW sends no WM_SHOWWINDOW) has written its own bar
+				//FLLDCIM: VIEWPORT - (0 .. resident rows, CB_SHOWDROPDOWN after an edit-text match): the logical bar replaces it
+				if (plan.size () > 0 && OS.IsWindowVisible (hwndList)) barState = BAR_SET;
+				updateBar ();
+			}
+			case OS.WM_SIZE, OS.LB_SETTOPINDEX -> updateBar ();
 			default -> {}
 		}
 	}
