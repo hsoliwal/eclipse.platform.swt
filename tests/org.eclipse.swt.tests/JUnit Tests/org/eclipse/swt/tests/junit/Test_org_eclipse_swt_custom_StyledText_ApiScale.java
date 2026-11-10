@@ -39,7 +39,7 @@ import org.junit.jupiter.api.TestFactory;
 /**
  * Scale proof: every operation of the shared API catalogue runs on a
  * 1,000,001-line document (fixed line height, then word wrap) and must request
- * at most {@value #LAYOUT_BOUND} line layouts. Lines laid out are counted by the
+ * at most {@code LAYOUT_BOUND} line layouts. Lines laid out are counted by the
  * renderer's layout-request counter. Per-operation layouts and wall time are
  * written to <code>-Dswt.styledtext.scaleReport=&lt;file&gt;</code> when set.
  * Test names are the coverage-table ids ("scale:fixed:" / "scale:wrap:" + op id).

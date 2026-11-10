@@ -51,10 +51,10 @@ import org.junit.jupiter.api.*;
  * how much of it the desktop shows), the pixels are drawn on request with WM_PRINT (client and children),
  * keyboard focus is on a one-pixel button outside the table and focus rectangles are hidden.
  * </p><p>
- * Variants 3 and up run the scripts of {@link TableViewportScripts}: keyboard and mouse input with Shift and
+ * Variants 3 and up run the scripts of {@code TableViewportScripts}: keyboard and mouse input with Shift and
  * Ctrl (window messages; the modifiers are the thread's keyboard state, set with SetKeyboardState, so the JVM
  * runs with <code>--enable-preview</code> on JDK 21), accessibility, geometry and presentation, reentrant
- * listeners, and DPI changes; variants 10 and 11 run {@link TableScaleScripts} at every scale (100, 125, 150 and
+ * listeners, and DPI changes; variants 10 and 11 run {@code TableScaleScripts} at every scale (100, 125, 150 and
  * 200 %). <code>-Dswt.viewport.variants=3,4</code> runs only the listed variants.
  * </p>
  */

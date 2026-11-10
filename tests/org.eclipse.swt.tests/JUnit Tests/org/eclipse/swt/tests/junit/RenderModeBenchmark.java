@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.*;
  * repetition ends with <code>update ()</code>, so the paint it causes is part of the time.
  * <p>
  * Usage: <code>RenderModeBenchmark &lt;Tree|Table|List&gt; &lt;operation&gt; &lt;out.tsv&gt;</code>; operations:
- * {@link #OPERATIONS}. It uses public API only (plus reflection for the mode name), so it runs unchanged on the
+ * {@code OPERATIONS}. It uses public API only (plus reflection for the mode name), so it runs unchanged on the
  * official jar.
  * </p>
  */

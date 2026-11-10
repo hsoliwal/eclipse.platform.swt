@@ -26,11 +26,11 @@ import org.junit.jupiter.api.*;
  * eclipse.platform.swt#208, "1.3 second UI freezes in Table.setItemCount": the refresh of a viewer whose input
  * changes is <code>setItemCount (0)</code> and then <code>setItemCount (n)</code>
  * (<code>AbstractTableViewer.internalVirtualRefreshAll</code>, <code>TableViewer.doSetItemCount</code>). Each of these
- * calls must stay under {@link #BUDGET_MILLIS} for a million rows, plain or <code>SWT.VIRTUAL</code>.
+ * calls must stay under {@code BUDGET_MILLIS} for a million rows, plain or <code>SWT.VIRTUAL</code>.
  * <p>
  * The VIRTUAL test runs in every mode and on any SWT; the plain test runs where the plain Table is the win32 viewport.
  * A Table that makes and deletes its rows one by one (the stock plain Table) would block a test for minutes at a million
- * rows, so each test first times the same calls on {@link #PILOT} rows and fails at once when they project past ten
+ * rows, so each test first times the same calls on {@code PILOT} rows and fails at once when they project past ten
  * budgets (a linear projection, so the real cost is higher): run against the official jar, the plain test fails at the
  * pilot (evidence/table_setitemcount-swt208-tt20261020b-win11-hidden-run.txt). On win32 the Table viewport
  * (docs/m3/TABLE_MEDIATED_VIEWPORT.md, leaf T-Table-O1) passes. Evidence: docs/m3/table-viewport/evidence/SetItemCountProbe.java.txt.
