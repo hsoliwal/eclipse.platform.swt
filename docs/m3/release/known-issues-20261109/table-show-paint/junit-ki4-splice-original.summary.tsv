@@ -1,0 +1,2 @@
+name	start	end	rc	jni_check_diagnostics	selectors	extra_classpath
+ki4-splice-original	2026-11-10T14:19:08+05:30	2026-11-10T14:19:23+05:30	0	0	--select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_Splice	F:/m3-scratch/rc-20261109/gatelib/org.eclipse.swt.svg-3.133.200.m3-superset-20261109.jar;F:/m3-scratch/rc-20261109/gatelib/jsvg-2.1.0.jar
