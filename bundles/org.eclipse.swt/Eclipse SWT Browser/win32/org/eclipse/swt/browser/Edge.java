@@ -903,6 +903,9 @@ void setupBrowser(int hr, long pv) {
 	webView.AddHostObjectToScript("swt\0".toCharArray(), hostObj);
 	hostDisp.Release();
 
+	// WebView2 sees the browser's part visibility: a page nobody can see stops rendering, throttles timers //FLLDCIM: MARK — every-widget SWT Edge H
+	browser.addListener(SWT.PartVisible, this::browserPartVisibility);
+	browser.addListener(SWT.PartHidden, this::browserPartVisibility);
 	browser.addListener(SWT.Dispose, this::browserDispose);
 	browser.addListener(SWT.FocusIn, this::browserFocusIn);
 	browser.addListener(SWT.Resize, this::browserResize);
@@ -985,7 +988,13 @@ void browserResize(Event event) {
 	RECT rect = new RECT();
 	OS.GetClientRect(browser.handle, rect);
 	controller.put_Bounds(rect);
-	controller.put_IsVisible(true);
+	controller.put_IsVisible(browser.isPartVisible());
+}
+
+void browserPartVisibility(Event event) {
+	if (controller != null) {
+		controller.put_IsVisible(event.type == SWT.PartVisible);
+	}
 }
 
 /**
