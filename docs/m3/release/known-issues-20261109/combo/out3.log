@@ -1,0 +1,3 @@
+PROBE after setText: viewport=true installed=true barState=0 bar=0..100/0@0 sel=-1 dropped=false
+PROBE after setListVisible: viewport=true installed=true barState=2 bar=0..99999/20@99980 sel=99990 dropped=true
+PROBE after settle: viewport=true installed=true barState=2 bar=0..99999/20@99980 sel=99990 dropped=true
