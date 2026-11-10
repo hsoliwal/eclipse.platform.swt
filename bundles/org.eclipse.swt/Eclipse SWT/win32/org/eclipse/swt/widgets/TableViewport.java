@@ -1194,6 +1194,13 @@ final class TableViewport {
 		return widen (widths.maxWidth (), Math.max (0, rowLanes.maxInt (INDENT, 0)));
 	}
 
+	/*
+	 * Set by Table.WM_PAINT around its column-less widen: the column width is then set with the redraw off and the
+	 * client invalidated, so the paint in progress draws it (Table_Splice.hiddenTableAppliesOneWindowPatchWhenShown:
+	 * LVM_SETCOLUMNWIDTH painted twice, synchronously, inside the first WM_PAINT after a hidden Table showed).
+	 */
+	boolean widenInPaint;
+
 	/* the stock arithmetic of the column-less width over a text width and an image indent; the column only widens */
 	private boolean widen (int textWidth, int imageIndent) {
 		long hwnd = table.handle;
