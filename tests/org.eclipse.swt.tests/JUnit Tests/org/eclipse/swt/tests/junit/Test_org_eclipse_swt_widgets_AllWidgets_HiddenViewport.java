@@ -77,6 +77,9 @@ public class Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport {
 				gc.setBackground (gc.getDevice ().getSystemColor (SWT.COLOR_WHITE + (value & 7)));
 				gc.fillRectangle (0, y, area.width, ROW);
 				gc.setForeground (gc.getDevice ().getSystemColor (SWT.COLOR_BLACK));
+				//FLLDCIM: TOP - the oracle compares a window capture with an Image GC; text smoothing differs between the
+				//FLLDCIM: TOP - two DCs (sub-pixel blend on screen, grayscale offscreen), so draw the label unsmoothed
+				gc.setTextAntialias (SWT.OFF);
 				gc.drawText (Integer.toString (value), 4, y, true);
 			}
 		}
@@ -138,7 +141,12 @@ public class Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport {
 		Probe probe = new Probe (bar);
 		target.setControl (probe.canvas);
 		gate ("expandbar-scrolled", probe, () -> {
-			for (int k = 0; k < 400 && !inView (probe.canvas, bar); k++) ViewportDifferential.send (bar, 0x115, 1, 0); // WM_VSCROLL SB_LINEDOWN
+			//FLLDCIM: TOP - SB_LINEDOWN moves an ExpandBar by its bar increment (1 pixel); item 30 starts about 2,000 pixels down,
+			//FLLDCIM: TOP - so 400 lines never reached it and the show never happened; bound the walk by the scroll range instead
+			int lines = bar.getVerticalBar ().getMaximum ();
+			//FLLDCIM: TOP - the pixel oracle reads the whole probe, so scroll until all of it is in view (not only its top 20 rows)
+			for (int k = 0; k < lines && !fullyInView (probe.canvas, bar); k++) ViewportDifferential.send (bar, 0x115, 1, 0); // WM_VSCROLL SB_LINEDOWN
+			assertTrue (fullyInView (probe.canvas, bar), "expandbar-scrolled: the scroll brings the probe into view");
 		});
 	}
 
@@ -234,6 +242,11 @@ public class Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport {
 			}
 		}
 		return count;
+	}
+
+	static boolean fullyInView (Control control, Composite viewport) {
+		Rectangle bounds = control.getBounds (), area = viewport.getClientArea ();
+		return bounds.y >= 0 && bounds.y + bounds.height <= area.height;
 	}
 
 	static boolean inView (Control control, Composite viewport) {

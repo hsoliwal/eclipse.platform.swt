@@ -631,4 +631,71 @@ public class Test_M3ColumnFilter {
 		assertEquals (0, seen [0].start ());
 		assertEquals (0, seen [0].count ());
 	}
+
+	@Test
+	public void test_invalidUpdatedParentFailsAndResetRecovers () {
+		int [] parents = {-1, 0, -1};
+		String [] labels = {"root", "match", "other"};
+		M3ColumnFilter filter = new M3ColumnFilter (1, labels.length, (row, column) -> labels [row]);
+		filter.setParents (row -> parents [row]);
+		filter.setText (0, "match", M3TextMatch.EXACT);
+		assertArrayEquals (new int [] {0, 1}, rows (filter));
+		for (int invalid : new int [] {-2, labels.length}) {
+			parents [1] = invalid;
+			assertThrows (IllegalArgumentException.class, () -> filter.rowsChanged (1));
+			parents [1] = 0;
+			filter.setSourceSize (labels.length);
+			assertArrayEquals (new int [] {0, 1}, rows (filter));
+			assertFalse (filter.matches (0));
+			assertTrue (filter.matches (1));
+			assertEquals (-1, filter.unmap (2));
+		}
+	}
+
+	@Test
+	public void test_ancestorCycleFallbackKeepsOnlyReachableRows () {
+		int [] parents = {1, 0, -1};
+		String [] labels = {"other", "match", "other"};
+		M3ColumnFilter filter = new M3ColumnFilter (1, labels.length, (row, column) -> labels [row]);
+		filter.setParents (row -> parents [row]);
+		filter.setText (0, "match", M3TextMatch.EXACT);
+		assertArrayEquals (new int [] {0, 1}, rows (filter));
+		labels [1] = "other";
+		filter.rowsChanged (1);
+		assertArrayEquals (new int [0], rows (filter));
+		labels [0] = "match";
+		filter.rowsChanged (0);
+		assertArrayEquals (new int [] {0, 1}, rows (filter));
+		assertTrue (filter.matches (0));
+		assertFalse (filter.matches (1));
+		assertEquals (-1, filter.unmap (2));
+		Test_M3ColumnSort.assertInverse (filter);
+	}
+
+	@Test
+	public void test_synchronousGenerationAndCriterionCopies () {
+		M3ColumnFilter filter = fruits ();
+		int generation = filter.getGeneration ();
+		assertFalse (filter.isAsync ());
+		filter.setAsync (null, 0);
+		assertEquals (generation, filter.getGeneration ());
+		assertEquals (generation, filter.getAppliedGeneration ());
+		assertThrows (IllegalArgumentException.class, () -> filter.setAsync (null, -1));
+		assertEquals (generation, filter.getGeneration ());
+		int [] columns = {0, 1};
+		filter.setText (columns, "red", M3TextMatch.EXACT);
+		columns [0] = 2;
+		int [] copy = filter.getColumns ();
+		copy [1] = 2;
+		assertArrayEquals (new int [] {0, 1}, filter.getColumns ());
+		assertArrayEquals (new int [] {0, 2}, rows (filter));
+		assertEquals (generation + 1, filter.getGeneration ());
+		assertEquals (filter.getGeneration (), filter.getAppliedGeneration ());
+		filter.rowsChanged (0, 0);
+		assertEquals (generation + 2, filter.getGeneration ());
+		assertEquals (filter.getGeneration (), filter.getAppliedGeneration ());
+		filter.clearAll ();
+		assertEquals (CELLS.length, filter.size ());
+		assertEquals (generation + 3, filter.getAppliedGeneration ());
+	}
 }

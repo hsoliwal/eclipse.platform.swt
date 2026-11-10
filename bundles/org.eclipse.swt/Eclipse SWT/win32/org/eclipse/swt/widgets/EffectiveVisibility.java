@@ -261,7 +261,9 @@ final class EffectiveVisibility {
 		if (geometry) {
 			invalidate (c);
 			VisibilityCatchUp.requestSweep (c.display);
-			return (c.state & DIRTY_ALL) != 0;
+			//FLLDCIM: VISIBILITY - a moved container (ScrolledComposite.setOrigin moves its content) can bring a dirty
+			//FLLDCIM: VISIBILITY - descendant into view: catch the subtree up now, so the exposure and the catch-up are one paint
+			return (c.state & DIRTY_ALL) != 0 || (c instanceof Composite && VisibilityCatchUp.hasDirtyDescendant (c));
 		}
 		return false;
 	}

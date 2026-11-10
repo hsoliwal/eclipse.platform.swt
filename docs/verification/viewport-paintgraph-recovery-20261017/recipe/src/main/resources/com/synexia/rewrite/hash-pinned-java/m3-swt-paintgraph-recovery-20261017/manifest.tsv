@@ -1,0 +1,4 @@
+# Source paths are relative to the receiving repository root; UTF-8 without BOM.
+bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/ViewportPaintGraph.java	fd00903d07343044836963f54cf34e98cf24b794d38cc8242fcddfdf72527d7c	2a7a8ce1564bc78f9fda1d49aee3c5fa5352a7f77c11521e8f498d57fec4e837	target-002.java.txt
+tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/AllWidgetTests.java	a50d54c3ec4d2174361b392f4011870ff1522a1ac794c8287d2d8d1475604af4	486e76aa4145f86b342841c9eded7feb2a878b099b60d67db1a0b7a06fbef597	target-003.java.txt
+tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_widgets_ViewportPaintGraphAtomicGrowth.java	ABSENT	d0c4b0062ba2413bf6c59670474b9922ce16109440796a31bc1de2badc410069	target-004.java.txt

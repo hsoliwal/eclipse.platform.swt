@@ -1,0 +1,12 @@
+containers_found	12
+containers_skipped	0
+containers_started	12
+containers_aborted	0
+containers_successful	12
+containers_failed	0
+tests_found	107
+tests_skipped	0
+tests_started	107
+tests_aborted	6
+tests_successful	74
+tests_failed	27

@@ -1,0 +1,23 @@
+{
+  "baseline_source_disappearances": [],
+  "candidate_classes": 330,
+  "disclaimer": "not observed test execution; focused CI may run unreferenced classes; other SWT test fragments are not in this inventory",
+  "missing_suite_references": [],
+  "new_omissions": [],
+  "nonregression_pass": true,
+  "reachable_candidate_classes": 330,
+  "root_suite": "AllTests",
+  "schema": "SWT_DEFAULT_SUITE_INVENTORY_V1",
+  "scope": "single JUnit Tests directory; candidate file names Test_* or *Test",
+  "suite_complete": true,
+  "suites_seen": {
+    "AllBrowserTests": 2,
+    "AllGraphicsTests": 22,
+    "AllM3DifferentialTests": 7,
+    "AllNonBrowserTests": 109,
+    "AllTests": 19,
+    "AllWidgetTests": 177
+  },
+  "unreferenced": [],
+  "unreferenced_candidate_classes": 0
+}

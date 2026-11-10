@@ -1,0 +1,4 @@
+PROBE small.handle=1898561634208 expand=1
+PROBE after small: pageBatches=0 small.expanded=true count=5
+PROBE large.handle=1898563467168 getItemOk=1 cChildren=0 state=0 lParam=1 lastVisible=1898563467168 itemCount=1 expanded=false
+PROBE TVM_EXPAND returned 1 expanded=true itemCount=44 pageBatches=1

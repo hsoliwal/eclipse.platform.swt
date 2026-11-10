@@ -47,6 +47,7 @@ public class AllNonBrowserTests {
 			// Groups of tests
 			AllGraphicsTests.class, //
 			AllWidgetTests.class, //
+			AllM3DifferentialTests.class, //
 			// Rest of tests alphabetically
 			DPIUtilTests.class, //
 			Test_org_eclipse_swt_accessibility_Accessible.class, //
@@ -81,6 +82,7 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_events_VerifyEvent.class, //
 			Test_org_eclipse_swt_internal_ViewportGcProxy.class, //
 			Test_org_eclipse_swt_internal_SVGRasterizer.class, //
+			Test_org_eclipse_swt_internal_render_RowPaintRetention.class, //
 			Test_org_eclipse_swt_layout_BorderLayout.class, //
 			Test_org_eclipse_swt_layout_FormAttachment.class, //
 			Test_org_eclipse_swt_layout_GridData.class, //
@@ -89,6 +91,67 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_printing_Printer.class, //
 			Test_org_eclipse_swt_printing_PrinterData.class, //
 			Test_org_eclipse_swt_program_Program.class, //
+			//FLLDCIM: TOP - release suite completeness 2026-11-09: model, render and internal classes not reachable from AllTests before
+			Test_DefaultContentDelimiterRegression.class, //
+			Test_ItemResidency.class, //
+			Test_ItemResidencyCountAdmission.class, //
+			Test_ItemResidencyLanes.class, //
+			Test_ItemResidencyPrint.class, //
+			Test_ViewportAffineBounds.class, //
+			Test_ViewportDamageScaledEndpoints.class, //
+			Test_ViewportDifferentialHarness.class, //
+			Test_ViewportPaintGraphEmptyClip.class, //
+			Test_ViewportPlaneGeometry.class, //
+			Test_ViewportRewriteContracts.class, //
+			Test_ViewportScrollBarGeometry.class, //
+			Test_ViewportSelectionShifts.class, //
+			Test_VirtualCellLanes.class, //
+			Test_VirtualListModel.class, //
+			Test_VirtualListWidth.class, //
+			Test_VirtualRowExtents.class, //
+			Test_VirtualRowWindowBounds.class, //
+			Test_VirtualRowWindowPlan.class, //
+			Test_VirtualSelectionModel_Hybrid.class, //
+			Test_VirtualTreeCoverage.class, //
+			Test_VirtualTreeResidency.class, //
+			Test_VirtualTreeResidentPlan.class, //
+			Test_VirtualTreeViewport.class, //
+			Test_org_eclipse_swt_internal_SwtLog.class, //
+			Test_org_eclipse_swt_internal_ViewportReporter.class, //
+			Test_org_eclipse_swt_internal_VisibilityGate.class, //
+			Test_org_eclipse_swt_internal_VisibilityGate_box.class, //
+			Test_org_eclipse_swt_internal_WidgetMode.class, //
+			Test_org_eclipse_swt_internal_WidgetModeAllWidgets.class, //
+			Test_org_eclipse_swt_internal_gpu_RetainedPlanes.class, //
+			Test_org_eclipse_swt_internal_laf_LookAndFeel.class, //
+			Test_org_eclipse_swt_internal_laf_M3LookAndFeel.class, //
+			Test_org_eclipse_swt_internal_laf_M3Palette.class, //
+			Test_org_eclipse_swt_internal_laf_M3SystemTheme.class, //
+			Test_org_eclipse_swt_internal_laf_M3SystemTheme_OptimizationBench.class, //
+			Test_org_eclipse_swt_internal_laf_M3ThemeCompleter.class, //
+			Test_org_eclipse_swt_internal_laf_M3ThemeImport.class, //
+			Test_org_eclipse_swt_internal_laf_M3UIDefaults.class, //
+			Test_org_eclipse_swt_internal_laf_M3UIDerivation.class, //
+			Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes.class, //
+			Test_org_eclipse_swt_internal_m3_collections_M3LabelPool.class, //
+			Test_org_eclipse_swt_internal_m3_collections_M3ShortLabel.class, //
+			Test_org_eclipse_swt_internal_m3_collections_M3TextExtentCache.class, //
+			Test_org_eclipse_swt_internal_m3_collections_M3TreePathTrie.class, //
+			Test_org_eclipse_swt_internal_render_FrameLog.class, //
+			Test_org_eclipse_swt_internal_render_FrameSlab.class, //
+			Test_org_eclipse_swt_internal_render_GlyphCache.class, //
+			Test_org_eclipse_swt_internal_render_Glyphs.class, //
+			Test_org_eclipse_swt_internal_render_LongCache.class, //
+			Test_org_eclipse_swt_internal_render_M3Canvas.class, //
+			Test_org_eclipse_swt_internal_render_RowPaintKey.class, //
+			Test_org_eclipse_swt_internal_render_RowRenderer.class, //
+			Test_org_eclipse_swt_internal_render_RowSnapshots.class, //
+			Test_org_eclipse_swt_internal_render_SvgSkins.class, //
+			Test_org_eclipse_swt_internal_render_Themes.class, //
+			Test_org_eclipse_swt_internal_render_ThreadRole.class, //
+			Test_org_eclipse_swt_internal_render_ThreadRoleBasic.class, //
+			Test_org_eclipse_swt_internal_render_VectorGlyphs.class, //
+			Test_org_eclipse_swt_internal_render_Win32Backends.class, //
 	})
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)

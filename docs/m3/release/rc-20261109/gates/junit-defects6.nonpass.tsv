@@ -1,0 +1,6 @@
+mark	node	parent	test	message
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_treePaintNeverMaterializesRowsWithoutApiCalls()	root rows painted without TreeItems ==> expected: <0> but was: <22>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_treeUnknownChildrenFetchedOnExpandWithMaskBitPlaceholder()	the loading child is a mask bit, not a TreeItem ==> expected: <22> but was: <29>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_treeBulkChildCountIsBatchedWithPreciseDamageOnly()	only an operation larger than one screen is batched ==> expected: <1> but was: <0>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain()	evicted blocks were swapped out ==> expected: <true> but was: <false>
+ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_awt_Java2DCanvas	test_screenPanCoverUncoverEqualsFreshFrame()	Assumption failed: viewport screenshot lane disabled

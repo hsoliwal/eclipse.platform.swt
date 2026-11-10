@@ -483,6 +483,11 @@ public class Test_org_eclipse_swt_widgets_List_ViewportAcceptance {
 		/* with a selection and its anchor: a removal above clears the anchor (at most two operations) */
 		list.setSelection (new int [] {7, 50_503, 99_990});
 		stock.setSelection (new int [] {7, 50_503, 99_990});
+		//FLLDCIM: TOP - setSelection scrolls to the new selection (List contract), here to row 7, which moved the window
+		//FLLDCIM: TOP - (its ~99 row operations were counted as the splice's); put the top back so row 30 is above it again
+		list.setTopIndex (50_000);
+		stock.setTopIndex (50_000);
+		before = (Long) ops.invoke (list);
 		splice.invoke (list, 30, 10, new String [] {"a", "b"});
 		itemApi (stock, 30, 10, new String [] {"a", "b"});
 		long cleared = (Long) ops.invoke (list) - before;

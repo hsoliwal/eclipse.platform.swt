@@ -421,10 +421,11 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportCoverage {
 		settle ();
 		assertEquals (1, tree.getSelectionCount (), "SINGLE: the new caret row is selected");
 		assertEquals ("root 6", tree.getSelection () [0].getText ());
-		/* shrinking past the caret deselects and puts the caret on the new last row */
+		/* shrinking past the caret puts the caret on the new last row; in SINGLE that row is the selection */
+		//FLLDCIM: TOP - official SWT 3.135.0 oracle (docs/m3/release/rc-20261109/oracle): selectionCount 1, focus "root 2"
 		tree.setItemCount (3);
 		settle ();
-		assertEquals (0, tree.getSelectionCount (), "the native caret move on deletion deselects");
+		assertEquals (1, tree.getSelectionCount (), "SINGLE: the caret row after the shrink is selected, as official SWT");
 		assertEquals ("root 2", focusText (tree));
 		tree.setItemCount (0);
 		settle ();

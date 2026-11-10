@@ -1,0 +1,4 @@
+mark	node	parent	test	message
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_tableEachRowFetchedOnceAcrossScrollAwayAndBackAndDataReproduced()	data handle applied from the block ==> expected: <35> but was: <null>
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_tableTransientFacadesAreReleasedAndReproduced()	materialized item is not in storage
+FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_VirtualPageSource	test_invalidateRefetchesAndKeepFacadesNeverReleases()	rows re-asked after invalidate ==> expected: <1:0> but was: <0:0>

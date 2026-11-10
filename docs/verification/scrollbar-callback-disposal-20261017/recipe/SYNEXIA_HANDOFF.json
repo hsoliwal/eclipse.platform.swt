@@ -1,0 +1,172 @@
+{
+  "schema": "SYNEXIA_VIEWPORT_OFFLINE_RECIPE_MIRROR_V1",
+  "canonical_repository": "hsoliwal/com.synexia",
+  "canonical_revision": "893118ced3ba18f97633c24c8090d1aa83b4113c",
+  "publication_status": "PINNED",
+  "canonical_crate_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017",
+  "canonical_engine_revision": "892e3f6c51d78bc0948e8a8cf736055b4c70eafa",
+  "recipe_name": "com.synexia.swt.ScrollBarCallbackDisposal20261017",
+  "target_repository": "hsoliwal/eclipse.platform.swt",
+  "target_revision": "bff9c98564a575781d9a19f61dc5561c1d13ce2a",
+  "purpose": "Offline source-authoring and qualification mirror only; no product runtime dependency",
+  "licenses": {
+    "recipe_and_engine": "Apache-2.0",
+    "target_payloads": "Retain each original source header; Apache-2.0 OR EPL-2.0 and EPL-2.0 payloads are not relicensed"
+  },
+  "commands_from_recipe_directory": [
+    "mvn -B -o -ntp -Drecipe.owner.root=\"$PWD/sdk-owner\" verify",
+    "python3 receive.py --target /absolute/path/to/product --check",
+    "python3 receive.py --target /absolute/path/to/product",
+    "python3 receive.py --target /absolute/path/to/product --check"
+  ],
+  "sdk_qualification": "Run the exact five SDK tests locally before the receiver; target runtime evidence remains separate",
+  "files": [
+    {
+      "path": "LICENSES/Apache-2.0.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/LICENSES/Apache-2.0.txt",
+      "sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6",
+      "git_blob": "29f81d812f3e768fa89638d1f72920dbfd1413a8",
+      "bytes": 11558
+    },
+    {
+      "path": "LICENSES/EPL-2.0.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/LICENSES/EPL-2.0.txt",
+      "sha256": "0becf16567beb77fa252b7664631dd177c8f9a1889e48995b45379c7130e5303",
+      "git_blob": "e23ece2c852415800ac224b74ede6c5849f6f88d",
+      "bytes": 14198
+    },
+    {
+      "path": "NOTICE",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/NOTICE",
+      "sha256": "48c879ec1e01ba1a8f4f4643f9bc0b55324704e50655f9658c9a0ed654b03d0a",
+      "git_blob": "ad17f5b4a7425cf2abc66e54ca3a16b0aca4e3ce",
+      "bytes": 1094
+    },
+    {
+      "path": "README.md",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/README.md",
+      "sha256": "15d718b2f689bdfa6b32fc2aca5f49b606d1f2891225a024e72c030bce2fd946",
+      "git_blob": "bf9b832828ab511e9938b3fbde08b4b1b01f1d62",
+      "bytes": 5720
+    },
+    {
+      "path": "crate.json",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/crate.json",
+      "sha256": "320d731d0cc172ade8201c3009d55b53d93286a7a80d0a085ea59245d73b5868",
+      "git_blob": "213678ab445e91f9bb66b5a496c1fe6e58541d7f",
+      "bytes": 3271
+    },
+    {
+      "path": "pom.xml",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/pom.xml",
+      "sha256": "cb242e4a8f562d4e7b21e3984e7e1da5ee5103e4601c6659b1181df0db1adb09",
+      "git_blob": "35ff74e50d59364badbbd029581108c5e112a572",
+      "bytes": 3189
+    },
+    {
+      "path": "receive.py",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/receive.py",
+      "sha256": "24ce6011c0bc7d89fc863f8f809740b24d943cb40c5aaf9aba03adf0f222dadf",
+      "git_blob": "7b441c78df78c5c0dcc2f8a3526d588981880037",
+      "bytes": 5941
+    },
+    {
+      "path": "sdk-owner/src/main/java/com/synexia/rewrite/M3EditScope.java",
+      "canonical_path": "synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3EditScope.java",
+      "sha256": "962d37d62d740c3e8055c365a048ae7ee0479c26a9f6bbfe741e540d6c1134ab",
+      "git_blob": "274360816db1e44a2f1796a3bc5cdeff6b0ce6db",
+      "bytes": 1052
+    },
+    {
+      "path": "sdk-owner/src/main/java/com/synexia/rewrite/M3HashPinnedJavaSnapshotRecipe.java",
+      "canonical_path": "synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedJavaSnapshotRecipe.java",
+      "sha256": "67f7b81126e4736c7b61b444fa6545153a61e23c012975ca796fcee623ab6625",
+      "git_blob": "3bdeeaea9a212fe0c7d1f544510f87c4cd49eb40",
+      "bytes": 31181
+    },
+    {
+      "path": "sdk-owner/src/main/java/com/synexia/rewrite/M3HashPinnedTextSnapshotRecipe.java",
+      "canonical_path": "synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedTextSnapshotRecipe.java",
+      "sha256": "fbf1ea9efad784afef5ac201ff7fc324551f77a099ebfe2f79b70c3a17c731ef",
+      "git_blob": "9d0788d3717e017d58345c5c3e62022c2915a3c8",
+      "bytes": 18026
+    },
+    {
+      "path": "sdk-owner/src/main/java/com/synexia/rewrite/M3ScopeInference.java",
+      "canonical_path": "synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3ScopeInference.java",
+      "sha256": "13660b59f60ec2941ec19e9bc8964ffd4b04689cdc33cd19711fba14b8da09a4",
+      "git_blob": "d24729950508857280ea1b56d4e930f05137ec85",
+      "bytes": 7655
+    },
+    {
+      "path": "src/main/resources/META-INF/rewrite/m3-swt-scrollbar-callback-disposal-20261017.yml",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/src/main/resources/META-INF/rewrite/m3-swt-scrollbar-callback-disposal-20261017.yml",
+      "sha256": "88aa64f7abafb4f2424bc389aeb0b4b17e730e6e9d56ade9f613949cb66a5467",
+      "git_blob": "c97d70346007bedb612331f4fffb2b54252091b6",
+      "bytes": 681
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/manifest.tsv",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/manifest.tsv",
+      "sha256": "053fe03435ab58cfc8ccb18c407134fe2c99e76277143833bfb9099062193a3f",
+      "git_blob": "ae6141b34d260b27aa0bb87558daf17fd4fc1f31",
+      "bytes": 772
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/pre/target-001.java.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/pre/target-001.java.txt",
+      "sha256": "966855c88fbe0fa13c25b5df89ec62ddbead1850bc94ef935d27f9d2c83f15ca",
+      "git_blob": "d8c3902e7c710a436fa0ee9368ba098e0b237f59",
+      "bytes": 33197
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/pre/target-002.java.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/pre/target-002.java.txt",
+      "sha256": "486e76aa4145f86b342841c9eded7feb2a878b099b60d67db1a0b7a06fbef597",
+      "git_blob": "9979b2fbe45481f1c96db5a399dc3516108726b0",
+      "bytes": 4972
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/target-001.java.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/target-001.java.txt",
+      "sha256": "b2cc90ce5b7f3f706a758099eacdca8199cae5ac53f7b44cdb9beb779aa09966",
+      "git_blob": "8aa2b71e77eda7ba2a1a3e3eb29700d71aad623d",
+      "bytes": 33351
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/target-002.java.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/target-002.java.txt",
+      "sha256": "5ad5c035f36409a26be9d2f763b42bba7686f6ce5b46badc4d40fa59bf89c883",
+      "git_blob": "e6398a083dfa3c81e45b61d8cfa647fd7ed19f03",
+      "bytes": 5043
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/target-003.java.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/target-003.java.txt",
+      "sha256": "cf94333fc5329b963bade2d842fbcb0352a05342d9c0f2bee2b1b8715898488a",
+      "git_blob": "2579c011d577618c007661c191ad67a69a28df82",
+      "bytes": 8634
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-scrollbar-callback-disposal-20261017/manifest.tsv",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-scrollbar-callback-disposal-20261017/manifest.tsv",
+      "sha256": "3ffa9011543b4506d97b9c8c0d4d4df51620af5d09e9bd69db23bbab07721d91",
+      "git_blob": "6a206aae4bffa03811a9e418519dc67fd6a22237",
+      "bytes": 230
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-scrollbar-callback-disposal-20261017/target-000.text.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-scrollbar-callback-disposal-20261017/target-000.text.txt",
+      "sha256": "a19a706f3ba03f828c2ca94b48535bd36d4ab08ef0cfd58707f3dfbd12c1b0f0",
+      "git_blob": "4d3570c577a880938240eca1b3baad8203f2c08a",
+      "bytes": 5099
+    },
+    {
+      "path": "src/test/java/com/synexia/rewrite/M3TaskRecipeTest.java",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/src/test/java/com/synexia/rewrite/M3TaskRecipeTest.java",
+      "sha256": "015e2f8257c6e2b5573cecb32929cfbc8a41766a2bac4446172ccfab28b7ebb3",
+      "git_blob": "3ff7e6f49fd75a34d0991ced8d069b956da0ee49",
+      "bytes": 16821
+    }
+  ]
+}

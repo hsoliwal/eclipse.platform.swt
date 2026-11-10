@@ -14,7 +14,7 @@ Native work is O(window); model work runs off the UI thread with generation chec
 
 Five startup modes are chosen with `-Dswt.widget.mode=viewport|original|custom|m3|gpu`, plus a per-class override `-Dswt.widget.mode.<Widget>`:
 - `viewport` is the default;
-- `original` is stock SWT;
+- `original` disables this fork's viewport; the separately recorded official SWT artifact is the stock reference;
 - `custom`, `m3` and `gpu` are the drawn modes.
 
 ## Release status and evidence
@@ -24,6 +24,9 @@ matrix, test selection, packaging scope and pending release gates. Widget result
 and coverage percentages below summarize their linked historical campaigns; they
 do not establish qualification of a later combined source commit or every native
 backend. Always record the candidate SHA and the measured class/platform/mode scope.
+
+[Fork release-readiness gates](../RELEASE_READINESS.md) ·
+[Candidate packaging and naming](../RELEASE_PACKAGING.md)
 
 ## Start here
 

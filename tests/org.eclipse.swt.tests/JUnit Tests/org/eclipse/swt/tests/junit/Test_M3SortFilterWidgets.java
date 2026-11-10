@@ -446,7 +446,8 @@ public class Test_M3SortFilterWidgets {
 		new TableColumn (table, SWT.NONE).setWidth (40);
 		row.refresh ();
 		table.getColumn (3).dispose ();
-		assertTrue (table.getItem (0).getText (1).contains ("12"));
+		//FLLDCIM: TOP - M3FilterRow applies a field after M3FilterRow.DELAY (timerExec); wait as the clearing step below does
+		waitFor (() -> table.getItem (0).getText (1).contains ("12"));
 		assertNotNull (table.getColumn (1).getImage ());
 		row.getText (1).setText ("");
 		waitFor (() -> !filter.isActive (1));

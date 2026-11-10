@@ -1,0 +1,62 @@
+{
+  "canonical_repository": "hsoliwal/com.synexia",
+  "canonical_base_branch": "m3/viewport-pr-recovery-20261017",
+  "canonical_base_commit": "a14a26e92fb65d0fbcd7f71e7ae1653222ccc439",
+  "canonical_base_tree": "03f1a1400ac985f211946f42c5afc9f04a05c5a2",
+  "canonical_parent": "892e3f6c51d78bc0948e8a8cf736055b4c70eafa",
+  "canonical_pull_request": 12108,
+  "verification": "GitHub Git commit GET independently read; target local Git tree compared with remote Git commit tree",
+  "swt_source_alias": {
+    "local_qualification_commit": "ca77c0272fb6c1ea12594ac00baca8fb9b50ce3d",
+    "remote_source_commit": "2db994eb1e21639a093d18bf9fb35ddeb6a7871d",
+    "equal_tree": "a5ae1e07c8843fe74ce27fe855dae5e81bcb7e5e"
+  },
+  "metadata_inputs": {
+    "synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv": {
+      "git_blob": "25e35ab44b6b5e8d771d06fb7d3ffbd0b9994df8",
+      "sha256": "7171ee8761f7823eae2f554017c02739acc4d43106d102d71f1137e7ae467abb",
+      "bytes": 42666
+    },
+    "docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv": {
+      "git_blob": "367e7c147f1bf9f0dfba24b0c25d07b3219b969a",
+      "sha256": "2330e21fc780f523472b1f1f235f4d16f3b07865f975e6d9839e5dad6c53f376",
+      "bytes": 1241975
+    }
+  },
+  "parent_metadata_remote_blob_verification": {
+    "method": "Authenticated GitHub repository file GET at exact canonical parent commit; start_line1,end_line3",
+    "registry_git_blob": "25e35ab44b6b5e8d771d06fb7d3ffbd0b9994df8",
+    "ledger_git_blob": "367e7c147f1bf9f0dfba24b0c25d07b3219b969a",
+    "result": "MATCH exact local parent bytes"
+  },
+  "receiving_swt_parent": {
+    "repository": "hsoliwal/eclipse.platform.swt",
+    "base_branch": "m3/viewport-paintgraph-recovery-20261017",
+    "local_qualification_commit": "b42becc14a4522d5342649cb527bd5e70aa7c86b",
+    "local_tree": "283cd2e30aa2c5522ca95a88b4d02fbcf9035a07",
+    "remote_source_commit": "bff9c98564a575781d9a19f61dc5561c1d13ce2a",
+    "remote_tree": "06bcccfd1b29ae3ca06f1a4fb8220432ec9d8cc7",
+    "tree_relationship": "Different trees. Only exact receiving source paths are asserted equivalent; do not infer whole-tree equality.",
+    "existing_preimages_verified": [
+      {
+        "path": "bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java",
+        "git_blob": "d8c3902e7c710a436fa0ee9368ba098e0b237f59"
+      },
+      {
+        "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/AllWidgetTests.java",
+        "git_blob": "9979b2fbe45481f1c96db5a399dc3516108726b0"
+      }
+    ],
+    "method": "Authenticated GitHub file GET at exact remote commit compared with local Git HEAD:path object IDs",
+    "absent_targets_verified": [
+      {
+        "path": ".m3/swt-scrollbar-callback-disposal-20261017/RECEIVER.md",
+        "status": "GitHub API 404 NOT_FOUND at immutable remote parent"
+      },
+      {
+        "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java",
+        "status": "GitHub API 404 NOT_FOUND at immutable remote parent"
+      }
+    ]
+  }
+}

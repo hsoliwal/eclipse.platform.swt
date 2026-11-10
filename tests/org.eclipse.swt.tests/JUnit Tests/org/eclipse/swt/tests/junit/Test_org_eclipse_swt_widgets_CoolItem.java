@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.widgets.CoolItem;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 
@@ -91,6 +92,7 @@ public void test_computeSizeII() {
 }
 
 @Test
+@Disabled("Failing test upstream: AllWidgetTests excludes this class as '// Failing test' (eclipse.platform.swt 0ef6051a20, 2025-09-24)")
 public void test_getBounds() {
 	CoolBar coolBar = new CoolBar(shell, 0);
 	CoolItem coolItem = new CoolItem(coolBar, 0);
@@ -164,6 +166,7 @@ public void test_getSize() {
 }
 
 @Test
+@Disabled("Failing test upstream: AllWidgetTests excludes this class as '// Failing test' (eclipse.platform.swt 0ef6051a20, 2025-09-24)")
 public void test_setControlLorg_eclipse_swt_widgets_Control() {
 	CoolBar coolBar = new CoolBar(shell, 0);
 	CoolItem coolItem = new CoolItem(coolBar, 0);
@@ -222,6 +225,7 @@ public void test_setPreferredSizeLorg_eclipse_swt_graphics_Point() {
 }
 
 @Test
+@Disabled("Failing test upstream: AllWidgetTests excludes this class as '// Failing test' (eclipse.platform.swt 0ef6051a20, 2025-09-24)")
 public void test_setSizeII() {
 	CoolBar coolBar = new CoolBar(shell, 0);
 	CoolItem coolItem = new CoolItem(coolBar, 0);

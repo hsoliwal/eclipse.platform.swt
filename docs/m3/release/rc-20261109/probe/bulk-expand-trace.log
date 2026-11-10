@@ -1,0 +1,50 @@
+stty: /dev/tty: No such device or address
+Nov 09, 2026 6:14:46 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINE: Tree visible again: one window patch after 1 parked layouts
+Nov 09, 2026 6:14:46 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINE: Tree focus without a caret: caret on logical top row 0
+Nov 09, 2026 6:14:46 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINE: Tree setItemCount 40 (roots)
+Nov 09, 2026 6:14:47 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINE: Tree setItemCount 1 (children of id 0)
+Nov 09, 2026 6:14:47 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINE: Tree native expansion of id 0: cached true, child count known true -> true (1), expanded false
+Nov 09, 2026 6:14:47 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINE: Tree setItemCount 5 (children of id 0)
+Nov 09, 2026 6:14:47 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+FINE: Tree setTopItem id 1
+╷
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  └─ Test_org_eclipse_swt_widgets_VirtualPageSource ✔
+│     └─ test_treeBulkChildCountIsBatchedWithPreciseDamageOnly() ✘ only an operation larger than one screen is batched ==> expected: <1> but was: <0>
+└─ JUnit Vintage ✔
+
+Failures (1):
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_VirtualPageSource:test_treeBulkChildCountIsBatchedWithPreciseDamageOnly()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource', methodName = 'test_treeBulkChildCountIsBatchedWithPreciseDamageOnly', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: only an operation larger than one screen is batched ==> expected: <1> but was: <0>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+       org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+       org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource.test_treeBulkChildCountIsBatchedWithPreciseDamageOnly(Test_org_eclipse_swt_widgets_VirtualPageSource.java:536)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+Test run finished after 1023 ms
+[         4 containers found      ]
+[         0 containers skipped    ]
+[         4 containers started    ]
+[         0 containers aborted    ]
+[         4 containers successful ]
+[         0 containers failed     ]
+[         1 tests found           ]
+[         0 tests skipped         ]
+[         1 tests started         ]
+[         0 tests aborted         ]
+[         0 tests successful      ]
+[         1 tests failed          ]
+

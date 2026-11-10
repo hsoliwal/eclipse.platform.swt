@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/tmp/m3-toolchain/apache-maven-3.9.11/bin/mvn",
+    "-B",
+    "-o",
+    "-ntp",
+    "-f",
+    "/tmp/synexia-viewport-followups-20261017/synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017/pom.xml",
+    "-Dmaven.repo.local=/tmp/m3-maven-repository",
+    "verify"
+  ],
+  "JAVA_HOME": "/tmp/m3-toolchain/jdk-21.0.12.1+1",
+  "exit_code": 0,
+  "elapsed_seconds": 17.686,
+  "log_sha256": "3e7619b8c591c1510a3fd9d297405c5790ffef355d39971bbf716b3402c4a187"
+}

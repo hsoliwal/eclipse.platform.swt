@@ -157,6 +157,18 @@ final class VisibilityCatchUp {
 		}
 	}
 
+	/** Whether an enlisted control with deferred work lies strictly inside the root's subtree (same shell). */
+	static boolean hasDirtyDescendant (Control root) {
+		Display d = root.display;
+		for (int i = 0; i < d.visDirtyCount; i++) {
+			Control c = d.visDirty [i];
+			if (c != null && c != root && !c.isDisposed () && (c.state & DIRTY_ALL) != 0 && isAncestor (root, c)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	static boolean isAncestor (Control root, Control c) {
 		for (Control p = c; p != null; p = p.parent) {
 			if (p == root) {

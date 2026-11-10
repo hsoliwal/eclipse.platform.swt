@@ -15,7 +15,7 @@ claim cross-platform compatibility merely because a source branch builds.
 | Java automatic module | `org.eclipse.swt`, unchanged |
 | Public Java API | Existing `org.eclipse.swt.*` package names, type/member descriptors and behavioral contracts |
 | Required execution environment | `JavaSE-21` in the current bundle manifest |
-| CI compiler/test JDK | Java **25** in the current `maven.yml` matrix; not the same as the minimum supported API runtime |
+| CI compiler/test JDK | Java **21 and 25** are configured in the current `maven.yml` matrix; compatibility requires successful execution for each claimed platform |
 | Internal M3 implementation | Existing `org.eclipse.swt.internal.*` packages and `M3*` helpers only as explicitly qualified internal owners |
 | Native ABI | Platform-specific JNI entry points and generated glue must match Java declarations and the native fragment |
 | Licensing | Preserve upstream EPL-2.0 and rights-holder-specific license/NOTICE headers; do not apply another license to upstream files |
@@ -183,3 +183,7 @@ fragment, JUnit test and skip totals, screenshot diffs, JNI generation diff,
 leaks/GC/native-memory checks, artifact hashes, exclusions and known failures.
 A passing preflight only proves its stated static checks; the release remains
 blocked until the complete native/GUI/platform and license gates pass.
+
+## Integrated receiving candidate
+
+The current additive receiving scope and unresolved OSGi/native gates are recorded in [the integration contract](m3/release/INTEGRATION.md).
