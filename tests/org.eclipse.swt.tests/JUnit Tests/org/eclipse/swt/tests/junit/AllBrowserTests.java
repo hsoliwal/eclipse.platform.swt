@@ -20,7 +20,8 @@ import org.junit.platform.suite.api.Suite;
 @Suite(failIfNoTests = false)
 @SelectClasses({
 	Test_org_eclipse_swt_browser_Browser.class,
-	Test_org_eclipse_swt_browser_Browser_IE.class
+	Test_org_eclipse_swt_browser_Browser_IE.class,
+	Test_org_eclipse_swt_browser_EdgePartVisibility.class
 })
 public class AllBrowserTests {
 }
