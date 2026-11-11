@@ -125,6 +125,15 @@ instrumentation. The naming preflight also rejects any platform matrix
 that silently drops Java 21 or Java 25 from Linux, Windows or macOS;
 a declared matrix still needs real green native/backend executions.
 
+### Exact PR check status at review (2026-11-11)
+
+The draft PR head currently has **zero GitHub check runs** and no
+pull-request workflow runs. Do not treat this as green. The repository's
+existing default-branch SWT matrix has recent failed runs as well as
+successful result-publication jobs; those default-branch runs are not
+evidence for this PR's exact source commit. The PR requires an explicit
+CI execution/receipt before it can leave draft or satisfy release admission.
+
 ## Native-independent Java 21 acceptance slice
 
 The [headless Java 21 runner](../tools/release/run_headless_java21.sh)
