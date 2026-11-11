@@ -93,13 +93,24 @@ line/branch coverage remain separate release requirements.** No coverage percent
 ### Remaining recorded differential/oracle tests
 
 The seven outstanding classes in the source ledger are not silently marked
-PASS. Each requires a version-pinned **official SWT reference run**, an
-M3-fork replay with the same script/seed and OS/backend, recorded public-state
-comparisons, and unmodified raw logs and hashes. These include the bulk-update,
-diff-apply, proxy-model, row-math, scrollbar-model, scroll-memento and
-sort/filter differentials. Some tests deliberately skip without their
-recording/oracle environment; a skipped test is not accepted execution
-coverage. The current `audit_suite_inventory.py --release` requires **zero**
+PASS. Most are paired official-SWT-vs-fork recording tests that require
+the same platform, script and seed; the sort/filter test uses an in-process
+Java reference model. The release reviewer must capture:
+
+| Unreferenced class | Reference contract and required evidence |
+| --- | --- |
+| `Test_M3BulkUpdatesDifferential` | Official unbatched Table/List/Tree edits vs M3 grouped updates, identical public state |
+| `Test_M3DiffApplyDifferential` | Official item rebuild vs M3 diff/splice, identical items and selection |
+| `Test_M3ProxyModelDifferential` | Official virtual Table `SetData` model vs M3 proxy filtered/sorted rows |
+| `Test_M3RowMathDifferential` | Official public Tree preorder vs M3 row/subtree/scroll mathematics |
+| `Test_M3ScrollBarModelDifferential` | Official scrollbar getter values vs M3 scrollbar state lanes |
+| `Test_M3ScrollMementoDifferential` | Official top-index remapping vs M3 save/remap/restore |
+| `Test_M3SortFilterDifferential` | Seeded in-process List/filter/sort oracle vs M3 indexed results and mutation behavior |
+
+Each execution requires the exact test source and reference versions,
+machine/backend, command/flags, raw outputs, comparison verdict and
+SHA-256. Some tests deliberately skip without their recording/oracle
+environment; a skipped test is **not** accepted coverage. The current `audit_suite_inventory.py --release` requires **zero**
 default-suite omissions; this exception catalogue alone does not waive that
 gate. An independently qualified execution path would require a separately
 reviewed release contract change and evidence validator before admission.
