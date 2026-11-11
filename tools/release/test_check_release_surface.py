@@ -25,7 +25,10 @@ class ReleaseSurfaceTest(unittest.TestCase):
                  "Bundle-RequiredExecutionEnvironment: JavaSE-21\n")
         self.put("tests/org.eclipse.swt.tests/pom.xml", "<test>AllTests</test>\n")
         self.put(".github/workflows/maven.yml",
-                 "jobs:\n  build-linux:\n  build-windows:\n  build-macos:\n")
+                 "jobs:\n"
+                 "  build-linux:\n    strategy:\n      matrix:\n        java: ['21', '25']\n"
+                 "  build-windows:\n    strategy:\n      matrix:\n        java: ['21', '25']\n"
+                 "  build-macos:\n    strategy:\n      matrix:\n        java: ['21', '25']\n")
         self.put(release.TEST_DIR / "AllTests.java",
                  "@SelectClasses({Test_ItemBitSetDifferential.class, "
                  "Test_ItemBitSetMaximumPosition.class})\n")
@@ -58,6 +61,17 @@ class ReleaseSurfaceTest(unittest.TestCase):
         report = release.audit(self.root)
         self.assertFalse(report["passed"])
         self.assertFalse(report["checks"]["Test_ItemBitSetMaximumPosition_registered"])
+
+    def test_missing_java21_in_one_platform_matrix_is_a_blocker(self):
+        matrix = self.root / ".github/workflows/maven.yml"
+        matrix.write_text(matrix.read_text(encoding="utf-8").replace(
+            "  build-windows:\n    strategy:\n      matrix:\n        java: ['21', '25']",
+            "  build-windows:\n    strategy:\n      matrix:\n        java: ['25']"),
+            encoding="utf-8")
+        report = release.audit(self.root)
+        self.assertFalse(report["passed"])
+        self.assertFalse(report["checks"]["build-windows_java21_java25"])
+        self.assertTrue(report["checks"]["build-linux_java21_java25"])
 
     def test_source_without_a_junit_test_is_a_blocker(self):
         self.put(release.TEST_DIR / "Test_ItemBitSetDifferential.java",
