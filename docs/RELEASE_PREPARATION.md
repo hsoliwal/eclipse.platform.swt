@@ -58,14 +58,14 @@ JUnit execution remain different receipts.
 
 The additional [suite audit](../tools/release/audit_suite_inventory.py)
 walks `AllTests` and its nested `@SelectClasses` suites, without treating
-commented-out class names as execution. At the **2026-11-07 review baseline**,
-the main JUnit directory has **328 test-like `Test_*.java` or `*Test.java`
-sources**: **158 referenced by the default suite graph** and **170 not
-referenced there**. The full, explicit
-[170-class omission baseline](../tools/release/unreferenced-suite-baseline.txt)
-names the classes instead of burying the gap in a single percentage. It
-includes UI, residency, viewport and differential candidates. Some may have
-focused CI routes; this audit does **not** claim that none of them ever run.
+commented-out class names as execution. At the **2026-11-11 source review**, the main JUnit directory has **332
+test-like `Test_*.java` or `*Test.java` sources**. Registering the new Edge
+visibility and CTabFolder same-colour tests gives **325 reachable from the
+default suite graph**. The remaining **7 unreferenced** tests are recorded
+in the [oracle-dependent omission ledger](../tools/release/unreferenced-suite-baseline.txt).
+These seven differential tests may be exercised through focused runs; their
+actual execution and original-SWT comparison receipts have **not** been
+verified by this source audit. Do not infer coverage from test filenames.
 
 `--strict` rejects newly unreferenced classes, missing suite members or
 deleted baseline sources. `--release` additionally demands **zero** default
@@ -84,12 +84,25 @@ python3 tools/release/audit_suite_inventory.py --root . --release
 These tests intentionally cover only the **M3 sparse-state release slice**.
 They do not establish all-widget statement/branch coverage, JNI/native
 memory safety, or correctness of every viewport implementation. The
-suite inventory now names the unreferenced candidates, and the JUnit XML
+suite inventory now names the seven oracle-dependent candidates, and the JUnit XML
 consumer reports total observed testcase counts, observed class counts,
-failed and skipped class names for each platform. **Reconciling the 170
-candidates with focused workflows, adding missing suite registrations,
-and measuring instrumented line/branch coverage remain separate release
-requirements.** No coverage percentage is inferred from filenames.
+failed and skipped class names for each platform. **Reconciling the seven recorded differentials with independent official-SWT
+reference runs and exact-source receipts, and measuring instrumented
+line/branch coverage remain separate release requirements.** No coverage percentage is inferred from filenames.
+
+### Remaining recorded differential/oracle tests
+
+The seven outstanding classes in the source ledger are not silently marked
+PASS. Each requires a version-pinned **official SWT reference run**, an
+M3-fork replay with the same script/seed and OS/backend, recorded public-state
+comparisons, and unmodified raw logs and hashes. These include the bulk-update,
+diff-apply, proxy-model, row-math, scrollbar-model, scroll-memento and
+sort/filter differentials. Some tests deliberately skip without their
+recording/oracle environment; a skipped test is not accepted execution
+coverage. The current `audit_suite_inventory.py --release` requires **zero**
+default-suite omissions; this exception catalogue alone does not waive that
+gate. An independently qualified execution path would require a separately
+reviewed release contract change and evidence validator before admission.
 
 ## Native-independent Java 21 acceptance slice
 
@@ -115,7 +128,7 @@ pre-existing workflow entrypoint on PRs. The dedicated
 [`release-preflight.yml`](../.github/workflows/release-preflight.yml)
 runs it again on `release/**` and explicit dispatch; for a release branch
 it also executes the suite auditor with `--release`, which **blocks until
-the 170 outstanding default-suite omissions are closed**. Both paths
+the 7 remaining oracle-dependent default-suite omissions are closed**. Both paths
 upload source-bound test logs and hashes. A green Java 21 run would prove
 only the compiled subset: **it is not an installed SWT bundle test,
 Java 21 execution of every public class, a JNI/OSGi proof or a native UI
