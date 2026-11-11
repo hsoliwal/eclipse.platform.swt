@@ -57,6 +57,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_custom_CCombo.class, //
 		Test_org_eclipse_swt_custom_CLabel.class, //
 		Test_org_eclipse_swt_custom_CTabFolder.class, //
+		Test_org_eclipse_swt_custom_CTabFolder_SameColour.class, //
 		Test_org_eclipse_swt_custom_CTabItem.class, //
 		Test_org_eclipse_swt_custom_ExtendedModifyListener.class, //
 		Test_org_eclipse_swt_custom_LineBackgroundListener.class, //
