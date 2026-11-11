@@ -21,6 +21,26 @@ def manifest_property(body: str, key: str) -> str:
     return match.group(1).strip() if match else ""
 
 
+def java_ci_lanes(workflow: str) -> dict[str, bool]:
+    """Require Java 21 and 25 in each actual platform build matrix.
+
+    Static matrix parsing is intentionally narrow: nested reusable jobs and
+    external workflow execution remain separate platform evidence.
+    """
+    wanted = ("build-linux", "build-windows", "build-macos")
+    heads = list(re.finditer(r"(?m)^  ([a-z][a-z0-9-]*):\s*$", workflow))
+    sections = {}
+    for index, head in enumerate(heads):
+        if head.group(1) not in wanted:
+            continue
+        end = heads[index + 1].start() if index + 1 < len(heads) else len(workflow)
+        body = workflow[head.end():end]
+        match = re.search(r"(?m)^        java:\s*\[([^\]]+)\]\s*$", body)
+        versions = set(re.findall(r"['\"](\d+)['\"]", match.group(1))) if match else set()
+        sections[head.group(1)] = {"21", "25"} <= versions
+    return {name: sections.get(name, False) for name in wanted}
+
+
 def audit(root: Path) -> dict:
     root = root.resolve()
     manifest = (root / "bundles/org.eclipse.swt/META-INF/MANIFEST.MF").read_text(encoding="utf-8")
@@ -51,6 +71,8 @@ def audit(root: Path) -> dict:
             re.search(r"(?m)^  " + lane + r":", matrix)
             for lane in ("build-linux", "build-windows", "build-macos")
         ),
+        **{lane + "_java21_java25": enabled
+           for lane, enabled in java_ci_lanes(matrix).items()},
         **{name + "_source_has_test": present[name] for name in REQUIRED},
         **{name + "_registered": name in entries for name in REQUIRED},
     }
