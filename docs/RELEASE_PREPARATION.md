@@ -104,6 +104,16 @@ default-suite omissions; this exception catalogue alone does not waive that
 gate. An independently qualified execution path would require a separately
 reviewed release contract change and evidence validator before admission.
 
+The source-audit JSON now binds the **exact candidate test-source set**,
+**nested suite-definition set** and **reviewed omission baseline** to
+domain-separated SHA-256 fingerprints. Unit tests prove that changing
+either a candidate source or a suite changes the corresponding digest
+without silently changing the other. These fingerprints provide a
+reproducible audit input, **not** executed JUnit results or bytecode
+instrumentation. The naming preflight also rejects any platform matrix
+that silently drops Java 21 or Java 25 from Linux, Windows or macOS;
+a declared matrix still needs real green native/backend executions.
+
 ## Native-independent Java 21 acceptance slice
 
 The [headless Java 21 runner](../tools/release/run_headless_java21.sh)
