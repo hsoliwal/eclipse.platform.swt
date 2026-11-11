@@ -5,8 +5,9 @@
 # baseline, recording properties, seeded replay and GUI/native environment.
 # Their presence here is NOT executed test coverage and NOT a release waiver.
 # --strict rejects new omissions and source disappearances.
-# --release continues to HOLD until every class is default-reachable or an
-# independent reviewed execution-and-parity receipt is admitted.
+# --release currently requires zero omissions. A qualified separate-oracle
+# evidence path would need explicit reviewed policy/validator changes; this
+# baseline by itself cannot waive the release gate.
 Test_M3BulkUpdatesDifferential
 Test_M3DiffApplyDifferential
 Test_M3ProxyModelDifferential
