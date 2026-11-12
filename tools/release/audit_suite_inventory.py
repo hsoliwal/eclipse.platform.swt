@@ -10,6 +10,7 @@ Surefire execution receipts or line/branch/native coverage.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -27,6 +28,24 @@ def selections(source: str) -> list[str]:
     without_blocks = re.sub(r"/\*.*?\*/", "", match.group("body"), flags=re.DOTALL)
     without_comments = re.sub(r"//[^\n]*", "", without_blocks)
     return CLASS_PATTERN.findall(without_comments)
+
+
+def fingerprint(root: Path, paths: set[Path]) -> str:
+    """Domain-separated exact-content digest of one stable path set.
+
+    Records contain the POSIX relative path, byte length and SHA-256 of each
+    file. Never treat the digest as executed tests, a line coverage statistic,
+    or a replacement for an exact Git commit/tree receipt.
+    """
+    digest = hashlib.sha256(b"SWT_RELEASE_SOURCE_SET_V1\0")
+    for relative in sorted(paths, key=lambda p: p.as_posix()):
+        name = relative.as_posix().encode("utf-8")
+        data = (root / relative).read_bytes()
+        digest.update(len(name).to_bytes(4, "big"))
+        digest.update(name)
+        digest.update(len(data).to_bytes(8, "big"))
+        digest.update(hashlib.sha256(data).digest())
+    return digest.hexdigest()
 
 
 def audit(root: Path, baseline: Path = DEFAULT_BASELINE) -> dict:
@@ -73,8 +92,13 @@ def audit(root: Path, baseline: Path = DEFAULT_BASELINE) -> dict:
     missing_baseline_sources = remembered - candidates
     nonregression_pass = bool(candidates) and not (
         new_omissions or missing_baseline_sources or missing_references)
+    candidate_files = {TEST_DIR / (name + ".java") for name in candidates}
+    suite_files = {TEST_DIR / (name + ".java") for name in suite_nodes}
     return {
         "schema": "SWT_DEFAULT_SUITE_INVENTORY_V1",
+        "candidate_sources_sha256": fingerprint(root, candidate_files),
+        "suite_sources_sha256": fingerprint(root, suite_files),
+        "reviewed_baseline_sha256": hashlib.sha256(base.read_bytes()).hexdigest(),
         "scope": "single JUnit Tests directory; candidate file names Test_* or *Test",
         "root_suite": "AllTests",
         "candidate_classes": len(candidates),

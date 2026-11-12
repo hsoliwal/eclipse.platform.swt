@@ -63,6 +63,26 @@ class SuiteInventoryTest(unittest.TestCase):
         self.assertFalse(report["nonregression_pass"])
         self.assertEqual(["Test_Unreferenced"], report["baseline_source_disappearances"])
 
+    def test_exact_candidate_content_changes_source_digest(self):
+        before = self.check()
+        self.put("Test_Direct", "class Test_Direct { @Test void changed() {} }\n")
+        after = self.check()
+        self.assertNotEqual(before["candidate_sources_sha256"],
+                            after["candidate_sources_sha256"])
+        self.assertEqual(before["suite_sources_sha256"],
+                         after["suite_sources_sha256"])
+        self.assertTrue(after["nonregression_pass"])
+
+    def test_suite_content_changes_independent_suite_digest(self):
+        before = self.check()
+        self.put("AllWidgets", "@SelectClasses({Test_Nested.class, Test_Unreferenced.class})")
+        after = self.check()
+        self.assertEqual(before["candidate_sources_sha256"],
+                         after["candidate_sources_sha256"])
+        self.assertNotEqual(before["suite_sources_sha256"],
+                            after["suite_sources_sha256"])
+        self.assertTrue(after["suite_complete"])
+
     def test_missing_selected_class_fails(self):
         self.put("AllTests", "@SelectClasses({AllWidgets.class, Test_Gone.class})")
         report = self.check()
