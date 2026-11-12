@@ -32,7 +32,7 @@ import org.junit.jupiter.api.*;
  * geometry, the bounds of the item controls), whether every control is at its logical position, the Expand and Collapse
  * events, the moves of item controls inside the native range and the Paint regions; every seed the rendered pixels.
  * Stock win32 clamps a child window to the 16-bit range; the viewport mode keeps the logical position, so where the
- * reference is away from it the viewport must be logical ({@link #LOGICAL_WHERE_STOCK_CLAMPS}). Win32 only
+ * reference is away from it the viewport must be logical ({@code LOGICAL_WHERE_STOCK_CLAMPS}). Win32 only
  * (scrolling is driven with window messages).
  */
 public class Test_org_eclipse_swt_widgets_ExpandBar_ViewportDifferential {
