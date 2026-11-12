@@ -5577,7 +5577,7 @@ void setScrollWidth (int width) {
 		* the recursive calls.
 		*/
 		boolean redraw = false;
-		if (hooks (SWT.MeasureItem)) {
+		if (hooks (SWT.MeasureItem) || viewport != null && viewport.widenInPaint) {
 			redraw = getDrawing () && OS.IsWindowVisible (handle);
 		}
         if (redraw) {
@@ -6995,7 +6995,13 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 
 	_checkShrink();
     if (fixScrollWidth) {
-        setScrollWidth(null, true);
+		//FLLDCIM: HPCPOP - the viewport widens the column with the redraw off here: LVM_SETCOLUMNWIDTH paints right away (nested passes); this pass paints it
+		if (viewport != null) viewport.widenInPaint = true;
+		try {
+			setScrollWidth(null, true);
+		} finally {
+			if (viewport != null) viewport.widenInPaint = false;
+		}
     }
 	return super.WM_PAINT (wParam, lParam);
 }

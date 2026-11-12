@@ -203,6 +203,15 @@ final class TreeViewport {
 	}
 
 	private static final int [] NO_INTS = new int [0];
+	private static final long [] NO_HANDLES = new long [0];
+
+	/* the native handles of the plan's retired rows, sorted (clearNativeCaret skips them) */
+	private long [] retiredHandles () {
+		long [] handles = new long [plan.retiredCount ()];
+		for (int i = 0; i < handles.length; i++) handles [i] = plan.retired (i);
+		Arrays.sort (handles);
+		return handles;
+	}
 
 	/* deletes the plan's retired rows (top-most), detaching their facades and the caret first */
 	private void retirePlanned (long tv) {
@@ -212,7 +221,7 @@ final class TreeViewport {
 			/* always detach: without a caret too, a retired row's facade must not keep a handle the TreeView reuses */
 			boolean caretInside = detachSubtree (hItem, caret);
 			if (caret != 0 && caretInside) {
-				clearNativeCaret ();
+				clearNativeCaret (retiredHandles ());
 				caret = 0;
 			}
 			OS.SendMessage (tv, OS.TVM_DELETEITEM, 0, hItem);
@@ -365,7 +374,8 @@ final class TreeViewport {
 	/** Moves the native window to the current paint window: retire, insert, commit. */
 	private void rebuild () {
 		long tv = tree.handle;
-		captureResidentState ();
+		//FLLDCIM: HPCPOP - the API call that led here captured already and no message changed a resident row since
+		if (!residentCaptured) captureResidentState ();
 		tree.virtualViewport.paintResidency (residency);
 		NativeWindow window = nativeWindow ();
 		plan.plan (window.count, window.parentIds, window.childIndices, window.physicalParents);
@@ -2670,7 +2680,7 @@ final class TreeViewport {
 		try {
 			long caret = OS.SendMessage (tv, OS.TVM_GETNEXTITEM, OS.TVGN_CARET, 0);
 			boolean caretInside = detachSubtree (hRow, caret);
-			if (caret != 0 && caretInside) clearNativeCaret ();
+			if (caret != 0 && caretInside) clearNativeCaret (NO_HANDLES);
 			OS.SendMessage (tv, OS.TVM_DELETEITEM, 0, hRow);
 		} finally {
 			tree.ignoreShrink = oldShrink;
@@ -2683,12 +2693,31 @@ final class TreeViewport {
 
 	/* ---------------------------------------------------------------- selection */
 
+	/*
+	 * True from a complete captureResidentState until the TreeView may have changed a resident row's selection or the
+	 * caret: Tree.windowProc clears it on input and on every row, state, expand or caret message (nativeMessage). A
+	 * rebuild right after a capture (an API call that captured, then laid out and parked) skips its second capture.
+	 */
+	private boolean residentCaptured;
+
+	/** Tree.windowProc: a message to the TreeView; input and row, state, expand and caret messages end a fresh capture. */
+	void nativeMessage (int msg) {
+		if (!residentCaptured) return;
+		switch (msg) {
+			case OS.TVM_INSERTITEM, OS.TVM_DELETEITEM, OS.TVM_EXPAND, OS.TVM_SELECTITEM, OS.TVM_SETITEM, OS.WM_SETFOCUS, OS.WM_KILLFOCUS -> residentCaptured = false;
+			default -> {
+				if (msg >= OS.WM_KEYFIRST && msg <= OS.WM_KEYLAST || msg >= OS.WM_MOUSEFIRST && msg <= OS.WM_MOUSELAST) residentCaptured = false;
+			}
+		}
+	}
+
 	/** Resident rows are the authority for their selection and the caret; copy them into the lanes. */
 	private void captureResidentState () {
 		/* while the mediator moves the native caret the native selection is transient (the TreeView deselects a row for the move): the lanes stay */
 		if (drivingCaret > 0) return;
 		int size = plan.size ();
 		if (size == 0) return;
+		residentCaptured = true;
 		long tv = tree.handle;
 		long caret = OS.SendMessage (tv, OS.TVM_GETNEXTITEM, OS.TVGN_CARET, 0);
 		TVITEM tvItem = new TVITEM ();
@@ -2789,7 +2818,7 @@ final class TreeViewport {
 	 * deselectOnCaretMoves mirrors for the public API), which here would be a resident row the lanes still select,
 	 * picked from the native insertion order: every resident row keeps its selection across the call.
 	 */
-	private void clearNativeCaret () {
+	private void clearNativeCaret (long [] retired) {
 		long tv = tree.handle;
 		int size = plan.size ();
 		boolean [] selected = new boolean [size], known = new boolean [size];
@@ -2798,6 +2827,8 @@ final class TreeViewport {
 		tvItem.stateMask = OS.TVIS_SELECTED;
 		for (int entry = 0; entry < size; entry++) {
 			tvItem.hItem = plan.handle (entry);
+			//FLLDCIM: HPCPOP - a row the plan retires is deleted next: its selection needs no keeping (a park retires every row)
+			if (Arrays.binarySearch (retired, tvItem.hItem) >= 0) continue;
 			known [entry] = OS.SendMessage (tv, OS.TVM_GETITEM, 0, tvItem) != 0;
 			selected [entry] = known [entry] && (tvItem.state & OS.TVIS_SELECTED) != 0;
 		}
