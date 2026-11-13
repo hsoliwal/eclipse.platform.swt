@@ -2172,6 +2172,8 @@ public void setEditable (boolean editable) {
     if (!editable) {
         style |= SWT.READ_ONLY;
     }
+	// the native state in use: EM_SETREADONLY would repaint the control for nothing //FLLDCIM: MARK — every-widget Text same editable D
+	if (editable == ((OS.GetWindowLong (handle, OS.GWL_STYLE) & OS.ES_READONLY) == 0)) return;
 	OS.SendMessage (handle, OS.EM_SETREADONLY, editable ? 0 : 1, 0);
 }
 
