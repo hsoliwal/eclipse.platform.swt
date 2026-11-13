@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 
-import org.eclipse.swt.internal.PackedHeapGrowth;
 import org.junit.jupiter.api.Test;
 
 /** Maximum-position contracts with a small, rebased BitSet oracle; no dense int-domain allocation. */

@@ -14,13 +14,11 @@
  *******************************************************************************/
 package org.eclipse.swt.tests.junit;
 
-import java.lang.reflect.*;
 import java.util.function.*;
 import java.util.logging.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.custom.*;
-import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
