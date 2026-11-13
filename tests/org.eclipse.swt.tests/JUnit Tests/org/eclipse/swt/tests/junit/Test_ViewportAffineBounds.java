@@ -14,7 +14,7 @@
  *******************************************************************************/
 package org.eclipse.swt.tests.junit;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /** Runs against the real SWT internal owner, without a native Display or an API-shaped double. */
 public class Test_ViewportAffineBounds {
