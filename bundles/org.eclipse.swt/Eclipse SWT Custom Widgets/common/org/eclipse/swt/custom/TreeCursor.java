@@ -779,6 +779,8 @@ void _resize() {
  */
 @Override
 public void setBackground (Color color) {
+	// the explicit colour in use: nothing to repaint //FLLDCIM: MARK — every-widget custom same font/colour D
+	if (color != null && color.equals(background)) return;
 	background = color;
 	super.setBackground(getBackground());
 	redraw();
@@ -802,6 +804,7 @@ public void setBackground (Color color) {
  */
 @Override
 public void setForeground (Color color) {
+	if (color != null && color.equals(foreground)) return;
 	foreground = color;
 	super.setForeground(getForeground());
 	redraw();

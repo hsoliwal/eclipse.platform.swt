@@ -876,6 +876,8 @@ public void setBottomMargin(int bottomMargin) {
 }
 @Override
 public void setFont(Font font) {
+	// the font in use: nothing to repaint //FLLDCIM: MARK — every-widget custom same font/colour D
+	if (font != null && font.equals(getFont())) return;
 	super.setFont(font);
 	redraw();
 }
