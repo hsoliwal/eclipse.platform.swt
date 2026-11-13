@@ -5476,6 +5476,8 @@ void setItemHeight (boolean fixScroll) {
  */
 public void setLinesVisible (boolean show) {
 	checkWidget ();
+	// the value in use: no style message and no header repaint, as Tree.setLinesVisible //FLLDCIM: MARK — every-widget Table same lines D
+	if (show == _getLinesVisible ()) return;
 	int newBits = show  ? OS.LVS_EX_GRIDLINES : 0;
 	OS.SendMessage (handle, OS.LVM_SETEXTENDEDLISTVIEWSTYLE, OS.LVS_EX_GRIDLINES, newBits);
 	OS.InvalidateRect (hwndHeader, null, true);
