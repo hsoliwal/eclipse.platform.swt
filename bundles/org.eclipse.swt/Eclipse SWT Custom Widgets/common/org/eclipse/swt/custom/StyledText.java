@@ -11480,6 +11480,8 @@ public void setStyleRanges(StyleRange[] ranges) {
  */
 public void setTabs(int tabs) {
 	checkWidget();
+	// the tab width in use: no cache reset, no caret placement, no repaint //FLLDCIM: MARK — every-widget StyledText same tabs D
+	if (tabs == tabLength) return;
 	tabLength = tabs;
 	renderer.setFont(null, tabs);
 	resetCache(0, content.getLineCount());
@@ -11517,8 +11519,10 @@ public void setTabStops(int [] tabs) {
             }
 			newTabs[i] = pos = tabs[i];
 		}
+		if (Arrays.equals(newTabs, this.tabs)) return; // the tab stops in use
 		this.tabs = newTabs;
 	} else {
+		if (this.tabs == null) return;
 		this.tabs = null;
 	}
 	resetCache(0, content.getLineCount());
