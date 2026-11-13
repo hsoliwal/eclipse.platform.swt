@@ -58,6 +58,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_custom_CLabel.class, //
 		Test_org_eclipse_swt_custom_CTabFolder.class, //
 		Test_org_eclipse_swt_custom_CTabFolder_SameColour.class, //
+		Test_org_eclipse_swt_custom_SameFontAndColour.class, //
 		Test_org_eclipse_swt_custom_CTabItem.class, //
 		Test_org_eclipse_swt_custom_ExtendedModifyListener.class, //
 		Test_org_eclipse_swt_custom_LineBackgroundListener.class, //
@@ -75,6 +76,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_custom_StyledText_VisibilityGate.class, //
 		Test_org_eclipse_swt_custom_StyledText_VisibilityDifferential.class, //
 		Test_org_eclipse_swt_custom_StyledText_RoundTrip.class, //
+		Test_org_eclipse_swt_custom_StyledText_SameTabs.class, //
 		Test_org_eclipse_swt_custom_TextChangeListener.class, //
 		Test_org_eclipse_swt_custom_VerifyKeyListener.class, //
 		Test_org_eclipse_swt_widgets_Button.class, //
@@ -173,6 +175,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_ScrolledComposite_ViewportDifferential.class, //
 		Test_org_eclipse_swt_widgets_Table_DrawnInteraction.class, //
 		Test_org_eclipse_swt_widgets_Table_ReentrantPaint.class, //
+		Test_org_eclipse_swt_widgets_Table_SameLines.class, //
 		Test_org_eclipse_swt_widgets_Table_SetItemCount.class, //
 		Test_org_eclipse_swt_widgets_Table_Splice.class, //
 		Test_org_eclipse_swt_widgets_Table_StockItems.class, //
@@ -182,6 +185,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_Table_ViewportDeltas.class, //
 		Test_org_eclipse_swt_widgets_Table_ViewportDifferential.class, //
 		Test_org_eclipse_swt_widgets_Text_OptimizationBench.class, //
+		Test_org_eclipse_swt_widgets_Text_SameEditable.class, //
 		Test_org_eclipse_swt_widgets_Text_ScaleOracle.class, //
 		Test_org_eclipse_swt_widgets_ToolBar_OptimizationBench.class, //
 		Test_org_eclipse_swt_widgets_ToolBar_ScaleOracle.class, //
