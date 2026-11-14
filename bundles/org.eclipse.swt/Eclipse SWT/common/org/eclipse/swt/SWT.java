@@ -1038,6 +1038,14 @@ public class SWT {
 	 * <code>TreeItem</code> was removed from it (with the <code>detail</code> field
 	 * set to 1).
 	 * </p>
+	 * <p>
+	 * On win32 it is also sent on <code>Table</code> and <code>List</code> each time
+	 * the item count crosses zero: the <code>detail</code> field is 0 when the first
+	 * item arrived and 1 when the last item went away, and the <code>count</code>
+	 * field is the item count after the change. One operation sends at most one
+	 * event (<code>setItemCount</code>, or <code>List.setItem</code> on a one-item
+	 * list, reports no transient state).
+	 * </p>
 	 *
 	 * @since 3.118
 	 */

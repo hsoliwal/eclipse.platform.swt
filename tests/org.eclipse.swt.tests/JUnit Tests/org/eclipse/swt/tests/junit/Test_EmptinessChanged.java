@@ -24,12 +24,13 @@ import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
 
 /**
- * Contract of M3Emptiness (enhanced M3 API, leaf 5). The oracle is <code>getItemCount</code>
- * before and after every public operation: an event is expected exactly when the count crossed
- * zero. The class passes unchanged in every startup mode; the mode differential is this class run
- * with <code>-Dswt.widget.mode=viewport</code> and with <code>-Dswt.widget.mode=original</code>.
+ * Contract of <code>SWT.EmptinessChanged</code> on a <code>Table</code> and a <code>List</code>. The
+ * oracle is <code>getItemCount</code> before and after every public operation: an event is expected
+ * exactly when the count crossed zero. A <code>Tree</code> keeps the stock rules. The class passes
+ * unchanged in every startup mode; the mode differential is this class run with
+ * <code>-Dswt.widget.mode=viewport</code> and with <code>-Dswt.widget.mode=original</code>.
  */
-public class Test_M3Emptiness {
+public class Test_EmptinessChanged {
 	Display display;
 	Shell shell;
 	/* events received: {type, detail, count} */
@@ -53,7 +54,7 @@ public class Test_M3Emptiness {
 	private void expect (int... detailCount) {
 		assertEquals (detailCount.length / 2, events.size (), () -> "events " + describe ());
 		for (int i = 0; i < events.size (); i++) {
-			assertEquals (M3Emptiness.EVENT, events.get (i) [0]);
+			assertEquals (SWT.EmptinessChanged, events.get (i) [0]);
 			assertEquals (detailCount [2 * i], events.get (i) [1], () -> "detail " + describe ());
 			assertEquals (detailCount [2 * i + 1], events.get (i) [2], () -> "count " + describe ());
 		}
@@ -66,15 +67,16 @@ public class Test_M3Emptiness {
 		return text.toString ();
 	}
 
-	private static final int EMPTY = M3Emptiness.BECAME_EMPTY;
-	private static final int FILLED = M3Emptiness.BECAME_NON_EMPTY;
+	/* event.detail when the last item went away, and when the first item arrived */
+	private static final int EMPTY = 1;
+	private static final int FILLED = 0;
 
 	/* ------------------------------------------------------------------ Table */
 
 	@Test
 	public void test_tableReportsEveryZeroCrossingOnce () {
 		Table table = new Table (shell, SWT.MULTI | SWT.BORDER);
-		M3Emptiness.addListener (table, recorder);
+		table.addListener (SWT.EmptinessChanged, recorder);
 		TableItem first = new TableItem (table, SWT.NONE);
 		expect (FILLED, 1);
 		TableItem second = new TableItem (table, SWT.NONE, 0);
@@ -109,7 +111,7 @@ public class Test_M3Emptiness {
 		Table table = new Table (shell, SWT.VIRTUAL | SWT.BORDER);
 		table.setBounds (5, 5, 300, 380);
 		table.addListener (SWT.SetData, event -> ((TableItem) event.item).setText ("row " + event.index));
-		M3Emptiness.addListener (table, recorder);
+		table.addListener (SWT.EmptinessChanged, recorder);
 		table.setItemCount (100000);
 		expect (FILLED, 100000);
 		table.getItem (99999).dispose ();
@@ -124,7 +126,7 @@ public class Test_M3Emptiness {
 	@Test
 	public void test_listReportsEveryZeroCrossingOnce () {
 		org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List (shell, SWT.MULTI | SWT.BORDER);
-		M3Emptiness.addListener (list, recorder);
+		list.addListener (SWT.EmptinessChanged, recorder);
 		list.add ("a");
 		expect (FILLED, 1);
 		/* remove and add inside: the transient empty list is not reported */
@@ -163,7 +165,7 @@ public class Test_M3Emptiness {
 	@Test
 	public void test_listFailedOperationsAreReportedByTheNextChange () {
 		org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List (shell, SWT.SINGLE);
-		M3Emptiness.addListener (list, recorder);
+		list.addListener (SWT.EmptinessChanged, recorder);
 		assertThrows (IllegalArgumentException.class, () -> list.setItem (0, "x"));
 		assertThrows (IllegalArgumentException.class, () -> list.add (null));
 		assertThrows (IllegalArgumentException.class, () -> list.remove (5));
@@ -176,72 +178,21 @@ public class Test_M3Emptiness {
 	/* ------------------------------------------------------------------ Tree */
 
 	@Test
-	public void test_treeCountsRootsOnly () {
-		Tree tree = new Tree (shell, SWT.MULTI | SWT.BORDER);
-		M3Emptiness.addListener (tree, recorder);
-		TreeItem root = new TreeItem (tree, SWT.NONE);
-		expect (FILLED, 1);
-		TreeItem child = new TreeItem (root, SWT.NONE);
-		new TreeItem (child, SWT.NONE);
-		TreeItem other = new TreeItem (tree, SWT.NONE, 0);
-		child.dispose ();
-		other.dispose ();
-		root.removeAll ();
-		root.setItemCount (3);
-		expect ();
-		/* the root goes with its children: one event */
-		root.dispose ();
-		expect (EMPTY, 0);
-		tree.setItemCount (4);
-		expect (FILLED, 4);
-		tree.getItem (0).setItemCount (2);
-		tree.setItemCount (1);
-		expect ();
-		tree.removeAll ();
-		expect (EMPTY, 0);
-		tree.removeAll ();
-		tree.setItemCount (0);
-		expect ();
-	}
-
-	@Test
-	public void test_virtualTreeReportsCountChanges () {
-		Tree tree = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
-		tree.setBounds (5, 5, 300, 380);
-		tree.addListener (SWT.SetData, event -> ((TreeItem) event.item).setText ("row " + event.index));
-		M3Emptiness.addListener (tree, recorder);
-		tree.setItemCount (50000);
-		expect (FILLED, 50000);
-		tree.getItem (0).setItemCount (10);
-		tree.getItem (1).dispose ();
-		expect ();
-		tree.setItemCount (0);
-		expect (EMPTY, 0);
-		new TreeItem (tree, SWT.NONE);
-		expect (FILLED, 1);
-		tree.getItem (0).dispose ();
-		expect (EMPTY, 0);
-	}
-
-	@Test
-	public void test_stockTreeEventIsUnchangedAndSeparate () {
+	public void test_treeKeepsTheStockRules () {
 		Tree tree = new Tree (shell, SWT.BORDER);
-		java.util.List<int []> stock = new ArrayList<> ();
-		tree.addListener (SWT.EmptinessChanged, event -> stock.add (new int [] {event.type, event.detail}));
-		M3Emptiness.addListener (tree, recorder);
+		tree.addListener (SWT.EmptinessChanged, recorder);
 		TreeItem item = new TreeItem (tree, SWT.NONE);
 		item.dispose ();
 		new TreeItem (tree, SWT.NONE);
-		int stockBeforeRemoveAll = stock.size ();
+		int beforeRemoveAll = events.size ();
 		tree.removeAll ();
-		expect (FILLED, 1, EMPTY, 0, FILLED, 1, EMPTY, 0);
 		/* stock: first item created (0), last item disposed (1); its removeAll sends nothing */
-		assertTrue (stock.size () >= 2);
-		for (int [] event : stock) assertEquals (SWT.EmptinessChanged, event [0]);
-		assertEquals (0, stock.get (0) [1]);
-		assertEquals (1, stock.get (1) [1]);
-		assertEquals (stockBeforeRemoveAll, stock.size ());
-		assertNotEquals (SWT.EmptinessChanged, M3Emptiness.EVENT);
+		assertTrue (events.size () >= 2, () -> "events " + describe ());
+		for (int [] event : events) assertEquals (SWT.EmptinessChanged, event [0]);
+		assertEquals (FILLED, events.get (0) [1]);
+		assertEquals (EMPTY, events.get (1) [1]);
+		assertEquals (beforeRemoveAll, events.size ());
+		events.clear ();
 	}
 
 	/* ------------------------------------------------------------------ registration */
@@ -250,24 +201,24 @@ public class Test_M3Emptiness {
 	public void test_listenersStartFromTheCurrentStateAndCanBeRemoved () {
 		Table table = new Table (shell, SWT.NONE);
 		new TableItem (table, SWT.NONE);
-		M3Emptiness.addListener (table, recorder);
+		table.addListener (SWT.EmptinessChanged, recorder);
 		new TableItem (table, SWT.NONE);
 		expect ();
 		java.util.List<Integer> second = new ArrayList<> ();
 		Listener counter = event -> second.add (event.detail);
-		M3Emptiness.addListener (table, counter);
+		table.addListener (SWT.EmptinessChanged, counter);
 		table.removeAll ();
 		expect (EMPTY, 0);
 		assertEquals (java.util.List.of (EMPTY), second);
-		M3Emptiness.removeListener (table, recorder);
+		table.removeListener (SWT.EmptinessChanged, recorder);
 		new TableItem (table, SWT.NONE);
 		expect ();
 		assertEquals (java.util.List.of (EMPTY, FILLED), second);
-		M3Emptiness.removeListener (table, counter);
+		table.removeListener (SWT.EmptinessChanged, counter);
 		table.removeAll ();
 		assertEquals (2, second.size ());
 		/* a new registration reads the state again */
-		M3Emptiness.addListener (table, recorder);
+		table.addListener (SWT.EmptinessChanged, recorder);
 		new TableItem (table, SWT.NONE);
 		expect (FILLED, 1);
 	}
@@ -276,10 +227,10 @@ public class Test_M3Emptiness {
 	public void test_listenerMayChangeTheWidget () {
 		org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List (shell, SWT.NONE);
 		/* a placeholder that refills the list when it becomes empty */
-		M3Emptiness.addListener (list, event -> {
+		list.addListener (SWT.EmptinessChanged, event -> {
 			if (event.detail == EMPTY) list.add ("placeholder");
 		});
-		M3Emptiness.addListener (list, recorder);
+		list.addListener (SWT.EmptinessChanged, recorder);
 		list.add ("a");
 		list.remove (0);
 		assertEquals (1, list.getItemCount ());
@@ -290,10 +241,10 @@ public class Test_M3Emptiness {
 	public void test_listenerMayChangeATableInsideTheEvent () {
 		Table table = new Table (shell, SWT.NONE);
 		/* the refill happens inside the dispatch of BECAME_EMPTY: the net state is announced after it */
-		M3Emptiness.addListener (table, event -> {
+		table.addListener (SWT.EmptinessChanged, event -> {
 			if (event.detail == EMPTY) new TableItem (table, SWT.NONE).setText ("placeholder");
 		});
-		M3Emptiness.addListener (table, recorder);
+		table.addListener (SWT.EmptinessChanged, recorder);
 		new TableItem (table, SWT.NONE).dispose ();
 		assertEquals (1, table.getItemCount ());
 		expect (FILLED, 1, EMPTY, 0, FILLED, 1);
@@ -302,8 +253,8 @@ public class Test_M3Emptiness {
 	@Test
 	public void test_removedListListenerHearsNothing () {
 		org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List (shell, SWT.NONE);
-		M3Emptiness.addListener (list, recorder);
-		M3Emptiness.removeListener (list, recorder);
+		list.addListener (SWT.EmptinessChanged, recorder);
+		list.removeListener (SWT.EmptinessChanged, recorder);
 		list.add ("a");
 		list.removeAll ();
 		expect ();
@@ -311,19 +262,19 @@ public class Test_M3Emptiness {
 
 	@Test
 	public void test_argumentsAreChecked () {
-		Tree tree = new Tree (shell, SWT.NONE);
 		Table table = new Table (shell, SWT.NONE);
 		org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List (shell, SWT.NONE);
-		assertThrows (IllegalArgumentException.class, () -> M3Emptiness.addListener ((Tree) null, recorder));
-		assertThrows (IllegalArgumentException.class, () -> M3Emptiness.addListener (table, null));
-		assertThrows (IllegalArgumentException.class, () -> M3Emptiness.addListener ((org.eclipse.swt.widgets.List) null, recorder));
-		assertThrows (IllegalArgumentException.class, () -> M3Emptiness.removeListener ((Table) null, recorder));
-		assertThrows (IllegalArgumentException.class, () -> M3Emptiness.removeListener (tree, null));
-		assertThrows (IllegalArgumentException.class, () -> M3Emptiness.removeListener (list, null));
-		M3Emptiness.removeListener (tree, recorder);
-		tree.dispose ();
-		assertThrows (SWTException.class, () -> M3Emptiness.addListener (tree, recorder));
-		assertThrows (SWTException.class, () -> M3Emptiness.removeListener (tree, recorder));
+		assertThrows (IllegalArgumentException.class, () -> table.addListener (SWT.EmptinessChanged, null));
+		assertThrows (IllegalArgumentException.class, () -> list.addListener (SWT.EmptinessChanged, null));
+		assertThrows (IllegalArgumentException.class, () -> table.removeListener (SWT.EmptinessChanged, null));
+		assertThrows (IllegalArgumentException.class, () -> list.removeListener (SWT.EmptinessChanged, null));
+		list.removeListener (SWT.EmptinessChanged, recorder);
+		list.dispose ();
+		assertThrows (SWTException.class, () -> list.addListener (SWT.EmptinessChanged, recorder));
+		assertThrows (SWTException.class, () -> list.removeListener (SWT.EmptinessChanged, recorder));
+		/* the refused registrations left nothing behind */
+		new TableItem (table, SWT.NONE);
+		expect ();
 	}
 
 	/* ------------------------------------------------------------------ oracle */
@@ -334,9 +285,9 @@ public class Test_M3Emptiness {
 		Table table = new Table (shell, SWT.MULTI);
 		org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List (shell, SWT.MULTI);
 		Tree tree = new Tree (shell, SWT.MULTI);
-		M3Emptiness.addListener (table, recorder);
-		M3Emptiness.addListener (list, recorder);
-		M3Emptiness.addListener (tree, recorder);
+		table.addListener (SWT.EmptinessChanged, recorder);
+		list.addListener (SWT.EmptinessChanged, recorder);
+		/* the tree keeps the stock rules and is not listened; its steps keep the seeded sequence */
 		java.util.List<Consumer<Random>> tableOps = java.util.List.of (
 			r -> new TableItem (table, SWT.NONE),
 			r -> { if (table.getItemCount () > 0) table.getItem (r.nextInt (table.getItemCount ())).dispose (); },
@@ -364,7 +315,7 @@ public class Test_M3Emptiness {
 			int before = count (widget);
 			ops.get (random.nextInt (ops.size ())).accept (random);
 			int after = count (widget);
-			if ((before == 0) == (after == 0)) {
+			if (kind == 2 || (before == 0) == (after == 0)) {
 				expect ();
 			} else {
 				expect (after == 0 ? EMPTY : FILLED, after);

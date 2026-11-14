@@ -48,8 +48,8 @@ final class BatchScope {
 	 * <code>setItemCount</code>, text and selection changes) as one update: the viewport and scroll bar planes of
 	 * the widget are frozen while the edits run (see <code>Control.beginBatch</code>), so nothing is painted in
 	 * between even if the edits dispatch events, and at the end the widget repaints only what changed, once. An
-	 * {@link M3Emptiness} listener hears at most one crossing, with the final count. The resulting state is the one
-	 * the same edits produce without the call.
+	 * <code>SWT.EmptinessChanged</code> listener of a table or a list hears at most one crossing, with the final
+	 * count. The resulting state is the one the same edits produce without the call.
 	 * <p>
 	 * Calls nest. An exception thrown by the edits leaves nothing frozen and propagates unchanged. With the
 	 * viewports the native work is already planned (a Table append burst becomes one native count change; List and
@@ -71,14 +71,14 @@ final class BatchScope {
 	static void bulk (Control widget, Runnable edits) {
 		if (widget == null || edits == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		widget.beginBatch (BULK_PLANES);
-		M3Emptiness.hold (widget);
+		Emptiness.hold (widget);
 		try {
 			edits.run ();
 		} finally {
 			/* the edits may have disposed the widget: then there is nothing left to resume */
 			if (!widget.isDisposed ()) {
 				try {
-					M3Emptiness.release (widget);
+					Emptiness.release (widget);
 				} finally {
 					widget.endBatch (BULK_PLANES);
 				}
