@@ -1,0 +1,2 @@
+name	start	end	rc	jni_check_diagnostics	selectors	extra_classpath
+r290-diff-official	2026-11-14T07:57:02+05:30	2026-11-14T07:57:18+05:30	0	0	--select-class org.eclipse.swt.tests.junit.Test_M3ResidencyDifferential	-
