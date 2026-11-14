@@ -32,7 +32,7 @@ public abstract class Control extends Widget implements Drawable {
 		MobilePlatform p = display.internal_platform();
 		// Button owns a paintable/touch-activated peer rather than a noninteractive
         // composite peer. Android's accessibility click route is CANVAS-specific.
-        int kind = this instanceof Shell ? MobilePlatform.SHELL
+        int kind = this instanceof Text ? MobilePlatform.TEXT : this instanceof Shell ? MobilePlatform.SHELL
                 : this instanceof Canvas || this instanceof Button || this instanceof Scale || this instanceof List ? MobilePlatform.CANVAS
                 : MobilePlatform.COMPOSITE;
 		peer = p.createControl(kind, parent == null ? 0 : parent.peer, style);
