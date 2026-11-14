@@ -11,7 +11,7 @@
  *     SAP SE and others - initial API and implementation
  *     Synexia (Hitesh Soliwal) - adoption into the M3 fork, 2026
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Path;
@@ -19,7 +19,7 @@ import org.eclipse.swt.graphics.PathData;
 
 import io.github.humbleui.skija.PathFillMode;
 
-public class M3PathConverter {
+public class RasterPathConverter {
 
 	public static io.github.humbleui.skija.Path convertSWTPathToM3Path(Path swtPath, DpiScalerUtil sc) {
 

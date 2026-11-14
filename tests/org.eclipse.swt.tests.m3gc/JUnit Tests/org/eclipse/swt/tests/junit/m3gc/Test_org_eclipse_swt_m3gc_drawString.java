@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.FontData;
-import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
+import org.eclipse.swt.internal.canvasext.raster.RasterExternalGC;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -47,7 +47,7 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		var canvas = surface.canvas;
 		ext.surface = surface;
 		ext.resources = resources;
-		final M3ExternalGC gc = new M3ExternalGC(ext, SWT.NONE);
+		final RasterExternalGC gc = new RasterExternalGC(ext, SWT.NONE);
 
 		gc.drawString("World", 10, 20);
 
@@ -159,7 +159,7 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		var canvas = surface.canvas;
 		ext.surface = surface;
 		ext.resources = resources;
-		final M3ExternalGC gc = new M3ExternalGC(ext, SWT.NONE);
+		final RasterExternalGC gc = new RasterExternalGC(ext, SWT.NONE);
 
 		gc.drawString("World", 10, 20);
 
@@ -248,7 +248,7 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		var canvas = surface.canvas;
 		ext.surface = surface;
 		ext.resources = resources;
-		final M3ExternalGC gc = new M3ExternalGC(ext, SWT.NONE);
+		final RasterExternalGC gc = new RasterExternalGC(ext, SWT.NONE);
 
 		gc.drawString("World", 10, 20);
 

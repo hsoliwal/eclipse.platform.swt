@@ -11,14 +11,14 @@
  *     SAP SE and others - initial API and implementation
  *     Synexia (Hitesh Soliwal) - adoption into the M3 fork, 2026
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Transform;
 
 import io.github.humbleui.skija.Matrix33;
 
-public class M3TransformConverter {
+public class RasterTransformConverter {
 
 	public static Matrix33 toM3Matrix(Transform transform, DpiScalerUtil sc) {
 

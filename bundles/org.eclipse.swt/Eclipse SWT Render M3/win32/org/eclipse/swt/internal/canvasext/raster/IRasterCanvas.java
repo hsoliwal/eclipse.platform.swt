@@ -1,4 +1,4 @@
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import io.github.humbleui.skija.ClipMode;
 import io.github.humbleui.skija.Font;
@@ -12,7 +12,7 @@ import io.github.humbleui.types.Rect;
 /**
  * Abstraction for Skija's Canvas, for future decoupling.
  */
-public interface IM3Canvas {
+public interface IRasterCanvas {
 	int getSaveCount();
 	void restoreToCount(int saveCount);
 	void drawLine(float x0, float y0, float x1, float y1, Paint paint);
@@ -22,8 +22,8 @@ public interface IM3Canvas {
 	void drawPath(Path path, Paint paint);
 	void drawPolygon(float[] points, Paint paint);
 	void drawRRect(RRect rrect, Paint paint);
-	void drawImage(IM3Image image, int x, int y);
-	void drawImageRect(IM3Image image, Rect src, Rect dst, io.github.humbleui.skija.SamplingMode sampling, Paint paint, boolean strict);
+	void drawImage(IRasterImage image, int x, int y);
+	void drawImageRect(IRasterImage image, Rect src, Rect dst, io.github.humbleui.skija.SamplingMode sampling, Paint paint, boolean strict);
 	void setMatrix(Matrix33 matrix);
 	void save();
 	void clipRect(Rect rect);

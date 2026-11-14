@@ -8,7 +8,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import java.util.function.*;
 
@@ -40,7 +40,7 @@ import org.eclipse.swt.widgets.Decorations;
  * are constructor arguments, so the decision is testable without a Display.
  * </p>
  */
-public class M3CanvasFactory implements IExternalCanvasFactory {
+public class RasterCanvasFactory implements IExternalCanvasFactory {
 	/** The widget class whose startup mode decides when no subclass has a property of its own. */
 	public static final String WIDGET = "Canvas"; //$NON-NLS-1$
 
@@ -50,18 +50,18 @@ public class M3CanvasFactory implements IExternalCanvasFactory {
 	private final Function<Composite, IExternalCanvasHandler> raster, gpu;
 
 	/** The shipped factory (ServiceLoader, Display registration): the startup mode of the canvas's class, the M3 handlers. */
-	public M3CanvasFactory() {
-		this(M3CanvasFactory::mode, M3CanvasHandler::raster, M3CanvasHandler::gpu);
+	public RasterCanvasFactory() {
+		this(RasterCanvasFactory::mode, M3CanvasHandler::raster, M3CanvasHandler::gpu);
 	}
 
 	/** The decision with one stubbed mode for every class and stubbed handler makers (headless tests, leaf 4). */
-	public M3CanvasFactory(Supplier<WidgetMode> selector, Function<Composite, IExternalCanvasHandler> raster,
+	public RasterCanvasFactory(Supplier<WidgetMode> selector, Function<Composite, IExternalCanvasHandler> raster,
 			Function<Composite, IExternalCanvasHandler> gpu) {
 		this(type -> selector.get(), raster, gpu);
 	}
 
 	/** The decision with a stubbed per-class selector and stubbed handler makers (headless tests, leaf 5; leaf 7: a composite too). */
-	public M3CanvasFactory(Function<Class<?>, WidgetMode> selector, Function<Composite, IExternalCanvasHandler> raster,
+	public RasterCanvasFactory(Function<Class<?>, WidgetMode> selector, Function<Composite, IExternalCanvasHandler> raster,
 			Function<Composite, IExternalCanvasHandler> gpu) {
 		this.selector = selector;
 		this.raster = raster;

@@ -8,18 +8,18 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import java.util.Objects;
 
 import org.eclipse.swt.internal.canvasext.IExternalFontMetrics;
 
-public class M3ExternalFontMetrics implements IExternalFontMetrics {
+public class RasterExternalFontMetrics implements IExternalFontMetrics {
 
 	private final io.github.humbleui.skija.FontMetrics m;
 	private final DpiScalerUtil sc;
 
-	M3ExternalFontMetrics(io.github.humbleui.skija.FontMetrics metrics, DpiScalerUtil dpiScaler) {
+	RasterExternalFontMetrics(io.github.humbleui.skija.FontMetrics metrics, DpiScalerUtil dpiScaler) {
 		this.sc = dpiScaler;
 		this.m = metrics;
 	}
@@ -70,7 +70,7 @@ public class M3ExternalFontMetrics implements IExternalFontMetrics {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		final M3ExternalFontMetrics other = (M3ExternalFontMetrics) obj;
+		final RasterExternalFontMetrics other = (RasterExternalFontMetrics) obj;
 		return Objects.equals(m, other.m);
 	}
 

@@ -8,19 +8,19 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Drawable;
 import org.eclipse.swt.graphics.Rectangle;
 
-public interface IM3CanvasExtension {
+public interface IRasterCanvasExtension {
 
-	IM3Surface getSurface();
+	IRasterSurface getSurface();
 
-	IM3Resources getResources();
+	IRasterResources getResources();
 
-	IM3Surface createSupportSurface(int width, int height);
+	IRasterSurface createSupportSurface(int width, int height);
 
 	DpiScalerUtil getScaler();
 

@@ -1,6 +1,6 @@
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
-public interface IM3Resources {
+public interface IRasterResources {
 	void setBackground(org.eclipse.swt.graphics.Color color);
 	void setForeground(org.eclipse.swt.graphics.Color color);
 	org.eclipse.swt.graphics.Color getForeground();
@@ -11,8 +11,8 @@ public interface IM3Resources {
 	org.eclipse.swt.graphics.Font getFont();
 	org.eclipse.swt.graphics.FontData getFontData();
 	void resetBaseColors();
-	void cacheTextImage(String text, org.eclipse.swt.internal.canvasext.FontProperties fontProperties, boolean transparent, int background, int foreground, boolean antiAlias, IM3Image image);
-	IM3Image getTextImage(String text, org.eclipse.swt.internal.canvasext.FontProperties fontProperties, boolean transparent, int background, int foreground, boolean antialias);
+	void cacheTextImage(String text, org.eclipse.swt.internal.canvasext.FontProperties fontProperties, boolean transparent, int background, int foreground, boolean antiAlias, IRasterImage image);
+	IRasterImage getTextImage(String text, org.eclipse.swt.internal.canvasext.FontProperties fontProperties, boolean transparent, int background, int foreground, boolean antialias);
 	String[] getTextSplits(String inputText, int flags);
 	org.eclipse.swt.graphics.Point textExtent(String text, int flags);
 	org.eclipse.swt.graphics.Point textExtent(String string);

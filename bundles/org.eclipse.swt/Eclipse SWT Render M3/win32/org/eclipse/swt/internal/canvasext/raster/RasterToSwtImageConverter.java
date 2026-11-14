@@ -11,7 +11,7 @@
  *     SAP SE and others - initial API and implementation
  *     Synexia (Hitesh Soliwal) - adoption into the M3 fork, 2026
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
@@ -20,9 +20,9 @@ import org.eclipse.swt.graphics.RGB;
 import io.github.humbleui.skija.Bitmap;
 import io.github.humbleui.skija.ColorType;
 
-public class M3ToSwtImageConverter {
+public class RasterToSwtImageConverter {
 
-	public static ImageData convertM3ImageToImageData(IM3Image image) {
+	public static ImageData convertM3ImageToImageData(IRasterImage image) {
 
 		final var innerImage = image.getM3Image();
 		return convertM3ImageToImageData(innerImage);

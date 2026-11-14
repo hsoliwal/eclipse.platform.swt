@@ -11,7 +11,7 @@
  * Contributors:
  *     Synexia (Hitesh Soliwal) - initial API and implementation (GC seam, leaf 2)
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import java.util.function.*;
 
@@ -22,7 +22,7 @@ import org.eclipse.swt.widgets.*;
 import io.github.humbleui.skija.Surface;
 
 /**
- * The M3 renderer's side of the GC seam: hands {@link M3ExternalGC} the surface a drawn plane already owns.
+ * The M3 renderer's side of the GC seam: hands {@link RasterExternalGC} the surface a drawn plane already owns.
  * <p>
  * Pattern (Initiative 31 <code>SkiaGlCanvasExtension</code>, PATTERN_ONLY): that class owns a GL context, a render
  * target and a surface per <code>Canvas</code>, and keeps a snapshot image of the last frame to restore the pixels
@@ -32,13 +32,13 @@ import io.github.humbleui.skija.Surface;
  * previous frame, so this class owns nothing: it adapts what the plane has, the plane's frame is the GC's clip, and
  * damage stays with the back buffer (the plane presents what it drew; a redraw request invalidates the control so the
  * plane's own paint presents again). Leaf 3 constructs it per plane and hands
- * <code>new GCExtension (new M3ExternalGC (extension, SWT.NONE))</code> to the <code>PaintListener</code>s.
+ * <code>new GCExtension (new RasterExternalGC (extension, SWT.NONE))</code> to the <code>PaintListener</code>s.
  */
-public final class M3PlaneCanvasExtension implements IM3CanvasExtension {
+public final class RasterPlaneCanvasExtension implements IRasterCanvasExtension {
 	private final Control control;
 	private final BackBuffer buffer;
 	private final Supplier<Surface> surface;
-	private final M3Resources resources;
+	private final RasterResources resources;
 	private final DpiScalerUtil scaler;
 	/* the damage of the frame being drawn, in client pixels; empty between frames */
 	private final Rectangle frame = new Rectangle (0, 0, 0, 0);
@@ -49,11 +49,11 @@ public final class M3PlaneCanvasExtension implements IM3CanvasExtension {
 	 * @param surface the plane's surface over that buffer, read per call (<code>M3RowCanvas.target</code> replaces it
 	 *                when the buffer grows)
 	 */
-	public M3PlaneCanvasExtension (Control control, BackBuffer buffer, Supplier<Surface> surface) {
+	public RasterPlaneCanvasExtension (Control control, BackBuffer buffer, Supplier<Surface> surface) {
 		this.control = control;
 		this.buffer = buffer;
 		this.surface = surface;
-		this.resources = new M3Resources (control, this);
+		this.resources = new RasterResources (control, this);
 		this.scaler = new DpiScalerUtil (() -> control.nativeZoom);
 	}
 
@@ -68,21 +68,21 @@ public final class M3PlaneCanvasExtension implements IM3CanvasExtension {
 	}
 
 	@Override
-	public IM3Surface getSurface () {
+	public IRasterSurface getSurface () {
 		Surface current = surface.get ();
-		return current == null ? null : new M3SurfaceAdapter (current);
+		return current == null ? null : new RasterSurfaceAdapter (current);
 	}
 
 	@Override
-	public IM3Resources getResources () {
+	public IRasterResources getResources () {
 		return resources;
 	}
 
 	@Override
-	public IM3Surface createSupportSurface (int width, int height) {
+	public IRasterSurface createSupportSurface (int width, int height) {
 		Surface current = surface.get ();
 		Surface support = current == null ? null : current.makeSurface (width, height);
-		return support == null ? null : new M3SurfaceAdapter (support);
+		return support == null ? null : new RasterSurfaceAdapter (support);
 	}
 
 	@Override

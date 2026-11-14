@@ -1,9 +1,9 @@
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import io.github.humbleui.skija.FilterTileMode;
 import io.github.humbleui.skija.Shader;
 
-public interface IM3Image extends AutoCloseable {
+public interface IRasterImage extends AutoCloseable {
 
 	boolean isClosed();
 

@@ -8,7 +8,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,7 +33,7 @@ import io.github.humbleui.skija.FontSlant;
 import io.github.humbleui.skija.FontStyle;
 import io.github.humbleui.skija.Typeface;
 
-public class M3Resources implements IM3Resources {
+public class RasterResources implements IRasterResources {
 	public static boolean USE_TEXT_IMAGE_CACHE = true;
 
 	/** Maximum number of entries kept in the text-image LRU cache. */
@@ -43,7 +43,7 @@ public class M3Resources implements IM3Resources {
 	 * LRU cache that automatically closes the evicted Skija image when the cache
 	 * exceeds its capacity. Must only be accessed from the SWT UI thread.
 	 */
-	private static final class LruImageCache<K> extends LinkedHashMap<K, IM3Image> {
+	private static final class LruImageCache<K> extends LinkedHashMap<K, IRasterImage> {
 		private static final long serialVersionUID = -4958211475619287841L;
 		private final int maxSize;
 
@@ -53,10 +53,10 @@ public class M3Resources implements IM3Resources {
 		}
 
 		@Override
-		protected boolean removeEldestEntry(Map.Entry<K, IM3Image> eldest) {
+		protected boolean removeEldestEntry(Map.Entry<K, IRasterImage> eldest) {
 			if (size() > maxSize) {
 				// Close the native Skija image before evicting it from the cache.
-				final IM3Image image = eldest.getValue();
+				final IRasterImage image = eldest.getValue();
 				// Auto-close will call image.close() at the end of this block, ensuring
 				// resources are released.
 				if (image != null && !image.isClosed()) {
@@ -88,9 +88,9 @@ public class M3Resources implements IM3Resources {
 
 	// ---------------------------------------------------------------------------------
 
-	private final IM3CanvasExtension m3Extension;
+	private final IRasterCanvasExtension m3Extension;
 
-	public M3Resources(Control canvas, IM3CanvasExtension m3Extension) {
+	public RasterResources(Control canvas, IRasterCanvasExtension m3Extension) {
 
 		this.canvas = canvas;
 		this.m3Extension = m3Extension;
@@ -355,7 +355,7 @@ public class M3Resources implements IM3Resources {
 
 	@Override
 	public void cacheTextImage(String text, FontProperties fontProperties, boolean transparent, int background,
-			int foreground, boolean antiAlias, IM3Image m3Image) {
+			int foreground, boolean antiAlias, IRasterImage m3Image) {
 		final var key = new ImageTextKey(text, fontProperties, transparent, background, foreground, antiAlias);
 		final var old = textImageCache.get(key);
 		if (old != null && !old.isClosed()) {
@@ -365,7 +365,7 @@ public class M3Resources implements IM3Resources {
 	}
 
 	@Override
-	public IM3Image getTextImage(String text, FontProperties fontProperties, boolean transparent, int background,
+	public IRasterImage getTextImage(String text, FontProperties fontProperties, boolean transparent, int background,
 			int foreground, boolean antialias) {
 		return this.textImageCache
 				.get(new ImageTextKey(text, fontProperties, transparent, background, foreground, antialias));

@@ -3,7 +3,7 @@ package org.eclipse.swt.tests.junit.m3gc;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.internal.render.m3.gc.SplitsTextCache;
+import org.eclipse.swt.internal.canvasext.raster.SplitsTextCache;
 
 public class TextSplitUtil {
 

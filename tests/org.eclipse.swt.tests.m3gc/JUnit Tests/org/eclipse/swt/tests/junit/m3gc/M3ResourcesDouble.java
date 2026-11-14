@@ -7,18 +7,18 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.internal.canvasext.FontProperties;
 import org.eclipse.swt.internal.canvasext.IDpiScaler;
-import org.eclipse.swt.internal.render.m3.gc.IM3Image;
-import org.eclipse.swt.internal.render.m3.gc.IM3Resources;
+import org.eclipse.swt.internal.canvasext.raster.IRasterImage;
+import org.eclipse.swt.internal.canvasext.raster.IRasterResources;
 
-public class M3ResourcesDouble implements IM3Resources {
+public class M3ResourcesDouble implements IRasterResources {
 
 	public Color background;
 	public Color foreground;
 	public Font font;
 	public io.github.humbleui.skija.Font m3Font;
 	public Image cachedImage;
-	public IM3Image cachedM3Image;
-	public IM3Image cachedTextImage;
+	public IRasterImage cachedM3Image;
+	public IRasterImage cachedTextImage;
 	public String[] textSplits;
 	public Point textExtent;
 	public FontData fontData;
@@ -80,13 +80,13 @@ public class M3ResourcesDouble implements IM3Resources {
 
 	@Override
 	public void cacheTextImage(String text, FontProperties fontProperties, boolean transparent, int background,
-			int foreground, boolean antiAlias, IM3Image m3Image) {
+			int foreground, boolean antiAlias, IRasterImage m3Image) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public IM3Image getTextImage(String text, FontProperties fontProperties, boolean transparent, int background,
+	public IRasterImage getTextImage(String text, FontProperties fontProperties, boolean transparent, int background,
 			int foreground, boolean antialias) {
 		return cachedTextImage;
 	}

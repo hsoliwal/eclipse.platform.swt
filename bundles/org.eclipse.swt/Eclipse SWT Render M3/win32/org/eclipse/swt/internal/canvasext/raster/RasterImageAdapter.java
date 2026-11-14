@@ -1,12 +1,12 @@
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import io.github.humbleui.skija.FilterTileMode;
 import io.github.humbleui.skija.Image;
 import io.github.humbleui.skija.Shader;
 
-public class M3ImageAdapter implements IM3Image {
+public class RasterImageAdapter implements IRasterImage {
 
-	public M3ImageAdapter(Image m3Image) {
+	public RasterImageAdapter(Image m3Image) {
 		this.m3Image = m3Image;
 	}
 

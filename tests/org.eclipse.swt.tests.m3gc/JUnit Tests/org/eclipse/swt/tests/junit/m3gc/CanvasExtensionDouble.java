@@ -3,15 +3,15 @@ package org.eclipse.swt.tests.junit.m3gc;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Drawable;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.internal.render.m3.gc.DpiScalerUtil;
-import org.eclipse.swt.internal.render.m3.gc.IM3Surface;
-import org.eclipse.swt.internal.render.m3.gc.IM3CanvasExtension;
-import org.eclipse.swt.internal.render.m3.gc.IM3Resources;
+import org.eclipse.swt.internal.canvasext.raster.DpiScalerUtil;
+import org.eclipse.swt.internal.canvasext.raster.IRasterCanvasExtension;
+import org.eclipse.swt.internal.canvasext.raster.IRasterResources;
+import org.eclipse.swt.internal.canvasext.raster.IRasterSurface;
 
-public class CanvasExtensionDouble implements IM3CanvasExtension {
+public class CanvasExtensionDouble implements IRasterCanvasExtension {
 
-	public IM3Surface surface;
-	public IM3Resources resources;
+	public IRasterSurface surface;
+	public IRasterResources resources;
 	public DpiScalerUtil scaler;
 	public Drawable drawable;
 	public Rectangle clientArea;
@@ -19,17 +19,17 @@ public class CanvasExtensionDouble implements IM3CanvasExtension {
 	public Rectangle bounds;
 
 	@Override
-	public IM3Surface getSurface() {
+	public IRasterSurface getSurface() {
 		return surface;
 	}
 
 	@Override
-	public IM3Resources getResources() {
+	public IRasterResources getResources() {
 		return resources;
 	}
 
 	@Override
-	public IM3Surface createSupportSurface(int width, int height) {
+	public IRasterSurface createSupportSurface(int width, int height) {
 		return surface.makeSurface(width, height);
 	}
 

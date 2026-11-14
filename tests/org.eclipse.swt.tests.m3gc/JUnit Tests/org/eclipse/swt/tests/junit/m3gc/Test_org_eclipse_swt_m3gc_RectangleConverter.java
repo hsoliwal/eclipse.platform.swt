@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.internal.render.m3.gc.RectangleConverter;
-import org.eclipse.swt.internal.render.m3.gc.DpiScalerUtil;
+import org.eclipse.swt.internal.canvasext.raster.RectangleConverter;
+import org.eclipse.swt.internal.canvasext.raster.DpiScalerUtil;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 

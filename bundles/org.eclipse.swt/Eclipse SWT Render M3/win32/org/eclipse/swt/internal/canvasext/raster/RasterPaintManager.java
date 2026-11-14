@@ -11,7 +11,7 @@
  *     SAP SE and others - initial API and implementation
  *     Synexia (Hitesh Soliwal) - adoption into the M3 fork, 2026
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import java.util.function.Consumer;
 
@@ -25,7 +25,7 @@ import io.github.humbleui.skija.PaintStrokeJoin;
 import io.github.humbleui.skija.PathEffect;
 import io.github.humbleui.skija.Shader;
 
-public class M3PaintManager {
+public class RasterPaintManager {
 
 	// Skia format: dash/dot widths and whitespace widths must be considered.
 	static final float[] LINE_DOT_ZERO = new float[] { 1, 1 };
@@ -33,16 +33,16 @@ public class M3PaintManager {
 	static final float[] LINE_DASHDOT_ZERO = new float[] { 3, 1, 1, 1 };
 	static final float[] LINE_DASHDOTDOT_ZERO = new float[] { 3, 1, 1, 1, 1, 1 };
 
-	private final M3ExternalGC gc;
+	private final RasterExternalGC gc;
 
-	public M3PaintManager(M3ExternalGC gc) {
+	public RasterPaintManager(RasterExternalGC gc) {
 		this.gc = gc;
 	}
 
 	public void performDraw(Consumer<Paint> operations) {
 		try (final Paint paint = new Paint()) {
 			paint.setAlpha(gc.getAlpha());
-			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha()));
+			paint.setColor(RasterColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha()));
 			paint.setAntiAlias(gc.getAntialias() != SWT.OFF);
 			if (gc.getXORMode()) {
 				paint.setBlendMode(io.github.humbleui.skija.BlendMode.DIFFERENCE);
@@ -54,7 +54,7 @@ public class M3PaintManager {
 			paint.setStrokeWidth(scaledLineWidth);
 			paint.setStrokeCap(getM3LineCap(gc.getLineCap()));
 			paint.setStrokeJoin(getM3LineJoin(gc.getLineJoin()));
-			// M3 (GC seam, leaf 5): the miter limit of the line attributes, once set (M3ExternalGC.isMiterLimitSet)
+			// M3 (GC seam, leaf 5): the miter limit of the line attributes, once set (RasterExternalGC.isMiterLimitSet)
 			if (gc.isMiterLimitSet()) {
 				paint.setStrokeMiter(gc.getMiterLimit());
 			}
@@ -100,7 +100,7 @@ public class M3PaintManager {
 				final float[] newFloats = new float[floats.length * 2];
 				System.arraycopy(floats, 0, newFloats, 0, floats.length);
 				System.arraycopy(floats, 0, newFloats, floats.length, floats.length);
-				// M3 (GC seam, leaf 5): the dash offset of the line attributes is the phase (M3ExternalGC.getDashPhase)
+				// M3 (GC seam, leaf 5): the dash offset of the line attributes is the phase (RasterExternalGC.getDashPhase)
 				return PathEffect.makeDash(getScaledPathFloats(scaler.autoScaleUp(1), newFloats, scaler), gc.getDashPhase());
 			}
 
@@ -126,7 +126,7 @@ public class M3PaintManager {
 	public void performDrawFilled(Consumer<Paint> operations) {
 		try (final Paint paint = new Paint()) {
 			paint.setMode(PaintMode.FILL);
-			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha()));
+			paint.setColor(RasterColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha()));
 			paint.setAntiAlias(gc.getAntialias() != SWT.OFF);
 			if (gc.getXORMode()) {
 				paint.setBlendMode(io.github.humbleui.skija.BlendMode.DIFFERENCE);
@@ -176,15 +176,15 @@ public class M3PaintManager {
 		final var props = org.eclipse.swt.graphics.PatternProperties.get(pattern);
 		final var sc = gc.getScaler();
 		if (props.getImage() == null) {
-			final int col1 = M3ColorConverter.convertSWTColorToM3Color(props.getColor1(), props.getAlpha1());
-			final int col2 = M3ColorConverter.convertSWTColorToM3Color(props.getColor2(), props.getAlpha2());
+			final int col1 = RasterColorConverter.convertSWTColorToM3Color(props.getColor1(), props.getAlpha1());
+			final int col2 = RasterColorConverter.convertSWTColorToM3Color(props.getColor2(), props.getAlpha2());
 			final var gs = new io.github.humbleui.skija.GradientStyle(io.github.humbleui.skija.FilterTileMode.REPEAT,
 					true, null);
 			return Shader.makeLinearGradient(sc.autoScaleUp(props.getBaseX1()), sc.autoScaleUp(props.getBaseY1()),
 					sc.autoScaleUp(props.getBaseX2()), sc.autoScaleUp(props.getBaseY2()), new int[] { col1, col2 },
 					null, gs);
 		}
-		try (final var image = SwtToM3ImageConverter.convertSWTImageToM3Image(props.getImage(),
+		try (final var image = SwtToRasterImageConverter.convertSWTImageToM3Image(props.getImage(),
 				gc.getScaler().getNativeZoom(), gc.getM3Resources())) {
 			return image.makeShader(io.github.humbleui.skija.FilterTileMode.REPEAT);
 		}
