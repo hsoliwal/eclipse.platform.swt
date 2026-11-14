@@ -723,6 +723,10 @@
       "sha256": "055cf2078f52391b414bfd189662f336144d381969e9f1a6f31a3d780b31d997"
     },
     {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Text.java",
+      "sha256": "c47d97c2e1b5245ecd075cfe4aff328459441d19d2f32a6d5af7f30167724bb2"
+    },
+    {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Scrollable.java"
     },
     {
