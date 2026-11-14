@@ -9,6 +9,7 @@ import java.util.BitSet;
 import java.util.Objects;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.accessibility.ACC;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
@@ -84,6 +85,22 @@ public class List extends Scrollable {
         });
         addListener(SWT.MouseWheel, event -> scrollBy(-3L * event.count));
         addListener(SWT.KeyDown, event -> keyInput(event.keyCode, event.stateMask));
+        publishAccessibility();
+    }
+
+    private void publishAccessibility() {
+        display.internal_platform().setAccessibility(peer, "List",
+                ACC.ROLE_LIST, isEnabled() ? ACC.STATE_NORMAL : ACC.STATE_DISABLED);
+    }
+    @Override public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        if (!isDisposed()) publishAccessibility();
+    }
+    /** Native accessibility scrolls without changing the selected row. */
+    void accessibilityScroll(boolean forward) {
+        checkWidget();
+        int rows = Math.max(1, getClientArea().height / getItemHeight());
+        scrollBy(forward ? rows : -(long)rows);
     }
 
     private boolean multi() { return (style & SWT.MULTI) != 0; }
