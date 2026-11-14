@@ -29,5 +29,8 @@ public final class MobileCoreContractJUnitTest {
 	@Test void originalMobileProgressAndScalePaintingAndSelection() {
 		MobileCoreContractTest.testMobileProgressAndScaleContracts();
 	}
+	@Test void originalMobileListInputAndSparseVirtualRows() {
+		MobileCoreContractTest.testMobileListContracts();
+	}
 
 }
