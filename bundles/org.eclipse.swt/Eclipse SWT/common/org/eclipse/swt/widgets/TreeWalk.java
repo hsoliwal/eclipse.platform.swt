@@ -29,7 +29,7 @@ import java.util.*;
  * in O(log n) (see M3-ROW-MATH in docs/m3/ENHANCED_API_MAP.tsv).
  * </p>
  */
-final class M3TreeWalk {
+final class TreeWalk {
 	private final Tree tree;
 	private TreeItem [] parents = new TreeItem [8];
 	private int [] next = new int [8], counts = new int [8];
@@ -37,7 +37,7 @@ final class M3TreeWalk {
 	private int depth = 0;
 
 	/** A walk positioned before the first root of <code>tree</code>. */
-	M3TreeWalk (Tree tree) {
+	TreeWalk (Tree tree) {
 		this.tree = tree;
 		counts [0] = tree.getItemCount ();
 	}
@@ -46,7 +46,7 @@ final class M3TreeWalk {
 	 * A walk over the visible descendants of <code>root</code> only, positioned before its
 	 * first child (the children are visited whether or not <code>root</code> is expanded).
 	 */
-	M3TreeWalk (TreeItem root) {
+	TreeWalk (TreeItem root) {
 		this.tree = root.getParent ();
 		parents [0] = root;
 		counts [0] = root.getItemCount ();

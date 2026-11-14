@@ -28,10 +28,10 @@ import org.eclipse.swt.widgets.*;
  * with <code>ImmersiveColorSet</code>, debounced by the display). A {@link Follower} switches the look and feel on
  * that event when the preference changed, and high contrast ({@link Display#getHighContrast()}) wins over both.
  */
-public final class M3SystemTheme {
-	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.internal.laf.M3SystemTheme");
+public final class SystemTheme {
+	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.internal.laf.SystemTheme");
 
-	private M3SystemTheme () {
+	private SystemTheme () {
 	}
 
 	/** The platform's preference: true for a dark appearance. */
@@ -44,7 +44,7 @@ public final class M3SystemTheme {
 	 * the light name.
 	 */
 	public static String preferred (Display display, String light, String dark) {
-		return preferred (display, light, dark, M3SystemTheme::dark);
+		return preferred (display, light, dark, SystemTheme::dark);
 	}
 
 	static String preferred (Display display, String light, String dark, BooleanSupplier darkness) {
@@ -54,14 +54,14 @@ public final class M3SystemTheme {
 
 	/**
 	 * Selects the preferred look and feel now and again on every settings change of the display (the application's
-	 * {@link M3LookAndFeel#setLookAndFeel} calls in between are kept until the platform's preference changes).
+	 * {@link LookAndFeelManager#setLookAndFeel} calls in between are kept until the platform's preference changes).
 	 *
 	 * @param display the display whose settings events are followed (its thread)
 	 * @param light the look and feel of a light preference, for example <code>light</code>
 	 * @param dark the look and feel of a dark preference, for example <code>dark</code>
 	 */
 	public static Follower follow (Display display, String light, String dark) {
-		return new Follower (display, light, dark, M3SystemTheme::dark);
+		return new Follower (display, light, dark, SystemTheme::dark);
 	}
 
 	/** One display following the platform; {@link #close} stops it. */
@@ -80,7 +80,7 @@ public final class M3SystemTheme {
 			this.darkness = darkness;
 			display.addListener (SWT.Settings, listener);
 			current = preferred (display, light, dark, darkness);
-			M3LookAndFeel.setLookAndFeel (current);
+			LookAndFeelManager.setLookAndFeel (current);
 			switches++;
 			LOG.debug (() -> "following the platform: " + current);
 		}
@@ -100,7 +100,7 @@ public final class M3SystemTheme {
 			String preferred = preferred (display, light, dark, darkness);
 			if (preferred.equals (current)) return;
 			current = preferred;
-			M3LookAndFeel.setLookAndFeel (preferred);
+			LookAndFeelManager.setLookAndFeel (preferred);
 			switches++;
 			LOG.debug (() -> "the platform changed its preference: " + preferred);
 		}

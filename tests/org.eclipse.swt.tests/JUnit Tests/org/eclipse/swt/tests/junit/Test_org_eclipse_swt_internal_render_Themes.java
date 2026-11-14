@@ -73,7 +73,7 @@ public class Test_org_eclipse_swt_internal_render_Themes {
 		assertTrue (Arrays.stream (ui.paintKeys ()).anyMatch (id -> "Table.selectionBackground".equals (UIKeys.name (id))));
 		assertSame (Theme.NATIVE, ui.theme (), "before it is installed");
 		for (String name : new String [] {"native", "swing", "initiative31", "light", "dark"}) {
-			M3UIDefaults defaults = M3LookAndFeel.defaults (name);
+			UIDefaults defaults = LookAndFeelManager.defaults (name);
 			ui.installUI (null, defaults);
 			Theme theme = ui.theme ();
 			assertEquals (ThemeDefaults.look (defaults.name ()).look, theme.look, name);

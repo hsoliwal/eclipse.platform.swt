@@ -50,13 +50,13 @@ public class Test_org_eclipse_swt_internal_laf_UIDerivation {
 	static final int FLAG = key ("Derive.flag", UIKeys.BOOLEAN), FLAG_COPY = key ("Derive.flagCopy", UIKeys.BOOLEAN);
 	static final int MARGIN = key ("Derive.margin", UIKeys.INSETS), MARGIN_COPY = key ("Derive.marginCopy", UIKeys.INSETS);
 
-	M3UIDefaults.Lanes developer;
-	M3UIDefaults defaults;
+	UIDefaults.Lanes developer;
+	UIDefaults defaults;
 
 	@BeforeEach
 	public void setUp () {
-		developer = new M3UIDefaults.Lanes ();
-		defaults = M3UIDefaults.of (LOADER, "derive", developer);
+		developer = new UIDefaults.Lanes ();
+		defaults = UIDefaults.of (LOADER, "derive", developer);
 	}
 
 	@Test
@@ -112,14 +112,14 @@ public class Test_org_eclipse_swt_internal_laf_UIDerivation {
 
 	@Test
 	public void everyLookAndFeelOfTheLayerFollows () {
-		M3UIDefaults other = M3UIDefaults.of (LOADER, "derive2", developer);
-		M3UIDefaults fixed = new M3UIDefaults (LOADER.load ("derive"), developer);
+		UIDefaults other = UIDefaults.of (LOADER, "derive2", developer);
+		UIDefaults fixed = new UIDefaults (LOADER.load ("derive"), developer);
 		defaults.putVariable ("accent", "#00ff00");
 		assertEquals (0xFF00FF00, other.color (D, 0), "derive2: Derive.d = $Derive.c = $Derive.a = @accent");
 		assertEquals (0xFFFFFFFF, defaults.color (D, 0));
 		assertEquals (0xFF102030, fixed.color (A, 0), "static defaults do not derive");
 		assertEquals (0, fixed.derivedCount ());
-		long [] changed = M3UIDefaults.diff (defaults, other);
+		long [] changed = UIDefaults.diff (defaults, other);
 		assertNotEquals (0, changed [D >>> 6] & (1L << D), "the diff sees the derived value");
 	}
 }

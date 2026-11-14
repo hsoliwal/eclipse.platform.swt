@@ -23,7 +23,7 @@ import org.eclipse.swt.widgets.*;
 
 /**
  * The look and feel manager of the drawn widgets (docs/m3/LOOK_AND_FEEL.md, LF6), Swing's <code>UIManager</code>:
- * the selected look and feel, switched at runtime ({@link #setLookAndFeel}), its {@link M3UIDefaults} over one
+ * the selected look and feel, switched at runtime ({@link #setLookAndFeel}), its {@link UIDefaults} over one
  * developer layer, the UI delegates of the widgets ({@link #installUI}) and their update on a switch.
  * <p>
  * A switch diffs the defaults of the two look and feels and touches only the widgets whose delegate reads a changed
@@ -39,7 +39,7 @@ import org.eclipse.swt.widgets.*;
  * <code>swt.widget.theme</code> (see {@link LookAndFeel}).
  * </p>
  */
-public final class M3LookAndFeel {
+public final class LookAndFeelManager {
 	/** The key of a widget's delegate in its data. */
 	public static final String UI = ComponentUI.class.getName ();
 
@@ -49,8 +49,8 @@ public final class M3LookAndFeel {
 		void lookAndFeelChanged (String from, String to);
 	}
 
-	private static final M3UIDefaults.Lanes DEVELOPER = new M3UIDefaults.Lanes ();
-	private static final Map<String, M3UIDefaults> DEFAULTS = new ConcurrentHashMap<> ();
+	private static final UIDefaults.Lanes DEVELOPER = new UIDefaults.Lanes ();
+	private static final Map<String, UIDefaults> DEFAULTS = new ConcurrentHashMap<> ();
 	private static final java.util.List<Listener> LISTENERS = new CopyOnWriteArrayList<> ();
 	private static final org.eclipse.swt.widgets.Listener DISPOSED = event -> remove ((Control) event.widget);
 	private static volatile String selected;
@@ -61,7 +61,7 @@ public final class M3LookAndFeel {
 		LookAndFeel.register ("dark", "@extends = flatdark\n", null);
 	}
 
-	private M3LookAndFeel () {
+	private LookAndFeelManager () {
 	}
 
 	/**
@@ -72,13 +72,13 @@ public final class M3LookAndFeel {
 	 * @return the number of delegates installed again
 	 */
 	public static int setAccent (int argb) {
-		Map<String, M3UIDefaults> before = new HashMap<> ();
-		for (Map.Entry<String, M3UIDefaults> entry : DEFAULTS.entrySet ()) before.put (entry.getKey (), entry.getValue ().snapshot ());
+		Map<String, UIDefaults> before = new HashMap<> ();
+		for (Map.Entry<String, UIDefaults> entry : DEFAULTS.entrySet ()) before.put (entry.getKey (), entry.getValue ().snapshot ());
 		getDefaults ().putVariable ("accent", Palette.text (argb));
 		Display display = Display.getCurrent ();
 		int touched = 0;
 		if (display != null) {
-			for (Map.Entry<String, M3UIDefaults> entry : before.entrySet ()) touched += update (display, entry.getValue (), defaults (entry.getKey ()));
+			for (Map.Entry<String, UIDefaults> entry : before.entrySet ()) touched += update (display, entry.getValue (), defaults (entry.getKey ()));
 		}
 		return touched;
 	}
@@ -91,7 +91,7 @@ public final class M3LookAndFeel {
 
 	/**
 	 * Selects a look and feel and updates the widgets of the calling thread's display (other displays call
-	 * {@link #update(Display, M3UIDefaults, M3UIDefaults)} on their thread).
+	 * {@link #update(Display, UIDefaults, UIDefaults)} on their thread).
 	 *
 	 * @param name a built-in, aliased or registered look and feel
 	 * @throws IllegalArgumentException when no look and feel has the name
@@ -100,7 +100,7 @@ public final class M3LookAndFeel {
 		String to = normalize (name);
 		if (!LookAndFeel.names ().contains (to) && LookAndFeelThemes.text (to) == null) throw new IllegalArgumentException ("unknown look and feel '" + name + "'");
 		String from = getLookAndFeel ();
-		M3UIDefaults before = getDefaults ();
+		UIDefaults before = getDefaults ();
 		selected = to;
 		for (Listener listener : LISTENERS) listener.lookAndFeelChanged (from, to);
 		Display display = Display.getCurrent ();
@@ -123,7 +123,7 @@ public final class M3LookAndFeel {
 	}
 
 	/** The defaults of the selected look and feel. */
-	public static M3UIDefaults getDefaults () {
+	public static UIDefaults getDefaults () {
 		return defaults (getLookAndFeel ());
 	}
 
@@ -132,10 +132,10 @@ public final class M3LookAndFeel {
 	 * resolved once per name on a display thread
 	 * (as {@link LookAndFeel#named}).
 	 */
-	public static M3UIDefaults defaults (String name) {
-		M3UIDefaults cached = DEFAULTS.get (name);
+	public static UIDefaults defaults (String name) {
+		UIDefaults cached = DEFAULTS.get (name);
 		if (cached != null) return cached;
-		M3UIDefaults defaults = M3UIDefaults.of (LookAndFeel.loader (), LookAndFeel.named (name).name (), DEVELOPER);
+		UIDefaults defaults = UIDefaults.of (LookAndFeel.loader (), LookAndFeel.named (name).name (), DEVELOPER);
 		if (Display.getCurrent () != null) DEFAULTS.putIfAbsent (name, defaults);
 		return defaults;
 	}
@@ -153,7 +153,7 @@ public final class M3LookAndFeel {
 	 * @return the number of delegates installed again
 	 */
 	public static int reload (String name, String table) {
-		M3UIDefaults before = defaults (name);
+		UIDefaults before = defaults (name);
 		RendererFactory renderers = LookAndFeel.named (name).renderers ();
 		register (name, table, renderers == RendererFactory.NONE ? null : renderers);
 		Display display = Display.getCurrent ();
@@ -228,10 +228,10 @@ public final class M3LookAndFeel {
 	 *
 	 * @return the number of delegates installed again
 	 */
-	public static int update (Display display, M3UIDefaults from, M3UIDefaults to) {
+	public static int update (Display display, UIDefaults from, UIDefaults to) {
 		UIResources.of (display).dispose ();
 		Registry registry = Registry.of (display);
-		long [] changed = M3UIDefaults.diff (from, to);
+		long [] changed = UIDefaults.diff (from, to);
 		int touched = 0;
 		//FLLDCIM: HPCPOP - a widget's target depends on its class only (pins are per class): once per class, not per widget
 		Map<Class<?>, String> targets = new IdentityHashMap<> ();
@@ -241,7 +241,7 @@ public final class M3LookAndFeel {
 			String target = targets.computeIfAbsent (control.getClass (), type -> lookAndFeel (type.getSimpleName ()));
 			boolean shared = slot.lookAndFeel.equals (from.name ()) && target.equals (to.name ());
 			if (!shared && target.equals (slot.lookAndFeel)) continue;
-			long [] keys = shared ? changed : M3UIDefaults.diff (defaults (slot.lookAndFeel), defaults (target));
+			long [] keys = shared ? changed : UIDefaults.diff (defaults (slot.lookAndFeel), defaults (target));
 			boolean relayout = reads (slot.ui.metricKeys (), keys);
 			if (relayout || reads (slot.ui.paintKeys (), keys)) {
 				reinstall (control, slot, target);

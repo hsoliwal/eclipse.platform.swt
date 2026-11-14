@@ -61,7 +61,7 @@ public class Test_org_eclipse_swt_internal_laf_Palette {
 
 	@Test
 	public void metricsScaleWithTheZoom () {
-		M3UIDefaults defaults = new M3UIDefaults (new LookAndFeelLoader (LookAndFeelThemes::text, name -> 0x808080).load ("flat"), new M3UIDefaults.Lanes ());
+		UIDefaults defaults = new UIDefaults (new LookAndFeelLoader (LookAndFeelThemes::text, name -> 0x808080).load ("flat"), new UIDefaults.Lanes ());
 		int rowHeight = defaults.integer (ROW_HEIGHT, 0);
 		assertEquals (rowHeight, defaults.metric (ROW_HEIGHT, 0, 100));
 		assertEquals (rowHeight * 2, defaults.metric (ROW_HEIGHT, 0, 200));
@@ -76,14 +76,14 @@ public class Test_org_eclipse_swt_internal_laf_Palette {
 	@Test
 	public void lightAndDarkAreBuiltIn () {
 		int flat = new LookAndFeelLoader (LookAndFeelThemes::text, name -> 0x808080).load ("flatdark").color ("Table.background", 0);
-		M3LookAndFeel.setLookAndFeel ("dark");
+		LookAndFeelManager.setLookAndFeel ("dark");
 		try {
-			assertEquals ("dark", M3LookAndFeel.getLookAndFeel ());
-			assertEquals (flat, M3LookAndFeel.getDefaults ().color (UIKeys.intern ("Table.background", UIKeys.COLOR), 0));
-			M3LookAndFeel.setLookAndFeel ("light");
-			assertEquals ("light", M3LookAndFeel.getLookAndFeel ());
+			assertEquals ("dark", LookAndFeelManager.getLookAndFeel ());
+			assertEquals (flat, LookAndFeelManager.getDefaults ().color (UIKeys.intern ("Table.background", UIKeys.COLOR), 0));
+			LookAndFeelManager.setLookAndFeel ("light");
+			assertEquals ("light", LookAndFeelManager.getLookAndFeel ());
 		} finally {
-			M3LookAndFeel.reset ();
+			LookAndFeelManager.reset ();
 		}
 	}
 
@@ -91,27 +91,27 @@ public class Test_org_eclipse_swt_internal_laf_Palette {
 	public void theAccentUpdatesOnlyItsReaders () {
 		Display display = Display.getDefault ();
 		Shell shell = new Shell (display);
-		M3LookAndFeel.register ("test-accent", "@extends = flat\n", null);
-		M3LookAndFeel.setLookAndFeel ("test-accent");
+		LookAndFeelManager.register ("test-accent", "@extends = flat\n", null);
+		LookAndFeelManager.setLookAndFeel ("test-accent");
 		try {
-			int gridBefore = M3LookAndFeel.getDefaults ().color (GRID, 0);
-			Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe reader = new Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe (new int [] {SELECTION}, ComponentUI.NO_KEYS);
-			Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe grid = new Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe (new int [] {GRID}, ComponentUI.NO_KEYS);
-			M3LookAndFeel.installUI (new Canvas (shell, SWT.NONE), Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe.class, reader);
-			M3LookAndFeel.installUI (new Canvas (shell, SWT.NONE), Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe.class, grid);
-			assertEquals (1, M3LookAndFeel.setAccent (0xFFC0392B), "only the reader of an accent-derived key");
+			int gridBefore = LookAndFeelManager.getDefaults ().color (GRID, 0);
+			Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe reader = new Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe (new int [] {SELECTION}, ComponentUI.NO_KEYS);
+			Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe grid = new Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe (new int [] {GRID}, ComponentUI.NO_KEYS);
+			LookAndFeelManager.installUI (new Canvas (shell, SWT.NONE), Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe.class, reader);
+			LookAndFeelManager.installUI (new Canvas (shell, SWT.NONE), Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe.class, grid);
+			assertEquals (1, LookAndFeelManager.setAccent (0xFFC0392B), "only the reader of an accent-derived key");
 			assertEquals (2, reader.installs);
 			assertEquals (1, grid.installs);
-			assertEquals (0xFFC0392B, M3LookAndFeel.getDefaults ().color (SELECTION, 0), "Table.selectionBackground follows @accent");
-			assertEquals (gridBefore, M3LookAndFeel.getDefaults ().color (GRID, 0));
+			assertEquals (0xFFC0392B, LookAndFeelManager.getDefaults ().color (SELECTION, 0), "Table.selectionBackground follows @accent");
+			assertEquals (gridBefore, LookAndFeelManager.getDefaults ().color (GRID, 0));
 			assertEquals (0xFFC0392B, reader.defaults.color (SELECTION, 0));
 		} finally {
-			M3LookAndFeel.getDefaults ().removeVariable ("accent");
-			M3LookAndFeel.reset ();
+			LookAndFeelManager.getDefaults ().removeVariable ("accent");
+			LookAndFeelManager.reset ();
 			shell.dispose ();
 		}
-		assertEquals (0, M3LookAndFeel.setAccent (0xFF2F6FD0), "no widget left");
-		M3LookAndFeel.getDefaults ().removeVariable ("accent");
+		assertEquals (0, LookAndFeelManager.setAccent (0xFF2F6FD0), "no widget left");
+		LookAndFeelManager.getDefaults ().removeVariable ("accent");
 	}
 
 	@Test
@@ -123,6 +123,6 @@ public class Test_org_eclipse_swt_internal_laf_Palette {
 		assertEquals (defaults.color ("Component.foreground", 0), defaults.color ("Component.borderColor", 1), "borders in the foreground colour");
 		org.eclipse.swt.graphics.RGB list = display.getSystemColor (SWT.COLOR_LIST_BACKGROUND).getRGB ();
 		assertEquals (0xFF000000 | list.red << 16 | list.green << 8 | list.blue, defaults.color ("Component.background", 0));
-		if (!display.getHighContrast ()) assertEquals (M3LookAndFeel.getLookAndFeel (), Palette.preferred (display));
+		if (!display.getHighContrast ()) assertEquals (LookAndFeelManager.getLookAndFeel (), Palette.preferred (display));
 	}
 }

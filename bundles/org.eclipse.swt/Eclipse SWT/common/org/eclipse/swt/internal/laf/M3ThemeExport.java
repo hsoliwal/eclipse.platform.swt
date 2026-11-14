@@ -18,9 +18,9 @@ import java.util.*;
 
 /**
  * Writes a completed theme ({@link M3ThemeCompleter.Theme}) for three toolkits (docs/m3/look-and-feel/GENERATOR.md):
- * an LF2 table for SWT ({@link M3LookAndFeel#register}), FlatLaf <code>.properties</code> for Swing (FlatLaf, or
+ * an LF2 table for SWT ({@link LookAndFeelManager#register}), FlatLaf <code>.properties</code> for Swing (FlatLaf, or
  * UIManager through a small applier) and an IntelliJ <code>.theme.json</code>. Each carries the completer version and
- * the content hash; each reads back through {@link M3ThemeImport} (or the LF2 loader) to the same catalogue values.
+ * the content hash; each reads back through {@link ThemeImport} (or the LF2 loader) to the same catalogue values.
  * Key names of the other toolkits come from the import's name table, so import and export never disagree.
  */
 public final class M3ThemeExport {
@@ -44,7 +44,7 @@ public final class M3ThemeExport {
 		out.append ("@baseTheme = ").append (theme.dark () ? "dark" : "light").append ('\n');
 		variables (out, theme, "@accentColor");
 		for (Map.Entry<String, String> entry : theme.table ().entrySet ()) {
-			out.append (M3ThemeImport.foreign (entry.getKey (), M3ThemeImport.SWING)).append (" = ").append (entry.getValue ()).append ('\n');
+			out.append (ThemeImport.foreign (entry.getKey (), ThemeImport.SWING)).append (" = ").append (entry.getValue ()).append ('\n');
 		}
 		return out.toString ();
 	}
@@ -53,7 +53,7 @@ public final class M3ThemeExport {
 	public static String intelliJ (M3ThemeCompleter.Theme theme) {
 		Map<String, Map<String, String>> ui = new TreeMap<> ();
 		for (Map.Entry<String, String> entry : theme.table ().entrySet ()) {
-			String name = M3ThemeImport.foreign (entry.getKey (), M3ThemeImport.INTELLIJ);
+			String name = ThemeImport.foreign (entry.getKey (), ThemeImport.INTELLIJ);
 			int dot = name.indexOf ('.');
 			ui.computeIfAbsent (name.substring (0, dot), k -> new TreeMap<> ()).put (name.substring (dot + 1), json (entry.getValue ()));
 		}

@@ -85,8 +85,8 @@ public final class Palette {
 	 * display runs in high contrast, otherwise the selected one.
 	 */
 	public static String preferred (Display display) {
-		if (!display.getHighContrast ()) return M3LookAndFeel.getLookAndFeel ();
-		M3LookAndFeel.register (HIGH_CONTRAST, highContrastTable (display), null);
+		if (!display.getHighContrast ()) return LookAndFeelManager.getLookAndFeel ();
+		LookAndFeelManager.register (HIGH_CONTRAST, highContrastTable (display), null);
 		return HIGH_CONTRAST;
 	}
 

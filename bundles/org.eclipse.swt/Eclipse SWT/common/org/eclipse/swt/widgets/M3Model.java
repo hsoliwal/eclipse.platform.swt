@@ -124,11 +124,11 @@ public final class M3Model {
 	private Labels labels;
 	private Listener setData;
 	/* the per-parent id lanes of a Tree; null for a List or Table */
-	private M3TreeModel tree;
+	private TreeModel tree;
 
 	private M3Model (Control widget) {
 		this.widget = widget;
-		if (widget instanceof Tree t) tree = new M3TreeModel (t);
+		if (widget instanceof Tree t) tree = new TreeModel (t);
 	}
 
 	/**
@@ -451,7 +451,7 @@ public final class M3Model {
 				sync ();
 				fillItem (item, idAt (event.index));
 			} else if (event.item instanceof TreeItem item) {
-				M3TreeModel.Lane lane = tree.lane (tree.idOf (item.getParentItem ()));
+				TreeModel.Lane lane = tree.lane (tree.idOf (item.getParentItem ()));
 				if (lane != null && event.index < lane.ids.length) fillTreeItem (item, lane.ids [event.index]);
 			}
 		};

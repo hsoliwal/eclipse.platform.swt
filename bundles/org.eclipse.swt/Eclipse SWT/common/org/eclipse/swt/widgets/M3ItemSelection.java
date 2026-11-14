@@ -392,7 +392,7 @@ public final class M3ItemSelection {
 		TreeItem top = tree.getTopItem ();
 		int rows = rows (itemAreaHeight (tree), tree.getItemHeight ());
 		if (top == null || rows == 0) return M3ItemRange.EMPTY;
-		M3TreeWalk walk = new M3TreeWalk (tree);
+		TreeWalk walk = new TreeWalk (tree);
 		int first = walk.indexOf (top);
 		return new M3ItemRange (first, first + walk.advance (rows - 1));
 	}
@@ -415,7 +415,7 @@ public final class M3ItemSelection {
 	public static TreeItem [] getVisibleItems (Tree tree) {
 		M3ItemRange range = getVisibleRange (tree);
 		TreeItem [] items = new TreeItem [range.size ()];
-		M3TreeWalk walk = new M3TreeWalk (tree);
+		TreeWalk walk = new TreeWalk (tree);
 		walk.advance (range.start ());
 		for (int i = 0; i < items.length; i++) items [i] = walk.next ();
 		return items;

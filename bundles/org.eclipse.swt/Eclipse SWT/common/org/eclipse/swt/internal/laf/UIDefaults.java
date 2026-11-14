@@ -28,7 +28,7 @@ import java.util.*;
  * reader passes the widget and the display's {@link UIOverrides}.
  * </p>
  */
-public final class M3UIDefaults {
+public final class UIDefaults {
 	private final String name;
 	private final Lanes theme, developer;
 	private final UIDerivation derivation;
@@ -42,7 +42,7 @@ public final class M3UIDefaults {
 	 * @param developer the developer layer (shared by the look and feels of one manager)
 	 * @throws IllegalArgumentException when a key of the table was interned with another kind
 	 */
-	public M3UIDefaults (LookAndFeelDefaults table, Lanes developer) {
+	public UIDefaults (LookAndFeelDefaults table, Lanes developer) {
 		this (table, developer, null);
 	}
 
@@ -50,7 +50,7 @@ public final class M3UIDefaults {
 	 * The defaults of a resolved LF2 table whose derived values follow the developer layer's bases (see
 	 * {@link UIDerivation}): the developer setting a key or a variable recomputes only the values derived from it.
 	 */
-	M3UIDefaults (LookAndFeelDefaults table, Lanes developer, UIDerivation derivation) {
+	UIDefaults (LookAndFeelDefaults table, Lanes developer, UIDerivation derivation) {
 		this.name = table.name ();
 		this.developer = developer;
 		this.derivation = derivation;
@@ -65,8 +65,8 @@ public final class M3UIDefaults {
 	 *
 	 * @throws IllegalArgumentException when the table cannot be loaded (see {@link LookAndFeelLoader#load})
 	 */
-	public static M3UIDefaults of (LookAndFeelLoader loader, String name, Lanes developer) {
-		return new M3UIDefaults (loader.load (name), developer, UIDerivation.of (name, loader));
+	public static UIDefaults of (LookAndFeelLoader loader, String name, Lanes developer) {
+		return new UIDefaults (loader.load (name), developer, UIDerivation.of (name, loader));
 	}
 
 	private static void copy (LookAndFeelDefaults table, Lanes lanes) {
@@ -180,13 +180,13 @@ public final class M3UIDefaults {
 		developer.setVariable ("@" + variable, null);
 	}
 
-	/** A frozen copy of the current answers, for a diff before the developer layer changes ({@link M3LookAndFeel#setAccent}). */
-	public M3UIDefaults snapshot () {
+	/** A frozen copy of the current answers, for a diff before the developer layer changes ({@link LookAndFeelManager#setAccent}). */
+	public UIDefaults snapshot () {
 		current ();
-		return new M3UIDefaults (name, theme, derived, developer.copy ());
+		return new UIDefaults (name, theme, derived, developer.copy ());
 	}
 
-	private M3UIDefaults (String name, Lanes theme, Lanes derived, Lanes developer) {
+	private UIDefaults (String name, Lanes theme, Lanes derived, Lanes developer) {
 		this.name = name;
 		this.theme = theme;
 		this.derived = derived;
@@ -222,7 +222,7 @@ public final class M3UIDefaults {
 	 * The keys whose answers differ between two defaults (by kind: the value, or the insets), as a bitset over key
 	 * ids: what a switch from <code>from</code> to <code>to</code> changes.
 	 */
-	public static long [] diff (M3UIDefaults from, M3UIDefaults to) {
+	public static long [] diff (UIDefaults from, UIDefaults to) {
 		int count = UIKeys.count ();
 		long [] changed = new long [(count + 63) >>> 6];
 		int [] a = new int [4], b = new int [4];
@@ -232,7 +232,7 @@ public final class M3UIDefaults {
 		return changed;
 	}
 
-	private static boolean differs (M3UIDefaults from, M3UIDefaults to, int key, int [] a, int [] b) {
+	private static boolean differs (UIDefaults from, UIDefaults to, int key, int [] a, int [] b) {
 		int x = from.resolve (key), y = to.resolve (key);
 		if (x < 0 || y < 0) return (x < 0) != (y < 0);
 		if (UIKeys.kind (key) != UIKeys.INSETS) return from.value (x) != to.value (y);

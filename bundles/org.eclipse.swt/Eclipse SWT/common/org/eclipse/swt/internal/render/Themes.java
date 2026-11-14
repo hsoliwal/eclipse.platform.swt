@@ -118,7 +118,7 @@ public final class Themes {
 		String key = widget + '/' + theme.name;
 		Theme resolved = RESOLVED.get (key);
 		if (resolved != null) return resolved;
-		resolved = ThemeDefaults.of (widget, theme, M3LookAndFeel.defaults (theme.name));
+		resolved = ThemeDefaults.of (widget, theme, LookAndFeelManager.defaults (theme.name));
 		/* platform colours are resolved on a display thread; a theme read without one is not kept (as LookAndFeel.named) */
 		if (Display.getCurrent () != null) RESOLVED.put (key, resolved);
 		return resolved;
@@ -127,7 +127,7 @@ public final class Themes {
 	/**
 	 * The theme a drawn plane paints with instead of the theme of its look and feel delegate ({@link DrawnRowUI}): a
 	 * run-time selection ({@link #select}), or a user-defined theme named by the startup properties; null when the look
-	 * and feel ({@link M3LookAndFeel}) decides.
+	 * and feel ({@link LookAndFeelManager}) decides.
 	 */
 	public static Theme explicit (String widget) {
 		if (SELECTED.containsKey (widget) || SELECTED.containsKey (ALL)) return current (widget);

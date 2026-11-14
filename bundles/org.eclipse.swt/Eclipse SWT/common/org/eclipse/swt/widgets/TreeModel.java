@@ -25,7 +25,7 @@ import org.eclipse.swt.internal.*;
  * inserts them. A parent id finds its lane, and a child id finds the lane that holds it, through
  * M3LongIndex (no boxing), so ids are unique in the whole tree.
  */
-final class M3TreeModel {
+final class TreeModel {
 
 	/* the children ids of one parent; positions are built on demand */
 	static final class Lane {
@@ -52,7 +52,7 @@ final class M3TreeModel {
 	private final M3LongIndex parentSlot = new M3LongIndex (16);
 	private final M3LongIndex childSlot = new M3LongIndex (64);
 
-	M3TreeModel (Tree tree) {
+	TreeModel (Tree tree) {
 		this.tree = tree;
 	}
 

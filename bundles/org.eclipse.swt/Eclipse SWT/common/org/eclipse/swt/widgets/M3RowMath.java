@@ -59,7 +59,7 @@ public final class M3RowMath {
 	public static long visibleRowCount (Tree tree) {
 		check (tree);
 		long count = tree.m3VisibleRowCount ();
-		return count != UNKNOWN ? count : new M3TreeWalk (tree).remaining ();
+		return count != UNKNOWN ? count : new TreeWalk (tree).remaining ();
 	}
 
 	/**
@@ -83,7 +83,7 @@ public final class M3RowMath {
 		for (TreeItem ancestor = item.getParentItem (); ancestor != null; ancestor = ancestor.getParentItem ()) {
 			if (!ancestor.getExpanded ()) return -1;
 		}
-		M3TreeWalk walk = new M3TreeWalk (item.getParent ());
+		TreeWalk walk = new TreeWalk (item.getParent ());
 		row = 0;
 		for (TreeItem next = walk.next (); next != item; next = walk.next ()) {
 			if (next == null) return -1;
@@ -116,7 +116,7 @@ public final class M3RowMath {
 			if (row >= count) SWT.error (SWT.ERROR_INVALID_RANGE);
 			return tree.m3ItemAt (row);
 		}
-		M3TreeWalk walk = new M3TreeWalk (tree);
+		TreeWalk walk = new TreeWalk (tree);
 		TreeItem item = walk.next ();
 		for (long skipped = 0; skipped < row && item != null; skipped++) item = walk.next ();
 		if (item == null) SWT.error (SWT.ERROR_INVALID_RANGE);
@@ -143,7 +143,7 @@ public final class M3RowMath {
 		check (item);
 		long rows = item.getParent ().m3SubtreeRowCount (item);
 		if (rows != UNKNOWN) return rows;
-		return item.getExpanded () ? 1 + new M3TreeWalk (item).remaining () : 1;
+		return item.getExpanded () ? 1 + new TreeWalk (item).remaining () : 1;
 	}
 
 	/**

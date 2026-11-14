@@ -26,10 +26,10 @@ import org.junit.jupiter.api.*;
 /**
  * The data layer of the Swing-style look and feel (docs/m3/LOOK_AND_FEEL.md, LF6): interned keys with kinds and
  * <code>Component</code> parents ({@link UIKeys}), the typed lanes of a theme with the developer layer
- * ({@link M3UIDefaults}), the diff of two themes, and the sparse per-widget lane ({@link UIOverrides}). Only
+ * ({@link UIDefaults}), the diff of two themes, and the sparse per-widget lane ({@link UIOverrides}). Only
  * {@link #disposedWidgetsLeaveTheLane} needs a display.
  */
-public class Test_org_eclipse_swt_internal_laf_M3UIDefaults {
+public class Test_org_eclipse_swt_internal_laf_UIDefaults {
 	static final LookAndFeelLoader.SystemColors SYSTEM = name -> 0x808080;
 
 	static final String THEME = """
@@ -89,7 +89,7 @@ public class Test_org_eclipse_swt_internal_laf_M3UIDefaults {
 
 	@Test
 	public void lanesAnswerTheKeyThenItsParentThenTheFallback () {
-		M3UIDefaults defaults = new M3UIDefaults (table ("lanes", THEME), new M3UIDefaults.Lanes ());
+		UIDefaults defaults = new UIDefaults (table ("lanes", THEME), new UIDefaults.Lanes ());
 		assertEquals ("lanes", defaults.name ());
 		assertEquals ("M3UIDefaults {lanes}", defaults.toString ());
 		assertEquals (0xFF102030, defaults.color (color ("Tree.selectionBackground"), 0));
@@ -114,14 +114,14 @@ public class Test_org_eclipse_swt_internal_laf_M3UIDefaults {
 
 	@Test
 	public void theDeveloperLayerAnswersFirstAndOutlivesTheTheme () {
-		M3UIDefaults.Lanes developer = new M3UIDefaults.Lanes ();
-		M3UIDefaults first = new M3UIDefaults (table ("first", THEME), developer);
+		UIDefaults.Lanes developer = new UIDefaults.Lanes ();
+		UIDefaults first = new UIDefaults (table ("first", THEME), developer);
 		int selection = color ("Tree.selectionBackground"), margin = UIKeys.intern ("Button.margin", UIKeys.INSETS);
 		int font = UIKeys.intern ("Tree.font", UIKeys.FONT);
 		first.put (selection, 0xFFABCDEF);
 		first.putInsets (margin, 9, 8, 7, 6);
 		first.put (font, 3);
-		M3UIDefaults second = new M3UIDefaults (table ("second", THEME + "Tree.selectionBackground = #000000\n"), developer);
+		UIDefaults second = new UIDefaults (table ("second", THEME + "Tree.selectionBackground = #000000\n"), developer);
 		assertEquals (0xFFABCDEF, second.color (selection, 0), "the developer value answers before the theme");
 		int [] insets = new int [4];
 		assertTrue (second.insets (margin, insets));
@@ -140,16 +140,16 @@ public class Test_org_eclipse_swt_internal_laf_M3UIDefaults {
 
 	@Test
 	public void theDiffNamesTheKeysAThemeChanges () {
-		M3UIDefaults.Lanes developer = new M3UIDefaults.Lanes ();
-		M3UIDefaults a = new M3UIDefaults (table ("a", THEME), developer);
-		M3UIDefaults b = new M3UIDefaults (table ("b", THEME + "Tree.rowHeight = 20\nButton.margin = 1,2,3,5\nList.coverageOnlyB = #ffffff\n"), developer);
-		long [] changed = M3UIDefaults.diff (a, b);
+		UIDefaults.Lanes developer = new UIDefaults.Lanes ();
+		UIDefaults a = new UIDefaults (table ("a", THEME), developer);
+		UIDefaults b = new UIDefaults (table ("b", THEME + "Tree.rowHeight = 20\nButton.margin = 1,2,3,5\nList.coverageOnlyB = #ffffff\n"), developer);
+		long [] changed = UIDefaults.diff (a, b);
 		Set<String> names = new TreeSet<> ();
 		for (int key = 0; key < UIKeys.count (); key++) {
 			if ((changed [key >>> 6] & (1L << key)) != 0) names.add (UIKeys.name (key));
 		}
 		assertEquals (new TreeSet<> (Set.of ("Tree.rowHeight", "Button.margin", "List.coverageOnlyB")), names);
-		long [] none = M3UIDefaults.diff (a, a);
+		long [] none = UIDefaults.diff (a, a);
 		assertEquals (0, Arrays.stream (none).filter (word -> word != 0).count ());
 	}
 
@@ -166,7 +166,7 @@ public class Test_org_eclipse_swt_internal_laf_M3UIDefaults {
 		assertEquals (UIOverrides.NONE, lane.lookup (first, rowHeight), "another key");
 		lane.put (first, selection, 0xFF112233);
 		assertEquals (0xFF112233, (int) lane.lookup (first, selection));
-		M3UIDefaults defaults = new M3UIDefaults (table ("over", THEME), new M3UIDefaults.Lanes ());
+		UIDefaults defaults = new UIDefaults (table ("over", THEME), new UIDefaults.Lanes ());
 		assertEquals (0xFF112233, defaults.color (lane, first, selection, 0));
 		assertEquals (0xFF102030, defaults.color (lane, second, selection, 0));
 		lane.put (second, rowHeight, 33);
