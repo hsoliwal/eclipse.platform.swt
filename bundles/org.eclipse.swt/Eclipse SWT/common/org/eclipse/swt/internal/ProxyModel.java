@@ -65,7 +65,7 @@ public final class ProxyModel {
 		void fill (T item, int sourceRow);
 	}
 
-	private static final String BINDING = "org.eclipse.swt.m3.M3ProxyModel"; //$NON-NLS-1$
+	private static final String BINDING = "org.eclipse.swt.internal.ProxyModel"; //$NON-NLS-1$
 
 	private int sourceSize;
 	/* stages: IntPredicate (filter) or RowComparator (sort), in order */

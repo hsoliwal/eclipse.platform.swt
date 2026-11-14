@@ -357,7 +357,7 @@ public class Test_M3ColumnFilter {
 	/* the package-private count of input changes a view applied by a full pass (brief rule 24: edits are deltas) */
 	static int fullPasses (RowView view) {
 		try {
-			java.lang.reflect.Field field = Class.forName ("org.eclipse.swt.m3.M3RowViewBase").getDeclaredField ("fullPasses");
+			java.lang.reflect.Field field = Class.forName ("org.eclipse.swt.internal.RowViewBase").getDeclaredField ("fullPasses");
 			field.setAccessible (true);
 			return field.getInt (view);
 		} catch (ReflectiveOperationException e) {

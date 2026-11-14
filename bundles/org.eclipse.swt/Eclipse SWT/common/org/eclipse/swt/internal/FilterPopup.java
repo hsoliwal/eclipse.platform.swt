@@ -37,7 +37,7 @@ import org.eclipse.swt.widgets.*;
  */
 public final class FilterPopup {
 
-	private static final String KEY = "org.eclipse.swt.m3.M3FilterPopup"; //$NON-NLS-1$
+	private static final String KEY = "org.eclipse.swt.internal.FilterPopup"; //$NON-NLS-1$
 
 	private final Composite control;
 	private final ColumnFilter filter;

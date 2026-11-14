@@ -27,7 +27,7 @@ import org.eclipse.swt.widgets.*;
  */
 final class SortHeader implements Listener, RowView.Listener {
 
-	private static final String KEY = "org.eclipse.swt.m3.M3SortHeader"; //$NON-NLS-1$
+	private static final String KEY = "org.eclipse.swt.internal.SortHeader"; //$NON-NLS-1$
 
 	private final ColumnSort sort;
 	private final Composite control;

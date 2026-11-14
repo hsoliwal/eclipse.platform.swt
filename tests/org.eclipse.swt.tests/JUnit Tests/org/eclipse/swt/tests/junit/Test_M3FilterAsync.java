@@ -258,7 +258,7 @@ public class Test_M3FilterAsync {
 
 	@Test
 	public void test_supersededGenerationsNeverApply () {
-		Logger logger = Logger.getLogger ("org.eclipse.swt.m3.M3ColumnFilter");
+		Logger logger = Logger.getLogger ("org.eclipse.swt.internal.ColumnFilter");
 		Level level = logger.getLevel ();
 		logger.setLevel (Level.FINE);
 		try {

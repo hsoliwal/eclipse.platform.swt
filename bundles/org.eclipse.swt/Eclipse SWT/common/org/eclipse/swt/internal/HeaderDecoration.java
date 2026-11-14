@@ -32,8 +32,8 @@ import org.eclipse.swt.widgets.*;
 final class HeaderDecoration {
 
 	static final int WIDTH = 20, HEIGHT = 10;
-	private static final String KEY = "org.eclipse.swt.m3.M3HeaderDecoration"; //$NON-NLS-1$
-	private static final String ORIGINAL = "org.eclipse.swt.m3.M3HeaderDecoration.original"; //$NON-NLS-1$
+	private static final String KEY = "org.eclipse.swt.internal.HeaderDecoration"; //$NON-NLS-1$
+	private static final String ORIGINAL = "org.eclipse.swt.internal.HeaderDecoration.original"; //$NON-NLS-1$
 	private static final Object NO_IMAGE = new Object ();
 	/* 3x5 digits 0 .. 9, then '+', one row per 3 bits (top row first) */
 	private static final short [] DIGITS = {

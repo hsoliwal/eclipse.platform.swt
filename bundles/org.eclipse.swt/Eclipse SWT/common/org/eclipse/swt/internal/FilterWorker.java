@@ -45,7 +45,7 @@ import org.eclipse.swt.widgets.*;
 final class FilterWorker implements Runnable {
 
 	static final int CHECK = 4096;
-	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.m3.M3ColumnFilter"); //$NON-NLS-1$
+	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.internal.ColumnFilter"); //$NON-NLS-1$
 
 	private final ColumnFilter filter;
 	private final Display display;

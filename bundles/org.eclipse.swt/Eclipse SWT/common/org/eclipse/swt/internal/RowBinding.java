@@ -53,7 +53,7 @@ public final class RowBinding {
 		void fill (T item, int sourceRow);
 	}
 
-	private static final String ROW = "org.eclipse.swt.m3.M3RowBinding.row"; //$NON-NLS-1$
+	private static final String ROW = "org.eclipse.swt.internal.RowBinding.row"; //$NON-NLS-1$
 	private static final int [] NONE = {};
 
 	private final Composite control;
