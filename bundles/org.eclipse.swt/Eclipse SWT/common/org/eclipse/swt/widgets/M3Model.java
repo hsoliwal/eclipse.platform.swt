@@ -120,7 +120,7 @@ public final class M3Model {
 	 * inserted ids come in with their rows, and the rows shifted by the patch keep a stale row as a hint, checked
 	 * against ids by indexOf and rebuilt only when a stale hint is asked for.
 	 */
-	private M3LongIndex positions;
+	private VirtualLongIntTable positions;
 	private Labels labels;
 	private Listener setData;
 	/* the per-parent id lanes of a Tree; null for a List or Table */
@@ -306,7 +306,7 @@ public final class M3Model {
 		checkParent (parent);
 		if (rowIds == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		if (rowIds.length != count ()) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
-		M3LongIndex check = new M3LongIndex (rowIds.length);
+		VirtualLongIntTable check = new VirtualLongIntTable (rowIds.length);
 		for (int i = 0; i < rowIds.length; i++) {
 			if (check.put (rowIds [i], i) >= 0) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 		}
@@ -399,7 +399,7 @@ public final class M3Model {
 			SWT.error (SWT.ERROR_INVALID_ARGUMENT, e);
 			return;
 		}
-		M3LongIndex lanePositions = shifts ? checkInserted (patch, before) : null;
+		VirtualLongIntTable lanePositions = shifts ? checkInserted (patch, before) : null;
 		labels = rowLabels;
 		boolean virtual = (widget.getStyle () & SWT.VIRTUAL) != 0;
 		installSetData ();
@@ -561,13 +561,13 @@ public final class M3Model {
 	 * An inserted id must be new to the lane, or a row the same patch removes (a move), and appear once: checked
 	 * over the changed rows only. Answers the positions of the lane before the patch.
 	 */
-	private M3LongIndex checkInserted (RowPatch patch, long [] before) {
-		M3LongIndex lane = ids == before && positions != null ? positions : positionsOf (before);
-		M3LongIndex removed = new M3LongIndex (patch.removedCount ());
+	private VirtualLongIntTable checkInserted (RowPatch patch, long [] before) {
+		VirtualLongIntTable lane = ids == before && positions != null ? positions : positionsOf (before);
+		VirtualLongIntTable removed = new VirtualLongIntTable (patch.removedCount ());
 		for (int i = 0; i < patch.removeRuns (); i++) {
 			for (int k = 0; k < patch.removeCount (i); k++) removed.put (before [patch.removeAt (i) + k], 0);
 		}
-		M3LongIndex inserted = new M3LongIndex (patch.insertedCount ());
+		VirtualLongIntTable inserted = new VirtualLongIntTable (patch.insertedCount ());
 		for (int i = 0; i < patch.insertRuns (); i++) {
 			for (int k = 0; k < patch.insertCount (i); k++) {
 				long id = patch.insertedId (i, k);
@@ -578,7 +578,7 @@ public final class M3Model {
 	}
 
 	/* the positions after a patch: removed ids leave, inserted ids come in with their rows, shifted rows keep hints */
-	private static M3LongIndex repoint (M3LongIndex lane, RowPatch patch, long [] before) {
+	private static VirtualLongIntTable repoint (VirtualLongIntTable lane, RowPatch patch, long [] before) {
 		for (int i = 0; i < patch.removeRuns (); i++) {
 			for (int k = 0; k < patch.removeCount (i); k++) lane.remove (before [patch.removeAt (i) + k]);
 		}
@@ -588,8 +588,8 @@ public final class M3Model {
 		return lane;
 	}
 
-	private static M3LongIndex positionsOf (long [] lane) {
-		M3LongIndex index = new M3LongIndex (lane.length);
+	private static VirtualLongIntTable positionsOf (long [] lane) {
+		VirtualLongIntTable index = new VirtualLongIntTable (lane.length);
 		for (int i = 0; i < lane.length; i++) index.put (lane [i], i);
 		return index;
 	}

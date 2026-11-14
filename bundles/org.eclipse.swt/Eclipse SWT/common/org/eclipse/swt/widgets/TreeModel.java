@@ -23,7 +23,7 @@ import org.eclipse.swt.internal.*;
  * The tree part of M3Model: one id lane per parent whose children have ids. The roots have positional
  * ids until a patch or setIds gives them; deeper children get ids from setIds or from the patch that
  * inserts them. A parent id finds its lane, and a child id finds the lane that holds it, through
- * M3LongIndex (no boxing), so ids are unique in the whole tree.
+ * VirtualLongIntTable (no boxing), so ids are unique in the whole tree.
  */
 final class TreeModel {
 
@@ -31,7 +31,7 @@ final class TreeModel {
 	static final class Lane {
 		final long parent;
 		long [] ids;
-		private M3LongIndex positions;
+		private VirtualLongIntTable positions;
 
 		Lane (long parent, long [] ids) {
 			this.parent = parent;
@@ -40,7 +40,7 @@ final class TreeModel {
 
 		int indexOf (long id) {
 			if (positions == null) {
-				positions = new M3LongIndex (ids.length);
+				positions = new VirtualLongIntTable (ids.length);
 				for (int i = 0; i < ids.length; i++) positions.put (ids [i], i);
 			}
 			return positions.get (id);
@@ -49,8 +49,8 @@ final class TreeModel {
 
 	private final Tree tree;
 	private final ArrayList<Lane> lanes = new ArrayList<> ();
-	private final M3LongIndex parentSlot = new M3LongIndex (16);
-	private final M3LongIndex childSlot = new M3LongIndex (64);
+	private final VirtualLongIntTable parentSlot = new VirtualLongIntTable (16);
+	private final VirtualLongIntTable childSlot = new VirtualLongIntTable (64);
 
 	TreeModel (Tree tree) {
 		this.tree = tree;
@@ -173,7 +173,7 @@ final class TreeModel {
 	void setIds (long parent, long [] ids) {
 		if (ids == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		if (ids.length != size (parent)) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
-		M3LongIndex check = new M3LongIndex (ids.length);
+		VirtualLongIntTable check = new VirtualLongIntTable (ids.length);
 		for (int i = 0; i < ids.length; i++) {
 			if (check.put (ids [i], i) >= 0) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 		}
@@ -209,7 +209,7 @@ final class TreeModel {
 			SWT.error (SWT.ERROR_INVALID_ARGUMENT, e);
 			return;
 		}
-		M3LongIndex old = new M3LongIndex (before.length), next = new M3LongIndex (after.length);
+		VirtualLongIntTable old = new VirtualLongIntTable (before.length), next = new VirtualLongIntTable (after.length);
 		for (int i = 0; i < before.length; i++) old.put (before [i], i);
 		for (int i = 0; i < after.length; i++) {
 			if (next.put (after [i], i) >= 0 || (old.get (after [i]) < 0 && childSlot.get (after [i]) >= 0)) SWT.error (SWT.ERROR_INVALID_ARGUMENT);

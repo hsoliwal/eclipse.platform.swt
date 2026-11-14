@@ -154,8 +154,8 @@ public class RasterExternalGC implements IExternalGC {
 
 	private static void logImageNull(int[] positionData) {
 		if (logImageNullError) {
-			Logger.logException(new IllegalArgumentException(
-					"Image argument is null. Position and size data: " + java.util.Arrays.toString(positionData))); //$NON-NLS-1$
+			new IllegalArgumentException(
+					"Image argument is null. Position and size data: " + java.util.Arrays.toString(positionData)).printStackTrace(); //$NON-NLS-1$
 			logImageNullError = false;
 		}
 	}
@@ -237,7 +237,7 @@ public class RasterExternalGC implements IExternalGC {
 		try (FileOutputStream fis = new FileOutputStream(f)) {
 			fis.write(imageBytes);
 		} catch (final Exception e) {
-			Logger.logException(e);
+			e.printStackTrace();
 		}
 	}
 
