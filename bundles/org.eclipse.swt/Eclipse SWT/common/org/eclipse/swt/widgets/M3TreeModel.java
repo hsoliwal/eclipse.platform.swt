@@ -17,7 +17,7 @@ package org.eclipse.swt.widgets;
 import java.util.*;
 
 import org.eclipse.swt.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 
 /*
  * The tree part of M3Model: one id lane per parent whose children have ids. The roots have positional
@@ -199,7 +199,7 @@ final class M3TreeModel {
 		return null;
 	}
 
-	void apply (M3Patch patch, M3Model owner) {
+	void apply (RowPatch patch, M3Model owner) {
 		long parent = patch.parent ();
 		Lane lane = knownLane (parent);
 		long [] before = lane.ids, after;
@@ -218,7 +218,7 @@ final class M3TreeModel {
 		boolean virtual = (tree.getStyle () & SWT.VIRTUAL) != 0;
 		long anchor = idOf (tree.getTopItem ());
 		M3BulkUpdates.bulk (tree, () -> {
-			patch.applyTo (new M3Patch.Target () {
+			patch.applyTo (new RowPatch.Target () {
 				int run;
 
 				@Override

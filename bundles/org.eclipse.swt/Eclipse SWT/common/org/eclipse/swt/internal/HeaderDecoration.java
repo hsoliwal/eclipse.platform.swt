@@ -14,7 +14,7 @@
  *     Hitesh Soliwal (Synexia) - adapted from TV_5.0 treeviewer ColumnFilterUI.updateColumnImage
  *         (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 
@@ -29,11 +29,11 @@ import org.eclipse.swt.widgets.*;
  * has no mark. The image is computed as ImageData (triangle, 3x5 digit bitmap, funnel) in the
  * control's foreground colour, at 100% and 200%, so it needs no font and its pixels are exact.
  */
-final class M3HeaderDecoration {
+final class HeaderDecoration {
 
 	static final int WIDTH = 20, HEIGHT = 10;
-	private static final String KEY = "org.eclipse.swt.m3.M3HeaderDecoration"; //$NON-NLS-1$
-	private static final String ORIGINAL = "org.eclipse.swt.m3.M3HeaderDecoration.original"; //$NON-NLS-1$
+	private static final String KEY = "org.eclipse.swt.internal.HeaderDecoration"; //$NON-NLS-1$
+	private static final String ORIGINAL = "org.eclipse.swt.internal.HeaderDecoration.original"; //$NON-NLS-1$
 	private static final Object NO_IMAGE = new Object ();
 	/* 3x5 digits 0 .. 9, then '+', one row per 3 bits (top row first) */
 	private static final short [] DIGITS = {
@@ -45,15 +45,15 @@ final class M3HeaderDecoration {
 	private boolean [] filtered = new boolean [0];
 	private final Map<Integer, Image> images = new HashMap<> ();
 
-	private M3HeaderDecoration (Composite control) {
+	private HeaderDecoration (Composite control) {
 		this.control = control;
 		control.addListener (SWT.Dispose, event -> dispose ());
 	}
 
-	static M3HeaderDecoration of (Composite control) {
+	static HeaderDecoration of (Composite control) {
 		Object decoration = control.getData (KEY);
-		if (decoration instanceof M3HeaderDecoration) return (M3HeaderDecoration) decoration;
-		M3HeaderDecoration created = new M3HeaderDecoration (control);
+		if (decoration instanceof HeaderDecoration) return (HeaderDecoration) decoration;
+		HeaderDecoration created = new HeaderDecoration (control);
 		control.setData (KEY, created);
 		return created;
 	}
@@ -85,7 +85,7 @@ final class M3HeaderDecoration {
 	}
 
 	private void update (int column) {
-		Item item = M3Columns.column (control, column);
+		Item item = Columns.column (control, column);
 		Object original = item.getData (ORIGINAL);
 		int code = code (column);
 		if (code == 0) {

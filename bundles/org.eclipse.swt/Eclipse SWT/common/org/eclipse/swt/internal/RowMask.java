@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 /*
  * Row masks: one bit per source row in a long[] lane (bit i of word i >>> 6). Bit runs are moved
@@ -20,9 +20,9 @@ package org.eclipse.swt.m3;
  * compaction (trailing-zero walk) and a view row is found back by a rank query (per-word prefix
  * popcounts + bitCount of the masked word).
  */
-final class M3RowMask {
+final class RowMask {
 
-	private M3RowMask () {
+	private RowMask () {
 	}
 
 	static int words (int bits) {

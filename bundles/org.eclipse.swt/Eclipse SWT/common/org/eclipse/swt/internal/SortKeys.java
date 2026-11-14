@@ -12,14 +12,14 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 
 import org.eclipse.swt.*;
 
 /**
- * Collation sort keys of a set of items, built by {@link M3Collation} (enhanced M3 language API).
+ * Collation sort keys of a set of items, built by {@link Collation} (enhanced M3 language API).
  * <p>
  * The keys of all items live in one byte lane with an offset lane; comparing two items is an
  * unsigned byte-range compare with no allocation. Instances are immutable.
@@ -27,12 +27,12 @@ import org.eclipse.swt.*;
  *
  * @since 3.138
  */
-public final class M3SortKeys {
+public final class SortKeys {
 
 	private final byte [] lane;
 	private final int [] offsets;
 
-	M3SortKeys (byte [] lane, int [] offsets) {
+	SortKeys (byte [] lane, int [] offsets) {
 		this.lane = lane;
 		this.offsets = offsets;
 	}

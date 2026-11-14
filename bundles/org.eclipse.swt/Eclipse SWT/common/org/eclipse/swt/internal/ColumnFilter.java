@@ -17,7 +17,7 @@
  *     Hitesh Soliwal (Synexia) - filtering the model off the UI thread adapted from x86core
  *         jsonviewer LazyTreeFilter and TreeFilterControl (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 import java.util.function.*;
@@ -27,7 +27,7 @@ import org.eclipse.swt.widgets.*;
 /**
  * Per-column filters over the rows of a source (enhanced M3 API).
  * <p>
- * Each column may have one criterion: a text match ({@link M3TextMatch}: contains, starts with,
+ * Each column may have one criterion: a text match ({@link TextMatch}: contains, starts with,
  * equals, wildcard or regular expression, optionally negated or without case) or a value list
  * (texts, or value ids). One more criterion, addressed as {@link #ALL_COLUMNS}, matches one text
  * against several columns (a row matches when any of them matches). Criteria combine from left
@@ -37,19 +37,19 @@ import org.eclipse.swt.widgets.*;
  * </p>
  * <p>
  * Every criterion keeps a bit mask over the source rows; combining is a word-wide fold, so
- * changing one criterion re-tests one column. Cell texts come from an {@link M3CellText}; widget
+ * changing one criterion re-tests one column. Cell texts come from an {@link CellText}; widget
  * items are never read. In tree mode ({@link #setParents(IntUnaryOperator)}) every ancestor of a
  * passing row is shown too, so that the row stays reachable.
  * </p>
  * <p>
  * Criterion changes report the rows that left and entered the view to the listeners, so an
- * {@link M3ColumnSort} over this filter updates incrementally.
+ * {@link ColumnSort} over this filter updates incrementally.
  * </p>
  *
- * @see M3ColumnSort
+ * @see ColumnSort
  * @since 3.138
  */
-public final class M3ColumnFilter extends M3RowViewBase {
+public final class ColumnFilter extends RowViewBase {
 
 	/** Logic: a row passes when it passes the criteria before and this one. */
 	public static final int AND = 0;
@@ -60,23 +60,23 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	/** The index of the multi-column criterion. */
 	public static final int ALL_COLUMNS = -1;
 
-	private final M3CellText text;
-	private final M3FilterCriterion [] criteria;
-	private M3FilterCriterion [] pending;
+	private final CellText text;
+	private final FilterCriterion [] criteria;
+	private FilterCriterion [] pending;
 	private boolean [] dirty;
 	volatile int generation;
 	private int appliedGeneration;
 	/* worker results applied on the UI thread (read by the hidden-viewport gate) */
 	int applies;
-	M3ColumnSort follower;
-	private M3FilterWorker worker;
+	ColumnSort follower;
+	private FilterWorker worker;
 	private IntUnaryOperator parentOf;
 	private long [] matched = {}, kept = {}, previous = {};
 	private int [] rows = {}, rank = {}, spare = {}, flipRows = {}, flipAt = {};
 	/* tree mode: the number of matching strict descendants of every row, and the parent of every row */
 	private int [] below = {}, parentLane = {};
 	private int size;
-	private final M3FilterDelta delta = new M3FilterDelta (this);
+	private final FilterDelta delta = new FilterDelta (this);
 
 	/**
 	 * Constructs a filter without criteria (every row passes).
@@ -89,12 +89,12 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 *    <li>ERROR_INVALID_ARGUMENT - if a count is negative</li>
 	 * </ul>
 	 */
-	public M3ColumnFilter (int columnCount, int sourceSize, M3CellText text) {
+	public ColumnFilter (int columnCount, int sourceSize, CellText text) {
 		super (null, sourceSize);
-		M3Checks.argument (columnCount >= 0);
+		RowChecks.argument (columnCount >= 0);
 		this.text = text;
-		criteria = new M3FilterCriterion [columnCount + 1];
-		for (int i = 0; i < criteria.length; i++) criteria [i] = new M3FilterCriterion ();
+		criteria = new FilterCriterion [columnCount + 1];
+		for (int i = 0; i < criteria.length; i++) criteria [i] = new FilterCriterion ();
 		pending = criteria;
 		dirty = new boolean [criteria.length];
 		recompute (null);
@@ -114,8 +114,8 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 * removes the criterion.
 	 *
 	 * @param column the column
-	 * @param pattern the pattern text (see {@link M3TextMatch}), or <code>null</code>
-	 * @param mode the mode and flags of {@link M3TextMatch}
+	 * @param pattern the pattern text (see {@link TextMatch}), or <code>null</code>
+	 * @param mode the mode and flags of {@link TextMatch}
 	 *
 	 * @exception IllegalArgumentException <ul>
 	 *    <li>ERROR_INVALID_RANGE - if the column is not a column</li>
@@ -123,18 +123,18 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 * </ul>
 	 */
 	public void setText (int column, String pattern, int mode) {
-		M3Checks.range (column, criteria.length - 1);
+		RowChecks.range (column, criteria.length - 1);
 		setText (column, new int [] {column}, pattern, mode);
 	}
 
 	/**
 	 * Sets the multi-column criterion: a row matches when the pattern matches any of the columns
-	 * (with {@link M3TextMatch#NEGATE}: none of them). A <code>null</code> pattern, or one without
+	 * (with {@link TextMatch#NEGATE}: none of them). A <code>null</code> pattern, or one without
 	 * tokens, removes the criterion.
 	 *
 	 * @param columns the columns
 	 * @param pattern the pattern text, or <code>null</code>
-	 * @param mode the mode and flags of {@link M3TextMatch}
+	 * @param mode the mode and flags of {@link TextMatch}
 	 *
 	 * @exception IllegalArgumentException <ul>
 	 *    <li>ERROR_NULL_ARGUMENT - if the columns are null</li>
@@ -143,17 +143,17 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 * </ul>
 	 */
 	public void setText (int [] columns, String pattern, int mode) {
-		M3Checks.nonNull (columns);
-		for (int column : columns) M3Checks.range (column, criteria.length - 1);
+		RowChecks.nonNull (columns);
+		for (int column : columns) RowChecks.range (column, criteria.length - 1);
 		setText (ALL_COLUMNS, columns.clone (), pattern, mode);
 	}
 
 	private void setText (int index, int [] columns, String pattern, int mode) {
-		M3TextMatch match = pattern == null ? null : M3TextMatch.compile (pattern, mode);
-		M3Checks.argument (text != null || match == null);
-		M3FilterCriterion before = pending [index + 1];
+		TextMatch match = pattern == null ? null : TextMatch.compile (pattern, mode);
+		RowChecks.argument (text != null || match == null);
+		FilterCriterion before = pending [index + 1];
 		boolean narrowing = worker == null && match != null && before.match != null && Arrays.equals (columns, before.columns) && match.narrows (before.match);
-		M3FilterCriterion criterion = edit (index + 1);
+		FilterCriterion criterion = edit (index + 1);
 		if (match != null && match.isActive ()) {
 			criterion.match = match;
 			criterion.columns = columns;
@@ -162,9 +162,9 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	}
 
 	/* typing more of a contains or starts-with pattern: only the rows the previous pattern kept are tested again */
-	private void narrowed (M3FilterCriterion criterion) {
+	private void narrowed (FilterCriterion criterion) {
 		generation++;
-		criterion.narrow (0, M3RowMask.words (sourceSize ()), text);
+		criterion.narrow (0, RowMask.words (sourceSize ()), text);
 		recompute (null);
 	}
 
@@ -181,9 +181,9 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 * </ul>
 	 */
 	public void setValues (int column, String... values) {
-		M3Checks.range (column, criteria.length - 1);
-		M3Checks.argument (text != null || values == null);
-		M3FilterCriterion criterion = edit (column + 1);
+		RowChecks.range (column, criteria.length - 1);
+		RowChecks.argument (text != null || values == null);
+		FilterCriterion criterion = edit (column + 1);
 		if (values != null) {
 			criterion.values = new HashSet<> (Arrays.asList (values));
 			criterion.columns = new int [] {column};
@@ -206,16 +206,16 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 * </ul>
 	 */
 	public void setValues (int column, IntUnaryOperator valueId, int... allowedIds) {
-		M3Checks.range (column, criteria.length - 1);
-		M3Checks.nonNull (valueId);
-		M3Checks.nonNull (allowedIds);
+		RowChecks.range (column, criteria.length - 1);
+		RowChecks.nonNull (valueId);
+		RowChecks.nonNull (allowedIds);
 		long [] allowed = {};
 		for (int id : allowedIds) {
-			M3Checks.argument (id >= 0);
-			allowed = M3RowMask.ensure (allowed, id + 1);
-			M3RowMask.set (allowed, id, true);
+			RowChecks.argument (id >= 0);
+			allowed = RowMask.ensure (allowed, id + 1);
+			RowMask.set (allowed, id, true);
 		}
-		M3FilterCriterion criterion = edit (column + 1);
+		FilterCriterion criterion = edit (column + 1);
 		criterion.valueId = valueId;
 		criterion.allowed = allowed;
 		criterion.columns = new int [] {column};
@@ -255,7 +255,7 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 */
 	public void setLogic (int column, int logic) {
 		criterion (column);
-		M3Checks.argument (logic == AND || logic == OR);
+		RowChecks.argument (logic == AND || logic == OR);
 		if (worker != null) pending [column + 1] = pending [column + 1].copy ();
 		pending [column + 1].logic = logic;
 		changed (null);
@@ -299,7 +299,7 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 *    <li>ERROR_INVALID_RANGE - if the column is neither a column nor ALL_COLUMNS</li>
 	 * </ul>
 	 */
-	public M3TextMatch getMatch (int column) {
+	public TextMatch getMatch (int column) {
 		return criterion (column).match;
 	}
 
@@ -323,7 +323,7 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 * </ul>
 	 */
 	public boolean matches (int sourceRow) {
-		return M3RowMask.get (matched, M3Checks.range (sourceRow, sourceSize ()));
+		return RowMask.get (matched, RowChecks.range (sourceRow, sourceSize ()));
 	}
 
 	/**
@@ -348,32 +348,32 @@ public final class M3ColumnFilter extends M3RowViewBase {
 
 	@Override
 	public int map (int row) {
-		return rows [M3Checks.range (row, size)];
+		return rows [RowChecks.range (row, size)];
 	}
 
 	@Override
 	public int unmap (int sourceRow) {
-		return M3RowMask.rank (kept, rank, M3Checks.range (sourceRow, sourceSize ()));
+		return RowMask.rank (kept, rank, RowChecks.range (sourceRow, sourceSize ()));
 	}
 
-	private M3FilterCriterion criterion (int column) {
-		return pending [M3Checks.range (column + 1, criteria.length)];
+	private FilterCriterion criterion (int column) {
+		return pending [RowChecks.range (column + 1, criteria.length)];
 	}
 
 	/* the criterion to fill: cleared in place when synchronous, a fresh pending one when asynchronous */
-	private M3FilterCriterion edit (int index) {
+	private FilterCriterion edit (int index) {
 		if (worker == null) {
 			criteria [index].clear ();
 			return criteria [index];
 		}
-		M3FilterCriterion fresh = new M3FilterCriterion ();
+		FilterCriterion fresh = new FilterCriterion ();
 		fresh.logic = pending [index].logic;
 		pending [index] = fresh;
 		dirty [index] = true;
 		return fresh;
 	}
 
-	private void changed (M3FilterCriterion criterion) {
+	private void changed (FilterCriterion criterion) {
 		generation++;
 		if (worker != null) {
 			worker.schedule ();
@@ -381,17 +381,17 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		}
 		if (criterion != null) {
 			int n = sourceSize ();
-			criterion.mask = M3RowMask.ensure (criterion.mask, n);
+			criterion.mask = RowMask.ensure (criterion.mask, n);
 			if (criterion.isActive ()) criterion.evaluate (0, n, text);
 		}
 		recompute (null);
 	}
 
 	@Override
-	void inputChanged (M3RowChange in) {
+	void inputChanged (RowChange in) {
 		generation++;
 		if (worker != null && anyDirty ()) worker.schedule ();
-		if (in.kind == M3RowChange.UPDATED || parentOf == null && in.kind != M3RowChange.RESET) {
+		if (in.kind == RowChange.UPDATED || parentOf == null && in.kind != RowChange.RESET) {
 			applyDelta (in);
 			return;
 		}
@@ -399,10 +399,10 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		fullPasses++;
 		int n = sourceSize ();
 		switch (in.kind) {
-			case M3RowChange.INSERTED: shift (in.start, in.count, true); evaluate (in.start, in.start + in.count); break;
-			case M3RowChange.REMOVED: shift (in.start, in.count, false); break;
-			case M3RowChange.UPDATED: for (int i = 0; i < in.rowCount; i++) evaluate (in.rows [i], in.rows [i] + 1); break;
-			default: for (M3FilterCriterion criterion : criteria) criterion.mask = new long [M3RowMask.words (n)]; evaluate (0, n); break;
+			case RowChange.INSERTED: shift (in.start, in.count, true); evaluate (in.start, in.start + in.count); break;
+			case RowChange.REMOVED: shift (in.start, in.count, false); break;
+			case RowChange.UPDATED: for (int i = 0; i < in.rowCount; i++) evaluate (in.rows [i], in.rows [i] + 1); break;
+			default: for (FilterCriterion criterion : criteria) criterion.mask = new long [RowMask.words (n)]; evaluate (0, n); break;
 		}
 		recompute (in);
 	}
@@ -412,10 +412,10 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 * the rows whose status flips are moved in the rows lane in one pass from the first of them, the word ranks are
 	 * recounted from there, and the change is reported from the edited rows (no fold, compaction or scan over n)
 	 */
-	private void applyDelta (M3RowChange in) {
+	private void applyDelta (RowChange in) {
 		int n = sourceSize (), start = in.start, count = in.count;
 		switch (in.kind) {
-			case M3RowChange.INSERTED: {
+			case RowChange.INSERTED: {
 				int old = n - count, at = positionBefore (start, old);
 				shift (start, count, true);
 				matched = shift (matched, old, n, start, count, true);
@@ -423,26 +423,26 @@ public final class M3ColumnFilter extends M3RowViewBase {
 				evaluate (start, start + count);
 				int entering = 0;
 				for (int row = start; row < start + count; row++) {
-					if (M3FilterCriterion.passes (criteria, row)) {
-						M3RowMask.set (matched, row, true);
-						M3RowMask.set (kept, row, true);
+					if (FilterCriterion.passes (criteria, row)) {
+						RowMask.set (matched, row, true);
+						RowMask.set (kept, row, true);
 						entering++;
 					}
 				}
 				rows = capacity (rows, size + entering);
 				for (int i = size - 1; i >= at; i--) rows [i + entering] = rows [i] + count;
 				for (int row = start, p = at; p < at + entering; row++) {
-					if (M3RowMask.get (kept, row)) rows [p++] = row;
+					if (RowMask.get (kept, row)) rows [p++] = row;
 				}
 				size += entering;
 				rerank (start >>> 6, n);
 				delta.structural (in, kept);
 				for (int row = start; row < start + count; row++) {
-					if (M3RowMask.get (kept, row)) M3RowMask.set (previous, row, true);
+					if (RowMask.get (kept, row)) RowMask.set (previous, row, true);
 				}
 				break;
 			}
-			case M3RowChange.REMOVED: {
+			case RowChange.REMOVED: {
 				int old = n + count, from = positionBefore (start, old), to = positionBefore (start + count, old);
 				shift (start, count, false);
 				matched = shift (matched, old, n, start, count, false);
@@ -470,7 +470,7 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 * an UPDATED edit (values changed, structure kept): the rows whose kept status flips leave or enter the rows
 	 * lane, merged in one pass from the first flip; the events are built from the flips and the edited rows
 	 */
-	private void updated (M3RowChange in) {
+	private void updated (RowChange in) {
 		for (int i = 0; i < in.rowCount; i++) evaluate (in.rows [i], in.rows [i] + 1);
 		int flips = parentOf == null ? flatFlips (in) : treeFlips (in);
 		if (flips < 0) {
@@ -483,19 +483,19 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		delta.changedRows (in, flipRows, flips, previous, kept);
 		for (int f = 0; f < flips; f++) {
 			int row = flipRows [f] < 0 ? ~flipRows [f] : flipRows [f];
-			M3RowMask.set (previous, row, flipRows [f] >= 0);
+			RowMask.set (previous, row, flipRows [f] >= 0);
 		}
 	}
 
 	/* flat: the edited rows whose fold changed, ascending, ~row for a row that leaves */
-	private int flatFlips (M3RowChange in) {
+	private int flatFlips (RowChange in) {
 		flipRows = capacity (flipRows, in.rowCount);
 		int flips = 0;
 		for (int i = 0; i < in.rowCount; i++) {
 			int row = in.rows [i];
-			boolean was = M3RowMask.get (kept, row);
-			if (M3FilterCriterion.passes (criteria, row) == was) continue;
-			M3RowMask.set (matched, row, !was);
+			boolean was = RowMask.get (kept, row);
+			if (FilterCriterion.passes (criteria, row) == was) continue;
+			RowMask.set (matched, row, !was);
 			flipRows [flips++] = was ? ~row : row;
 		}
 		return flips;
@@ -508,14 +508,14 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 * rows and the ancestors whose count crossed zero. Returns the flips, ascending, ~row for a row that leaves, or -1
 	 * when a parent chain loops (then the whole fold decides, as before).
 	 */
-	private int treeFlips (M3RowChange in) {
+	private int treeFlips (RowChange in) {
 		int n = sourceSize (), candidates = 0;
 		for (int i = 0; i < in.rowCount; i++) {
 			int row = in.rows [i], parent = parentOf.applyAsInt (row), old = parentLane [row];
 			if (parent < -1 || parent >= n) return -1;
-			boolean was = M3RowMask.get (matched, row), match = M3FilterCriterion.passes (criteria, row);
+			boolean was = RowMask.get (matched, row), match = FilterCriterion.passes (criteria, row);
 			if (parent == old && match == was) continue;
-			M3RowMask.set (matched, row, match);
+			RowMask.set (matched, row, match);
 			candidates = candidate (row, candidates);
 			if (parent == old) {
 				candidates = climb (old, match ? 1 : -1, candidates, n);
@@ -532,8 +532,8 @@ public final class M3ColumnFilter extends M3RowViewBase {
 			int row = flipRows [k];
 			if (row == last) continue;
 			last = row;
-			boolean now = M3RowMask.get (matched, row) || below [row] > 0;
-			if (now != M3RowMask.get (kept, row)) flipRows [flips++] = now ? row : ~row;
+			boolean now = RowMask.get (matched, row) || below [row] > 0;
+			if (now != RowMask.get (kept, row)) flipRows [flips++] = now ? row : ~row;
 		}
 		return flips;
 	}
@@ -575,10 +575,10 @@ public final class M3ColumnFilter extends M3RowViewBase {
 			read = at;
 			if (row < 0) {
 				read++;
-				M3RowMask.set (kept, ~row, false);
+				RowMask.set (kept, ~row, false);
 			} else {
 				rows [out++] = row;
-				M3RowMask.set (kept, row, true);
+				RowMask.set (kept, row, true);
 			}
 		}
 		System.arraycopy (spare, read - first, rows, out, size - read);
@@ -588,7 +588,7 @@ public final class M3ColumnFilter extends M3RowViewBase {
 
 	/* recounts the word ranks after word fromWord (the ranks up to it are unchanged) */
 	private void rerank (int fromWord, int n) {
-		int words = M3RowMask.words (n);
+		int words = RowMask.words (n);
 		if (rank.length < words) rank = Arrays.copyOf (rank, Math.max (words, rank.length + (rank.length >> 1)));
 		for (int w = fromWord + 1; w < words; w++) rank [w] = rank [w - 1] + Long.bitCount (kept [w - 1]);
 	}
@@ -598,39 +598,39 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	}
 
 	private void evaluate (int start, int end) {
-		for (M3FilterCriterion criterion : criteria) {
+		for (FilterCriterion criterion : criteria) {
 			if (criterion.isActive ()) criterion.evaluate (start, end, text);
 		}
 	}
 
 	private void shift (int start, int count, boolean insert) {
 		int n = sourceSize (), old = insert ? n - count : n + count;
-		for (M3FilterCriterion criterion : criteria) criterion.mask = shift (criterion.mask, old, n, start, count, insert);
+		for (FilterCriterion criterion : criteria) criterion.mask = shift (criterion.mask, old, n, start, count, insert);
 		previous = shift (previous, old, n, start, count, insert);
 	}
 
 	private static long [] shift (long [] mask, int old, int n, int start, int count, boolean insert) {
-		mask = M3RowMask.ensure (mask, Math.max (old, n));
-		if (insert) M3RowMask.insert (mask, old, start, count); else M3RowMask.remove (mask, old, start, count);
+		mask = RowMask.ensure (mask, Math.max (old, n));
+		if (insert) RowMask.insert (mask, old, start, count); else RowMask.remove (mask, old, start, count);
 		return mask;
 	}
 
 	/* folds the criteria, applies the ancestor rule, compacts the view, and reports the change */
-	private void recompute (M3RowChange in) {
-		int n = sourceSize (), words = M3RowMask.words (n);
-		matched = M3RowMask.ensure (matched, n);
-		M3FilterCriterion.fold (criteria, matched, n);
-		kept = M3RowMask.ensure (kept, n);
+	private void recompute (RowChange in) {
+		int n = sourceSize (), words = RowMask.words (n);
+		matched = RowMask.ensure (matched, n);
+		FilterCriterion.fold (criteria, matched, n);
+		kept = RowMask.ensure (kept, n);
 		System.arraycopy (matched, 0, kept, 0, words);
 		if (parentOf != null) {
-			M3FilterCriterion.ancestors (matched, kept, n, parentOf);
+			FilterCriterion.ancestors (matched, kept, n, parentOf);
 			parentLane = parentLane.length >= n ? parentLane : new int [n];
-			below = M3FilterCriterion.below (matched, n, parentOf, below, parentLane);
+			below = FilterCriterion.below (matched, n, parentOf, below, parentLane);
 		}
 		rows = rows.length >= n ? rows : new int [n];
 		rank = rank.length >= words ? rank : new int [words];
-		size = M3RowMask.compact (kept, words, rows, rank);
-		previous = M3RowMask.ensure (previous, n);
+		size = RowMask.compact (kept, words, rows, rank);
+		previous = RowMask.ensure (previous, n);
 		delta.report (in, previous, kept, n);
 		System.arraycopy (kept, 0, previous, 0, words);
 	}
@@ -641,9 +641,9 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 * <code>clear</code>, <code>clearAll</code>, <code>setLogic</code>, <code>setParents</code>) is
 	 * recorded at once and increments the generation; after <code>debounceMs</code> without a newer
 	 * change, a worker thread evaluates the changed criteria over the source rows and computes the
-	 * view (and the order of an {@link M3ColumnSort} over this filter), dropping the work as soon as
+	 * view (and the order of an {@link ColumnSort} over this filter), dropping the work as soon as
 	 * a newer generation exists; the result of the newest generation is applied on the display's
-	 * thread in one step and reported as one {@link M3RowChange#RESET}. Until then the view shows
+	 * thread in one step and reported as one {@link RowChange#RESET}. Until then the view shows
 	 * the previous result, and {@link #isActive(int)} and {@link #getMatch(int)} already answer the
 	 * recorded criteria. The cell text, the parents and the sort keys are then read on the worker
 	 * thread: they must be safe to read there while the source is not being edited. Source edits
@@ -658,13 +658,13 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 * </ul>
 	 */
 	public void setAsync (Display display, int debounceMs) {
-		M3Checks.argument (debounceMs >= 0);
+		RowChecks.argument (debounceMs >= 0);
 		if (display == null) {
 			if (worker != null) flush ();
 			return;
 		}
 		if (worker == null) {
-			worker = new M3FilterWorker (this, display);
+			worker = new FilterWorker (this, display);
 			worker.hold (held ());
 			pending = criteria.clone ();
 		}
@@ -711,7 +711,7 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		int n = sourceSize ();
 		for (int i = 0; i < criteria.length; i++) {
 			if (dirty [i]) {
-				pending [i].mask = new long [M3RowMask.words (n)];
+				pending [i].mask = new long [RowMask.words (n)];
 				if (pending [i].isActive ()) pending [i].evaluate (0, n, text);
 			} else {
 				pending [i].mask = criteria [i].mask;
@@ -730,11 +730,11 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		return false;
 	}
 
-	M3FilterCriterion [] pendingCriteria () {
+	FilterCriterion [] pendingCriteria () {
 		return pending;
 	}
 
-	M3FilterCriterion [] appliedCriteria () {
+	FilterCriterion [] appliedCriteria () {
 		return criteria;
 	}
 
@@ -746,12 +746,12 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		return parentOf;
 	}
 
-	M3CellText cellText () {
+	CellText cellText () {
 		return text;
 	}
 
 	/* UI thread: takes a worker result (its generation is current) and reports one RESET */
-	void apply (M3FilterCriterion [] next, long [] matched, long [] kept, int [] below, int [] parentLane, int [] rows, int [] rank, int size, int generation) {
+	void apply (FilterCriterion [] next, long [] matched, long [] kept, int [] below, int [] parentLane, int [] rows, int [] rank, int size, int generation) {
 		applies++;
 		System.arraycopy (next, 0, criteria, 0, criteria.length);
 		Arrays.fill (dirty, false);
@@ -764,8 +764,8 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		this.rows = rows;
 		this.rank = rank;
 		this.size = size;
-		int n = sourceSize (), words = M3RowMask.words (n), changed = words;
-		previous = M3RowMask.ensure (previous, n);
+		int n = sourceSize (), words = RowMask.words (n), changed = words;
+		previous = RowMask.ensure (previous, n);
 		for (int w = 0; w < words && changed == words; w++) {
 			if (previous [w] != kept [w]) changed = w;
 		}
@@ -773,7 +773,7 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		System.arraycopy (kept, 0, previous, 0, words);
 		appliedGeneration = generation;
 		if (follower != null) follower.commitPrepared (generation);
-		change.set (M3RowChange.RESET, 0, 0);
+		change.set (RowChange.RESET, 0, 0);
 		change.damage (first, size - 1);
 		fire ();
 	}

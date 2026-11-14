@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.text.*;
 import java.util.*;
@@ -38,7 +38,7 @@ import org.eclipse.swt.*;
  *
  * @since 3.138
  */
-public final class M3TextSegments {
+public final class TextSegments {
 
 	/** Segment kind: words and the spaces and punctuation between them. */
 	public static final int WORD = 0;
@@ -57,7 +57,7 @@ public final class M3TextSegments {
 	/* bit i set when segment i holds a letter or a digit; null unless WORD */
 	private final long [] wordBits;
 
-	private M3TextSegments (int kind, int [] boundaries, long [] wordBits) {
+	private TextSegments (int kind, int [] boundaries, long [] wordBits) {
 		this.kind = kind;
 		this.boundaries = boundaries;
 		this.wordBits = wordBits;
@@ -74,7 +74,7 @@ public final class M3TextSegments {
 	 *    <li>ERROR_NULL_ARGUMENT - if the text or the locale is null</li>
 	 * </ul>
 	 */
-	public static M3TextSegments words (String text, Locale locale) {
+	public static TextSegments words (String text, Locale locale) {
 		return of (WORD, text, locale);
 	}
 
@@ -89,7 +89,7 @@ public final class M3TextSegments {
 	 *    <li>ERROR_NULL_ARGUMENT - if the text or the locale is null</li>
 	 * </ul>
 	 */
-	public static M3TextSegments graphemes (String text, Locale locale) {
+	public static TextSegments graphemes (String text, Locale locale) {
 		return of (GRAPHEME, text, locale);
 	}
 
@@ -104,7 +104,7 @@ public final class M3TextSegments {
 	 *    <li>ERROR_NULL_ARGUMENT - if the text or the locale is null</li>
 	 * </ul>
 	 */
-	public static M3TextSegments lineBreaks (String text, Locale locale) {
+	public static TextSegments lineBreaks (String text, Locale locale) {
 		return of (LINE, text, locale);
 	}
 
@@ -119,7 +119,7 @@ public final class M3TextSegments {
 	 *    <li>ERROR_NULL_ARGUMENT - if the text or the locale is null</li>
 	 * </ul>
 	 */
-	public static M3TextSegments sentences (String text, Locale locale) {
+	public static TextSegments sentences (String text, Locale locale) {
 		return of (SENTENCE, text, locale);
 	}
 
@@ -136,12 +136,12 @@ public final class M3TextSegments {
 	 *    <li>ERROR_INVALID_ARGUMENT - if the kind is not one of the four</li>
 	 * </ul>
 	 */
-	public static M3TextSegments of (int kind, String text, Locale locale) {
+	public static TextSegments of (int kind, String text, Locale locale) {
 		if (text == null || locale == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		if (kind < WORD || kind > SENTENCE) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
-		if (text.isEmpty ()) return new M3TextSegments (kind, NO_BOUNDARIES, null);
+		if (text.isEmpty ()) return new TextSegments (kind, NO_BOUNDARIES, null);
 		int [] boundaries = boundaries (iterator (kind, locale), text);
-		return new M3TextSegments (kind, boundaries, kind == WORD ? wordBits (text, boundaries) : null);
+		return new TextSegments (kind, boundaries, kind == WORD ? wordBits (text, boundaries) : null);
 	}
 
 	/**
@@ -242,9 +242,9 @@ public final class M3TextSegments {
 
 	/**
 	 * Returns the token ids of the word segments in order (see {@link #isWord(int)}): a lane of
-	 * non-negative ids that a token cursor reads and {@link M3TokenMatch} searches. With
+	 * non-negative ids that a token cursor reads and {@link TokenMatch} searches. With
 	 * <code>add</code>, absent words are interned while the vocabulary has room; otherwise, and
-	 * when it is full, they are {@link M3TokenVocabulary#UNKNOWN}. Kinds other than
+	 * when it is full, they are {@link TokenVocabulary#UNKNOWN}. Kinds other than
 	 * {@link #WORD} have no word segments, so their lane is empty. No substring is created.
 	 *
 	 * @param text the text these segments were computed from
@@ -257,7 +257,7 @@ public final class M3TextSegments {
 	 *    <li>ERROR_INVALID_ARGUMENT - if the text length differs from the segmented length</li>
 	 * </ul>
 	 */
-	public int [] tokens (String text, M3TokenVocabulary vocabulary, boolean add) {
+	public int [] tokens (String text, TokenVocabulary vocabulary, boolean add) {
 		if (text == null || vocabulary == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		if (text.length () != length ()) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 		int [] ids = new int [wordCount ()];

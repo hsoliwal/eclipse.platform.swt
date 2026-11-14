@@ -20,7 +20,7 @@ import java.util.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 import org.eclipse.swt.widgets.List;
 import org.junit.jupiter.api.*;
@@ -67,12 +67,12 @@ public class Test_M3Model {
 	};
 
 	/* a random patch of a list of ids: removes, inserts with fresh ids, updates */
-	private M3Patch randomPatch (Random random, long [] ids, long [] nextId) {
-		return randomPatch (random, M3Patch.ROOT, ids, nextId);
+	private RowPatch randomPatch (Random random, long [] ids, long [] nextId) {
+		return randomPatch (random, RowPatch.ROOT, ids, nextId);
 	}
 
-	private M3Patch randomPatch (Random random, long parent, long [] ids, long [] nextId) {
-		M3Patch.Builder builder = M3Patch.builder (parent);
+	private RowPatch randomPatch (Random random, long parent, long [] ids, long [] nextId) {
+		RowPatch.Builder builder = RowPatch.builder (parent);
 		int size = ids.length, limit = size;
 		for (int k = random.nextInt (4); k > 0 && limit > 0; k--) {
 			int count = 1 + random.nextInt (Math.min (5, limit));
@@ -100,9 +100,9 @@ public class Test_M3Model {
 	}
 
 	/* the stock twin of apply: the same runs through the item API, then the anchored top row */
-	private void stockApply (Table table, M3Patch patch, long [] before, long [] after) {
+	private void stockApply (Table table, RowPatch patch, long [] before, long [] after) {
 		int top = table.getTopIndex ();
-		patch.applyTo (new M3Patch.Target () {
+		patch.applyTo (new RowPatch.Target () {
 			int run;
 
 			@Override
@@ -185,7 +185,7 @@ public class Test_M3Model {
 			int [] selection = random.ints (3, 0, Math.max (1, model.getItemCount ())).toArray ();
 			model.setSelection (selection);
 			stock.setSelection (selection);
-			M3Patch patch = randomPatch (random, ids, nextId);
+			RowPatch patch = randomPatch (random, ids, nextId);
 			long [] after = patch.apply (ids);
 			for (int i = 0; i < patch.updateRuns (); i++) {
 				for (int k = 0; k < patch.updateCount (i); k++) versions.merge (after [patch.updateAt (i) + k], 1, Integer::sum);
@@ -227,7 +227,7 @@ public class Test_M3Model {
 		M3Model m3 = M3Model.of (table);
 		long [] start = new long [5000];
 		for (int i = 0; i < start.length; i++) start [i] = i;
-		m3.apply (M3Patch.builder (M3Patch.ROOT).insert (0, start).build (), labels);
+		m3.apply (RowPatch.builder (RowPatch.ROOT).insert (0, start).build (), labels);
 		table.setTopIndex (2000);
 		flush ();
 		table.update ();
@@ -238,7 +238,7 @@ public class Test_M3Model {
 			above [i] = 10_000 + i;
 			below [i] = 20_000 + i;
 		}
-		m3.apply (M3Patch.builder (M3Patch.ROOT).remove (10, 50).insert (0, above).insert (4900, below).build (), labels);
+		m3.apply (RowPatch.builder (RowPatch.ROOT).remove (10, 50).insert (0, above).insert (4900, below).build (), labels);
 		assertEquals (0, fills, "no label asked outside the window");
 		assertEquals (topId, m3.id (M3Model.ROOT, table.getTopIndex ()), "the top row stays");
 		assertEquals (5150, table.getItemCount ());
@@ -265,7 +265,7 @@ public class Test_M3Model {
 			int top = random.nextInt (model.getItemCount ());
 			model.setTopIndex (top);
 			stock.setTopIndex (top);
-			M3Patch patch = randomPatch (random, ids, nextId);
+			RowPatch patch = randomPatch (random, ids, nextId);
 			long [] after = patch.apply (ids);
 			for (int i = 0; i < patch.updateRuns (); i++) {
 				for (int k = 0; k < patch.updateCount (i); k++) versions.merge (after [patch.updateAt (i) + k], 1, Integer::sum);
@@ -273,7 +273,7 @@ public class Test_M3Model {
 			m3.apply (patch, labels);
 			int stockTop = stock.getTopIndex ();
 			long [] before = ids;
-			patch.applyTo (new M3Patch.Target () {
+			patch.applyTo (new RowPatch.Target () {
 				int run;
 
 				@Override
@@ -359,7 +359,7 @@ public class Test_M3Model {
 			long [] current = lanes.get (M3Model.ROOT);
 			long parent = random.nextInt (3) == 0 || current.length == 0 ? M3Model.ROOT : current [random.nextInt (current.length)];
 			long [] ids = lanes.getOrDefault (parent, new long [0]);
-			M3Patch patch = randomPatch (random, parent, ids, nextId);
+			RowPatch patch = randomPatch (random, parent, ids, nextId);
 			long [] after = patch.apply (ids);
 			for (int i = 0; i < patch.updateRuns (); i++) {
 				for (int k = 0; k < patch.updateCount (i); k++) versions.merge (after [patch.updateAt (i) + k], 1, Integer::sum);
@@ -368,7 +368,7 @@ public class Test_M3Model {
 			long anchor = stockTop == null ? -2 : (Long) stockTop.getData ();
 			m3.apply (patch, labels);
 			TreeItem stockParent = parent == M3Model.ROOT ? null : find (stock.getItems (), parent);
-			patch.applyTo (new M3Patch.Target () {
+			patch.applyTo (new RowPatch.Target () {
 				int run;
 
 				@Override
@@ -442,10 +442,10 @@ public class Test_M3Model {
 		assertThrows (IllegalArgumentException.class, () -> m3.text (99, 0));
 		assertThrows (IllegalArgumentException.class, () -> m3.image (99, 0));
 		assertThrows (IllegalArgumentException.class, () -> m3.apply (null, labels));
-		assertThrows (IllegalArgumentException.class, () -> m3.apply (M3Patch.builder (M3Patch.ROOT).build (), null));
-		assertThrows (IllegalArgumentException.class, () -> m3.apply (M3Patch.builder (4).build (), labels));
-		assertThrows (IllegalArgumentException.class, () -> m3.apply (M3Patch.builder (M3Patch.ROOT).remove (3, 5).build (), labels));
-		assertThrows (IllegalArgumentException.class, () -> m3.apply (M3Patch.builder (M3Patch.ROOT).insert (0, 2).build (), labels), "id 2 is in use");
+		assertThrows (IllegalArgumentException.class, () -> m3.apply (RowPatch.builder (RowPatch.ROOT).build (), null));
+		assertThrows (IllegalArgumentException.class, () -> m3.apply (RowPatch.builder (4).build (), labels));
+		assertThrows (IllegalArgumentException.class, () -> m3.apply (RowPatch.builder (RowPatch.ROOT).remove (3, 5).build (), labels));
+		assertThrows (IllegalArgumentException.class, () -> m3.apply (RowPatch.builder (RowPatch.ROOT).insert (0, 2).build (), labels), "id 2 is in use");
 		assertThrows (IllegalArgumentException.class, () -> M3Model.of ((Table) null));
 		assertThrows (IllegalArgumentException.class, () -> M3Model.of ((List) null));
 		table.dispose ();

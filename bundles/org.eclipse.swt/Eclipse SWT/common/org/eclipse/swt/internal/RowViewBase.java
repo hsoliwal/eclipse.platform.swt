@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 
@@ -22,26 +22,26 @@ import java.util.*;
  * its identity source; the other views forward edits to their input, so an edit reported to any
  * view flows down the whole chain.
  */
-abstract class M3RowViewBase implements M3RowView {
+abstract class RowViewBase implements RowView {
 
-	private static final M3RowView.Listener [] NO_LISTENERS = {};
+	private static final RowView.Listener [] NO_LISTENERS = {};
 
-	final M3RowView input;
-	final M3RowChange change = new M3RowChange (this);
-	private final M3RowChange edit;
-	private final M3RowView.Listener inputListener;
-	private M3RowView.Listener [] listeners = NO_LISTENERS;
+	final RowView input;
+	final RowChange change = new RowChange (this);
+	private final RowChange edit;
+	private final RowView.Listener inputListener;
+	private RowView.Listener [] listeners = NO_LISTENERS;
 	private int rootSourceSize;
 	/* input changes this view applied by a pass over all its rows (re-evaluation, fold or re-sort) instead of a delta */
 	int fullPasses;
 	private int visibleViewports, hiddenViewports;
 
-	M3RowViewBase (M3RowView input, int sourceSize) {
+	RowViewBase (RowView input, int sourceSize) {
 		this.input = input;
 		if (input == null) {
-			M3Checks.argument (sourceSize >= 0);
+			RowChecks.argument (sourceSize >= 0);
 			rootSourceSize = sourceSize;
-			edit = new M3RowChange (null);
+			edit = new RowChange (null);
 			inputListener = null;
 		} else {
 			edit = null;
@@ -51,7 +51,7 @@ abstract class M3RowViewBase implements M3RowView {
 	}
 
 	/* applies a change of the input (or of the identity source) and fires this view's change */
-	abstract void inputChanged (M3RowChange change);
+	abstract void inputChanged (RowChange change);
 
 	@Override
 	public int sourceSize () {
@@ -64,9 +64,9 @@ abstract class M3RowViewBase implements M3RowView {
 			input.setSourceSize (sourceSize);
 			return;
 		}
-		M3Checks.argument (sourceSize >= 0);
+		RowChecks.argument (sourceSize >= 0);
 		rootSourceSize = sourceSize;
-		edit.set (M3RowChange.RESET, 0, 0);
+		edit.set (RowChange.RESET, 0, 0);
 		inputChanged (edit);
 	}
 
@@ -76,10 +76,10 @@ abstract class M3RowViewBase implements M3RowView {
 			input.rowsInserted (start, count);
 			return;
 		}
-		M3Checks.span (start, 0, rootSourceSize);
-		M3Checks.argument (count >= 0);
+		RowChecks.span (start, 0, rootSourceSize);
+		RowChecks.argument (count >= 0);
 		rootSourceSize += count;
-		edit.set (M3RowChange.INSERTED, start, count);
+		edit.set (RowChange.INSERTED, start, count);
 		for (int row = start; row < start + count; row++) edit.add (row);
 		inputChanged (edit);
 	}
@@ -90,9 +90,9 @@ abstract class M3RowViewBase implements M3RowView {
 			input.rowsRemoved (start, count);
 			return;
 		}
-		M3Checks.span (start, count, rootSourceSize);
+		RowChecks.span (start, count, rootSourceSize);
 		rootSourceSize -= count;
-		edit.set (M3RowChange.REMOVED, start, count);
+		edit.set (RowChange.REMOVED, start, count);
 		inputChanged (edit);
 	}
 
@@ -102,34 +102,34 @@ abstract class M3RowViewBase implements M3RowView {
 			input.rowsChanged (sourceRows);
 			return;
 		}
-		M3Checks.nonNull (sourceRows);
+		RowChecks.nonNull (sourceRows);
 		int [] rows = sourceRows.clone ();
 		Arrays.sort (rows);
-		edit.set (M3RowChange.UPDATED, 0, 0);
+		edit.set (RowChange.UPDATED, 0, 0);
 		for (int i = 0; i < rows.length; i++) {
-			M3Checks.range (rows [i], rootSourceSize);
+			RowChecks.range (rows [i], rootSourceSize);
 			if (i == 0 || rows [i] != rows [i - 1]) edit.add (rows [i]);
 		}
 		inputChanged (edit);
 	}
 
 	@Override
-	public void addListener (M3RowView.Listener listener) {
-		M3Checks.nonNull (listener);
-		for (M3RowView.Listener l : listeners) {
+	public void addListener (RowView.Listener listener) {
+		RowChecks.nonNull (listener);
+		for (RowView.Listener l : listeners) {
 			if (l == listener) return;
 		}
-		M3RowView.Listener [] grown = Arrays.copyOf (listeners, listeners.length + 1);
+		RowView.Listener [] grown = Arrays.copyOf (listeners, listeners.length + 1);
 		grown [listeners.length] = listener;
 		listeners = grown;
 	}
 
 	@Override
-	public void removeListener (M3RowView.Listener listener) {
-		M3Checks.nonNull (listener);
+	public void removeListener (RowView.Listener listener) {
+		RowChecks.nonNull (listener);
 		for (int i = 0; i < listeners.length; i++) {
 			if (listeners [i] == listener) {
-				M3RowView.Listener [] shrunk = new M3RowView.Listener [listeners.length - 1];
+				RowView.Listener [] shrunk = new RowView.Listener [listeners.length - 1];
 				System.arraycopy (listeners, 0, shrunk, 0, i);
 				System.arraycopy (listeners, i + 1, shrunk, i, shrunk.length - i);
 				listeners = shrunk;
@@ -153,7 +153,7 @@ abstract class M3RowViewBase implements M3RowView {
 	void viewports (int visible, int hidden) {
 		visibleViewports += visible;
 		hiddenViewports += hidden;
-		if (input == null) viewportsChanged (); else if (input instanceof M3RowViewBase base) base.viewports (visible, hidden);
+		if (input == null) viewportsChanged (); else if (input instanceof RowViewBase base) base.viewports (visible, hidden);
 	}
 
 	/* whether viewports are bound to this view and every one of them is hidden */
@@ -170,6 +170,6 @@ abstract class M3RowViewBase implements M3RowView {
 	}
 
 	void fire () {
-		for (M3RowView.Listener listener : listeners) listener.viewChanged (change);
+		for (RowView.Listener listener : listeners) listener.viewChanged (change);
 	}
 }

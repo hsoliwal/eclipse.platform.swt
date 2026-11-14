@@ -14,25 +14,25 @@
  *     Hitesh Soliwal (Synexia) - per-parent sorted children adapted from TV_5.0 treeviewer
  *         SortedElementProvider and Comparator (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 import java.util.function.*;
 
 /*
- * The lanes of M3ColumnSort: the order lane (view row -> source row), its inverse (source row ->
+ * The lanes of ColumnSort: the order lane (view row -> source row), its inverse (source row ->
  * view row or -1), and the sibling index of tree mode (CSR: child start per parent, children in
  * sorted order, sibling position per source row). Changes are applied incrementally: a moved row
  * is found by binary search and shifted with one arraycopy; an entering batch is sorted and
  * merged from the back; leaving rows are compacted in one pass. Each operation returns the
  * first view row whose content changed.
  */
-final class M3SortOrder {
+final class SortOrder {
 
 	private static final int REMOVED = -2;
 
-	final M3SortLanes lanes = new M3SortLanes ();
-	private final M3ColumnSort sort;
+	final SortLanes lanes = new SortLanes ();
+	private final ColumnSort sort;
 	int [] order = new int [0];
 	int size;
 	int [] inverse = new int [0];
@@ -43,14 +43,14 @@ final class M3SortOrder {
 	/* full rebuilds of the sibling index (read by the tests: value updates keep it) */
 	int treeBuilds;
 
-	M3SortOrder (M3ColumnSort sort) {
+	SortOrder (ColumnSort sort) {
 		this.sort = sort;
 	}
 
 	/* how rows are sorted: the sort's own chain, or a chain captured by a worker */
 	@FunctionalInterface
 	interface Sorter {
-		void sort (M3SortLanes lanes, int [] rows, int n);
+		void sort (SortLanes lanes, int [] rows, int n);
 	}
 
 	/* replaces the rows by rows [0, n) of a source of sourceSize rows and sorts them */
@@ -174,7 +174,7 @@ final class M3SortOrder {
 	}
 
 	/* rows [0, m) of the view changed their values; returns {first, last} damaged view rows */
-	void update (int [] rows, int m, M3RowChange change) {
+	void update (int [] rows, int m, RowChange change) {
 		boolean tree = treeValid && sort.parents () != null;
 		if (m == 1) move (rows [0], change); else reposition (rows, m, change);
 		if (tree) treeValid = siblings (rows, m, sort.parents ());
@@ -343,7 +343,7 @@ final class M3SortOrder {
 	 * found by binary search over the unmarked rows, and the span between the first and the last place that changes
 	 * is rewritten once (removals and insertions are equal in number, so the rows after the span keep their place)
 	 */
-	private void reposition (int [] rows, int m, M3RowChange change) {
+	private void reposition (int [] rows, int m, RowChange change) {
 		batch = ensure (batch, m, 0);
 		places = ensure (places, m, 0);
 		olds = ensure (olds, m, 0);
@@ -411,7 +411,7 @@ final class M3SortOrder {
 		return low;
 	}
 
-	private void move (int row, M3RowChange change) {
+	private void move (int row, RowChange change) {
 		int old = inverse [row];
 		if (old < 0) return;
 		if (old > 0 && sort.compare (order [old - 1], row) > 0) {
@@ -496,7 +496,7 @@ final class M3SortOrder {
 
 	private int bucket (IntUnaryOperator parentOf, int row) {
 		int parent = parentOf.applyAsInt (row);
-		M3Checks.argument (parent >= -1 && parent < sourceSize);
+		RowChecks.argument (parent >= -1 && parent < sourceSize);
 		return parent + 1;
 	}
 
@@ -505,7 +505,7 @@ final class M3SortOrder {
 	}
 
 	int child (int parent, int index) {
-		M3Checks.range (index, childCount (parent));
+		RowChecks.range (index, childCount (parent));
 		return children [childStart [parent + 1] + index];
 	}
 

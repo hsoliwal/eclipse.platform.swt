@@ -12,14 +12,14 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import org.eclipse.swt.*;
 
 /* Argument checks of the M3 sort and filter classes, in one place (SWT.error idiom). */
-final class M3Checks {
+final class RowChecks {
 
-	private M3Checks () {
+	private RowChecks () {
 	}
 
 	static <T> T nonNull (T value) {

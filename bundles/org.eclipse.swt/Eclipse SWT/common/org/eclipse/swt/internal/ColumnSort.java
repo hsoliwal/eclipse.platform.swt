@@ -14,7 +14,7 @@
  *     Hitesh Soliwal (Synexia) - per-parent sorted children adapted from TV_5.0 treeviewer
  *         SortedElementProvider and Comparator (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 import java.util.function.*;
@@ -28,11 +28,11 @@ import org.eclipse.swt.widgets.*;
  * The sort keys are an ordered list of (column, direction) pairs: rows are ordered by the first
  * key, rows equal in it by the second key, and so on; rows equal in every key keep ascending
  * source order, in both directions (the sort is stable). Each column reads its values through an
- * {@link M3ColumnKey} or, by default, through the cell text. The result is a permutation lane
+ * {@link ColumnKey} or, by default, through the cell text. The result is a permutation lane
  * over the source rows, kept up to date incrementally as rows change, enter or leave the input.
  * </p>
  * <p>
- * The sort is a {@link M3RowView}: bind it to a virtual widget with {@link M3RowBinding}, so that
+ * The sort is a {@link RowView}: bind it to a virtual widget with {@link RowBinding}, so that
  * only the rows the widget materializes are read. {@link #install(Table)} and
  * {@link #install(Tree)} connect the column headers: a click sorts by the column (ascending,
  * descending, unsorted), a Shift+click adds the column as the next key, and every sorted column
@@ -43,17 +43,17 @@ import org.eclipse.swt.widgets.*;
  * {@link #childCount(int)} and {@link #child(int, int)} answer the sorted children of a row.
  * </p>
  *
- * @see M3ColumnFilter
+ * @see ColumnFilter
  * @since 3.138
  */
-public final class M3ColumnSort extends M3RowViewBase {
+public final class ColumnSort extends RowViewBase {
 
 	private static final int [] NONE = {};
 
-	private final M3ColumnKey [] keys, textKeys;
-	private M3CellText text;
+	private final ColumnKey [] keys, textKeys;
+	private CellText text;
 	private int [] sortColumns = NONE, sortDirections = NONE;
-	private M3ColumnKey [] chain = {};
+	private ColumnKey [] chain = {};
 	private boolean [] descending = {};
 	private IntUnaryOperator parentOf;
 
@@ -61,8 +61,8 @@ public final class M3ColumnSort extends M3RowViewBase {
 		return parentOf;
 	}
 	private final IntBinaryOperator compareRows = this::compare;
-	M3SortOrder order = new M3SortOrder (this);
-	private M3SortOrder prepared;
+	SortOrder order = new SortOrder (this);
+	private SortOrder prepared;
 	private volatile int keysVersion;
 	private int preparedGeneration = -1, preparedVersion, preparedFirst;
 	private boolean takePrepared;
@@ -77,12 +77,12 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 *    <li>ERROR_INVALID_ARGUMENT - if a count is negative</li>
 	 * </ul>
 	 */
-	public M3ColumnSort (int columnCount, int sourceSize) {
+	public ColumnSort (int columnCount, int sourceSize) {
 		this (columnCount, null, sourceSize);
 	}
 
 	/**
-	 * Constructs a sort of the rows of an input view, for example an {@link M3ColumnFilter}.
+	 * Constructs a sort of the rows of an input view, for example an {@link ColumnFilter}.
 	 *
 	 * @param columnCount the number of columns, not negative
 	 * @param input the input view
@@ -92,16 +92,16 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 *    <li>ERROR_NULL_ARGUMENT - if the input is null</li>
 	 * </ul>
 	 */
-	public M3ColumnSort (int columnCount, M3RowView input) {
-		this (columnCount, M3Checks.nonNull (input), 0);
+	public ColumnSort (int columnCount, RowView input) {
+		this (columnCount, RowChecks.nonNull (input), 0);
 	}
 
-	private M3ColumnSort (int columnCount, M3RowView input, int sourceSize) {
+	private ColumnSort (int columnCount, RowView input, int sourceSize) {
 		super (input, sourceSize);
-		M3Checks.argument (columnCount >= 0);
-		keys = new M3ColumnKey [columnCount];
-		textKeys = new M3ColumnKey [columnCount];
-		if (input instanceof M3ColumnFilter filter) filter.follower = this;
+		RowChecks.argument (columnCount >= 0);
+		keys = new ColumnKey [columnCount];
+		textKeys = new ColumnKey [columnCount];
+		if (input instanceof ColumnFilter filter) filter.follower = this;
 		rebuild ();
 	}
 
@@ -116,7 +116,7 @@ public final class M3ColumnSort extends M3RowViewBase {
 
 	/**
 	 * Sets how a column reads its sort key; <code>null</code> reads the cell text (see
-	 * {@link #setCellText(M3CellText)}). Takes effect at the next change of the sort keys.
+	 * {@link #setCellText(CellText)}). Takes effect at the next change of the sort keys.
 	 *
 	 * @param column the column
 	 * @param key the key, or <code>null</code>
@@ -125,8 +125,8 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 *    <li>ERROR_INVALID_RANGE - if the column is not a column</li>
 	 * </ul>
 	 */
-	public void setKey (int column, M3ColumnKey key) {
-		keys [M3Checks.range (column, keys.length)] = key;
+	public void setKey (int column, ColumnKey key) {
+		keys [RowChecks.range (column, keys.length)] = key;
 	}
 
 	/**
@@ -139,8 +139,8 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 *    <li>ERROR_INVALID_RANGE - if the column is not a column</li>
 	 * </ul>
 	 */
-	public M3ColumnKey getKey (int column) {
-		return keys [M3Checks.range (column, keys.length)];
+	public ColumnKey getKey (int column) {
+		return keys [RowChecks.range (column, keys.length)];
 	}
 
 	/**
@@ -150,7 +150,7 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 *
 	 * @param text the cell text, or <code>null</code>
 	 */
-	public void setCellText (M3CellText text) {
+	public void setCellText (CellText text) {
 		this.text = text;
 		Arrays.fill (textKeys, null);
 	}
@@ -169,15 +169,15 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 * </ul>
 	 */
 	public void setSortKeys (int [] columns, int [] directions) {
-		M3Checks.nonNull (columns);
-		M3Checks.nonNull (directions);
-		M3Checks.argument (columns.length == directions.length);
-		M3ColumnKey [] newChain = new M3ColumnKey [columns.length];
+		RowChecks.nonNull (columns);
+		RowChecks.nonNull (directions);
+		RowChecks.argument (columns.length == directions.length);
+		ColumnKey [] newChain = new ColumnKey [columns.length];
 		boolean [] newDescending = new boolean [columns.length];
 		for (int i = 0; i < columns.length; i++) {
-			M3Checks.range (columns [i], keys.length);
-			M3Checks.argument (directions [i] == SWT.UP || directions [i] == SWT.DOWN);
-			for (int j = 0; j < i; j++) M3Checks.argument (columns [j] != columns [i]);
+			RowChecks.range (columns [i], keys.length);
+			RowChecks.argument (directions [i] == SWT.UP || directions [i] == SWT.DOWN);
+			for (int j = 0; j < i; j++) RowChecks.argument (columns [j] != columns [i]);
 			newChain [i] = keyOf (columns [i]);
 			newDescending [i] = directions [i] == SWT.DOWN;
 		}
@@ -187,17 +187,17 @@ public final class M3ColumnSort extends M3RowViewBase {
 		descending = newDescending;
 		keysVersion++;
 		order.resort ();
-		change.set (M3RowChange.ORDER, 0, 0);
+		change.set (RowChange.ORDER, 0, 0);
 		change.damage (0, order.size - 1);
 		fire ();
 	}
 
-	private M3ColumnKey keyOf (int column) {
+	private ColumnKey keyOf (int column) {
 		if (keys [column] != null) return keys [column];
-		M3Checks.argument (text != null);
+		RowChecks.argument (text != null);
 		if (textKeys [column] == null) {
-			M3CellText cells = text;
-			textKeys [column] = M3ColumnKey.ofText (row -> cells.text (row, column), null);
+			CellText cells = text;
+			textKeys [column] = ColumnKey.ofText (row -> cells.text (row, column), null);
 		}
 		return textKeys [column];
 	}
@@ -217,7 +217,7 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 * </ul>
 	 */
 	public void toggle (int column, boolean accumulate) {
-		M3Checks.range (column, keys.length);
+		RowChecks.range (column, keys.length);
 		int priority = getPriority (column);
 		int next = priority < 0 ? SWT.UP : sortDirections [priority] == SWT.UP ? SWT.DOWN : SWT.NONE;
 		if (!accumulate) {
@@ -263,7 +263,7 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 * </ul>
 	 */
 	public int getSortColumn (int priority) {
-		return sortColumns [M3Checks.range (priority, sortColumns.length)];
+		return sortColumns [RowChecks.range (priority, sortColumns.length)];
 	}
 
 	/**
@@ -277,7 +277,7 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 * </ul>
 	 */
 	public int getSortDirection (int priority) {
-		return sortDirections [M3Checks.range (priority, sortDirections.length)];
+		return sortDirections [RowChecks.range (priority, sortDirections.length)];
 	}
 
 	/**
@@ -307,7 +307,7 @@ public final class M3ColumnSort extends M3RowViewBase {
 
 	/**
 	 * Compares two source rows by the sort keys; rows equal in every key compare by source row.
-	 * This is the order of the view; it has the shape of <code>M3ProxyModel.RowComparator</code>.
+	 * This is the order of the view; it has the shape of <code>ProxyModel.RowComparator</code>.
 	 *
 	 * @param sourceA a source row
 	 * @param sourceB another source row
@@ -318,18 +318,18 @@ public final class M3ColumnSort extends M3RowViewBase {
 	}
 
 	/*
-	 * Worker side of an asynchronous filter (M3FilterWorker): sorts the rows the filter will show
+	 * Worker side of an asynchronous filter (FilterWorker): sorts the rows the filter will show
 	 * into a second set of lanes, with the key chain read once; the UI thread later swaps the lanes
 	 * in (commitPrepared) instead of sorting. Returns false when the sort keys changed meanwhile.
 	 */
 	boolean prepare (int [] rows, int n, int sourceSize, int generation) {
 		int version = keysVersion;
-		M3ColumnKey [] keys = chain;
+		ColumnKey [] keys = chain;
 		boolean [] down = descending;
-		M3SortOrder next = prepared != null ? prepared : new M3SortOrder (this);
+		SortOrder next = prepared != null ? prepared : new SortOrder (this);
 		next.reset (rows, n, sourceSize, (lanes, r, count) -> lanes.sort (r, count, keys, down, keys.length, (a, b) -> compare (keys, down, a, b)));
 		if (parentOf != null) next.buildTree (parentOf);
-		M3SortOrder current = order;
+		SortOrder current = order;
 		int [] old = current.order;
 		int first = 0, common = Math.min (Math.min (current.size, old.length), next.size);
 		while (first < common && old [first] == next.order [first]) first++;
@@ -343,14 +343,14 @@ public final class M3ColumnSort extends M3RowViewBase {
 	/* UI side: takes the prepared lanes of a generation if the sort keys did not change since */
 	boolean commitPrepared (int generation) {
 		if (prepared == null || preparedGeneration != generation || preparedVersion != keysVersion) return false;
-		M3SortOrder swap = order;
+		SortOrder swap = order;
 		order = prepared;
 		prepared = swap;
 		takePrepared = true;
 		return true;
 	}
 
-	private static int compare (M3ColumnKey [] keys, boolean [] down, int a, int b) {
+	private static int compare (ColumnKey [] keys, boolean [] down, int a, int b) {
 		for (int i = 0; i < keys.length; i++) {
 			int c = down [i] ? keys [i].compare (b, a) : keys [i].compare (a, b);
 			if (c != 0) return c;
@@ -358,7 +358,7 @@ public final class M3ColumnSort extends M3RowViewBase {
 		return Integer.compare (a, b);
 	}
 
-	void sortRows (M3SortLanes lanes, int [] rows, int n) {
+	void sortRows (SortLanes lanes, int [] rows, int n) {
 		lanes.sort (rows, n, chain, descending, chain.length, compareRows);
 	}
 
@@ -369,12 +369,12 @@ public final class M3ColumnSort extends M3RowViewBase {
 
 	@Override
 	public int map (int row) {
-		return order.order [M3Checks.range (row, order.size)];
+		return order.order [RowChecks.range (row, order.size)];
 	}
 
 	@Override
 	public int unmap (int sourceRow) {
-		return order.inverse [M3Checks.range (sourceRow, order.sourceSize)];
+		return order.inverse [RowChecks.range (sourceRow, order.sourceSize)];
 	}
 
 	/**
@@ -434,13 +434,13 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 * </ul>
 	 */
 	public int indexOfChild (int sourceRow) {
-		tree (M3Checks.range (sourceRow, order.sourceSize));
+		tree (RowChecks.range (sourceRow, order.sourceSize));
 		return order.indexOfChild (sourceRow);
 	}
 
 	private void tree (int row) {
-		M3Checks.range (row + 1, order.sourceSize + 1);
-		M3Checks.argument (parentOf != null);
+		RowChecks.range (row + 1, order.sourceSize + 1);
+		RowChecks.argument (parentOf != null);
 		order.buildTree (parentOf);
 	}
 
@@ -459,7 +459,7 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 * </ul>
 	 */
 	public void install (Table table) {
-		M3SortHeader.install (this, M3Checks.nonNull (table));
+		SortHeader.install (this, RowChecks.nonNull (table));
 	}
 
 	/**
@@ -477,18 +477,18 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 * </ul>
 	 */
 	public void install (Tree tree) {
-		M3SortHeader.install (this, M3Checks.nonNull (tree));
+		SortHeader.install (this, RowChecks.nonNull (tree));
 	}
 
 	@Override
-	void inputChanged (M3RowChange in) {
+	void inputChanged (RowChange in) {
 		int kind = in.kind;
-		if (kind == M3RowChange.ORDER) return;
+		if (kind == RowChange.ORDER) return;
 		change.set (kind, in.start, in.count);
 		for (int i = 0; i < in.rowCount; i++) change.add (in.rows [i]);
 		int first = -1;
 		switch (kind) {
-			case M3RowChange.RESET:
+			case RowChange.RESET:
 				first = takePrepared ? preparedFirst : 0;
 				if (!takePrepared) {
 					fullPasses++;
@@ -496,10 +496,10 @@ public final class M3ColumnSort extends M3RowViewBase {
 				}
 				takePrepared = false;
 				break;
-			case M3RowChange.INSERTED: order.insertSourceRange (in.start, in.count); first = order.insert (in.rows, in.rowCount); break;
-			case M3RowChange.REMOVED: first = order.removeSourceRange (in.start, in.count); break;
-			case M3RowChange.ENTERED: first = order.insert (in.rows, in.rowCount); break;
-			case M3RowChange.LEFT: first = order.remove (in.rows, in.rowCount); break;
+			case RowChange.INSERTED: order.insertSourceRange (in.start, in.count); first = order.insert (in.rows, in.rowCount); break;
+			case RowChange.REMOVED: first = order.removeSourceRange (in.start, in.count); break;
+			case RowChange.ENTERED: first = order.insert (in.rows, in.rowCount); break;
+			case RowChange.LEFT: first = order.remove (in.rows, in.rowCount); break;
 			default: order.update (in.rows, in.rowCount, change); break;
 		}
 		if (first >= 0) change.damage (first, order.size - 1);

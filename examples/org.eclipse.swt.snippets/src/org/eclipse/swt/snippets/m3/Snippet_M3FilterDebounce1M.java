@@ -18,7 +18,7 @@ import java.util.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /*
@@ -41,7 +41,7 @@ public class Snippet_M3FilterDebounce1M {
 			ids [i] = Long.toString (random.nextLong () & Long.MAX_VALUE, 36);
 			sizes [i] = random.nextInt (100_000);
 		}
-		M3CellText text = (row, column) -> column == 0 ? ids [row] : String.valueOf (sizes [row]);
+		CellText text = (row, column) -> column == 0 ? ids [row] : String.valueOf (sizes [row]);
 
 		Display display = new Display ();
 		Shell shell = new Shell (display);
@@ -61,12 +61,12 @@ public class Snippet_M3FilterDebounce1M {
 		Label status = new Label (shell, SWT.NONE);
 		status.setLayoutData (new GridData (SWT.FILL, SWT.BOTTOM, true, false));
 
-		M3ColumnFilter filter = new M3ColumnFilter (2, rows, text);
-		M3ColumnSort sort = new M3ColumnSort (2, filter);
-		sort.setKey (0, M3ColumnKey.ofText (r -> ids [r], null));
-		sort.setKey (1, M3ColumnKey.ofInts (r -> sizes [r]));
+		ColumnFilter filter = new ColumnFilter (2, rows, text);
+		ColumnSort sort = new ColumnSort (2, filter);
+		sort.setKey (0, ColumnKey.ofText (r -> ids [r], null));
+		sort.setKey (1, ColumnKey.ofInts (r -> sizes [r]));
 		sort.install (table);
-		M3RowBinding.bind (table, sort, (item, row) -> {
+		RowBinding.bind (table, sort, (item, row) -> {
 			item.setText (0, ids [row]);
 			item.setText (1, String.valueOf (sizes [row]));
 		});
@@ -74,7 +74,7 @@ public class Snippet_M3FilterDebounce1M {
 		filter.addListener (change -> status.setText (filter.size () + " of " + rows + " rows, generation " + filter.getAppliedGeneration ()));
 		box.addListener (SWT.Modify, event -> {
 			String pattern = box.getText ();
-			filter.setText (0, pattern.isEmpty () ? null : pattern, M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE);
+			filter.setText (0, pattern.isEmpty () ? null : pattern, TextMatch.CONTAINS | TextMatch.IGNORE_CASE);
 			status.setText ("filtering... (generation " + filter.getGeneration () + ")");
 		});
 		box.setText ("zz");

@@ -12,43 +12,43 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.widgets.*;
 
 /*
- * Connects the column headers of a Table or Tree to an M3ColumnSort: a column Selection (header
+ * Connects the column headers of a Table or Tree to an ColumnSort: a column Selection (header
  * click) toggles the column, with Shift accumulating (NatTable accumulate pattern, Shift per the
  * user). After every change of the sort keys the primary key gets the native sort indicator and,
  * with two or more keys, every sorted column shows its direction and priority number through the
  * shared header decoration. Installing again picks up columns created since; each column is
  * hooked once.
  */
-final class M3SortHeader implements Listener, M3RowView.Listener {
+final class SortHeader implements Listener, RowView.Listener {
 
-	private static final String KEY = "org.eclipse.swt.m3.M3SortHeader"; //$NON-NLS-1$
+	private static final String KEY = "org.eclipse.swt.internal.SortHeader"; //$NON-NLS-1$
 
-	private final M3ColumnSort sort;
+	private final ColumnSort sort;
 	private final Composite control;
 
-	private M3SortHeader (M3ColumnSort sort, Composite control) {
+	private SortHeader (ColumnSort sort, Composite control) {
 		this.sort = sort;
 		this.control = control;
 	}
 
-	static void install (M3ColumnSort sort, Composite control) {
+	static void install (ColumnSort sort, Composite control) {
 		Object old = control.getData (KEY);
-		M3SortHeader header = old instanceof M3SortHeader installed && installed.sort == sort ? installed : null;
+		SortHeader header = old instanceof SortHeader installed && installed.sort == sort ? installed : null;
 		if (header == null) {
-			if (old instanceof M3SortHeader installed) installed.uninstall ();
-			header = new M3SortHeader (sort, control);
+			if (old instanceof SortHeader installed) installed.uninstall ();
+			header = new SortHeader (sort, control);
 			control.setData (KEY, header);
 			sort.addListener (header);
 			control.addListener (SWT.Dispose, header);
 		}
-		for (int i = 0, n = M3Columns.count (control); i < n; i++) {
-			Item column = M3Columns.column (control, i);
+		for (int i = 0, n = Columns.count (control); i < n; i++) {
+			Item column = Columns.column (control, i);
 			if (column.getData (KEY) != header) {
 				column.setData (KEY, header);
 				column.addListener (SWT.Selection, header);
@@ -60,8 +60,8 @@ final class M3SortHeader implements Listener, M3RowView.Listener {
 	private void uninstall () {
 		sort.removeListener (this);
 		control.removeListener (SWT.Dispose, this);
-		for (int i = 0, n = M3Columns.count (control); i < n; i++) {
-			Item column = M3Columns.column (control, i);
+		for (int i = 0, n = Columns.count (control); i < n; i++) {
+			Item column = Columns.column (control, i);
 			column.removeListener (SWT.Selection, this);
 			column.setData (KEY, null);
 		}
@@ -73,21 +73,21 @@ final class M3SortHeader implements Listener, M3RowView.Listener {
 			sort.removeListener (this);
 			return;
 		}
-		int column = M3Columns.indexOf (control, (Item) event.widget);
+		int column = Columns.indexOf (control, (Item) event.widget);
 		if (column < sort.getColumnCount ()) sort.toggle (column, (event.stateMask & SWT.SHIFT) != 0);
 	}
 
 	@Override
-	public void viewChanged (M3RowChange change) {
-		if (change.kind () == M3RowChange.ORDER && !control.isDisposed ()) indicate ();
+	public void viewChanged (RowChange change) {
+		if (change.kind () == RowChange.ORDER && !control.isDisposed ()) indicate ();
 	}
 
 	/* native indicator for the primary key; numbered marks when two or more keys are active */
 	private void indicate () {
 		int keys = sort.getSortKeyCount ();
-		M3Columns.setSortIndicator (control, keys == 0 ? -1 : sort.getSortColumn (0), keys == 0 ? SWT.NONE : sort.getSortDirection (0));
-		M3HeaderDecoration decoration = M3HeaderDecoration.of (control);
-		for (int i = 0, n = Math.min (M3Columns.count (control), sort.getColumnCount ()); i < n; i++) {
+		Columns.setSortIndicator (control, keys == 0 ? -1 : sort.getSortColumn (0), keys == 0 ? SWT.NONE : sort.getSortDirection (0));
+		HeaderDecoration decoration = HeaderDecoration.of (control);
+		for (int i = 0, n = Math.min (Columns.count (control), sort.getColumnCount ()); i < n; i++) {
 			int priority = sort.getPriority (i);
 			boolean numbered = keys > 1 && priority >= 0;
 			decoration.setSort (i, numbered ? sort.getDirection (i) : SWT.NONE, numbered ? priority + 1 : 0);

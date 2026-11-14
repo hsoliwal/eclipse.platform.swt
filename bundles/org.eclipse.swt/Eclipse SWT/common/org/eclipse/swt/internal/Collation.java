@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.text.*;
 import java.util.*;
@@ -29,12 +29,12 @@ import org.eclipse.swt.*;
  * in Swedish after "z", and Turkish distinguishes the dotted and dotless i.
  * </p>
  *
- * @see M3SortKeys
+ * @see SortKeys
  * @since 3.138
  */
-public final class M3Collation {
+public final class Collation {
 
-	private M3Collation () {
+	private Collation () {
 	}
 
 	/**
@@ -49,7 +49,7 @@ public final class M3Collation {
 	 *    <li>ERROR_NULL_ARGUMENT - if the items, an item or the locale is null</li>
 	 * </ul>
 	 */
-	public static M3SortKeys keys (String [] items, Locale locale) {
+	public static SortKeys keys (String [] items, Locale locale) {
 		return keys (items, locale, Collator.TERTIARY);
 	}
 
@@ -66,7 +66,7 @@ public final class M3Collation {
 	 *    <li>ERROR_INVALID_ARGUMENT - if the strength is not one of the four</li>
 	 * </ul>
 	 */
-	public static M3SortKeys keys (String [] items, Locale locale, int strength) {
+	public static SortKeys keys (String [] items, Locale locale, int strength) {
 		if (items == null || locale == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		if (strength != Collator.PRIMARY && strength != Collator.SECONDARY && strength != Collator.TERTIARY && strength != Collator.IDENTICAL) {
 			SWT.error (SWT.ERROR_INVALID_ARGUMENT);
@@ -82,6 +82,6 @@ public final class M3Collation {
 		}
 		byte [] lane = new byte [offsets [items.length]];
 		for (int i = 0; i < items.length; i++) System.arraycopy (built [i], 0, lane, offsets [i], built [i].length);
-		return new M3SortKeys (lane, offsets);
+		return new SortKeys (lane, offsets);
 	}
 }

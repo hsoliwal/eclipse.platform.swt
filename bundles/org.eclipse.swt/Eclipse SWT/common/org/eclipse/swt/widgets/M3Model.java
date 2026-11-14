@@ -18,17 +18,17 @@ import java.util.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 
 /**
  * The one model of a <code>List</code>, <code>Table</code> or <code>Tree</code> (enhanced M3 API, the model seam):
- * the widget's rows plus one lane of row ids per parent, edited by deltas ({@link M3Patch}). A tree's
- * patch edits the children of one parent ({@link M3Patch#parent()}); removing or moving a row drops
+ * the widget's rows plus one lane of row ids per parent, edited by deltas ({@link RowPatch}). A tree's
+ * patch edits the children of one parent ({@link RowPatch#parent()}); removing or moving a row drops
  * its children, as disposing its item does.
  * <p>
  * A viewer or a binding keeps its domain objects and refers to rows by id; it does not keep a second
  * row store. Ids are positional (the id of a row is its index) until {@link #setIds(long, long[])} or
- * the first patch gives them. {@link #apply(M3Patch, Labels)} applies a delta as one update
+ * the first patch gives them. {@link #apply(RowPatch, Labels)} applies a delta as one update
  * ({@link M3BulkUpdates}) and keeps the top row on screen (anchored by id), so a delta entirely above
  * or below the visible rows changes only the scroll bar. Labels are asked for the rows a patch inserts
  * or updates; in a table with <code>SWT.VIRTUAL</code> they are asked only when the table shows the row
@@ -44,7 +44,7 @@ import org.eclipse.swt.m3.*;
 public final class M3Model {
 
 	/** The parent id of every row of a List or Table. */
-	public static final long ROOT = M3Patch.ROOT;
+	public static final long ROOT = RowPatch.ROOT;
 
 	/** Fills the labels of one row. */
 	@FunctionalInterface
@@ -379,7 +379,7 @@ public final class M3Model {
 	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the widget</li>
 	 * </ul>
 	 */
-	public void apply (M3Patch patch, Labels rowLabels) {
+	public void apply (RowPatch patch, Labels rowLabels) {
 		if (patch == null || rowLabels == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		widget.checkWidget ();
 		if (tree != null) {
@@ -408,7 +408,7 @@ public final class M3Model {
 		M3BulkUpdates.bulk (widget, () -> {
 			ids = after;
 			if (shifts) positions = repoint (lanePositions, patch, before);
-			patch.applyTo (new M3Patch.Target () {
+			patch.applyTo (new RowPatch.Target () {
 				int run;
 
 				/* a Table that splices (win32 viewport, Table.m3Splice) moves a run with one native count change, keeping the top row on top */
@@ -524,7 +524,7 @@ public final class M3Model {
 	 * The old top row, or the first surviving row below it, goes back on top. A top row the patch keeps is followed
 	 * through the runs in O(runs); only a removed (or moved) top row is looked up by id.
 	 */
-	private void restoreTop (long [] before, int top, long anchor, M3Patch patch) {
+	private void restoreTop (long [] before, int top, long anchor, RowPatch patch) {
 		int count = count ();
 		if (count == 0) return;
 		int index = top < before.length ? follow (patch, top) : -1;
@@ -535,7 +535,7 @@ public final class M3Model {
 	}
 
 	/* the final row of an old row through a patch, or -1 when the patch removes it */
-	static int follow (M3Patch patch, int old) {
+	static int follow (RowPatch patch, int old) {
 		int index = old;
 		for (int i = 0; i < patch.removeRuns (); i++) {
 			int at = patch.removeAt (i), count = patch.removeCount (i);
@@ -550,7 +550,7 @@ public final class M3Model {
 	}
 
 	/* an update-only patch keeps the lane: its runs must fit the rows */
-	private static long [] updatesFit (M3Patch patch, long [] lane) {
+	private static long [] updatesFit (RowPatch patch, long [] lane) {
 		for (int i = 0; i < patch.updateRuns (); i++) {
 			if (patch.updateAt (i) + patch.updateCount (i) > lane.length) SWT.error (SWT.ERROR_INVALID_RANGE);
 		}
@@ -561,7 +561,7 @@ public final class M3Model {
 	 * An inserted id must be new to the lane, or a row the same patch removes (a move), and appear once: checked
 	 * over the changed rows only. Answers the positions of the lane before the patch.
 	 */
-	private M3LongIndex checkInserted (M3Patch patch, long [] before) {
+	private M3LongIndex checkInserted (RowPatch patch, long [] before) {
 		M3LongIndex lane = ids == before && positions != null ? positions : positionsOf (before);
 		M3LongIndex removed = new M3LongIndex (patch.removedCount ());
 		for (int i = 0; i < patch.removeRuns (); i++) {
@@ -578,7 +578,7 @@ public final class M3Model {
 	}
 
 	/* the positions after a patch: removed ids leave, inserted ids come in with their rows, shifted rows keep hints */
-	private static M3LongIndex repoint (M3LongIndex lane, M3Patch patch, long [] before) {
+	private static M3LongIndex repoint (M3LongIndex lane, RowPatch patch, long [] before) {
 		for (int i = 0; i < patch.removeRuns (); i++) {
 			for (int k = 0; k < patch.removeCount (i); k++) lane.remove (before [patch.removeAt (i) + k]);
 		}

@@ -12,20 +12,20 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 /**
  * The text of a cell of the application's source rows (enhanced M3 API).
  * <p>
- * It is the function the application uses to fill its items, given to {@link M3ColumnFilter}
- * (text criteria) and {@link M3ColumnSort} (default text keys), so that neither reads widget
+ * It is the function the application uses to fill its items, given to {@link ColumnFilter}
+ * (text criteria) and {@link ColumnSort} (default text keys), so that neither reads widget
  * items.
  * </p>
  *
  * @since 3.138
  */
 @FunctionalInterface
-public interface M3CellText {
+public interface CellText {
 
 	/**
 	 * Returns the text of a cell.

@@ -12,16 +12,16 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 /**
  * A view of the rows of an application's source (enhanced M3 API).
  * <p>
  * A view maps its rows (what a widget shows, <code>0 .. size() - 1</code>) to source rows
- * (<code>0 .. sourceSize() - 1</code>) and back. Views compose: {@link M3ColumnFilter} keeps the
- * source rows that pass its criteria, {@link M3ColumnSort} orders the rows of its input view, and
- * {@link M3RowWindow} exposes a window of its input view. Edits of the source may be reported to
- * any view of a chain; they go to the first view and flow down the chain as {@link M3RowChange}s.
+ * (<code>0 .. sourceSize() - 1</code>) and back. Views compose: {@link ColumnFilter} keeps the
+ * source rows that pass its criteria, {@link ColumnSort} orders the rows of its input view, and
+ * {@link RowWindow} exposes a window of its input view. Edits of the source may be reported to
+ * any view of a chain; they go to the first view and flow down the chain as {@link RowChange}s.
  * </p>
  * <p>
  * Views keep their state in int and long lanes; no object is made per row.
@@ -29,7 +29,7 @@ package org.eclipse.swt.m3;
  *
  * @since 3.138
  */
-public interface M3RowView {
+public interface RowView {
 
 	/** Receives the changes of a view. */
 	@FunctionalInterface
@@ -40,7 +40,7 @@ public interface M3RowView {
 		 *
 		 * @param change the change
 		 */
-		void viewChanged (M3RowChange change);
+		void viewChanged (RowChange change);
 	}
 
 	/**

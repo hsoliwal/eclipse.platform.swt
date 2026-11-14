@@ -12,13 +12,13 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 import java.util.function.*;
 
 /*
- * The sorting algorithms of M3ColumnSort over int lanes, with their reusable scratch lanes
+ * The sorting algorithms of ColumnSort over int lanes, with their reusable scratch lanes
  * (ALGORITHM_CATALOGUE.tsv in docs/m3/sort-filter):
  * - multi-key order: every key becomes an unsigned radix key per row, normalized to key - min (or max - key
  *   when descending) so that it needs only the bits of its range; consecutive keys whose bits fit in 64 are
@@ -28,7 +28,7 @@ import java.util.function.*;
  *   text keys with at most n/2 distinct values hash the texts first and sort only the distinct ones;
  * - small inputs: stable merge sort with the key chain comparator.
  */
-final class M3SortLanes {
+final class SortLanes {
 
 	/* below this many rows the comparator merge sort beats radix keys (MEASUREMENTS.md) */
 	static final int MERGE_CUTOVER = 48;
@@ -64,7 +64,7 @@ final class M3SortLanes {
 	}
 
 	/* orders rows [0, n) by the key chain; rows whose keys are all equal keep ascending source order */
-	void sort (int [] rows, int n, M3ColumnKey [] chain, boolean [] descending, int keyCount, IntBinaryOperator compare) {
+	void sort (int [] rows, int n, ColumnKey [] chain, boolean [] descending, int keyCount, IntBinaryOperator compare) {
 		if (n < 2) return;
 		ensure (n);
 		if (keyCount > 0 && n < MERGE_CUTOVER) {

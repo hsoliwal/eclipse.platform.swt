@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +27,7 @@ import org.eclipse.swt.widgets.*;
  * The model maps the rows of a view (what a widget shows) to the rows of the application's
  * source and back. Stages run in the order they were added: a filter keeps the rows its
  * predicate accepts, a sort orders the rows stably by a comparator of source rows (or by
- * {@link M3SortKeys}). Edits take effect at {@link #refresh()}. The mapping is one permutation
+ * {@link SortKeys}). Edits take effect at {@link #refresh()}. The mapping is one permutation
  * lane and its inverse; no row object is made.
  * </p>
  * <p>
@@ -38,7 +38,7 @@ import org.eclipse.swt.widgets.*;
  *
  * @since 3.138
  */
-public final class M3ProxyModel {
+public final class ProxyModel {
 
 	/** Orders two source rows. */
 	@FunctionalInterface
@@ -65,7 +65,7 @@ public final class M3ProxyModel {
 		void fill (T item, int sourceRow);
 	}
 
-	private static final String BINDING = "org.eclipse.swt.m3.M3ProxyModel"; //$NON-NLS-1$
+	private static final String BINDING = "org.eclipse.swt.internal.ProxyModel"; //$NON-NLS-1$
 
 	private int sourceSize;
 	/* stages: IntPredicate (filter) or RowComparator (sort), in order */
@@ -85,7 +85,7 @@ public final class M3ProxyModel {
 	 *    <li>ERROR_INVALID_ARGUMENT - if the size is negative</li>
 	 * </ul>
 	 */
-	public M3ProxyModel (int sourceSize) {
+	public ProxyModel (int sourceSize) {
 		setSourceSize (sourceSize);
 		refresh ();
 	}
@@ -124,7 +124,7 @@ public final class M3ProxyModel {
 	 *    <li>ERROR_NULL_ARGUMENT - if the predicate is null</li>
 	 * </ul>
 	 */
-	public M3ProxyModel addFilter (IntPredicate keep) {
+	public ProxyModel addFilter (IntPredicate keep) {
 		if (keep == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		stages.add (keep);
 		return this;
@@ -140,7 +140,7 @@ public final class M3ProxyModel {
 	 *    <li>ERROR_NULL_ARGUMENT - if the comparator is null</li>
 	 * </ul>
 	 */
-	public M3ProxyModel addSort (RowComparator comparator) {
+	public ProxyModel addSort (RowComparator comparator) {
 		if (comparator == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		stages.add (comparator);
 		return this;
@@ -157,7 +157,7 @@ public final class M3ProxyModel {
 	 *    <li>ERROR_NULL_ARGUMENT - if the keys are null</li>
 	 * </ul>
 	 */
-	public M3ProxyModel addSort (M3SortKeys keys) {
+	public ProxyModel addSort (SortKeys keys) {
 		if (keys == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		return addSort (keys::compare);
 	}
@@ -167,7 +167,7 @@ public final class M3ProxyModel {
 	 *
 	 * @return this model
 	 */
-	public M3ProxyModel clearStages () {
+	public ProxyModel clearStages () {
 		stages.clear ();
 		return this;
 	}
@@ -177,7 +177,7 @@ public final class M3ProxyModel {
 	 *
 	 * @return this model
 	 */
-	public M3ProxyModel refresh () {
+	public ProxyModel refresh () {
 		int [] lane = new int [sourceSize], scratch = new int [sourceSize];
 		for (int s = 0; s < sourceSize; s++) lane [s] = s;
 		int n = sourceSize;

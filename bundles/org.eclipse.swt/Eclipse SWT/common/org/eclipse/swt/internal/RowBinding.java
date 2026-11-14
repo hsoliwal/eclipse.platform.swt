@@ -14,7 +14,7 @@
  *     Hitesh Soliwal (Synexia) - adapted from TV_5.0 treeviewer SortedElementProvider and
  *         FilteredTreeElementProvider (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 import java.util.function.*;
@@ -23,7 +23,7 @@ import org.eclipse.swt.*;
 import org.eclipse.swt.widgets.*;
 
 /**
- * Drives a virtual Table or Tree from an {@link M3RowView} (enhanced M3 API).
+ * Drives a virtual Table or Tree from an {@link RowView} (enhanced M3 API).
  * <p>
  * The widget's item count follows the view, and each <code>SWT.SetData</code> request fills the
  * item from the source row the view maps it to. When the view changes, only its damaged rows are
@@ -33,13 +33,13 @@ import org.eclipse.swt.widgets.*;
  * of posted; when the widget shows again it is redone once from the view before it paints. A
  * table keeps its selection by source row: the rows the user selected stay selected,
  * wherever the view moves them, as long as the view shows them. A tree is driven by an
- * {@link M3ColumnSort} in tree mode: the children of an item are the sorted children of its
+ * {@link ColumnSort} in tree mode: the children of an item are the sorted children of its
  * source row.
  * </p>
  *
  * @since 3.138
  */
-public final class M3RowBinding {
+public final class RowBinding {
 
 	/** Fills a widget item from a source row. */
 	@FunctionalInterface
@@ -53,15 +53,15 @@ public final class M3RowBinding {
 		void fill (T item, int sourceRow);
 	}
 
-	private static final String ROW = "org.eclipse.swt.m3.M3RowBinding.row"; //$NON-NLS-1$
+	private static final String ROW = "org.eclipse.swt.internal.RowBinding.row"; //$NON-NLS-1$
 	private static final int [] NONE = {};
 
 	private final Composite control;
-	private final M3RowView view;
+	private final RowView view;
 	private Listener setData, selection;
 	private final Listener visibility = this::visibility, disposed = event -> unhook ();
-	private final M3RowView.Listener listener = this::viewChanged;
-	private M3RowView.Listener changed;
+	private final RowView.Listener listener = this::viewChanged;
+	private RowView.Listener changed;
 	private int [] selected = NONE;
 	/* the control and its ancestors up to the shell, whose Show and Hide events tell when the viewport shows */
 	private Control [] path = {};
@@ -70,7 +70,7 @@ public final class M3RowBinding {
 	/* widget refresh passes (read by the hidden-viewport gate) */
 	int refreshes;
 
-	private M3RowBinding (Composite control, M3RowView view) {
+	private RowBinding (Composite control, RowView view) {
 		this.control = control;
 		this.view = view;
 	}
@@ -104,14 +104,14 @@ public final class M3RowBinding {
 	}
 
 	private void viewports (int visible, int hidden) {
-		if (view instanceof M3RowViewBase base) base.viewports (visible, hidden);
+		if (view instanceof RowViewBase base) base.viewports (visible, hidden);
 	}
 
 	/*
 	 * A change of the view: applied to the widget while the viewport shows; while it is hidden the view's lanes are
 	 * already up to date (deltas), so the widget is only marked dirty and redone once when it shows (brief rule 24).
 	 */
-	private void viewChanged (M3RowChange change) {
+	private void viewChanged (RowChange change) {
 		if (control.isDisposed ()) return;
 		if (shown && !showing) {
 			refreshes++;
@@ -162,7 +162,7 @@ public final class M3RowBinding {
 			restore ();
 		} else {
 			Tree tree = (Tree) control;
-			M3ColumnSort sort = (M3ColumnSort) view;
+			ColumnSort sort = (ColumnSort) view;
 			tree.setItemCount (sort.childCount (-1));
 			tree.clearAll (true);
 			restoreTree (sort);
@@ -186,9 +186,9 @@ public final class M3RowBinding {
 	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the table</li>
 	 * </ul>
 	 */
-	public static M3RowBinding bind (Table table, M3RowView view, RowFill<TableItem> fill) {
+	public static RowBinding bind (Table table, RowView view, RowFill<TableItem> fill) {
 		check (table, view, fill);
-		M3RowBinding binding = new M3RowBinding (table, view);
+		RowBinding binding = new RowBinding (table, view);
 		binding.setData = event -> {
 			if (event.index < view.size ()) fill.fill ((TableItem) event.item, view.map (event.index));
 		};
@@ -219,10 +219,10 @@ public final class M3RowBinding {
 	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the tree</li>
 	 * </ul>
 	 */
-	public static M3RowBinding bind (Tree tree, M3ColumnSort sort, RowFill<TreeItem> fill) {
+	public static RowBinding bind (Tree tree, ColumnSort sort, RowFill<TreeItem> fill) {
 		check (tree, sort, fill);
 		int roots = sort.childCount (-1);
-		M3RowBinding binding = new M3RowBinding (tree, sort);
+		RowBinding binding = new RowBinding (tree, sort);
 		binding.setData = event -> {
 			TreeItem item = (TreeItem) event.item, parentItem = item.getParentItem ();
 			int parent = parentItem == null ? -1 : sourceRow (parentItem);
@@ -236,7 +236,7 @@ public final class M3RowBinding {
 		binding.changed = change -> {
 			if (tree.isDisposed ()) return;
 			int kind = change.kind ();
-			if (kind == M3RowChange.ENTERED || kind == M3RowChange.LEFT || kind == M3RowChange.UPDATED) {
+			if (kind == RowChange.ENTERED || kind == RowChange.LEFT || kind == RowChange.UPDATED) {
 				binding.parentsChanged (tree, sort, change);
 			} else {
 				/* a new order or a structural source edit: every item's source row may differ */
@@ -265,15 +265,15 @@ public final class M3RowBinding {
 	 * </ul>
 	 */
 	public static int sourceRow (TreeItem item) {
-		Object row = M3Checks.nonNull (item).getData (ROW);
+		Object row = RowChecks.nonNull (item).getData (ROW);
 		return row instanceof Integer ? (Integer) row : -1;
 	}
 
-	private static void check (Composite control, M3RowView view, RowFill<?> fill) {
-		M3Checks.nonNull (control);
-		M3Checks.nonNull (view);
-		M3Checks.nonNull (fill);
-		M3Checks.argument ((control.getStyle () & SWT.VIRTUAL) != 0);
+	private static void check (Composite control, RowView view, RowFill<?> fill) {
+		RowChecks.nonNull (control);
+		RowChecks.nonNull (view);
+		RowChecks.nonNull (fill);
+		RowChecks.argument ((control.getStyle () & SWT.VIRTUAL) != 0);
 	}
 
 	/* the table's selection as source rows (O(selected)) */
@@ -283,7 +283,7 @@ public final class M3RowBinding {
 		for (int i = 0; i < indices.length; i++) selected [i] = view.map (indices [i]);
 	}
 
-	private void refresh (M3RowChange change) {
+	private void refresh (RowChange change) {
 		Table table = (Table) control;
 		if (table.isDisposed ()) return;
 		int size = view.size ();
@@ -295,12 +295,12 @@ public final class M3RowBinding {
 	}
 
 	/* source rows move with insertions and removals of the source */
-	private void renumber (M3RowChange change) {
+	private void renumber (RowChange change) {
 		int kind = change.kind (), start = change.start (), count = change.count (), kept = 0;
-		if (kind != M3RowChange.INSERTED && kind != M3RowChange.REMOVED) return;
+		if (kind != RowChange.INSERTED && kind != RowChange.REMOVED) return;
 		for (int row : selected) {
 			if (row < start) selected [kept++] = row;
-			else if (kind == M3RowChange.INSERTED) selected [kept++] = row + count;
+			else if (kind == RowChange.INSERTED) selected [kept++] = row + count;
 			else if (row >= start + count) selected [kept++] = row - count;
 		}
 		selected = Arrays.copyOf (selected, kept);
@@ -323,7 +323,7 @@ public final class M3RowBinding {
 	 * count and the children asked again. Parents are taken outermost first, so that a parent that entered in the same
 	 * change already has its place when its own children are set. A parent outside the view has no item to redo.
 	 */
-	private void parentsChanged (Tree tree, M3ColumnSort sort, M3RowChange change) {
+	private void parentsChanged (Tree tree, ColumnSort sort, RowChange change) {
 		IntUnaryOperator parentOf = sort.parents ();
 		long [] keyed = new long [change.rowCount ()];
 		for (int i = 0; i < keyed.length; i++) {
@@ -359,7 +359,7 @@ public final class M3RowBinding {
 	}
 
 	/* selects the items of the selected source rows, walking down from the root by sibling index (O(depth) each) */
-	private void restoreTree (M3ColumnSort sort) {
+	private void restoreTree (ColumnSort sort) {
 		Tree tree = (Tree) control;
 		TreeItem [] items = new TreeItem [selected.length];
 		int count = 0;
@@ -370,7 +370,7 @@ public final class M3RowBinding {
 		if (count == 0) tree.deselectAll (); else tree.setSelection (Arrays.copyOf (items, count));
 	}
 
-	private static TreeItem itemOf (Tree tree, M3ColumnSort sort, int row) {
+	private static TreeItem itemOf (Tree tree, ColumnSort sort, int row) {
 		int [] path = new int [2];
 		int depth = 0;
 		for (int r = row; r != -1; r = sort.parents ().applyAsInt (r)) {
@@ -404,8 +404,8 @@ public final class M3RowBinding {
 	 * </ul>
 	 */
 	public void setSelectedRows (int... sourceRows) {
-		selected = M3Checks.nonNull (sourceRows).clone ();
-		if (control instanceof Table) restore (); else restoreTree ((M3ColumnSort) view);
+		selected = RowChecks.nonNull (sourceRows).clone ();
+		if (control instanceof Table) restore (); else restoreTree ((ColumnSort) view);
 	}
 
 	/**
@@ -413,7 +413,7 @@ public final class M3RowBinding {
 	 *
 	 * @return the view
 	 */
-	public M3RowView getView () {
+	public RowView getView () {
 		return view;
 	}
 

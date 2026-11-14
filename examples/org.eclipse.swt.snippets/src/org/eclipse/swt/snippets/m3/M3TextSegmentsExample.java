@@ -19,11 +19,11 @@ import java.util.*;
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
- * Enhanced M3 language API, leaf 3: <code>org.eclipse.swt.m3.M3TextSegments</code>. Selecting a
+ * Enhanced M3 language API, leaf 3: <code>org.eclipse.swt.m3.TextSegments</code>. Selecting a
  * product of the 1,000,000-row virtual table segments its description into words, graphemes,
  * line-break pieces or sentences and lists the segments with their offsets.
  */
@@ -60,7 +60,7 @@ public static void main (String [] args) {
 	products.setItemCount (COUNT);
 	Combo kind = new Combo (shell, SWT.READ_ONLY);
 	kind.setItems (KINDS);
-	kind.select (M3TextSegments.WORD);
+	kind.select (TextSegments.WORD);
 	Table segments = new Table (shell, SWT.BORDER | SWT.FULL_SELECTION);
 	segments.setHeaderVisible (true);
 	segments.setLayoutData (new GridData (SWT.FILL, SWT.FILL, true, true));
@@ -74,7 +74,7 @@ public static void main (String [] args) {
 	Runnable update = () -> {
 		int row = Math.max (0, products.getSelectionIndex ());
 		String text = description (row);
-		M3TextSegments facts = M3TextSegments.of (kind.getSelectionIndex (), text, Locale.ENGLISH);
+		TextSegments facts = TextSegments.of (kind.getSelectionIndex (), text, Locale.ENGLISH);
 		segments.removeAll ();
 		int words = 0;
 		for (int s = 0; s < facts.count (); s++) {

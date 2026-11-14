@@ -16,7 +16,7 @@ package org.eclipse.swt.snippets.m3;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /*
@@ -48,7 +48,7 @@ public class Snippet_M3TreeFilterKeepsAncestors {
 			first += width;
 			width *= fanOut;
 		}
-		M3CellText text = (row, column) -> name [row];
+		CellText text = (row, column) -> name [row];
 
 		Display display = new Display ();
 		Shell shell = new Shell (display);
@@ -64,19 +64,19 @@ public class Snippet_M3TreeFilterKeepsAncestors {
 		column.setText ("Name");
 		column.setWidth (300);
 
-		M3ColumnFilter filter = new M3ColumnFilter (1, count, text);
+		ColumnFilter filter = new ColumnFilter (1, count, text);
 		filter.setParents (r -> parent [r]);
-		M3ColumnSort sort = new M3ColumnSort (1, filter);
+		ColumnSort sort = new ColumnSort (1, filter);
 		sort.setParents (r -> parent [r]);
 		sort.setCellText (text);
 		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
 		sort.install (tree);
-		M3RowBinding.bind (tree, sort, (item, row) -> item.setText (name [row]));
+		RowBinding.bind (tree, sort, (item, row) -> item.setText (name [row]));
 		filter.setAsync (display, 100);
 		filter.addListener (change -> {
 			for (TreeItem item : tree.getItems ()) item.setExpanded (box.getText ().length () > 0);
 		});
-		box.addListener (SWT.Modify, event -> filter.setText (0, box.getText ().isEmpty () ? null : box.getText (), M3TextMatch.WILDCARD | M3TextMatch.IGNORE_CASE));
+		box.addListener (SWT.Modify, event -> filter.setText (0, box.getText ().isEmpty () ? null : box.getText (), TextMatch.WILDCARD | TextMatch.IGNORE_CASE));
 		box.setText ("file-a*");
 
 		shell.setSize (420, 520);

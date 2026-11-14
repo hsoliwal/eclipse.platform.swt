@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 
@@ -34,7 +34,7 @@ import org.eclipse.swt.*;
  *
  * @since 3.138
  */
-public final class M3Patch {
+public final class RowPatch {
 
 	/** The parent id of the roots of a tree and of every row of a flat list. */
 	public static final long ROOT = -1;
@@ -73,7 +73,7 @@ public final class M3Patch {
 	private final long [] insertedIds;
 	private final int removed, inserted, updated;
 
-	M3Patch (long parent, int [] removeAt, int [] removeCount, int [] insertAt, int [] insertCount, long [] insertedIds,
+	RowPatch (long parent, int [] removeAt, int [] removeCount, int [] insertAt, int [] insertCount, long [] insertedIds,
 			int [] updateAt, int [] updateCount, int [] moveFrom, int [] moveTo) {
 		this.parent = parent;
 		this.removeAt = removeAt;
@@ -117,7 +117,7 @@ public final class M3Patch {
 	 *    <li>ERROR_INVALID_ARGUMENT - if an array repeats an id</li>
 	 * </ul>
 	 */
-	public static M3Patch diff (long parent, long [] oldIds, long [] newIds) {
+	public static RowPatch diff (long parent, long [] oldIds, long [] newIds) {
 		if (oldIds == null || newIds == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		LongIndex old = new LongIndex (oldIds.length);
 		for (int i = 0; i < oldIds.length; i++) {
@@ -470,8 +470,8 @@ public final class M3Patch {
 		}
 
 		/** @return the patch */
-		public M3Patch build () {
-			return new M3Patch (parent, Arrays.copyOf (removeAt, removes), Arrays.copyOf (removeCount, removes),
+		public RowPatch build () {
+			return new RowPatch (parent, Arrays.copyOf (removeAt, removes), Arrays.copyOf (removeCount, removes),
 					Arrays.copyOf (insertAt, inserts), Arrays.copyOf (insertCount, inserts), Arrays.copyOf (ids, idCount),
 					Arrays.copyOf (updateAt, updates), Arrays.copyOf (updateCount, updates), Arrays.copyOf (moveFrom, moves),
 					Arrays.copyOf (moveTo, moves));

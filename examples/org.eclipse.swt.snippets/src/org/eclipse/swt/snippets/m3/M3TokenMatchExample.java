@@ -19,12 +19,12 @@ import java.util.*;
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
- * Enhanced M3 language API, leaf 4: <code>org.eclipse.swt.m3.M3TokenMatch</code> and
- * <code>M3TokenVocabulary</code>. Each product description of the 1,000,000-row virtual table
+ * Enhanced M3 language API, leaf 4: <code>org.eclipse.swt.m3.TokenMatch</code> and
+ * <code>TokenVocabulary</code>. Each product description of the 1,000,000-row virtual table
  * becomes a lane of token ids; a case-folded word query is matched with a presence-mask
  * prefilter and a Knuth-Morris-Pratt search. Words outside the vocabulary never match.
  */
@@ -33,7 +33,7 @@ public class M3TokenMatchExample {
 static final int COUNT = 1_000_000;
 static final int SCAN = 100_000;
 static final String [] FRUITS = {"apple", "Apricot", "banana", "Blueberry", "cherry", "Äpfel", "kiwi", "Zucchini", "éclair", "date"};
-static final M3TokenVocabulary VOCABULARY = new M3TokenVocabulary (64, true);
+static final TokenVocabulary VOCABULARY = new TokenVocabulary (64, true);
 static int [] needle = {};
 
 static String name (int i) {
@@ -50,7 +50,7 @@ static String description (int i) {
 
 /* The token ids of the words of a text; absent words are UNKNOWN unless add is set. */
 static int [] lane (String text, boolean add) {
-	return M3TextSegments.words (text, Locale.ENGLISH).tokens (text, VOCABULARY, add);
+	return TextSegments.words (text, Locale.ENGLISH).tokens (text, VOCABULARY, add);
 }
 
 public static void main (String [] args) {
@@ -76,7 +76,7 @@ public static void main (String [] args) {
 		TableItem item = (TableItem) event.item;
 		int i = table.indexOf (item);
 		int [] lane = lane (description (i), false);
-		int at = M3TokenMatch.indexOf (lane, needle, 0);
+		int at = TokenMatch.indexOf (lane, needle, 0);
 		item.setText (new String [] {description (i), Arrays.toString (lane), at < 0 ? "" : "at token " + at});
 	});
 	table.setItemCount (COUNT);
@@ -93,9 +93,9 @@ public static void main (String [] args) {
 		int from = table.getSelectionIndex () + 1, tested = 0;
 		for (int i = from; i < Math.min (COUNT, from + SCAN); i++) {
 			int [] lane = lane (description (i), false);
-			if (!M3TokenMatch.mayContain (M3TokenMatch.presenceMask (lane), needle)) continue;
+			if (!TokenMatch.mayContain (TokenMatch.presenceMask (lane), needle)) continue;
 			tested++;
-			int at = M3TokenMatch.indexOf (lane, needle, 0);
+			int at = TokenMatch.indexOf (lane, needle, 0);
 			if (at < 0) continue;
 			table.setSelection (i);
 			status.setText ("needle " + Arrays.toString (needle) + " found in row " + i + " at token " + at

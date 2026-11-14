@@ -14,7 +14,7 @@
  *     Hitesh Soliwal (Synexia) - texts from TV_5.0 treeviewer filters/resources/messages.properties
  *         (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 
@@ -24,7 +24,7 @@ import org.eclipse.swt.*;
  * The texts of the M3 filter UI: SWT message keys (SWTMessages.properties) with their English
  * text as the fallback when the running SWT carries no such key.
  */
-final class M3Messages {
+final class FilterMessages {
 
 	static final String MATCHES = "SWT_M3_Filter_Matches"; //$NON-NLS-1$
 	static final String DOES_NOT_MATCH = "SWT_M3_Filter_Does_Not_Match"; //$NON-NLS-1$
@@ -63,7 +63,7 @@ final class M3Messages {
 		Map.entry (CLOSE, "Close"), //$NON-NLS-1$
 		Map.entry (CLOSE_FILTER, "Close the filter")); //$NON-NLS-1$
 
-	private M3Messages () {
+	private FilterMessages () {
 	}
 
 	static String get (String key) {

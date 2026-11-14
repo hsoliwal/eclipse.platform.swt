@@ -19,14 +19,15 @@ import java.util.Random;
 import java.util.stream.*;
 
 import org.eclipse.swt.*;
+import org.eclipse.swt.internal.ProxyModel;
 import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
 
 /**
- * Recorded differential of M3ProxyModel against the official SWT jar (enhanced M3 API, leaf 14).
+ * Recorded differential of ProxyModel against the official SWT jar (enhanced M3 API, leaf 14).
  * A virtual Table shows a filtered and sorted view of a source of rows. The official run computes the view
  * with boxed streams and drives the table with <code>setItemCount</code>, <code>clearAll</code> and its own
- * <code>SWT.SetData</code> listener; this SWT binds an M3ProxyModel. Both record the view size, the top index and
+ * <code>SWT.SetData</code> listener; this SWT binds an ProxyModel. Both record the view size, the top index and
  * the texts of the first rows.
  */
 public class Test_M3ProxyModelDifferential {
@@ -72,7 +73,7 @@ public class Test_M3ProxyModelDifferential {
 	/* This SWT only. */
 	static final class Fork {
 		static void bind (Scene scene) {
-			org.eclipse.swt.m3.M3ProxyModel model = new org.eclipse.swt.m3.M3ProxyModel (scene.source).addFilter (s -> s % scene.modulus != 0)
+			ProxyModel model = new ProxyModel (scene.source).addFilter (s -> s % scene.modulus != 0)
 				.addSort ((a, b) -> scene.direction * Integer.compare (scene.key (a), scene.key (b))).refresh ();
 			model.bind (scene.table, (item, s) -> item.setText ("s" + s));
 		}
