@@ -2997,34 +2997,34 @@ public int getItemCount () {
 	return (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
 }
 
-/* M3Model seam (enhanced API leaf 19, step 3): rows [at, at + removed) replaced by inserted empty rows with one native count change (TableSplice); false when the caller is to edit through the item API */
+/* RowModel seam (enhanced API leaf 19, step 3): rows [at, at + removed) replaced by inserted empty rows with one native count change (TableSplice); false when the caller is to edit through the item API */
 boolean m3Splice (int at, int removed, int inserted) {
 	checkWidget ();
 	return viewport != null && TableSplice.splice (this, viewport, at, removed, inserted);
 }
 
-/* M3Model seam (T-Table-O2): the labels of a row written to the viewport lanes without an item (TableViewport.setRow); false when the caller is to write them through the item */
+/* RowModel seam (T-Table-O2): the labels of a row written to the viewport lanes without an item (TableViewport.setRow); false when the caller is to write them through the item */
 boolean m3SetRow (int index, String [] texts, Image [] images, boolean checked) {
 	return viewport != null && viewport.setRow (index, texts, images, checked);
 }
 
-/* M3Residency seam: the last native cache hint with the viewport; null (every row) without one */
+/* Residency seam: the last native cache hint with the viewport; null (every row) without one */
 int [] m3ResidentRange () {
 	return viewport != null ? viewport.residentRange () : null;
 }
 
-/* M3TypeAhead seam: the viewport searches its text lane; -2 (no lanes) without a viewport */
+/* TypeAhead seam: the viewport searches its text lane; -2 (no lanes) without a viewport */
 int m3IndexOf (String text, int from, boolean prefix, boolean wrap) {
 	return viewport != null ? viewport.findRow (text, from, prefix, wrap) : -2;
 }
 
-/* M3Residency seam: 1 when an item object exists for the row now, 0 when not; never makes one */
+/* Residency seam: 1 when an item object exists for the row now, 0 when not; never makes one */
 int m3Materialized (int index) {
 	if (viewport != null) return viewport.isLive (index) ? 1 : 0;
 	return _getItem (index, false) != null ? 1 : 0;
 }
 
-/* M3Residency seam: item objects alive (held: only the strongly held ones); one pass over the rows */
+/* Residency seam: item objects alive (held: only the strongly held ones); one pass over the rows */
 long m3Facades (boolean held) {
 	if (viewport != null) return viewport.facadeCount (held);
 	long count = 0;
@@ -5311,15 +5311,15 @@ public void setItemCount (int count) {
 	} finally {
 		M3Emptiness.release (this);
 	}
-	if (viewport != null) M3Prefetch.windowChanged (this);
-	M3VisibilityObserver.changed (this);
+	if (viewport != null) Prefetch.windowChanged (this);
+	VisibilityObserver.changed (this);
 }
 
 /* M3 seams after a structural change: the emptiness crossing, and the prefetch window clamped to the rows */
 void m3StructureChanged () {
 	M3Emptiness.changed (this);
-	if (viewport != null) M3Prefetch.windowChanged (this);
-	M3VisibilityObserver.changed (this);
+	if (viewport != null) Prefetch.windowChanged (this);
+	VisibilityObserver.changed (this);
 }
 
 void setCount (int count) {

@@ -598,7 +598,7 @@ public int getItemCount () {
 	return itemCount;
 }
 
-/* M3Residency seam: no residency lanes on this platform; every row is resident */
+/* Residency seam: no residency lanes on this platform; every row is resident */
 int [] m3ResidentRange () {
 	return null;
 }

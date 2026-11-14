@@ -19,7 +19,6 @@ import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.internal.RowPatch;
 import org.eclipse.swt.widgets.*;
 import org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_ViewportDifferential.Scene;
 
@@ -28,27 +27,15 @@ import org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_ViewportDi
  * becomes visible from hidden it should paint; while it is hidden the model may make changes and the viewport is dirty
  * and renders on becoming visible"). Each step selects rows and scrolls, hides the Table (not visible, or a zero size),
  * applies 250 model deltas (40 steps: 10^4 per seed), shows it again and answers its rows; the probes record count,
- * top, scroll bars, selection, focus, events and pixels. The deltas go through M3Model where this SWT has it (the
- * default and original modes); the official jar has none, so the same runs go through the item API followed by
- * <code>setTopIndex</code> of the old top row or of the first row after it that survives, which is M3Model's contract.
- * With the win32 viewport the step also checks the counters: no native row or state operation, no whole-list rebuild,
- * no facade and no paint while hidden, and exactly one paint pass after showing (Scene.hiddenViolations).
+ * top, scroll bars, selection, focus, events and pixels. The deltas go through the item API followed by
+ * <code>setTopIndex</code> of the old top row or of the first row after it that survives (the contract of the model
+ * path), in this SWT and the official jar. TableSpliceTests in 'Eclipse SWT Tests/win32' runs the hidden deltas
+ * through RowModel and checks the win32 viewport's counters: no native row or state operation, no whole-list rebuild,
+ * no facade and no paint while hidden, and exactly one paint pass after showing.
  */
 final class TableHiddenScripts {
 	static final int DELTAS = 250;
-	/* M3Model is this SWT's (the official jar has none): the model path is linked only where it exists */
-	static final boolean MODEL = present ("org.eclipse.swt.widgets.M3Model");
-
 	private TableHiddenScripts () {
-	}
-
-	static boolean present (String name) {
-		try {
-			Class.forName (name);
-			return true;
-		} catch (ClassNotFoundException | LinkageError e) {
-			return false;
-		}
 	}
 
 	static String hidden (Scene scene, int kind, int fraction, int pick, int span, int delta) {
@@ -63,10 +50,6 @@ final class TableHiddenScripts {
 		Rectangle bounds = table.getBounds ();
 		if (zero) table.setSize (0, 0); else table.setVisible (false);
 		ViewportDifferential.settle (scene.display, 30);
-		int [] paints = new int [1];
-		Listener paint = event -> paints [0]++;
-		table.addListener (SWT.Paint, paint);
-		long [] before = counters (table);
 		Random random = new Random (((long) fraction << 16) ^ pick ^ ((long) kind << 40));
 		int applied = 0;
 		for (int i = 0; i < DELTAS; i++) {
@@ -85,26 +68,13 @@ final class TableHiddenScripts {
 			applied++;
 		}
 		ViewportDifferential.settle (scene.display, 30);
-		long [] hidden = counters (table);
-		int hiddenPaints = paints [0];
 		if (zero) table.setBounds (bounds); else table.setVisible (true);
 		ViewportDifferential.settle (scene.display, 150);
-		table.removeListener (SWT.Paint, paint);
-		if (before != null) {
-			String step = "seed " + scene.seed + " step " + scene.counted + " (" + (zero ? "zero size" : "not visible") + ")";
-			if (!Arrays.equals (before, hidden)) scene.hiddenViolations.add (step + ": counters while hidden " + Arrays.toString (before) + " -> " + Arrays.toString (hidden));
-			if (hiddenPaints != 0) scene.hiddenViolations.add (step + ": " + hiddenPaints + " paints while hidden");
-			if (paints [0] - hiddenPaints != 1) scene.hiddenViolations.add (step + ": " + (paints [0] - hiddenPaints) + " paint passes after showing");
-		}
 		return "hidden " + (zero ? "zero size" : "not visible") + ": " + applied + " deltas -> rows " + table.getItemCount () + " top " + table.getTopIndex ();
 	}
 
-	/* the run through M3Model where it exists; otherwise its contract through the item API */
+	/* the contract of the model path through the item API */
 	static void apply (Table table, int at, int removed, long [] ids, int top) {
-		if (MODEL) {
-			ModelPath.apply (table, at, removed, ids);
-			return;
-		}
 		if (removed > 0) table.remove (at, at + removed - 1);
 		for (int k = 0; k < ids.length; k++) new TableItem (table, SWT.NONE, at + k).setText ("row " + ids [k]);
 		int anchor = top < at ? top : top >= at + removed ? top - removed + ids.length : at + ids.length;
@@ -135,19 +105,6 @@ final class TableHiddenScripts {
 			return counters;
 		} catch (ReflectiveOperationException | RuntimeException e) {
 			return null;
-		}
-	}
-
-	/** Linked only where M3Model exists. */
-	static final class ModelPath {
-		private ModelPath () {
-		}
-
-		static void apply (Table table, int at, int removed, long [] ids) {
-			RowPatch.Builder builder = RowPatch.builder (M3Model.ROOT);
-			if (removed > 0) builder.remove (at, removed);
-			if (ids.length > 0) builder.insert (at, ids);
-			M3Model.of (table).apply (builder.build (), (id, row) -> row.setText (0, "row " + id));
 		}
 	}
 }

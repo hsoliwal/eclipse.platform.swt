@@ -640,7 +640,7 @@ public int getItemCount () {
 	return GTK.gtk_tree_model_iter_n_children (modelHandle, 0);
 }
 
-/* M3Residency seam: no residency lanes on this platform; every row is resident */
+/* Residency seam: no residency lanes on this platform; every row is resident */
 int [] m3ResidentRange () {
 	return null;
 }

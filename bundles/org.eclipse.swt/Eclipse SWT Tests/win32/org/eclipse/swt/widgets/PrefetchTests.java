@@ -1,0 +1,353 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.swt.widgets;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.BitSet;
+import java.util.Random;
+import java.util.function.*;
+
+import org.eclipse.swt.*;
+import org.eclipse.swt.internal.ItemRange;
+import org.eclipse.swt.widgets.*;
+import org.junit.jupiter.api.*;
+
+/**
+ * Contract of Prefetch (enhanced M3 API, leaf 9). The oracle replays the events into a set of
+ * announced rows: a prefetch must add only new rows, a cancel must remove only announced rows,
+ * and after every step the set must equal the resident window (Residency) widened by the
+ * margins. Without a viewport (original mode) no event is expected.
+ */
+public class PrefetchTests {
+	/* native rows in the original mode cost seconds per 10^5: the stock widgets get a tenth */
+	static final int ROWS = "original".equals (System.getProperty ("swt.widget.mode")) ? 10_000 : 100_000;
+	Display display;
+	Shell shell;
+
+	@BeforeEach
+	public void setUp () {
+		display = Display.getDefault ();
+		shell = new Shell (display);
+		shell.setBounds (20, 20, 320, 420);
+		shell.open ();
+	}
+
+	@AfterEach
+	public void tearDown () {
+		shell.dispose ();
+	}
+
+	private void flush () {
+		while (display.readAndDispatch ()) {
+			// deliver pending paints and notifications
+		}
+	}
+
+	/* the announced rows, replayed from the events */
+	static final class Announced implements Listener {
+		final BitSet rows = new BitSet ();
+		int events;
+
+		@Override
+		public void handleEvent (Event event) {
+			assertEquals (Prefetch.EVENT, event.type);
+			assertNull (event.item);
+			assertTrue (event.start <= event.end, "empty range");
+			events++;
+			if (event.detail == Prefetch.PREFETCH) {
+				int already = rows.get (event.start, event.end + 1).cardinality ();
+				assertEquals (0, already, "prefetched twice: " + event.start + ".." + event.end);
+				rows.set (event.start, event.end + 1);
+			} else {
+				assertEquals (Prefetch.CANCEL, event.detail);
+				assertEquals (event.end - event.start + 1, rows.get (event.start, event.end + 1).cardinality (), "cancelled rows that were not announced");
+				rows.clear (event.start, event.end + 1);
+			}
+		}
+	}
+
+	private static void assertWindow (Announced announced, ItemRange resident, long count, int before, int after, boolean viewport, String what) {
+		BitSet expected = new BitSet ();
+		if (viewport && !resident.isEmpty ()) {
+			int first = Math.max (0, resident.start () - before);
+			int last = (int) Math.min (count - 1, (long) resident.end () + after);
+			expected.set (first, last + 1);
+		}
+		assertEquals (expected, announced.rows, what + ": resident " + resident);
+	}
+
+	private static boolean viewport (Widget widget) {
+		return ModeQuery.of (widget) == ModeQuery.VIEWPORT;
+	}
+
+	/* ------------------------------------------------------------------ Table */
+
+	/* the Table viewport serves tables without SWT.VIRTUAL; a virtual table is stock and announces nothing */
+	static final int TABLE_ROWS = 20_000;
+
+	private Table plainTable (Shell parent) {
+		Table table = new Table (parent, SWT.MULTI | SWT.BORDER);
+		table.setBounds (5, 5, 300, 380);
+		table.setItemCount (TABLE_ROWS);
+		return table;
+	}
+
+	private void showTop (Table table, int top) {
+		table.setTopIndex (top);
+		table.redraw ();
+		table.update ();
+		flush ();
+	}
+
+	@Test
+	public void test_tableAnnouncesTheWindowAndOnlyWhatMoved () {
+		Table table = plainTable (shell);
+		showTop (table, 0);
+		Announced announced = new Announced ();
+		Prefetch.addListener (table, announced);
+		boolean viewport = viewport (table);
+		assertWindow (announced, Residency.residentRange (table), TABLE_ROWS, 0, 0, viewport, "after addListener");
+		int before = announced.events;
+		showTop (table, 1);
+		assertWindow (announced, Residency.residentRange (table), TABLE_ROWS, 0, 0, viewport, "after one row");
+		if (viewport) assertTrue (announced.events - before <= 4, "one-row scroll announced " + (announced.events - before) + " ranges");
+		for (int top : new int [] {500, TABLE_ROWS / 2, TABLE_ROWS - 1, 0}) {
+			showTop (table, top);
+			assertWindow (announced, Residency.residentRange (table), TABLE_ROWS, 0, 0, viewport, "top " + top);
+		}
+		if (!viewport) assertEquals (0, announced.events);
+	}
+
+	@Test
+	public void test_marginsWidenTheAnnouncedRange () {
+		Table table = plainTable (shell);
+		Prefetch.setWindow (table, 50, 200);
+		Announced announced = new Announced ();
+		Prefetch.addListener (table, announced);
+		boolean viewport = viewport (table);
+		for (int top : new int [] {0, 10, 1000, TABLE_ROWS - 1}) {
+			showTop (table, top);
+			assertWindow (announced, Residency.residentRange (table), table.getItemCount (), 50, 200, viewport, "top " + top);
+		}
+		table.removeAll ();
+		flush ();
+		assertTrue (announced.rows.isEmpty (), "removeAll cancels everything");
+	}
+
+	@Test
+	public void test_aHiddenTableAnnouncesNothing () {
+		Shell hidden = new Shell (display);
+		hidden.setBounds (20, 20, 320, 420);
+		Table table = plainTable (hidden);
+		Announced announced = new Announced ();
+		Prefetch.addListener (table, announced);
+		table.setTopIndex (5000);
+		flush ();
+		assertEquals (0, announced.events);
+		hidden.dispose ();
+	}
+
+	/* ------------------------------------------------------------------ List and Tree */
+
+	@Test
+	public void test_listFollowsItsWindow () {
+		List list = new List (shell, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL);
+		list.setBounds (5, 5, 300, 380);
+		String [] strings = new String [ROWS];
+		for (int i = 0; i < ROWS; i++) strings [i] = "row " + i;
+		list.setItems (strings);
+		flush ();
+		Announced announced = new Announced ();
+		Prefetch.setWindow (list, 3, 3);
+		Prefetch.addListener (list, announced);
+		boolean viewport = viewport (list);
+		for (int top : new int [] {0, 1, 2, 4000, ROWS - 1}) {
+			list.setTopIndex (top);
+			list.update ();
+			flush ();
+			assertWindow (announced, Residency.residentRange (list), list.getItemCount (), 3, 3, viewport, "top " + top);
+		}
+		list.removeAll ();
+		flush ();
+		assertTrue (announced.rows.isEmpty (), "removeAll cancels everything");
+	}
+
+	@Test
+	public void test_treeFollowsItsWindow () {
+		Tree tree = new Tree (shell, SWT.VIRTUAL | SWT.MULTI | SWT.BORDER);
+		tree.setBounds (5, 5, 300, 380);
+		tree.addListener (SWT.SetData, event -> ((TreeItem) event.item).setText ("node " + event.index));
+		tree.setItemCount (ROWS);
+		flush ();
+		Announced announced = new Announced ();
+		Prefetch.addListener (tree, announced);
+		boolean viewport = viewport (tree);
+		IntConsumer show = index -> {
+			tree.setTopItem (tree.getItem (index));
+			tree.update ();
+			flush ();
+		};
+		for (int index : new int [] {0, 1, ROWS / 2, ROWS - 1}) {
+			show.accept (index);
+			assertWindow (announced, Residency.residentRange (tree), RowMath.visibleRowCount (tree), 0, 0, viewport, "top " + index);
+		}
+	}
+
+	/* ------------------------------------------------------------------ registration */
+
+	@Test
+	public void test_removedListenersHearNothingAndANewOneStartsWhole () {
+		Table table = plainTable (shell);
+		showTop (table, 0);
+		Announced first = new Announced ();
+		Prefetch.addListener (table, first);
+		Prefetch.removeListener (table, first);
+		int heard = first.events;
+		showTop (table, 3000);
+		assertEquals (heard, first.events);
+		Announced second = new Announced ();
+		Prefetch.addListener (table, second);
+		assertWindow (second, Residency.residentRange (table), TABLE_ROWS, 0, 0, viewport (table), "new listener");
+	}
+
+	@Test
+	public void test_listAndTreeListenersCanBeRemoved () {
+		List list = new List (shell, SWT.MULTI | SWT.V_SCROLL);
+		list.setBounds (5, 5, 300, 380);
+		String [] strings = new String [2000];
+		for (int i = 0; i < strings.length; i++) strings [i] = "row " + i;
+		list.setItems (strings);
+		Tree tree = new Tree (shell, SWT.VIRTUAL);
+		tree.setBounds (5, 5, 300, 380);
+		tree.addListener (SWT.SetData, event -> ((TreeItem) event.item).setText ("node " + event.index));
+		tree.setItemCount (2000);
+		flush ();
+		Prefetch.setWindow (tree, 2, 2);
+		Announced fromList = new Announced (), fromTree = new Announced ();
+		Prefetch.addListener (list, fromList);
+		Prefetch.addListener (tree, fromTree);
+		Prefetch.removeListener (list, fromList);
+		Prefetch.removeListener (tree, fromTree);
+		int heard = fromList.events + fromTree.events;
+		list.setTopIndex (1500);
+		tree.setTopItem (tree.getItem (1500));
+		flush ();
+		assertEquals (heard, fromList.events + fromTree.events);
+	}
+
+	@Test
+	public void test_onlyTheFirstListenerHearsTheWholeWindow () {
+		Table table = plainTable (shell);
+		showTop (table, 0);
+		Announced first = new Announced ();
+		Prefetch.addListener (table, first);
+		int [] second = new int [1];
+		Prefetch.addListener (table, event -> second [0]++);
+		assertEquals (0, second [0], "a later listener hears changes only");
+		showTop (table, 5000);
+		if (viewport (table)) assertTrue (second [0] > 0);
+		assertWindow (first, Residency.residentRange (table), TABLE_ROWS, 0, 0, viewport (table), "first listener");
+		/* a listener added for the event type without this class has no latch and hears nothing */
+		Table raw = plainTable (shell);
+		int [] heard = new int [1];
+		raw.addListener (Prefetch.EVENT, event -> heard [0]++);
+		showTop (raw, 3000);
+		assertEquals (0, heard [0]);
+	}
+
+	@Test
+	public void test_argumentsAreChecked () {
+		Table table = new Table (shell, SWT.NONE);
+		Listener nothing = event -> {};
+		assertThrows (IllegalArgumentException.class, () -> Prefetch.addListener ((Table) null, nothing));
+		assertThrows (IllegalArgumentException.class, () -> Prefetch.addListener ((List) null, nothing));
+		assertThrows (IllegalArgumentException.class, () -> Prefetch.addListener ((Tree) null, nothing));
+		assertThrows (IllegalArgumentException.class, () -> Prefetch.addListener (table, null));
+		assertThrows (IllegalArgumentException.class, () -> Prefetch.removeListener ((Table) null, nothing));
+		assertThrows (IllegalArgumentException.class, () -> Prefetch.removeListener ((List) null, nothing));
+		assertThrows (IllegalArgumentException.class, () -> Prefetch.removeListener ((Tree) null, nothing));
+		assertThrows (IllegalArgumentException.class, () -> Prefetch.setWindow ((Table) null, 0, 0));
+		assertThrows (IllegalArgumentException.class, () -> Prefetch.setWindow ((List) null, 0, 0));
+		assertThrows (IllegalArgumentException.class, () -> Prefetch.setWindow ((Tree) null, 0, 0));
+		assertThrows (IllegalArgumentException.class, () -> Prefetch.setWindow (table, -1, 0));
+		assertThrows (IllegalArgumentException.class, () -> Prefetch.setWindow (table, 0, -1));
+		table.dispose ();
+		assertThrows (SWTException.class, () -> Prefetch.addListener (table, nothing));
+		assertThrows (SWTException.class, () -> Prefetch.setWindow (table, 1, 1));
+	}
+
+	@Test
+	public void test_windowSetTwiceAndListenerThatDisposes () {
+		Table table = new Table (shell, SWT.NONE);
+		table.setBounds (5, 5, 300, 380);
+		for (int i = 0; i < 500; i++) new TableItem (table, SWT.NONE).setText ("row " + i);
+		/* the second call reuses the latch of the first */
+		Prefetch.setWindow (table, 2, 2);
+		Prefetch.setWindow (table, 3, 3);
+		int [] events = new int [1];
+		Prefetch.addListener (table, event -> {
+			/* the first range of a move disposes the table: the second range is not sent */
+			if (events [0]++ > 0) table.dispose ();
+		});
+		table.setTopIndex (200);
+		flush ();
+		assertTrue (events [0] <= 2 || table.isDisposed ());
+	}
+
+	/**
+	 * In process, the official-jar differential Test_org_eclipse_swt_widgets_PrefetchDifferential (tests bundle):
+	 * with a window of 2 rows before and 3 after, the rows announced on the Table and the List equal the resident
+	 * range widened by the window (clamped), or none without a resident window, and the listeners leave the public
+	 * state of a twin scene without them.
+	 */
+	@Test
+	public void test_announcedRowsFollowTheResidentRangeOnSeededSteps () {
+		for (int style : new int [] {SWT.NONE, SWT.VIRTUAL}) {
+			SeededWidgetScene scene = new SeededWidgetScene (display, style), twin = new SeededWidgetScene (display, style);
+			BitSet table = new BitSet (), list = new BitSet ();
+			Prefetch.setWindow (scene.table, 2, 3);
+			Prefetch.setWindow (scene.list, 2, 3);
+			Prefetch.addListener (scene.table, event -> replay (table, event));
+			Prefetch.addListener (scene.list, event -> replay (list, event));
+			try {
+				Random a = new Random (0x4D330009L), b = new Random (0x4D330009L);
+				for (int step = 0; step < 150; step++) {
+					scene.step (a);
+					twin.step (b);
+					assertEquals (twin.state (), scene.state (), style + " step " + step);
+					/* the Table viewport serves tables without SWT.VIRTUAL; a virtual table is stock and announces nothing */
+					boolean tableWindow = ModeQuery.of (scene.table) == ModeQuery.VIEWPORT && (style & SWT.VIRTUAL) == 0;
+					assertEquals (expected (Residency.residentRange (scene.table), scene.table.getItemCount (), tableWindow), table, style + " table step " + step);
+					assertEquals (expected (Residency.residentRange (scene.list), scene.list.getItemCount (), ModeQuery.of (scene.list) == ModeQuery.VIEWPORT), list, style + " list step " + step);
+				}
+			} finally {
+				scene.dispose ();
+				twin.dispose ();
+			}
+		}
+	}
+
+	private static void replay (BitSet rows, Event event) {
+		if (event.detail == Prefetch.PREFETCH) rows.set (event.start, event.end + 1);
+		else rows.clear (event.start, event.end + 1);
+	}
+
+	private static BitSet expected (ItemRange resident, int count, boolean window) {
+		BitSet expected = new BitSet ();
+		if (window && !resident.isEmpty ()) expected.set (Math.max (0, resident.start () - 2), Math.min (count, resident.end () + 4));
+		return expected;
+	}
+}

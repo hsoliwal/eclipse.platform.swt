@@ -778,7 +778,7 @@ public int getItemCount () {
 	return result;
 }
 
-/* M3Residency seam: the native row window with the viewport; null (every row) without one */
+/* Residency seam: the native row window with the viewport; null (every row) without one */
 int [] m3ResidentRange () {
 	return viewport != null ? viewport.residentRange () : null;
 }
@@ -3556,7 +3556,7 @@ void handleDPIChange(Event event, float scalingFactor) {
 }
 
 /*
- * The model seam (docs/m3/enhanced-api/LEAF19_MODEL_SEAM.md, step 3): one edit run, which M3Model.apply (RowPatch)
+ * The model seam (docs/m3/enhanced-api/LEAF19_MODEL_SEAM.md, step 3): one edit run, which RowModel.apply (RowPatch)
  * uses for a widget with a viewport. The rows [at, at + removed) leave and the inserted strings enter at `at`; the
  * top row stays the same row. Without a viewport the run goes through the item API, with the top row put back.
  */

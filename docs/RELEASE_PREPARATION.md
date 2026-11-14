@@ -99,12 +99,12 @@ Java reference model. The release reviewer must capture:
 
 | Unreferenced class | Reference contract and required evidence |
 | --- | --- |
-| `Test_M3BulkUpdatesDifferential` | Official unbatched Table/List/Tree edits vs M3 grouped updates, identical public state |
-| `Test_M3DiffApplyDifferential` | Official item rebuild vs M3 diff/splice, identical items and selection |
+| `Test_org_eclipse_swt_widgets_BatchScopeDifferential` | Official unbatched Table/List/Tree edits vs M3 grouped updates, identical public state |
+| `Test_org_eclipse_swt_widgets_RowDiffDifferential` | Official item rebuild vs M3 diff/splice, identical items and selection |
 | `Test_org_eclipse_swt_internal_ProxyModelDifferential` | Official virtual Table `SetData` model vs M3 proxy filtered/sorted rows |
-| `Test_M3RowMathDifferential` | Official public Tree preorder vs M3 row/subtree/scroll mathematics |
-| `Test_M3ScrollBarModelDifferential` | Official scrollbar getter values vs M3 scrollbar state lanes |
-| `Test_M3ScrollMementoDifferential` | Official top-index remapping vs M3 save/remap/restore |
+| `Test_org_eclipse_swt_widgets_RowMathDifferential` | Official public Tree preorder vs M3 row/subtree/scroll mathematics |
+| `Test_org_eclipse_swt_widgets_ScrollBarModelDifferential` | Official scrollbar getter values vs M3 scrollbar state lanes |
+| `Test_org_eclipse_swt_widgets_ScrollMementoDifferential` | Official top-index remapping vs M3 save/remap/restore |
 | `Test_M3SortFilterDifferential` | Seeded in-process List/filter/sort oracle vs M3 indexed results and mutation behavior |
 
 Each execution requires the exact test source and reference versions,

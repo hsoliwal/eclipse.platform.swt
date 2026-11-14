@@ -16,6 +16,7 @@ package org.eclipse.swt.widgets;
 
 import java.util.*;
 
+import org.eclipse.swt.internal.ItemRange;
 import org.eclipse.swt.internal.PackedHeapGrowth;
 
 /**
@@ -224,6 +225,13 @@ final class VirtualRowExtents {
 		out [1] = viewport == 0 ? first : rowAt (offset + viewport - 1) + 1;
 	}
 
+	/** Rows a viewport shows, as a range: empty without rows or with an empty viewport. */
+	ItemRange visibleRange (long offset, int viewport) {
+		int [] out = new int [2];
+		visibleRange (offset, viewport, out);
+		return ItemRange.of (out [0], out [1] - 1);
+	}
+
 	long maxScrollOffset (int viewport) {
 		return Math.max (0L, totalExtent () - viewport);
 	}
@@ -348,5 +356,10 @@ final class VirtualRowExtents {
 
 	private static void checkEstimate (int estimate) {
 		if (estimate < 1) throw new IllegalArgumentException ("non-positive estimate");
+	}
+
+	@Override
+	public String toString () {
+		return "VirtualRowExtents [" + count + " rows, " + measured + " measured, estimate " + estimate + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
 }

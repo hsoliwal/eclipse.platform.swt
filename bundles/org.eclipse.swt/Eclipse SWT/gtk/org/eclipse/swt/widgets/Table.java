@@ -3566,12 +3566,12 @@ public int getItemCount () {
 	return itemCount;
 }
 
-/* M3Residency seam: no residency lanes on this platform; every row is resident, facades unknown */
+/* Residency seam: no residency lanes on this platform; every row is resident, facades unknown */
 int [] m3ResidentRange () {
 	return null;
 }
 
-/* M3TypeAhead seam: no text lane on this platform; M3TypeAhead scans the items */
+/* TypeAhead seam: no text lane on this platform; TypeAhead scans the items */
 int m3IndexOf (String text, int from, boolean prefix, boolean wrap) {
 	return -2;
 }
@@ -3585,12 +3585,12 @@ long m3Facades (boolean held) {
 	return -1;
 }
 
-/* M3Model seam (win32 viewport only): no splice here, M3Model edits through the item API */
+/* RowModel seam (win32 viewport only): no splice here, RowModel edits through the item API */
 boolean m3Splice (int at, int removed, int inserted) {
 	return false;
 }
 
-/* M3Model seam (win32 viewport only): the labels go through the item here */
+/* RowModel seam (win32 viewport only): the labels go through the item here */
 boolean m3SetRow (int index, String [] texts, Image [] images, boolean checked) {
 	return false;
 }

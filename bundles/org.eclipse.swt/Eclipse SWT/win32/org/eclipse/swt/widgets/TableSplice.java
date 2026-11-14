@@ -29,7 +29,7 @@ import org.eclipse.swt.internal.win32.*;
  * instead of one <code>LVM_DELETEITEM</code> or <code>LVM_INSERTITEM</code> per row. The result is that of the same
  * edits through the item API (<code>remove (at, at + removed - 1)</code>, then
  * <code>new TableItem (table, SWT.NONE, at + k)</code>) followed by <code>setTopIndex</code> of the old top row, or of
- * the first row after it that survives, as <code>M3Model.apply</code> makes them:
+ * the first row after it that survives, as <code>RowModel.apply</code> makes them:
  * </p>
  * <ul>
  * <li>A count change does not move the selection, the focus and the selection mark of an owner-data ListView

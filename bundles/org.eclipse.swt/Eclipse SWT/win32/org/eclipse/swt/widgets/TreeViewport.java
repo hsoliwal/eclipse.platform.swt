@@ -367,8 +367,8 @@ final class TreeViewport {
 		committedGeneration = tree.virtualTopology.generation ();
 		committedFirstRow = first;
 		committedCount = count;
-		M3Prefetch.windowChanged (tree);
-		M3VisibilityObserver.changed (tree);
+		Prefetch.windowChanged (tree);
+		VisibilityObserver.changed (tree);
 	}
 
 	/** Moves the native window to the current paint window: retire, insert, commit. */
@@ -1534,12 +1534,12 @@ final class TreeViewport {
 		return item;
 	}
 
-	/* ---------------------------------------------------------------- M3RowMath seam (enhanced API) */
+	/* ---------------------------------------------------------------- RowMath seam (enhanced API) */
 
 	/** Visible row of the facade from the projection (rank), -1 under a collapsed ancestor; UNKNOWN for a foreign facade. */
 	long visibleRowOf (TreeItem item) {
 		int id = idOf (item);
-		return id < 0 ? M3RowMath.UNKNOWN : tree.virtualProjection.visibleIndexOf (id);
+		return id < 0 ? RowMath.UNKNOWN : tree.virtualProjection.visibleIndexOf (id);
 	}
 
 	/** The facade at a visible row (select), made or reused and pinned like the result of getItem. */
@@ -1553,7 +1553,7 @@ final class TreeViewport {
 	/** Rows of the facade's visible subtree: the facade plus the topology's visible extra rows below it. */
 	long subtreeRows (TreeItem item) {
 		int id = idOf (item);
-		return id < 0 ? M3RowMath.UNKNOWN : Math.addExact (1L, tree.virtualTopology.visibleExtraRows (id));
+		return id < 0 ? RowMath.UNKNOWN : Math.addExact (1L, tree.virtualTopology.visibleExtraRows (id));
 	}
 
 	TreeItem [] getItems (TreeItem parent) {

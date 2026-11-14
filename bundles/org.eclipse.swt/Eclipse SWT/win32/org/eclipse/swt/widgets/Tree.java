@@ -391,13 +391,13 @@ long virtualVisibleRowCount () {
 	return virtualProjection != null ? virtualProjection.visibleRowCount () : 0;
 }
 
-/* M3RowMath seam: the viewport's projection lanes answer; M3RowMath.UNKNOWN (null for an item) without a viewport */
+/* RowMath seam: the viewport's projection lanes answer; RowMath.UNKNOWN (null for an item) without a viewport */
 long m3VisibleRowCount () {
-	return viewport != null ? virtualVisibleRowCount () : M3RowMath.UNKNOWN;
+	return viewport != null ? virtualVisibleRowCount () : RowMath.UNKNOWN;
 }
 
 long m3RowOf (TreeItem item) {
-	return viewport != null ? viewport.visibleRowOf (item) : M3RowMath.UNKNOWN;
+	return viewport != null ? viewport.visibleRowOf (item) : RowMath.UNKNOWN;
 }
 
 TreeItem m3ItemAt (long row) {
@@ -405,17 +405,17 @@ TreeItem m3ItemAt (long row) {
 }
 
 long m3SubtreeRowCount (TreeItem item) {
-	return viewport != null ? viewport.subtreeRows (item) : M3RowMath.UNKNOWN;
+	return viewport != null ? viewport.subtreeRows (item) : RowMath.UNKNOWN;
 }
 
-/* M3Residency seam: the paint window (visible rows, overscan included) with the viewport; null (every visible row) without one */
+/* Residency seam: the paint window (visible rows, overscan included) with the viewport; null (every visible row) without one */
 long [] m3ResidentRange () {
 	if (viewport == null) return null;
 	long first = virtualViewport.firstPaintRow ();
 	return new long [] {first, first + virtualViewport.paintRowCount () - 1};
 }
 
-/* M3Residency seam: item objects alive (held: the same, a Tree holds every facade it keeps strongly) */
+/* Residency seam: item objects alive (held: the same, a Tree holds every facade it keeps strongly) */
 long m3Facades (boolean held) {
 	long count = 0;
 	if (items != null) {

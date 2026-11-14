@@ -20,7 +20,7 @@ import org.eclipse.swt.*;
 import org.eclipse.swt.internal.*;
 
 /*
- * The tree part of M3Model: one id lane per parent whose children have ids. The roots have positional
+ * The tree part of RowModel: one id lane per parent whose children have ids. The roots have positional
  * ids until a patch or setIds gives them; deeper children get ids from setIds or from the patch that
  * inserts them. A parent id finds its lane, and a child id finds the lane that holds it, through
  * VirtualLongIntTable (no boxing), so ids are unique in the whole tree.
@@ -64,7 +64,7 @@ final class TreeModel {
 			dropLane (parent);
 			lane = null;
 		}
-		if (lane != null || parent != M3Model.ROOT) return lane;
+		if (lane != null || parent != RowModel.ROOT) return lane;
 		long [] ids = new long [tree.getItemCount ()];
 		for (int i = 0; i < ids.length; i++) {
 			ids [i] = i;
@@ -112,7 +112,7 @@ final class TreeModel {
 
 	/* the lane holding an id, or null */
 	Lane laneOf (long id) {
-		lane (M3Model.ROOT);
+		lane (RowModel.ROOT);
 		int slot = childSlot.get (id);
 		return slot < 0 ? null : lanes.get (slot);
 	}
@@ -122,14 +122,14 @@ final class TreeModel {
 		Lane lane = laneOf (id);
 		if (lane == null) return null;
 		int index = lane.indexOf (id);
-		if (lane.parent == M3Model.ROOT) return index < tree.getItemCount () ? tree.getItem (index) : null;
+		if (lane.parent == RowModel.ROOT) return index < tree.getItemCount () ? tree.getItem (index) : null;
 		TreeItem parent = item (lane.parent);
 		return parent != null && index < parent.getItemCount () ? parent.getItem (index) : null;
 	}
 
 	/* the id of an item, or the root id for null; -2 when the item has no id */
 	long idOf (TreeItem item) {
-		if (item == null) return M3Model.ROOT;
+		if (item == null) return RowModel.ROOT;
 		TreeItem parentItem = item.getParentItem ();
 		long parent = idOf (parentItem);
 		if (parent == -2) return -2;
@@ -141,12 +141,12 @@ final class TreeModel {
 
 	/* children of a parent id, or -1 when the parent has no item */
 	int count (long parent) {
-		if (parent == M3Model.ROOT) return tree.getItemCount ();
+		if (parent == RowModel.ROOT) return tree.getItemCount ();
 		TreeItem item = item (parent);
 		return item == null ? -1 : item.getItemCount ();
 	}
 
-	/* ------------------------------------------------------------------ M3Model operations */
+	/* ------------------------------------------------------------------ RowModel operations */
 
 	int size (long parent) {
 		int count = count (parent);
@@ -199,7 +199,7 @@ final class TreeModel {
 		return null;
 	}
 
-	void apply (RowPatch patch, M3Model owner) {
+	void apply (RowPatch patch, RowModel owner) {
 		long parent = patch.parent ();
 		Lane lane = knownLane (parent);
 		long [] before = lane.ids, after;
@@ -214,10 +214,10 @@ final class TreeModel {
 		for (int i = 0; i < after.length; i++) {
 			if (next.put (after [i], i) >= 0 || (old.get (after [i]) < 0 && childSlot.get (after [i]) >= 0)) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 		}
-		TreeItem parentItem = parent == M3Model.ROOT ? null : item (parent);
+		TreeItem parentItem = parent == RowModel.ROOT ? null : item (parent);
 		boolean virtual = (tree.getStyle () & SWT.VIRTUAL) != 0;
 		long anchor = idOf (tree.getTopItem ());
-		M3BulkUpdates.bulk (tree, () -> {
+		BatchScope.bulk (tree, () -> {
 			patch.applyTo (new RowPatch.Target () {
 				int run;
 
@@ -258,7 +258,7 @@ final class TreeModel {
 				for (int k = 0; k < patch.removeCount (i); k++) dropLane (before [patch.removeAt (i) + k]);
 			}
 			setLane (parent, after);
-			TreeItem top = anchor == -2 || anchor == M3Model.ROOT ? null : item (anchor);
+			TreeItem top = anchor == -2 || anchor == RowModel.ROOT ? null : item (anchor);
 			if (top != null) tree.setTopItem (top);
 		});
 	}
