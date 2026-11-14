@@ -10,6 +10,13 @@ import org.eclipse.swt.graphics.Rectangle;
 /** Scrollable geometry owner; native scrollbars are an explicit unsupported lane. */
 public abstract class Scrollable extends Control {
 	public Scrollable(Composite parent, int style) { super(parent, supportedStyle(style)); }
+	/**
+	 * Platform-internal software-scrolling seam for mobile list implementations:
+	 * retain original SWT scroll style flags without claiming native ScrollBar peers.
+	 */
+	protected Scrollable(Composite parent, int style, boolean softwareScroll) {
+		super(parent, softwareScroll ? style : supportedStyle(style));
+	}
 	Scrollable(Display display, int style) { super(display, supportedStyle(style)); }
 	private static int supportedStyle(int style) {
 		if ((style & (SWT.H_SCROLL | SWT.V_SCROLL)) != 0) throw new UnsupportedOperationException("Native mobile scrollbars are not implemented");
