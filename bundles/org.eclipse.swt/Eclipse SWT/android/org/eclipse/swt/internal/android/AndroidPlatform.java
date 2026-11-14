@@ -449,7 +449,7 @@ public final class AndroidPlatform implements MobilePlatform {
 		@Override public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
 			super.onInitializeAccessibilityNodeInfo(info);
 			info.setEnabled(isEnabled() && (accessibleState & ACC.STATE_DISABLED) == 0);
-			info.setFocusable(isFocusable()); info.setClickable(kind == CANVAS && role != ACC.ROLE_SLIDER);
+			info.setFocusable(isFocusable()); info.setClickable(kind == CANVAS && role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST);
 			info.setSelected((accessibleState & ACC.STATE_SELECTED) != 0);
 			if (role == ACC.ROLE_CHECKBUTTON || role == ACC.ROLE_RADIOBUTTON) {
 				info.setCheckable(true); info.setChecked((accessibleState & ACC.STATE_CHECKED) != 0);
@@ -462,18 +462,19 @@ public final class AndroidPlatform implements MobilePlatform {
 				case ACC.ROLE_TEXT -> "android.widget.EditText";
 				case ACC.ROLE_PROGRESSBAR -> "android.widget.ProgressBar";
 				case ACC.ROLE_SLIDER -> "android.widget.SeekBar";
+				case ACC.ROLE_LIST -> "android.widget.ListView";
 				default -> "android.view.View";
 			};
 			info.setClassName(className);
-			if (kind == CANVAS && role != ACC.ROLE_SLIDER)
+			if (kind == CANVAS && role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST)
 				info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK);
-			if (role == ACC.ROLE_SLIDER) {
+			if (role == ACC.ROLE_SLIDER || role == ACC.ROLE_LIST) {
 				info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
 				info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
 			}
 		}
 		@Override public boolean performAccessibilityAction(int action, Bundle arguments) {
-			if (role == ACC.ROLE_SLIDER && isEnabled()
+			if ((role == ACC.ROLE_SLIDER || role == ACC.ROLE_LIST) && isEnabled()
 					&& (action == AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
 					|| action == AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD)) {
 				EventSink receiver = sink;
@@ -483,7 +484,7 @@ public final class AndroidPlatform implements MobilePlatform {
 				callback(() -> receiver.accessibility(id, code));
 				return true;
 			}
-			if (role != ACC.ROLE_SLIDER && action == AccessibilityNodeInfo.ACTION_CLICK && isEnabled()) {
+			if (role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST && action == AccessibilityNodeInfo.ACTION_CLICK && isEnabled()) {
 				EventSink receiver = sink;
 				if (receiver == null || id == 0) return false;
 				callback(() -> receiver.accessibility(id, ACTION_ACTIVATE)); return true;
