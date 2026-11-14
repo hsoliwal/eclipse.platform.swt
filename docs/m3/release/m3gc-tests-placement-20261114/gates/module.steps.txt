@@ -1,0 +1,36 @@
+[INFO] Building SWT M3 render backend tests (m3gc) 1.0.0-SNAPSHOT
+[INFO] --- clean:3.2.0:clean (default-clean) @ org.eclipse.swt.tests.m3gc ---
+[INFO] --- resources:3.4.0:resources (default-resources) @ org.eclipse.swt.tests.m3gc ---
+[INFO] --- compiler:3.14.1:compile (default-compile) @ org.eclipse.swt.tests.m3gc ---
+[INFO] --- build-helper:3.6.2:add-test-source (add-m3-render-tree) @ org.eclipse.swt.tests.m3gc ---
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ org.eclipse.swt.tests.m3gc ---
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ org.eclipse.swt.tests.m3gc ---
+[INFO] Compiling 64 source files with javac [debug release 21] to target\test-classes
+[INFO] --- surefire:3.6.1:test (default-test) @ org.eclipse.swt.tests.m3gc ---
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.099 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_RectangleConverter
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_RGBAEncoder
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.216 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_M3ToSwtImageConvert
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.020 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_M3ToSwtImageConverter
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.361 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawLine
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawArc
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.011 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawOval
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.105 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawPath
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.004 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawPoint
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.004 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawPolygon
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawPolyline
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawRectangle
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.005 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawRoundRectangle
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.032 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawString
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawText
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawText_NoCache
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_DrawnCustomDraw
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_M3CanvasFactory
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_CanvasCoverage
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_CanvasDamage
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_StrokeState
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s -- in org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_CompositeCoverage
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.062 s -- in org.eclipse.swt.tests.junit.m3gc.AllM3GcTests
+[INFO] Tests run: 97, Failures: 0, Errors: 0, Skipped: 0
+[INFO] --- jar:3.4.2:jar (default-jar) @ org.eclipse.swt.tests.m3gc ---
+[INFO] Building jar: org.eclipse.swt.tests.m3gc-1.0.0-SNAPSHOT.jar
+[INFO] BUILD SUCCESS
