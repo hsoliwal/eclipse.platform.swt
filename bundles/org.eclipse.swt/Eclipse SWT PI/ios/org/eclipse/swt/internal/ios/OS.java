@@ -34,6 +34,7 @@ public final class OS {
 	public static final int DRAW_TRANSPARENT = SWT.DRAW_TRANSPARENT,
 		DRAW_DELIMITER = SWT.DRAW_DELIMITER, DRAW_TAB = SWT.DRAW_TAB, DRAW_MNEMONIC = SWT.DRAW_MNEMONIC;
 	public static final int ACTION_ACTIVATE = MobilePlatform.ACTION_ACTIVATE;
+	public static final int NO_FOCUS = SWT.NO_FOCUS;
 	public static final int SHELL = MobilePlatform.SHELL, COMPOSITE = MobilePlatform.COMPOSITE,
 		CANVAS = MobilePlatform.CANVAS;
 	public static final int ROLE_LABEL = ACC.ROLE_LABEL, ROLE_PUSHBUTTON = ACC.ROLE_PUSHBUTTON,
