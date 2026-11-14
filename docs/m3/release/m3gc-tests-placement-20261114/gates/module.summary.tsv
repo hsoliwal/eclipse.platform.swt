@@ -1,0 +1,2 @@
+module	status	rc	seconds	compiled_sources	compile_errors	tests	failures	errors	skipped	jni_check_diagnostics	source_commit
+org.eclipse.swt.tests.m3gc	BUILD SUCCESS	0	18	64	0	97	0	0	0	0	a4dc3f04bf270d628e0eaa2a8ea3ecc68f48eaca
