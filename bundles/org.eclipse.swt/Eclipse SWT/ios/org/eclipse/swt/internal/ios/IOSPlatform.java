@@ -90,6 +90,10 @@ public final class IOSPlatform implements MobilePlatform {
 		check();
 		OS.textContent(peer, text, selectionStart, selectionEnd, editable, limit, hint);
 	}
+	@Override public String getClipboardText() { check(); return OS.getClipboardText(); }
+	@Override public void setClipboardText(String text) {
+		check(); OS.setClipboardText(Objects.requireNonNull(text, "clipboard text"));
+	}
 	@Override public void setTitle(long peer, String title) { check(); OS.setTitle(peer, Objects.requireNonNull(title, "title")); }
 	@Override public boolean requestFocus(long peer) { check(); return OS.requestFocus(peer); }
 	@Override public void setAccessibility(long peer, String label, int role, int state) { check(); OS.setAccessibility(peer, Objects.requireNonNull(label, "label"), role, state); }
