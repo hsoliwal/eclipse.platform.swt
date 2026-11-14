@@ -109,13 +109,13 @@ public class Test_M3SortFilterDifferential {
 			start = System.nanoTime ();
 			sort.setSortKeys (new int [] {3, 0, 2}, new int [] {SWT.UP, SWT.DOWN, SWT.UP});
 			time ("m3-sort-three-keys", n, System.nanoTime () - start);
-			assertArrayEquals (expected, Test_M3ColumnSort.order (sort), "n " + n);
+			assertArrayEquals (expected, Test_org_eclipse_swt_internal_ColumnSort.order (sort), "n " + n);
 
 			RowWindow window = new RowWindow (sort);
 			window.setWindow (expected.length / 2, 40);
 			for (int i = 0; i < window.size (); i++) assertEquals (expected [expected.length / 2 + i], window.map (i));
 
-			int filterPasses = Test_M3ColumnFilter.fullPasses (filter), sortPasses = Test_M3ColumnFilter.fullPasses (sort);
+			int filterPasses = Test_org_eclipse_swt_internal_ColumnFilter.fullPasses (filter), sortPasses = Test_org_eclipse_swt_internal_ColumnFilter.fullPasses (sort);
 			Random random = new Random (n + 1);
 			int updates = 1000;
 			start = System.nanoTime ();
@@ -133,9 +133,9 @@ public class Test_M3SortFilterDifferential {
 			}
 			sort.rowsChanged (batch);
 			time ("m3-batch-update-1pct", n, System.nanoTime () - start);
-			assertEquals (filterPasses, Test_M3ColumnFilter.fullPasses (filter), "n " + n + ": value updates are filter deltas");
-			assertEquals (sortPasses, Test_M3ColumnFilter.fullPasses (sort), "n " + n + ": value updates are sort deltas");
-			assertEquals (0, Test_M3ColumnFilter.fullPasses (window), "n " + n + ": the window applies deltas");
+			assertEquals (filterPasses, Test_org_eclipse_swt_internal_ColumnFilter.fullPasses (filter), "n " + n + ": value updates are filter deltas");
+			assertEquals (sortPasses, Test_org_eclipse_swt_internal_ColumnFilter.fullPasses (sort), "n " + n + ": value updates are sort deltas");
+			assertEquals (0, Test_org_eclipse_swt_internal_ColumnFilter.fullPasses (window), "n " + n + ": the window applies deltas");
 			start = System.nanoTime ();
 			filter.setText (3, "w1*", TextMatch.WILDCARD);
 			filter.setText (3, "w1*,w2*", TextMatch.WILDCARD);
@@ -143,8 +143,8 @@ public class Test_M3SortFilterDifferential {
 			start = System.nanoTime ();
 			expected = data.reference (n);
 			time ("reference-rebuild", n, System.nanoTime () - start);
-			assertArrayEquals (expected, Test_M3ColumnSort.order (sort), "n " + n + " after updates");
-			Test_M3ColumnSort.assertInverse (sort);
+			assertArrayEquals (expected, Test_org_eclipse_swt_internal_ColumnSort.order (sort), "n " + n + " after updates");
+			Test_org_eclipse_swt_internal_ColumnSort.assertInverse (sort);
 		}
 	}
 
@@ -152,8 +152,8 @@ public class Test_M3SortFilterDifferential {
 	public void test_randomScriptsOnSmallSources () {
 		Random random = new Random (77);
 		for (int seed = 0; seed < 40; seed++) {
-			Test_M3ColumnSort.Rows rows = new Test_M3ColumnSort.Rows (random.nextInt (300), seed, 2 + random.nextInt (9));
-			CellText text = Test_M3ColumnFilter.text (rows);
+			Test_org_eclipse_swt_internal_ColumnSort.Rows rows = new Test_org_eclipse_swt_internal_ColumnSort.Rows (random.nextInt (300), seed, 2 + random.nextInt (9));
+			CellText text = Test_org_eclipse_swt_internal_ColumnFilter.text (rows);
 			ColumnFilter filter = new ColumnFilter (4, rows.size (), text);
 			ColumnSort sort = new ColumnSort (4, filter);
 			rows.keys (sort);
@@ -169,14 +169,14 @@ public class Test_M3SortFilterDifferential {
 			int [] resets = {0, 0};
 			filter.addListener (change -> resets [0] += change.kind () == RowChange.RESET ? 1 : 0);
 			sort.addListener (change -> resets [1] += change.kind () == RowChange.RESET ? 1 : 0);
-			int filterPasses = Test_M3ColumnFilter.fullPasses (filter), sortPasses = Test_M3ColumnFilter.fullPasses (sort);
+			int filterPasses = Test_org_eclipse_swt_internal_ColumnFilter.fullPasses (filter), sortPasses = Test_org_eclipse_swt_internal_ColumnFilter.fullPasses (sort);
 			for (int step = 0; step < 40; step++) {
-				if (random.nextInt (3) == 0) Test_M3ColumnFilter.criterion (filter, random); else Test_M3ColumnSort.edit (rows, sort, random);
-				assertArrayEquals (Test_M3ColumnFilter.reference (rows, filter, text, c, d), Test_M3ColumnSort.order (sort), "seed " + seed + " step " + step);
+				if (random.nextInt (3) == 0) Test_org_eclipse_swt_internal_ColumnFilter.criterion (filter, random); else Test_org_eclipse_swt_internal_ColumnSort.edit (rows, sort, random);
+				assertArrayEquals (Test_org_eclipse_swt_internal_ColumnFilter.reference (rows, filter, text, c, d), Test_org_eclipse_swt_internal_ColumnSort.order (sort), "seed " + seed + " step " + step);
 			}
 			/* brief rule 24: only a new source (setSourceSize, one RESET) is applied by a full pass */
-			assertEquals (filterPasses + resets [0], Test_M3ColumnFilter.fullPasses (filter), "seed " + seed);
-			assertEquals (sortPasses + resets [1], Test_M3ColumnFilter.fullPasses (sort), "seed " + seed);
+			assertEquals (filterPasses + resets [0], Test_org_eclipse_swt_internal_ColumnFilter.fullPasses (filter), "seed " + seed);
+			assertEquals (sortPasses + resets [1], Test_org_eclipse_swt_internal_ColumnFilter.fullPasses (sort), "seed " + seed);
 		}
 	}
 }

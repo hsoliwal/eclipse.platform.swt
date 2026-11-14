@@ -30,7 +30,7 @@ import org.junit.jupiter.api.*;
  * <code>SWT.SetData</code> listener; this SWT binds an ProxyModel. Both record the view size, the top index and
  * the texts of the first rows.
  */
-public class Test_M3ProxyModelDifferential {
+public class Test_org_eclipse_swt_internal_ProxyModelDifferential {
 	//FLLDCIM: TOP — test isolation: release the default Display this class used, so later classes in the same
 	//FLLDCIM: TOP — suite (Test_org_eclipse_swt_widgets_Display) can create their own Display on this thread
 	@AfterAll
@@ -109,8 +109,8 @@ public class Test_M3ProxyModelDifferential {
 	@Test
 	public void boundVirtualTableAnswersLikeTheOfficialJar () throws IOException {
 		Scene scene = new Scene (Display.getDefault ());
-		ViewportDifferential<Scene> harness = ViewportDifferential.of ("m3-proxymodel", 0x4D33000EL, Test_M3ProxyModelDifferential::next).widget ("Table")
-			.probe ("rows", Test_M3ProxyModelDifferential::rows)
+		ViewportDifferential<Scene> harness = ViewportDifferential.of ("m3-proxymodel", 0x4D33000EL, Test_org_eclipse_swt_internal_ProxyModelDifferential::next).widget ("Table")
+			.probe ("rows", Test_org_eclipse_swt_internal_ProxyModelDifferential::rows)
 			.beforeSeed (s -> {
 				s.source = 50;
 				s.modulus = 2;

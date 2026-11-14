@@ -25,7 +25,7 @@ import org.junit.jupiter.api.*;
  * Palettes, accent, high contrast, DPI-aware metrics and the light and dark built-ins (docs/m3/LOOK_AND_FEEL.md, LF6,
  * improvement 5). {@link #theAccentUpdatesOnlyItsReaders} and the high-contrast cases need a display.
  */
-public class Test_org_eclipse_swt_internal_laf_M3Palette {
+public class Test_org_eclipse_swt_internal_laf_Palette {
 	static final int SELECTION = UIKeys.intern ("Table.selectionBackground", UIKeys.COLOR);
 	static final int GRID = UIKeys.intern ("Table.gridColor", UIKeys.COLOR);
 	static final int ROW_HEIGHT = UIKeys.intern ("Tree.rowHeight", UIKeys.INTEGER);

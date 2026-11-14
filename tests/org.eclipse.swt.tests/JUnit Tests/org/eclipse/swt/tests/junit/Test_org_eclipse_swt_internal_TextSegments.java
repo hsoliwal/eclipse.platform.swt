@@ -26,7 +26,7 @@ import org.junit.jupiter.api.*;
  * Contract of TextSegments (enhanced M3 language API, leaf 3). Headless; the oracle is the
  * JDK <code>BreakIterator</code> of the same kind and locale.
  */
-public class Test_M3TextSegments {
+public class Test_org_eclipse_swt_internal_TextSegments {
 
 	/* oracle: the boundary sequence of a JDK iterator, 0 first */
 	private static int [] oracle (BreakIterator iterator, String text) {

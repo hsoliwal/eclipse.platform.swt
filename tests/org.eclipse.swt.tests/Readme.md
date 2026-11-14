@@ -69,15 +69,15 @@ command above does not satisfy this complete release-report contract.
 
 These nine existing classes execute without creating a native Display:
 
-- `Test_M3Collation`
-- `Test_M3ColumnFilter`
-- `Test_M3ColumnSort`
+- `Test_org_eclipse_swt_internal_Collation`
+- `Test_org_eclipse_swt_internal_ColumnFilter`
+- `Test_org_eclipse_swt_internal_ColumnSort`
 - `Test_M3ItemRange`
-- `Test_M3Patch`
+- `Test_org_eclipse_swt_internal_RowPatch`
 - `Test_M3RowExtents`
-- `Test_M3TextMatch`
-- `Test_M3TextSegments`
-- `Test_M3TokenMatch`
+- `Test_org_eclipse_swt_internal_TextMatch`
+- `Test_org_eclipse_swt_internal_TextSegments`
+- `Test_org_eclipse_swt_internal_TokenMatch`
 
 They can be selected individually with `-Dtest` after the target is resolved and
 compiled. The recorded 7 November 2026 run used the actual GTK Java source set,

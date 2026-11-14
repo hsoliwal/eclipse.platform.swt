@@ -26,7 +26,7 @@ import org.junit.jupiter.api.*;
  * Contract of RowPatch (enhanced M3 API, leaf 19, the model seam). Headless. Oracles: an ArrayList of ids edited
  * through the Target callbacks, and a quadratic LIS for the minimal size of a diff.
  */
-public class Test_M3Patch {
+public class Test_org_eclipse_swt_internal_RowPatch {
 
 	private static long [] edit (Random random, long [] ids, long next) {
 		ArrayList<Long> list = LongStream.of (ids).boxed ().collect (Collectors.toCollection (ArrayList::new));

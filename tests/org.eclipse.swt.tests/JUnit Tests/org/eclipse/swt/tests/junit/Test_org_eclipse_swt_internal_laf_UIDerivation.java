@@ -25,7 +25,7 @@ import org.junit.jupiter.api.*;
  * Derived values that follow their bases (docs/m3/LOOK_AND_FEEL.md, LF6, improvement 2): a key or a variable set in
  * the developer layer recomputes the values derived from it, transitively, and nothing else. No display.
  */
-public class Test_org_eclipse_swt_internal_laf_M3UIDerivation {
+public class Test_org_eclipse_swt_internal_laf_UIDerivation {
 	static final String BASE = """
 		@accent = #102030
 		Derive.a = @accent

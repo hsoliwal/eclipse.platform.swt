@@ -26,7 +26,7 @@ import org.junit.jupiter.api.*;
  * Contract of Collation and SortKeys (enhanced M3 language API, leaf 12). Headless. The
  * oracle is <code>java.text.Collator</code> of the same locale and strength.
  */
-public class Test_M3Collation {
+public class Test_org_eclipse_swt_internal_Collation {
 
 	private static int index (String [] items, String item) {
 		return Arrays.asList (items).indexOf (item);
