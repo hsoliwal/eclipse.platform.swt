@@ -30,6 +30,25 @@ import org.eclipse.swt.widgets.*;
  */
 final class FilterEditPanel extends Composite {
 
+	/* message keys of SWTMessages.properties */
+	private static final String MATCHES = "SWT_M3_Filter_Matches"; //$NON-NLS-1$
+	private static final String DOES_NOT_MATCH = "SWT_M3_Filter_Does_Not_Match"; //$NON-NLS-1$
+	private static final String MATCH_REGEXP = "SWT_M3_Filter_Match_Regexp"; //$NON-NLS-1$
+	private static final String DOES_NOT_MATCH_REGEXP = "SWT_M3_Filter_Does_Not_Match_Regexp"; //$NON-NLS-1$
+	private static final String CONTAINS = "SWT_M3_Filter_Contains"; //$NON-NLS-1$
+	private static final String STARTS_WITH = "SWT_M3_Filter_Starts_With"; //$NON-NLS-1$
+	private static final String EQUALS = "SWT_M3_Filter_Equals"; //$NON-NLS-1$
+	private static final String WILDCARD_INFO = "SWT_M3_Filter_Wildcard_Info"; //$NON-NLS-1$
+	private static final String REGEXP_INFO = "SWT_M3_Filter_Regexp_Info"; //$NON-NLS-1$
+	private static final String TEXT_INFO = "SWT_M3_Filter_Text_Info"; //$NON-NLS-1$
+	private static final String VALIDITY_ERROR = "SWT_M3_Filter_Validity_Error"; //$NON-NLS-1$
+	private static final String SET_DEFAULT_TEXT = "SWT_M3_Filter_Set_Default_Text"; //$NON-NLS-1$
+	private static final String DEFAULT = "SWT_M3_Filter_Default"; //$NON-NLS-1$
+	private static final String PASTE = "SWT_M3_Filter_Paste"; //$NON-NLS-1$
+	private static final String PASTE_FROM_CLIPBOARD = "SWT_M3_Filter_Paste_From_Clipboard"; //$NON-NLS-1$
+	private static final String CLOSE = "SWT_M3_Filter_Close"; //$NON-NLS-1$
+	private static final String CLOSE_FILTER = "SWT_M3_Filter_Close_Tooltip"; //$NON-NLS-1$
+
 	static final int DELAY = 250;
 	static final int [] MODES = {
 		TextMatch.WILDCARD | TextMatch.IGNORE_CASE,
@@ -41,8 +60,8 @@ final class FilterEditPanel extends Composite {
 		TextMatch.EXACT | TextMatch.IGNORE_CASE,
 	};
 	private static final String [] LABELS = {
-		FilterMessages.MATCHES, FilterMessages.DOES_NOT_MATCH, FilterMessages.MATCH_REGEXP, FilterMessages.DOES_NOT_MATCH_REGEXP,
-		FilterMessages.CONTAINS, FilterMessages.STARTS_WITH, FilterMessages.EQUALS,
+		MATCHES, DOES_NOT_MATCH, MATCH_REGEXP, DOES_NOT_MATCH_REGEXP,
+		CONTAINS, STARTS_WITH, EQUALS,
 	};
 
 	private final ColumnFilter filter;
@@ -64,15 +83,15 @@ final class FilterEditPanel extends Composite {
 		enablement = new Combo (this, SWT.READ_ONLY);
 		enablement.setItems ("", columnName); //$NON-NLS-1$
 		matchType = new Combo (this, SWT.READ_ONLY);
-		for (String label : LABELS) matchType.add (FilterMessages.get (label));
+		for (String label : LABELS) matchType.add (SWT.getMessage (label));
 		pattern = new Text (this, SWT.SINGLE | SWT.BORDER);
 		GridData data = new GridData (SWT.FILL, SWT.CENTER, true, false);
 		data.widthHint = 100;
 		pattern.setLayoutData (data);
 		ToolBar bar = new ToolBar (this, SWT.FLAT);
-		defaultItem = item (bar, FilterMessages.DEFAULT, FilterMessages.SET_DEFAULT_TEXT);
-		pasteItem = item (bar, FilterMessages.PASTE, FilterMessages.PASTE_FROM_CLIPBOARD);
-		closeItem = item (bar, FilterMessages.CLOSE, FilterMessages.CLOSE_FILTER);
+		defaultItem = item (bar, DEFAULT, SET_DEFAULT_TEXT);
+		pasteItem = item (bar, PASTE, PASTE_FROM_CLIPBOARD);
+		closeItem = item (bar, CLOSE, CLOSE_FILTER);
 		feedback = new Label (this, SWT.WRAP);
 		feedback.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false, 4, 1));
 		initialize ();
@@ -81,8 +100,8 @@ final class FilterEditPanel extends Composite {
 
 	private static ToolItem item (ToolBar bar, String text, String toolTip) {
 		ToolItem item = new ToolItem (bar, SWT.PUSH);
-		item.setText (FilterMessages.get (text));
-		item.setToolTipText (FilterMessages.get (toolTip));
+		item.setText (SWT.getMessage (text));
+		item.setToolTipText (SWT.getMessage (toolTip));
 		return item;
 	}
 
@@ -159,7 +178,7 @@ final class FilterEditPanel extends Composite {
 		int mode = MODES [matchType.getSelectionIndex ()];
 		String problem = TextMatch.check (pattern.getText (), mode);
 		if (!problem.isEmpty ()) {
-			feedback.setText (FilterMessages.get (FilterMessages.VALIDITY_ERROR) + ' ' + problem);
+			feedback.setText (SWT.getMessage (VALIDITY_ERROR) + ' ' + problem);
 			return false;
 		}
 		filter.setText (column, pattern.getText (), mode);
@@ -181,6 +200,6 @@ final class FilterEditPanel extends Composite {
 
 	private String info () {
 		int kind = MODES [Math.max (0, matchType.getSelectionIndex ())] & 0xFF;
-		return FilterMessages.get (kind == TextMatch.WILDCARD ? FilterMessages.WILDCARD_INFO : kind == TextMatch.REGEX ? FilterMessages.REGEXP_INFO : FilterMessages.TEXT_INFO);
+		return SWT.getMessage (kind == TextMatch.WILDCARD ? WILDCARD_INFO : kind == TextMatch.REGEX ? REGEXP_INFO : TEXT_INFO);
 	}
 }
