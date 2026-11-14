@@ -1,0 +1,26 @@
+name: SWT mobile iOS UIKit JNI compile gate
+on:
+  pull_request:
+    paths: ['mobile/ios/**', 'mobile/test-core.sh', '.github/workflows/m3-mobile-ios-bridge.yml']
+  push:
+    paths: ['mobile/ios/**', 'mobile/test-core.sh', '.github/workflows/m3-mobile-ios-bridge.yml']
+permissions:
+  contents: read
+jobs:
+  ios-bridge-compile:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile Java bridge and compare JNI entrypoint names
+        run: bash mobile/test-core.sh
+      - name: Clang UIKit bridge syntax for iOS simulator
+        run: |
+          SDK="$(xcrun --sdk iphonesimulator --show-sdk-path)"
+          xcrun --sdk iphonesimulator clang -fobjc-arc -fblocks -fsyntax-only \
+            -target arm64-apple-ios16.0-simulator -isysroot "$SDK" \
+            -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/darwin" \
+            mobile/ios/native/SWTMobileUIKit.m
