@@ -229,6 +229,7 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 @property(nonatomic) jlong peer;
 @property(nonatomic) jlong owner;
 @property(nonatomic) jint kind;
+@property(nonatomic) jint style;
 @property(nonatomic) BOOL disposed;
 @property(nonatomic, strong) UITouch *primaryTouch;
 @property(nonatomic) BOOL enabled;
@@ -282,7 +283,7 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 	jlong peer = _peer;
 	swtCallback(^(JNIEnv *env, jobject sink) { (*env)->CallVoidMethod(env, sink, swtPaint, peer); });
 }
-- (BOOL)canBecomeFirstResponder { return !_disposed && _enabled; }
+- (BOOL)canBecomeFirstResponder { return !_disposed && _enabled && (_style & SWT(NO_FOCUS)) == 0; }
 - (BOOL)becomeFirstResponder {
 	BOOL was = self.isFirstResponder;
 	BOOL result = [super becomeFirstResponder];
@@ -522,7 +523,6 @@ JNIEXPORT jintArray JNICALL JNI(dpi)(JNI_ARGS) {
 
 JNIEXPORT jlong JNICALL JNI(createControl)(JNI_ARGS, jint kind, jlong parent, jint style) {
 	@autoreleasepool {
-		(void)style;
 		if (!swtOnDisplayThread(env)) return 0;
 		if ((kind != SWT(SHELL) && kind != SWT(COMPOSITE) && kind != SWT(CANVAS)) || (kind != SWT(SHELL) && parent == 0)) { swtThrow(env, "java/lang/IllegalArgumentException", "Unsupported peer kind or missing parent"); return 0; }
 		__block jlong peer = 0;
@@ -536,7 +536,7 @@ JNIEXPORT jlong JNICALL JNI(createControl)(JNI_ARGS, jint kind, jlong parent, ji
 			UIView *host = kind == SWT(SHELL) ? swtRoot : owner;
 			if (host == nil) [NSException raise:NSInternalInconsistencyException format:@"UIKit root is unavailable"];
 			SWTUIKitView *view = [[SWTUIKitView alloc] initWithFrame:CGRectZero];
-			view.kind = kind; view.owner = parent;
+			view.kind = kind; view.owner = parent; view.style = style;
 			SWTRegistryError error;
 			peer = swtRegistryAdd(&swtViews, view, &error);
 			if (peer == 0) [NSException raise:error == SWTRegistryMemory ? NSMallocException : NSInternalInconsistencyException format:@"Cannot allocate SWT UIKit peer registry slot (%u)", (unsigned)error];
