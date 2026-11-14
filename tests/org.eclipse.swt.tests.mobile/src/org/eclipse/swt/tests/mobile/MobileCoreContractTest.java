@@ -157,6 +157,9 @@ public final class MobileCoreContractTest {
 			require(label.computeSize(SWT.DEFAULT, SWT.DEFAULT).x > 20, "Label text measures its own mobile GC");
 			label.setAlignment(SWT.RIGHT);
 			require(label.getAlignment() == SWT.RIGHT, "Label alignment setter/getter");
+			require(!label.setFocus(), "Mobile Label remains nonfocusable");
+			require(platform.controls.get(labelPeer).role == org.eclipse.swt.accessibility.ACC.ROLE_LABEL,
+				"Label installs native accessibility static-text role");
 			Button check = new Button(shell, SWT.CHECK);
 			check.setText("Enable");
 			check.setBounds(0, 40, 160, 32);
@@ -186,6 +189,8 @@ public final class MobileCoreContractTest {
 			drain(display);
 			require(check.getSelection() && selections.get() == 1 && during.equals(List.of(true)),
 				"Native down/up produces one Button Selection with updated state");
+			require((platform.controls.get(checkPeer).state & org.eclipse.swt.accessibility.ACC.STATE_CHECKED) != 0,
+				"Native checkbox accessibility state follows selection");
 			check.setSelection(false);
 			require(selections.get() == 1 && !check.getSelection(), "Programmatic selection does not notify");
 			radioA.setSelection(true);
