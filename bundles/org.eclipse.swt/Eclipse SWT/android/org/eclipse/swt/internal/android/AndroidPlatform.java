@@ -14,6 +14,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.Callable;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
@@ -272,6 +275,29 @@ public final class AndroidPlatform implements MobilePlatform {
 			PeerView view = controls.get(peer);
 			if (view.kind != TEXT || view.editor == null) throw new IllegalArgumentException("TEXT peer required");
 			view.configureEditor(text, start, end, editable, limit, hint);
+			return null;
+		});
+	}
+	@Override public String getClipboardText() {
+		checkThread();
+		return ui(() -> {
+			ClipboardManager clipboard = (ClipboardManager)
+					activity.getSystemService(Context.CLIPBOARD_SERVICE);
+			if (clipboard == null || !clipboard.hasPrimaryClip()) return "";
+			ClipData clip = clipboard.getPrimaryClip();
+			if (clip == null || clip.getItemCount() == 0) return "";
+			CharSequence value = clip.getItemAt(0).coerceToText(activity);
+			return value == null ? "" : value.toString();
+		});
+	}
+	@Override public void setClipboardText(String text) {
+		checkThread();
+		Objects.requireNonNull(text, "clipboard text");
+		ui(() -> {
+			ClipboardManager clipboard = (ClipboardManager)
+					activity.getSystemService(Context.CLIPBOARD_SERVICE);
+			if (clipboard == null) throw new IllegalStateException("Android clipboard unavailable");
+			clipboard.setPrimaryClip(ClipData.newPlainText("SWT Text", text));
 			return null;
 		});
 	}
