@@ -1,2 +1,0 @@
-mark	node	parent	test	message
-FAIL	leaf	JUnit Jupiter/Test_org_eclipse_swt_widgets_Table_Splice	hiddenTableAppliesOneWindowPatchWhenShown() 67984 ms	paint passes after showing ==> expected: <1> but was: <2>

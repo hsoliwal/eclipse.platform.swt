@@ -1,2 +1,0 @@
-name	start	end	rc	jni_check_diagnostics	selectors
-attribution-widget-then-display	2026-11-09T16:41:47+05:30	2026-11-09T16:42:02+05:30	1	0	--config=junit.jupiter.testclass.order.default=org.junit.jupiter.api.ClassOrderer$ClassName --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Button --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display

@@ -1,2 +1,0 @@
-name	start	end	rc	jni_check_diagnostics	selectors	extra_classpath
-vps-viewport	2026-11-09T17:52:17+05:30	2026-11-09T17:52:23+05:30	1	0	--select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource	-

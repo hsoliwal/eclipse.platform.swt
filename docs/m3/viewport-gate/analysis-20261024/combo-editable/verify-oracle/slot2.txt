@@ -1,2 +1,0 @@
-[15:50:44] slot m3-ui-tests-1
-[15:50:47] replay2 exit 0

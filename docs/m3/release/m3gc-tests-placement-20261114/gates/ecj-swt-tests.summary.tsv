@@ -1,2 +1,0 @@
-label	ecj_rc	errors	warnings	access_forbidden	error_kinds	warning_kinds	sources	rules	source_commit
-swt-tests	0	0	3970	0		access_discouraged=3920 other=50 	393	28	a4dc3f04bf270d628e0eaa2a8ea3ecc68f48eaca

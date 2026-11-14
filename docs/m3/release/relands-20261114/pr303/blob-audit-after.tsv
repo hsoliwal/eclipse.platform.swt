@@ -1,5 +1,0 @@
-path	class	base	head	master	added_total	added_on_master	removed_total	removed_back
-bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/m3/M3FilterRow.java	PRESENT	7a1e7abeb8	1f651d2dd1	1f651d2dd1	0	0	0	0
-docs/m3/ENHANCED_API_MAP.tsv	EVOLVED	7be9b4c98d	964679c752	82ffc102ad	1	1	1	0
-docs/m3/sort-filter/DESIGN.md	PRESENT	b86235637d	28d2643b88	28d2643b88	0	0	0	0
-tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3SortFilterWidgets.java	EVOLVED	2406d0fb82	7e389acede	a27191bf18	17	17	0	0

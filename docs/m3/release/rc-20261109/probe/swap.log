@@ -1,8 +1,0 @@
-top 0: requested 1 fetched 1 evicted 0 resident 1 released 0 swappedOut 0 swappedIn 0
-top 5000: requested 2 fetched 2 evicted 0 resident 2 released 0 swappedOut 0 swappedIn 0
-top 10000: requested 3 fetched 3 evicted 0 resident 3 released 0 swappedOut 0 swappedIn 0
-top 15000: requested 4 fetched 4 evicted 0 resident 4 released 0 swappedOut 0 swappedIn 0
-top 20000: requested 5 fetched 5 evicted 0 resident 5 released 0 swappedOut 0 swappedIn 0
-top 25000: requested 6 fetched 6 evicted 0 resident 6 released 0 swappedOut 0 swappedIn 0
-top 0: requested 6 fetched 6 evicted 0 resident 6 released 0 swappedOut 0 swappedIn 0
-top 10000: requested 6 fetched 6 evicted 0 resident 6 released 0 swappedOut 0 swappedIn 0

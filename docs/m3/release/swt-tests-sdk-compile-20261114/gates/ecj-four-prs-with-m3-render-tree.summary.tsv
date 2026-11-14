@@ -1,2 +1,0 @@
-label	ecj_rc	errors	warnings	access_forbidden	error_kinds	warning_kinds	sources	rules	source_commit
-four-prs-with-m3-render-tree	0	0	4209	0		access_discouraged=4088 other=121 	424	28	cc99cc8d63613c41a8b3ba3651d092315d80ccd4
