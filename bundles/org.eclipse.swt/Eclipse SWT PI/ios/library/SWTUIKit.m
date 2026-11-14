@@ -755,6 +755,35 @@ JNIEXPORT jboolean JNICALL JNI(requestFocus)(JNI_ARGS, jlong peer) {
 		return focused ? JNI_TRUE : JNI_FALSE;
 	}
 }
+JNIEXPORT jstring JNICALL JNI(getClipboardText)(JNI_ARGS) {
+	@autoreleasepool {
+		if (!swtOnDisplayThread(env)) return NULL;
+		__block NSString *text = @"";
+		if (!swtUI(env, ^{ text = UIPasteboard.generalPasteboard.string ?: @""; })) return NULL;
+		if (text.length > INT_MAX) {
+			swtThrow(env, "java/lang/IllegalArgumentException", "Clipboard text exceeds UTF-16 JNI capacity");
+			return NULL;
+		}
+		unichar *chars = calloc(MAX((NSUInteger)1, text.length), sizeof(unichar));
+		if (chars == NULL) {
+			swtThrow(env, "java/lang/OutOfMemoryError", "Cannot copy clipboard UTF-16 text");
+			return NULL;
+		}
+		[text getCharacters:chars range:NSMakeRange(0, text.length)];
+		jstring result = (*env)->NewString(env, (const jchar *)chars, (jsize)text.length);
+		free(chars);
+		return result;
+	}
+}
+JNIEXPORT void JNICALL JNI(setClipboardText)(JNI_ARGS, jstring value) {
+	@autoreleasepool {
+		if (!swtOnDisplayThread(env)) return;
+		NSString *text = swtString(env, value);
+		if (text == nil) return;
+		swtUI(env, ^{ UIPasteboard.generalPasteboard.string = text; });
+	}
+}
+
 JNIEXPORT void JNICALL JNI(textContent)(JNI_ARGS, jlong peer, jstring value,
 	jint start, jint end, jboolean editable, jint limit, jstring hint) {
 	@autoreleasepool {
@@ -1267,6 +1296,8 @@ static JNINativeMethod swtMethods[] = {
 	{"setEnabled", "(JZ)V", (void *)JNI(setEnabled)},
 	{"setTitle", "(JLjava/lang/String;)V", (void *)JNI(setTitle)},
 	{"textContent", "(JLjava/lang/String;IIZILjava/lang/String;)V", (void *)JNI(textContent)},
+	{"getClipboardText", "()Ljava/lang/String;", (void *)JNI(getClipboardText)},
+	{"setClipboardText", "(Ljava/lang/String;)V", (void *)JNI(setClipboardText)},
 	{"requestFocus", "(J)Z", (void *)JNI(requestFocus)},
 	{"setAccessibility", "(JLjava/lang/String;II)V", (void *)JNI(setAccessibility)},
 	{"present", "(JJ)V", (void *)JNI(present)},
