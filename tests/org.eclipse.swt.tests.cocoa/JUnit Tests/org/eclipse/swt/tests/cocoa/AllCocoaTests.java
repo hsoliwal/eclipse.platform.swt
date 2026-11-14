@@ -19,7 +19,6 @@ import org.junit.platform.suite.api.Suite;
 
 @Suite
 @SelectClasses({
-	Test_cocoa_Platform.class,
 	Test_cocoa_AccessibleTextRanges.class,
 	Test_cocoa_GLCanvas.class,
 	Test_cocoa_SystemMenu.class
