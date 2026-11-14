@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2026 Hitesh Soliwal and contributors.
+  SPDX-License-Identifier: EPL-2.0
+
+  This standalone JDK/Android-SDK module is its own Maven launcher root.
+  The desktop reactor retains its existing Tycho extensions at the repository
+  root; those extensions are not required by this mobile Java/SDK build.
+-->
+<extensions />
