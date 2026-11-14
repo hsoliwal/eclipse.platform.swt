@@ -1,5 +1,26 @@
 Optional SWT retained Skija backend packaging (2026-10-13)
 
+Current source configuration (2026-11-14)
+
+For source at f2f62684a673717e57fa35791be62504c33c95bd, use -Dswt.gpu=m3.
+RetainedPlanes.parseMode recognizes gdi/retained/m3; skija alone selects MODE_OFF.
+The current GPU fragment POM requests io.github.humbleui:skija-shared:0.116.3,
+io.github.humbleui:skija-windows-x64:0.116.3 and io.github.humbleui:types:0.1.1.
+This describes source configuration, not independently verified packaged binaries.
+
+The 0.143.18/Types0.2.0 versions, hashes, tag and native-engine revision recorded
+below belong to the historical packaging evidence. They must not be relabeled
+as identities of the current 0.116.3 dependencies. Current native-engine identity
+and source-to-published-binary provenance remain unresolved.
+
+The inspected local 0.116.3 shared POM requires Types0.1.1, whereas upstream tag
+0.116.3 at 90e6bc12a3be9f84b88c077e0c23178499e21b7b script/common.py specifies
+Types0.2.0. That tag alone therefore does not establish the cached binary origin.
+Retain all existing license texts and complete distribution inventory before
+public binary release.
+
+Historical packaging record (preserved verbatim below):
+
 The existing three SWT Java renderer files retain EPL-2.0 and their original notices.
 This optional fragment embeds unchanged Skija-shared0.143.18, Skija-windows-x640.143.18
 and HumbleUI Types0.2.0 jars in lib/. This supersedes only the packaging description
