@@ -26,5 +26,8 @@ public final class MobileCoreContractJUnitTest {
 	@Test void originalMobileButtonLabelPaintingAndSelection() {
 		MobileCoreContractTest.testMobileButtonLabelContracts();
 	}
+	@Test void originalMobileProgressAndScalePaintingAndSelection() {
+		MobileCoreContractTest.testMobileProgressAndScaleContracts();
+	}
 
 }

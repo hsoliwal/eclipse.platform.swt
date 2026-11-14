@@ -120,7 +120,9 @@ platform capture. `Control.print` is separately scoped offscreen composition and
 must not be presented as visible-screen evidence.
 
 This is **not the complete SWT or Nebula widget catalogue**. Button and Label
-have bounded Canvas-rendered source implementations; Text, List, Combo,
+have bounded Canvas-rendered source implementations; ProgressBar and Scale now
+offer native-backed GC painting with original SWT range/selection methods.
+Text, List, Combo,
 Table, Tree, menus, ToolBar, TabFolder, StyledText, Browser, printing,
 drag-and-drop, OpenGL, complete IME/text composition, and the public Accessible
 API are not implemented by this source closure. Other Nebula widgets are not
