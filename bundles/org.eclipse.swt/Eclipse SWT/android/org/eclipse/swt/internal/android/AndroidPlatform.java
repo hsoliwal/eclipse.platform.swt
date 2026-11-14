@@ -99,6 +99,8 @@ public final class AndroidPlatform implements MobilePlatform {
 			view.fillViewport = old.fillViewport;
 			view.front = old.front; old.front = null;
 			view.setVisibility(old.getVisibility()); view.setEnabled(old.isEnabled());
+			if (old.editor != null && view.editor != null)
+				view.editor.setEnabled(old.editor.isEnabled());
 			view.setContentDescription(old.getContentDescription());
 			view.role = old.role; view.accessibleState = old.accessibleState;
 			if (old.editor != null && view.editor != null) {
@@ -119,7 +121,11 @@ public final class AndroidPlatform implements MobilePlatform {
 			ViewGroup parent = view.kind == SHELL ? root : controls.get(view.parent);
 			parent.addView(view, view.layoutParams());
 		}
-		if (focused != 0) controls.get(focused).requestFocus();
+		if (focused != 0) {
+			PeerView focusOwner = controls.get(focused);
+			if (focusOwner.editor != null) focusOwner.editor.requestFocus();
+			else focusOwner.requestFocus();
+		}
 	}
 
 	public void active(boolean value) {
@@ -265,7 +271,15 @@ public final class AndroidPlatform implements MobilePlatform {
 		});
 	}
 	@Override public void setVisible(long peer, boolean value) { checkThread(); ui(() -> { controls.get(peer).setVisibility(value ? View.VISIBLE : View.INVISIBLE); return null; }); }
-	@Override public void setEnabled(long peer, boolean value) { checkThread(); ui(() -> { controls.get(peer).setEnabled(value); return null; }); }
+	@Override public void setEnabled(long peer, boolean value) {
+		checkThread();
+		ui(() -> {
+			PeerView view = controls.get(peer);
+			view.setEnabled(value);
+			if (view.editor != null) view.editor.setEnabled(value);
+			return null;
+		});
+	}
 	@Override public void textContent(long peer, String text, int start, int end,
 			boolean editable, int limit, String hint) {
 		checkThread();
