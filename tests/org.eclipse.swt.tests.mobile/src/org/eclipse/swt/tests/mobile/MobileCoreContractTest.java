@@ -35,6 +35,7 @@ public final class MobileCoreContractTest {
 		testGraphicsAndDisposalDuringPaint();
 		testDestructionAndBlockedSyncExec();
 		testOwnedShellCoordinateMapping();
+		testMobileButtonLabelContracts();
 		System.out.println("PASS: "+assertions+" SWT/Nebula owner-contract assertions. Native device qualification is separate.");
 	}
 	static void testOriginalWidgetAndPainting()throws Exception {
@@ -140,6 +141,74 @@ public final class MobileCoreContractTest {
 			require(canvas.toControl(111,124).equals(new Point(4,5)),"Owned Shell inverse coordinates round-trip correctly");
 			require(display.map(canvas,parent,4,5).equals(new Point(81,84)),"Display.map crosses owned Shell boundaries without double-counting ancestors");
 		} finally {display.dispose();MobileRuntime.uninstall(platform);}
+	}
+
+	static void testMobileButtonLabelContracts() {
+		ContractPlatform platform = new ContractPlatform();
+		MobileRuntime.install(platform);
+		Display display = new Display();
+		try {
+			Shell shell = new Shell(display);
+			Label label = new Label(shell, SWT.LEFT);
+			label.setBounds(0, 0, 180, 30);
+			label.setText("Mobile && Label");
+			require("Mobile && Label".equals(label.getText()), "Label retains mnemonic source text");
+			require(label.computeSize(SWT.DEFAULT, SWT.DEFAULT).x > 20, "Label text measures its own mobile GC");
+			label.setAlignment(SWT.RIGHT);
+			require(label.getAlignment() == SWT.RIGHT, "Label alignment setter/getter");
+			Button check = new Button(shell, SWT.CHECK);
+			check.setText("Enable");
+			check.setBounds(0, 40, 160, 32);
+			long checkPeer = platform.lastCreated;
+			Button radioA = new Button(shell, SWT.RADIO);
+			radioA.setBounds(0, 80, 160, 32);
+			Button radioB = new Button(shell, SWT.RADIO);
+			radioB.setBounds(0, 120, 160, 32);
+			Button push = new Button(shell, SWT.PUSH);
+			push.setBounds(0, 160, 160, 32);
+			push.setText("Go");
+			shell.open();
+			drain(display);
+			require(platform.controls.get(checkPeer).frame != null, "Original Button paints through native peer image");
+			AtomicInteger selections = new AtomicInteger();
+			List<Boolean> during = new ArrayList<>();
+			check.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> {
+				selections.incrementAndGet();
+				during.add(check.getSelection());
+			}));
+			platform.sink.input(checkPeer, SWT.MouseDown, 6, 8, 1, 0, '\0', 0, 1, 1);
+			platform.sink.input(checkPeer, SWT.MouseUp, 6, 8, 1, 0, '\0', 0, 1, 2);
+			drain(display);
+			require(check.getSelection() && selections.get() == 1 && during.equals(List.of(true)),
+				"Native down/up produces one Button Selection with updated state");
+			check.setSelection(false);
+			require(selections.get() == 1 && !check.getSelection(), "Programmatic selection does not notify");
+			radioA.setSelection(true);
+			radioB.notifyListeners(SWT.MouseDown, click(5, 5));
+			radioB.notifyListeners(SWT.MouseUp, click(5, 5));
+			require(radioB.getSelection() && !radioA.getSelection(),
+				"Native radio input deselects contiguous sibling");
+			push.setEnabled(false);
+			AtomicInteger pushes = new AtomicInteger();
+			push.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> pushes.incrementAndGet()));
+			push.notifyListeners(SWT.MouseDown, click(5, 5));
+			push.notifyListeners(SWT.MouseUp, click(5, 5));
+			require(pushes.get() == 0, "Disabled Button ignores input");
+			label.setImage(new Image(display, 12, 12));
+			Image ownedExternally = label.getImage();
+			label.setText("Text restored");
+			require(label.getImage() == ownedExternally && !ownedExternally.isDisposed(),
+				"Label image remains caller owned after restoring text");
+			label.setImage(null);
+			ownedExternally.dispose();
+			shell.dispose();
+			require(label.isDisposed() && check.isDisposed(), "Original Label and Button disposed with Shell");
+		} finally {
+			display.dispose();
+			MobileRuntime.uninstall(platform);
+		}
+		require(platform.controls.isEmpty() && platform.images.isEmpty(),
+				"Mobile Label/Button paint resources and peers fully released");
 	}
 
 }
