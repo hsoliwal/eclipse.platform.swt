@@ -38,6 +38,8 @@ public final class OS {
 		ACTION_DECREMENT = MobilePlatform.ACTION_DECREMENT;
 	public static final int NO_FOCUS = SWT.NO_FOCUS;
 	public static final int TEXT = MobilePlatform.TEXT;
+	public static final int MULTI = SWT.MULTI, PASSWORD = SWT.PASSWORD;
+	public static final int DEFAULT_SELECTION = SWT.DefaultSelection;
 	public static final int SHELL = MobilePlatform.SHELL, COMPOSITE = MobilePlatform.COMPOSITE,
 		CANVAS = MobilePlatform.CANVAS;
 	public static final int ROLE_LIST = ACC.ROLE_LIST, ROLE_LABEL = ACC.ROLE_LABEL, ROLE_PUSHBUTTON = ACC.ROLE_PUSHBUTTON,
