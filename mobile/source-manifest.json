@@ -716,7 +716,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Scale.java",
-      "sha256": "492cc409b39201c79b5a2ae1c554c4b9ab5658d5fc1c628d04a46804bbf5eb00"
+      "sha256": "055cf2078f52391b414bfd189662f336144d381969e9f1a6f31a3d780b31d997"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Scrollable.java"
