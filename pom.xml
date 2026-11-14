@@ -53,7 +53,7 @@
     <profile>
       <id>m3-gpu-retained-backend</id>
       <activation><property><name>m3.gpu.retainedBackend</name><value>true</value></property></activation>
-      <modules><module>bundles/org.eclipse.swt.gpu.m3</module></modules>
+      <modules><module>bundles/org.eclipse.swt.gpu</module></modules>
     </profile>
     <profile>
       <id>build-individual-bundles</id>
@@ -226,7 +226,7 @@
     <module>examples/org.eclipse.swt.examples.ole.win32</module>
     <module>examples/org.eclipse.swt.examples.views</module>
     <module>tests/org.eclipse.swt.tests</module>
-    <module>tests/org.eclipse.swt.tests.m3gc</module>
+    <module>tests/org.eclipse.swt.tests.raster</module>
     <module>features/org.eclipse.swt.tools.feature</module>
   </modules>
 </project>

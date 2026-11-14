@@ -27,7 +27,7 @@ import org.eclipse.swt.internal.*;
  */
 public final class RowBackends {
 	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.internal.render.RowBackends");
-	/** The M3 backend, compiled from the Eclipse SWT Render M3 source folder against the Skija library jars. */
+	/** The M3 backend, compiled from the Eclipse SWT Render source folder against the Skija library jars. */
 	static final String M3_CANVAS = "org.eclipse.swt.internal.render.RasterRowCanvas";
 	/**
 	 * The M3 backend of <code>SWT.M3</code> canvases (GC seam, leaf 4), compiled from the same folder; the Display registers it

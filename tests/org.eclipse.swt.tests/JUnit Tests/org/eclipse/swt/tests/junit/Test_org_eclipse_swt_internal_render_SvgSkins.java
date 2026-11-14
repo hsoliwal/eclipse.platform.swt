@@ -45,7 +45,7 @@ public class Test_org_eclipse_swt_internal_render_SvgSkins {
 	public void buttonsKeepTheirCornersAtEveryZoomAndSize () {
 		SvgSkins skins = SvgSkins.create (256);
 		Assumptions.assumeTrue (skins != null, "no SVG rasterizer (org.eclipse.swt.svg fragment) on the class path");
-		int button = SvgSkins.id ("m3/button");
+		int button = SvgSkins.id ("default/button");
 		assertTrue (SvgSkins.has (button, SvgSkins.BACKGROUND));
 		for (int zoom : ZOOMS) {
 			int natural = 24 * zoom / 100, corner = 6 * zoom / 100;
@@ -77,7 +77,7 @@ public class Test_org_eclipse_swt_internal_render_SvgSkins {
 	public void marksAreRasterizedAtTheirSizeAndStatesFallBack () {
 		SvgSkins skins = SvgSkins.create (64);
 		Assumptions.assumeTrue (skins != null, "no SVG rasterizer (org.eclipse.swt.svg fragment) on the class path");
-		int check = SvgSkins.id ("m3/check"), button = SvgSkins.id ("m3/button");
+		int check = SvgSkins.id ("default/check"), button = SvgSkins.id ("default/button");
 		for (int size : new int [] {16, 20, 24, 32}) {
 			ImageData mark = skins.part (check, SvgSkins.MARK, SvgSkins.NORMAL, 0x202020, size, size, 100, null);
 			assertEquals (size, mark.width);
@@ -88,14 +88,14 @@ public class Test_org_eclipse_swt_internal_render_SvgSkins {
 		ImageData normal = skins.part (button, SvgSkins.BORDER, SvgSkins.NORMAL, TINT, 80, 30, 100, null);
 		assertSame (normal, skins.part (button, SvgSkins.BORDER, SvgSkins.HOVER, TINT, 80, 30, 100, null), "no hover source: the normal part, cached once");
 		assertNotSame (normal, skins.part (button, SvgSkins.BORDER, SvgSkins.FOCUSED, TINT, 80, 30, 100, null), "the focused border has its own source");
-		assertNull (skins.part (SvgSkins.id ("m3/no-such-skin"), SvgSkins.BACKGROUND, SvgSkins.NORMAL, TINT, 80, 30, 100, null), "a missing part paints as before");
+		assertNull (skins.part (SvgSkins.id ("default/no-such-skin"), SvgSkins.BACKGROUND, SvgSkins.NORMAL, TINT, 80, 30, 100, null), "a missing part paints as before");
 	}
 
 	@Test
 	public void aWarmLookupAllocatesNothing () {
 		SvgSkins skins = SvgSkins.create (256);
 		Assumptions.assumeTrue (skins != null, "no SVG rasterizer (org.eclipse.swt.svg fragment) on the class path");
-		int button = SvgSkins.id ("m3/button");
+		int button = SvgSkins.id ("default/button");
 		int [] insets = {6, 6, 6, 6};
 		for (int [] size : SIZES) skins.part (button, SvgSkins.BACKGROUND, SvgSkins.NORMAL, TINT, size [0], size [1], 150, insets);
 		com.sun.management.ThreadMXBean threads = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean ();
