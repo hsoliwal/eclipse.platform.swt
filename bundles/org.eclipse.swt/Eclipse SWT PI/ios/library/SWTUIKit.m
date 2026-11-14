@@ -383,6 +383,20 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 		(*env)->CallVoidMethod(env, sink, swtAccessibility, peer, (jint)SWT(ACTION_DECREMENT));
 	});
 }
+- (BOOL)accessibilityScroll:(UIAccessibilityScrollDirection)direction {
+	if (_disposed || !_enabled || _accessibilityRole != SWT(ROLE_LIST)) return NO;
+	jint action;
+	switch (direction) {
+		case UIAccessibilityScrollDirectionUp: action = SWT(ACTION_INCREMENT); break;
+		case UIAccessibilityScrollDirectionDown: action = SWT(ACTION_DECREMENT); break;
+		default: return NO;
+	}
+	jlong peer = _peer;
+	swtCallback(^(JNIEnv *env, jobject sink) {
+		(*env)->CallVoidMethod(env, sink, swtAccessibility, peer, action);
+	});
+	return YES;
+}
 @end
 
 static SWTUIKitView *swtView(jlong peer) {
