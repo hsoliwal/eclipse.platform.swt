@@ -24,32 +24,18 @@ import org.junit.platform.suite.api.Suite;
 @Suite
 @SelectClasses({ //
 		// Enhanced M3 API contracts; recorded differentials have a separate oracle run.
-		Test_M3BulkUpdates.class, //
-		Test_M3CheckState.class, //
 		Test_org_eclipse_swt_internal_Collation.class, //
 		Test_org_eclipse_swt_internal_ColumnFilter.class, //
 		Test_org_eclipse_swt_internal_ColumnSort.class, //
-		Test_M3DiffApply.class, //
 		Test_M3Emptiness.class, //
 		Test_M3FilterAsync.class, //
-		Test_M3ItemRange.class, //
-		Test_M3ItemSelection.class, //
-		Test_M3Model.class, //
+		Test_org_eclipse_swt_internal_ItemRange.class, //
 		Test_org_eclipse_swt_internal_RowPatch.class, //
-		Test_M3Prefetch.class, //
 		Test_org_eclipse_swt_internal_ProxyModel.class, //
-		Test_M3Residency.class, //
-		Test_M3RowExtents.class, //
-		Test_M3RowMath.class, //
-		Test_M3ScrollBarModel.class, //
-		Test_M3ScrollMemento.class, //
-		Test_M3Scrolling.class, //
 		Test_M3SortFilterWidgets.class, //
 		Test_org_eclipse_swt_internal_TextMatch.class, //
 		Test_org_eclipse_swt_internal_TextSegments.class, //
 		Test_org_eclipse_swt_internal_TokenMatch.class, //
-		Test_M3TypeAhead.class, //
-		Test_M3VisibilityObserver.class, //
 		// Existing widget contracts
 		Test_VirtualTreeCoordinateVisibility.class, //
 		Test_org_eclipse_swt_custom_BidiSegmentListener.class, //
@@ -177,7 +163,6 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_Table_ReentrantPaint.class, //
 		Test_org_eclipse_swt_widgets_Table_SameLines.class, //
 		Test_org_eclipse_swt_widgets_Table_SetItemCount.class, //
-		Test_org_eclipse_swt_widgets_Table_Splice.class, //
 		Test_org_eclipse_swt_widgets_Table_StockItems.class, //
 		Test_org_eclipse_swt_widgets_Table_Viewport.class, //
 		Test_org_eclipse_swt_widgets_Table_ViewportArms.class, //

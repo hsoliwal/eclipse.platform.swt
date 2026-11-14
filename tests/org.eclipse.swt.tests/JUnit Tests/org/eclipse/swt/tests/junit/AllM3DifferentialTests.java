@@ -31,14 +31,14 @@ import org.junit.platform.suite.api.Suite;
  */
 @Suite
 @SelectClasses({
-	Test_M3BulkUpdatesDifferential.class,
-	Test_M3DiffApplyDifferential.class,
-	Test_M3PrefetchDifferential.class,
+	Test_org_eclipse_swt_widgets_BatchScopeDifferential.class,
+	Test_org_eclipse_swt_widgets_RowDiffDifferential.class,
+	Test_org_eclipse_swt_widgets_PrefetchDifferential.class,
 	Test_org_eclipse_swt_internal_ProxyModelDifferential.class,
-	Test_M3ResidencyDifferential.class,
-	Test_M3RowMathDifferential.class,
-	Test_M3ScrollBarModelDifferential.class,
-	Test_M3ScrollMementoDifferential.class,
+	Test_org_eclipse_swt_widgets_ResidencyDifferential.class,
+	Test_org_eclipse_swt_widgets_RowMathDifferential.class,
+	Test_org_eclipse_swt_widgets_ScrollBarModelDifferential.class,
+	Test_org_eclipse_swt_widgets_ScrollMementoDifferential.class,
 	Test_M3SortFilterDifferential.class
 })
 public class AllM3DifferentialTests {

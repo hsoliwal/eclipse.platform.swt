@@ -290,7 +290,7 @@ gates explicitly.
 ## Proposed RowExtents coverage supplement
 
 The unapplied release supplement preserves all existing tests and adds four
-deterministic `Test_M3RowExtents` methods for SMART and AUTO alignment, exact
+deterministic `VirtualRowExtentsTests` methods for SMART and AUTO alignment, exact
 anchoring boundaries and sparse maximum row counts with long offsets. Its reviewed
 inventory is 26 ordinary classes / 223 methods and, with the seven existing
 differential classes and retention class, 34 classes / 240 methods. These are

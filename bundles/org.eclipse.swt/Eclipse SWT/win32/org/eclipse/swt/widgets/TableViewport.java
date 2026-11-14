@@ -103,7 +103,7 @@ final class TableViewport {
 	/**
 	 * The first row at or after <code>from</code> (clamped to the rows), wrapping when asked, whose
 	 * first-column text starts with (<code>prefix</code>) or equals the string, ignoring case; -1
-	 * when none. Reads the text lane: no facade is made (also M3TypeAhead).
+	 * when none. Reads the text lane: no facade is made (also TypeAhead).
 	 */
 	int findRow (String string, int from, boolean prefix, boolean wrap) {
 		int count = (int) OS.SendMessage (table.handle, OS.LVM_GETITEMCOUNT, 0, 0);
@@ -715,7 +715,7 @@ final class TableViewport {
 		if (row >= 0) hold (row, item);
 	}
 
-	/* ---------------------------------------------------------------- M3Residency seam (enhanced API) */
+	/* ---------------------------------------------------------------- Residency seam (enhanced API) */
 
 	/* the last LVN_ODCACHEHINT range, [first, last]; empty before the first paint */
 	private int hintFirst, hintLast = -1;
@@ -771,8 +771,8 @@ final class TableViewport {
 			}
 		}
 		/* the M3 listeners run last: one of them may dispose the table */
-		M3Prefetch.windowChanged (table);
-		M3VisibilityObserver.changed (table);
+		Prefetch.windowChanged (table);
+		VisibilityObserver.changed (table);
 	}
 
 	/** Mediated <code>getItems</code> of a plain Table: every row answers its facade. */
@@ -1008,7 +1008,7 @@ final class TableViewport {
 	}
 
 	/**
-	 * M3Model's labels of a row that has no facade (Table.m3SetRow): the text of every column and the check box,
+	 * RowModel's labels of a row that has no facade (Table.m3SetRow): the text of every column and the check box,
 	 * written to the lanes as the item setters store them, then the repaint of a visible row and the column-less width,
 	 * as TableItem.setText does. A row with a facade, with images, or labelled with images is left to the item setters
 	 * (false), so a facade stays its row's state and the image list registers its images.

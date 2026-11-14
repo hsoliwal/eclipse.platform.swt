@@ -71,7 +71,7 @@ public final class RowWindow extends RowViewBase {
 	 *    <li>ERROR_NULL_ARGUMENT - if the range is null</li>
 	 * </ul>
 	 */
-	public void setWindow (M3ItemRange range) {
+	public void setWindow (ItemRange range) {
 		RowChecks.nonNull (range);
 		setWindow (range.start (), range.size ());
 	}
@@ -81,8 +81,8 @@ public final class RowWindow extends RowViewBase {
 	 *
 	 * @return the range
 	 */
-	public M3ItemRange getRange () {
-		return M3ItemRange.of (first, first + size () - 1);
+	public ItemRange getRange () {
+		return ItemRange.of (first, first + size () - 1);
 	}
 
 	/**

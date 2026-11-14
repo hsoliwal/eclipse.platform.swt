@@ -443,13 +443,13 @@ long virtualVisibleRowCount () {
 	return virtualProjection != null ? virtualProjection.visibleRowCount () : 0;
 }
 
-/* M3RowMath seam: no row lanes on this platform yet; M3RowMath walks the public API */
+/* RowMath seam: no row lanes on this platform yet; RowMath walks the public API */
 long m3VisibleRowCount () {
-	return M3RowMath.UNKNOWN;
+	return RowMath.UNKNOWN;
 }
 
 long m3RowOf (TreeItem item) {
-	return M3RowMath.UNKNOWN;
+	return RowMath.UNKNOWN;
 }
 
 TreeItem m3ItemAt (long row) {
@@ -457,10 +457,10 @@ TreeItem m3ItemAt (long row) {
 }
 
 long m3SubtreeRowCount (TreeItem item) {
-	return M3RowMath.UNKNOWN;
+	return RowMath.UNKNOWN;
 }
 
-/* M3Residency seam: no residency lanes on this platform; every visible row is resident, facades unknown */
+/* Residency seam: no residency lanes on this platform; every visible row is resident, facades unknown */
 long [] m3ResidentRange () {
 	return null;
 }

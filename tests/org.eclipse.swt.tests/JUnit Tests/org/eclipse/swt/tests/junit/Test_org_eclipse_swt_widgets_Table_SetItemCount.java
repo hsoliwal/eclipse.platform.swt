@@ -107,7 +107,7 @@ public class Test_org_eclipse_swt_widgets_Table_SetItemCount {
 	@Timeout (120)
 	public void refreshOfAMillionPlainRowsStaysUnderBudget () {
 		/* the stock plain Table (the official jar, the original mode) makes and deletes its rows one by one: minutes at a million rows (evidence) */
-		Assumptions.assumeTrue (Test_org_eclipse_swt_widgets_Table_Splice.splices (new Table (shell, SWT.MULTI)), "the plain Table is the win32 viewport's");
+		Assumptions.assumeTrue (splices (new Table (shell, SWT.MULTI)), "the plain Table is the win32 viewport's");
 		refreshAMillionRows (SWT.MULTI, "plain Table");
 	}
 
@@ -115,5 +115,16 @@ public class Test_org_eclipse_swt_widgets_Table_SetItemCount {
 	@Timeout (120)
 	public void refreshOfAMillionVirtualRowsStaysUnderBudget () {
 		refreshAMillionRows (SWT.MULTI | SWT.VIRTUAL, "VIRTUAL Table");
+	}
+
+	/* the win32 viewport serves the Table (the official jar and the original mode have none) */
+	static boolean splices (Table table) {
+		try {
+			java.lang.reflect.Field field = Table.class.getDeclaredField ("viewport");
+			field.setAccessible (true);
+			return field.get (table) != null;
+		} catch (ReflectiveOperationException | RuntimeException e) {
+			return false;
+		}
 	}
 }

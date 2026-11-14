@@ -8,10 +8,10 @@
 # --release currently requires zero omissions. A qualified separate-oracle
 # evidence path would need explicit reviewed policy/validator changes; this
 # baseline by itself cannot waive the release gate.
-Test_M3BulkUpdatesDifferential
-Test_M3DiffApplyDifferential
+Test_org_eclipse_swt_widgets_BatchScopeDifferential
+Test_org_eclipse_swt_widgets_RowDiffDifferential
 Test_org_eclipse_swt_internal_ProxyModelDifferential
-Test_M3RowMathDifferential
-Test_M3ScrollBarModelDifferential
-Test_M3ScrollMementoDifferential
+Test_org_eclipse_swt_widgets_RowMathDifferential
+Test_org_eclipse_swt_widgets_ScrollBarModelDifferential
+Test_org_eclipse_swt_widgets_ScrollMementoDifferential
 Test_M3SortFilterDifferential

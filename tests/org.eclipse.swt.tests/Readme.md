@@ -67,14 +67,13 @@ command above does not satisfy this complete release-report contract.
 
 ## Headless contract scope
 
-These nine existing classes execute without creating a native Display:
+These eight existing classes execute without creating a native Display:
 
 - `Test_org_eclipse_swt_internal_Collation`
 - `Test_org_eclipse_swt_internal_ColumnFilter`
 - `Test_org_eclipse_swt_internal_ColumnSort`
-- `Test_M3ItemRange`
+- `Test_org_eclipse_swt_internal_ItemRange`
 - `Test_org_eclipse_swt_internal_RowPatch`
-- `Test_M3RowExtents`
 - `Test_org_eclipse_swt_internal_TextMatch`
 - `Test_org_eclipse_swt_internal_TextSegments`
 - `Test_org_eclipse_swt_internal_TokenMatch`
@@ -95,6 +94,9 @@ maximum row counts. Execute them through the actual JUnit provider and bind
 any focused Java17 instrumentation to its exact source, test and classfile
 hashes. A separate independent model harness cannot substitute for JUnit or
 measured JaCoCo evidence. Java21/25 and native qualification remain separate.
+
+`VirtualRowExtentsTests`, a test of a package-private type, runs headless from the SWT bundle's own
+`Eclipse SWT Tests/win32` folder.
 
 ## Coverage evidence
 

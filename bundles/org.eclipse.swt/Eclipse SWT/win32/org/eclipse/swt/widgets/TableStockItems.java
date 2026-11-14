@@ -252,7 +252,7 @@ final class TableStockItems {
 	/*
 	 * The shift of the keys after a removed range. Stock shifts them by the removed items, which equals the removed
 	 * rows only when every removed row had an item: unbatched, the ListView paints the rows in view (and so gives them
-	 * items) inside the first LVM_DELETEITEM. While a batch freezes the viewport plane (M3BulkUpdates, beginBatch)
+	 * items) inside the first LVM_DELETEITEM. While a batch freezes the viewport plane (BatchScope.bulk, beginBatch)
 	 * that paint is deferred, so the keys shift by the removed rows: the answer of a run whose removed rows had items,
 	 * and no ArrayIndexOutOfBoundsException at the next paint (stock has it with redraw off: TableColdRemoveOracle).
 	 */

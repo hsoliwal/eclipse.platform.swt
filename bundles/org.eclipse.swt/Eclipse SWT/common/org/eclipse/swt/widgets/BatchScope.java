@@ -21,7 +21,8 @@ import org.eclipse.swt.graphics.*;
 
 /**
  * Platform-neutral part of <code>Control.beginBatch</code>,
- * <code>endBatch</code> and <code>runBatch</code>.
+ * <code>endBatch</code> and <code>runBatch</code>, and the bulk update of
+ * the item widgets ({@link #bulk(Control, Runnable)}).
  * <p>
  * <code>run</code> keeps the event loop running while the background work
  * executes, so the frozen planes record their damage, the planes that are not
@@ -37,6 +38,52 @@ final class BatchScope {
 	static final int BUSY_THRESHOLD = Integer.getInteger ("swt.batch.busyMs", 100).intValue (); //$NON-NLS-1$
 
 	private BatchScope () {
+	}
+
+	/* the planes a structural edit changes; the main plane (layout, chrome) stays live */
+	private static final int BULK_PLANES = SWT.PLANE_VIEWPORT | SWT.PLANE_SCROLLBARS;
+
+	/**
+	 * Runs a group of edits of a <code>Tree</code>, <code>Table</code> or <code>List</code> (adds, removes,
+	 * <code>setItemCount</code>, text and selection changes) as one update: the viewport and scroll bar planes of
+	 * the widget are frozen while the edits run (see <code>Control.beginBatch</code>), so nothing is painted in
+	 * between even if the edits dispatch events, and at the end the widget repaints only what changed, once. An
+	 * {@link M3Emptiness} listener hears at most one crossing, with the final count. The resulting state is the one
+	 * the same edits produce without the call.
+	 * <p>
+	 * Calls nest. An exception thrown by the edits leaves nothing frozen and propagates unchanged. With the
+	 * viewports the native work is already planned (a Table append burst becomes one native count change; List and
+	 * Tree touch only their window); in the original mode the stock per-item native calls remain and only their
+	 * painting is coalesced.
+	 * </p>
+	 *
+	 * @param widget the tree, table or list
+	 * @param edits the edits
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_NULL_ARGUMENT - if the widget or the edits are null</li>
+	 * </ul>
+	 * @exception SWTException <ul>
+	 *    <li>ERROR_WIDGET_DISPOSED - if the widget has been disposed</li>
+	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the widget</li>
+	 * </ul>
+	 */
+	static void bulk (Control widget, Runnable edits) {
+		if (widget == null || edits == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+		widget.beginBatch (BULK_PLANES);
+		M3Emptiness.hold (widget);
+		try {
+			edits.run ();
+		} finally {
+			/* the edits may have disposed the widget: then there is nothing left to resume */
+			if (!widget.isDisposed ()) {
+				try {
+					M3Emptiness.release (widget);
+				} finally {
+					widget.endBatch (BULK_PLANES);
+				}
+			}
+		}
 	}
 
 	/**

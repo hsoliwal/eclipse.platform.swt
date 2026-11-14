@@ -537,17 +537,17 @@ public class Test_org_eclipse_swt_internal_ColumnFilter {
 		sort.setKey (0, ColumnKey.ofInts (i -> i % 5));
 		RowWindow window = new RowWindow (sort);
 		List<String> kinds = new ArrayList<> ();
-		List<org.eclipse.swt.widgets.M3ItemRange> damaged = new ArrayList<> ();
+		List<ItemRange> damaged = new ArrayList<> ();
 		window.addListener (change -> {
 			kinds.add (change.toString ());
 			damaged.add (change.damaged ());
 		});
-		window.setWindow (org.eclipse.swt.widgets.M3ItemRange.of (10, 19));
-		assertEquals (org.eclipse.swt.widgets.M3ItemRange.of (10, 19), window.getRange ());
-		window.setWindow (org.eclipse.swt.widgets.M3ItemRange.EMPTY);
-		assertEquals (org.eclipse.swt.widgets.M3ItemRange.EMPTY, window.getRange ());
+		window.setWindow (ItemRange.of (10, 19));
+		assertEquals (ItemRange.of (10, 19), window.getRange ());
+		window.setWindow (ItemRange.EMPTY);
+		assertEquals (ItemRange.EMPTY, window.getRange ());
 		window.setWindow (45, 10);
-		assertEquals (org.eclipse.swt.widgets.M3ItemRange.of (45, 49), window.getRange ());
+		assertEquals (ItemRange.of (45, 49), window.getRange ());
 		sort.rowsInserted (0, 1);
 		sort.rowsRemoved (0, 1);
 		sort.toggle (0, false);
@@ -556,8 +556,8 @@ public class Test_org_eclipse_swt_internal_ColumnFilter {
 		assertThrows (IllegalArgumentException.class, () -> window.setWindow (null));
 		String all = String.join (" ", kinds);
 		for (String kind : new String [] {"RESET", "INSERTED", "REMOVED", "ORDER", "UPDATED"}) assertTrue (all.contains (kind), kind);
-		assertEquals (org.eclipse.swt.widgets.M3ItemRange.of (0, 9), damaged.get (0));
-		assertEquals (org.eclipse.swt.widgets.M3ItemRange.EMPTY, damaged.get (1));
+		assertEquals (ItemRange.of (0, 9), damaged.get (0));
+		assertEquals (ItemRange.EMPTY, damaged.get (1));
 		ColumnFilter filter = fruits ();
 		RowChange [] last = new RowChange [1];
 		filter.addListener (change -> last [0] = change);

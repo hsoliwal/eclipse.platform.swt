@@ -142,12 +142,12 @@ public final class RowChange {
 	}
 
 	/**
-	 * Returns the damaged view rows as a range ({@link M3ItemRange#EMPTY} when no row is damaged).
+	 * Returns the damaged view rows as a range ({@link ItemRange#EMPTY} when no row is damaged).
 	 *
 	 * @return the damaged range
 	 */
-	public M3ItemRange damaged () {
-		return firstDamaged < 0 ? M3ItemRange.EMPTY : M3ItemRange.of (firstDamaged, lastDamaged);
+	public ItemRange damaged () {
+		return firstDamaged < 0 ? ItemRange.EMPTY : ItemRange.of (firstDamaged, lastDamaged);
 	}
 
 	void set (int kind, int start, int count) {
