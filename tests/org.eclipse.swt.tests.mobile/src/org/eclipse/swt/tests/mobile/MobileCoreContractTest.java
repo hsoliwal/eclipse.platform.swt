@@ -150,6 +150,7 @@ public final class MobileCoreContractTest {
 		try {
 			Shell shell = new Shell(display);
 			Label label = new Label(shell, SWT.LEFT);
+			long labelPeer = platform.lastCreated;
 			label.setBounds(0, 0, 180, 30);
 			label.setText("Mobile && Label");
 			require("Mobile && Label".equals(label.getText()), "Label retains mnemonic source text");
@@ -160,6 +161,10 @@ public final class MobileCoreContractTest {
 			check.setText("Enable");
 			check.setBounds(0, 40, 160, 32);
 			long checkPeer = platform.lastCreated;
+			require(platform.controls.get(labelPeer).kind == MobilePlatform.COMPOSITE,
+				"Noninteractive Label uses nonclickable native peer");
+			require(platform.controls.get(checkPeer).kind == MobilePlatform.CANVAS,
+				"Button uses Android/iOS paint and accessibility-action native peer");
 			Button radioA = new Button(shell, SWT.RADIO);
 			radioA.setBounds(0, 80, 160, 32);
 			Button radioB = new Button(shell, SWT.RADIO);
