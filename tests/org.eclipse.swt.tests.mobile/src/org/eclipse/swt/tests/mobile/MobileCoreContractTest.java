@@ -289,11 +289,19 @@ public final class MobileCoreContractTest {
 			scale.notifyListeners(SWT.KeyDown, keyboard);
 			require(scale.getSelection() == 50 && changes.get() == 2,
 					"Scale keyboard PageUp applies page increment and sends Selection");
+			platform.sink.accessibility(scalePeer, MobilePlatform.ACTION_INCREMENT);
+			drain(display);
+			require(scale.getSelection() == 51 && changes.get() == 3,
+					"Native accessibility increment uses original Scale step and Selection owner");
+			platform.sink.accessibility(scalePeer, MobilePlatform.ACTION_DECREMENT);
+			drain(display);
+			require(scale.getSelection() == 50 && changes.get() == 4,
+					"Native accessibility decrement retains original Scale step and event");
 			scale.setEnabled(false);
 			platform.sink.input(scalePeer, SWT.MouseDown, 110, 12, 1, 0, '\0', 0, 1, 32);
 			platform.sink.input(scalePeer, SWT.MouseUp, 110, 12, 1, 0, '\0', 0, 1, 33);
 			drain(display);
-			require(scale.getSelection() == 50 && changes.get() == 2,
+			require(scale.getSelection() == 50 && changes.get() == 4,
 					"Disabled Scale blocks native input");
 			shell.dispose();
 			require(indeterminate.isDisposed() && bar.isDisposed() && scale.isDisposed(),

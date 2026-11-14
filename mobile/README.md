@@ -130,7 +130,9 @@ qualified merely because they derive from Canvas.
 
 Native scrollbars, RTL control layout, font enumeration/registration, nonempty
 tooltips, and unsupported accessibility semantic actions fail explicitly where
-those methods are exposed. Current native pointer input is translated into
+those methods are exposed. Android TalkBack and iOS VoiceOver now route Scale
+increment/decrement through its original SWT Selection/keyboard owner, while
+the general SWT Accessible API and other adjustable widget roles remain open. Current native pointer input is translated into
 standard SWT mouse events; `Display.getTouchEnabled()` is false because the
 separate SWT Touch/TouchSource API is not implemented. Native accessibility
 activation follows the original widget's cancellable mouse activation path;

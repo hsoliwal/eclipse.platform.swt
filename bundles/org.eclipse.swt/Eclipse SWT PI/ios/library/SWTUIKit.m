@@ -230,6 +230,7 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 @property(nonatomic) jlong owner;
 @property(nonatomic) jint kind;
 @property(nonatomic) jint style;
+@property(nonatomic) jint accessibilityRole;
 @property(nonatomic) BOOL disposed;
 @property(nonatomic, strong) UITouch *primaryTouch;
 @property(nonatomic) BOOL enabled;
@@ -363,10 +364,24 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 - (void)pressesEnded:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event { [self sendPresses:presses type:SWT(KEY_UP) event:event]; }
 - (void)pressesCancelled:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event { [self sendPresses:presses type:SWT(KEY_UP) event:event]; }
 - (BOOL)accessibilityActivate {
-	if (_disposed || !_enabled) return NO;
+	if (_disposed || !_enabled || _accessibilityRole == SWT(ROLE_SLIDER)) return NO;
 	jlong peer = _peer;
 	swtCallback(^(JNIEnv *env, jobject sink) { (*env)->CallVoidMethod(env, sink, swtAccessibility, peer, (jint)SWT(ACTION_ACTIVATE)); });
 	return YES;
+}
+- (void)accessibilityIncrement {
+	if (_disposed || !_enabled || _accessibilityRole != SWT(ROLE_SLIDER)) return;
+	jlong peer = _peer;
+	swtCallback(^(JNIEnv *env, jobject sink) {
+		(*env)->CallVoidMethod(env, sink, swtAccessibility, peer, (jint)SWT(ACTION_INCREMENT));
+	});
+}
+- (void)accessibilityDecrement {
+	if (_disposed || !_enabled || _accessibilityRole != SWT(ROLE_SLIDER)) return;
+	jlong peer = _peer;
+	swtCallback(^(JNIEnv *env, jobject sink) {
+		(*env)->CallVoidMethod(env, sink, swtAccessibility, peer, (jint)SWT(ACTION_DECREMENT));
+	});
 }
 @end
 
@@ -620,8 +635,8 @@ JNIEXPORT jboolean JNICALL JNI(requestFocus)(JNI_ARGS, jlong peer) {
 JNIEXPORT void JNICALL JNI(setAccessibility)(JNI_ARGS, jlong peer, jstring label, jint role, jint state) {
 	@autoreleasepool {
 		if (!swtOnDisplayThread(env)) return;
-		if (role == SWT(ROLE_SLIDER) || role == SWT(ROLE_SPINBUTTON)) {
-			swtThrow(env, "java/lang/UnsupportedOperationException", "Adjustable accessibility actions require the corresponding original SWT widget integration"); return;
+		if (role == SWT(ROLE_SPINBUTTON)) {
+			swtThrow(env, "java/lang/UnsupportedOperationException", "Spin button accessibility requires its original SWT widget integration"); return;
 		}
 		NSString *value = swtString(env, label); if (value == nil) return;
 		swtUI(env, ^{
@@ -630,10 +645,13 @@ JNIEXPORT void JNICALL JNI(setAccessibility)(JNI_ARGS, jlong peer, jstring label
 			UIAccessibilityTraits traits = UIAccessibilityTraitNone;
 			if (role == SWT(ROLE_PUSHBUTTON) || role == SWT(ROLE_CHECKBUTTON) || role == SWT(ROLE_RADIOBUTTON)) traits |= UIAccessibilityTraitButton;
 			if (role == SWT(ROLE_LABEL)) traits |= UIAccessibilityTraitStaticText;
+			if (role == SWT(ROLE_SLIDER)) traits |= UIAccessibilityTraitAdjustable;
 			if ((state & (SWT(STATE_SELECTED) | SWT(STATE_CHECKED))) != 0) traits |= UIAccessibilityTraitSelected;
 			if ((state & SWT(STATE_DISABLED)) != 0 || !view.enabled) traits |= UIAccessibilityTraitNotEnabled;
 			view.isAccessibilityElement = role != 0 || value.length != 0;
-			view.accessibilityLabel = value;
+			view.accessibilityRole = role;
+			view.accessibilityLabel = role == SWT(ROLE_SLIDER) ? @"Scale" : value;
+			view.accessibilityValue = role == SWT(ROLE_SLIDER) ? value : nil;
 			view.accessibilityTraits = traits;
 			UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
 		});
