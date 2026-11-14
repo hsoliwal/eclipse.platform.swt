@@ -350,7 +350,10 @@ public final class AndroidPlatform implements MobilePlatform {
 		PeerView(int kind, long parent, int style) {
 			super(activity);
 			this.kind = kind; this.parent = parent; this.style = style;
-			setWillNotDraw(false); setFocusable(true); setFocusableInTouchMode(true);
+			setWillNotDraw(false);
+            boolean canFocus = (style & SWT.NO_FOCUS) == 0;
+            setFocusable(canFocus);
+            setFocusableInTouchMode(canFocus);
 			setClipChildren(true); setClipToPadding(true);
 			setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
 			setVisibility(kind == SHELL ? View.INVISIBLE : View.VISIBLE);
