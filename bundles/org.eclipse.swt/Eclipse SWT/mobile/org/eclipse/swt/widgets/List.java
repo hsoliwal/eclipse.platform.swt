@@ -126,6 +126,7 @@ public class List extends Scrollable {
         pages[page][index & PAGE_MASK] = value;
     }
     private String textAt(int index) {
+        if (isDisposed() || index < 0 || index >= count) return "";
         String value = slot(index);
         if (value != null || !virtual() || resolving.get(index)) return value == null ? "" : value;
         resolving.set(index);
@@ -134,7 +135,7 @@ public class List extends Scrollable {
             event.index = index;
             sendEvent(SWT.SetData, event);
         } finally { resolving.clear(index); }
-        return isDisposed() ? "" : Objects.requireNonNullElse(slot(index), "");
+        return isDisposed() || index >= count ? "" : Objects.requireNonNullElse(slot(index), "");
     }
     private int maxTop() { return Math.max(0, count - 1); }
     private void scrollBy(long amount) {
@@ -456,6 +457,7 @@ public class List extends Scrollable {
         Color selectedBg = null, selectedFg = null;
         for (int offset = 0; offset < visible && !isDisposed(); offset++) {
             int index = topIndex + offset;
+            if (index >= count) break;
             int y = offset * height;
             String text = textAt(index);
             if (isDisposed()) return;
