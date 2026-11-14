@@ -1,0 +1,762 @@
+{
+  "schema": 1,
+  "javaRelease": 21,
+  "swtBaseCommit": "c7f07fbaa2c687a1bce18d3b67cfdb0e05b83840",
+  "nebulaBaseCommit": "91d01b4e3ff3ed0c298c4f5c148710b770756932",
+  "scope": "Initial mobile Canvas/Composite/Shell platform; this manifest is not whole-SWT API coverage.",
+  "shared": [
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT Accessibility/common/org/eclipse/swt/accessibility/ACC.java",
+      "sha256": "fc683cd9561fe6f2539c7760db8faf546d09c940d14d3f2b1191889d38cdd386"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT PI/common/org/eclipse/swt/internal/Library.java",
+      "sha256": "61c428c0b708af14a03ceaf9391d3a71230d11db86cd1f8fe9084a4ae5a52686"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWT.java",
+      "sha256": "4e6c946b8f1a09b5fe54cacde4b8c6f0c0dea55d34890ec028d672f8c2630988"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWTError.java",
+      "sha256": "8208b1d55e1554b9e11d574294ed57c2e1db7bad1401d6130367c91ae8627958"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWTException.java",
+      "sha256": "c2c23359ecc6c57ec931e34ba494eb0d96617deb9f3640d3bad1b10fe18985e5"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ArmEvent.java",
+      "sha256": "f6c577421a222905090c48340a442029891acc8c6dad5532268bcf1e99980374"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ArmListener.java",
+      "sha256": "a5aaf0d00f61cdc8b00c8c40a05822770910b305d4d29270b69817f2dc23b8ae"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ControlAdapter.java",
+      "sha256": "7cf47c0b8bf1061911a0306336dbd969c114cc4ca3b59d7986c9f584929c714a"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ControlEvent.java",
+      "sha256": "6c481cf79924d840e9ed6e3a563c911b29561e3050dcfb6438a6dcc1e1ba681b"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ControlListener.java",
+      "sha256": "7f4f6bf71e77dcebf20f6962da7df56ab5f86c689717c75be0b63885c39364c2"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/DisposeEvent.java",
+      "sha256": "fc122741064d529808eef86e6321ef199d00980c43ba5bacd808b3c400d27b3f"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/DisposeListener.java",
+      "sha256": "0d68ff2f7024989365690bab24e3539d0a102a2a9855acdba35681b41412f7c6"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/DragDetectEvent.java",
+      "sha256": "95b14db08f31891f53ef32adca1299b362dab0fc791737d1699eeefe55f30072"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/DragDetectListener.java",
+      "sha256": "8febed8e47bbc72f0705dc48998c6432b30871fd3b21e9ad7038866f74cb9ff5"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ExpandAdapter.java",
+      "sha256": "d2f9b93bf2a1f5ce84c98372b121f3ee03b6efe1be40d65c648c7f787c9cd425"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ExpandEvent.java",
+      "sha256": "62948e53bb2187ea138ad77dff9920edd364d68dec74baec8f255c30734c249e"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ExpandListener.java",
+      "sha256": "0d9bc77cf272ae26b1a81f2edc0d5fa7f4043aaeb4d93fe27923fbd8c92fdc5d"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/FocusAdapter.java",
+      "sha256": "d39a2836bffdf3b668f35d3953635a7f81db7a2c872c0227fa0a55f410894850"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/FocusEvent.java",
+      "sha256": "999fa40d6d4cd85bd98a5015f33b05d0dbff3b019142fe3352f4da564cab0355"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/FocusListener.java",
+      "sha256": "25f792bf82aea19206050eed8b98b62b0f2ac6c74aa36e8c8372170883d860e9"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/GestureEvent.java",
+      "sha256": "96503645565234827cd97d212c424799980a623d7077ca172ac8a50f570581f3"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/GestureListener.java",
+      "sha256": "19824bad1eff57efebd0be9c3ed7276435d78086d315cd96e527106837b2d74d"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/HelpEvent.java",
+      "sha256": "71dcd8e6cba04e968e7718f4bf61c26a7afe09986bc07b68fe83b0ba3fb44cba"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/HelpListener.java",
+      "sha256": "ae9e68cee1eb3e4a05835eda7629b053ecad2d9833e7c17aa91956e380f5869d"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/KeyAdapter.java",
+      "sha256": "90dc3a0c25fd6d54c1e1e597059c09f83de6bc3b8a644bc3c1c8c920100cd5d8"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/KeyEvent.java",
+      "sha256": "5899b3713f60d4ff2332293bb7e66c221246f1b40fdb5f504437bfbe3e35a181"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/KeyListener.java",
+      "sha256": "f0026d0b08cbb1a450f5113411229e5a443ba2f6788f836aa516bd2fe25d9bbc"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/MenuAdapter.java",
+      "sha256": "e3426a1e5c98ab90c24ffa9ba1c4dba427ed427c87eb6556922d280e96335783"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/MenuDetectEvent.java",
+      "sha256": "9c13654933580b2504d7ce3cef5dfdf6be1b1cf9da0f7ca4a925aca396c5f1bd"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/MenuDetectListener.java",
+      "sha256": "8b4b45753bb26151d0fe4ab25636c4bac9d95081719ffeaa9570e8c8abb33f71"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/MenuEvent.java",
+      "sha256": "ed371706d9053235bf927469ab935adb9b4bfcba189c3d8387b4c3ccaa40eb0d"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/MenuListener.java",
+      "sha256": "c5c0b0e3830400d57c9fccfbaf62212ebac86fa4a1d4625d927d544a3fad415f"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ModifyEvent.java",
+      "sha256": "5c839110d0e77a6a6ecc3d18fb212264dfd1c19d2f4c8987b4c912c923cfa32e"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ModifyListener.java",
+      "sha256": "ac98dfb096cb81b4ff259482b4314c03f27865ba1af4e5a41faf1d6f0ae71d28"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/MouseAdapter.java",
+      "sha256": "2dc8dc739c1be586b8911177cdba951060f9a036d01d65c000f0ed6aa7457a04"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/MouseEvent.java",
+      "sha256": "cb4584de40b4a0918e0595d41ade0d4d03e12c7c4d2e6a8efd193e5435827b2b"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/MouseListener.java",
+      "sha256": "6e277014531c777bb594326ab79aafec9df0707ec095e1949257a353d5952e76"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/MouseMoveListener.java",
+      "sha256": "6f1e625b21ded6e4b5727512ea7c04ac01341355915a583fff15b27fb759643d"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/MouseTrackAdapter.java",
+      "sha256": "c8e0738c8d836b86b31f1fbddc4ba160d5ddfe8a74229df4d4b96c5bfce6fd7d"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/MouseTrackListener.java",
+      "sha256": "362183e1cacec9ff4f90b3ee9b4fb274887088276b6abce2944564a7968f8677"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/MouseWheelListener.java",
+      "sha256": "ac35f5fe458008344bf8aba72fc419df651a2931c8222d6a9dca8a73d603f179"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/PaintEvent.java",
+      "sha256": "9053665b4927c416cac56dd0460c52c7a73935ceae2d62077cfbde8a1984c2d5"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/PaintListener.java",
+      "sha256": "6f6b0e9d43a9c6f7e77340609a0d9aa44ae5f331ebeda0c36240b856689c67e0"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/PartVisibilityAdapter.java",
+      "sha256": "54545d00ef1bf12c740ffaeb84417205a7566bbf08ae64565f76378b29bf41fb"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/PartVisibilityEvent.java",
+      "sha256": "5609a8372afb21a466235629b32b5721b87976dd083b071f50d603ab3d3f40c0"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/PartVisibilityListener.java",
+      "sha256": "c568463ca0fd2a2d31da74172e373cac13498b611dc099cd8f67c83b9da4dd77"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/SegmentEvent.java",
+      "sha256": "f36f6708b66865bca1ce511bc6d47b6797d70d8e1918d3efeb6eebfcc9cfd76b"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/SegmentListener.java",
+      "sha256": "17710d00ba9505a118eb05e9add0372eaca9a8a14fd4b776141e9e58ed15a0b9"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/SelectionAdapter.java",
+      "sha256": "983368946363317643a301af307fd8cea8cf326e86ba5e08ff409c719e3b116d"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/SelectionEvent.java",
+      "sha256": "f11e83d678309130fe3eda48a1c21cf330d645695b48df8f93c2cf611babaaa2"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/SelectionListener.java",
+      "sha256": "06077b6fb90a41f6e7041ba887440e6e60039c04e7c3d98babf3cf58b636da78"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ShellAdapter.java",
+      "sha256": "286d843d062e1c788b87bd5fa0b7d204a8e3a44a245ed76274896123f09ef148"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ShellEvent.java",
+      "sha256": "0dfb005d2b46e592b8a8b6c813302bd429f0eea4b7c65a29b72fde0d28652816"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ShellListener.java",
+      "sha256": "be22fa3fbd8d4e6f6134d22b4f97bc5cd467618c2565370711d6ec9204543761"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/TouchEvent.java",
+      "sha256": "62aa40b8b595605699bbb1ccd0afc3d5055a7c22055a5aee3a1e893913eaeafb"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/TouchListener.java",
+      "sha256": "18be3bd1c57bc8d770e74852b0ea0de1f01ee094079aeb8fa389f3089822e6ed"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/TraverseEvent.java",
+      "sha256": "83f55a8699f0a916981be3fc069497978a19a15ab785eaff39e6c675a7e525a2"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/TraverseListener.java",
+      "sha256": "55be94dfaba185e0bfa2094bf28dcf0db08e4aca32b61f427a60331183fa3e2c"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/TreeAdapter.java",
+      "sha256": "400fb9f1793f5f5f108370c6187741ec797bc62a64d6bdd511fc4231aef63850"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/TreeEvent.java",
+      "sha256": "7adff1c634a6a873d245f783fc5b4f4b8825662da42e94bf0d3c9430112b2704"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/TreeListener.java",
+      "sha256": "00e48f05c0c0a9e0f3882fb363fc04335fdaa79e58a7be58fb2bd129575706d4"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/TypedEvent.java",
+      "sha256": "ad6b40072dcc4b00bb32c085692448634ea37211b61110a250974d3c893425fb"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/VerifyEvent.java",
+      "sha256": "6ba41be0e374e862293ddafd2215f47cc5bbf31d1aca447560fd2494669880ee"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/VerifyListener.java",
+      "sha256": "524a28d3b23fce52e0360ccac198d2bfb6a5deb1c03be17564232784e7fd1dfd"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ViewportEvent.java",
+      "sha256": "10458891438fcae5b51db76f334eb1fa6ebbe6be969f572232505c475e643e31"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ViewportListener.java",
+      "sha256": "bda36f7330e632db1346e977acf6a1e17b16f70e1f46542c5838e5ffce19d822"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/AutoscalingMode.java",
+      "sha256": "057e1a1654a78a67f80f703761e7cbdbe787d022990f41eefa84448c663297d2"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/Drawable.java",
+      "sha256": "cb459127eb10de06376ffefd2dd9780613c4b006ebf36d074121116e777b231a"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/GlyphMetrics.java",
+      "sha256": "a12e4238d0c24678e1c0084781022b6da61e2ca533c9c901d14cbfdec60abc43"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/ImageData.java",
+      "sha256": "dc6327ad9419c99f867c27b41ca45515f79fdb6711d39053704807e5228d93b7"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/ImageDataAtSizeProvider.java",
+      "sha256": "6d6849cb21b92b01b549acd2d613b351a71261f5189477329c77cfaa073a39c8"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/ImageDataLoader.java",
+      "sha256": "0b5760fa5638eea330a639b944133f629f611ae21772cdb38db4c242e793a841"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/ImageDataProvider.java",
+      "sha256": "d4ab1ea27815ebcacd37177b86d5f5a69fc0321f759fec95c07baea55645ddb1"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/ImageFileNameProvider.java",
+      "sha256": "a577d6a8ebb1425528daa0cbf5d61f8e5a17ac42794e05aa039e2b9d66474056"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/ImageGcDrawer.java",
+      "sha256": "23e1726f276aa815aef31180f4fdd692591f901419a7c9aa27f8274cc64b4b53"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/ImageLoader.java",
+      "sha256": "c60be7b82e253a597bb8576ed7b753f34b4bb1db526efb0fe92db142de622220"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/ImageLoaderEvent.java",
+      "sha256": "d91173c15c4f739e3b2554fe83957a1b8d48de0e48ed9969fd220b1927d2cc65"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/ImageLoaderListener.java",
+      "sha256": "76a6917d3c5439c839fab7ac16ebe0ec3ffac646de1592e0a1792d00bd94937c"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/LineAttributes.java",
+      "sha256": "1877af872205edfdc78581a49d81c7549a037fcd81b9ec78d565cb5384574497"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/PaletteData.java",
+      "sha256": "267820ae702752de5cf399f3062beda28dfd364ace9e7b6ed6d9807913f31ecd"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/Point.java",
+      "sha256": "1408b41e65726d45f9c5eb7a900864432abc659adfee015a2eecb960f17340fa"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/RGB.java",
+      "sha256": "d5b25d31d0ac8859e2c70a2d24dafba5d6ce8b7a9e0af55d53398320128c1cd3"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/RGBA.java",
+      "sha256": "4f2499419e03ec13f56af080e4d4a4f90a1c0c36facd23361774f1d2459db71f"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/Rectangle.java",
+      "sha256": "c15099c4983c0b5d80e0b768e594fdb8015ad36e2c5aaaeb5a97d3ce600a019d"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/Resource.java",
+      "sha256": "9fd840fc60c4cb679de93e274b8488a89b81f46e935abf32b0129dc90039dbe2"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/RoundingMode.java",
+      "sha256": "fb31bca581cf0269dac82fd960802677d6da00bfd529035f0aebe57239a9d88d"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/TextStyle.java",
+      "sha256": "54d58a48363d1c910553e41c65066e81057a00e8cbb14339066578dfaac4103d"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/AutoScaleCalculation.java",
+      "sha256": "a426d6251f6faf7d851fd88b8330b524d76da761d25883d4bd050cb7fd8508af"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/Compatibility.java",
+      "sha256": "d57d5220222aeb5ccab02e52910f9ebbed967ff768a914e1ca5891df1564c198"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/DPIUtil.java",
+      "sha256": "51d5ec77e5e2d0a0ab0c74e405c1179ee7a627428d8ed304094821403d14f422"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/ExceptionStash.java",
+      "sha256": "6282b651c73508a3d0b8b36365921617be3aaf9b69844a18bd10249bff6126e5"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/SWTEventListener.java",
+      "sha256": "161b2e5cf40f454026eea39f009fec70e27d630d662a12523d99e1707710ab10"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/FileFormat.java",
+      "sha256": "d3f22c2dc2513c12097a36f0a70dc4ed0516b1fa680cf1af70633afd425db243"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/GIFFileFormat.java",
+      "sha256": "d1d243ba3c74cd48f173c98e6a4767f914c7034dba8344033ab0d89c1cd88f4d"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/ImageColorTransformer.java",
+      "sha256": "a4b54277b2bf96cc57c09102d6885aa4a82f185a0e7d4ae09adb11b8943b7356"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGAppn.java",
+      "sha256": "747a3084e7a25f61b66f07e29a8a22d5262d67b8728363ebc26a58eb2a2bfdcf"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGArithmeticConditioningTable.java",
+      "sha256": "fd6d3a98665a0bc88aafb610c9fc9ad28ce4fc212de65254f0d83dfa790dcb3c"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGComment.java",
+      "sha256": "33f78a29c6dd86a99bbf672bc50fecb6cdf1f9844bd01a9ef25b83f69f4d5064"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGDecoder.java",
+      "sha256": "19515a38f110c8b5e10e1954936c245490d56e956e791bb8eed60d67b20218db"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGEndOfImage.java",
+      "sha256": "5913d02fcdd9e0d47a53d30f40400f190e49a131bcd23492e870540e10cce435"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGFileFormat.java",
+      "sha256": "c579324d70b836befff1f1d8bcd95ee215df87a44a86d42f88f33cf78109b038"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGFixedSizeSegment.java",
+      "sha256": "6092ebbd108f1b15dcf5d40f3a9a89820265ec9c1857433ad2a89edfd6f58c6b"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGFrameHeader.java",
+      "sha256": "fb354f9527b9a5dfad361907cea06b3251ad39b44461d14faa7f62c6ff30c37b"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGHuffmanTable.java",
+      "sha256": "28a37653188879ff758fab9a90eefe60df33cbb0447082061d4a0a05c3c02682"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGQuantizationTable.java",
+      "sha256": "5a81c066193f3914b672de8e223928a38bf7d2e563faf0401b620274bc5009c1"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGRestartInterval.java",
+      "sha256": "ba907f8872ee7da821b07874febda3080555f8806cb3ae200630687f6f288217"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGScanHeader.java",
+      "sha256": "0e25951ad78463cb1c7c12c32c8010dd5c0cdaab328e26ffa355b8c9bcfc9890"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGSegment.java",
+      "sha256": "80668d9911131c0b587405038090a41af402da0e34b580b5735820719711ca69"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGStartOfImage.java",
+      "sha256": "f7724be8a4deb51dbebeccca556acbbdca31ac3d80cbb26b040348da79123f40"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGVariableSizeSegment.java",
+      "sha256": "90ca6f5df57a133887c74fa1ce4d15e8878fe063e39b6a8ad2c3e121472a670c"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/LEDataInputStream.java",
+      "sha256": "0a349f5a2437320344d1457e6f9c545621f608a533529e0fdcc6eb1953cacd8a"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/LEDataOutputStream.java",
+      "sha256": "9f7642d7f5ea8965434128cdb8bf45a33be2dac6d6d2475d2b2679510ed152e2"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/LZWCodec.java",
+      "sha256": "b288af4d2cfcaa6a20cab866e13ccdad2e0e67a383c6feae16d5225ceb2199f4"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/LZWNode.java",
+      "sha256": "d370527dd627397752f37d53a3b5bc657a74678700d7d66d323d7de046d6988d"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/OS2BMPFileFormat.java",
+      "sha256": "76c7852d2dcfa5ecc8e930694f0c46b837dc12c2bff581fbbaab13ef52424bed"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PNGFileFormat.java",
+      "sha256": "c6a0bf06535a827ec5e69407505b3e3a8de9539ff6c5efd71072f19c16c5914f"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngChunk.java",
+      "sha256": "33c96e7c7c5005226db594fad60cf80804f31e4d34df95e50cb6961b852b8fab"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngChunkReader.java",
+      "sha256": "85951a7ae2b368889e7e76a65dec325e20ffc08f9a293c6c9fbaed8a2aa5b52c"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngDecodingDataStream.java",
+      "sha256": "57d431aaed72d292e76f5dc740c609e0e0565fb7a1fc8bdf53082c8ea193fcb7"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngEncoder.java",
+      "sha256": "2b0cbefe03449f9a3162d40259edb44840ad079c4183c4ba7a9d875196380b9c"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngFileReadState.java",
+      "sha256": "c5a80fed0029b6caff7ddef58b745553b2cf0591ae707d2ce7ff46a6a0ee87c5"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngHuffmanTable.java",
+      "sha256": "7e9d7b053e2cbd474f27160fffca5248498defce0d031ba66f9070709dd198a1"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngHuffmanTables.java",
+      "sha256": "e784ec2d6a1c4cc1cd689244a0864444ff5ec0bea5184d3739c7fb8a40dd36df"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngIdatChunk.java",
+      "sha256": "828a28254c2ed87114b97b58afe183cd509eb59da34d0692303ae72f519b84fb"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngIendChunk.java",
+      "sha256": "5c05f88f7031e21ef409b0406e0e90d6fb0884c1fdb55d8aa38a6f69bb09005f"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngIhdrChunk.java",
+      "sha256": "c3088b1d8751900bcaebb27a186149ba31a3a7bc747fb8f2afe78b77fb756fcd"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngInputStream.java",
+      "sha256": "e42c48694d821b6cdc936e21368aecf650837f8b02b35cd5026459b67a3d07f2"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngLzBlockReader.java",
+      "sha256": "a130b8b96c14f70f00a5754343df5a7c690a517ceaad47a0bf7a7f797f8d53cc"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngPlteChunk.java",
+      "sha256": "04ab82e9124f3ee10838f34185c17a3582221d6e83c445d6fdf80545dcc629c6"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngTrnsChunk.java",
+      "sha256": "b6914c26fba27fdcb80127e21f569f0b08035729adfe82776d66fe825da6a24e"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/SVGFileFormat.java",
+      "sha256": "5a811f9ec4586e54e0b654c18cfb482cca0035fc45ee31e0fe78d6ca80501778"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/SVGRasterizer.java",
+      "sha256": "2773cc4737d5c54da4c963b39b494ddca8f3f82b106418139211e648aef5c2b2"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/TIFFDirectory.java",
+      "sha256": "2dc7214fe8c051ccd9ffd5fd2470fe58be59d3bd83682aad4ee2be974e7b32e5"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/TIFFFileFormat.java",
+      "sha256": "094e9fa9e0f566a73ffbaf429a63f6069262bcdda4c7f6cd5f490d6086875f78"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/TIFFModifiedHuffmanCodec.java",
+      "sha256": "c844209b72b2dc508aaf3f1cf2f7d34eeb15765aaa6c952a16d53282ffbdac0e"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/TIFFRandomFileAccess.java",
+      "sha256": "6287b5ff54e95fd63e14774c1665b319a5ceb577574c2cf8516c92c4a496ed58"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/WinBMPFileFormat.java",
+      "sha256": "4552be4e84ca9ef1d9d41f8d6879a5a10a2ef9a61d6f82def2e7a77af73c9533"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/WinICOFileFormat.java",
+      "sha256": "7dab3ca6d4d67fd31ef1098c2e9ae45fe863b4d9200f7f07f90ed58dcd779b1c"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/BorderData.java",
+      "sha256": "8f5df38be78b83c8573da0bd3fa9a33bbaf88a6863f896406fe93b4ff8cfc42a"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/BorderLayout.java",
+      "sha256": "33d83f02a95d6eb498c7cda1dc62206a07564de1b556737ee8b509dfce851904"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/FillData.java",
+      "sha256": "41a5d78b597da7f4552b5b619689266ea6b32c786d6ab3dd8150a95e86de2033"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/FillLayout.java",
+      "sha256": "61532480880c7f429db1f70738c5291fe3838a05993c4c18532b8469b4e761e8"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/FormAttachment.java",
+      "sha256": "d0768d2313f783a472c36ccef3fadfcc93c90c4c440d9dbbddb8c48674a1e9a2"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/FormData.java",
+      "sha256": "3a44a9761e805d78d7094340fb183384887b57607adae95b42e7bff1b4616c1b"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/FormLayout.java",
+      "sha256": "b6133aba548fe4454bf0166316a3965199df3f7b355c9cacf78ac2be6973737e"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/GridData.java",
+      "sha256": "708e50c531fd07c4261fcaee79949adce0a0705149aee7a79220912a60e01dbf"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/GridLayout.java",
+      "sha256": "3ae15a8fd1926496a9d60baa4b22d430d2f1a4b0647bf359cfc017695c293eb4"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/RowData.java",
+      "sha256": "e9979c7e8aefe47b900d754a132a4388a444996b3a3c8c2477eed62279541382"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/RowLayout.java",
+      "sha256": "4f644ed1ef3f528b791feb8360b8383824500a0523180f91941e39e6bf16ae21"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/TabFolderLayout.java",
+      "sha256": "5adbaa314cc79f5738b2f1b33b0d3ccd5725670f48d00298a20d3bf71487006b"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/Event.java",
+      "sha256": "c1e9830cd890c25405fdeef33b671d771bd78a8b6512c1010ebabf3783d9d16e"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/EventTable.java",
+      "sha256": "82201e5f512e8ff2f9f0e8f2187b59535861d2c6a8b8a7b9a9f32da2e65ab10c"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/Layout.java",
+      "sha256": "d7387ffd12949b6b16671c2df2f6a9f14f51faad6c86a7599f6318b783c90c14"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/Listener.java",
+      "sha256": "493ee2f8e6902e802beeb87b2a248cd9ba2eea65c022dfeec3774ad667be77be"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/Monitor.java",
+      "sha256": "5ff9c6590de829ed08995fc58faf1745b234f49a99323b1eeb47aa9a310cba2c"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/Touch.java",
+      "sha256": "e4f89634cf7f4bf307b70580482a4d3bb75fadb3ad1bb0672d9678ee733a5f21"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/TouchSource.java",
+      "sha256": "0988c579dbf7725290ef54ef2fcb83f908fb8c01bd63f56c2049993b429ed2ea"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/TypedListener.java",
+      "sha256": "514e234b39c8610ab4fbc58f04171b50bae94bb4cdf357d9fefc1aaaf0876f77"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Color.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Device.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/DeviceData.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Font.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/FontData.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/FontMetrics.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/GC.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/GCData.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Image.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Transform.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/NativeImageLoader.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/Platform.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobilePlatform.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobileRuntime.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Canvas.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Composite.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Decorations.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Scrollable.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Shell.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Widget.java"
+    }
+  ],
+  "platforms": {
+    "android": [
+      {
+        "path": "bundles/org.eclipse.swt/Eclipse SWT/android/org/eclipse/swt/internal/android/AndroidPlatform.java"
+      },
+      {
+        "path": "bundles/org.eclipse.swt/Eclipse SWT/android/org/eclipse/swt/internal/android/SwtActivity.java"
+      }
+    ],
+    "ios": [
+      {
+        "path": "bundles/org.eclipse.swt/Eclipse SWT/ios/org/eclipse/swt/internal/ios/IOSPlatform.java"
+      },
+      {
+        "path": "bundles/org.eclipse.swt/Eclipse SWT PI/ios/org/eclipse/swt/internal/ios/OS.java"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/SWTMessages.properties",
+      "target": "org/eclipse/swt/internal/SWTMessages.properties",
+      "sha256": "d2ef28c126a1f9bbefd76c821b1e2e6e8fa714df03306c7a54ad59cd60df80a1"
+    },
+    {
+      "path": "LICENSE",
+      "target": "META-INF/LICENSE-SWT",
+      "sha256": "0becf16567beb77fa252b7664631dd177c8f9a1889e48995b45379c7130e5303"
+    }
+  ],
+  "nebulaOriginalSources": [
+    {
+      "path": "widgets/roundedcheckbox/org.eclipse.nebula.widgets.roundedcheckbox/src/org/eclipse/nebula/widgets/roundedcheckbox/RoundedCheckbox.java",
+      "sha256": "f2c03f61d320be80a72b73816e63bce5d5538d9628111abb8532542312c913e1"
+    },
+    {
+      "path": "widgets/opal/commons/org.eclipse.nebula.widgets.opal.commons/src/org/eclipse/nebula/widgets/opal/commons/SelectionListenerUtil.java",
+      "sha256": "a4241d10312889745b4c98d99640641f240366b098d2eb24c6c88ea845c12d15"
+    },
+    {
+      "path": "widgets/opal/commons/org.eclipse.nebula.widgets.opal.commons/src/org/eclipse/nebula/widgets/opal/commons/ReflectionUtils.java",
+      "sha256": "7951e76e2e1a5a8f794729849448312451bd1d2f1493dbe1ae6c8e48384abd19"
+    }
+  ],
+  "contractSources": [
+    {
+      "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/ContractPlatform.java"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCoreContractTest.java"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCoreContractJUnitTest.java"
+    }
+  ]
+}

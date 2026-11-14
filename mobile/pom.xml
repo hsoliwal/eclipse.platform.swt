@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2026 Hitesh Soliwal and contributors. SPDX-License-Identifier: EPL-2.0 -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.eclipse.platform</groupId>
+  <artifactId>org.eclipse.swt.mobile</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <name>SWT initial mobile platform source set</name>
+  <description>Explicit shared/Android/iOS source closure and portable owner contracts; native OS acceptance is separate.</description>
+  <licenses><license><name>Eclipse Public License 2.0</name><url>https://www.eclipse.org/legal/epl-2.0/</url></license></licenses>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.build.outputTimestamp>2026-11-14T00:00:00Z</project.build.outputTimestamp>
+    <maven.compiler.release>21</maven.compiler.release>
+    <swt.checkout>${project.basedir}/..</swt.checkout>
+    <nebula.checkout>${project.basedir}/../../nebula</nebula.checkout>
+    <mobile.platform>shared</mobile.platform>
+    <mobile.output>${project.basedir}/target</mobile.output>
+    <mobile.contracts>false</mobile.contracts>
+    <skipTests>true</skipTests>
+    <python.executable>python3</python.executable>
+    <android.sdk>${env.ANDROID_SDK_ROOT}</android.sdk>
+  </properties>
+  <build>
+    <directory>${mobile.output}</directory>
+    <finalName>swt-mobile-${mobile.platform}</finalName>
+    <sourceDirectory>${project.build.directory}/generated-sources/mobile</sourceDirectory>
+    <testSourceDirectory>${project.build.directory}/generated-test-sources/mobile</testSourceDirectory>
+    <resources><resource><directory>${project.build.directory}/generated-resources/mobile</directory></resource></resources>
+    <plugins>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-clean-plugin</artifactId><version>3.2.0</version></plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId><artifactId>exec-maven-plugin</artifactId><version>3.5.0</version>
+        <executions><execution><id>select-original-mobile-source-owners</id><phase>generate-sources</phase><goals><goal>exec</goal></goals>
+          <configuration><executable>${python.executable}</executable><arguments>
+            <argument>${project.basedir}/prepare_sources.py</argument>
+            <argument>--swt</argument><argument>${swt.checkout}</argument>
+            <argument>--nebula</argument><argument>${nebula.checkout}</argument>
+            <argument>--platform</argument><argument>${mobile.platform}</argument>
+            <argument>--output</argument><argument>${project.build.directory}</argument>
+            <argument>--contracts</argument><argument>${mobile.contracts}</argument>
+          </arguments></configuration>
+        </execution></executions>
+      </plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-resources-plugin</artifactId><version>3.3.1</version></plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.13.0</version>
+        <configuration><release>21</release><proc>none</proc><showWarnings>true</showWarnings></configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.4</version>
+        <configuration>
+          <skipTests>${skipTests}</skipTests><failIfNoTests>true</failIfNoTests><trimStackTrace>false</trimStackTrace>
+          <includes><include>**/MobileCoreContractJUnitTest.java</include></includes>
+          <systemPropertyVariables><java.awt.headless>true</java.awt.headless></systemPropertyVariables>
+          <properties><configurationParameters>junit.jupiter.execution.parallel.enabled=false</configurationParameters></properties>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.1</version>
+        <executions><execution><id>source-only-closure</id><phase>package</phase><goals><goal>jar</goal></goals>
+          <configuration><classifier>sources</classifier><classesDirectory>${project.build.sourceDirectory}</classesDirectory></configuration>
+        </execution></executions>
+      </plugin>
+    </plugins>
+  </build>
+  <profiles>
+    <profile>
+      <id>contracts</id>
+      <properties><mobile.contracts>true</mobile.contracts><skipTests>false</skipTests></properties>
+      <dependencies><dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>5.11.4</version><scope>test</scope></dependency></dependencies>
+    </profile>
+    <profile>
+      <id>android-source</id><activation><property><name>mobile.platform</name><value>android</value></property></activation>
+      <dependencies><dependency><groupId>android.platform</groupId><artifactId>android</artifactId><version>35</version>
+        <scope>system</scope><systemPath>${android.sdk}/platforms/android-35/android.jar</systemPath>
+      </dependency></dependencies>
+    </profile>
+  </profiles>
+</project>

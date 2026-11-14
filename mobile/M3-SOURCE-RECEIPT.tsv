@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: 2026 Hitesh Soliwal and contributors
+# SPDX-License-Identifier: EPL-2.0
+kind	key	value	detail
+receipt	schema	M3_MOBILE_SOURCE_RECEIPT_V1	Source delivery; native platform results remain separate
+receiver	repository	hsoliwal/eclipse.platform.swt	base c7f07fbaa2c687a1bce18d3b67cfdb0e05b83840
+canonical	workspace	hsoliwal/com.synexia	Recipes and proof remain in canonical repository
+canonical	main_named_recipe_revision	4168e8ccff1ac5b98e0c545413562cf5feb63c8b	Named product descriptors and their frozen input resources
+canonical	text_engine_revision	4168e8ccff1ac5b98e0c545413562cf5feb63c8b	com.synexia.rewrite.M3HashPinnedTextSnapshotRecipe
+canonical	text_engine_sha256	501442c7f7074e24bc4f1626d9736069d007edfef8c61f71b568d92a65c4a9ce	Later packets use this existing engine; new packet descriptors are not claimed to exist at the earlier revision
+input	main_frozen_inputs_sha256	3ce4dd7e5de1f428454fa998ba9c12d2eb5f5502d1b6e6af64d756e2e005086a	synexia-openrewrite-recipes/recipe-crates/swt-mobile-20261114/prepared/product-current/FROZEN_INPUTS.json
+execution	main_sdk_receipt_sha256	949423e224c4555655582a6ba770227f62c357ea93ff905ebe2d5fec03f2008c	synexia-openrewrite-recipes/recipe-crates/swt-mobile-20261114/evidence/product-current-qualified-temurin21/result.json
+execution	main_maven_receipt_sha256	7e6fd0c3e58f6f4d8ca8b11856926b3bc398efa7d2e3a88a95c50160a7aa686c	synexia-openrewrite-recipes/recipe-crates/swt-mobile-20261114/evidence/product-current-maven-temurin21/result.json
+input	launcher_frozen_inputs_sha256	e777541651d0e4681ebb278cd69d942df21f3ae7a0e8c837a68b80272a5221ad	synexia-openrewrite-recipes/recipe-crates/swt-mobile-20261114/prepared/mobile-launcher-isolation/FROZEN_INPUTS.json
+execution	launcher_sdk_receipt_sha256	7366eb992ce217b89a1a149c0e37297c6447902e6810d7b8b0cccc6e2c752dda	synexia-openrewrite-recipes/recipe-crates/swt-mobile-20261114/evidence/mobile-launcher-isolation-temurin21/result.json
+execution	launcher_maven_receipt_sha256	119017adb793410655760a06d005852a4f08af122b9f3298169f7d785cb26bf7	synexia-openrewrite-recipes/recipe-crates/swt-mobile-20261114/evidence/mobile-launcher-isolation-maven-temurin21/result.json
+scope	mobile_widget	Original Nebula RoundedCheckbox	Selected SWT Display/Shell/Canvas, original event contracts, native graphics and image API closure
+gate	recipe_sdk_and_focused_maven	PASS	16 tests per named packet; fixed point zero; every selected input drift refused
+gate	android_native_behavior	NOT_RUN	Official software-emulator boots did not produce a usable activity test session; no screenshot or native behavior pass claimed
+gate	ios_native_sdk_and_device	NOT_RUN	Apple SDK compile/link and embedded JVM/AOT device execution are separate required gates
+scope	desktop_and_widget_completeness	NOT_CLAIMED	No full desktop reactor or all-widget compatibility claim
+output	.github/workflows/maven.yml	6c96ec577b5f707b32ba64f743c49f0c1305c3c0d466321dbb40184a4a48cf95	swt-mobile-native-images-20261114-text
+output	bundles/org.eclipse.swt/Eclipse SWT PI/ios/library/SWTUIKit.h	c626d9358c3bbd438051fffae9bcb6f5529d34e74dd0f11e11210d77022afcc0	swt-mobile-native-images-20261114-text
+output	bundles/org.eclipse.swt/Eclipse SWT PI/ios/library/SWTUIKit.m	cecbb7eeffba3ce1bf796a0adf9ee553650a0829555962d864b4dfdca21052a8	swt-mobile-native-images-20261114-text
+output	bundles/org.eclipse.swt/Eclipse SWT PI/ios/org/eclipse/swt/internal/ios/OS.java	49504f685e3c643e72acb9f63a29a5619aadd4a36afd58d02257d8b9ef52471f	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/android/org/eclipse/swt/internal/android/AndroidPlatform.java	ad9cd89854b993d8838d053606e8110b9a501327a5f774041322a4a33f6efbb3	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/android/org/eclipse/swt/internal/android/SwtActivity.java	635677fc93eda7ed88da288aba1518b5164ae8ca4ea6bde91996c5dab5a9c715	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/ios/org/eclipse/swt/internal/ios/IOSPlatform.java	d8975dfc11c383bec98a14b3d910149c9d266547a7677add91db89dd0a16a1ed	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Color.java	b76aaeb1b32d5f9363756706b16785296c9eccc7e08f74fe889c73910731b285	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Device.java	a4e740af3862b0c7a5f1bda1827295c24343bd1dcb8e4f205452f715f8d812ed	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/DeviceData.java	9fc28669738c9627500b5a6be572e2884eb849c2ef2ffa9ba693e284ca1d3e52	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Font.java	5905cf7141b642a73f9ce12d0b846842657e0dde95c7ad08e34a7b3e1fc3fa76	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/FontData.java	00aeeb7d9feb6c849e8112733e5591b602f83aa209920cf8818dc9789386db4c	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/FontMetrics.java	763f6b9815a67b87abc1c57faf10e42e7de3e4ce6d4a7d89cf8b2977294a3203	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/GC.java	71f10f3f8b1ae0a5388d5c52e32743cf85434fae393e4c1d0c64879c4899a4a7	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/GCData.java	e4057795db2a4c4d94c61305231d53bccac117c26fd0aa84ecbd431eda5955ec	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Image.java	2c67e760a44bb4ee2350b882c13d86be37e81004fec78eec6a17eada7129ade0	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Transform.java	4e500b7c964ee4bca69d0de1b2d4db7e69acc985f6894d6de96c7a33e4d002bf	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/NativeImageLoader.java	2da612fac5ece9b425ca1d6ccad02d544a4941db4555a08c9aa592e97c40ae37	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/Platform.java	e0935d6d7dea6a1d09068c0f9a3f07c2320006cb79bd67310b26c105e20874d5	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobilePlatform.java	61e86f60e58fc0f5a7796ab68b6d3bb9269cf44b20fc00c97f242c2b11b601ce	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobileRuntime.java	d8e952493f706db4f31e50f6f9023b60d734ce8fb5d7a876d39eb47af17a3abd	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Canvas.java	43e2e8ee6b891802e537e68021b1350791a717257355090e778ddcc4105ef5ed	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Composite.java	3681105a7edd98807457f1fd867de88bca8278267283eefb152e0255c460cfe1	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java	0bfea425dd653207f28361a11b2770b123006584410f31d7584bc8ca00162f9e	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Decorations.java	c7d507941dadb8a5a2f8efddc5425b4cc8beec5cf311303af030261b4dfe95e5	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java	cf6858922f433bb1ff4311786261daa8660eecaf77d6885d715c5203b35cd4ce	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Scrollable.java	81fec9a57c5e9175df11db91ef082d3d676a688b3b07920eeb46f832991d90c0	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Shell.java	754e1a0a6c02caa05e6e90d68b08a5e56fa385df062dd97e08e1b3317267f932	swt-mobile-native-images-20261114-java
+output	bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Widget.java	0a32faff4bae53dbefc06994c6c43325486c577ed4d8f4fa2daada799fed758d	swt-mobile-native-images-20261114-java
+output	mobile/.gitignore	02e7b40893c74a993a139de7b0f85d8cf2eaea57d544effd576920a514872af4	swt-mobile-native-images-20261114-text
+output	mobile/.mvn/extensions.xml	d50f90bc5f8d585dc26afbcf85bbbaeb98d82e194eef4f1e275408a53df942c6	swt-mobile-launcher-isolation-20261114-text
+output	mobile/README.md	f780128312a4c0b37c07efc7f1de9297a9230d8a7b8dca6c41c8ffc77fadba77	swt-mobile-native-images-20261114-text
+output	mobile/ios/CMakeLists.txt	a274f0db0a11d9d47391e712f70ce341b06565a669fd14a4ae130a9b548d0327	swt-mobile-native-images-20261114-text
+output	mobile/ios/Info.plist	d0921c7f5f8d4705b7a71df4f4cc23770724e995002451afda6d31f145e34e01	swt-mobile-native-images-20261114-text
+output	mobile/ios/README.md	9d29cdcc27027ad19f2d9373562839324ed47c0a3399abd668f214d9a4a29340	swt-mobile-native-images-20261114-text
+output	mobile/ios/build.sh	ccc6d4c423117fc1c8a051b211c1170c7300c37486eb409dc5eedaf044016f6e	swt-mobile-native-images-20261114-text
+output	mobile/ios/main.m	7ff5dabfd4b4c0a11eb1e34aa2b27f067d302564cde9bc540d25ef1a135dced6	swt-mobile-native-images-20261114-text
+output	mobile/pom.xml	b35dfb53cf17a51b10a2461b0585a46e4764eb81a40d8e0c721c8c98e0cd18f9	swt-mobile-native-images-20261114-text
+output	mobile/prepare_sources.py	a7cd0e9270256c2ac471ffe7085a8065cdb058da04762c9a0f2d647ae7ca6549	swt-mobile-native-images-20261114-text
+output	mobile/source-manifest.json	4566e7c1947a388bbe63f6f3039769650a39c03945ae5bd2ae5eb6b4df65fa1d	swt-mobile-native-images-20261114-text
+output	tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/ContractPlatform.java	b4fa0f1cdefcbc0b325863f18fc0120e2901db77d11a394c0a9bfc9de0c40e5b	swt-mobile-native-images-20261114-java
+output	tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCoreContractJUnitTest.java	58c73008f06cf22407e1bac21349cb2d42415dc03d06186f8eb2b5095f967243	swt-mobile-native-images-20261114-java
+output	tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCoreContractTest.java	93ab07efc591472136b24eb6632e23873ad849014b83a412e8c3878a5655d06c	swt-mobile-native-images-20261114-java
