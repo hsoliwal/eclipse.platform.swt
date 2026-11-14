@@ -36,6 +36,7 @@ public final class MobileCoreContractTest {
 		testDestructionAndBlockedSyncExec();
 		testOwnedShellCoordinateMapping();
 		testMobileButtonLabelContracts();
+		testMobileProgressAndScaleContracts();
 		System.out.println("PASS: "+assertions+" SWT/Nebula owner-contract assertions. Native device qualification is separate.");
 	}
 	static void testOriginalWidgetAndPainting()throws Exception {
@@ -221,4 +222,89 @@ public final class MobileCoreContractTest {
 				"Mobile Label/Button paint resources and peers fully released");
 	}
 
+
+	/** SWT owner-level contracts for Android/iOS-backed ProgressBar and Scale. */
+	static void testMobileProgressAndScaleContracts() {
+		ContractPlatform platform = new ContractPlatform();
+		MobileRuntime.install(platform);
+		Display display = new Display();
+		try {
+			Shell shell = new Shell(display);
+			ProgressBar bar = new ProgressBar(shell, SWT.HORIZONTAL);
+			long barPeer = platform.lastCreated;
+			bar.setBounds(0, 0, 160, 20);
+			require(bar.getMinimum() == 0 && bar.getMaximum() == 100 && bar.getSelection() == 0,
+					"ProgressBar starts at the original SWT range defaults");
+			bar.setMinimum(20);
+			require(bar.getSelection() == 20, "Minimum clamps ProgressBar selection");
+			bar.setMaximum(10);
+			require(bar.getMaximum() == 100, "Invalid ProgressBar maximum ignored");
+			bar.setState(SWT.ERROR);
+			require(bar.getState() == SWT.ERROR, "ProgressBar state is preserved");
+			bar.setState(-1);
+			require(bar.getState() == SWT.ERROR, "Invalid ProgressBar state ignored");
+			require(platform.controls.get(barPeer).role == org.eclipse.swt.accessibility.ACC.ROLE_PROGRESSBAR,
+					"ProgressBar publishes the native accessibility role");
+			ProgressBar indeterminate = new ProgressBar(shell, SWT.INDETERMINATE);
+			indeterminate.setBounds(0, 30, 160, 20);
+			long indeterminatePeer = platform.lastCreated;
+			require((platform.controls.get(indeterminatePeer).state
+					& org.eclipse.swt.accessibility.ACC.STATE_BUSY) != 0,
+					"Indeterminate progress advertises native busy state");
+			Scale scale = new Scale(shell, SWT.HORIZONTAL);
+			long scalePeer = platform.lastCreated;
+			scale.setBounds(0, 60, 160, 28);
+			require(platform.controls.get(scalePeer).kind == MobilePlatform.CANVAS,
+					"Mobile Scale uses interactive original SWT Canvas peer");
+			require(platform.controls.get(scalePeer).role == org.eclipse.swt.accessibility.ACC.ROLE_SLIDER,
+					"Scale publishes slider role to Android/UIKit");
+			shell.open();
+			drain(display);
+			int[] before = platform.controls.get(barPeer).frame.clone();
+			bar.setSelection(80);
+			drain(display);
+			require(!Arrays.equals(before, platform.controls.get(barPeer).frame),
+					"ProgressBar value paints into a real native peer image");
+			AtomicInteger changes = new AtomicInteger();
+			scale.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> {
+				require(scale.getSelection() > 0, "Selection listener sees the already-updated Scale value");
+				changes.incrementAndGet();
+			}));
+			platform.sink.input(scalePeer, SWT.MouseDown, 130, 12, 1, 0, '\0', 0, 1, 30);
+			platform.sink.input(scalePeer, SWT.MouseUp, 130, 12, 1, 0, '\0', 0, 1, 31);
+			drain(display);
+			require(scale.getSelection() > 0 && changes.get() == 1,
+					"Native touch down/up produces exactly one Scale Selection");
+			scale.setSelection(50);
+			require(changes.get() == 1, "Programmatic Scale selection is silent");
+			scale.setMinimum(40);
+			scale.setSelection(-10);
+			require(scale.getSelection() == 40, "Scale clamps to changed minimum");
+			scale.setMaximum(20);
+			require(scale.getMaximum() == 100, "Invalid Scale maximum ignored");
+			scale.setIncrement(0);
+			require(scale.getIncrement() == 1, "Zero Scale increment ignored");
+			Event keyboard = new Event();
+			keyboard.keyCode = SWT.PAGE_UP;
+			scale.notifyListeners(SWT.KeyDown, keyboard);
+			require(scale.getSelection() == 50 && changes.get() == 2,
+					"Scale keyboard PageUp applies page increment and sends Selection");
+			scale.setEnabled(false);
+			platform.sink.input(scalePeer, SWT.MouseDown, 110, 12, 1, 0, '\0', 0, 1, 32);
+			platform.sink.input(scalePeer, SWT.MouseUp, 110, 12, 1, 0, '\0', 0, 1, 33);
+			drain(display);
+			require(scale.getSelection() == 50 && changes.get() == 2,
+					"Disabled Scale blocks native input");
+			shell.dispose();
+			require(indeterminate.isDisposed() && bar.isDisposed() && scale.isDisposed(),
+					"Shell disposes progress timer and Scale native owners");
+		} finally {
+			display.dispose();
+			MobileRuntime.uninstall(platform);
+		}
+		require(platform.controls.isEmpty() && platform.images.isEmpty(),
+				"Range widgets release all native peers and images");
+		require(platform.openedGraphics == platform.closedGraphics,
+				"Range widgets close every native graphics context");
+	}
 }
