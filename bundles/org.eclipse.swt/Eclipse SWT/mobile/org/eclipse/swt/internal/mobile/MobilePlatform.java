@@ -21,6 +21,10 @@ public interface MobilePlatform {
 	interface EventSink {
 		void input(long peer, int type, int x, int y, int button, int keyCode,
 			char character, int stateMask, int count, int time);
+		/** Native IME/editor snapshot; only the SWT Display thread applies it. */
+		default void textChanged(long peer, String text, int start, int end) {
+			throw new UnsupportedOperationException("Native text owner must implement textChanged");
+		}
 		void resize(long peer, int width, int height);
 		void paint(long peer);
 		void close(long peer);
@@ -43,6 +47,11 @@ public interface MobilePlatform {
 	void setVisible(long peer, boolean visible);
 	void setEnabled(long peer, boolean enabled);
 	void setTitle(long peer, String title);
+	/** Publish canonical Text state to the native editor, suppressing echo callbacks. */
+	default void textContent(long peer, String text, int start, int end,
+			boolean editable, int limit, String hint) {
+		throw new UnsupportedOperationException("Native Text widget is not implemented");
+	}
 	boolean requestFocus(long peer);
 	void setAccessibility(long peer, String label, int role, int state);
 
