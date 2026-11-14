@@ -24,7 +24,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.internal.*;
 import org.eclipse.swt.internal.canvasext.*;
 import org.eclipse.swt.internal.render.*;
-import org.eclipse.swt.internal.render.m3.gc.*;
+import org.eclipse.swt.internal.canvasext.raster.*;
 import org.eclipse.swt.internal.win32.*;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
@@ -41,7 +41,7 @@ import io.github.humbleui.skija.SurfaceProps;
 /**
  * The M3 renderer behind a <code>Canvas</code> created with {@link SWT#M3} (GC seam, leaf 4): the canvas's
  * <code>WM_PAINT</code> through {@link IExternalCanvasHandler}, painting the damage into a retained {@link BackBuffer}
- * of the canvas through a <code>GCExtension</code> over {@link M3ExternalGC}, then presenting it. The surface is
+ * of the canvas through a <code>GCExtension</code> over {@link RasterExternalGC}, then presenting it. The surface is
  * exactly the drawn planes' (<code>M3RowCanvas.target</code>): <code>Surface.makeRasterDirect</code> over the DIB
  * section in the <code>m3</code> mode, a render target on the thread's {@link M3Gpu} context read back into the
  * damage in the <code>gpu</code> mode; no GL context or surface of its own.
@@ -55,7 +55,7 @@ import io.github.humbleui.skija.SurfaceProps;
  * </p>
  * <p>
  * Leaf 5: every <code>Canvas</code> subclass of the <code>m3</code> and <code>gpu</code> modes gets this handler
- * (<code>M3CanvasFactory</code>). Damage (pattern M3-CANVAS-DAMAGE v1, {@link M3CanvasDamage}): the update region is read
+ * (<code>RasterCanvasFactory</code>). Damage (pattern M3-CANVAS-DAMAGE v1, {@link M3CanvasDamage}): the update region is read
  * before <code>BeginPaint</code>, each Paint event is drawn clipped to its part of it (one per rectangle with
  * <code>SWT.NO_MERGE_PAINTS</code>), and only its rectangles are presented, so a partial <code>Canvas.redraw</code> repaints
  * and copies that damage alone. Retention (M3-CANVAS-RETAIN v1): a canvas that draws over its previous frame
@@ -78,7 +78,7 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	private final Composite control;
 	private final M3Gpu gpu;
 	private final BackBuffer buffer = new BackBuffer ();
-	private final M3PlaneCanvasExtension extension;
+	private final RasterPlaneCanvasExtension extension;
 	private Surface surface;
 	private long bits;
 	private int width, height;
@@ -94,7 +94,7 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	private M3CanvasHandler (Composite canvas, M3Gpu gpu) {
 		this.control = canvas;
 		this.gpu = gpu;
-		this.extension = new M3PlaneCanvasExtension (canvas, buffer, this::surface);
+		this.extension = new RasterPlaneCanvasExtension (canvas, buffer, this::surface);
 		canvas.setData (DATA_KEY, this);
 		canvas.addListener (SWT.Dispose, e -> dispose ());
 	}
@@ -184,7 +184,7 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 		io.github.humbleui.skija.Canvas canvas = surface.getCanvas ();
 		canvas.save ();
 		damage.clip (canvas, pass, passes);
-		if (!retains ()) canvas.clear (M3ColorConverter.convertSWTColorToM3Color (control.getBackground ()));
+		if (!retains ()) canvas.clear (RasterColorConverter.convertSWTColorToM3Color (control.getBackground ()));
 		try {
 			event (send, damage.bounds (pass, passes), damage.eventCount (pass, passes));
 		} finally {
@@ -234,13 +234,13 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	}
 
 	/*
-	 * One GC per pass, as the stock path makes one per WM_PAINT: made inside the pass's save so M3ExternalGC restores to it
+	 * One GC per pass, as the stock path makes one per WM_PAINT: made inside the pass's save so RasterExternalGC restores to it
 	 * on dispose. The bounds are the pass in points by the zoom the extension's scaler uses (control.nativeZoom); count is
 	 * the number of NO_MERGE_PAINTS events still to come.
 	 */
 	private void event (Consumer<Event> send, int [] bounds, int count) {
 		extension.frame (bounds [0], bounds [1], bounds [2], bounds [3]);
-		GC gc = new GCExtension (new M3ExternalGC (extension, SWT.NONE));
+		GC gc = new GCExtension (new RasterExternalGC (extension, SWT.NONE));
 		Event event = new Event ();
 		event.gc = gc;
 		event.count = count;

@@ -38,7 +38,7 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.ViewForm;
 import org.eclipse.swt.internal.WidgetMode;
 import org.eclipse.swt.internal.canvasext.IExternalCanvasFactory;
-import org.eclipse.swt.internal.render.m3.gc.M3CanvasFactory;
+import org.eclipse.swt.internal.canvasext.raster.RasterCanvasFactory;
 import org.eclipse.swt.ole.win32.OleClientSite;
 import org.eclipse.swt.ole.win32.OleControlSite;
 import org.eclipse.swt.opengl.GLCanvas;
@@ -110,7 +110,7 @@ public class Test_org_eclipse_swt_m3gc_CompositeCoverage {
 		for (WidgetMode mode : WidgetMode.values()) {
 			for (Class<?> type : COVERED) {
 				for (int style : STYLES) {
-					if (drawn(mode) != M3CanvasFactory.compositeBackend(mode, type, style)) {
+					if (drawn(mode) != RasterCanvasFactory.compositeBackend(mode, type, style)) {
 						wrong.add(mode + " " + type.getSimpleName() + " 0x" + Integer.toHexString(style));
 					}
 				}
@@ -124,7 +124,7 @@ public class Test_org_eclipse_swt_m3gc_CompositeCoverage {
 		for (WidgetMode mode : WidgetMode.values()) {
 			for (Class<?> type : CANVASES) {
 				for (int style : STYLES) {
-					assertNull(M3CanvasFactory.compositeBackend(mode, type, style), mode + " " + type.getSimpleName());
+					assertNull(RasterCanvasFactory.compositeBackend(mode, type, style), mode + " " + type.getSimpleName());
 				}
 			}
 		}
@@ -133,22 +133,22 @@ public class Test_org_eclipse_swt_m3gc_CompositeCoverage {
 	@Test
 	public void testForeignTransparentAndMirroredCompositesStayStock() {
 		for (WidgetMode mode : WidgetMode.values()) {
-			assertNull(M3CanvasFactory.compositeBackend(mode, Composite.class, SWT.EMBEDDED), mode + " embedded host");
-			assertNull(M3CanvasFactory.compositeBackend(mode, OleClientSite.class, SWT.NONE), mode + " OLE client site");
-			assertNull(M3CanvasFactory.compositeBackend(mode, OleControlSite.class, SWT.NONE), mode + " OLE control site");
-			assertNull(M3CanvasFactory.compositeBackend(mode, Browser.class, SWT.NONE), mode + " Browser");
-			assertNull(M3CanvasFactory.compositeBackend(mode, CTabFolder.class, SWT.TRANSPARENT), mode + " transparent");
-			assertNull(M3CanvasFactory.compositeBackend(mode, AppComposite.class, SWT.RIGHT_TO_LEFT), mode + " mirrored");
+			assertNull(RasterCanvasFactory.compositeBackend(mode, Composite.class, SWT.EMBEDDED), mode + " embedded host");
+			assertNull(RasterCanvasFactory.compositeBackend(mode, OleClientSite.class, SWT.NONE), mode + " OLE client site");
+			assertNull(RasterCanvasFactory.compositeBackend(mode, OleControlSite.class, SWT.NONE), mode + " OLE control site");
+			assertNull(RasterCanvasFactory.compositeBackend(mode, Browser.class, SWT.NONE), mode + " Browser");
+			assertNull(RasterCanvasFactory.compositeBackend(mode, CTabFolder.class, SWT.TRANSPARENT), mode + " transparent");
+			assertNull(RasterCanvasFactory.compositeBackend(mode, AppComposite.class, SWT.RIGHT_TO_LEFT), mode + " mirrored");
 		}
-		assertTrue(M3CanvasFactory.foreignComposite(OleControlSite.class, SWT.NONE));
-		assertTrue(M3CanvasFactory.foreignComposite(CBanner.class, SWT.EMBEDDED));
-		assertFalse(M3CanvasFactory.foreignComposite(CTabFolder.class, SWT.BORDER | SWT.CLOSE));
+		assertTrue(RasterCanvasFactory.foreignComposite(OleControlSite.class, SWT.NONE));
+		assertTrue(RasterCanvasFactory.foreignComposite(CBanner.class, SWT.EMBEDDED));
+		assertFalse(RasterCanvasFactory.foreignComposite(CTabFolder.class, SWT.BORDER | SWT.CLOSE));
 	}
 
 	@Test
 	public void testFactoryAppliesTheSelectorToTheCompositeClass() {
 		List<Class<?>> asked = new ArrayList<>();
-		M3CanvasFactory gpu = new M3CanvasFactory(type -> {
+		RasterCanvasFactory gpu = new RasterCanvasFactory(type -> {
 			asked.add(type);
 			return WidgetMode.GPU;
 		}, c -> Test_org_eclipse_swt_m3gc_M3CanvasFactory.RASTER, c -> Test_org_eclipse_swt_m3gc_M3CanvasFactory.GPU);
@@ -160,7 +160,7 @@ public class Test_org_eclipse_swt_m3gc_CompositeCoverage {
 				"the selector sees the composite class");
 		assertSame(Test_org_eclipse_swt_m3gc_M3CanvasFactory.GPU, gpu.create(null, SWT.NONE), "the canvas path is unchanged");
 		assertEquals(Canvas.class, asked.get(4), "and still asks for the canvas class");
-		M3CanvasFactory off = new M3CanvasFactory((Class<?> type) -> WidgetMode.VIEWPORT,
+		RasterCanvasFactory off = new RasterCanvasFactory((Class<?> type) -> WidgetMode.VIEWPORT,
 				c -> Test_org_eclipse_swt_m3gc_M3CanvasFactory.RASTER, c -> Test_org_eclipse_swt_m3gc_M3CanvasFactory.GPU);
 		assertFalse(off.acceptsComposite(null, SWT.NONE), "viewport mode");
 		assertNull(off.createComposite(null, SWT.NONE));
@@ -170,17 +170,17 @@ public class Test_org_eclipse_swt_m3gc_CompositeCoverage {
 	public void testPerClassPropertyDecidesForComposites() {
 		assumeTrue(Test_org_eclipse_swt_m3gc_CanvasCoverage.noModeProperty(), "the test JVM sets no widget mode");
 		set("CTabFolder", "m3");
-		assertEquals(WidgetMode.M3, M3CanvasFactory.mode(CTabFolder.class));
-		assertEquals(WidgetMode.ORIGINAL, M3CanvasFactory.mode(CBanner.class), "no property: the stock path");
+		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(CTabFolder.class));
+		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(CBanner.class), "no property: the stock path");
 		set("Composite", "gpu");
-		assertEquals(WidgetMode.GPU, M3CanvasFactory.mode(CBanner.class), "the Composite property reaches every composite");
-		assertEquals(WidgetMode.GPU, M3CanvasFactory.mode(AppComposite.class));
-		assertEquals(WidgetMode.M3, M3CanvasFactory.mode(CTabFolder.class), "the most derived property wins");
-		assertEquals(WidgetMode.ORIGINAL, M3CanvasFactory.mode(Canvas.class), "the Composite property stops at Canvas");
-		assertEquals(WidgetMode.ORIGINAL, M3CanvasFactory.mode(StyledText.class));
+		assertEquals(WidgetMode.GPU, RasterCanvasFactory.mode(CBanner.class), "the Composite property reaches every composite");
+		assertEquals(WidgetMode.GPU, RasterCanvasFactory.mode(AppComposite.class));
+		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(CTabFolder.class), "the most derived property wins");
+		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(Canvas.class), "the Composite property stops at Canvas");
+		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(StyledText.class));
 		set("Canvas", "m3");
-		assertEquals(WidgetMode.GPU, M3CanvasFactory.mode(ViewForm.class), "the Canvas property does not reach composites");
-		assertEquals(WidgetMode.M3, M3CanvasFactory.mode(CLabel.class));
+		assertEquals(WidgetMode.GPU, RasterCanvasFactory.mode(ViewForm.class), "the Canvas property does not reach composites");
+		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(CLabel.class));
 	}
 
 	@Test

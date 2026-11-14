@@ -11,7 +11,7 @@
  *     SAP SE and others - initial API and implementation
  *     Synexia (Hitesh Soliwal) - adoption into the M3 fork, 2026
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -22,15 +22,15 @@ import io.github.humbleui.skija.ColorAlphaType;
 import io.github.humbleui.skija.ColorType;
 import io.github.humbleui.skija.ImageInfo;
 
-public class SwtToM3ImageConverter {
-	public static IM3Image convertSWTImageToM3Image(Image swtImage, int zoom, IM3Resources resources) {
-		IM3Image img = null;
+public class SwtToRasterImageConverter {
+	public static IRasterImage convertSWTImageToM3Image(Image swtImage, int zoom, IRasterResources resources) {
+		IRasterImage img = null;
 		final ImageData imageData = swtImage.getImageData(zoom);
 		img = convertSWTImageToM3Image(imageData);
 		return img;
 	}
 
-	public static IM3Image convertSWTImageToM3Image(ImageData imageData) {
+	public static IRasterImage convertSWTImageToM3Image(ImageData imageData) {
 		final int width = imageData.width;
 		final int height = imageData.height;
 		ColorType colType = getColorType(imageData);
@@ -38,11 +38,11 @@ public class SwtToM3ImageConverter {
 			final byte[] bytes = RGBAEncoder.encode(imageData);
 			colType = ColorType.RGBA_8888;
 			final ImageInfo imageInfo = new ImageInfo(width, height, colType, ColorAlphaType.UNPREMUL);
-			return new M3ImageAdapter(
+			return new RasterImageAdapter(
 					io.github.humbleui.skija.Image.makeRasterFromBytes(imageInfo, bytes, imageData.width * 4));
 		}
 		final ImageInfo imageInfo = new ImageInfo(width, height, colType, ColorAlphaType.UNPREMUL);
-		return new M3ImageAdapter(
+		return new RasterImageAdapter(
 				io.github.humbleui.skija.Image.makeRasterFromBytes(imageInfo, imageData.data, imageData.width * 4));
 	}
 

@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.internal.render.m3.gc.M3ToSwtImageConverter;
-import org.eclipse.swt.internal.render.m3.gc.IM3Image;
+import org.eclipse.swt.internal.canvasext.raster.IRasterImage;
+import org.eclipse.swt.internal.canvasext.raster.RasterToSwtImageConverter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +31,7 @@ public class Test_org_eclipse_swt_m3gc_M3ToSwtImageConverter {
 		try (Surface surface = Surface.makeRaster(new ImageInfo(2, 2, ColorType.RGBA_8888, ColorAlphaType.PREMUL))) {
 			surface.getCanvas().clear(0xFF0000FF); // Blue
 			final Image m3Image = surface.makeImageSnapshot();
-			final ImageData data = M3ToSwtImageConverter.convertM3ImageToImageData(m3Image);
+			final ImageData data = RasterToSwtImageConverter.convertM3ImageToImageData(m3Image);
 			assertNotNull(data);
 			assertEquals(2, data.width);
 			assertEquals(2, data.height);
@@ -53,7 +53,7 @@ public class Test_org_eclipse_swt_m3gc_M3ToSwtImageConverter {
 		try (Surface surface = Surface.makeRaster(new ImageInfo(1, 1, ColorType.RGBA_8888, ColorAlphaType.PREMUL))) {
 			surface.getCanvas().clear(0x80000000); // Half-transparent black
 			final Image m3Image = surface.makeImageSnapshot();
-			final ImageData data = M3ToSwtImageConverter.convertM3ImageToImageData(m3Image);
+			final ImageData data = RasterToSwtImageConverter.convertM3ImageToImageData(m3Image);
 			assertNotNull(data);
 			assertEquals(1, data.width);
 			assertEquals(1, data.height);
@@ -69,7 +69,7 @@ public class Test_org_eclipse_swt_m3gc_M3ToSwtImageConverter {
 	public void testNullInput() {
 		// Should throw AssertionError or NullPointerException on null input
 		final Throwable thrown = assertThrows(Throwable.class, () -> {
-			M3ToSwtImageConverter.convertM3ImageToImageData((IM3Image)null);
+			RasterToSwtImageConverter.convertM3ImageToImageData((IRasterImage)null);
 		});
 		assertTrue(thrown instanceof NullPointerException || thrown instanceof AssertionError,
 				"Expected NullPointerException or AssertionError, but got: " + thrown.getClass().getName());

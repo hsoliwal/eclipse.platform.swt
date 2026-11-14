@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
-import org.eclipse.swt.internal.render.m3.gc.IM3Resources;
+import org.eclipse.swt.internal.canvasext.raster.IRasterResources;
+import org.eclipse.swt.internal.canvasext.raster.RasterExternalGC;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -20,7 +20,7 @@ public class Test_org_eclipse_swt_m3gc_drawPolyline {
 
 	@Test
 	public void testDrawPolyline() {
-		IM3Resources resources = new M3ResourcesDouble();
+		IRasterResources resources = new M3ResourcesDouble();
 		Color foregroundColor = new Color(null, 255, 255, 255);
 		resources.setForeground(foregroundColor);
 		Color backgroundColor = new Color(null, 0, 0, 0);
@@ -31,7 +31,7 @@ public class Test_org_eclipse_swt_m3gc_drawPolyline {
 		final CanvasExtensionDouble ext = new CanvasExtensionDouble();
 		ext.surface = surface;
 		ext.resources = resources;
-		final M3ExternalGC gc = new M3ExternalGC(ext, SWT.NONE);
+		final RasterExternalGC gc = new RasterExternalGC(ext, SWT.NONE);
 
 		int[] points = { 10, 20, 30, 40, 50, 60 };
 		gc.drawPolyline(points);
@@ -68,7 +68,7 @@ public class Test_org_eclipse_swt_m3gc_drawPolyline {
 
 	@Test
 	public void testDrawPolyline_Zoom150() {
-		IM3Resources resources = new M3ResourcesDouble(150);
+		IRasterResources resources = new M3ResourcesDouble(150);
 		Color foregroundColor = new Color(null, 255, 255, 255);
 		resources.setForeground(foregroundColor);
 		Color backgroundColor = new Color(null, 0, 0, 0);
@@ -79,7 +79,7 @@ public class Test_org_eclipse_swt_m3gc_drawPolyline {
 		final CanvasExtensionDouble ext = new CanvasExtensionDouble();
 		ext.surface = surface;
 		ext.resources = resources;
-		final M3ExternalGC gc = new M3ExternalGC(ext, SWT.NONE);
+		final RasterExternalGC gc = new RasterExternalGC(ext, SWT.NONE);
 
 		int[] points = { 10, 20, 30, 40, 50, 60 };
 		gc.drawPolyline(points);
@@ -116,7 +116,7 @@ public class Test_org_eclipse_swt_m3gc_drawPolyline {
 
 	@Test
 	public void testDrawPolyline_Zoom200() {
-		IM3Resources resources = new M3ResourcesDouble(200);
+		IRasterResources resources = new M3ResourcesDouble(200);
 		Color foregroundColor = new Color(null, 255, 255, 255);
 		resources.setForeground(foregroundColor);
 		Color backgroundColor = new Color(null, 0, 0, 0);
@@ -127,7 +127,7 @@ public class Test_org_eclipse_swt_m3gc_drawPolyline {
 		final CanvasExtensionDouble ext = new CanvasExtensionDouble();
 		ext.surface = surface;
 		ext.resources = resources;
-		final M3ExternalGC gc = new M3ExternalGC(ext, SWT.NONE);
+		final RasterExternalGC gc = new RasterExternalGC(ext, SWT.NONE);
 
 		int[] points = { 10, 20, 30, 40, 50, 60 };
 		gc.drawPolyline(points);

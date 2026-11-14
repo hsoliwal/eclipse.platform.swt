@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.internal.render.m3.gc.M3ToSwtImageConverter;
+import org.eclipse.swt.internal.canvasext.raster.RasterToSwtImageConverter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +28,7 @@ class Test_org_eclipse_swt_m3gc_M3ToSwtImageConvert {
 		try (Surface surface = Surface.makeRaster(new ImageInfo(2, 2, ColorType.RGBA_8888, ColorAlphaType.PREMUL))) {
 			surface.getCanvas().clear(0xFF0000FF); // Blue
 			final Image m3Image = surface.makeImageSnapshot();
-			final ImageData data = M3ToSwtImageConverter.convertM3ImageToImageData(m3Image);
+			final ImageData data = RasterToSwtImageConverter.convertM3ImageToImageData(m3Image);
 			assertNotNull(data);
 			assertEquals(2, data.width);
 			assertEquals(2, data.height);

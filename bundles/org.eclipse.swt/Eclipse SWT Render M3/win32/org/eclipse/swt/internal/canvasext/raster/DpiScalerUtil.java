@@ -1,4 +1,4 @@
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.internal.canvasext.IDpiScaler;
@@ -16,7 +16,7 @@ public class DpiScalerUtil implements IDpiScaler {
 		this.scaler = () -> nativeZoom;
 	}
 
-	public DpiScalerUtil(M3Resources resources) {
+	public DpiScalerUtil(RasterResources resources) {
 		this.scaler = resources.getScaler();
 	}
 

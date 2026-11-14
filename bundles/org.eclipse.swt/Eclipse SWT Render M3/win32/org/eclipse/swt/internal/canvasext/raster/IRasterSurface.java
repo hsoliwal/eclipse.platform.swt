@@ -1,4 +1,4 @@
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import io.github.humbleui.types.IRect;
 
@@ -6,7 +6,7 @@ import io.github.humbleui.types.IRect;
  * Interface to abstract Skija's Surface for SWT integration.
  * This allows decoupling from the direct Skija dependency in client code.
  */
-public interface IM3Surface extends AutoCloseable {
+public interface IRasterSurface extends AutoCloseable {
 	/**
 	 * Returns the width of the surface in pixels.
 	 */
@@ -23,23 +23,23 @@ public interface IM3Surface extends AutoCloseable {
 	boolean isClosed();
 
 	/**
-	 * Returns the IM3Canvas for drawing operations.
+	 * Returns the IRasterCanvas for drawing operations.
 	 */
-	IM3Canvas getCanvas();
+	IRasterCanvas getCanvas();
 
 	/**
 	 * Creates an image snapshot of the current surface contents.
-	 * The return type should be an abstraction (e.g., IM3Image) but for now Object.
+	 * The return type should be an abstraction (e.g., IRasterImage) but for now Object.
 	 */
-	IM3Image makeImageSnapshot();
+	IRasterImage makeImageSnapshot();
 
-	IM3Image makeImageSnapshot(IRect rect);
+	IRasterImage makeImageSnapshot(IRect rect);
 
 	/**
 	 * Creates a new surface with the given width and height.
-	 * The return type should be IM3Surface.
+	 * The return type should be IRasterSurface.
 	 */
-	IM3Surface makeSurface(int width, int height);
+	IRasterSurface makeSurface(int width, int height);
 
 	/**
 	 * Closes/releases the surface and its resources.

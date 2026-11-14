@@ -11,7 +11,7 @@
  *     SAP SE and others - initial API and implementation
  *     Synexia (Hitesh Soliwal) - adoption into the M3 fork, 2026
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
@@ -24,12 +24,12 @@ import io.github.humbleui.skija.PaintMode;
 import io.github.humbleui.skija.PaintStrokeCap;
 import io.github.humbleui.types.Rect;
 
-public class M3TextDrawing {
+public class RasterTextDrawing {
 	// only for debug purpose use text drawing without cache.
 
-	public static final String NO_TEXT_CACHE = "org.eclipse.swt.internal.render.m3.gc.M3Resources.IGNORE_TEXT_IMAGE_CACHE"; //$NON-NLS-1$
+	public static final String NO_TEXT_CACHE = "org.eclipse.swt.internal.canvasext.raster.RasterResources.IGNORE_TEXT_IMAGE_CACHE"; //$NON-NLS-1$
 
-	public static void drawText(M3ExternalGC gc, String[] splits, int flags, int x, int y) {
+	public static void drawText(RasterExternalGC gc, String[] splits, int flags, int x, int y) {
 
 		final var NO_TEXT_IMAGE_CACHE = Boolean.parseBoolean(
 				System.getProperty(NO_TEXT_CACHE, "false")); //$NON-NLS-1$
@@ -46,7 +46,7 @@ public class M3TextDrawing {
 		return (SWT.DRAW_TRANSPARENT & flags) != 0;
 	}
 
-	private static void drawTextBlobNoCache(M3ExternalGC gc, String[] splits, int flags, int x, int y) {
+	private static void drawTextBlobNoCache(RasterExternalGC gc, String[] splits, int flags, int x, int y) {
 
 		final var paintManager = gc.getPaintManager();
 		final var resources = gc.getM3Resources();
@@ -114,7 +114,7 @@ public class M3TextDrawing {
 
 	}
 
-	private static void drawTextBlobWithCache(M3ExternalGC gc, String[] splits, int flags, int xIn, int yIn) {
+	private static void drawTextBlobWithCache(RasterExternalGC gc, String[] splits, int flags, int xIn, int yIn) {
 
 		final var paintManager = gc.getPaintManager();
 		final var resources = gc.getM3Resources();
@@ -129,9 +129,9 @@ public class M3TextDrawing {
 		final var f = resources.getM3Font();
 		final FontProperties props = FontProperties.getFontProperties(resources.getFontData());
 		final int backgroundColor = gc.getAlpha() < 255
-				? M3ColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha())
-						: M3ColorConverter.convertSWTColorToM3Color(gc.getBackground());
-		final int foregroundColor = M3ColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha());
+				? RasterColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha())
+						: RasterColorConverter.convertSWTColorToM3Color(gc.getBackground());
+		final int foregroundColor = RasterColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha());
 		final boolean antiAlias = gc.getAntialias() != SWT.OFF || gc.getTextAntialias() != SWT.OFF;
 
 		final int[] yPos = new int[1];
@@ -200,7 +200,7 @@ public class M3TextDrawing {
 					Logger.logException(new IllegalStateException(sb.toString()));
 					return;
 				}
-				try (IM3Surface supportSurface = gc.getM3Extension().createSupportSurface(surfaceWidth, size.y)) {
+				try (IRasterSurface supportSurface = gc.getM3Extension().createSupportSurface(surfaceWidth, size.y)) {
 
 					supportSurface.getCanvas().clear(0);
 					if (!transparent) {
@@ -212,7 +212,7 @@ public class M3TextDrawing {
 						// the background color, the rest stays transparent.
 						try (Paint p = new Paint()) {
 							p.setColor(
-									M3ColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha()));
+									RasterColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha()));
 							p.setMode(PaintMode.FILL);
 							supportSurface.getCanvas().drawRect(
 									new Rect(0, 0, (int) Math.ceil(rect.getWidth() + endOfRectangle), size.y), p);

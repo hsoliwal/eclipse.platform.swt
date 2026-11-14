@@ -1,8 +1,10 @@
 package org.eclipse.swt.tests.junit.m3gc;
 
+import org.eclipse.swt.internal.canvasext.raster.IRasterImage;
+
 import java.util.Objects;
 
-public class IM3ImageDouble implements org.eclipse.swt.internal.render.m3.gc.IM3Image {
+public class IM3ImageDouble implements IRasterImage {
 
 	public boolean closed = false;
 	public int height;

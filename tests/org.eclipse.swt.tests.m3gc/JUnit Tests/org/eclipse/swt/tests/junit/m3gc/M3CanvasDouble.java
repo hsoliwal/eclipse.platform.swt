@@ -3,9 +3,8 @@ package org.eclipse.swt.tests.junit.m3gc;
 
 import java.util.List;
 
-import org.eclipse.swt.internal.render.m3.gc.IM3Canvas;
-import org.eclipse.swt.internal.render.m3.gc.IM3Image;
-
+import org.eclipse.swt.internal.canvasext.raster.IRasterCanvas;
+import org.eclipse.swt.internal.canvasext.raster.IRasterImage;
 import io.github.humbleui.skija.ClipMode;
 import io.github.humbleui.skija.Font;
 import io.github.humbleui.skija.Matrix33;
@@ -16,7 +15,7 @@ import io.github.humbleui.skija.SamplingMode;
 import io.github.humbleui.types.RRect;
 import io.github.humbleui.types.Rect;
 
-public class M3CanvasDouble implements IM3Canvas {
+public class M3CanvasDouble implements IRasterCanvas {
 
 	int saveCount;
 	String name;
@@ -76,12 +75,12 @@ public class M3CanvasDouble implements IM3Canvas {
 	}
 
 	@Override
-	public void drawImage(IM3Image image, int x, int y) {
+	public void drawImage(IRasterImage image, int x, int y) {
 		add(logCall("drawImage", image, x, y));
 	}
 
 	@Override
-	public void drawImageRect(IM3Image image, Rect src, Rect dst, SamplingMode sampling, Paint paint, boolean strict) {
+	public void drawImageRect(IRasterImage image, Rect src, Rect dst, SamplingMode sampling, Paint paint, boolean strict) {
 		add(logCall("drawImageRect", image, src, dst, sampling, paint, strict));
 	}
 

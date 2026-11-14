@@ -8,7 +8,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.ImageData;

@@ -8,7 +8,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import java.util.HashMap;
 
@@ -21,7 +21,7 @@ import org.eclipse.swt.graphics.RegionLog.Operation;
 
 import io.github.humbleui.types.IRect;
 
-public class M3RegionCalculator implements AutoCloseable {
+public class RasterRegionCalculator implements AutoCloseable {
 
 	private final static HashMap<OpType, io.github.humbleui.skija.Region.Op> operationMapping = new HashMap<OpType, io.github.humbleui.skija.Region.Op>();
 
@@ -33,9 +33,9 @@ public class M3RegionCalculator implements AutoCloseable {
 
 	private final org.eclipse.swt.graphics.Region region;
 	private io.github.humbleui.skija.Region calculatedRegion;
-	private final IM3CanvasExtension m3Extension;
+	private final IRasterCanvasExtension m3Extension;
 
-	public M3RegionCalculator(org.eclipse.swt.graphics.Region r, IM3CanvasExtension m3Extension) {
+	public RasterRegionCalculator(org.eclipse.swt.graphics.Region r, IRasterCanvasExtension m3Extension) {
 		this.region = r;
 		this.m3Extension = m3Extension;
 	}
@@ -94,7 +94,7 @@ public class M3RegionCalculator implements AutoCloseable {
 			final var irect = createRectRegion(rec);
 			reg.op(irect, m3Operation);
 		} else if (ob instanceof final Region otherReg) {
-			try (final M3RegionCalculator src = new M3RegionCalculator(otherReg, m3Extension)) {
+			try (final RasterRegionCalculator src = new RasterRegionCalculator(otherReg, m3Extension)) {
 				reg.op(src.getM3Region(), m3Operation);
 			}
 		}

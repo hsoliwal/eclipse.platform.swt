@@ -12,7 +12,7 @@
  *     Synexia (Hitesh Soliwal) - adoption into the M3 fork, 2026
  *******************************************************************************/
 
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -56,10 +56,10 @@ import io.github.humbleui.skija.SamplingMode;
 import io.github.humbleui.skija.Shader;
 import io.github.humbleui.types.Rect;
 
-public class M3ExternalGC implements IExternalGC {
+public class RasterExternalGC implements IExternalGC {
 
 	private static boolean logImageNullError = true;
-	private final IM3Surface surface;
+	private final IRasterSurface surface;
 	private int alpha = 255;
 	private int antialias;
 	private boolean xorModeActive;
@@ -73,7 +73,7 @@ public class M3ExternalGC implements IExternalGC {
 	private int lineJoin = SWT.JOIN_MITER;
 	private float[] lineDashes;
 	// M3 (GC seam, leaf 5; pattern M3-GC-STROKE v1): the stroke state the donor stored but never applied, with the stock
-	// defaults (GCData: dash offset 0, miter limit 10); the dash phase reaches LINE_CUSTOM patterns (M3PaintManager), the
+	// defaults (GCData: dash offset 0, miter limit 10); the dash phase reaches LINE_CUSTOM patterns (RasterPaintManager), the
 	// miter limit every stroke once setLineAttributes ran (until then the paint keeps the donor's Skija miter, 4, and
 	// drawPath's 1000, which the adopted tests pin)
 	private float dashOffset;
@@ -91,16 +91,16 @@ public class M3ExternalGC implements IExternalGC {
 	private Rectangle currentClipBounds;
 	private Region currentClipRegion;
 
-	private final IM3CanvasExtension m3Extension;
-	private final IM3Resources resources;
+	private final IRasterCanvasExtension m3Extension;
+	private final IRasterResources resources;
 	private final int style;
 	private int textAntiAlias = SWT.ON;
 
 	private final int initialSaveCount;
-	private final M3PaintManager paintManager;
+	private final RasterPaintManager paintManager;
 	private final DpiScalerUtil dpiScalerUtil;
 
-	public M3ExternalGC(IM3CanvasExtension exst, int style) {
+	public RasterExternalGC(IRasterCanvasExtension exst, int style) {
 		this.drawable = exst.getDrawable();
 		device = exst.getDevice();
 		this.surface = exst.getSurface();
@@ -109,7 +109,7 @@ public class M3ExternalGC implements IExternalGC {
 		this.style = style;
 		// Save the initial canvas state so it can be fully restored on dispose()
 		this.initialSaveCount = this.surface.getCanvas().getSaveCount();
-		this.paintManager = new M3PaintManager(this);
+		this.paintManager = new RasterPaintManager(this);
 		this.dpiScalerUtil = new DpiScalerUtil(this.resources.getScaler());
 		this.currentClipBounds = exst.getClientArea();
 
@@ -198,14 +198,14 @@ public class M3ExternalGC implements IExternalGC {
 		if (sizeFactorInImage == 0) {
 			sizeFactorInImage = 1;
 		}
-		final IM3Canvas canvas = surface.getCanvas();
+		final IRasterCanvas canvas = surface.getCanvas();
 		final int fac = sizeFactorInImage;
 
 		paintManager.performDraw(paint -> {
 			paint.setAlpha(alpha);
 			paint.setAntiAlias(true);
 			canvas.drawImageRect(
-					SwtToM3ImageConverter.convertSWTImageToM3Image(image, getScaler().autoScaleUp(100 * fac),
+					SwtToRasterImageConverter.convertSWTImageToM3Image(image, getScaler().autoScaleUp(100 * fac),
 							resources),
 					RectangleConverter.createScaledRectangle(getScaler(), srcX * fac, srcY * fac, srcWidth * fac,
 							srcHeight * fac),
@@ -289,10 +289,10 @@ public class M3ExternalGC implements IExternalGC {
 		}
 
 		final String splits[] = this.resources.getTextSplits(inputText, flags);
-		M3TextDrawing.drawText(this, splits, flags, x, y);
+		RasterTextDrawing.drawText(this, splits, flags, x, y);
 	}
 
-	M3PaintManager getPaintManager() {
+	RasterPaintManager getPaintManager() {
 		return this.paintManager;
 	}
 
@@ -327,13 +327,13 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public void drawPath(Path path) {
 		paintManager.performDraw(paint -> {
-			try (io.github.humbleui.skija.Path m3Path = M3PathConverter.convertSWTPathToM3Path(path,
+			try (io.github.humbleui.skija.Path m3Path = RasterPathConverter.convertSWTPathToM3Path(path,
 					getScaler())) {
 				if (m3Path == null) {
 					return;
 				}
 				// the stroke miter on GC is quite high (the donor's default; leaf 5: a miter limit setLineAttributes gave wins,
-				// M3PaintManager.performDraw applied it)
+				// RasterPaintManager.performDraw applied it)
 				if (!miterLimitSet) {
 					paint.setStrokeMiter(1000);
 				}
@@ -347,7 +347,7 @@ public class M3ExternalGC implements IExternalGC {
 		paintManager.performDrawFilled(paint -> {
 			// points have always one pixel no matter the zoom...
 			// fill mode is right for it, not stroke, so we use performDrawFilled
-			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(getForeground()));
+			paint.setColor(RasterColorConverter.convertSWTColorToM3Color(getForeground()));
 			final var rec = RectangleConverter.scaleUpRectangle(getScaler(), new Rectangle(x, y, 1, 1));
 			final var r = new Rect(rec.x, rec.y, rec.x + 1, rec.y + 1);
 			surface.getCanvas().drawRect(r, paint);
@@ -493,8 +493,8 @@ public class M3ExternalGC implements IExternalGC {
 		final int y2 = vertical ? y + height : y;
 
 		final Rect rect = RectangleConverter.createScaledRectangle(getScaler(), x, y, width, height);
-		int fromColor = M3ColorConverter.convertSWTColorToM3Color(getForeground());
-		int toColor = M3ColorConverter.convertSWTColorToM3Color(getBackground());
+		int fromColor = RasterColorConverter.convertSWTColorToM3Color(getForeground());
+		int toColor = RasterColorConverter.convertSWTColorToM3Color(getBackground());
 		if (fromColor == toColor) {
 			paintManager.performDrawFilled(paint -> surface.getCanvas().drawRect(rect, paint));
 			return;
@@ -543,7 +543,7 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public void fillPath(Path path) {
 		paintManager.performDrawFilled(paint -> {
-			try (io.github.humbleui.skija.Path m3Path = M3PathConverter.convertSWTPathToM3Path(path,
+			try (io.github.humbleui.skija.Path m3Path = RasterPathConverter.convertSWTPathToM3Path(path,
 					getScaler())) {
 				if (m3Path == null) {
 					return;
@@ -570,7 +570,7 @@ public class M3ExternalGC implements IExternalGC {
 
 		paintManager.performDrawFilled(paint -> {
 
-			try (var path = M3PathConverter.createPath(pointArray, fillRule, getScaler())) {
+			try (var path = RasterPathConverter.createPath(pointArray, fillRule, getScaler())) {
 				if (path == null || path.isEmpty()) {
 					return;
 				}
@@ -612,7 +612,7 @@ public class M3ExternalGC implements IExternalGC {
 	public void setTransform(Transform transform) {
 
 		final var sc = getScaler();
-		this.currentTransform = M3TransformConverter.toM3Matrix(transform, sc);
+		this.currentTransform = RasterTransformConverter.toM3Matrix(transform, sc);
 		surface.getCanvas().setMatrix(this.currentTransform);
 		// Save the canvas state after applying the new transform, so subsequent
 		// operations (e.g. clipping) can be stacked and later restored independently
@@ -718,19 +718,19 @@ public class M3ExternalGC implements IExternalGC {
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		}
 
-		final IM3Image m3Image = SwtToM3ImageConverter.convertSWTImageToM3Image(image,
+		final IRasterImage m3Image = SwtToRasterImageConverter.convertSWTImageToM3Image(image,
 				getScaler().getNativeZoom(), resources);
-		try (final IM3Image copiedArea = surface.makeImageSnapshot(RectangleConverter
+		try (final IRasterImage copiedArea = surface.makeImageSnapshot(RectangleConverter
 				.createScaledRectangle(getScaler(), x, y, m3Image.getWidth(), m3Image.getHeight()).toIRect())) {
 
 			if (copiedArea == null) {
 				SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 			}
 
-			try (final IM3Surface imageSurface = surface.makeSurface(m3Image.getWidth(), m3Image.getHeight())) {
+			try (final IRasterSurface imageSurface = surface.makeSurface(m3Image.getWidth(), m3Image.getHeight())) {
 				imageSurface.getCanvas().drawImage(copiedArea, 0, 0);
-				try (final IM3Image snapshot = imageSurface.makeImageSnapshot()) {
-					final ImageData imgData = M3ToSwtImageConverter.convertM3ImageToImageData(snapshot);
+				try (final IRasterImage snapshot = imageSurface.makeImageSnapshot()) {
+					final ImageData imgData = RasterToSwtImageConverter.convertM3ImageToImageData(snapshot);
 					Image i = null;
 					GC gc = null;
 					try {
@@ -769,7 +769,7 @@ public class M3ExternalGC implements IExternalGC {
 			surface.getCanvas()
 			.clipRect(RectangleConverter.createScaledRectangle(getScaler(), srcX, srcY, width, height));
 			// Clear the clipped area with transparent background (simulates OS.SW_ERASE)
-			surface.getCanvas().clear(M3ColorConverter.convertSWTColorToM3Color(getBackground()));
+			surface.getCanvas().clear(RasterColorConverter.convertSWTColorToM3Color(getBackground()));
 			// Restore the canvas state
 			surface.getCanvas().restore();
 			// Trigger redraw for the source area if using SWT Canvas
@@ -903,7 +903,7 @@ public class M3ExternalGC implements IExternalGC {
 		if (transform == null) {
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		}
-		M3TransformConverter.fromM3Matrix(currentTransform, transform, getScaler());
+		RasterTransformConverter.fromM3Matrix(currentTransform, transform, getScaler());
 	}
 
 	@Override
@@ -921,7 +921,7 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public void setClipping(Path path) {
-		final IM3Canvas canvas = surface.getCanvas();
+		final IRasterCanvas canvas = surface.getCanvas();
 		if (isClipSet) {
 			canvas.restore(); // pop the previously saved clip layer
 			isClipSet = false;
@@ -932,7 +932,7 @@ public class M3ExternalGC implements IExternalGC {
 		if (path.isDisposed()) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
-		try (final io.github.humbleui.skija.Path m3Path = M3PathConverter.convertSWTPathToM3Path(path,
+		try (final io.github.humbleui.skija.Path m3Path = RasterPathConverter.convertSWTPathToM3Path(path,
 				getScaler())) {
 			if (m3Path == null) {
 				return;
@@ -954,7 +954,7 @@ public class M3ExternalGC implements IExternalGC {
 		// here
 		// because the clip will be cleared when the next setClipping call is made or on
 		// dispose.
-		final IM3Canvas canvas = surface.getCanvas();
+		final IRasterCanvas canvas = surface.getCanvas();
 		if (isClipSet) {
 			canvas.restore(); // pop the previously saved clip layer
 			isClipSet = false;
@@ -976,7 +976,7 @@ public class M3ExternalGC implements IExternalGC {
 
 		// Skija uses a canvas state stack; each save() pushes a new layer,
 		// and restore() pops it, removing the clipping region set in that layer.
-		final IM3Canvas canvas = surface.getCanvas();
+		final IRasterCanvas canvas = surface.getCanvas();
 		if (isClipSet) {
 			canvas.restore(); // pop the previously saved clip layer
 			isClipSet = false;
@@ -988,7 +988,7 @@ public class M3ExternalGC implements IExternalGC {
 			return;
 		}
 
-		final M3RegionCalculator calc = new M3RegionCalculator(region, m3Extension);
+		final RasterRegionCalculator calc = new RasterRegionCalculator(region, m3Extension);
 		// Push a new canvas layer so the clip can be undone later with restore()
 		canvas.save();
 		try (calc) {
@@ -1237,7 +1237,7 @@ public class M3ExternalGC implements IExternalGC {
 
 		final var font = getM3Font();
 		final var m = font.getMetrics();
-		final var fe = new FontMetricsExtension(new M3ExternalFontMetrics(m, getScaler()));
+		final var fe = new FontMetricsExtension(new RasterExternalFontMetrics(m, getScaler()));
 		return fe;
 	}
 
@@ -1278,15 +1278,15 @@ public class M3ExternalGC implements IExternalGC {
 
 	}
 
-	IM3Resources getM3Resources() {
+	IRasterResources getM3Resources() {
 		return this.resources;
 	}
 
-	IM3Surface getM3Surface() {
+	IRasterSurface getM3Surface() {
 		return this.surface;
 	}
 
-	IM3CanvasExtension getM3Extension() {
+	IRasterCanvasExtension getM3Extension() {
 		return this.m3Extension;
 	}
 

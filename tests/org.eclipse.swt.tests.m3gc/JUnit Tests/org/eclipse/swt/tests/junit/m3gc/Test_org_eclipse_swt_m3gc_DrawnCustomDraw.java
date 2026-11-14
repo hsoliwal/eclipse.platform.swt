@@ -28,8 +28,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.GCExtension;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.internal.canvasext.raster.RasterExternalGC;
 import org.eclipse.swt.internal.render.DrawnCustomDraw;
-import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
 import org.eclipse.swt.widgets.Event;
 import org.junit.jupiter.api.Test;
 
@@ -68,7 +68,7 @@ public class Test_org_eclipse_swt_m3gc_DrawnCustomDraw {
 			ext.resources = resources;
 			ext.clientArea = new Rectangle(0, 0, 400, 300);
 			ext.bounds = ext.clientArea;
-			gc = new GCExtension(new M3ExternalGC(ext, SWT.NONE));
+			gc = new GCExtension(new RasterExternalGC(ext, SWT.NONE));
 			protocol = new DrawnCustomDraw(type -> (this.hooked & bit(type)) != 0, this::send, this::supply, this::release);
 			protocol.frame(zoom);
 		}

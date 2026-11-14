@@ -25,8 +25,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.LineAttributes;
 import org.eclipse.swt.graphics.Path;
-import org.eclipse.swt.internal.render.m3.gc.IM3Resources;
-import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
+import org.eclipse.swt.internal.canvasext.raster.IRasterResources;
+import org.eclipse.swt.internal.canvasext.raster.RasterExternalGC;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -49,14 +49,14 @@ public class Test_org_eclipse_swt_m3gc_StrokeState {
 		assumeTrue(SupportedTestPlatforms.isSupported(), "Test skipped: Platform not supported");
 	}
 
-	static M3ExternalGC gc(M3SurfaceDouble surface) {
-		IM3Resources resources = new M3ResourcesDouble();
+	static RasterExternalGC gc(M3SurfaceDouble surface) {
+		IRasterResources resources = new M3ResourcesDouble();
 		resources.setForeground(new Color(null, 255, 255, 255));
 		resources.setBackground(new Color(null, 0, 0, 0));
 		CanvasExtensionDouble ext = new CanvasExtensionDouble();
 		ext.surface = surface;
 		ext.resources = resources;
-		return new M3ExternalGC(ext, SWT.NONE);
+		return new RasterExternalGC(ext, SWT.NONE);
 	}
 
 	static float miter(M3SurfaceDouble surface, int call) {
@@ -71,7 +71,7 @@ public class Test_org_eclipse_swt_m3gc_StrokeState {
 	@Test
 	public void testDefaultsKeepTheAdoptedContract() {
 		M3SurfaceDouble surface = new M3SurfaceDouble(null);
-		M3ExternalGC gc = gc(surface);
+		RasterExternalGC gc = gc(surface);
 		gc.drawLine(10, 20, 30, 40);
 		assertEquals(4.0f, miter(surface, 0), "no limit given: the donor's Skija default");
 		assertEquals(10f, gc.getLineAttributes().miterLimit, "the stock GCData default (the donor reported 0)");
@@ -81,7 +81,7 @@ public class Test_org_eclipse_swt_m3gc_StrokeState {
 	@Test
 	public void testGivenMiterLimitReachesEveryStroke() {
 		M3SurfaceDouble surface = new M3SurfaceDouble(null);
-		M3ExternalGC gc = gc(surface);
+		RasterExternalGC gc = gc(surface);
 		gc.setLineAttributes(attributes(SWT.LINE_SOLID, null, 0, 2.5f));
 		gc.drawLine(10, 20, 30, 40);
 		gc.drawRectangle(1, 1, 10, 10);
@@ -93,7 +93,7 @@ public class Test_org_eclipse_swt_m3gc_StrokeState {
 	@Test
 	public void testDrawPathKeepsTheDonorMiterUntilALimitIsGiven() {
 		M3SurfaceDouble surface = new M3SurfaceDouble(null);
-		M3ExternalGC gc = gc(surface);
+		RasterExternalGC gc = gc(surface);
 		Path path = new Path(null);
 		path.moveTo(10, 20);
 		path.lineTo(30, 40);
@@ -109,7 +109,7 @@ public class Test_org_eclipse_swt_m3gc_StrokeState {
 	@Test
 	public void testRoundTripStrokesWithTheStockMiter() {
 		M3SurfaceDouble surface = new M3SurfaceDouble(null);
-		M3ExternalGC gc = gc(surface);
+		RasterExternalGC gc = gc(surface);
 		gc.setLineAttributes(gc.getLineAttributes());
 		gc.drawLine(10, 20, 30, 40);
 		assertEquals(10f, miter(surface, 0), "get/set keeps the stock 10 (a 0 would bevel every join)");
@@ -129,7 +129,7 @@ public class Test_org_eclipse_swt_m3gc_StrokeState {
 						real.drawLine(x0, y0, x1, y1, paint);
 					}
 				};
-				M3ExternalGC gc = gc(surface);
+				RasterExternalGC gc = gc(surface);
 				gc.setLineAttributes(attributes(style, dash, offset, 10));
 				gc.drawLine(0, 4, WIDTH - 1, 4);
 				boolean[] on = new boolean[WIDTH];

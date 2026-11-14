@@ -3080,7 +3080,7 @@ public long internal_new_GC (GCData data) {
  * M3 (GC seam, leaf 4): registers the M3 canvas factory (loaded by name, as RowBackends loads the planes' backend) with
  * ExternalCanvasHandler when a startup property asks for m3 or gpu. Leaf 5: any such property, global or per widget
  * (swt.widget.mode.StyledText=m3 alone reaches StyledText); the factory then decides per canvas class
- * (M3CanvasFactory.accepts). With no mode set nothing is registered and every canvas paints as it always did.
+ * (RasterCanvasFactory.accepts). With no mode set nothing is registered and every canvas paints as it always did.
  */
 void registerM3Canvas () {
 	if (WidgetMode.anyRequested (WidgetMode.M3, WidgetMode.GPU)) {

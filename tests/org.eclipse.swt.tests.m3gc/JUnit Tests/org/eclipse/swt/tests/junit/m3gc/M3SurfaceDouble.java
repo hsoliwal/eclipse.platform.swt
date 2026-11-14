@@ -3,13 +3,12 @@ package org.eclipse.swt.tests.junit.m3gc;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.swt.internal.render.m3.gc.IM3Canvas;
-import org.eclipse.swt.internal.render.m3.gc.IM3Image;
-import org.eclipse.swt.internal.render.m3.gc.IM3Surface;
-
+import org.eclipse.swt.internal.canvasext.raster.IRasterCanvas;
+import org.eclipse.swt.internal.canvasext.raster.IRasterImage;
+import org.eclipse.swt.internal.canvasext.raster.IRasterSurface;
 import io.github.humbleui.types.IRect;
 
-public class M3SurfaceDouble implements IM3Surface {
+public class M3SurfaceDouble implements IRasterSurface {
 
 	List<MethodCall> calls ;
 	
@@ -22,9 +21,9 @@ public class M3SurfaceDouble implements IM3Surface {
 	boolean closed;
 	M3CanvasDouble canvas;
 
-	List<IM3Image> imageSnapshots = new ArrayList<>();
+	List<IRasterImage> imageSnapshots = new ArrayList<>();
 
-	List<IM3Surface> subSurfaces = new ArrayList<>();
+	List<IRasterSurface> subSurfaces = new ArrayList<>();
 
 	public M3SurfaceDouble(int width, int height, String string, List<MethodCall> calls) {
 		this.width = width;
@@ -61,7 +60,7 @@ public class M3SurfaceDouble implements IM3Surface {
 	}
 
 	@Override
-	public IM3Canvas getCanvas() {
+	public IRasterCanvas getCanvas() {
 		return canvas;
 	}
 
@@ -71,7 +70,7 @@ public class M3SurfaceDouble implements IM3Surface {
 	}
 
 	@Override
-	public IM3Image makeImageSnapshot() {
+	public IRasterImage makeImageSnapshot() {
 
 		var doub = new IM3ImageDouble();
 
@@ -87,7 +86,7 @@ public class M3SurfaceDouble implements IM3Surface {
 	}
 
 	@Override
-	public IM3Image makeImageSnapshot(IRect rect) {
+	public IRasterImage makeImageSnapshot(IRect rect) {
 
 		var doub = new IM3ImageDouble();
 
@@ -102,7 +101,7 @@ public class M3SurfaceDouble implements IM3Surface {
 	}
 
 	@Override
-	public IM3Surface makeSurface(int width, int height) {
+	public IRasterSurface makeSurface(int width, int height) {
 		M3SurfaceDouble surface = new M3SurfaceDouble(width, height, name + "-child-" + childIndex++, calls);
 		subSurfaces.add(surface);
 		return surface;

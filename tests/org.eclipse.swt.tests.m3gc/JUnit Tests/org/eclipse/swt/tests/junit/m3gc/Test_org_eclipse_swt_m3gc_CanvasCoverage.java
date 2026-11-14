@@ -35,7 +35,7 @@ import org.eclipse.swt.custom.TableCursor;
 import org.eclipse.swt.custom.TreeCursor;
 import org.eclipse.swt.internal.WidgetMode;
 import org.eclipse.swt.internal.canvasext.IExternalCanvasFactory;
-import org.eclipse.swt.internal.render.m3.gc.M3CanvasFactory;
+import org.eclipse.swt.internal.canvasext.raster.RasterCanvasFactory;
 import org.eclipse.swt.opengl.GLCanvas;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
@@ -118,7 +118,7 @@ public class Test_org_eclipse_swt_m3gc_CanvasCoverage {
 		for (WidgetMode mode : WidgetMode.values()) {
 			for (Class<?> type : COVERED) {
 				for (int style : STYLES) {
-					if (drawn(mode) != M3CanvasFactory.backend(mode, type, style)) {
+					if (drawn(mode) != RasterCanvasFactory.backend(mode, type, style)) {
 						wrong.add(mode + " " + type.getSimpleName() + " 0x" + Integer.toHexString(style));
 					}
 				}
@@ -130,22 +130,22 @@ public class Test_org_eclipse_swt_m3gc_CanvasCoverage {
 	@Test
 	public void testForeignCanvasesNeedTheStyleBit() {
 		for (WidgetMode mode : WidgetMode.values()) {
-			assertNull(M3CanvasFactory.backend(mode, GLCanvas.class, SWT.NONE), mode + " GLCanvas without SWT.M3");
-			assertNull(M3CanvasFactory.backend(mode, Canvas.class, SWT.EMBEDDED), mode + " embedded host without SWT.M3");
-			assertNull(M3CanvasFactory.backend(mode, AppCanvas.class, SWT.EMBEDDED | SWT.NO_BACKGROUND), mode + " embedded subclass");
-			assertEquals(drawn(mode), M3CanvasFactory.backend(mode, GLCanvas.class, SWT.M3), mode + " GLCanvas with SWT.M3");
-			assertEquals(drawn(mode), M3CanvasFactory.backend(mode, Canvas.class, SWT.EMBEDDED | SWT.M3), mode + " embedded with SWT.M3");
+			assertNull(RasterCanvasFactory.backend(mode, GLCanvas.class, SWT.NONE), mode + " GLCanvas without SWT.M3");
+			assertNull(RasterCanvasFactory.backend(mode, Canvas.class, SWT.EMBEDDED), mode + " embedded host without SWT.M3");
+			assertNull(RasterCanvasFactory.backend(mode, AppCanvas.class, SWT.EMBEDDED | SWT.NO_BACKGROUND), mode + " embedded subclass");
+			assertEquals(drawn(mode), RasterCanvasFactory.backend(mode, GLCanvas.class, SWT.M3), mode + " GLCanvas with SWT.M3");
+			assertEquals(drawn(mode), RasterCanvasFactory.backend(mode, Canvas.class, SWT.EMBEDDED | SWT.M3), mode + " embedded with SWT.M3");
 		}
-		assertTrue(M3CanvasFactory.foreign(GLCanvas.class, SWT.NONE));
-		assertFalse(M3CanvasFactory.foreign(StyledText.class, SWT.NO_BACKGROUND));
+		assertTrue(RasterCanvasFactory.foreign(GLCanvas.class, SWT.NONE));
+		assertFalse(RasterCanvasFactory.foreign(StyledText.class, SWT.NO_BACKGROUND));
 	}
 
 	@Test
 	public void testDecorationsNever() {
 		for (WidgetMode mode : WidgetMode.values()) {
 			for (int style : STYLES) {
-				assertNull(M3CanvasFactory.backend(mode, Decorations.class, style), mode + " Decorations");
-				assertNull(M3CanvasFactory.backend(mode, Shell.class, style), mode + " Shell");
+				assertNull(RasterCanvasFactory.backend(mode, Decorations.class, style), mode + " Decorations");
+				assertNull(RasterCanvasFactory.backend(mode, Shell.class, style), mode + " Shell");
 			}
 		}
 	}
@@ -153,7 +153,7 @@ public class Test_org_eclipse_swt_m3gc_CanvasCoverage {
 	@Test
 	public void testFactoryAppliesTheSelectorToTheCanvasClass() {
 		List<Class<?>> asked = new ArrayList<>();
-		M3CanvasFactory m3 = new M3CanvasFactory(type -> {
+		RasterCanvasFactory m3 = new RasterCanvasFactory(type -> {
 			asked.add(type);
 			return WidgetMode.M3;
 		}, c -> Test_org_eclipse_swt_m3gc_M3CanvasFactory.RASTER, c -> Test_org_eclipse_swt_m3gc_M3CanvasFactory.GPU);
@@ -161,7 +161,7 @@ public class Test_org_eclipse_swt_m3gc_CanvasCoverage {
 		assertSame(Test_org_eclipse_swt_m3gc_M3CanvasFactory.RASTER, m3.create(null, SWT.NONE));
 		assertFalse(m3.accepts(null, SWT.EMBEDDED), "an embedded host without the bit");
 		assertEquals(List.of(Canvas.class, Canvas.class, Canvas.class), asked, "the selector sees the canvas class");
-		M3CanvasFactory off = new M3CanvasFactory((Class<?> type) -> WidgetMode.ORIGINAL,
+		RasterCanvasFactory off = new RasterCanvasFactory((Class<?> type) -> WidgetMode.ORIGINAL,
 				c -> Test_org_eclipse_swt_m3gc_M3CanvasFactory.RASTER, c -> Test_org_eclipse_swt_m3gc_M3CanvasFactory.GPU);
 		assertFalse(off.accepts(null, SWT.M3), "original mode, even with the bit");
 		assertNull(off.create(null, SWT.M3));
@@ -171,22 +171,22 @@ public class Test_org_eclipse_swt_m3gc_CanvasCoverage {
 	public void testPerClassPropertyDecides() {
 		assumeTrue(noModeProperty(), "the test JVM sets no widget mode");
 		set("StyledText", "m3");
-		assertEquals(WidgetMode.M3, M3CanvasFactory.mode(StyledText.class));
-		assertEquals(WidgetMode.M3, M3CanvasFactory.mode(AppText.class), "a subclass inherits its superclass's property");
-		assertEquals(WidgetMode.ORIGINAL, M3CanvasFactory.mode(CLabel.class), "no property: the stock path");
-		assertEquals(WidgetMode.ORIGINAL, M3CanvasFactory.mode(Canvas.class));
+		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(StyledText.class));
+		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(AppText.class), "a subclass inherits its superclass's property");
+		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(CLabel.class), "no property: the stock path");
+		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(Canvas.class));
 		set("Canvas", "gpu");
-		assertEquals(WidgetMode.GPU, M3CanvasFactory.mode(CLabel.class), "the Canvas property reaches every subclass");
-		assertEquals(WidgetMode.GPU, M3CanvasFactory.mode(AppCanvas.class));
-		assertEquals(WidgetMode.M3, M3CanvasFactory.mode(StyledText.class), "the most derived property wins");
+		assertEquals(WidgetMode.GPU, RasterCanvasFactory.mode(CLabel.class), "the Canvas property reaches every subclass");
+		assertEquals(WidgetMode.GPU, RasterCanvasFactory.mode(AppCanvas.class));
+		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(StyledText.class), "the most derived property wins");
 		set("Canvas", null);
 		set(null, "m3");
 		set("StyledText", "original");
-		assertEquals(WidgetMode.ORIGINAL, M3CanvasFactory.mode(StyledText.class), "a class opts out of a global m3");
-		assertEquals(WidgetMode.ORIGINAL, M3CanvasFactory.mode(AppText.class));
-		assertEquals(WidgetMode.M3, M3CanvasFactory.mode(CLabel.class), "the global property for the others");
+		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(StyledText.class), "a class opts out of a global m3");
+		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(AppText.class));
+		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(CLabel.class), "the global property for the others");
 		set("AppCanvas", "custom");
-		assertEquals(WidgetMode.ORIGINAL, M3CanvasFactory.mode(AppCanvas.class), "an unsupported mode falls back (Canvas has no viewport)");
+		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(AppCanvas.class), "an unsupported mode falls back (Canvas has no viewport)");
 	}
 
 	@Test

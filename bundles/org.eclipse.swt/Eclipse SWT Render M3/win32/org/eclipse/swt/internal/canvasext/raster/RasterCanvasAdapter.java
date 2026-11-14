@@ -1,4 +1,4 @@
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import io.github.humbleui.skija.Canvas;
 import io.github.humbleui.skija.Font;
@@ -11,13 +11,13 @@ import io.github.humbleui.types.RRect;
 import io.github.humbleui.types.Rect;
 
 /**
- * Adapter to wrap Skija's Canvas as IM3Canvas. (Stub for now, can be extended
+ * Adapter to wrap Skija's Canvas as IRasterCanvas. (Stub for now, can be extended
  * as needed.)
  */
-class M3CanvasAdapter implements IM3Canvas {
+class RasterCanvasAdapter implements IRasterCanvas {
 	private final Canvas delegate;
 
-	public M3CanvasAdapter(Canvas canvas) {
+	public RasterCanvasAdapter(Canvas canvas) {
 		this.delegate = canvas;
 	}
 
@@ -68,13 +68,13 @@ class M3CanvasAdapter implements IM3Canvas {
 	}
 
 	@Override
-	public void drawImage(IM3Image image, int x, int y) {
-		delegate.drawImage(((M3ImageAdapter)image).getM3Image(), x, y);
+	public void drawImage(IRasterImage image, int x, int y) {
+		delegate.drawImage(((RasterImageAdapter)image).getM3Image(), x, y);
 	}
 
 	@Override
-	public void drawImageRect(IM3Image image, Rect src, Rect dst, SamplingMode sampling, Paint paint, boolean strict) {
-		delegate.drawImageRect(((M3ImageAdapter)image).getM3Image(), src, dst, sampling, paint, strict);
+	public void drawImageRect(IRasterImage image, Rect src, Rect dst, SamplingMode sampling, Paint paint, boolean strict) {
+		delegate.drawImageRect(((RasterImageAdapter)image).getM3Image(), src, dst, sampling, paint, strict);
 	}
 
 	@Override

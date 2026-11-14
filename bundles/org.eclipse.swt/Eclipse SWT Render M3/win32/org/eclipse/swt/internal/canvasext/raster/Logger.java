@@ -1,4 +1,4 @@
-package org.eclipse.swt.internal.render.m3.gc;
+package org.eclipse.swt.internal.canvasext.raster;
 
 import org.eclipse.swt.internal.canvasext.*;
 
