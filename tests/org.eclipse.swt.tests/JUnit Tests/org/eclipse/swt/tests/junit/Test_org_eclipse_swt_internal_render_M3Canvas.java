@@ -38,7 +38,7 @@ public class Test_org_eclipse_swt_internal_render_M3Canvas {
 	public static void m3BackendOnly () {
 		Assumptions.assumeTrue ("win32".equals (SWT.getPlatform ()));
 		try {
-			type = Class.forName ("org.eclipse.swt.internal.render.m3.M3RowCanvas");
+			type = Class.forName ("org.eclipse.swt.internal.render.RasterRowCanvas");
 		} catch (ClassNotFoundException | LinkageError e) {
 			Assumptions.assumeTrue (false, "the M3 backend and the library jars are not on the class path");
 		}
@@ -145,7 +145,7 @@ public class Test_org_eclipse_swt_internal_render_M3Canvas {
 	public void backendSelectionPrefersTheM3Backend () {
 		BufferCanvas m3 = RowBackends.create (WidgetMode.M3, "Tree", 0, TREEVIEW, () -> 100, hdc -> null);
 		try {
-			assertEquals ("M3RowCanvas", m3.getClass ().getSimpleName ());
+			assertEquals ("RasterRowCanvas", m3.getClass ().getSimpleName ());
 		} finally {
 			m3.dispose ();
 		}

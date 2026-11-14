@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3;
+package org.eclipse.swt.internal.render;
 
 import java.util.*;
 import java.util.function.*;
@@ -21,7 +21,6 @@ import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.canvasext.raster.RasterExternalGC;
 import org.eclipse.swt.internal.canvasext.raster.RasterPlaneCanvasExtension;
-import org.eclipse.swt.internal.render.*;
 import org.eclipse.swt.internal.win32.*;
 import org.eclipse.swt.widgets.Control;
 
@@ -48,7 +47,7 @@ import io.github.humbleui.types.Rect;
  * the library's primitive native entry points and allocate nothing; objects are made only when a cache misses.
  * </p>
  */
-public final class M3RowCanvas implements BufferCanvas {
+public final class RasterRowCanvas implements BufferCanvas {
 	private static final int FONTS = 32, LINES = 2048, PART_IMAGES = 256;
 	private static final int CLIP_INTERSECT = ClipMode.INTERSECT.ordinal ();
 	private static final String ELLIPSIS_TEXT = "...";
@@ -73,7 +72,7 @@ public final class M3RowCanvas implements BufferCanvas {
 
 		@Override
 		public void close () {
-			lines.values ().forEach (M3RowCanvas::close);
+			lines.values ().forEach (RasterRowCanvas::close);
 			lines.clear ();
 			font.close ();
 		}
@@ -138,17 +137,17 @@ public final class M3RowCanvas implements BufferCanvas {
 	private long dc, bits;
 	private int width, height;
 	/* by native handle or packed part key: no boxing per lookup (LongCache) */
-	private final LongCache<FontEntry> fonts = new LongCache<> (FONTS, M3RowCanvas::close);
+	private final LongCache<FontEntry> fonts = new LongCache<> (FONTS, RasterRowCanvas::close);
 	private final Map<org.eclipse.swt.graphics.Image, Bitmap> images = new WeakHashMap<> ();
 	private final Map<ImageData, Bitmap> glyphs = new WeakHashMap<> ();
-	private final LongCache<Bitmap> partImages = new LongCache<> (PART_IMAGES, M3RowCanvas::close);
+	private final LongCache<Bitmap> partImages = new LongCache<> (PART_IMAGES, RasterRowCanvas::close);
 	private final LOGFONT logFont = new LOGFONT ();
 	/* the fonts of the frame being drawn on the render thread (rule 28); null on the UI thread */
 	private FontTable table;
 	/* the path of polygon, reset per call */
 	private final Path path = new Path ();
 	/* the gpu mode: the frame is drawn on the graphics hardware and read back into the back buffer */
-	private final M3Gpu gpu;
+	private final GpuContext gpu;
 	private Pixmap readback;
 	private ImageInfo readbackInfo;
 	private int frameX, frameY, frameWidth, frameHeight;
@@ -167,23 +166,23 @@ public final class M3RowCanvas implements BufferCanvas {
 	 * @param itemThemeClass the uxtheme class of rows (NUL-terminated)
 	 * @param zoom the widget's current native zoom
 	 */
-	public M3RowCanvas (long hwnd, char [] itemThemeClass, IntSupplier zoom) {
+	public RasterRowCanvas (long hwnd, char [] itemThemeClass, IntSupplier zoom) {
 		this (hwnd, itemThemeClass, zoom, null);
 	}
 
-	private M3RowCanvas (long hwnd, char [] itemThemeClass, IntSupplier zoom, M3Gpu gpu) {
+	private RasterRowCanvas (long hwnd, char [] itemThemeClass, IntSupplier zoom, GpuContext gpu) {
 		this.zoom = zoom;
 		this.parts = new ThemeParts (hwnd, itemThemeClass, zoom);
 		this.gpu = gpu;
 	}
 
 	/**
-	 * The graphics hardware backend of the <code>gpu</code> mode (Skia over OpenGL, see {@link M3Gpu}), or null when
+	 * The graphics hardware backend of the <code>gpu</code> mode (Skia over OpenGL, see {@link GpuContext}), or null when
 	 * no GL context can be made.
 	 */
-	public static M3RowCanvas gpu (long hwnd, char [] itemThemeClass, IntSupplier zoom) {
-		M3Gpu gpu = M3Gpu.acquire ();
-		return gpu == null ? null : new M3RowCanvas (hwnd, itemThemeClass, zoom, gpu);
+	public static RasterRowCanvas gpu (long hwnd, char [] itemThemeClass, IntSupplier zoom) {
+		GpuContext gpu = GpuContext.acquire ();
+		return gpu == null ? null : new RasterRowCanvas (hwnd, itemThemeClass, zoom, gpu);
 	}
 
 	private static <K, V> Map<K, V> lru (int capacity) {
@@ -448,9 +447,9 @@ public final class M3RowCanvas implements BufferCanvas {
 	public void dispose () {
 		parts.close ();
 		fonts.clear ();
-		images.values ().forEach (M3RowCanvas::close);
+		images.values ().forEach (RasterRowCanvas::close);
 		images.clear ();
-		glyphs.values ().forEach (M3RowCanvas::close);
+		glyphs.values ().forEach (RasterRowCanvas::close);
 		glyphs.clear ();
 		partImages.clear ();
 		path.close ();

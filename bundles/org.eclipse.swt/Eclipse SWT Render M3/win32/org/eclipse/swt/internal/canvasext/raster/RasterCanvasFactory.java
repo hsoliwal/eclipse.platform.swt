@@ -16,7 +16,7 @@ import org.eclipse.swt.*;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.internal.*;
 import org.eclipse.swt.internal.canvasext.*;
-import org.eclipse.swt.internal.render.m3.*;
+import org.eclipse.swt.internal.render.*;
 import org.eclipse.swt.ole.win32.OleClientSite;
 import org.eclipse.swt.opengl.GLCanvas;
 import org.eclipse.swt.widgets.Canvas;
@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Decorations;
  * <p>
  * M3 (GC seam, leaf 5; pattern M3-CANVAS-ACTIVATION v2, v1 was leaf 4's mode x style bit): the decision is the widget
  * mode of the canvas's class, {@link #backend(WidgetMode, Class, int)}. In the <code>m3</code> (raster,
- * {@link M3CanvasHandler#raster}) and <code>gpu</code> ({@link M3CanvasHandler#gpu}) modes every <code>Canvas</code>
+ * {@link RasterCanvasHandler#raster}) and <code>gpu</code> ({@link RasterCanvasHandler#gpu}) modes every <code>Canvas</code>
  * subclass gets a handler, with or without <code>SWT.M3</code> (StyledText, CLabel, the table and tree cursors, Nebula's
  * canvases); a class may choose its own mode (<code>swt.widget.mode.StyledText</code>, then a superclass's property up to
  * <code>swt.widget.mode.Canvas</code>, then <code>swt.widget.mode</code>). A canvas whose pixels are not its paint
@@ -51,7 +51,7 @@ public class RasterCanvasFactory implements IExternalCanvasFactory {
 
 	/** The shipped factory (ServiceLoader, Display registration): the startup mode of the canvas's class, the M3 handlers. */
 	public RasterCanvasFactory() {
-		this(RasterCanvasFactory::mode, M3CanvasHandler::raster, M3CanvasHandler::gpu);
+		this(RasterCanvasFactory::mode, RasterCanvasHandler::raster, RasterCanvasHandler::gpu);
 	}
 
 	/** The decision with one stubbed mode for every class and stubbed handler makers (headless tests, leaf 4). */

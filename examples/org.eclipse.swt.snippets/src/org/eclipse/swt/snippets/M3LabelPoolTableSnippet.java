@@ -17,7 +17,7 @@ package org.eclipse.swt.snippets;
 /*
  * A virtual Table of 1,000,000 rows whose labels repeat like an Explorer
  * window (name, type, size, date). With the label pool on (default) the model
- * keeps one int label id per cell in M3LabelLanes; with -Dm3.labelpool=off it
+ * keeps one int label id per cell in LabelLanes; with -Dm3.labelpool=off it
  * keeps a String per cell. The header line shows the retained heap of the
  * model, and how many GC.stringExtent calls the widest-column computation of
  * every column needed: once per distinct label with the pool, once per row
@@ -31,7 +31,7 @@ import java.util.function.*;
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.*;
-import org.eclipse.swt.internal.m3.collections.*;
+import org.eclipse.swt.internal.residency.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
@@ -59,9 +59,9 @@ public class M3LabelPoolTableSnippet {
 	}
 
 	static Model pooled (Random random) {
-		M3LabelPool pool = new M3LabelPool (4096);
-		M3TextExtentCache extents = new M3TextExtentCache (1 << 18);
-		M3LabelLanes lanes = new M3LabelLanes (COLUMNS, pool, extents);
+		LabelPool pool = new LabelPool (4096);
+		TextExtentCache extents = new TextExtentCache (1 << 18);
+		LabelLanes lanes = new LabelLanes (COLUMNS, pool, extents);
 		lanes.setRowCount (ROWS);
 		for (int row = 0; row < ROWS; row++) {
 			for (int c = 0; c < COLUMNS; c++) lanes.setText (row, c, label (c, random.nextInt (DISTINCT [c])));
@@ -69,7 +69,7 @@ public class M3LabelPoolTableSnippet {
 		return new Model () {
 			public String text (int row, int column) { return lanes.text (row, column); }
 			public int widest (int column, ToIntFunction<String> measure) {
-				return lanes.widest (column, 0, ROWS, 0, (id, font) -> M3TextExtentCache.pack (measure.applyAsInt (lanes.text (id)), 0));
+				return lanes.widest (column, 0, ROWS, 0, (id, font) -> TextExtentCache.pack (measure.applyAsInt (lanes.text (id)), 0));
 			}
 			public long calls () { return extents.misses (); }
 		};

@@ -21,8 +21,8 @@ package org.eclipse.swt.internal.laf;
  * matrices are Bjorn Ottosson's ("A perceptual color space for image processing", 2020, public domain formulas);
  * colours outside sRGB lose chroma by bisection until they fit.
  */
-public final class M3Oklch {
-	private M3Oklch () {
+public final class Oklch {
+	private Oklch () {
 	}
 
 	/** The OKLCH coordinates <code>{L, C, h}</code> of an ARGB colour (alpha ignored). */

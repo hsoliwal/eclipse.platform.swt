@@ -177,7 +177,7 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeImport {
 	public void anImportIsInstalledAsALookAndFeel () {
 		M3ThemeImport.install ("test-import-ij", M3ThemeImport.intelliJ (INTELLIJ));
 		assertTrue (LookAndFeel.names ().contains ("test-import-ij"));
-		int tree = M3UIKeys.intern ("Tree.selectionBackground", M3UIKeys.COLOR);
+		int tree = UIKeys.intern ("Tree.selectionBackground", UIKeys.COLOR);
 		assertEquals (0xFF112233, M3LookAndFeel.defaults ("test-import-ij").color (tree, 0));
 	}
 
@@ -189,12 +189,12 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeImport {
 		Path file = directory.resolve ("live.properties"), json = directory.resolve ("live.theme.json");
 		Files.writeString (file, "@extends = flat\nTable.selectionBackground = #102030\n", StandardCharsets.UTF_8);
 		Files.writeString (json, INTELLIJ, StandardCharsets.UTF_8);
-		int selection = M3UIKeys.intern ("Table.selectionBackground", M3UIKeys.COLOR);
-		try (M3ThemeWatcher watcher = M3ThemeWatcher.watch (display, file, "test-live"); M3ThemeWatcher other = M3ThemeWatcher.watch (display, json, "test-live-ij")) {
-			assertEquals (0xFF112233, M3LookAndFeel.defaults ("test-live-ij").color (M3UIKeys.intern ("Tree.selectionBackground", M3UIKeys.COLOR), 0));
+		int selection = UIKeys.intern ("Table.selectionBackground", UIKeys.COLOR);
+		try (ThemeWatcher watcher = ThemeWatcher.watch (display, file, "test-live"); ThemeWatcher other = ThemeWatcher.watch (display, json, "test-live-ij")) {
+			assertEquals (0xFF112233, M3LookAndFeel.defaults ("test-live-ij").color (UIKeys.intern ("Tree.selectionBackground", UIKeys.COLOR), 0));
 			M3LookAndFeel.setLookAndFeel ("test-live");
 			Canvas canvas = new Canvas (shell, SWT.NONE);
-			Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe probe = new Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe (new int [] {selection}, M3ComponentUI.NO_KEYS);
+			Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe probe = new Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe (new int [] {selection}, ComponentUI.NO_KEYS);
 			M3LookAndFeel.installUI (canvas, Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe.class, probe);
 			assertEquals (0xFF102030, probe.defaults.color (selection, 0));
 			Files.writeString (file, "@extends = flat\nTable.selectionBackground = #405060\n", StandardCharsets.UTF_8);

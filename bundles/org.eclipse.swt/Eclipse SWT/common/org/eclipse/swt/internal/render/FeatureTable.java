@@ -20,7 +20,7 @@ package org.eclipse.swt.internal.render;
  * file). One tab-separated string per row, in bit order, columns feature_id, concept, widget_family, current_state, default, native_owner, enhanced_api_id, alias, shipped.
  */
 //FLLDCIM: TFG — generated from FEATURE_SWITCH_MATRIX.tsv and SHIPPED.tsv by gen_features.py
-final class M3FeatureTable {
+final class FeatureTable {
 	/** The number of features: the rows of the ledger. */
 	static final int COUNT = 179;
 	/** The columns of a row, tab separated, in bit order. */
@@ -206,6 +206,6 @@ final class M3FeatureTable {
 		"frame-overlay\tframe overlay (frame time and input latency numbers over the rows)\tall\tVIEWPORT_HAS\toff\tDrawnPlane.overlay (win32 drawn planes: custom, m3, gpu modes)\t-\tswt.drawn.overlay\tyes",
 	};
 
-	private M3FeatureTable () {
+	private FeatureTable () {
 	}
 }

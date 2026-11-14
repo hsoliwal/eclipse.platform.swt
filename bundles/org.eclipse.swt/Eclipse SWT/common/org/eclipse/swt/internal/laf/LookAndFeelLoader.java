@@ -251,7 +251,7 @@ public final class LookAndFeelLoader {
 				case "shade":
 				case "fadein":
 				case "fadeout":
-					return new Value (LookAndFeelDefaults.COLOR, M3ColorFunctions.apply (function, args, this::colorOf), null);
+					return new Value (LookAndFeelDefaults.COLOR, ColorFunctions.apply (function, args, this::colorOf), null);
 				case "system": {
 					expect (function, args, 1);
 					return new Value (LookAndFeelDefaults.COLOR, 0xFF000000 | system.argb (args.get (0).trim ()), null);

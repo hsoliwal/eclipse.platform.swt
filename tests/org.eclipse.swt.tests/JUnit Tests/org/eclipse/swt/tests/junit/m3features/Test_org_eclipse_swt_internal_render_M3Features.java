@@ -36,15 +36,15 @@ import org.junit.jupiter.api.*;
 @SuppressWarnings("restriction")
 public class Test_org_eclipse_swt_internal_render_M3Features {
 	private static final String WIDGET = "CoverageWidget", PARENT = "CoverageParent";
-	private static final int FEATURE = M3Features.FRAME_OVERLAY;
-	private static final String GLOBAL = M3Features.key (FEATURE);
-	private static final String SPECIFIC = M3Features.key (WIDGET, FEATURE);
-	private static final String PARENT_KEY = M3Features.key (PARENT, FEATURE);
-	private static final String ALIAS = M3Features.alias (FEATURE);
-	private static final String NATIVE_KEY = M3Features.key (M3Features.BUTTON);
-	private static final String UNSHIPPED_KEY = M3Features.key (M3Features.CARD);
-	private static final String INTEGER_KEY = M3Features.key (Integer.class.getSimpleName (), FEATURE);
-	private static final String NUMBER_KEY = M3Features.key (Number.class.getSimpleName (), FEATURE);
+	private static final int FEATURE = Features.FRAME_OVERLAY;
+	private static final String GLOBAL = Features.key (FEATURE);
+	private static final String SPECIFIC = Features.key (WIDGET, FEATURE);
+	private static final String PARENT_KEY = Features.key (PARENT, FEATURE);
+	private static final String ALIAS = Features.alias (FEATURE);
+	private static final String NATIVE_KEY = Features.key (Features.BUTTON);
+	private static final String UNSHIPPED_KEY = Features.key (Features.CARD);
+	private static final String INTEGER_KEY = Features.key (Integer.class.getSimpleName (), FEATURE);
+	private static final String NUMBER_KEY = Features.key (Number.class.getSimpleName (), FEATURE);
 	private static final List<String> KEYS = List.of (GLOBAL, SPECIFIC, PARENT_KEY, ALIAS, NATIVE_KEY, UNSHIPPED_KEY, INTEGER_KEY, NUMBER_KEY);
 	private static final int FRAME_OVERLAY_BIT = 178;
 	private static final int BIT = 0, FEATURE_ID = 1, CONCEPT = 3, FAMILY = 4, STATE = 5, DEFAULT = 6, OWNER = 7, API = 8, ALIAS_COLUMN = 9, SHIPPED = 10;
@@ -68,19 +68,19 @@ public class Test_org_eclipse_swt_internal_render_M3Features {
 	}
 
 	private static boolean overlay (String... widgets) {
-		return M3Features.isOn (M3Features.resolve (widgets), FEATURE);
+		return Features.isOn (Features.resolve (widgets), FEATURE);
 	}
 
 	@Test
 	public void test_defaults () {
-		long [] bits = M3Features.resolve (WIDGET);
-		assertFalse (M3Features.isOn (bits, FEATURE));
-		assertTrue (M3Features.isOn (bits, M3Features.BUTTON));
-		assertFalse (M3Features.isOn (bits, M3Features.CARD));
-		IntStream.of (M3Features.ids ()).forEach (id -> {
-			String [] cells = M3Features.describe (id).split ("\t");
-			assertEquals ("NATIVE_HAS".equals (cells [4]), M3Features.isOn (bits, id), cells [1] + " on iff NATIVE_HAS");
-			assertEquals ("on".equals (cells [5]), M3Features.isOn (bits, id), cells [1] + " on iff default on");
+		long [] bits = Features.resolve (WIDGET);
+		assertFalse (Features.isOn (bits, FEATURE));
+		assertTrue (Features.isOn (bits, Features.BUTTON));
+		assertFalse (Features.isOn (bits, Features.CARD));
+		IntStream.of (Features.ids ()).forEach (id -> {
+			String [] cells = Features.describe (id).split ("\t");
+			assertEquals ("NATIVE_HAS".equals (cells [4]), Features.isOn (bits, id), cells [1] + " on iff NATIVE_HAS");
+			assertEquals ("on".equals (cells [5]), Features.isOn (bits, id), cells [1] + " on iff default on");
 		});
 	}
 
@@ -119,11 +119,11 @@ public class Test_org_eclipse_swt_internal_render_M3Features {
 	@Test
 	public void test_classChain () {
 		System.setProperty (NUMBER_KEY, "true");
-		assertTrue (M3Features.isOn (M3Features.resolve (Integer.class), FEATURE));
-		assertFalse (M3Features.isOn (M3Features.resolve (String.class), FEATURE));
+		assertTrue (Features.isOn (Features.resolve (Integer.class), FEATURE));
+		assertFalse (Features.isOn (Features.resolve (String.class), FEATURE));
 		System.setProperty (INTEGER_KEY, "false");
-		assertFalse (M3Features.isOn (M3Features.resolve (Integer.class), FEATURE));
-		assertTrue (M3Features.isOn (M3Features.resolve (Number.class), FEATURE));
+		assertFalse (Features.isOn (Features.resolve (Integer.class), FEATURE));
+		assertTrue (Features.isOn (Features.resolve (Number.class), FEATURE));
 	}
 
 	@Test
@@ -136,71 +136,71 @@ public class Test_org_eclipse_swt_internal_render_M3Features {
 		System.clearProperty (GLOBAL);
 		System.setProperty (ALIAS, "false");
 		assertFalse (overlay (WIDGET));
-		assertEquals ("-", M3Features.alias (M3Features.CARD));
+		assertEquals ("-", Features.alias (Features.CARD));
 	}
 
 	@Test
 	public void test_nativeRowNotSwitchable () {
 		System.setProperty (NATIVE_KEY, "false");
-		assertTrue (M3Features.isOn (M3Features.resolve (WIDGET), M3Features.BUTTON));
+		assertTrue (Features.isOn (Features.resolve (WIDGET), Features.BUTTON));
 	}
 
 	@Test
 	public void test_unshippedRowIgnored () {
 		System.setProperty (UNSHIPPED_KEY, "true");
-		assertFalse (M3Features.isOn (M3Features.resolve (WIDGET), M3Features.CARD));
+		assertFalse (Features.isOn (Features.resolve (WIDGET), Features.CARD));
 	}
 
 	@Test
 	public void test_setAndIsOn () {
-		long [] defaults = M3Features.resolve (WIDGET);
-		long [] bits = M3Features.set (null, defaults, FEATURE, true);
+		long [] defaults = Features.resolve (WIDGET);
+		long [] bits = Features.set (null, defaults, FEATURE, true);
 		assertNotNull (bits);
-		assertTrue (M3Features.isOn (bits, FEATURE));
-		assertFalse (M3Features.isOn (defaults, FEATURE), "the defaults are not written");
-		assertTrue (M3Features.isOn (bits, M3Features.BUTTON), "the other switches are copied");
-		assertNull (M3Features.set (bits, defaults, FEATURE, false), "back at the defaults: no bitset");
-		assertNull (M3Features.set (null, defaults, FEATURE, false), "a default value allocates nothing");
-		assertNull (M3Features.set (null, defaults, M3Features.BUTTON, true), "a NATIVE_HAS row on is a no-op");
-		assertSame (bits, M3Features.set (bits, defaults, M3Features.BUTTON, true));
+		assertTrue (Features.isOn (bits, FEATURE));
+		assertFalse (Features.isOn (defaults, FEATURE), "the defaults are not written");
+		assertTrue (Features.isOn (bits, Features.BUTTON), "the other switches are copied");
+		assertNull (Features.set (bits, defaults, FEATURE, false), "back at the defaults: no bitset");
+		assertNull (Features.set (null, defaults, FEATURE, false), "a default value allocates nothing");
+		assertNull (Features.set (null, defaults, Features.BUTTON, true), "a NATIVE_HAS row on is a no-op");
+		assertSame (bits, Features.set (bits, defaults, Features.BUTTON, true));
 	}
 
 	@Test
 	public void test_setRefusals () {
-		long [] defaults = M3Features.resolve (WIDGET);
+		long [] defaults = Features.resolve (WIDGET);
 		/* SWT.error: ERROR_INVALID_ARGUMENT and ERROR_INVALID_RANGE are IllegalArgumentExceptions, ERROR_NOT_IMPLEMENTED an SWTError */
-		assertThrows (IllegalArgumentException.class, () -> M3Features.set (null, defaults, M3Features.BUTTON, false), "a NATIVE_HAS row off");
-		SWTError unshipped = assertThrows (SWTError.class, () -> M3Features.set (null, defaults, M3Features.CARD, true));
+		assertThrows (IllegalArgumentException.class, () -> Features.set (null, defaults, Features.BUTTON, false), "a NATIVE_HAS row off");
+		SWTError unshipped = assertThrows (SWTError.class, () -> Features.set (null, defaults, Features.CARD, true));
 		assertEquals (SWT.ERROR_NOT_IMPLEMENTED, unshipped.code);
-		assertThrows (IllegalArgumentException.class, () -> M3Features.describe (-1));
-		assertThrows (IllegalArgumentException.class, () -> M3Features.isOn (defaults, M3Features.COUNT));
-		assertThrows (IllegalArgumentException.class, () -> M3Features.key (M3Features.COUNT));
+		assertThrows (IllegalArgumentException.class, () -> Features.describe (-1));
+		assertThrows (IllegalArgumentException.class, () -> Features.isOn (defaults, Features.COUNT));
+		assertThrows (IllegalArgumentException.class, () -> Features.key (Features.COUNT));
 	}
 
 	@Test
 	public void test_discovery () {
-		assertEquals (M3Features.COUNT, M3Features.ids ().length);
-		assertEquals (0, M3Features.CARD, "bit index = ledger row order, from the first row");
+		assertEquals (Features.COUNT, Features.ids ().length);
+		assertEquals (0, Features.CARD, "bit index = ledger row order, from the first row");
 		assertEquals (FRAME_OVERLAY_BIT, FEATURE, "append-only: the first switch keeps its bit");
-		assertTrue (M3Features.describe (FEATURE).startsWith (FRAME_OVERLAY_BIT + "\tframe-overlay\t"));
-		assertEquals (OptionalInt.of (FEATURE), M3Features.id ("frame-overlay"));
-		assertTrue (M3Features.id ("no-such-feature").isEmpty ());
+		assertTrue (Features.describe (FEATURE).startsWith (FRAME_OVERLAY_BIT + "\tframe-overlay\t"));
+		assertEquals (OptionalInt.of (FEATURE), Features.id ("frame-overlay"));
+		assertTrue (Features.id ("no-such-feature").isEmpty ());
 		assertEquals ("swt.widget.feature.frame-overlay", GLOBAL);
 		assertEquals ("swt.widget.feature.CoverageWidget.frame-overlay", SPECIFIC);
-		String [] lines = M3Features.table ().split ("\n");
-		assertEquals (M3Features.COUNT + 1, lines.length);
-		assertEquals (M3Features.TABLE_HEADER, lines [0]);
-		assertEquals (M3Features.describe (FEATURE), lines [FEATURE + 1]);
+		String [] lines = Features.table ().split ("\n");
+		assertEquals (Features.COUNT + 1, lines.length);
+		assertEquals (Features.TABLE_HEADER, lines [0]);
+		assertEquals (Features.describe (FEATURE), lines [FEATURE + 1]);
 	}
 
 	@Test
 	public void test_generatedTableMatchesGeneratedView () throws IOException {
 		List<String> lines = generatedView ();
-		assertEquals (M3Features.COUNT + 1, lines.size (), "one row per feature");
-		IntStream.of (M3Features.ids ()).forEach (id -> {
+		assertEquals (Features.COUNT + 1, lines.size (), "one row per feature");
+		IntStream.of (Features.ids ()).forEach (id -> {
 			String [] cells = lines.get (id + 1).split ("\t", -1);
 			String described = IntStream.of (DESCRIBED).mapToObj (column -> cells [column]).collect (Collectors.joining ("\t"));
-			assertEquals (described, M3Features.describe (id), "row " + id);
+			assertEquals (described, Features.describe (id), "row " + id);
 			assertEquals (id, constant (cells [2]), cells [2] + " = bit " + id);
 		});
 	}
@@ -216,7 +216,7 @@ public class Test_org_eclipse_swt_internal_render_M3Features {
 
 	private static int constant (String name) {
 		try {
-			return M3FeatureIds.class.getField (name).getInt (null);
+			return FeatureIds.class.getField (name).getInt (null);
 		} catch (ReflectiveOperationException e) {
 			throw new AssertionError ("generated constant " + name, e);
 		}

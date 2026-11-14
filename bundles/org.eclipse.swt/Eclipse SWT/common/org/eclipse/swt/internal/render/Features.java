@@ -23,7 +23,7 @@ import org.eclipse.swt.widgets.*;
 
 /**
  * The registry of the web-UI feature switches (docs/m3/feature-switches/FEATURE_SWITCH_RULES.md): every feature of the
- * harvested web kits is an opt-in, configurable option of the widgets. A feature is a dense int id ({@link M3FeatureIds}:
+ * harvested web kits is an opt-in, configurable option of the widgets. A feature is a dense int id ({@link FeatureIds}:
  * the row order of the ledger FEATURE_SWITCH_MATRIX.tsv, append-only) and is <code>off</code> unless the stock toolkit owns
  * it (<code>NATIVE_HAS</code>: <code>on</code>, read-only). A switch that is off leaves the widget the stock contract.
  * <p>
@@ -43,22 +43,22 @@ import org.eclipse.swt.widgets.*;
  * </p>
  */
 //FLLDCIM: BOP — feature switches as discoverable, per-instance configurable behaviour; FEATURE_SWITCH_RULES.md rules 1-5
-public final class M3Features implements M3FeatureIds {
+public final class Features implements FeatureIds {
 	/** The property prefix of the global key; the key of one widget class inserts <code>"&lt;Widget&gt;."</code> before the id. */
 	public static final String PREFIX = "swt.widget.feature.";
 	/** <code>-Dswt.widget.feature.list=true</code> logs the registry table once, when this class initializes. */
 	public static final String LIST_PROPERTY = PREFIX + "list";
 	/** The number of features: the bits of a bitset, the rows of the ledger. */
-	public static final int COUNT = M3FeatureTable.COUNT;
+	public static final int COUNT = FeatureTable.COUNT;
 	/** The columns of {@link #describe} and {@link #table}, tab separated. */
 	public static final String TABLE_HEADER = "bit\tfeature_id\tconcept\twidget_family\tcurrent_state\tdefault\tnative_owner\tenhanced_api_id\talias\tshipped";
 	private static final int WORD_SHIFT = 6, BIT_MASK = (1 << WORD_SHIFT) - 1;
 	private static final int WORDS = (COUNT + BIT_MASK) >>> WORD_SHIFT;
-	/* the columns of M3FeatureTable.ROWS */
+	/* the columns of FeatureTable.ROWS */
 	private static final int ID = 0, STATE = 3, DEFAULT = 4, ALIAS = 7, SHIPPED_COLUMN = 8;
 	private static final String TAB = "\t", ON = "on", TRUE = "true", YES = "yes", NATIVE_HAS = "NATIVE_HAS", NONE = "-";
-	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.internal.render.M3Features");
-	private static final String [][] CELLS = Arrays.stream (M3FeatureTable.ROWS).map (row -> row.split (TAB, -1)).toArray (String [][]::new);
+	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.internal.render.Features");
+	private static final String [][] CELLS = Arrays.stream (FeatureTable.ROWS).map (row -> row.split (TAB, -1)).toArray (String [][]::new);
 	/** The ledger defaults: every <code>NATIVE_HAS</code> row on, every other row off. */
 	static final long [] DEFAULTS = column (DEFAULT, ON);
 	/** The read-only rows: the stock toolkit owns the feature; never switched off. */
@@ -74,12 +74,12 @@ public final class M3Features implements M3FeatureIds {
 	};
 
 	static {
-		if (Boolean.getBoolean (LIST_PROPERTY)) LOG.info (M3Features::table);
-		System.getProperties ().stringPropertyNames ().stream ().filter (M3Features::unknownKey).sorted ()
+		if (Boolean.getBoolean (LIST_PROPERTY)) LOG.info (Features::table);
+		System.getProperties ().stringPropertyNames ().stream ().filter (Features::unknownKey).sorted ()
 			.forEach (key -> LOG.info (() -> "ignoring " + key + ": not a feature id"));
 	}
 
-	private M3Features () {
+	private Features () {
 	}
 
 	/**
@@ -87,7 +87,7 @@ public final class M3Features implements M3FeatureIds {
 	 * class defaults (the properties, resolved once per widget class).
 	 *
 	 * @param widget the widget
-	 * @param id the feature ({@link M3FeatureIds})
+	 * @param id the feature ({@link FeatureIds})
 	 * @return whether the feature is on for this widget
 	 */
 	public static boolean isOn (Widget widget, int id) {
@@ -245,7 +245,7 @@ public final class M3Features implements M3FeatureIds {
 
 	/** @return the registry table: {@link #TABLE_HEADER}, then one line per feature in bit order */
 	public static String table () {
-		return Stream.concat (Stream.of (TABLE_HEADER), IntStream.range (0, COUNT).mapToObj (M3Features::describe)).collect (Collectors.joining ("\n"));
+		return Stream.concat (Stream.of (TABLE_HEADER), IntStream.range (0, COUNT).mapToObj (Features::describe)).collect (Collectors.joining ("\n"));
 	}
 
 	private static long [] column (int column, String value) {

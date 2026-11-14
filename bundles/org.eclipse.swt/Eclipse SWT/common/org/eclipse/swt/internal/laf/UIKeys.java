@@ -29,7 +29,7 @@ package org.eclipse.swt.internal.laf;
  * lanes are lock-free. Ids are never reused.
  * </p>
  */
-public final class M3UIKeys {
+public final class UIKeys {
 	/** Kinds of values: the LF2 kinds and fonts. */
 	public static final byte COLOR = LookAndFeelDefaults.COLOR, INTEGER = LookAndFeelDefaults.INTEGER, BOOLEAN = LookAndFeelDefaults.BOOLEAN,
 		INSETS = LookAndFeelDefaults.INSETS, FONT = 5;
@@ -45,7 +45,7 @@ public final class M3UIKeys {
 	/* open addressing: slot -> id + 1, 0 empty; capacity a power of two, at most half full */
 	private static int [] slots = new int [256];
 
-	private M3UIKeys () {
+	private UIKeys () {
 	}
 
 	/**

@@ -18,7 +18,7 @@ package org.eclipse.swt.snippets.m3;
  * M3 look and feel: switch the look and feel of drawn widgets at runtime (native, swing, initiative31, light, dark),
  * like Swing's UIManager.setLookAndFeel, and change the accent colour (docs/m3/look-and-feel/EXAMPLES.md).
  *
- * The rows on the left are painted with the colours of an example UI delegate (M3ComponentUI); the Table on the
+ * The rows on the left are painted with the colours of an example UI delegate (ComponentUI); the Table on the
  * right is a native widget and keeps native pixels. Run with the M3 SWT jar on the class path:
  *   java -cp swt.jar;snippets M3LookAndFeelSwitchSnippet [--screenshots <directory>]
  * With --screenshots, the snippet saves one PNG per look and feel (and one with another accent) and exits.
@@ -73,14 +73,14 @@ public class M3LookAndFeelSwitchSnippet {
 	}
 
 	/*
-	 * An example UI delegate (M3ComponentUI) that keeps the row colours of its look and feel; the drawn Tree, Table and
-	 * List of the drawn modes use org.eclipse.swt.internal.render.M3DrawnRowUI the same way. A switch that changes one of its
+	 * An example UI delegate (ComponentUI) that keeps the row colours of its look and feel; the drawn Tree, Table and
+	 * List of the drawn modes use org.eclipse.swt.internal.render.DrawnRowUI the same way. A switch that changes one of its
 	 * paint keys installs it again and repaints the canvas; a change of its metric key relays it out.
 	 */
-	static final class Rows implements M3ComponentUI {
-		static final int BACKGROUND = M3UIKeys.intern ("Table.background", M3UIKeys.COLOR), FOREGROUND = M3UIKeys.intern ("Table.foreground", M3UIKeys.COLOR);
-		static final int SELECTION = M3UIKeys.intern ("Table.selectionBackground", M3UIKeys.COLOR), SELECTION_TEXT = M3UIKeys.intern ("Table.selectionForeground", M3UIKeys.COLOR);
-		static final int STRIPE = M3UIKeys.intern ("Table.stripeBackground", M3UIKeys.COLOR), ROW_HEIGHT = M3UIKeys.intern ("Table.rowHeight", M3UIKeys.INTEGER);
+	static final class Rows implements ComponentUI {
+		static final int BACKGROUND = UIKeys.intern ("Table.background", UIKeys.COLOR), FOREGROUND = UIKeys.intern ("Table.foreground", UIKeys.COLOR);
+		static final int SELECTION = UIKeys.intern ("Table.selectionBackground", UIKeys.COLOR), SELECTION_TEXT = UIKeys.intern ("Table.selectionForeground", UIKeys.COLOR);
+		static final int STRIPE = UIKeys.intern ("Table.stripeBackground", UIKeys.COLOR), ROW_HEIGHT = UIKeys.intern ("Table.rowHeight", UIKeys.INTEGER);
 		int background, foreground, selection, selectionText, stripe, rowHeight;
 
 		@Override
@@ -110,7 +110,7 @@ public class M3LookAndFeelSwitchSnippet {
 		M3LookAndFeel.installUI (canvas, Rows.class, new Rows ());
 		canvas.addListener (SWT.Paint, e -> {
 			Rows ui = (Rows) M3LookAndFeel.getUI (canvas);
-			M3UIResources resources = M3UIResources.of (canvas.getDisplay ());
+			UIResources resources = UIResources.of (canvas.getDisplay ());
 			int width = canvas.getClientArea ().width;
 			for (int i = 0, y = 0; y < canvas.getClientArea ().height; i++, y += ui.rowHeight) {
 				boolean selected = i == 2;

@@ -56,11 +56,11 @@ public class M3ThemeImportSnippet {
 		Display display = new Display ();
 		List<String> arguments = Arrays.asList (args);
 		List<String> names = new ArrayList<> ();
-		M3ThemeWatcher watcher = null;
+		ThemeWatcher watcher = null;
 		if (args.length > 0 && !args [0].startsWith ("--")) {
 			Path file = Paths.get (args [0]);
 			if (arguments.contains ("--watch")) {
-				watcher = M3ThemeWatcher.watch (display, file, "file");
+				watcher = ThemeWatcher.watch (display, file, "file");
 			} else {
 				String text = Files.readString (file, StandardCharsets.UTF_8);
 				M3ThemeImport.install ("file", file.toString ().endsWith (".json") ? M3ThemeImport.intelliJ (text) : M3ThemeImport.flatLaf (text));

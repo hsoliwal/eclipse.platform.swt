@@ -28,8 +28,8 @@ import org.eclipse.swt.widgets.*;
  * <p>
  * A switch diffs the defaults of the two look and feels and touches only the widgets whose delegate reads a changed
  * key: the delegate is installed again (created again when the new look and feel's factory has one), the widget is
- * repainted, and relaid out when a measured key changed ({@link M3ComponentUI#metricKeys()}). The display's
- * {@link M3UIResources} are disposed. {@link #updateComponentTreeUI} is Swing's full update of a tree. Widgets without
+ * repainted, and relaid out when a measured key changed ({@link ComponentUI#metricKeys()}). The display's
+ * {@link UIResources} are disposed. {@link #updateComponentTreeUI} is Swing's full update of a tree. Widgets without
  * a delegate (every native widget, every widget in the <code>viewport</code> and <code>original</code> modes) are
  * never visited.
  * </p>
@@ -41,7 +41,7 @@ import org.eclipse.swt.widgets.*;
  */
 public final class M3LookAndFeel {
 	/** The key of a widget's delegate in its data. */
-	public static final String UI = M3ComponentUI.class.getName ();
+	public static final String UI = ComponentUI.class.getName ();
 
 	/** Told about every switch, after the selection changed and before the widgets are updated. */
 	public interface Listener {
@@ -74,7 +74,7 @@ public final class M3LookAndFeel {
 	public static int setAccent (int argb) {
 		Map<String, M3UIDefaults> before = new HashMap<> ();
 		for (Map.Entry<String, M3UIDefaults> entry : DEFAULTS.entrySet ()) before.put (entry.getKey (), entry.getValue ().snapshot ());
-		getDefaults ().putVariable ("accent", M3Palette.text (argb));
+		getDefaults ().putVariable ("accent", Palette.text (argb));
 		Display display = Display.getCurrent ();
 		int touched = 0;
 		if (display != null) {
@@ -148,7 +148,7 @@ public final class M3LookAndFeel {
 
 	/**
 	 * Replaces the table of a look and feel (keeping its renderers) and, on a display thread, updates the widgets that
-	 * use it: only those whose delegate reads a key the new table changes (live reload, {@link M3ThemeWatcher}).
+	 * use it: only those whose delegate reads a key the new table changes (live reload, {@link ThemeWatcher}).
 	 *
 	 * @return the number of delegates installed again
 	 */
@@ -174,7 +174,7 @@ public final class M3LookAndFeel {
 	 *
 	 * @return the installed delegate
 	 */
-	public static <U extends M3ComponentUI> U installUI (Control control, Class<U> type, U fallback) {
+	public static <U extends ComponentUI> U installUI (Control control, Class<U> type, U fallback) {
 		uninstallUI (control);
 		String name = lookAndFeel (control.getClass ().getSimpleName ());
 		U created = LookAndFeel.named (name).renderers ().create (type, control);
@@ -187,7 +187,7 @@ public final class M3LookAndFeel {
 	}
 
 	/** The delegate of a widget, or <code>null</code>. */
-	public static M3ComponentUI getUI (Control control) {
+	public static ComponentUI getUI (Control control) {
 		Slot slot = (Slot) control.getData (UI);
 		return slot == null ? null : slot.ui;
 	}
@@ -229,7 +229,7 @@ public final class M3LookAndFeel {
 	 * @return the number of delegates installed again
 	 */
 	public static int update (Display display, M3UIDefaults from, M3UIDefaults to) {
-		M3UIResources.of (display).dispose ();
+		UIResources.of (display).dispose ();
 		Registry registry = Registry.of (display);
 		long [] changed = M3UIDefaults.diff (from, to);
 		int touched = 0;
@@ -256,12 +256,12 @@ public final class M3LookAndFeel {
 	}
 
 	/**
-	 * Sets a per-widget value (Swing's <code>putClientProperty</code>) in the display's {@link M3UIOverrides} and
+	 * Sets a per-widget value (Swing's <code>putClientProperty</code>) in the display's {@link UIOverrides} and
 	 * repaints the widget when its delegate reads the key (relays it out for a measured key).
 	 */
 	public static void override (Control control, int key, int value) {
-		M3UIOverrides.of (control.getDisplay ()).put (control, key, value);
-		M3ComponentUI ui = getUI (control);
+		UIOverrides.of (control.getDisplay ()).put (control, key, value);
+		ComponentUI ui = getUI (control);
 		if (ui == null) return;
 		long [] keys = new long [(key >>> 6) + 1];
 		keys [key >>> 6] = 1L << key;
@@ -276,7 +276,7 @@ public final class M3LookAndFeel {
 
 	private static void reinstall (Control control, Slot slot, String target) {
 		slot.ui.uninstallUI (control);
-		M3ComponentUI created = LookAndFeel.named (target).renderers ().create (slot.ui.type (), control);
+		ComponentUI created = LookAndFeel.named (target).renderers ().create (slot.ui.type (), control);
 		if (created != null) slot.ui = created;
 		slot.lookAndFeel = target;
 		slot.ui.installUI (control, defaults (target));
@@ -317,11 +317,11 @@ public final class M3LookAndFeel {
 
 	/* a widget's delegate, the look and feel it was installed with, and its index in the display's registry */
 	private static final class Slot {
-		M3ComponentUI ui;
+		ComponentUI ui;
 		String lookAndFeel;
 		int index;
 
-		Slot (M3ComponentUI ui, String lookAndFeel, int index) {
+		Slot (ComponentUI ui, String lookAndFeel, int index) {
 			this.ui = ui;
 			this.lookAndFeel = lookAndFeel;
 			this.index = index;

@@ -18,20 +18,20 @@ import java.util.*;
 
 /**
  * The defaults of one look and feel as a delegate reads them (docs/m3/LOOK_AND_FEEL.md, LF6), Swing's
- * <code>UIDefaults</code> laid out as data: values in typed lanes indexed by the key ids of {@link M3UIKeys} (a colour
+ * <code>UIDefaults</code> laid out as data: values in typed lanes indexed by the key ids of {@link UIKeys} (a colour
  * is an ARGB int, an integer or a font id an int, a boolean 0 or 1, insets an int quad), presence in a bitset. A read
  * is an array access: no hashing, no boxing, no allocation.
  * <p>
  * Two layers answer a key, as in Swing's <code>UIManager</code>: the developer layer ({@link #put}, shared by every
  * look and feel and kept across switches), then the theme. A key without a value answers its
- * <code>Component.&lt;property&gt;</code> parent ({@link M3UIKeys#parent}). Per-widget values come first when the
- * reader passes the widget and the display's {@link M3UIOverrides}.
+ * <code>Component.&lt;property&gt;</code> parent ({@link UIKeys#parent}). Per-widget values come first when the
+ * reader passes the widget and the display's {@link UIOverrides}.
  * </p>
  */
 public final class M3UIDefaults {
 	private final String name;
 	private final Lanes theme, developer;
-	private final M3UIDerivation derivation;
+	private final UIDerivation derivation;
 	private Lanes derived = new Lanes ();
 	private int derivedGeneration;
 
@@ -48,9 +48,9 @@ public final class M3UIDefaults {
 
 	/**
 	 * The defaults of a resolved LF2 table whose derived values follow the developer layer's bases (see
-	 * {@link M3UIDerivation}): the developer setting a key or a variable recomputes only the values derived from it.
+	 * {@link UIDerivation}): the developer setting a key or a variable recomputes only the values derived from it.
 	 */
-	M3UIDefaults (LookAndFeelDefaults table, Lanes developer, M3UIDerivation derivation) {
+	M3UIDefaults (LookAndFeelDefaults table, Lanes developer, UIDerivation derivation) {
 		this.name = table.name ();
 		this.developer = developer;
 		this.derivation = derivation;
@@ -66,14 +66,14 @@ public final class M3UIDefaults {
 	 * @throws IllegalArgumentException when the table cannot be loaded (see {@link LookAndFeelLoader#load})
 	 */
 	public static M3UIDefaults of (LookAndFeelLoader loader, String name, Lanes developer) {
-		return new M3UIDefaults (loader.load (name), developer, M3UIDerivation.of (name, loader));
+		return new M3UIDefaults (loader.load (name), developer, UIDerivation.of (name, loader));
 	}
 
 	private static void copy (LookAndFeelDefaults table, Lanes lanes) {
 		String [] keys = table.keys ();
 		for (int index = 0; index < keys.length; index++) {
-			int id = M3UIKeys.intern (keys [index], table.kind (index));
-			if (table.kind (index) == M3UIKeys.INSETS) {
+			int id = UIKeys.intern (keys [index], table.kind (index));
+			if (table.kind (index) == UIKeys.INSETS) {
 				int [] insets = table.insets (index);
 				lanes.setQuad (id, insets [0], insets [1], insets [2], insets [3]);
 			} else {
@@ -92,48 +92,48 @@ public final class M3UIDefaults {
 		return resolve (key) >= 0;
 	}
 
-	/** The ARGB colour of a {@link M3UIKeys#COLOR} key, or the fallback. */
+	/** The ARGB colour of a {@link UIKeys#COLOR} key, or the fallback. */
 	public int color (int key, int fallback) {
-		return scalar (key, M3UIKeys.COLOR, fallback);
+		return scalar (key, UIKeys.COLOR, fallback);
 	}
 
-	/** The integer of a {@link M3UIKeys#INTEGER} key, or the fallback. */
+	/** The integer of a {@link UIKeys#INTEGER} key, or the fallback. */
 	public int integer (int key, int fallback) {
-		return scalar (key, M3UIKeys.INTEGER, fallback);
+		return scalar (key, UIKeys.INTEGER, fallback);
 	}
 
-	/** The boolean of a {@link M3UIKeys#BOOLEAN} key, or the fallback. */
+	/** The boolean of a {@link UIKeys#BOOLEAN} key, or the fallback. */
 	public boolean bool (int key, boolean fallback) {
-		return scalar (key, M3UIKeys.BOOLEAN, fallback ? 1 : 0) != 0;
+		return scalar (key, UIKeys.BOOLEAN, fallback ? 1 : 0) != 0;
 	}
 
-	/** The font id of a {@link M3UIKeys#FONT} key, or the fallback. */
+	/** The font id of a {@link UIKeys#FONT} key, or the fallback. */
 	public int font (int key, int fallback) {
-		return scalar (key, M3UIKeys.FONT, fallback);
+		return scalar (key, UIKeys.FONT, fallback);
 	}
 
 	/**
-	 * The insets of a {@link M3UIKeys#INSETS} key into <code>out</code> (top, left, bottom, right).
+	 * The insets of a {@link UIKeys#INSETS} key into <code>out</code> (top, left, bottom, right).
 	 *
 	 * @return false, leaving <code>out</code> unchanged, when the key has no insets
 	 */
 	public boolean insets (int key, int [] out) {
-		int id = M3UIKeys.kind (key) == M3UIKeys.INSETS ? resolve (key) : -1;
+		int id = UIKeys.kind (key) == UIKeys.INSETS ? resolve (key) : -1;
 		if (id < 0) return false;
 		(developer.has (id) ? developer : derived.has (id) ? derived : theme).quad (id, out);
 		return true;
 	}
 
-	/** The colour of a key for one widget: its override ({@link M3UIOverrides}), else {@link #color(int, int)}. */
-	public int color (M3UIOverrides overrides, Object widget, int key, int fallback) {
+	/** The colour of a key for one widget: its override ({@link UIOverrides}), else {@link #color(int, int)}. */
+	public int color (UIOverrides overrides, Object widget, int key, int fallback) {
 		long hit = overrides.lookup (widget, key);
-		return hit != M3UIOverrides.NONE ? (int) hit : color (key, fallback);
+		return hit != UIOverrides.NONE ? (int) hit : color (key, fallback);
 	}
 
 	/** The integer of a key for one widget: its override, else {@link #integer(int, int)}. */
-	public int integer (M3UIOverrides overrides, Object widget, int key, int fallback) {
+	public int integer (UIOverrides overrides, Object widget, int key, int fallback) {
 		long hit = overrides.lookup (widget, key);
-		return hit != M3UIOverrides.NONE ? (int) hit : integer (key, fallback);
+		return hit != UIOverrides.NONE ? (int) hit : integer (key, fallback);
 	}
 
 	/**
@@ -141,13 +141,13 @@ public final class M3UIDefaults {
 	 * removed. Insets go through {@link #putInsets}.
 	 */
 	public void put (int key, int value) {
-		if (M3UIKeys.kind (key) == M3UIKeys.INSETS) throw new IllegalArgumentException (M3UIKeys.name (key) + " is insets");
+		if (UIKeys.kind (key) == UIKeys.INSETS) throw new IllegalArgumentException (UIKeys.name (key) + " is insets");
 		developer.set (key, value);
 	}
 
 	/** Sets insets in the developer layer. */
 	public void putInsets (int key, int top, int left, int bottom, int right) {
-		if (M3UIKeys.kind (key) != M3UIKeys.INSETS) throw new IllegalArgumentException (M3UIKeys.name (key) + " is not insets");
+		if (UIKeys.kind (key) != UIKeys.INSETS) throw new IllegalArgumentException (UIKeys.name (key) + " is not insets");
 		developer.setQuad (key, top, left, bottom, right);
 	}
 
@@ -196,7 +196,7 @@ public final class M3UIDefaults {
 	}
 
 	/**
-	 * An {@link M3UIKeys#INTEGER} metric (row height, width, arc: points in the table) in pixels at a zoom, as SWT
+	 * An {@link UIKeys#INTEGER} metric (row height, width, arc: points in the table) in pixels at a zoom, as SWT
 	 * scales points ({@link org.eclipse.swt.internal.DPIUtil#pointToPixel(int, int)}).
 	 *
 	 * @param zoom the widget's zoom, 100 for 100 %
@@ -223,7 +223,7 @@ public final class M3UIDefaults {
 	 * ids: what a switch from <code>from</code> to <code>to</code> changes.
 	 */
 	public static long [] diff (M3UIDefaults from, M3UIDefaults to) {
-		int count = M3UIKeys.count ();
+		int count = UIKeys.count ();
 		long [] changed = new long [(count + 63) >>> 6];
 		int [] a = new int [4], b = new int [4];
 		for (int key = 0; key < count; key++) {
@@ -235,14 +235,14 @@ public final class M3UIDefaults {
 	private static boolean differs (M3UIDefaults from, M3UIDefaults to, int key, int [] a, int [] b) {
 		int x = from.resolve (key), y = to.resolve (key);
 		if (x < 0 || y < 0) return (x < 0) != (y < 0);
-		if (M3UIKeys.kind (key) != M3UIKeys.INSETS) return from.value (x) != to.value (y);
+		if (UIKeys.kind (key) != UIKeys.INSETS) return from.value (x) != to.value (y);
 		from.insets (key, a);
 		to.insets (key, b);
 		return !Arrays.equals (a, b);
 	}
 
 	private int scalar (int key, byte kind, int fallback) {
-		int id = M3UIKeys.kind (key) == kind ? resolve (key) : -1;
+		int id = UIKeys.kind (key) == kind ? resolve (key) : -1;
 		return id < 0 ? fallback : value (id);
 	}
 
@@ -254,7 +254,7 @@ public final class M3UIDefaults {
 	private int resolve (int key) {
 		current ();
 		if (has (key)) return key;
-		int parent = M3UIKeys.parent (key);
+		int parent = UIKeys.parent (key);
 		return parent >= 0 && has (parent) ? parent : -1;
 	}
 

@@ -26,7 +26,7 @@ import org.junit.jupiter.api.*;
 /**
  * The CPU side of the look and feel generator (docs/m3/look-and-feel/GENERATOR.md, LF7): the strict reading of an
  * LLM's proposal ({@link M3ThemeSpec}), its completion with WCAG contrast and derived states
- * ({@link M3ThemeCompleter}, OKLCH by {@link M3Oklch}) on seeded and adversarial proposals, the content hash, the
+ * ({@link M3ThemeCompleter}, OKLCH by {@link Oklch}) on seeded and adversarial proposals, the content hash, the
  * twin, and the three emitters ({@link M3ThemeExport}) read back through the importers. No display.
  */
 public class Test_org_eclipse_swt_internal_laf_M3ThemeCompleter {
@@ -53,14 +53,14 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeCompleter {
 			{"Link.hoverForeground", "Component.background"}, {"Component.selectionForeground", "Component.selectionBackground"},
 			{"Component.selectionInactiveForeground", "Component.selectionInactiveBackground"}, {"Table.headerForeground", "Table.headerBackground"}};
 		for (String [] pair : text) {
-			double ratio = M3Palette.contrast (colour (theme, pair [0]), colour (theme, pair [1]));
+			double ratio = Palette.contrast (colour (theme, pair [0]), colour (theme, pair [1]));
 			assertTrue (ratio >= M3ThemeCompleter.TEXT - 1e-9, pair [0] + " on " + pair [1] + ": " + ratio + " " + theme.notes ());
 		}
 		for (String element : new String [] {"Component.focusColor", "Component.borderColor", "TabFolder.underlineColor"}) {
-			double ratio = M3Palette.contrast (colour (theme, element), colour (theme, "Component.background"));
+			double ratio = Palette.contrast (colour (theme, element), colour (theme, "Component.background"));
 			assertTrue (ratio >= M3ThemeCompleter.UI - 1e-9, element + ": " + ratio);
 		}
-		assertTrue (M3Palette.contrast (colour (theme, "ProgressBar.foreground"), colour (theme, "ProgressBar.background")) >= M3ThemeCompleter.UI - 1e-9);
+		assertTrue (Palette.contrast (colour (theme, "ProgressBar.foreground"), colour (theme, "ProgressBar.background")) >= M3ThemeCompleter.UI - 1e-9);
 		assertEquals (LookAndFeelThemes.KEYS, new ArrayList<> (theme.table ().keySet ()), "every catalogue key, in order");
 	}
 
@@ -174,7 +174,7 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeCompleter {
 		assertTrue (dark.dark ());
 		assertFalse (light.dark ());
 		assertEquals ("Harbour \"Night\" Light", light.name ());
-		assertTrue (M3Oklch.lightness (colour (light, "Component.background")) > 0.5, "light in OKLCH");
+		assertTrue (Oklch.lightness (colour (light, "Component.background")) > 0.5, "light in OKLCH");
 		assertReadable (light);
 		M3ThemeCompleter.Theme back = M3ThemeCompleter.twin (M3ThemeSpec.parse ("{\"dark\": false}"));
 		assertTrue (back.dark ());
@@ -186,16 +186,16 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeCompleter {
 	public void contrastIsSolvedInOklch () {
 		assertEquals (0xFF000000, M3ThemeCompleter.ensure (0xFF000000, 0xFFFFFFFF, 4.5), "already readable");
 		int solved = M3ThemeCompleter.ensure (0xFF808080, 0xFF8A8A8A, 4.5);
-		assertTrue (M3Palette.contrast (solved, 0xFF8A8A8A) >= 4.5);
-		assertEquals (M3Palette.readableOn (0xFF808080), M3ThemeCompleter.ensure (0xFF808080, 0xFF808080, 22), "no lightness reaches 22:1");
+		assertTrue (Palette.contrast (solved, 0xFF8A8A8A) >= 4.5);
+		assertEquals (Palette.readableOn (0xFF808080), M3ThemeCompleter.ensure (0xFF808080, 0xFF808080, 22), "no lightness reaches 22:1");
 		int blue = M3ThemeCompleter.ensure (0xFF2F6FD0, 0xFF1E1F22, 7);
-		double [] before = M3Oklch.of (0xFF2F6FD0), after = M3Oklch.of (blue);
+		double [] before = Oklch.of (0xFF2F6FD0), after = Oklch.of (blue);
 		assertTrue (after [0] > before [0], "lighter on a dark background");
 		assertEquals (before [2], after [2], 2.0, "the hue is kept");
 		int darkOnLight = M3ThemeCompleter.ensure (0xFFE0E0E0, 0xFFFFFFFF, 4.5);
-		assertTrue (M3Oklch.lightness (darkOnLight) < M3Oklch.lightness (0xFFE0E0E0), "darker on white");
+		assertTrue (Oklch.lightness (darkOnLight) < Oklch.lightness (0xFFE0E0E0), "darker on white");
 		int other = M3ThemeCompleter.ensure (0xFFF0F0F0, 0xFF767676, 4.6);
-		assertTrue (M3Palette.contrast (other, 0xFF767676) >= 4.6, "the other direction when lighter cannot reach it");
+		assertTrue (Palette.contrast (other, 0xFF767676) >= 4.6, "the other direction when lighter cannot reach it");
 		int start = M3ThemeCompleter.mix (0xFF123456, 0xFFABCDEF, 0);
 		for (int shift = 0; shift < 24; shift += 8) assertTrue (Math.abs (((start >> shift) & 0xFF) - ((0xFF123456 >> shift) & 0xFF)) <= 1);
 		int end = M3ThemeCompleter.mix (0xFF123456, 0xFFABCDEF, 1);
@@ -207,15 +207,15 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeCompleter {
 		Random random = new Random (7);
 		for (int i = 0; i < 500; i++) {
 			int argb = 0xFF000000 | random.nextInt (0x1000000);
-			double [] lch = M3Oklch.of (argb);
-			int back = M3Oklch.argb (lch [0], lch [1], lch [2]);
+			double [] lch = Oklch.of (argb);
+			int back = Oklch.argb (lch [0], lch [1], lch [2]);
 			for (int shift = 0; shift < 24; shift += 8) assertTrue (Math.abs (((back >> shift) & 0xFF) - ((argb >> shift) & 0xFF)) <= 1, Integer.toHexString (argb));
 		}
-		int outside = M3Oklch.argb (0.9, 0.4, 150);
+		int outside = Oklch.argb (0.9, 0.4, 150);
 		assertEquals (0xFF, outside >>> 24);
-		assertEquals (0.9, M3Oklch.lightness (outside), 0.02, "chroma gave way, not lightness");
-		assertEquals (0xFFFFFFFF, M3Oklch.argb (1.5, 0, 0), "lightness clamped");
-		assertEquals (0xFF000000, M3Oklch.withLightness (0xFF2F6FD0, 0));
+		assertEquals (0.9, Oklch.lightness (outside), 0.02, "chroma gave way, not lightness");
+		assertEquals (0xFFFFFFFF, Oklch.argb (1.5, 0, 0), "lightness clamped");
+		assertEquals (0xFF000000, Oklch.withLightness (0xFF2F6FD0, 0));
 	}
 
 	@Test

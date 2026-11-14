@@ -12,9 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.internal.gpu.m3;
-
-import org.eclipse.swt.internal.gpu.*;
+package org.eclipse.swt.internal.gpu;
 
 import io.github.humbleui.skija.*;
 import io.github.humbleui.types.*;
@@ -25,15 +23,15 @@ import io.github.humbleui.types.*;
  * overlay planes) and a pool of tile render targets indexed by tile slot
  * (reused across evictions, never reallocated per frame). Every copy is an
  * integer-offset blit with source blending ({@code SRC}), so tiles meet at exact
- * device-pixel seams and nothing is filtered. Replay uses Skija's primitive
+ * device-pixel seams and nothing is filtered. OpStreamReplay uses Skija's primitive
  * native entry points on canvas pointers; only cache misses allocate.
  */
-final class M3Target implements PlaneBackend.Target {
+final class GpuTarget implements PlaneBackend.Target {
 	static final int TILE = TileGrid.SIZE;
 	static final int INTERSECT = ClipMode.INTERSECT.ordinal (), SRC = BlendMode.SRC.ordinal ();
 	static final int TEXT_MASK = PaintKeys.mask (PaintKeys.KIND_TEXT, 0, 0, 0, -1, 0, 0, PaintKeys.BACKEND_M3);
 
-	final M3PlaneBackend backend;
+	final GlPlaneBackend backend;
 	final Surface [] tiles;
 	Surface frame, present;
 	int frameW, frameH;
@@ -41,7 +39,7 @@ final class M3Target implements PlaneBackend.Target {
 	ImageInfo info;
 	int infoW, infoH;
 
-	M3Target (M3PlaneBackend backend, int capacity) {
+	GpuTarget (GlPlaneBackend backend, int capacity) {
 		this.backend = backend;
 		tiles = new Surface [capacity];
 	}
@@ -94,7 +92,7 @@ final class M3Target implements PlaneBackend.Target {
 		Canvas._nClipRect (canvas, x, y, x + w, y + h, INTERSECT, false);
 		if ((background >>> 24) != 0) Canvas._nDrawColor (canvas, background, SRC);
 		try {
-			Replay.run (backend, canvas, ops);
+			OpStreamReplay.run (backend, canvas, ops);
 		} finally {
 			Canvas._nRestoreToCount (canvas, save);
 		}
@@ -163,7 +161,7 @@ final class M3Target implements PlaneBackend.Target {
 		Canvas._nClipRect (canvas, x, y, x + w, y + h, INTERSECT, false);
 		try {
 			frame.draw (present.getCanvas (), 0, 0, backend.srcPaint);
-			if (ops != null) Replay.run (backend, canvas, ops);
+			if (ops != null) OpStreamReplay.run (backend, canvas, ops);
 		} finally {
 			Canvas._nRestoreToCount (canvas, save);
 		}

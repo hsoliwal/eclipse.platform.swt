@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.internal.render.m3.M3CanvasDamage;
+import org.eclipse.swt.internal.render.CanvasDamage;
 import org.junit.jupiter.api.Test;
 
 import io.github.humbleui.skija.Bitmap;
@@ -36,22 +36,22 @@ public class Test_org_eclipse_swt_m3gc_CanvasDamage {
 	/** RGNDATA in ints: the header (dwSize 32, iType RDH_RECTANGLES, nCount, nRgnSize, rcBound) and left, top, right, bottom per rectangle. */
 	static int[] region(int... ltrb) {
 		int n = ltrb.length / 4;
-		int[] data = new int[M3CanvasDamage.HEADER + ltrb.length];
+		int[] data = new int[CanvasDamage.HEADER + ltrb.length];
 		data[0] = 32;
 		data[1] = 1;
 		data[2] = n;
 		data[3] = 16 * n;
-		System.arraycopy(ltrb, 0, data, M3CanvasDamage.HEADER, ltrb.length);
+		System.arraycopy(ltrb, 0, data, CanvasDamage.HEADER, ltrb.length);
 		return data;
 	}
 
-	static int[] rect(M3CanvasDamage damage, int i) {
+	static int[] rect(CanvasDamage damage, int i) {
 		return new int[] { damage.x(i), damage.y(i), damage.width(i), damage.height(i) };
 	}
 
 	@Test
 	public void testNoRegionIsThePaintRectangle() {
-		M3CanvasDamage damage = new M3CanvasDamage();
+		CanvasDamage damage = new CanvasDamage();
 		damage.read(null, 5, 6, 25, 16);
 		assertEquals(1, damage.count());
 		assertArrayEquals(new int[] { 5, 6, 20, 10 }, rect(damage, 0));
@@ -63,7 +63,7 @@ public class Test_org_eclipse_swt_m3gc_CanvasDamage {
 
 	@Test
 	public void testRectanglesAndBounds() {
-		M3CanvasDamage damage = new M3CanvasDamage();
+		CanvasDamage damage = new CanvasDamage();
 		damage.read(region(10, 10, 30, 20, 50, 40, 70, 60), 10, 10, 70, 60);
 		assertEquals(2, damage.count());
 		assertArrayEquals(new int[] { 10, 10, 20, 10 }, rect(damage, 0));
@@ -73,7 +73,7 @@ public class Test_org_eclipse_swt_m3gc_CanvasDamage {
 
 	@Test
 	public void testMergedUnlessNoMergePaints() {
-		M3CanvasDamage damage = new M3CanvasDamage();
+		CanvasDamage damage = new CanvasDamage();
 		damage.read(region(10, 10, 30, 20, 50, 40, 70, 60), 10, 10, 70, 60);
 		assertEquals(1, damage.passes(SWT.NONE));
 		assertEquals(1, damage.passes(SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND));
@@ -89,7 +89,7 @@ public class Test_org_eclipse_swt_m3gc_CanvasDamage {
 
 	@Test
 	public void testIntersectedWithThePaintRectangle() {
-		M3CanvasDamage damage = new M3CanvasDamage();
+		CanvasDamage damage = new CanvasDamage();
 		damage.read(region(0, 0, 40, 40, 100, 100, 120, 120), 10, 10, 30, 30);
 		assertEquals(1, damage.count(), "the rectangle outside rcPaint is dropped");
 		assertArrayEquals(new int[] { 10, 10, 20, 20 }, rect(damage, 0));
@@ -107,7 +107,7 @@ public class Test_org_eclipse_swt_m3gc_CanvasDamage {
 			ltrb[4 * i + 2] = i * 5 + 3;
 			ltrb[4 * i + 3] = 7;
 		}
-		M3CanvasDamage damage = new M3CanvasDamage();
+		CanvasDamage damage = new CanvasDamage();
 		damage.read(region(ltrb), 0, 0, 100, 10);
 		assertEquals(20, damage.count());
 		assertArrayEquals(new int[] { 95, 0, 3, 7 }, rect(damage, 19));
@@ -118,7 +118,7 @@ public class Test_org_eclipse_swt_m3gc_CanvasDamage {
 
 	@Test
 	public void testClipTouchesTheRegionOnly() {
-		M3CanvasDamage damage = new M3CanvasDamage();
+		CanvasDamage damage = new CanvasDamage();
 		damage.read(region(10, 10, 30, 20, 50, 40, 70, 60), 10, 10, 70, 60);
 		try (Bitmap bitmap = new Bitmap()) {
 			bitmap.allocN32Pixels(80, 80);

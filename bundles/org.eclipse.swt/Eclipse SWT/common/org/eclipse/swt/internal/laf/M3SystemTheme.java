@@ -40,7 +40,7 @@ public final class M3SystemTheme {
 	}
 
 	/**
-	 * The look and feel the platform asks for: {@link M3Palette#HIGH_CONTRAST} in high contrast, else the dark or
+	 * The look and feel the platform asks for: {@link Palette#HIGH_CONTRAST} in high contrast, else the dark or
 	 * the light name.
 	 */
 	public static String preferred (Display display, String light, String dark) {
@@ -48,7 +48,7 @@ public final class M3SystemTheme {
 	}
 
 	static String preferred (Display display, String light, String dark, BooleanSupplier darkness) {
-		if (display.getHighContrast ()) return M3Palette.preferred (display);
+		if (display.getHighContrast ()) return Palette.preferred (display);
 		return darkness.getAsBoolean () ? dark : light;
 	}
 

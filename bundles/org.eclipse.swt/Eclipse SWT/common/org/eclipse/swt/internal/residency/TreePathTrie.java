@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.internal.m3.collections;
+package org.eclipse.swt.internal.residency;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -35,12 +35,12 @@ import java.util.function.IntConsumer;
  * same path ids from the same segments, the flags apply to the new items
  * without any per-item object or String path.</p>
  *
- * <p>With an {@link M3LabelPool} for names, every path holds one reference on
+ * <p>With an {@link LabelPool} for names, every path holds one reference on
  * the label id of its segment and releases it when the path is removed.</p>
  *
  * <p>Not thread-safe; owned by one model.</p>
  */
-public final class M3TreePathTrie {
+public final class TreePathTrie {
 	/** Path id of the empty path, the root of every path. */
 	public static final int ROOT = 0;
 	/** Answer of the find methods for a path that is not interned. */
@@ -61,7 +61,7 @@ public final class M3TreePathTrie {
 	private static final long EMPTY = -1L;
 	private static final long GOLDEN = 0x9E37_79B9_7F4A_7C15L;
 
-	private final M3LabelPool names;
+	private final LabelPool names;
 	private int [] parents, segments, depths, firstChildren, nextSiblings, prevSiblings;
 	private long [] flags;
 	private long [] edgeKeys;
@@ -70,7 +70,7 @@ public final class M3TreePathTrie {
 	private char [] scratch = new char [64];
 
 	/** Creates a trie whose segments are plain ints. */
-	public M3TreePathTrie () {
+	public TreePathTrie () {
 		this (null);
 	}
 
@@ -78,7 +78,7 @@ public final class M3TreePathTrie {
 	 * Creates a trie whose segments may be label ids of {@code names}; every path
 	 * then holds a reference on its segment's label.
 	 */
-	public M3TreePathTrie (M3LabelPool names) {
+	public TreePathTrie (LabelPool names) {
 		this.names = names;
 		reset ();
 	}
@@ -148,7 +148,7 @@ public final class M3TreePathTrie {
 	public int findNamed (int parent, String name) {
 		checkPath (parent);
 		int label = requireNames ().find (name);
-		return label == M3LabelPool.NOT_FOUND ? NOT_FOUND : find (parent, label);
+		return label == LabelPool.NOT_FOUND ? NOT_FOUND : find (parent, label);
 	}
 
 	/**
@@ -157,7 +157,7 @@ public final class M3TreePathTrie {
 	 * becomes a path id without a String per segment.
 	 */
 	public int internPath (String path, char separator) {
-		M3LabelPool pool = requireNames ();
+		LabelPool pool = requireNames ();
 		int length = path.length ();
 		if (scratch.length < length) scratch = new char [Math.max (length, scratch.length * 2)];
 		path.getChars (0, length, scratch, 0);
@@ -331,7 +331,7 @@ public final class M3TreePathTrie {
 	}
 
 	/** The pool of segment names, or null. */
-	public M3LabelPool names () {
+	public LabelPool names () {
 		return names;
 	}
 
@@ -400,7 +400,7 @@ public final class M3TreePathTrie {
 		flags = Arrays.copyOf (flags, capacity);
 	}
 
-	/* As in M3LabelPool, free ids are reused first, so every id is live when the table grows. */
+	/* As in LabelPool, free ids are reused first, so every id is live when the table grows. */
 	private void rehash (int capacity) {
 		edgeKeys = new long [capacity];
 		edgeIds = new int [capacity];
@@ -442,7 +442,7 @@ public final class M3TreePathTrie {
 		return (int) ((key * GOLDEN) >>> edgeShift);
 	}
 
-	private M3LabelPool requireNames () {
+	private LabelPool requireNames () {
 		if (names == null) throw new IllegalStateException ("this trie has no name pool");
 		return names;
 	}

@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation (GC seam, leaf 5)
  *******************************************************************************/
-package org.eclipse.swt.internal.render.m3;
+package org.eclipse.swt.internal.render;
 
 import java.util.*;
 import java.util.stream.*;
@@ -36,7 +36,7 @@ import io.github.humbleui.types.Rect;
  * and the clip are testable without a Display.
  * </p>
  */
-public final class M3CanvasDamage {
+public final class CanvasDamage {
 	/** <code>RGNDATAHEADER</code> in ints (dwSize, iType, nCount, nRgnSize, rcBound); the rectangles follow as left, top, right, bottom. */
 	public static final int HEADER = 8;
 	/* x, y, width, height per rectangle; reused across paints */

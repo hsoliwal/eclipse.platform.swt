@@ -31,7 +31,7 @@ package org.eclipse.swt.internal.gpu;
  */
 public interface PlaneBackend {
 	/** Class implementing the M3 backend; present only when Skija is on the class path. */
-	String M3 = "org.eclipse.swt.internal.gpu.m3.M3PlaneBackend";
+	String M3 = "org.eclipse.swt.internal.gpu.GlPlaneBackend";
 
 	/** Per-widget target owning tile textures and a frame surface. */
 	interface Target {

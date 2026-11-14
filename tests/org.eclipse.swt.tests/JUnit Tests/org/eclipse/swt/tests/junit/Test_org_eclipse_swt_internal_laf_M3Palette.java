@@ -26,37 +26,37 @@ import org.junit.jupiter.api.*;
  * improvement 5). {@link #theAccentUpdatesOnlyItsReaders} and the high-contrast cases need a display.
  */
 public class Test_org_eclipse_swt_internal_laf_M3Palette {
-	static final int SELECTION = M3UIKeys.intern ("Table.selectionBackground", M3UIKeys.COLOR);
-	static final int GRID = M3UIKeys.intern ("Table.gridColor", M3UIKeys.COLOR);
-	static final int ROW_HEIGHT = M3UIKeys.intern ("Tree.rowHeight", M3UIKeys.INTEGER);
-	static final int MARGIN = M3UIKeys.intern ("Button.margin", M3UIKeys.INSETS);
+	static final int SELECTION = UIKeys.intern ("Table.selectionBackground", UIKeys.COLOR);
+	static final int GRID = UIKeys.intern ("Table.gridColor", UIKeys.COLOR);
+	static final int ROW_HEIGHT = UIKeys.intern ("Tree.rowHeight", UIKeys.INTEGER);
+	static final int MARGIN = UIKeys.intern ("Button.margin", UIKeys.INSETS);
 
 	@Test
 	public void aRampGoesFromTintToShade () {
-		int [] ramp = M3Palette.ramp (0xFF2F6FD0);
-		assertEquals (M3Palette.STEPS.length, ramp.length);
+		int [] ramp = Palette.ramp (0xFF2F6FD0);
+		assertEquals (Palette.STEPS.length, ramp.length);
 		for (int i = 1; i < ramp.length; i++) {
-			assertTrue (M3Palette.luminance (ramp [i]) < M3Palette.luminance (ramp [i - 1]), "step " + i);
+			assertTrue (Palette.luminance (ramp [i]) < Palette.luminance (ramp [i - 1]), "step " + i);
 			assertEquals (0xFF, ramp [i] >>> 24);
 		}
-		int [] grey = M3Palette.ramp (0xFF808080);
+		int [] grey = Palette.ramp (0xFF808080);
 		assertEquals ((grey [5] >> 16) & 0xFF, grey [5] & 0xFF, "a grey accent gives a grey ramp");
 	}
 
 	@Test
 	public void contrastPicksReadableText () {
-		assertEquals (21.0, M3Palette.contrast (0xFF000000, 0xFFFFFFFF), 1e-9);
-		assertEquals (1.0, M3Palette.contrast (0xFF2F6FD0, 0xFF2F6FD0), 1e-9);
-		assertEquals (0xFF000000, M3Palette.readableOn (0xFFFFFFFF));
-		assertEquals (0xFFFFFFFF, M3Palette.readableOn (0xFF000000));
-		assertEquals (0xFFFFFFFF, M3Palette.readableOn (0xFF2F6FD0), "white on the flat accent");
+		assertEquals (21.0, Palette.contrast (0xFF000000, 0xFFFFFFFF), 1e-9);
+		assertEquals (1.0, Palette.contrast (0xFF2F6FD0, 0xFF2F6FD0), 1e-9);
+		assertEquals (0xFF000000, Palette.readableOn (0xFFFFFFFF));
+		assertEquals (0xFFFFFFFF, Palette.readableOn (0xFF000000));
+		assertEquals (0xFFFFFFFF, Palette.readableOn (0xFF2F6FD0), "white on the flat accent");
 		for (int background : new int [] {0xFF777777, 0xFFFFD700, 0xFF123456, 0xFFE0EEFE}) {
-			int text = M3Palette.readableOn (background), other = text == 0xFF000000 ? 0xFFFFFFFF : 0xFF000000;
-			assertTrue (M3Palette.contrast (text, background) >= M3Palette.contrast (other, background), Integer.toHexString (background));
+			int text = Palette.readableOn (background), other = text == 0xFF000000 ? 0xFFFFFFFF : 0xFF000000;
+			assertTrue (Palette.contrast (text, background) >= Palette.contrast (other, background), Integer.toHexString (background));
 		}
-		assertTrue (M3Palette.contrast (0xFF000000, 0xFF777777) >= M3Palette.READABLE);
-		assertEquals ("#2f6fd0", M3Palette.text (0xFF2F6FD0));
-		assertEquals ("#2f6fd080", M3Palette.text (0x802F6FD0));
+		assertTrue (Palette.contrast (0xFF000000, 0xFF777777) >= Palette.READABLE);
+		assertEquals ("#2f6fd0", Palette.text (0xFF2F6FD0));
+		assertEquals ("#2f6fd080", Palette.text (0x802F6FD0));
 	}
 
 	@Test
@@ -70,7 +70,7 @@ public class Test_org_eclipse_swt_internal_laf_M3Palette {
 		assertTrue (defaults.insets (MARGIN, points));
 		assertTrue (defaults.insets (MARGIN, pixels, 200));
 		for (int i = 0; i < 4; i++) assertEquals (points [i] * 2, pixels [i]);
-		assertFalse (defaults.insets (M3UIKeys.intern ("Button.coverageNoInsets", M3UIKeys.INSETS), pixels, 200));
+		assertFalse (defaults.insets (UIKeys.intern ("Button.coverageNoInsets", UIKeys.INSETS), pixels, 200));
 	}
 
 	@Test
@@ -79,7 +79,7 @@ public class Test_org_eclipse_swt_internal_laf_M3Palette {
 		M3LookAndFeel.setLookAndFeel ("dark");
 		try {
 			assertEquals ("dark", M3LookAndFeel.getLookAndFeel ());
-			assertEquals (flat, M3LookAndFeel.getDefaults ().color (M3UIKeys.intern ("Table.background", M3UIKeys.COLOR), 0));
+			assertEquals (flat, M3LookAndFeel.getDefaults ().color (UIKeys.intern ("Table.background", UIKeys.COLOR), 0));
 			M3LookAndFeel.setLookAndFeel ("light");
 			assertEquals ("light", M3LookAndFeel.getLookAndFeel ());
 		} finally {
@@ -95,8 +95,8 @@ public class Test_org_eclipse_swt_internal_laf_M3Palette {
 		M3LookAndFeel.setLookAndFeel ("test-accent");
 		try {
 			int gridBefore = M3LookAndFeel.getDefaults ().color (GRID, 0);
-			Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe reader = new Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe (new int [] {SELECTION}, M3ComponentUI.NO_KEYS);
-			Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe grid = new Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe (new int [] {GRID}, M3ComponentUI.NO_KEYS);
+			Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe reader = new Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe (new int [] {SELECTION}, ComponentUI.NO_KEYS);
+			Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe grid = new Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe (new int [] {GRID}, ComponentUI.NO_KEYS);
 			M3LookAndFeel.installUI (new Canvas (shell, SWT.NONE), Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe.class, reader);
 			M3LookAndFeel.installUI (new Canvas (shell, SWT.NONE), Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe.class, grid);
 			assertEquals (1, M3LookAndFeel.setAccent (0xFFC0392B), "only the reader of an accent-derived key");
@@ -117,12 +117,12 @@ public class Test_org_eclipse_swt_internal_laf_M3Palette {
 	@Test
 	public void highContrastFromThePlatform () {
 		Display display = Display.getDefault ();
-		String table = M3Palette.highContrastTable (display);
+		String table = Palette.highContrastTable (display);
 		LookAndFeelDefaults defaults = new LookAndFeelLoader (n -> n.equals ("hc") ? table : LookAndFeelThemes.text (n), name -> 0x808080).load ("hc");
 		assertEquals (2, defaults.integer ("Component.focusWidth", 0));
 		assertEquals (defaults.color ("Component.foreground", 0), defaults.color ("Component.borderColor", 1), "borders in the foreground colour");
 		org.eclipse.swt.graphics.RGB list = display.getSystemColor (SWT.COLOR_LIST_BACKGROUND).getRGB ();
 		assertEquals (0xFF000000 | list.red << 16 | list.green << 8 | list.blue, defaults.color ("Component.background", 0));
-		if (!display.getHighContrast ()) assertEquals (M3LookAndFeel.getLookAndFeel (), M3Palette.preferred (display));
+		if (!display.getHighContrast ()) assertEquals (M3LookAndFeel.getLookAndFeel (), Palette.preferred (display));
 	}
 }

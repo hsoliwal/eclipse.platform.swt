@@ -17,18 +17,18 @@ package org.eclipse.swt.internal.laf;
 import java.util.*;
 
 /**
- * Font descriptions as ints (docs/m3/LOOK_AND_FEEL.md, LF6): a font of the defaults ({@link M3UIKeys#FONT}) is the id
- * of a name, a height in points and an SWT style, interned once into lanes. {@link M3UIResources} turns an id into an
+ * Font descriptions as ints (docs/m3/LOOK_AND_FEEL.md, LF6): a font of the defaults ({@link UIKeys#FONT}) is the id
+ * of a name, a height in points and an SWT style, interned once into lanes. {@link UIResources} turns an id into an
  * SWT <code>Font</code> per display.
  */
-public final class M3UIFonts {
+public final class UIFonts {
 	private static final Object LOCK = new Object ();
 	private static final Map<String, Integer> IDS = new HashMap<> ();
 	private static volatile String [] names = new String [16];
 	private static volatile int [] heights = new int [16], styles = new int [16];
 	private static volatile int count;
 
-	private M3UIFonts () {
+	private UIFonts () {
 	}
 
 	/**

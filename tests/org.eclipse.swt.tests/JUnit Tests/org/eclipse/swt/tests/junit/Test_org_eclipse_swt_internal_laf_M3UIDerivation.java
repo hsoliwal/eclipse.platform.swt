@@ -42,13 +42,13 @@ public class Test_org_eclipse_swt_internal_laf_M3UIDerivation {
 	static final LookAndFeelLoader LOADER = new LookAndFeelLoader (Map.of ("derive", BASE, "derive2", "@extends = derive\nDerive.d = $Derive.c\n")::get, name -> 0);
 
 	static int key (String name, byte kind) {
-		return M3UIKeys.intern (name, kind);
+		return UIKeys.intern (name, kind);
 	}
 
-	static final int A = key ("Derive.a", M3UIKeys.COLOR), B = key ("Derive.b", M3UIKeys.COLOR), C = key ("Derive.c", M3UIKeys.COLOR), D = key ("Derive.d", M3UIKeys.COLOR);
-	static final int SIZE = key ("Derive.size", M3UIKeys.INTEGER), SIZE_COPY = key ("Derive.sizeCopy", M3UIKeys.INTEGER);
-	static final int FLAG = key ("Derive.flag", M3UIKeys.BOOLEAN), FLAG_COPY = key ("Derive.flagCopy", M3UIKeys.BOOLEAN);
-	static final int MARGIN = key ("Derive.margin", M3UIKeys.INSETS), MARGIN_COPY = key ("Derive.marginCopy", M3UIKeys.INSETS);
+	static final int A = key ("Derive.a", UIKeys.COLOR), B = key ("Derive.b", UIKeys.COLOR), C = key ("Derive.c", UIKeys.COLOR), D = key ("Derive.d", UIKeys.COLOR);
+	static final int SIZE = key ("Derive.size", UIKeys.INTEGER), SIZE_COPY = key ("Derive.sizeCopy", UIKeys.INTEGER);
+	static final int FLAG = key ("Derive.flag", UIKeys.BOOLEAN), FLAG_COPY = key ("Derive.flagCopy", UIKeys.BOOLEAN);
+	static final int MARGIN = key ("Derive.margin", UIKeys.INSETS), MARGIN_COPY = key ("Derive.marginCopy", UIKeys.INSETS);
 
 	M3UIDefaults.Lanes developer;
 	M3UIDefaults defaults;

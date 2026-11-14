@@ -14,7 +14,7 @@
  *******************************************************************************/
 package org.eclipse.swt.tests.junit;
 
-import org.eclipse.swt.internal.m3.collections.*;
+import org.eclipse.swt.internal.residency.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,7 +24,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 /**
- * Pool-on versus pool-off differential of {@link M3LabelLanes}: the same seeded
+ * Pool-on versus pool-off differential of {@link LabelLanes}: the same seeded
  * table script runs against plain String lanes measured on every call and
  * against the label lanes; every answer must be equal.
  */
@@ -36,16 +36,16 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 		measured++;
 		int width = 0;
 		for (int i = 0; i < text.length (); i++) width += 5 + (text.charAt (i) % 7) + font;
-		return M3TextExtentCache.pack (width, 12 + font);
+		return TextExtentCache.pack (width, 12 + font);
 	}
 
 	@Test
 	void seededDifferentialPoolOnVersusPoolOff () {
 		for (int seed = 1; seed <= 16; seed++) {
 			Random random = new Random (seed);
-			M3LabelPool pool = new M3LabelPool (seed % 3 * 4);
-			M3LabelLanes on = new M3LabelLanes (2, pool, new M3TextExtentCache (1 + seed % 5 * 8), seed % 2 == 0);
-			M3TextExtentCache.Measurer byId = (label, font) -> measure (on.text (label), font);
+			LabelPool pool = new LabelPool (seed % 3 * 4);
+			LabelLanes on = new LabelLanes (2, pool, new TextExtentCache (1 + seed % 5 * 8), seed % 2 == 0);
+			TextExtentCache.Measurer byId = (label, font) -> measure (on.text (label), font);
 			List<String []> off = new ArrayList<> ();
 			for (int step = 0; step < 3000; step++) {
 				int op = random.nextInt (10), rows = off.size ();
@@ -65,7 +65,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 				} else if (op == 7 && rows > 0) {
 					int column = random.nextInt (2), font = random.nextInt (3), from = random.nextInt (rows), to = from + random.nextInt (rows - from + 1);
 					int expected = 0;
-					for (int r = from; r < to; r++) expected = Math.max (expected, M3TextExtentCache.width (measure (off.get (r) [column], font)));
+					for (int r = from; r < to; r++) expected = Math.max (expected, TextExtentCache.width (measure (off.get (r) [column], font)));
 					assertEquals (expected, on.widest (column, from, to, font, byId));
 				} else if (op == 8 && rows > 0) {
 					int row = random.nextInt (rows), column = random.nextInt (2), font = random.nextInt (3);
@@ -85,9 +85,9 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 
 	@Test
 	void repeatedLabelsShareIdsAndMeasurements () {
-		M3LabelPool pool = new M3LabelPool ();
-		M3TextExtentCache extents = new M3TextExtentCache (64);
-		M3LabelLanes lanes = new M3LabelLanes (1, pool, extents);
+		LabelPool pool = new LabelPool ();
+		TextExtentCache extents = new TextExtentCache (64);
+		LabelLanes lanes = new LabelLanes (1, pool, extents);
 		lanes.setRowCount (10_000);
 		for (int r = 0; r < 10_000; r++) lanes.setText (r, 0, TYPES [r % 4]);
 		assertEquals (4, pool.size ());
@@ -113,10 +113,10 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 	 */
 	@Test
 	void refreshIsADeltaNotARebuild () {
-		M3LabelPool pool = new M3LabelPool ();
-		M3TextExtentCache extents = new M3TextExtentCache (64);
-		M3LabelLanes lanes = new M3LabelLanes (1, pool, extents);
-		M3TextExtentCache.Measurer measurer = (label, font) -> measure (pool.text ((int) label), font);
+		LabelPool pool = new LabelPool ();
+		TextExtentCache extents = new TextExtentCache (64);
+		LabelLanes lanes = new LabelLanes (1, pool, extents);
+		TextExtentCache.Measurer measurer = (label, font) -> measure (pool.text ((int) label), font);
 		lanes.setRowCount (1000);
 		for (int r = 0; r < 1000; r++) lanes.setText (r, 0, TYPES [r % 4]);
 		int [] ids = new int [1000];
@@ -137,9 +137,9 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 
 	@Test
 	void evictedLabelsLeaveTheExtentCache () {
-		M3LabelPool pool = new M3LabelPool (0);
-		M3TextExtentCache extents = new M3TextExtentCache (8);
-		M3LabelLanes lanes = new M3LabelLanes (1, pool, extents);
+		LabelPool pool = new LabelPool (0);
+		TextExtentCache extents = new TextExtentCache (8);
+		LabelLanes lanes = new LabelLanes (1, pool, extents);
 		lanes.setRowCount (1);
 		lanes.setText (0, 0, "first");
 		int first = lanes.labelId (0, 0);
@@ -151,12 +151,12 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 
 	@Test
 	void refusesInvalidArguments () {
-		M3LabelPool pool = new M3LabelPool ();
-		M3TextExtentCache extents = new M3TextExtentCache (8);
-		assertThrows (IllegalArgumentException.class, () -> new M3LabelLanes (0, pool, extents));
-		assertThrows (NullPointerException.class, () -> new M3LabelLanes (1, null, extents));
-		assertThrows (NullPointerException.class, () -> new M3LabelLanes (1, pool, null));
-		M3LabelLanes lanes = new M3LabelLanes (2, pool, extents);
+		LabelPool pool = new LabelPool ();
+		TextExtentCache extents = new TextExtentCache (8);
+		assertThrows (IllegalArgumentException.class, () -> new LabelLanes (0, pool, extents));
+		assertThrows (NullPointerException.class, () -> new LabelLanes (1, null, extents));
+		assertThrows (NullPointerException.class, () -> new LabelLanes (1, pool, null));
+		LabelLanes lanes = new LabelLanes (2, pool, extents);
 		assertThrows (IllegalArgumentException.class, () -> lanes.setRowCount (-1));
 		assertThrows (IllegalArgumentException.class, () -> lanes.insertRows (0, -1));
 		assertThrows (IndexOutOfBoundsException.class, () -> lanes.insertRows (1, 1));
@@ -168,7 +168,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 		assertThrows (IndexOutOfBoundsException.class, () -> lanes.widest (0, 0, 2, 0, (l, f) -> 0L));
 		assertThrows (NullPointerException.class, () -> lanes.setText (0, 0, null));
 		assertEquals ("", lanes.text (0, 1));
-		M3LabelLanes wide = new M3LabelLanes (1, pool, extents, true);
+		LabelLanes wide = new LabelLanes (1, pool, extents, true);
 		wide.setRowCount (1);
 		assertThrows (NullPointerException.class, () -> wide.setText (0, 0, null));
 		assertThrows (IndexOutOfBoundsException.class, () -> wide.immediateCells (1));
@@ -177,17 +177,17 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 
 	@Test
 	void immediateLanesKeepShortLabelsOutOfThePool () {
-		M3LabelPool pool = new M3LabelPool ();
-		M3TextExtentCache extents = new M3TextExtentCache (64);
-		M3LabelLanes lanes = new M3LabelLanes (2, pool, extents, true);
+		LabelPool pool = new LabelPool ();
+		TextExtentCache extents = new TextExtentCache (64);
+		LabelLanes lanes = new LabelLanes (2, pool, extents, true);
 		assertTrue (lanes.immediates ());
 		lanes.setRowCount (6);
 		String [] texts = {"Error", "Warning", "line 42", "identifier", "a longer label", "अ File"};
 		for (int r = 0; r < texts.length; r++) lanes.setText (r, 0, texts [r]);
 		assertEquals (4, lanes.immediateCells (0));
 		assertEquals (2, pool.size ());
-		assertTrue (M3ShortLabel.isImmediate (lanes.label (0, 0)));
-		assertEquals (M3ShortLabel.pack ("Error"), lanes.label (0, 0));
+		assertTrue (ShortLabel.isImmediate (lanes.label (0, 0)));
+		assertEquals (ShortLabel.pack ("Error"), lanes.label (0, 0));
 		assertThrows (IllegalArgumentException.class, () -> lanes.labelId (0, 0));
 		assertEquals (pool.find ("a longer label"), lanes.labelId (4, 0));
 		char [] buffer = new char [20];
@@ -198,7 +198,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 		}
 		assertEquals ("", lanes.text (0, 1));
 		assertEquals (0, lanes.length (0, 1));
-		M3TextExtentCache.Measurer measurer = (label, font) -> measure (lanes.text (label), font);
+		TextExtentCache.Measurer measurer = (label, font) -> measure (lanes.text (label), font);
 		int widest = lanes.widest (0, 0, 6, 0, measurer);
 		assertEquals (6, extents.misses ());
 		lanes.setText (1, 0, "Error");
@@ -209,7 +209,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 		assertEquals (1, pool.cachedCount ());
 		lanes.insertRows (0, 1);
 		assertEquals ("Error", lanes.text (1, 0));
-		assertTrue (lanes.retainedBytes () > new M3LabelLanes (2, new M3LabelPool (), new M3TextExtentCache (64)).retainedBytes () - 1);
+		assertTrue (lanes.retainedBytes () > new LabelLanes (2, new LabelPool (), new TextExtentCache (64)).retainedBytes () - 1);
 		lanes.setRowCount (40);
 		assertEquals ("अ File", lanes.text (4, 0));
 	}
