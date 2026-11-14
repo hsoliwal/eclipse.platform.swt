@@ -3,7 +3,7 @@
   "javaRelease": 21,
   "swtBaseCommit": "c7f07fbaa2c687a1bce18d3b67cfdb0e05b83840",
   "nebulaBaseCommit": "91d01b4e3ff3ed0c298c4f5c148710b770756932",
-  "scope": "Initial mobile Canvas/Composite/Shell platform; this manifest is not whole-SWT API coverage.",
+  "scope": "Initial mobile Canvas/Composite/Shell plus Canvas-rendered original Label and Button classes; not complete SWT API coverage.",
   "shared": [
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT Accessibility/common/org/eclipse/swt/accessibility/ACC.java",
@@ -12,18 +12,6 @@
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT PI/common/org/eclipse/swt/internal/Library.java",
       "sha256": "61c428c0b708af14a03ceaf9391d3a71230d11db86cd1f8fe9084a4ae5a52686"
-    },
-    {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWT.java",
-      "sha256": "4e6c946b8f1a09b5fe54cacde4b8c6f0c0dea55d34890ec028d672f8c2630988"
-    },
-    {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWTError.java",
-      "sha256": "8208b1d55e1554b9e11d574294ed57c2e1db7bad1401d6130367c91ae8627958"
-    },
-    {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWTException.java",
-      "sha256": "c2c23359ecc6c57ec931e34ba494eb0d96617deb9f3640d3bad1b10fe18985e5"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ArmEvent.java",
@@ -330,20 +318,20 @@
       "sha256": "1408b41e65726d45f9c5eb7a900864432abc659adfee015a2eecb960f17340fa"
     },
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/RGB.java",
-      "sha256": "d5b25d31d0ac8859e2c70a2d24dafba5d6ce8b7a9e0af55d53398320128c1cd3"
-    },
-    {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/RGBA.java",
-      "sha256": "4f2499419e03ec13f56af080e4d4a4f90a1c0c36facd23361774f1d2459db71f"
-    },
-    {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/Rectangle.java",
       "sha256": "c15099c4983c0b5d80e0b768e594fdb8015ad36e2c5aaaeb5a97d3ce600a019d"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/Resource.java",
       "sha256": "9fd840fc60c4cb679de93e274b8488a89b81f46e935abf32b0129dc90039dbe2"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/RGB.java",
+      "sha256": "d5b25d31d0ac8859e2c70a2d24dafba5d6ce8b7a9e0af55d53398320128c1cd3"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/RGBA.java",
+      "sha256": "4f2499419e03ec13f56af080e4d4a4f90a1c0c36facd23361774f1d2459db71f"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/RoundingMode.java",
@@ -368,10 +356,6 @@
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/ExceptionStash.java",
       "sha256": "6282b651c73508a3d0b8b36365921617be3aaf9b69844a18bd10249bff6126e5"
-    },
-    {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/SWTEventListener.java",
-      "sha256": "161b2e5cf40f454026eea39f009fec70e27d630d662a12523d99e1707710ab10"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/FileFormat.java",
@@ -466,10 +450,6 @@
       "sha256": "76c7852d2dcfa5ecc8e930694f0c46b837dc12c2bff581fbbaab13ef52424bed"
     },
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PNGFileFormat.java",
-      "sha256": "c6a0bf06535a827ec5e69407505b3e3a8de9539ff6c5efd71072f19c16c5914f"
-    },
-    {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngChunk.java",
       "sha256": "33c96e7c7c5005226db594fad60cf80804f31e4d34df95e50cb6961b852b8fab"
     },
@@ -484,6 +464,10 @@
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngEncoder.java",
       "sha256": "2b0cbefe03449f9a3162d40259edb44840ad079c4183c4ba7a9d875196380b9c"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PNGFileFormat.java",
+      "sha256": "c6a0bf06535a827ec5e69407505b3e3a8de9539ff6c5efd71072f19c16c5914f"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngFileReadState.java",
@@ -558,6 +542,10 @@
       "sha256": "7dab3ca6d4d67fd31ef1098c2e9ae45fe863b4d9200f7f07f90ed58dcd779b1c"
     },
     {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/SWTEventListener.java",
+      "sha256": "161b2e5cf40f454026eea39f009fec70e27d630d662a12523d99e1707710ab10"
+    },
+    {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/BorderData.java",
       "sha256": "8f5df38be78b83c8573da0bd3fa9a33bbaf88a6863f896406fe93b4ff8cfc42a"
     },
@@ -606,6 +594,18 @@
       "sha256": "5adbaa314cc79f5738b2f1b33b0d3ccd5725670f48d00298a20d3bf71487006b"
     },
     {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWT.java",
+      "sha256": "4e6c946b8f1a09b5fe54cacde4b8c6f0c0dea55d34890ec028d672f8c2630988"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWTError.java",
+      "sha256": "8208b1d55e1554b9e11d574294ed57c2e1db7bad1401d6130367c91ae8627958"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWTException.java",
+      "sha256": "c2c23359ecc6c57ec931e34ba494eb0d96617deb9f3640d3bad1b10fe18985e5"
+    },
+    {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/Event.java",
       "sha256": "c1e9830cd890c25405fdeef33b671d771bd78a8b6512c1010ebabf3783d9d16e"
     },
@@ -626,6 +626,10 @@
       "sha256": "5ff9c6590de829ed08995fc58faf1745b234f49a99323b1eeb47aa9a310cba2c"
     },
     {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/StyleBits.java",
+      "sha256": "ba736e84ce1d9b80f3999b130478fec06ab8c1ca24cebed206bbbef9ef0de568"
+    },
+    {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/Touch.java",
       "sha256": "e4f89634cf7f4bf307b70580482a4d3bb75fadb3ad1bb0672d9678ee733a5f21"
     },
@@ -636,6 +640,10 @@
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/TypedListener.java",
       "sha256": "514e234b39c8610ab4fbc58f04171b50bae94bb4cdf357d9fefc1aaaf0876f77"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/WidgetStylePolicy.java",
+      "sha256": "329331900ce99a4db3246648691510b104e25942089008ac63421538b130b74d"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Color.java"
@@ -668,16 +676,20 @@
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Transform.java"
     },
     {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobilePlatform.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobileRuntime.java"
+    },
+    {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/NativeImageLoader.java"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/Platform.java"
     },
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobilePlatform.java"
-    },
-    {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobileRuntime.java"
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Button.java",
+      "sha256": "70d6f45a7ac54d3b997bd3b271e41ade7d9e9c6e9bbaf43e1936467d265c03cd"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Canvas.java"
@@ -693,6 +705,10 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Label.java",
+      "sha256": "03ee6f742f5670fb63a9f48c357117ef6d4d2a5e391dafd7e40fd66af0bcd27f"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Scrollable.java"

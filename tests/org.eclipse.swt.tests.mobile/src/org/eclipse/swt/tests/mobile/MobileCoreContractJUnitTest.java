@@ -23,5 +23,8 @@ public final class MobileCoreContractJUnitTest {
 	@Test void ownedShellCoordinatesUseNativeRoot() {
 		MobileCoreContractTest.testOwnedShellCoordinateMapping();
 	}
+	@Test void originalMobileButtonLabelPaintingAndSelection() {
+		MobileCoreContractTest.testMobileButtonLabelContracts();
+	}
 
 }
