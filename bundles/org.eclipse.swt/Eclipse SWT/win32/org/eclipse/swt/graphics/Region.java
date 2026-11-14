@@ -585,6 +585,10 @@ static class ZoomToRegionMap {
 void set(ZoomToRegionMap zoomToRegionHandleMap, int contextZoom) {
 	this.temporaryHandleZoomHint = contextZoom;
 	final Operation operation = new OperationWithRegionHandle(Operation::set, zoomToRegionHandleMap);
+	// The operation replaces the region's area, so the operations describing its
+	// previous area are no longer part of it and must be released.
+	operations.forEach(Operation::dereference);
+	operations.clear();
 	storeAndApplyOperationForAllHandles(operation);
 }
 
@@ -1020,6 +1024,9 @@ private static class OperationWithRegion extends Operation {
 	OperationWithRegion(OperationStrategy operationStrategy, List<Operation> operations) {
 		super(operationStrategy);
 		this.operations = List.copyOf(operations);
+		// The operations of the other region are retained beyond that region's lifetime,
+		// so they must be kept alive until this operation itself is destroyed.
+		this.operations.forEach(Operation::reference);
 	}
 
 	@Override
@@ -1048,6 +1055,11 @@ private static class OperationWithRegion extends Operation {
 	@Override
 	void translate(long handle, int zoom) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	void destroy() {
+		operations.forEach(Operation::dereference);
 	}
 
 }
