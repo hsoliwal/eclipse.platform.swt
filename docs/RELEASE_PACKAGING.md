@@ -163,11 +163,11 @@ the denominator; do not combine unrelated class or backend reports into a single
 whole-product percentage. Counts of tests are not a coverage percentage.
 
 Existing feature-specific evidence includes
-[all-widgets coverage](m3/allwidgets-viewport/coverage/COVERAGE.md),
-[enhanced API coverage](m3/enhanced-api/coverage/COVERAGE.md),
-[table coverage](m3/table-viewport/coverage/COVERAGE.md),
-[tree gaps](m3/tree-viewport/COVERAGE_GAPS.tsv), and
-[render-mode coverage tooling](m3/render-modes/tools/coverage_unit.sh).
+[all-widgets coverage](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/allwidgets-viewport/coverage/COVERAGE.md),
+[enhanced API coverage](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/enhanced-api/coverage/COVERAGE.md),
+[table coverage](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/table-viewport/coverage/COVERAGE.md),
+[tree gaps](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/tree-viewport/COVERAGE_GAPS.tsv), and
+[render-mode coverage tooling](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/render-modes/tools/coverage_unit.sh).
 Those records describe their stated historical revisions, source/class sets,
 backends and test modes. Re-run them against the candidate when claiming coverage
 for that candidate. Keep raw missed branches visible even when a report explains

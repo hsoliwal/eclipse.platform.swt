@@ -229,4 +229,4 @@ blocked until the complete native/GUI/platform and license gates pass.
 
 ## Integrated receiving candidate
 
-The current additive receiving scope and unresolved OSGi/native gates are recorded in [the integration contract](m3/release/INTEGRATION.md).
+The current additive receiving scope and unresolved OSGi/native gates are recorded in [the integration contract](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/release/INTEGRATION.md).
