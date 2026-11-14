@@ -21,6 +21,12 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.text.InputFilter;
+import android.text.InputType;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -92,6 +98,13 @@ public final class AndroidPlatform implements MobilePlatform {
 			view.setVisibility(old.getVisibility()); view.setEnabled(old.isEnabled());
 			view.setContentDescription(old.getContentDescription());
 			view.role = old.role; view.accessibleState = old.accessibleState;
+			if (old.editor != null && view.editor != null) {
+				view.configureEditor(old.editor.getText().toString(),
+						old.editor.getSelectionStart(), old.editor.getSelectionEnd(),
+						old.editor.isFocusable(), old.editor.getFilters().length == 0
+								? Integer.MAX_VALUE : old.textLimit,
+						old.editor.getHint() == null ? "" : old.editor.getHint().toString());
+			}
 			controls.replace(view.id, view);
 			// The detached Activity may deliver delayed focus/layout callbacks.
 			// Only its replacement may publish events for this SWT owner.
@@ -201,7 +214,7 @@ public final class AndroidPlatform implements MobilePlatform {
 	@Override public int[] dpi() { return new int[] {96, 96}; }
 	@Override public long createControl(int kind, long parent, int style) {
 		checkThread();
-		if (kind != SHELL && kind != COMPOSITE && kind != CANVAS) throw new UnsupportedOperationException("Unsupported SWT mobile control kind: " + kind);
+		if (kind != SHELL && kind != COMPOSITE && kind != CANVAS && kind != TEXT) throw new UnsupportedOperationException("Unsupported SWT mobile control kind: " + kind);
 		return ui(() -> {
 			if (kind != SHELL && parent == 0) throw new IllegalArgumentException("Control requires a parent");
 			if (kind == SHELL && parent != 0 && controls.get(parent).kind != SHELL) throw new IllegalArgumentException("Shell requires a Shell parent");
@@ -216,10 +229,19 @@ public final class AndroidPlatform implements MobilePlatform {
 	@Override public void disposeControl(long peer) { checkThread(); ui(() -> { releasePeer(controls.get(peer)); return null; }); }
 	private void releaseTree(PeerView view) {
 		// Reused registry slots do not imply native parent/child ordering.
-		while (view.getChildCount() != 0) releaseTree((PeerView) view.getChildAt(view.getChildCount() - 1));
+		while (view.getChildCount() != 0) {
+			View child = view.getChildAt(view.getChildCount() - 1);
+			if (child instanceof PeerView peer) releaseTree(peer);
+			else view.removeView(child);
+		}
 		releasePeer(view);
 	}
 	private void releasePeer(PeerView view) {
+		if (view.editor != null) {
+			view.editor.clearFocus();
+			view.removeView(view.editor);
+			view.editor = null;
+		}
 		if (view.getChildCount() != 0) throw new IllegalStateException("Dispose child SWT controls first");
 		controls.remove(view.id);
 		view.id = 0;
@@ -241,8 +263,27 @@ public final class AndroidPlatform implements MobilePlatform {
 	}
 	@Override public void setVisible(long peer, boolean value) { checkThread(); ui(() -> { controls.get(peer).setVisibility(value ? View.VISIBLE : View.INVISIBLE); return null; }); }
 	@Override public void setEnabled(long peer, boolean value) { checkThread(); ui(() -> { controls.get(peer).setEnabled(value); return null; }); }
+	@Override public void textContent(long peer, String text, int start, int end,
+			boolean editable, int limit, String hint) {
+		checkThread();
+		Objects.requireNonNull(text, "text");
+		Objects.requireNonNull(hint, "hint");
+		ui(() -> {
+			PeerView view = controls.get(peer);
+			if (view.kind != TEXT || view.editor == null) throw new IllegalArgumentException("TEXT peer required");
+			view.configureEditor(text, start, end, editable, limit, hint);
+			return null;
+		});
+	}
 	@Override public void setTitle(long peer, String title) { checkThread(); ui(() -> { PeerView view = controls.get(peer); if (view.kind == SHELL) activity.setTitle(title); view.setContentDescription(title); return null; }); }
-	@Override public boolean requestFocus(long peer) { checkThread(); return ui(() -> controls.get(peer).requestFocus()); }
+	@Override public boolean requestFocus(long peer) {
+		checkThread();
+		return ui(() -> {
+			PeerView view = controls.get(peer);
+			return view.kind == TEXT && view.editor != null
+					? view.editor.requestFocus() : view.requestFocus();
+		});
+	}
 	@Override public void setAccessibility(long peer, String label, int role, int state) {
 		checkThread(); ui(() -> { PeerView view = controls.get(peer); view.setContentDescription(label); view.role = role; view.accessibleState = state; return null; });
 	}
@@ -341,6 +382,9 @@ public final class AndroidPlatform implements MobilePlatform {
 	private final class PeerView extends ViewGroup {
 		long id;
 		final int kind, style;
+		EditText editor;
+		boolean suppressNativeEdit;
+		int textLimit = Integer.MAX_VALUE;
 		final long parent;
 		int logicalX, logicalY, logicalWidth, logicalHeight;
 		int role, accessibleState;
@@ -357,6 +401,61 @@ public final class AndroidPlatform implements MobilePlatform {
 			setClipChildren(true); setClipToPadding(true);
 			setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
 			setVisibility(kind == SHELL ? View.INVISIBLE : View.VISIBLE);
+			if (kind == TEXT) initializeEditor();
+		}
+		private void initializeEditor() {
+			editor = new EditText(activity);
+			boolean multiline = (style & SWT.MULTI) != 0;
+			int inputType = InputType.TYPE_CLASS_TEXT;
+			if (multiline) inputType |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
+			if ((style & SWT.PASSWORD) != 0) inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
+			editor.setInputType(inputType);
+			editor.setSingleLine(!multiline);
+			editor.setPadding(0, 0, 0, 0);
+			editor.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+			editor.setImeOptions(multiline ? EditorInfo.IME_FLAG_NO_ENTER_ACTION : EditorInfo.IME_ACTION_DONE);
+			editor.setOnEditorActionListener((field, actionId, key) -> {
+				if (!multiline && id != 0) {
+					event(SWT.DefaultSelection, 0, 0, 0, 0, '\0', 0, 0,
+							(int)SystemClock.uptimeMillis());
+					return true;
+				}
+				return false;
+			});
+			editor.setOnFocusChangeListener((view, hasFocus) ->
+				event(hasFocus ? SWT.FocusIn : SWT.FocusOut, 0, 0, 0, 0, '\0', 0, 0,
+						(int)SystemClock.uptimeMillis()));
+			editor.addTextChangedListener(new TextWatcher() {
+				@Override public void beforeTextChanged(CharSequence value, int start, int count, int after) {}
+				@Override public void onTextChanged(CharSequence value, int start, int before, int count) {}
+				@Override public void afterTextChanged(Editable changed) {
+					if (suppressNativeEdit || id == 0) return;
+					EventSink receiver = sink;
+					long current = id;
+					String copy = changed.toString();
+					int start = editor.getSelectionStart(), end = editor.getSelectionEnd();
+					if (receiver != null) callback(() -> receiver.textChanged(current, copy, start, end));
+				}
+			});
+			addView(editor, new ViewGroup.LayoutParams(
+					ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+		}
+		void configureEditor(String text, int start, int end,
+				boolean editable, int limit, String hint) {
+			if (editor == null) throw new IllegalStateException("Not a Text peer");
+			suppressNativeEdit = true;
+			try {
+				textLimit = limit;
+				if (!editor.getText().toString().equals(text)) editor.setText(text);
+				int length = editor.length();
+				editor.setSelection(Math.max(0, Math.min(start, length)),
+						Math.max(0, Math.min(end, length)));
+				editor.setFilters(limit == Integer.MAX_VALUE
+						? new InputFilter[0] : new InputFilter[] {new InputFilter.LengthFilter(limit)});
+				editor.setHint(hint);
+				editor.setFocusable(editable);
+				editor.setFocusableInTouchMode(editable);
+			} finally { suppressNativeEdit = false; }
 		}
 		ViewGroup.LayoutParams layoutParams() {
 			if (kind == SHELL) {
@@ -368,15 +467,21 @@ public final class AndroidPlatform implements MobilePlatform {
 		@Override protected void onMeasure(int width, int height) {
 			setMeasuredDimension(MeasureSpec.getSize(width), MeasureSpec.getSize(height));
 			for (int i = 0; i < getChildCount(); i++) {
-				PeerView child = (PeerView) getChildAt(i);
-				child.measure(MeasureSpec.makeMeasureSpec(physical(child.logicalWidth), MeasureSpec.EXACTLY),
-					MeasureSpec.makeMeasureSpec(physical(child.logicalHeight), MeasureSpec.EXACTLY));
+				View child = getChildAt(i);
+				if (child instanceof PeerView peer) {
+					peer.measure(MeasureSpec.makeMeasureSpec(physical(peer.logicalWidth), MeasureSpec.EXACTLY),
+							MeasureSpec.makeMeasureSpec(physical(peer.logicalHeight), MeasureSpec.EXACTLY));
+				} else {
+					child.measure(MeasureSpec.makeMeasureSpec(getMeasuredWidth(), MeasureSpec.EXACTLY),
+							MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY));
+				}
 			}
 		}
 		@Override protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
 			for (int i = 0; i < getChildCount(); i++) {
-				PeerView child = (PeerView) getChildAt(i);
-				int x = physical(child.logicalX), y = physical(child.logicalY);
+				View child = getChildAt(i);
+				int x = child instanceof PeerView peer ? physical(peer.logicalX) : 0;
+				int y = child instanceof PeerView peer ? physical(peer.logicalY) : 0;
 				child.layout(x, y, x + child.getMeasuredWidth(), y + child.getMeasuredHeight());
 			}
 		}
