@@ -27,7 +27,7 @@ final class ContractPlatform implements MobilePlatform {
 	int connects, disconnects, openedGraphics, closedGraphics;
 	final Map<Long, Peer> controls = new HashMap<>();
 	final Map<Long, BufferedImage> images = new HashMap<>();
-	static final class Peer { long parent; int x,y,width,height; boolean enabled=true,visible; String title,label; int role,state; int[] frame; }
+	static final class Peer { long parent; int kind,x,y,width,height; boolean enabled=true,visible; String title,label; int role,state; int[] frame; }
 	private void check() { if (owner != Thread.currentThread()) throw new AssertionError("OS operations must run from the SWT owner thread in this transport"); }
 	private Peer peer(long id) { check(); Peer p=controls.get(id); if(p==null)throw new IllegalStateException("Stale test peer "+id); return p; }
 	private BufferedImage bitmap(long id) { check(); BufferedImage image=images.get(id); if(image==null)throw new IllegalStateException("Stale test image "+id);return image; }
@@ -36,7 +36,7 @@ final class ContractPlatform implements MobilePlatform {
 	@Override public void disconnect(){check();if(!controls.isEmpty()||!images.isEmpty())throw new AssertionError("Leaked native owners: "+controls.size()+" controls, "+images.size()+" images");sink=null;disconnects++;}
 	@Override public int[] displayBounds(){check();return new int[]{0,0,400,600};}
 	@Override public int[] dpi(){check();return new int[]{96,96};}
-	@Override public long createControl(int kind,long parent,int style){check();if(parent!=0)peer(parent);Peer p=new Peer();p.parent=parent;long id=next++;controls.put(id,p);lastCreated=id;return id;}
+	@Override public long createControl(int kind,long parent,int style){check();if(parent!=0)peer(parent);Peer p=new Peer();p.parent=parent;p.kind=kind;long id=next++;controls.put(id,p);lastCreated=id;return id;}
 	@Override public void disposeControl(long id){peer(id);if(controls.values().stream().anyMatch(p->p.parent==id))throw new AssertionError("Parent destroyed before children");controls.remove(id);}
 	@Override public void setBounds(long id,int x,int y,int w,int h){Peer p=peer(id);p.x=x;p.y=y;p.width=w;p.height=h;}
 	@Override public void setVisible(long id,boolean visible){peer(id).visible=visible;}
