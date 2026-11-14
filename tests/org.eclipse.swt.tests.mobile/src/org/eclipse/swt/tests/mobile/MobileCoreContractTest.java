@@ -470,6 +470,18 @@ public final class MobileCoreContractTest {
 					&& editor.getOffsetAtLine(1) == 6,
 					"Text line navigation uses original SWT UTF-16 code unit offsets");
 			editor.setTextLimit(Text.LIMIT);
+			editor.setText("clipboard");
+			editor.setSelection(0, 4);
+			editor.copy();
+			require(platform.clipboard.equals("clip") && editor.getSelectionText().equals("clip"),
+					"Text.copy writes original selected UTF-16 text to native clipboard");
+			editor.cut();
+			require(editor.getText().equals("board")
+						&& editor.getCaretPosition() == 0,
+					"Text.cut deletes selected text through original Verify and Modify");
+			editor.paste();
+			require(editor.getText().equals("clipboard"),
+					"Text.paste reads system clipboard and applies exact canonical replacement");
 			editor.setText("A\uD83D\uDE03B");
 			require(editor.getCharCount() == 4, "Supplementary Unicode retains UTF-16 width");
 			require(editor.getText(1, 2).equals("\uD83D\uDE03"),
