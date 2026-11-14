@@ -259,7 +259,18 @@ public class Display extends Device implements Executor {
 		@Override public void accessibility(long peer, int action) {
 			enqueue(() -> {
 				Control c = control(peer); if (c == null || !c.isEnabled() || !c.isVisible()) return;
-				if (action != MobilePlatform.ACTION_ACTIVATE) throw new UnsupportedOperationException("Accessibility action " + action + " requires a widget-specific semantic mapping");
+				if (c instanceof Scale && (action == MobilePlatform.ACTION_INCREMENT
+						|| action == MobilePlatform.ACTION_DECREMENT)) {
+					// The original Scale's keyboard owner applies its exact increment,
+					// emits SWT.Selection once, and handles listener reentrancy.
+					Event key = new Event();
+					key.keyCode = action == MobilePlatform.ACTION_INCREMENT
+							? SWT.ARROW_UP : SWT.ARROW_DOWN;
+					c.sendEvent(SWT.KeyDown, key);
+					return;
+				}
+				if (action != MobilePlatform.ACTION_ACTIVATE)
+					throw new UnsupportedOperationException("Unsupported SWT accessibility action " + action);
 				Point size = c.getSize(); Event down = new Event(); down.x = size.x / 2; down.y = size.y / 2; down.button = 1; down.count = 1;
 				c.sendEvent(SWT.MouseDown, down);
 				if (!c.isDisposed()) { Event up = new Event(); up.x = down.x; up.y = down.y; up.button = 1; up.count = 1; c.sendEvent(SWT.MouseUp, up); }
