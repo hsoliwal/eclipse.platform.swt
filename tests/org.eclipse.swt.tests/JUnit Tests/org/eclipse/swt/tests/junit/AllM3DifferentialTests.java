@@ -31,6 +31,7 @@ import org.junit.platform.suite.api.Suite;
  */
 @Suite
 @SelectClasses({
+	Test_ControlSnapshotDifferential.class,
 	Test_org_eclipse_swt_widgets_BatchScopeDifferential.class,
 	Test_org_eclipse_swt_widgets_RowDiffDifferential.class,
 	Test_org_eclipse_swt_widgets_PrefetchDifferential.class,
