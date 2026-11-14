@@ -146,9 +146,7 @@ public class Test_ControlSnapshot {
 		/* the rows before root 2: root 0, its three children, and root 1 */
 		assertSame (tree.getItem (2), tree.getTopItem ());
 		assertEquals (5, shot.visibleRange ().start ());
-		assertTrue (shot.state ().contains ("
-top=5
-"), shot.state ());
+		assertTrue (shot.state ().contains ("\ntop=5\n"), shot.state ());
 	}
 
 	@Test
