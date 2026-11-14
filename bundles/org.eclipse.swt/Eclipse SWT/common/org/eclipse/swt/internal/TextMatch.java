@@ -16,7 +16,7 @@
  *     Hitesh Soliwal (Synexia) - match types and match case adapted from x86core jsonviewer
  *         MatcherFactory and its matchers (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 import java.util.regex.*;
@@ -24,7 +24,7 @@ import java.util.regex.*;
 import org.eclipse.swt.*;
 
 /**
- * A compiled text criterion of {@link M3ColumnFilter} (enhanced M3 API).
+ * A compiled text criterion of {@link ColumnFilter} (enhanced M3 API).
  * <p>
  * The pattern text is split at unescaped commas into tokens (<code>\,</code> is a literal comma;
  * empty tokens are ignored). A text matches when any token matches it; with {@link #NEGATE} it
@@ -45,7 +45,7 @@ import org.eclipse.swt.*;
  *
  * @since 3.138
  */
-public final class M3TextMatch {
+public final class TextMatch {
 
 	/** Mode: the token occurs in the text. */
 	public static final int CONTAINS = 0;
@@ -77,7 +77,7 @@ public final class M3TextMatch {
 	private final int [][] wildcards;
 	private final Matcher [] matchers;
 
-	private M3TextMatch (String pattern, int mode) {
+	private TextMatch (String pattern, int mode) {
 		this.pattern = pattern;
 		this.mode = mode;
 		tokens = tokens (pattern);
@@ -102,10 +102,10 @@ public final class M3TextMatch {
 	 *    <li>ERROR_INVALID_ARGUMENT - if the mode is not a mode, or a regular expression token is not valid</li>
 	 * </ul>
 	 */
-	public static M3TextMatch compile (String pattern, int mode) {
+	public static TextMatch compile (String pattern, int mode) {
 		String problem = check (pattern, mode);
 		if (!problem.isEmpty ()) SWT.error (SWT.ERROR_INVALID_ARGUMENT, null, problem);
-		return new M3TextMatch (pattern, mode);
+		return new TextMatch (pattern, mode);
 	}
 
 	/**
@@ -122,10 +122,10 @@ public final class M3TextMatch {
 	 * </ul>
 	 */
 	public static String check (String pattern, int mode) {
-		M3Checks.nonNull (pattern);
-		M3Checks.argument ((mode & MODE_MASK) <= REGEX && (mode & ~(MODE_MASK | NEGATE | IGNORE_CASE)) == 0);
+		RowChecks.nonNull (pattern);
+		RowChecks.argument ((mode & MODE_MASK) <= REGEX && (mode & ~(MODE_MASK | NEGATE | IGNORE_CASE)) == 0);
 		try {
-			new M3TextMatch (pattern, mode);
+			new TextMatch (pattern, mode);
 			return ""; //$NON-NLS-1$
 		} catch (PatternSyntaxException e) {
 			return e.getMessage ();
@@ -144,7 +144,7 @@ public final class M3TextMatch {
 	 * </ul>
 	 */
 	public static String [] tokens (String pattern) {
-		M3Checks.nonNull (pattern);
+		RowChecks.nonNull (pattern);
 		List<String> tokens = new ArrayList<> ();
 		StringBuilder token = new StringBuilder ();
 		for (int i = 0; i < pattern.length (); i++) {
@@ -187,7 +187,7 @@ public final class M3TextMatch {
 
 	/**
 	 * Returns whether the pattern has a token. A match without tokens matches every text and
-	 * {@link M3ColumnFilter} treats it as no criterion.
+	 * {@link ColumnFilter} treats it as no criterion.
 	 *
 	 * @return whether there is a token
 	 */
@@ -223,7 +223,7 @@ public final class M3TextMatch {
 	 * starts-with filter): then only the rows previous kept need testing. The previous match tests this match's
 	 * token itself, so the relation uses exactly the matching rules; with IGNORE_CASE only ASCII tokens qualify.
 	 */
-	boolean narrows (M3TextMatch previous) {
+	boolean narrows (TextMatch previous) {
 		if (previous == null || previous.mode != mode || negated () || tokens.length != 1 || previous.tokens.length != 1) return false;
 		if (kind () != CONTAINS && kind () != STARTS_WITH) return false;
 		if ((mode & IGNORE_CASE) != 0 && !(ascii (tokens [0]) && ascii (previous.tokens [0]))) return false;

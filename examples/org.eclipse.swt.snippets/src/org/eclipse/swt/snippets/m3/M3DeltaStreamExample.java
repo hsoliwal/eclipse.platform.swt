@@ -19,14 +19,14 @@ import java.util.logging.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
  * Model seam, delta-only views (brief rule 24): a stream of 100,000 deltas into a <code>Table</code> and a
  * <code>Tree</code> of 1,000,000 rows, without a full refresh.
  * <p>
- * Every change reaches the widget as one {@link M3Patch} through {@link M3Model#apply(M3Patch, M3Model.Labels)}:
+ * Every change reaches the widget as one {@link RowPatch} through {@link M3Model#apply(RowPatch, M3Model.Labels)}:
  * 70% label updates, 15% inserts and 15% removes of one row at a random position. The example never calls
  * <code>setItemCount</code>, <code>removeAll</code>, <code>clearAll</code>, <code>setItems</code> or a refresh
  * after the initial load. Both widgets are <code>SWT.VIRTUAL</code>, so the labels of a changed row are asked only
@@ -75,9 +75,9 @@ static final class Stream {
 	}
 
 	/* one delta of one row in a lane of the given size: 70% update, 15% insert, 15% remove */
-	M3Patch next (long parent, int size) {
+	RowPatch next (long parent, int size) {
 		int kind = random.nextInt (100);
-		M3Patch.Builder builder = M3Patch.builder (parent);
+		RowPatch.Builder builder = RowPatch.builder (parent);
 		if (kind < 70 && size > 0) return builder.update (random.nextInt (size), 1).build ();
 		if (kind < 85 || size == 0) return builder.insert (random.nextInt (size + 1), nextId++).build ();
 		return builder.remove (random.nextInt (size), 1).build ();
@@ -142,7 +142,7 @@ static String streamTable (Shell shell, int rows, int deltas, long seconds) {
 	long start = System.nanoTime (), deadline = start + seconds * 1_000_000_000L;
 	for (int k = 0; k < deltas && System.nanoTime () < deadline; k++) {
 		int size = model.size (M3Model.ROOT);
-		M3Patch patch = stream.next (M3Model.ROOT, size);
+		RowPatch patch = stream.next (M3Model.ROOT, size);
 		int top = table.getTopIndex ();
 		long topId = model.id (M3Model.ROOT, top);
 		boolean outside = outsideWindow (patch, top, table.getClientArea ().height / Math.max (1, table.getItemHeight ()) + 1);
@@ -185,7 +185,7 @@ static String streamTree (Shell shell, int rows, int deltas, long seconds) {
 	long start = System.nanoTime (), deadline = start + seconds * 1_000_000_000L;
 	for (int k = 0; k < deltas && System.nanoTime () < deadline; k++) {
 		long category = stream.random.nextInt (CATEGORIES);
-		M3Patch patch = stream.next (category, model.size (category));
+		RowPatch patch = stream.next (category, model.size (category));
 		TreeItem top = tree.getTopItem ();
 		boolean outside = !tree.getItem ((int) category).getExpanded ();
 		labels.tick = k;
@@ -203,7 +203,7 @@ static String streamTree (Shell shell, int rows, int deltas, long seconds) {
 }
 
 /* whether a one-row patch lands outside the rows [top, top + visible) of the window */
-static boolean outsideWindow (M3Patch patch, int top, int visible) {
+static boolean outsideWindow (RowPatch patch, int top, int visible) {
 	int at = patch.removeRuns () > 0 ? patch.removeAt (0) : patch.insertRuns () > 0 ? patch.insertAt (0) : patch.updateAt (0);
 	return at < top || at > top + visible;
 }

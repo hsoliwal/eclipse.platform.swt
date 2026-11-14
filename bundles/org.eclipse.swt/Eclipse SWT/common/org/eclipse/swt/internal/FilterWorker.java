@@ -16,17 +16,16 @@
  *         from TV_5.0 treeviewer TreeViewerUpdater, TreeViewerWork and ViewerFilterUI
  *         (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 import java.util.function.*;
 
 import org.eclipse.swt.*;
-import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /*
- * The asynchronous side of an M3ColumnFilter.
+ * The asynchronous side of an ColumnFilter.
  *
  * - Debounce: every criterion change increments the filter's generation (an int) and re-arms one
  *   preallocated timer runnable; when it fires it returns unless the armed generation is still
@@ -34,7 +33,7 @@ import org.eclipse.swt.widgets.*;
  * - Model work off the UI thread: one daemon thread takes the newest request (a snapshot of the
  *   criteria), compiles nothing (matches were compiled once when the change was recorded),
  *   evaluates only the changed criteria over the source rows, folds the masks word by word,
- *   applies the tree ancestor rule, compacts the view and lets a following M3ColumnSort sort the
+ *   applies the tree ancestor rule, compacts the view and lets a following ColumnSort sort the
  *   result into spare lanes. It compares the generation every CHECK rows and drops the work as
  *   soon as a newer generation exists.
  * - Hidden viewports: while every viewport bound to the chain is hidden, a finished result is
@@ -43,12 +42,12 @@ import org.eclipse.swt.widgets.*;
  * - One asyncExec back: the result is applied on the UI thread only when its generation is still
  *   current; applying swaps lanes and fires one RESET, so a bound widget refreshes its window.
  */
-final class M3FilterWorker implements Runnable {
+final class FilterWorker implements Runnable {
 
 	static final int CHECK = 4096;
 	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.m3.M3ColumnFilter"); //$NON-NLS-1$
 
-	private final M3ColumnFilter filter;
+	private final ColumnFilter filter;
 	private final Display display;
 	private final Object lock = new Object ();
 	private final Runnable debounced = this::debounced, applied = this::applied;
@@ -58,14 +57,14 @@ final class M3FilterWorker implements Runnable {
 	private Thread thread;
 	/* the request (guarded by lock) */
 	private int requested = -1, taken = -1;
-	private M3FilterCriterion [] requestCriteria, requestCurrent;
+	private FilterCriterion [] requestCriteria, requestCurrent;
 	private boolean [] requestDirty;
 	private IntUnaryOperator requestParents;
 	private int requestSize;
-	private M3CellText text;
+	private CellText text;
 	/* the result, published to the UI thread by asyncExec */
 	private int resultGeneration = -1, resultSize;
-	private M3FilterCriterion [] resultCriteria;
+	private FilterCriterion [] resultCriteria;
 	private long [] resultMatched, resultKept;
 	private int [] resultRows, resultRank, resultBelow, resultParents;
 	private RuntimeException failure;
@@ -73,7 +72,7 @@ final class M3FilterWorker implements Runnable {
 	private boolean held, parked;
 	int posted;
 
-	M3FilterWorker (M3ColumnFilter filter, Display display) {
+	FilterWorker (ColumnFilter filter, Display display) {
 		this.filter = filter;
 		this.display = display;
 	}
@@ -137,7 +136,7 @@ final class M3FilterWorker implements Runnable {
 	public void run () {
 		while (true) {
 			int generation;
-			M3FilterCriterion [] criteria, current;
+			FilterCriterion [] criteria, current;
 			boolean [] dirty;
 			IntUnaryOperator parents;
 			int n;
@@ -161,7 +160,7 @@ final class M3FilterWorker implements Runnable {
 		}
 	}
 
-	private void step (int generation, M3FilterCriterion [] criteria, M3FilterCriterion [] current, boolean [] dirty, IntUnaryOperator parents, int n) {
+	private void step (int generation, FilterCriterion [] criteria, FilterCriterion [] current, boolean [] dirty, IntUnaryOperator parents, int n) {
 		long start = System.nanoTime ();
 		try {
 			boolean computed = compute (generation, criteria, current, dirty, parents, n);
@@ -196,10 +195,10 @@ final class M3FilterWorker implements Runnable {
 	}
 
 	/* worker thread: the whole filter result for one generation, or false when a newer generation exists */
-	private boolean compute (int generation, M3FilterCriterion [] criteria, M3FilterCriterion [] current, boolean [] dirty, IntUnaryOperator parents, int n) {
-		int words = M3RowMask.words (n);
+	private boolean compute (int generation, FilterCriterion [] criteria, FilterCriterion [] current, boolean [] dirty, IntUnaryOperator parents, int n) {
+		int words = RowMask.words (n);
 		for (int i = 0; i < criteria.length; i++) {
-			M3FilterCriterion criterion = criteria [i];
+			FilterCriterion criterion = criteria [i];
 			if (!dirty [i]) {
 				criterion.mask = current [i].mask;
 			} else if (criterion.narrows (current [i])) {
@@ -218,15 +217,15 @@ final class M3FilterWorker implements Runnable {
 			}
 		}
 		long [] matched = new long [words];
-		M3FilterCriterion.fold (criteria, matched, n);
+		FilterCriterion.fold (criteria, matched, n);
 		long [] kept = Arrays.copyOf (matched, words);
-		if (parents != null) M3FilterCriterion.ancestors (matched, kept, n, parents);
+		if (parents != null) FilterCriterion.ancestors (matched, kept, n, parents);
 		int [] parentLane = parents == null ? null : new int [n];
-		int [] below = parents == null ? null : M3FilterCriterion.below (matched, n, parents, new int [n], parentLane);
+		int [] below = parents == null ? null : FilterCriterion.below (matched, n, parents, new int [n], parentLane);
 		int [] rows = new int [n], rank = new int [words];
-		int size = M3RowMask.compact (kept, words, rows, rank);
+		int size = RowMask.compact (kept, words, rows, rank);
 		if (generation != filter.generation) return false;
-		M3ColumnSort follower = filter.follower;
+		ColumnSort follower = filter.follower;
 		if (follower != null) follower.prepare (rows, size, n, generation);
 		synchronized (lock) {
 			resultCriteria = criteria;
@@ -245,7 +244,7 @@ final class M3FilterWorker implements Runnable {
 
 	/* UI thread: applies the result if no newer generation exists */
 	private void applied () {
-		M3FilterCriterion [] criteria;
+		FilterCriterion [] criteria;
 		long [] matched, kept;
 		int [] rows, rank, below, parentLane;
 		int size, generation;

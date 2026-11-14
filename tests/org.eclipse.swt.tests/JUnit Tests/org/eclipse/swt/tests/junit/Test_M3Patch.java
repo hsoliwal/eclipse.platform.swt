@@ -19,11 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.*;
 import java.util.stream.*;
 
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.junit.jupiter.api.*;
 
 /**
- * Contract of M3Patch (enhanced M3 API, leaf 19, the model seam). Headless. Oracles: an ArrayList of ids edited
+ * Contract of RowPatch (enhanced M3 API, leaf 19, the model seam). Headless. Oracles: an ArrayList of ids edited
  * through the Target callbacks, and a quadratic LIS for the minimal size of a diff.
  */
 public class Test_M3Patch {
@@ -51,10 +51,10 @@ public class Test_M3Patch {
 	}
 
 	/* replays a patch through the Target callbacks onto a list oracle */
-	private static long [] replay (M3Patch patch, long [] before) {
+	private static long [] replay (RowPatch patch, long [] before) {
 		ArrayList<Long> list = LongStream.of (before).boxed ().collect (Collectors.toCollection (ArrayList::new));
 		int [] run = new int [1];
-		patch.applyTo (new M3Patch.Target () {
+		patch.applyTo (new RowPatch.Target () {
 			@Override
 			public void remove (int index, int count) {
 				list.subList (index, index + count).clear ();
@@ -82,7 +82,7 @@ public class Test_M3Patch {
 		for (int round = 0; round < 300; round++) {
 			long [] wanted = edit (random, ids, next);
 			next += 10;
-			M3Patch patch = M3Patch.diff (M3Patch.ROOT, ids, wanted);
+			RowPatch patch = RowPatch.diff (RowPatch.ROOT, ids, wanted);
 			assertArrayEquals (wanted, patch.apply (ids), "round " + round);
 			assertArrayEquals (wanted, replay (patch, ids), "round " + round);
 			int kept = lis (ids, wanted);
@@ -97,7 +97,7 @@ public class Test_M3Patch {
 
 	@Test
 	public void test_builderRunsAndUpdates () {
-		M3Patch patch = M3Patch.builder (7).remove (8, 2).remove (1, 1).insert (0, 100, 101).insert (5, 102).update (3, 2).update (9, 1).build ();
+		RowPatch patch = RowPatch.builder (7).remove (8, 2).remove (1, 1).insert (0, 100, 101).insert (5, 102).update (3, 2).update (9, 1).build ();
 		assertEquals (7, patch.parent ());
 		assertEquals (2, patch.removeRuns ());
 		assertEquals (8, patch.removeAt (0));
@@ -116,20 +116,20 @@ public class Test_M3Patch {
 		assertArrayEquals (new long [] {100, 101, 0, 2, 3, 102, 4, 5, 6, 7}, after);
 		assertArrayEquals (after, replay (patch, before));
 		assertEquals ("M3Patch [parent 7, -3 +3 ~3, 0 moves]", patch.toString ());
-		M3Patch moved = M3Patch.builder (M3Patch.ROOT).remove (0, 1).insert (2, 0).move (0, 2).build ();
+		RowPatch moved = RowPatch.builder (RowPatch.ROOT).remove (0, 1).insert (2, 0).move (0, 2).build ();
 		assertEquals (1, moved.moveCount ());
 		assertArrayEquals (new long [] {1, 2, 0}, moved.apply (new long [] {0, 1, 2}));
-		M3Patch empty = M3Patch.builder (M3Patch.ROOT).build ();
+		RowPatch empty = RowPatch.builder (RowPatch.ROOT).build ();
 		assertTrue (empty.isEmpty ());
 		long [] same = {4, 5};
 		assertArrayEquals (same, empty.apply (same));
 		assertNotSame (same, empty.apply (same));
-		assertFalse (M3Patch.builder (M3Patch.ROOT).update (0, 1).build ().isEmpty ());
+		assertFalse (RowPatch.builder (RowPatch.ROOT).update (0, 1).build ().isEmpty ());
 	}
 
 	@Test
 	public void test_argumentsAreChecked () {
-		M3Patch.Builder builder = M3Patch.builder (M3Patch.ROOT).remove (5, 2);
+		RowPatch.Builder builder = RowPatch.builder (RowPatch.ROOT).remove (5, 2);
 		assertThrows (IllegalArgumentException.class, () -> builder.remove (6, 1), "removes go down");
 		assertThrows (IllegalArgumentException.class, () -> builder.remove (-1, 1));
 		assertThrows (IllegalArgumentException.class, () -> builder.remove (0, 0));
@@ -144,16 +144,16 @@ public class Test_M3Patch {
 		assertThrows (IllegalArgumentException.class, () -> builder.update (9, 0));
 		assertThrows (IllegalArgumentException.class, () -> builder.move (0, 3), "0 is not removed");
 		assertThrows (IllegalArgumentException.class, () -> builder.move (5, 4), "4 is not inserted");
-		M3Patch patch = builder.move (6, 3).build ();
+		RowPatch patch = builder.move (6, 3).build ();
 		assertThrows (IllegalArgumentException.class, () -> patch.insertedId (0, 1));
 		assertThrows (IllegalArgumentException.class, () -> patch.apply (new long [3]), "remove beyond the list");
-		assertThrows (IllegalArgumentException.class, () -> M3Patch.builder (M3Patch.ROOT).insert (2, 1).build ().apply (new long [1]));
-		assertThrows (IllegalArgumentException.class, () -> M3Patch.builder (M3Patch.ROOT).update (0, 2).build ().apply (new long [1]));
+		assertThrows (IllegalArgumentException.class, () -> RowPatch.builder (RowPatch.ROOT).insert (2, 1).build ().apply (new long [1]));
+		assertThrows (IllegalArgumentException.class, () -> RowPatch.builder (RowPatch.ROOT).update (0, 2).build ().apply (new long [1]));
 		assertThrows (IllegalArgumentException.class, () -> patch.apply (null));
 		assertThrows (IllegalArgumentException.class, () -> patch.applyTo (null));
-		assertThrows (IllegalArgumentException.class, () -> M3Patch.diff (M3Patch.ROOT, null, new long [0]));
-		assertThrows (IllegalArgumentException.class, () -> M3Patch.diff (M3Patch.ROOT, new long [0], null));
-		assertThrows (IllegalArgumentException.class, () -> M3Patch.diff (M3Patch.ROOT, new long [] {1, 1}, new long [0]));
-		assertThrows (IllegalArgumentException.class, () -> M3Patch.diff (M3Patch.ROOT, new long [0], new long [] {2, 2}));
+		assertThrows (IllegalArgumentException.class, () -> RowPatch.diff (RowPatch.ROOT, null, new long [0]));
+		assertThrows (IllegalArgumentException.class, () -> RowPatch.diff (RowPatch.ROOT, new long [0], null));
+		assertThrows (IllegalArgumentException.class, () -> RowPatch.diff (RowPatch.ROOT, new long [] {1, 1}, new long [0]));
+		assertThrows (IllegalArgumentException.class, () -> RowPatch.diff (RowPatch.ROOT, new long [0], new long [] {2, 2}));
 	}
 }

@@ -18,7 +18,7 @@ import java.util.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /*
@@ -40,7 +40,7 @@ public class Snippet_M3ColumnFilterRow {
 		for (int i = 0; i < rows; i++) {
 			cells [i] = new String [] {fruits [random.nextInt (fruits.length)], colors [random.nextInt (colors.length)], String.valueOf (random.nextInt (1000))};
 		}
-		M3CellText text = (row, column) -> cells [row][column];
+		CellText text = (row, column) -> cells [row][column];
 
 		Display display = new Display ();
 		Shell shell = new Shell (display);
@@ -54,18 +54,18 @@ public class Snippet_M3ColumnFilterRow {
 			column.setWidth (150);
 		}
 
-		M3ColumnFilter filter = new M3ColumnFilter (3, rows, text);
-		M3ColumnSort sort = new M3ColumnSort (3, filter);
+		ColumnFilter filter = new ColumnFilter (3, rows, text);
+		ColumnSort sort = new ColumnSort (3, filter);
 		sort.setCellText (text);
-		sort.setKey (2, M3ColumnKey.ofInts (r -> Integer.parseInt (cells [r][2])));
+		sort.setKey (2, ColumnKey.ofInts (r -> Integer.parseInt (cells [r][2])));
 		sort.install (table);
-		M3RowBinding.bind (table, sort, (item, row) -> item.setText (cells [row]));
+		RowBinding.bind (table, sort, (item, row) -> item.setText (cells [row]));
 
-		M3FilterRow filterRow = new M3FilterRow (shell, table, filter);
+		FilterRow filterRow = new FilterRow (shell, table, filter);
 		filterRow.moveAbove (table);
 		filterRow.setLayoutData (new GridData (SWT.FILL, SWT.TOP, true, false));
 		table.setLayoutData (new GridData (SWT.FILL, SWT.FILL, true, true));
-		M3FilterPopup.install (table, filter);
+		FilterPopup.install (table, filter);
 		filterRow.getText (1).setText ("red,black");
 
 		Label status = new Label (shell, SWT.NONE);

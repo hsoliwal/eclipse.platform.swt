@@ -12,14 +12,14 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 
 import org.eclipse.swt.widgets.*;
 
 /**
- * A change of an {@link M3RowView} (enhanced M3 API).
+ * A change of an {@link RowView} (enhanced M3 API).
  * <p>
  * The kind says what happened; the payload is a lane of source rows and, for insertions and
  * removals, a range of source rows. The damaged range names the view rows, after the change,
@@ -28,10 +28,10 @@ import org.eclipse.swt.widgets.*;
  * the notification only.
  * </p>
  *
- * @see M3RowView.Listener
+ * @see RowView.Listener
  * @since 3.138
  */
-public final class M3RowChange {
+public final class RowChange {
 
 	/** The view was rebuilt; its rows from the first damaged one on may differ (an asynchronous filter result damages only from its first changed row). */
 	public static final int RESET = 1;
@@ -54,11 +54,11 @@ public final class M3RowChange {
 	/** The order of the view changed; the payload is empty. */
 	public static final int ORDER = 7;
 
-	private final M3RowView view;
+	private final RowView view;
 	int kind, start, count, rowCount, firstDamaged = -1, lastDamaged = -1;
 	int [] rows = new int [16];
 
-	M3RowChange (M3RowView view) {
+	RowChange (RowView view) {
 		this.view = view;
 	}
 
@@ -67,7 +67,7 @@ public final class M3RowChange {
 	 *
 	 * @return the view
 	 */
-	public M3RowView view () {
+	public RowView view () {
 		return view;
 	}
 
@@ -119,7 +119,7 @@ public final class M3RowChange {
 	 * </ul>
 	 */
 	public int row (int index) {
-		M3Checks.range (index, rowCount);
+		RowChecks.range (index, rowCount);
 		return rows [index];
 	}
 

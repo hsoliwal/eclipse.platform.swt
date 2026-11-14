@@ -14,7 +14,7 @@
  *     Hitesh Soliwal (Synexia) - adapted from TV_5.0 treeviewer FilterEditPanel and
  *         ViewerFilterUI (edit area, tool items) (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.dnd.*;
@@ -28,24 +28,24 @@ import org.eclipse.swt.widgets.*;
  * short delay (TV_5.0 DeferredRun); an invalid pattern leaves the filter as it was. Return and
  * Escape close the panel's popup.
  */
-final class M3FilterEditPanel extends Composite {
+final class FilterEditPanel extends Composite {
 
 	static final int DELAY = 250;
 	static final int [] MODES = {
-		M3TextMatch.WILDCARD | M3TextMatch.IGNORE_CASE,
-		M3TextMatch.WILDCARD | M3TextMatch.IGNORE_CASE | M3TextMatch.NEGATE,
-		M3TextMatch.REGEX,
-		M3TextMatch.REGEX | M3TextMatch.NEGATE,
-		M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE,
-		M3TextMatch.STARTS_WITH | M3TextMatch.IGNORE_CASE,
-		M3TextMatch.EXACT | M3TextMatch.IGNORE_CASE,
+		TextMatch.WILDCARD | TextMatch.IGNORE_CASE,
+		TextMatch.WILDCARD | TextMatch.IGNORE_CASE | TextMatch.NEGATE,
+		TextMatch.REGEX,
+		TextMatch.REGEX | TextMatch.NEGATE,
+		TextMatch.CONTAINS | TextMatch.IGNORE_CASE,
+		TextMatch.STARTS_WITH | TextMatch.IGNORE_CASE,
+		TextMatch.EXACT | TextMatch.IGNORE_CASE,
 	};
 	private static final String [] LABELS = {
-		M3Messages.MATCHES, M3Messages.DOES_NOT_MATCH, M3Messages.MATCH_REGEXP, M3Messages.DOES_NOT_MATCH_REGEXP,
-		M3Messages.CONTAINS, M3Messages.STARTS_WITH, M3Messages.EQUALS,
+		FilterMessages.MATCHES, FilterMessages.DOES_NOT_MATCH, FilterMessages.MATCH_REGEXP, FilterMessages.DOES_NOT_MATCH_REGEXP,
+		FilterMessages.CONTAINS, FilterMessages.STARTS_WITH, FilterMessages.EQUALS,
 	};
 
-	private final M3ColumnFilter filter;
+	private final ColumnFilter filter;
 	private final int column;
 	private final Runnable close, applied;
 	final Combo enablement, matchType;
@@ -54,7 +54,7 @@ final class M3FilterEditPanel extends Composite {
 	final ToolItem defaultItem, pasteItem, closeItem;
 	private final Runnable apply = this::apply;
 
-	M3FilterEditPanel (Composite parent, M3ColumnFilter filter, int column, String columnName, Runnable close, Runnable applied) {
+	FilterEditPanel (Composite parent, ColumnFilter filter, int column, String columnName, Runnable close, Runnable applied) {
 		super (parent, SWT.NONE);
 		this.filter = filter;
 		this.column = column;
@@ -64,15 +64,15 @@ final class M3FilterEditPanel extends Composite {
 		enablement = new Combo (this, SWT.READ_ONLY);
 		enablement.setItems ("", columnName); //$NON-NLS-1$
 		matchType = new Combo (this, SWT.READ_ONLY);
-		for (String label : LABELS) matchType.add (M3Messages.get (label));
+		for (String label : LABELS) matchType.add (FilterMessages.get (label));
 		pattern = new Text (this, SWT.SINGLE | SWT.BORDER);
 		GridData data = new GridData (SWT.FILL, SWT.CENTER, true, false);
 		data.widthHint = 100;
 		pattern.setLayoutData (data);
 		ToolBar bar = new ToolBar (this, SWT.FLAT);
-		defaultItem = item (bar, M3Messages.DEFAULT, M3Messages.SET_DEFAULT_TEXT);
-		pasteItem = item (bar, M3Messages.PASTE, M3Messages.PASTE_FROM_CLIPBOARD);
-		closeItem = item (bar, M3Messages.CLOSE, M3Messages.CLOSE_FILTER);
+		defaultItem = item (bar, FilterMessages.DEFAULT, FilterMessages.SET_DEFAULT_TEXT);
+		pasteItem = item (bar, FilterMessages.PASTE, FilterMessages.PASTE_FROM_CLIPBOARD);
+		closeItem = item (bar, FilterMessages.CLOSE, FilterMessages.CLOSE_FILTER);
 		feedback = new Label (this, SWT.WRAP);
 		feedback.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false, 4, 1));
 		initialize ();
@@ -81,13 +81,13 @@ final class M3FilterEditPanel extends Composite {
 
 	private static ToolItem item (ToolBar bar, String text, String toolTip) {
 		ToolItem item = new ToolItem (bar, SWT.PUSH);
-		item.setText (M3Messages.get (text));
-		item.setToolTipText (M3Messages.get (toolTip));
+		item.setText (FilterMessages.get (text));
+		item.setToolTipText (FilterMessages.get (toolTip));
 		return item;
 	}
 
 	private void initialize () {
-		M3TextMatch match = filter.getMatch (column);
+		TextMatch match = filter.getMatch (column);
 		enablement.select (match == null ? 0 : 1);
 		matchType.select (match == null ? 0 : indexOf (match.mode ()));
 		pattern.setText (match == null ? defaultText () : match.pattern ());
@@ -100,7 +100,7 @@ final class M3FilterEditPanel extends Composite {
 			if (MODES [i] == mode) return i;
 		}
 		for (int i = 0; i < MODES.length; i++) {
-			if ((MODES [i] & ~M3TextMatch.IGNORE_CASE) == (mode & ~M3TextMatch.IGNORE_CASE)) return i;
+			if ((MODES [i] & ~TextMatch.IGNORE_CASE) == (mode & ~TextMatch.IGNORE_CASE)) return i;
 		}
 		return 0;
 	}
@@ -157,9 +157,9 @@ final class M3FilterEditPanel extends Composite {
 			return true;
 		}
 		int mode = MODES [matchType.getSelectionIndex ()];
-		String problem = M3TextMatch.check (pattern.getText (), mode);
+		String problem = TextMatch.check (pattern.getText (), mode);
 		if (!problem.isEmpty ()) {
-			feedback.setText (M3Messages.get (M3Messages.VALIDITY_ERROR) + ' ' + problem);
+			feedback.setText (FilterMessages.get (FilterMessages.VALIDITY_ERROR) + ' ' + problem);
 			return false;
 		}
 		filter.setText (column, pattern.getText (), mode);
@@ -176,11 +176,11 @@ final class M3FilterEditPanel extends Composite {
 
 	private String defaultText () {
 		int kind = MODES [Math.max (0, matchType.getSelectionIndex ())] & 0xFF;
-		return kind == M3TextMatch.WILDCARD ? "*" : kind == M3TextMatch.REGEX ? ".*" : ""; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		return kind == TextMatch.WILDCARD ? "*" : kind == TextMatch.REGEX ? ".*" : ""; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	private String info () {
 		int kind = MODES [Math.max (0, matchType.getSelectionIndex ())] & 0xFF;
-		return M3Messages.get (kind == M3TextMatch.WILDCARD ? M3Messages.WILDCARD_INFO : kind == M3TextMatch.REGEX ? M3Messages.REGEXP_INFO : M3Messages.TEXT_INFO);
+		return FilterMessages.get (kind == TextMatch.WILDCARD ? FilterMessages.WILDCARD_INFO : kind == TextMatch.REGEX ? FilterMessages.REGEXP_INFO : FilterMessages.TEXT_INFO);
 	}
 }

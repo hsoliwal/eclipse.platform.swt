@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import org.eclipse.swt.widgets.*;
 
@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.*;
  *
  * @since 3.138
  */
-public final class M3RowWindow extends M3RowViewBase {
+public final class RowWindow extends RowViewBase {
 
 	private int first, count;
 
@@ -39,8 +39,8 @@ public final class M3RowWindow extends M3RowViewBase {
 	 *    <li>ERROR_NULL_ARGUMENT - if the input is null</li>
 	 * </ul>
 	 */
-	public M3RowWindow (M3RowView input) {
-		super (M3Checks.nonNull (input), 0);
+	public RowWindow (RowView input) {
+		super (RowChecks.nonNull (input), 0);
 	}
 
 	/**
@@ -54,10 +54,10 @@ public final class M3RowWindow extends M3RowViewBase {
 	 * </ul>
 	 */
 	public void setWindow (int first, int count) {
-		M3Checks.argument (first >= 0 && count >= 0);
+		RowChecks.argument (first >= 0 && count >= 0);
 		this.first = first;
 		this.count = count;
-		change.set (M3RowChange.RESET, 0, 0);
+		change.set (RowChange.RESET, 0, 0);
 		change.damage (0, size () - 1);
 		fire ();
 	}
@@ -72,7 +72,7 @@ public final class M3RowWindow extends M3RowViewBase {
 	 * </ul>
 	 */
 	public void setWindow (M3ItemRange range) {
-		M3Checks.nonNull (range);
+		RowChecks.nonNull (range);
 		setWindow (range.start (), range.size ());
 	}
 
@@ -110,7 +110,7 @@ public final class M3RowWindow extends M3RowViewBase {
 
 	@Override
 	public int map (int row) {
-		return input.map (first + M3Checks.range (row, size ()));
+		return input.map (first + RowChecks.range (row, size ()));
 	}
 
 	@Override
@@ -120,11 +120,11 @@ public final class M3RowWindow extends M3RowViewBase {
 	}
 
 	@Override
-	void inputChanged (M3RowChange in) {
+	void inputChanged (RowChange in) {
 		change.set (in.kind, in.start, in.count);
 		for (int i = 0; i < in.rowCount; i++) change.add (in.rows [i]);
 		int last = size () - 1;
-		if (in.kind == M3RowChange.RESET) {
+		if (in.kind == RowChange.RESET) {
 			change.damage (0, last);
 		} else if (in.firstDamaged >= 0) {
 			change.damage (Math.max (in.firstDamaged - first, 0), Math.min (in.lastDamaged - first, last));

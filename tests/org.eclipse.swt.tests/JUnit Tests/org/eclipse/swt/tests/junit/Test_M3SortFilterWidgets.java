@@ -22,7 +22,7 @@ import java.util.function.*;
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
 
@@ -90,9 +90,9 @@ public class Test_M3SortFilterWidgets {
 		return column == 0 ? String.valueOf (numbers [row]) : column == 1 ? names [row] : "r" + row;
 	}
 
-	M3ColumnSort sort (M3RowView input) {
-		M3ColumnSort sort = input == null ? new M3ColumnSort (3, ROWS) : new M3ColumnSort (3, input);
-		sort.setKey (0, M3ColumnKey.ofInts (r -> numbers [r]));
+	ColumnSort sort (RowView input) {
+		ColumnSort sort = input == null ? new ColumnSort (3, ROWS) : new ColumnSort (3, input);
+		sort.setKey (0, ColumnKey.ofInts (r -> numbers [r]));
 		sort.setCellText (this::cell);
 		return sort;
 	}
@@ -105,8 +105,8 @@ public class Test_M3SortFilterWidgets {
 
 	static int [] fills = new int [1];
 
-	M3RowBinding bind (Table table, M3RowView view) {
-		return M3RowBinding.bind (table, view, (item, row) -> {
+	RowBinding bind (Table table, RowView view) {
+		return RowBinding.bind (table, view, (item, row) -> {
 			fills [0]++;
 			for (int c = 0; c < 3; c++) item.setText (c, cell (row, c));
 		});
@@ -117,7 +117,7 @@ public class Test_M3SortFilterWidgets {
 		Table table = table (SWT.NONE);
 		Image own = new Image (display, 8, 8);
 		table.getColumn (2).setImage (own);
-		M3ColumnSort sort = sort (null);
+		ColumnSort sort = sort (null);
 		bind (table, sort);
 		sort.install (table);
 		sort.install (table);
@@ -157,7 +157,7 @@ public class Test_M3SortFilterWidgets {
 		sort.install (table);
 		click (extra, false);
 		assertEquals (0, sort.getSortKeyCount ());
-		M3ColumnSort other = sort (null);
+		ColumnSort other = sort (null);
 		other.install (table);
 		click (table.getColumn (1), false);
 		assertEquals (1, other.getSortKeyCount ());
@@ -170,10 +170,10 @@ public class Test_M3SortFilterWidgets {
 	@Test
 	public void test_virtualTableAsksOnlyForResidentRows () {
 		Table table = table (SWT.NONE);
-		M3ColumnFilter filter = new M3ColumnFilter (3, ROWS, this::cell);
-		M3ColumnSort sort = sort (filter);
+		ColumnFilter filter = new ColumnFilter (3, ROWS, this::cell);
+		ColumnSort sort = sort (filter);
 		fills [0] = 0;
-		M3RowBinding binding = bind (table, sort);
+		RowBinding binding = bind (table, sort);
 		assertSame (sort, binding.getView ());
 		shell.open ();
 		drain ();
@@ -186,7 +186,7 @@ public class Test_M3SortFilterWidgets {
 		table.getItem (0).getText ();
 		assertTrue (fills [0] <= visible * 2, "fills after sort " + fills [0]);
 		assertEquals (cell (sort.map (0), 1), table.getItem (0).getText (1));
-		filter.setText (1, "n1*", M3TextMatch.WILDCARD);
+		filter.setText (1, "n1*", TextMatch.WILDCARD);
 		drain ();
 		assertEquals (sort.size (), table.getItemCount ());
 		assertTrue (table.getItem (0).getText (1).startsWith ("n1"));
@@ -210,11 +210,11 @@ public class Test_M3SortFilterWidgets {
 		binding.dispose ();
 		sort.toggle (1, false);
 		assertNotEquals (cell (sort.map (0), 1), table.getItem (0).getText (1));
-		assertThrows (IllegalArgumentException.class, () -> M3RowBinding.bind (new Table (shell, SWT.NONE), sort, (item, row) -> {}));
-		assertThrows (IllegalArgumentException.class, () -> M3RowBinding.bind ((Table) null, sort, (item, row) -> {}));
-		assertThrows (IllegalArgumentException.class, () -> M3RowBinding.bind (table, null, (item, row) -> {}));
-		assertThrows (IllegalArgumentException.class, () -> M3RowBinding.bind (table, sort, null));
-		M3RowBinding again = bind (table, sort);
+		assertThrows (IllegalArgumentException.class, () -> RowBinding.bind (new Table (shell, SWT.NONE), sort, (item, row) -> {}));
+		assertThrows (IllegalArgumentException.class, () -> RowBinding.bind ((Table) null, sort, (item, row) -> {}));
+		assertThrows (IllegalArgumentException.class, () -> RowBinding.bind (table, null, (item, row) -> {}));
+		assertThrows (IllegalArgumentException.class, () -> RowBinding.bind (table, sort, null));
+		RowBinding again = bind (table, sort);
 		table.dispose ();
 		sort.toggle (1, false);
 		again.dispose ();
@@ -228,27 +228,27 @@ public class Test_M3SortFilterWidgets {
 		Tree tree = new Tree (shell, SWT.VIRTUAL | SWT.BORDER | SWT.MULTI);
 		tree.setHeaderVisible (true);
 		new TreeColumn (tree, SWT.NONE).setWidth (200);
-		M3ColumnFilter filter = new M3ColumnFilter (1, 8, (row, column) -> labels [row]);
+		ColumnFilter filter = new ColumnFilter (1, 8, (row, column) -> labels [row]);
 		filter.setParents (r -> parents [r]);
-		M3ColumnSort sort = new M3ColumnSort (1, filter);
+		ColumnSort sort = new ColumnSort (1, filter);
 		sort.setParents (r -> parents [r]);
 		sort.setCellText ((row, column) -> labels [row]);
-		assertThrows (IllegalArgumentException.class, () -> M3RowBinding.bind (tree, new M3ColumnSort (1, 1), (item, row) -> {}));
-		M3RowBinding treeBinding = M3RowBinding.bind (tree, sort, (item, row) -> item.setText (labels [row]));
+		assertThrows (IllegalArgumentException.class, () -> RowBinding.bind (tree, new ColumnSort (1, 1), (item, row) -> {}));
+		RowBinding treeBinding = RowBinding.bind (tree, sort, (item, row) -> item.setText (labels [row]));
 		sort.install (tree);
-		M3FilterPopup popup = M3FilterPopup.install (tree, filter);
+		FilterPopup popup = FilterPopup.install (tree, filter);
 		shell.open ();
 		drain ();
 		assertEquals (3, tree.getItemCount ());
 		click (tree.getColumn (0), false);
 		drain ();
 		assertEquals ("lone", tree.getItem (0).getText ());
-		filter.setText (0, "*match", M3TextMatch.WILDCARD);
+		filter.setText (0, "*match", TextMatch.WILDCARD);
 		drain ();
 		assertEquals (1, tree.getItemCount ());
 		TreeItem root = tree.getItem (0);
 		assertEquals ("root", root.getText ());
-		assertEquals (0, M3RowBinding.sourceRow (root));
+		assertEquals (0, RowBinding.sourceRow (root));
 		assertEquals (1, root.getItemCount ());
 		TreeItem dir = root.getItem (0);
 		assertEquals (2, dir.getItemCount ());
@@ -256,9 +256,9 @@ public class Test_M3SortFilterWidgets {
 		tree.setSelection (dir.getItem (0));
 		tree.notifyListeners (SWT.Selection, new Event ());
 		assertArrayEquals (new int [] {3}, treeBinding.getSelectedRows ());
-		filter.setText (0, "*match,dir,top", M3TextMatch.WILDCARD);
+		filter.setText (0, "*match,dir,top", TextMatch.WILDCARD);
 		drain ();
-		assertEquals (3, M3RowBinding.sourceRow (tree.getSelection () [0]));
+		assertEquals (3, RowBinding.sourceRow (tree.getSelection () [0]));
 		treeBinding.setSelectedRows (99);
 		assertEquals (0, tree.getSelectionCount ());
 		treeBinding.setSelectedRows (6);
@@ -267,17 +267,17 @@ public class Test_M3SortFilterWidgets {
 		assertEquals (2, tree.getSelectionCount ());
 		treeBinding.setSelectedRows ();
 		assertEquals (0, tree.getSelectionCount ());
-		filter.setText (0, "*match", M3TextMatch.WILDCARD);
+		filter.setText (0, "*match", TextMatch.WILDCARD);
 		treeBinding.dispose ();
-		assertEquals (-1, M3RowBinding.sourceRow (new TreeItem (new Tree (shell, SWT.NONE), SWT.NONE)));
-		assertThrows (IllegalArgumentException.class, () -> M3RowBinding.sourceRow (null));
+		assertEquals (-1, RowBinding.sourceRow (new TreeItem (new Tree (shell, SWT.NONE), SWT.NONE)));
+		assertThrows (IllegalArgumentException.class, () -> RowBinding.sourceRow (null));
 		assertNotNull (tree.getColumn (0).getImage (), "filter mark");
 		popup.open (0);
 		assertTrue (popup.isOpen ());
 		popup.dispose ();
 		assertFalse (popup.isOpen ());
-		assertThrows (IllegalArgumentException.class, () -> M3FilterPopup.install ((Tree) null, filter));
-		assertThrows (IllegalArgumentException.class, () -> M3FilterPopup.install (tree, null));
+		assertThrows (IllegalArgumentException.class, () -> FilterPopup.install ((Tree) null, filter));
+		assertThrows (IllegalArgumentException.class, () -> FilterPopup.install (tree, null));
 	}
 
 	static <T extends Control> T find (Composite parent, Class<T> type, int index) {
@@ -307,15 +307,15 @@ public class Test_M3SortFilterWidgets {
 	@Test
 	public void test_filterPopupEditsTheColumnFilter () {
 		Table table = table (SWT.NONE);
-		M3ColumnFilter filter = new M3ColumnFilter (2, ROWS, this::cell);
-		M3ColumnSort sort = sort (filter);
+		ColumnFilter filter = new ColumnFilter (2, ROWS, this::cell);
+		ColumnSort sort = sort (filter);
 		bind (table, sort);
-		M3FilterPopup popup = M3FilterPopup.install (table, filter);
-		assertNotSame (popup, M3FilterPopup.install (table, filter));
-		popup = M3FilterPopup.install (table, filter);
+		FilterPopup popup = FilterPopup.install (table, filter);
+		assertNotSame (popup, FilterPopup.install (table, filter));
+		popup = FilterPopup.install (table, filter);
 		shell.open ();
 		drain ();
-		M3FilterPopup installed = popup;
+		FilterPopup installed = popup;
 		assertThrows (IllegalArgumentException.class, () -> installed.open (2));
 		popup.open (1);
 		assertEquals (1, popup.getColumn ());
@@ -371,11 +371,11 @@ public class Test_M3SortFilterWidgets {
 		waitFor (() -> !filter.isActive (1));
 		popup.close ();
 		assertNull (table.getColumn (1).getImage ());
-		filter.setText (0, "1", M3TextMatch.STARTS_WITH | M3TextMatch.NEGATE);
+		filter.setText (0, "1", TextMatch.STARTS_WITH | TextMatch.NEGATE);
 		popup.open (0);
 		assertEquals (0, find (popup.getShell (), Combo.class, 1).getSelectionIndex ());
 		popup.close ();
-		filter.setText (0, "1", M3TextMatch.CONTAINS);
+		filter.setText (0, "1", TextMatch.CONTAINS);
 		table.setHeaderVisible (false);
 		popup.open (0);
 		table.setHeaderVisible (true);
@@ -389,7 +389,7 @@ public class Test_M3SortFilterWidgets {
 		popup.getShell ().notifyListeners (SWT.Deactivate, new Event ());
 		shell.setActive ();
 		waitFor (() -> !installed.isOpen ());
-		M3FilterPopup last = popup;
+		FilterPopup last = popup;
 		Event menu = new Event ();
 		menu.detail = SWT.MENU_MOUSE;
 		int top = table.getClientArea ().y;
@@ -423,11 +423,11 @@ public class Test_M3SortFilterWidgets {
 
 	@Test
 	public void test_filterRowFollowsMovesOfTheRowAndTheControl () {
-		M3ColumnFilter filter = new M3ColumnFilter (3, ROWS, this::cell);
+		ColumnFilter filter = new ColumnFilter (3, ROWS, this::cell);
 		shell.setLayout (null);
 		Table table = table (SWT.NONE);
 		table.setBounds (10, 40, 400, 200);
-		M3FilterRow row = new M3FilterRow (shell, table, filter);
+		FilterRow row = new FilterRow (shell, table, filter);
 		row.setBounds (10, 10, 400, 24);
 		shell.open ();
 		drain ();
@@ -440,12 +440,12 @@ public class Test_M3SortFilterWidgets {
 
 	@Test
 	public void test_filterRowFollowsColumnsAndFilters () {
-		M3ColumnFilter filter = new M3ColumnFilter (3, ROWS, this::cell);
+		ColumnFilter filter = new ColumnFilter (3, ROWS, this::cell);
 		Table table = table (SWT.H_SCROLL);
-		M3FilterRow row = new M3FilterRow (shell, table, filter);
+		FilterRow row = new FilterRow (shell, table, filter);
 		row.moveAbove (table);
 		row.setLayoutData (new GridData (SWT.FILL, SWT.TOP, true, false));
-		M3ColumnSort sort = sort (filter);
+		ColumnSort sort = sort (filter);
 		bind (table, sort);
 		shell.layout (true, true);
 		shell.open ();
@@ -464,7 +464,7 @@ public class Test_M3SortFilterWidgets {
 		new TableColumn (table, SWT.NONE).setWidth (40);
 		row.refresh ();
 		table.getColumn (3).dispose ();
-		//FLLDCIM: TOP - M3FilterRow applies a field after M3FilterRow.DELAY (timerExec); wait as the clearing step below does
+		//FLLDCIM: TOP - FilterRow applies a field after FilterRow.DELAY (timerExec); wait as the clearing step below does
 		waitFor (() -> table.getItem (0).getText (1).contains ("12"));
 		assertNotNull (table.getColumn (1).getImage ());
 		row.getText (1).setText ("");
@@ -475,19 +475,19 @@ public class Test_M3SortFilterWidgets {
 		assertEquals (row.getText (0).computeSize (SWT.DEFAULT, SWT.DEFAULT).y, row.computeSize (SWT.DEFAULT, SWT.DEFAULT).y);
 		assertEquals (77, row.computeSize (77, 9).x);
 		assertEquals (9, row.computeSize (77, 9).y);
-		M3ColumnFilter none = new M3ColumnFilter (0, 1, null);
-		assertEquals (0, new M3FilterRow (shell, table, none).computeSize (SWT.DEFAULT, SWT.DEFAULT).y);
+		ColumnFilter none = new ColumnFilter (0, 1, null);
+		assertEquals (0, new FilterRow (shell, table, none).computeSize (SWT.DEFAULT, SWT.DEFAULT).y);
 		Tree tree = new Tree (shell, SWT.NONE);
 		new TreeColumn (tree, SWT.NONE).setWidth (50);
-		M3FilterRow treeRow = new M3FilterRow (shell, tree, filter);
+		FilterRow treeRow = new FilterRow (shell, tree, filter);
 		treeRow.getText (0).setText ("x");
 		treeRow.dispose ();
 		tree.dispose ();
 		row.getText (0).setText ("1");
 		table.dispose ();
 		assertTrue (row.isDisposed ());
-		assertThrows (IllegalArgumentException.class, () -> new M3FilterRow (shell, (Table) null, filter));
-		assertThrows (IllegalArgumentException.class, () -> new M3FilterRow (shell, (Tree) null, filter));
-		assertThrows (IllegalArgumentException.class, () -> new M3FilterRow (shell, new Table (shell, SWT.NONE), null));
+		assertThrows (IllegalArgumentException.class, () -> new FilterRow (shell, (Table) null, filter));
+		assertThrows (IllegalArgumentException.class, () -> new FilterRow (shell, (Tree) null, filter));
+		assertThrows (IllegalArgumentException.class, () -> new FilterRow (shell, new Table (shell, SWT.NONE), null));
 	}
 }

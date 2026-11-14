@@ -12,56 +12,56 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 /*
- * Reports the change of an M3ColumnFilter from its old and new kept masks, word by word: the
+ * Reports the change of an ColumnFilter from its old and new kept masks, word by word: the
  * structural change of the source first (RESET, INSERTED with the inserted rows that pass,
  * REMOVED), then the rows that left (old & ~new), the changed rows that stayed (UPDATED), and
  * the rows that entered (new & ~old, outside an inserted range). UPDATED comes before ENTERED so
  * that a sorted view re-places its changed rows before it binary-searches the entering ones.
  * Damage is in view rows (source order), so a row's view position is its rank in the new mask.
  */
-final class M3FilterDelta {
+final class FilterDelta {
 
-	private final M3ColumnFilter filter;
-	private final M3RowChange change;
+	private final ColumnFilter filter;
+	private final RowChange change;
 
-	M3FilterDelta (M3ColumnFilter filter) {
+	FilterDelta (ColumnFilter filter) {
 		this.filter = filter;
 		this.change = filter.change;
 	}
 
-	void report (M3RowChange in, long [] previous, long [] kept, int n) {
+	void report (RowChange in, long [] previous, long [] kept, int n) {
 		if (!filter.hasListeners ()) return;
 		int kind = in == null ? 0 : in.kind;
-		int words = M3RowMask.words (n), last = filter.size () - 1;
-		if (kind == M3RowChange.RESET) {
-			change.set (M3RowChange.RESET, 0, 0);
+		int words = RowMask.words (n), last = filter.size () - 1;
+		if (kind == RowChange.RESET) {
+			change.set (RowChange.RESET, 0, 0);
 			change.damage (0, last);
 			filter.fire ();
 			return;
 		}
 		int skipStart = 0, skipEnd = 0;
-		if (kind == M3RowChange.INSERTED || kind == M3RowChange.REMOVED) {
+		if (kind == RowChange.INSERTED || kind == RowChange.REMOVED) {
 			structural (in, kept);
-			if (kind == M3RowChange.INSERTED) {
+			if (kind == RowChange.INSERTED) {
 				skipStart = in.start;
 				skipEnd = in.start + in.count;
 			}
 		}
-		emit (M3RowChange.LEFT, previous, kept, words, 0, 0);
-		if (kind == M3RowChange.UPDATED) updated (in, previous, kept);
-		emit (M3RowChange.ENTERED, kept, previous, words, skipStart, skipEnd);
+		emit (RowChange.LEFT, previous, kept, words, 0, 0);
+		if (kind == RowChange.UPDATED) updated (in, previous, kept);
+		emit (RowChange.ENTERED, kept, previous, words, skipStart, skipEnd);
 	}
 
 	/* the INSERTED or REMOVED event of a source edit: the inserted rows that pass, damage from the edit to the end */
-	void structural (M3RowChange in, long [] kept) {
+	void structural (RowChange in, long [] kept) {
 		if (!filter.hasListeners ()) return;
 		change.set (in.kind, in.start, in.count);
-		if (in.kind == M3RowChange.INSERTED) {
+		if (in.kind == RowChange.INSERTED) {
 			for (int row = in.start; row < in.start + in.count; row++) {
-				if (M3RowMask.get (kept, row)) change.add (row);
+				if (RowMask.get (kept, row)) change.add (row);
 			}
 		}
 		change.damage (filter.rankBefore (in.start), filter.size () - 1);
@@ -69,11 +69,11 @@ final class M3FilterDelta {
 	}
 
 	/* the change of an UPDATED edit: the kept flips (ascending, ~row for a row that left) and the edited rows that stayed */
-	void changedRows (M3RowChange in, int [] flips, int count, long [] previous, long [] kept) {
+	void changedRows (RowChange in, int [] flips, int count, long [] previous, long [] kept) {
 		if (!filter.hasListeners ()) return;
-		emitFlips (M3RowChange.LEFT, flips, count, false);
+		emitFlips (RowChange.LEFT, flips, count, false);
 		updated (in, previous, kept);
-		emitFlips (M3RowChange.ENTERED, flips, count, true);
+		emitFlips (RowChange.ENTERED, flips, count, true);
 	}
 
 	/* fires the flips that left (or entered), if any (as emit, without the scan) */
@@ -112,12 +112,12 @@ final class M3FilterDelta {
 		filter.fire ();
 	}
 
-	void updated (M3RowChange in, long [] previous, long [] kept) {
+	void updated (RowChange in, long [] previous, long [] kept) {
 		boolean any = false;
 		for (int i = 0; i < in.rowCount; i++) {
 			int row = in.rows [i];
-			if (M3RowMask.get (kept, row) && M3RowMask.get (previous, row)) {
-				if (!any) change.set (M3RowChange.UPDATED, 0, 0);
+			if (RowMask.get (kept, row) && RowMask.get (previous, row)) {
+				if (!any) change.set (RowChange.UPDATED, 0, 0);
 				any = true;
 				change.add (row);
 				int position = filter.rankBefore (row);

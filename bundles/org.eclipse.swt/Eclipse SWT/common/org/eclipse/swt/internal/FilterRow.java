@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 
@@ -27,19 +27,19 @@ import org.eclipse.swt.widgets.*;
  * Place the row above the control with any layout. Each field follows its column's position,
  * width and order, the control's horizontal scrolling and where the row and the control are
  * (a move of either). Typing in a field sets the column's
- * criterion of the {@link M3ColumnFilter} to "contains, ignoring case" (commas separate
- * alternatives, see {@link M3TextMatch}) after a short delay; an
+ * criterion of the {@link ColumnFilter} to "contains, ignoring case" (commas separate
+ * alternatives, see {@link TextMatch}) after a short delay; an
  * empty field removes it. Call {@link #refresh()} after columns are created or disposed.
  * </p>
  *
  * @since 3.138
  */
-public final class M3FilterRow extends Composite {
+public final class FilterRow extends Composite {
 
 	static final int DELAY = 250;
 
 	private final Composite control;
-	private final M3ColumnFilter filter;
+	private final ColumnFilter filter;
 	private final java.util.List<Text> texts = new ArrayList<> ();
 	private final Listener listener = this::handleEvent;
 	private final Runnable apply = this::apply;
@@ -59,8 +59,8 @@ public final class M3FilterRow extends Composite {
 	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the parent</li>
 	 * </ul>
 	 */
-	public M3FilterRow (Composite parent, Table table, M3ColumnFilter filter) {
-		this (parent, (Composite) M3Checks.nonNull (table), filter);
+	public FilterRow (Composite parent, Table table, ColumnFilter filter) {
+		this (parent, (Composite) RowChecks.nonNull (table), filter);
 	}
 
 	/**
@@ -77,14 +77,14 @@ public final class M3FilterRow extends Composite {
 	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the parent</li>
 	 * </ul>
 	 */
-	public M3FilterRow (Composite parent, Tree tree, M3ColumnFilter filter) {
-		this (parent, (Composite) M3Checks.nonNull (tree), filter);
+	public FilterRow (Composite parent, Tree tree, ColumnFilter filter) {
+		this (parent, (Composite) RowChecks.nonNull (tree), filter);
 	}
 
-	private M3FilterRow (Composite parent, Composite control, M3ColumnFilter filter) {
+	private FilterRow (Composite parent, Composite control, ColumnFilter filter) {
 		super (parent, SWT.NONE);
 		this.control = control;
-		this.filter = M3Checks.nonNull (filter);
+		this.filter = RowChecks.nonNull (filter);
 		pending = new boolean [filter.getColumnCount ()];
 		control.addListener (SWT.Resize, listener);
 		control.addListener (SWT.Move, listener);
@@ -100,7 +100,7 @@ public final class M3FilterRow extends Composite {
 	/** Creates the fields of new columns and lays the fields out again. */
 	public void refresh () {
 		checkWidget ();
-		int count = Math.min (M3Columns.count (control), filter.getColumnCount ());
+		int count = Math.min (Columns.count (control), filter.getColumnCount ());
 		while (texts.size () > count) texts.remove (texts.size () - 1).dispose ();
 		while (texts.size () < count) {
 			Text text = new Text (this, SWT.SINGLE | SWT.BORDER | SWT.SEARCH);
@@ -109,7 +109,7 @@ public final class M3FilterRow extends Composite {
 			texts.add (text);
 		}
 		for (int i = 0; i < count; i++) {
-			Item column = M3Columns.column (control, i);
+			Item column = Columns.column (control, i);
 			column.removeListener (SWT.Resize, listener);
 			column.removeListener (SWT.Move, listener);
 			column.addListener (SWT.Resize, listener);
@@ -129,7 +129,7 @@ public final class M3FilterRow extends Composite {
 	 * </ul>
 	 */
 	public Text getText (int column) {
-		return texts.get (M3Checks.range (column, texts.size ()));
+		return texts.get (RowChecks.range (column, texts.size ()));
 	}
 
 	@Override
@@ -143,8 +143,8 @@ public final class M3FilterRow extends Composite {
 	private void layoutFields () {
 		int offset = toControl (control.toDisplay (0, 0)).x, height = getClientArea ().height;
 		for (int i = 0; i < texts.size (); i++) {
-			Item column = M3Columns.column (control, i);
-			texts.get (i).setBounds (offset + M3Columns.left (control, i), 0, M3Columns.width (column), height);
+			Item column = Columns.column (control, i);
+			texts.get (i).setBounds (offset + Columns.left (control, i), 0, Columns.width (column), height);
 		}
 	}
 
@@ -171,9 +171,9 @@ public final class M3FilterRow extends Composite {
 		control.removeListener (SWT.Dispose, listener);
 		ScrollBar bar = control.getHorizontalBar ();
 		if (bar != null) bar.removeListener (SWT.Selection, listener);
-		for (int i = 0, n = M3Columns.count (control); i < n; i++) {
-			M3Columns.column (control, i).removeListener (SWT.Resize, listener);
-			M3Columns.column (control, i).removeListener (SWT.Move, listener);
+		for (int i = 0, n = Columns.count (control); i < n; i++) {
+			Columns.column (control, i).removeListener (SWT.Resize, listener);
+			Columns.column (control, i).removeListener (SWT.Move, listener);
 		}
 	}
 
@@ -185,8 +185,8 @@ public final class M3FilterRow extends Composite {
 			if (!pending [i]) continue;
 			pending [i] = false;
 			String text = texts.get (i).getText ();
-			filter.setText (i, text.isEmpty () ? null : text, M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE);
-			M3HeaderDecoration.of (control).setFiltered (i, filter.isActive (i));
+			filter.setText (i, text.isEmpty () ? null : text, TextMatch.CONTAINS | TextMatch.IGNORE_CASE);
+			HeaderDecoration.of (control).setFiltered (i, filter.isActive (i));
 		}
 	}
 }

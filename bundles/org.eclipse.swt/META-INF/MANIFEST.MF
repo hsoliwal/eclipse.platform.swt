@@ -25,7 +25,6 @@ Export-Package:
  org.eclipse.swt.internal.residency;x-internal:=true,
  org.eclipse.swt.internal.swap;x-internal:=true,
  org.eclipse.swt.layout,
- org.eclipse.swt.m3;x-friends:="org.eclipse.swt.tests",
  org.eclipse.swt.opengl,
  org.eclipse.swt.printing,
  org.eclipse.swt.program,

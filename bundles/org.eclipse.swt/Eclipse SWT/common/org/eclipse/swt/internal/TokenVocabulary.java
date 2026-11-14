@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 
@@ -25,7 +25,7 @@ import org.eclipse.swt.*;
  * Ids run from 1 to {@link #size()} in interning order and stay stable for the life of the
  * vocabulary; {@link #UNKNOWN} (0) answers a token that is absent or that no longer fits. The
  * ids are the non-negative symbols a token cursor reads (see
- * {@link M3TextSegments#tokens(String, M3TokenVocabulary, boolean)} and {@link M3TokenMatch}).
+ * {@link TextSegments#tokens(String, TokenVocabulary, boolean)} and {@link TokenMatch}).
  * </p>
  * <p>
  * No <code>String</code> is created to intern or look up a token: keys are kept in one
@@ -36,7 +36,7 @@ import org.eclipse.swt.*;
  *
  * @since 3.138
  */
-public final class M3TokenVocabulary {
+public final class TokenVocabulary {
 
 	/** The id of a token that is absent or did not fit. */
 	public static final int UNKNOWN = 0;
@@ -64,7 +64,7 @@ public final class M3TokenVocabulary {
 	 *    <li>ERROR_INVALID_ARGUMENT - if the capacity is smaller than 1</li>
 	 * </ul>
 	 */
-	public M3TokenVocabulary (int capacity, boolean foldCase) {
+	public TokenVocabulary (int capacity, boolean foldCase) {
 		if (capacity < 1) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 		this.capacity = capacity;
 		this.foldCase = foldCase;

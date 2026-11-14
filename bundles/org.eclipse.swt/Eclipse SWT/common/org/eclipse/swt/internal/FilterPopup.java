@@ -14,7 +14,7 @@
  *     Hitesh Soliwal (Synexia) - adapted from TV_5.0 treeviewer PopUpFilterUI, ColumnFilterUI, TreeUtil and
  *         ViewerFilterUI (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
@@ -28,26 +28,26 @@ import org.eclipse.swt.widgets.*;
  * tool window under the column with the column's filter: an enablement choice, the match type
  * (wildcard, regular expression, contains, starts with, equals, and their negations), the pattern,
  * and tools for the default pattern, pasting the clipboard and closing. Edits apply to the
- * {@link M3ColumnFilter} after a short delay; Return applies at once and closes, Escape closes. The
+ * {@link ColumnFilter} after a short delay; Return applies at once and closes, Escape closes. The
  * popup also closes when the control is clicked, when the window moves, or when it is deactivated.
  * Columns with an active criterion show a filter mark in their header.
  * </p>
  *
  * @since 3.138
  */
-public final class M3FilterPopup {
+public final class FilterPopup {
 
 	private static final String KEY = "org.eclipse.swt.m3.M3FilterPopup"; //$NON-NLS-1$
 
 	private final Composite control;
-	private final M3ColumnFilter filter;
+	private final ColumnFilter filter;
 	private final Listener listener = this::handleEvent;
-	private final M3RowView.Listener marks = change -> marks ();
+	private final RowView.Listener marks = change -> marks ();
 	private Shell shell;
-	private M3FilterEditPanel panel;
+	private FilterEditPanel panel;
 	private int column = -1;
 
-	private M3FilterPopup (Composite control, M3ColumnFilter filter) {
+	private FilterPopup (Composite control, ColumnFilter filter) {
 		this.control = control;
 		this.filter = filter;
 		control.addListener (SWT.MenuDetect, listener);
@@ -75,8 +75,8 @@ public final class M3FilterPopup {
 	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the table</li>
 	 * </ul>
 	 */
-	public static M3FilterPopup install (Table table, M3ColumnFilter filter) {
-		return install ((Composite) M3Checks.nonNull (table), filter);
+	public static FilterPopup install (Table table, ColumnFilter filter) {
+		return install ((Composite) RowChecks.nonNull (table), filter);
 	}
 
 	/**
@@ -94,14 +94,14 @@ public final class M3FilterPopup {
 	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the tree</li>
 	 * </ul>
 	 */
-	public static M3FilterPopup install (Tree tree, M3ColumnFilter filter) {
-		return install ((Composite) M3Checks.nonNull (tree), filter);
+	public static FilterPopup install (Tree tree, ColumnFilter filter) {
+		return install ((Composite) RowChecks.nonNull (tree), filter);
 	}
 
-	private static M3FilterPopup install (Composite control, M3ColumnFilter filter) {
-		M3Checks.nonNull (filter);
-		if (control.getData (KEY) instanceof M3FilterPopup old) old.dispose ();
-		return new M3FilterPopup (control, filter);
+	private static FilterPopup install (Composite control, ColumnFilter filter) {
+		RowChecks.nonNull (filter);
+		if (control.getData (KEY) instanceof FilterPopup old) old.dispose ();
+		return new FilterPopup (control, filter);
 	}
 
 	/**
@@ -114,12 +114,12 @@ public final class M3FilterPopup {
 	 * </ul>
 	 */
 	public void open (int column) {
-		M3Checks.range (column, Math.min (M3Columns.count (control), filter.getColumnCount ()));
+		RowChecks.range (column, Math.min (Columns.count (control), filter.getColumnCount ()));
 		close ();
 		this.column = column;
 		shell = new Shell (control.getShell (), SWT.ON_TOP | SWT.TOOL);
 		shell.setLayout (new FillLayout ());
-		panel = new M3FilterEditPanel (shell, filter, column, M3Columns.column (control, column).getText (), this::close, this::marks);
+		panel = new FilterEditPanel (shell, filter, column, Columns.column (control, column).getText (), this::close, this::marks);
 		shell.addListener (SWT.Deactivate, listener);
 		shell.pack ();
 		shell.setLocation (location (shell.getSize ()));
@@ -129,7 +129,7 @@ public final class M3FilterPopup {
 
 	/* under the column header, kept inside the monitor's client area (TV_5.0 PopUpFilterUI) */
 	private Point location (Point size) {
-		Point location = control.toDisplay (M3Columns.left (control, column), M3Columns.headerTop (control) + M3Columns.headerHeight (control));
+		Point location = control.toDisplay (Columns.left (control, column), Columns.headerTop (control) + Columns.headerHeight (control));
 		Rectangle bounds = control.getMonitor ().getClientArea ();
 		location.x = Math.max (bounds.x, Math.min (location.x, bounds.x + bounds.width - size.x));
 		location.y = Math.max (bounds.y, Math.min (location.y, bounds.y + bounds.height - size.y));
@@ -199,9 +199,9 @@ public final class M3FilterPopup {
 	/* a right click on the header opens the column's filter instead of the control's menu */
 	private void menuDetected (Event event) {
 		Point point = control.toControl (event.x, event.y);
-		int top = M3Columns.headerTop (control);
-		if (event.detail != SWT.MENU_MOUSE || point.y < top || point.y >= top + M3Columns.headerHeight (control)) return;
-		int at = M3Columns.columnAt (control, point.x);
+		int top = Columns.headerTop (control);
+		if (event.detail != SWT.MENU_MOUSE || point.y < top || point.y >= top + Columns.headerHeight (control)) return;
+		int at = Columns.columnAt (control, point.x);
 		if (at < 0 || at >= filter.getColumnCount ()) return;
 		event.doit = false;
 		open (at);
@@ -213,8 +213,8 @@ public final class M3FilterPopup {
 
 	private void marks () {
 		if (control.isDisposed ()) return;
-		M3HeaderDecoration decoration = M3HeaderDecoration.of (control);
-		for (int i = 0, n = Math.min (M3Columns.count (control), filter.getColumnCount ()); i < n; i++) {
+		HeaderDecoration decoration = HeaderDecoration.of (control);
+		for (int i = 0, n = Math.min (Columns.count (control), filter.getColumnCount ()); i < n; i++) {
 			decoration.setFiltered (i, filter.isActive (i));
 		}
 	}

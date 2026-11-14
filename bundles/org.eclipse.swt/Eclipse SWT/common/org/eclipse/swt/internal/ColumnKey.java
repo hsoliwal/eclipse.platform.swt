@@ -12,13 +12,13 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import java.util.*;
 import java.util.function.*;
 
 /**
- * How {@link M3ColumnSort} reads the sort key of a column (enhanced M3 API).
+ * How {@link ColumnSort} reads the sort key of a column (enhanced M3 API).
  * <p>
  * A key reads the application's values by source row, typically from its own arrays; widget
  * items are never read. Numeric keys sort through radix keys directly; text and comparator keys
@@ -27,7 +27,7 @@ import java.util.function.*;
  *
  * @since 3.138
  */
-public abstract class M3ColumnKey {
+public abstract class ColumnKey {
 
 	/** Orders two source rows. */
 	@FunctionalInterface
@@ -42,7 +42,7 @@ public abstract class M3ColumnKey {
 		int compare (int sourceA, int sourceB);
 	}
 
-	M3ColumnKey () {
+	ColumnKey () {
 	}
 
 	/**
@@ -55,16 +55,16 @@ public abstract class M3ColumnKey {
 	 *    <li>ERROR_NULL_ARGUMENT - if the function is null</li>
 	 * </ul>
 	 */
-	public static M3ColumnKey ofInts (IntUnaryOperator value) {
-		M3Checks.nonNull (value);
-		return new M3ColumnKey () {
+	public static ColumnKey ofInts (IntUnaryOperator value) {
+		RowChecks.nonNull (value);
+		return new ColumnKey () {
 			@Override
 			public int compare (int a, int b) {
 				return Integer.compare (value.applyAsInt (a), value.applyAsInt (b));
 			}
 
 			@Override
-			int radixKeys (int [] rows, int n, M3SortLanes lanes) {
+			int radixKeys (int [] rows, int n, SortLanes lanes) {
 				long [] keys = lanes.keys;
 				for (int i = 0; i < n; i++) keys [i] = (value.applyAsInt (rows [i]) ^ Integer.MIN_VALUE) & 0xFFFFFFFFL;
 				return 4;
@@ -82,16 +82,16 @@ public abstract class M3ColumnKey {
 	 *    <li>ERROR_NULL_ARGUMENT - if the function is null</li>
 	 * </ul>
 	 */
-	public static M3ColumnKey ofLongs (IntToLongFunction value) {
-		M3Checks.nonNull (value);
-		return new M3ColumnKey () {
+	public static ColumnKey ofLongs (IntToLongFunction value) {
+		RowChecks.nonNull (value);
+		return new ColumnKey () {
 			@Override
 			public int compare (int a, int b) {
 				return Long.compare (value.applyAsLong (a), value.applyAsLong (b));
 			}
 
 			@Override
-			int radixKeys (int [] rows, int n, M3SortLanes lanes) {
+			int radixKeys (int [] rows, int n, SortLanes lanes) {
 				long [] keys = lanes.keys;
 				for (int i = 0; i < n; i++) keys [i] = value.applyAsLong (rows [i]) ^ Long.MIN_VALUE;
 				return 8;
@@ -110,16 +110,16 @@ public abstract class M3ColumnKey {
 	 *    <li>ERROR_NULL_ARGUMENT - if the function is null</li>
 	 * </ul>
 	 */
-	public static M3ColumnKey ofDoubles (IntToDoubleFunction value) {
-		M3Checks.nonNull (value);
-		return new M3ColumnKey () {
+	public static ColumnKey ofDoubles (IntToDoubleFunction value) {
+		RowChecks.nonNull (value);
+		return new ColumnKey () {
 			@Override
 			public int compare (int a, int b) {
 				return Double.compare (value.applyAsDouble (a), value.applyAsDouble (b));
 			}
 
 			@Override
-			int radixKeys (int [] rows, int n, M3SortLanes lanes) {
+			int radixKeys (int [] rows, int n, SortLanes lanes) {
 				long [] keys = lanes.keys;
 				for (int i = 0; i < n; i++) {
 					long bits = Double.doubleToLongBits (value.applyAsDouble (rows [i]));
@@ -143,31 +143,31 @@ public abstract class M3ColumnKey {
 	 *    <li>ERROR_NULL_ARGUMENT - if the text function is null</li>
 	 * </ul>
 	 */
-	public static M3ColumnKey ofText (IntFunction<String> text, Comparator<? super String> order) {
-		M3Checks.nonNull (text);
+	public static ColumnKey ofText (IntFunction<String> text, Comparator<? super String> order) {
+		RowChecks.nonNull (text);
 		Comparator<? super String> base = order == null ? Comparator.<String> naturalOrder () : order;
 		Comparator<String> compare = Comparator.nullsFirst (base);
-		return new M3ColumnKey () {
+		return new ColumnKey () {
 			@Override
 			public int compare (int a, int b) {
 				return compare.compare (text.apply (a), text.apply (b));
 			}
 
 			@Override
-			int radixKeys (int [] rows, int n, M3SortLanes lanes) {
+			int radixKeys (int [] rows, int n, SortLanes lanes) {
 				String [] texts = lanes.texts (n);
 				for (int i = 0; i < n; i++) texts [i] = text.apply (rows [i]);
 				long maxRank = lanes.distinctRanks (n, compare);
 				if (maxRank < 0) maxRank = lanes.ranks (n, (i, j) -> compare.compare (texts [i], texts [j]));
 				lanes.releaseTexts (n);
-				return M3SortLanes.bytesFor (maxRank);
+				return SortLanes.bytesFor (maxRank);
 			}
 		};
 	}
 
 	/**
 	 * Returns a key that sorts source rows with a comparator, for example
-	 * <code>M3SortKeys::compare</code> for collation keys.
+	 * <code>SortKeys::compare</code> for collation keys.
 	 *
 	 * @param comparator the order of source rows
 	 * @return the key
@@ -176,23 +176,23 @@ public abstract class M3ColumnKey {
 	 *    <li>ERROR_NULL_ARGUMENT - if the comparator is null</li>
 	 * </ul>
 	 */
-	public static M3ColumnKey ofRows (RowComparator comparator) {
-		M3Checks.nonNull (comparator);
-		return new M3ColumnKey () {
+	public static ColumnKey ofRows (RowComparator comparator) {
+		RowChecks.nonNull (comparator);
+		return new ColumnKey () {
 			@Override
 			public int compare (int a, int b) {
 				return comparator.compare (a, b);
 			}
 
 			@Override
-			int radixKeys (int [] rows, int n, M3SortLanes lanes) {
-				return M3SortLanes.bytesFor (lanes.ranks (n, (i, j) -> comparator.compare (rows [i], rows [j])));
+			int radixKeys (int [] rows, int n, SortLanes lanes) {
+				return SortLanes.bytesFor (lanes.ranks (n, (i, j) -> comparator.compare (rows [i], rows [j])));
 			}
 		};
 	}
 
 	/**
-	 * Returns a key that sorts by collation keys ({@link M3Collation}): source row <code>s</code>
+	 * Returns a key that sorts by collation keys ({@link Collation}): source row <code>s</code>
 	 * sorts by key <code>s</code>.
 	 *
 	 * @param keys the collation keys, one per source row
@@ -202,8 +202,8 @@ public abstract class M3ColumnKey {
 	 *    <li>ERROR_NULL_ARGUMENT - if the keys are null</li>
 	 * </ul>
 	 */
-	public static M3ColumnKey ofSortKeys (M3SortKeys keys) {
-		M3Checks.nonNull (keys);
+	public static ColumnKey ofSortKeys (SortKeys keys) {
+		RowChecks.nonNull (keys);
 		return ofRows (keys::compare);
 	}
 
@@ -217,5 +217,5 @@ public abstract class M3ColumnKey {
 	public abstract int compare (int sourceA, int sourceB);
 
 	/* writes the unsigned radix key of rows [i] into lanes.keys [i] for i < n; returns the key width in bytes */
-	abstract int radixKeys (int [] rows, int n, M3SortLanes lanes);
+	abstract int radixKeys (int [] rows, int n, SortLanes lanes);
 }

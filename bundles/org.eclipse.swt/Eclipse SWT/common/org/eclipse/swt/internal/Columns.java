@@ -14,14 +14,14 @@
  *     Hitesh Soliwal (Synexia) - header hit test and column lookup adapted from TV_5.0 treeviewer
  *         TreeUtil (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import org.eclipse.swt.widgets.*;
 
 /* The column API that Table and Tree share without a common type (a Table is a Tree of depth 1). */
-final class M3Columns {
+final class Columns {
 
-	private M3Columns () {
+	private Columns () {
 	}
 
 	static int count (Composite control) {

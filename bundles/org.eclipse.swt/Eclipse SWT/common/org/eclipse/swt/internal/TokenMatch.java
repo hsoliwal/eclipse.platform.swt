@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.m3;
+package org.eclipse.swt.internal;
 
 import org.eclipse.swt.*;
 
@@ -20,17 +20,17 @@ import org.eclipse.swt.*;
  * Matching over token-id lanes (enhanced M3 language API).
  * <p>
  * A lane is an <code>int[]</code> of non-negative token ids, as produced by
- * {@link M3TextSegments#tokens(String, M3TokenVocabulary, boolean)}. Lanes have the shape a
+ * {@link TextSegments#tokens(String, TokenVocabulary, boolean)}. Lanes have the shape a
  * token cursor reads, and presence masks use the cursor-facts rule: bit <code>id &amp; 63</code>
- * is set when the id may occur. A needle holding {@link M3TokenVocabulary#UNKNOWN} matches
+ * is set when the id may occur. A needle holding {@link TokenVocabulary#UNKNOWN} matches
  * nothing, so unknown words never match.
  * </p>
  *
  * @since 3.138
  */
-public final class M3TokenMatch {
+public final class TokenMatch {
 
-	private M3TokenMatch () {
+	private TokenMatch () {
 	}
 
 	/**
@@ -70,7 +70,7 @@ public final class M3TokenMatch {
 	/**
 	 * Returns the index of the first occurrence of the needle in the haystack at or after
 	 * <code>from</code>, or -1. An empty needle matches at <code>min(max(from, 0), length)</code>,
-	 * like <code>String.indexOf("")</code>; a needle holding {@link M3TokenVocabulary#UNKNOWN}
+	 * like <code>String.indexOf("")</code>; a needle holding {@link TokenVocabulary#UNKNOWN}
 	 * matches nothing. Linear time (Knuth-Morris-Pratt).
 	 *
 	 * @param haystack the ids to search
@@ -86,7 +86,7 @@ public final class M3TokenMatch {
 		if (haystack == null || needle == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		int start = Math.min (Math.max (from, 0), haystack.length);
 		for (int id : needle) {
-			if (id == M3TokenVocabulary.UNKNOWN) return -1;
+			if (id == TokenVocabulary.UNKNOWN) return -1;
 		}
 		if (needle.length == 0) return start;
 		int [] failure = failure (needle);

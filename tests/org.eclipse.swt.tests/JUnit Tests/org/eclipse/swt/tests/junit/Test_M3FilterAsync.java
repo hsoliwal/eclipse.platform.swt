@@ -25,7 +25,7 @@ import java.util.logging.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
 
@@ -144,17 +144,17 @@ public class Test_M3FilterAsync {
 	public void test_hiddenViewportAppliesOnceOnShow () {
 		Table table = new Table (shell, SWT.VIRTUAL | SWT.MULTI);
 		for (int c = 0; c < 2; c++) new TableColumn (table, SWT.NONE).setWidth (150);
-		M3ColumnFilter filter = new M3ColumnFilter (2, ROWS, this::cell);
-		M3ColumnSort sort = new M3ColumnSort (2, filter);
-		sort.setKey (0, M3ColumnKey.ofInts (r -> numbers [r]));
+		ColumnFilter filter = new ColumnFilter (2, ROWS, this::cell);
+		ColumnSort sort = new ColumnSort (2, filter);
+		sort.setKey (0, ColumnKey.ofInts (r -> numbers [r]));
 		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
-		M3RowBinding binding = M3RowBinding.bind (table, sort, (item, row) -> {
+		RowBinding binding = RowBinding.bind (table, sort, (item, row) -> {
 			item.setText (0, cell (row, 0));
 			item.setText (1, cell (row, 1));
 		});
 		filter.setAsync (display, 50);
 		shell.open ();
-		filter.setText (1, "n1", M3TextMatch.CONTAINS);
+		filter.setText (1, "n1", TextMatch.CONTAINS);
 		waitFor (() -> filter.getAppliedGeneration () == filter.getGeneration ());
 		Object worker = field (filter, "worker");
 		int posted = counter (worker, "posted"), applies = counter (filter, "applies"), refreshes = counter (binding, "refreshes");
@@ -168,7 +168,7 @@ public class Test_M3FilterAsync {
 			names [row] = "n" + random.nextInt (1_000_000);
 			sort.rowsChanged (row);
 			if (k % 1000 == 999) {
-				filter.setText (1, patterns [k / 1000], M3TextMatch.CONTAINS);
+				filter.setText (1, patterns [k / 1000], TextMatch.CONTAINS);
 				pump (60);
 			}
 		}
@@ -196,14 +196,14 @@ public class Test_M3FilterAsync {
 	public void test_typingOverAMillionRowsStaysResponsive () {
 		Table table = new Table (shell, SWT.VIRTUAL | SWT.MULTI);
 		for (int c = 0; c < 2; c++) new TableColumn (table, SWT.NONE).setWidth (150);
-		M3ColumnFilter filter = new M3ColumnFilter (2, ROWS, this::cell);
-		M3ColumnSort sort = new M3ColumnSort (2, filter);
-		sort.setKey (0, M3ColumnKey.ofInts (r -> numbers [r]));
+		ColumnFilter filter = new ColumnFilter (2, ROWS, this::cell);
+		ColumnSort sort = new ColumnSort (2, filter);
+		sort.setKey (0, ColumnKey.ofInts (r -> numbers [r]));
 		sort.setCellText (this::cell);
 		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
 		long [] firstFill = {0};
 		boolean [] armed = {false};
-		M3RowBinding binding = M3RowBinding.bind (table, sort, (item, row) -> {
+		RowBinding binding = RowBinding.bind (table, sort, (item, row) -> {
 			if (armed [0] && firstFill [0] == 0 && filter.getAppliedGeneration () == filter.getGeneration ()) firstFill [0] = System.nanoTime ();
 			item.setText (0, cell (row, 0));
 			item.setText (1, cell (row, 1));
@@ -215,8 +215,8 @@ public class Test_M3FilterAsync {
 		shell.open ();
 		pump (200);
 		/* warm up the recording path (class loading, first compilation), then measure */
-		filter.setText (1, "warm", M3TextMatch.CONTAINS);
-		filter.setText (1, null, M3TextMatch.CONTAINS);
+		filter.setText (1, "warm", TextMatch.CONTAINS);
+		filter.setText (1, null, TextMatch.CONTAINS);
 		waitFor (() -> filter.getAppliedGeneration () == filter.getGeneration ());
 		applied.clear ();
 		String last = "n123";
@@ -229,7 +229,7 @@ public class Test_M3FilterAsync {
 		long slowestDispatch = 0, lastKeystroke = 0;
 		for (int k = 0; k < typed.length; k++) {
 			long start = System.nanoTime ();
-			filter.setText (1, typed [k], M3TextMatch.CONTAINS);
+			filter.setText (1, typed [k], TextMatch.CONTAINS);
 			lastKeystroke = System.nanoTime ();
 			keystrokes [k] = lastKeystroke - start;
 			slowestDispatch = Math.max (slowestDispatch, pump (30));
@@ -262,15 +262,15 @@ public class Test_M3FilterAsync {
 		Level level = logger.getLevel ();
 		logger.setLevel (Level.FINE);
 		try {
-			M3ColumnFilter filter = new M3ColumnFilter (2, ROWS, this::cell);
-			M3ColumnSort sort = new M3ColumnSort (2, filter);
-			sort.setKey (0, M3ColumnKey.ofInts (r -> numbers [r]));
+			ColumnFilter filter = new ColumnFilter (2, ROWS, this::cell);
+			ColumnSort sort = new ColumnSort (2, filter);
+			sort.setKey (0, ColumnKey.ofInts (r -> numbers [r]));
 			sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
 			filter.setAsync (display, 0);
 			java.util.List<int []> applied = new ArrayList<> ();
 			filter.addListener (change -> applied.add (new int [] {filter.getAppliedGeneration (), filter.getGeneration ()}));
 			for (String pattern : new String [] {"1", "12", "123", "1234", "123", "12", "77"}) {
-				filter.setText (1, pattern, M3TextMatch.CONTAINS);
+				filter.setText (1, pattern, TextMatch.CONTAINS);
 				pump (3);
 			}
 			int finalGeneration = filter.getGeneration ();
@@ -290,18 +290,18 @@ public class Test_M3FilterAsync {
 		for (int i = 0; i < n; i++) words [i] = "w" + (i % 97);
 		int [] parents = new int [n];
 		for (int i = 0; i < n; i++) parents [i] = i < 10 ? -1 : i % 10;
-		M3ColumnFilter filter = new M3ColumnFilter (2, n, (row, column) -> column == 0 ? words [row] : String.valueOf (row));
-		M3ColumnSort sort = new M3ColumnSort (2, filter);
+		ColumnFilter filter = new ColumnFilter (2, n, (row, column) -> column == 0 ? words [row] : String.valueOf (row));
+		ColumnSort sort = new ColumnSort (2, filter);
 		sort.setCellText ((row, column) -> words [row]);
 		assertThrows (IllegalArgumentException.class, () -> filter.setAsync (display, -1));
 		filter.setAsync (display, 5);
 		filter.setAsync (display, 0);
-		filter.setText (0, "w1*", M3TextMatch.WILDCARD);
+		filter.setText (0, "w1*", TextMatch.WILDCARD);
 		assertTrue (filter.isActive (0));
 		assertEquals (n, filter.size (), "not applied yet");
 		filter.setValues (1, "1", "2");
-		filter.setLogic (1, M3ColumnFilter.OR);
-		assertEquals (M3ColumnFilter.OR, filter.getLogic (1));
+		filter.setLogic (1, ColumnFilter.OR);
+		assertEquals (ColumnFilter.OR, filter.getLogic (1));
 		words [3] = "w1x";
 		filter.rowsChanged (3);
 		waitFor (() -> filter.getAppliedGeneration () == filter.getGeneration ());
@@ -318,14 +318,14 @@ public class Test_M3FilterAsync {
 		assertTrue (filter.size () >= expected);
 		filter.clearAll ();
 		filter.clear (0);
-		filter.setText (new int [] {0, 1}, "w2*", M3TextMatch.WILDCARD);
+		filter.setText (new int [] {0, 1}, "w2*", TextMatch.WILDCARD);
 		filter.setAsync (null, 0);
 		assertFalse (filter.isAsync ());
 		assertEquals (filter.getGeneration (), filter.getAppliedGeneration ());
 		int synchronous = filter.size ();
-		M3ColumnFilter reference = new M3ColumnFilter (2, n, (row, column) -> column == 0 ? words [row] : String.valueOf (row));
+		ColumnFilter reference = new ColumnFilter (2, n, (row, column) -> column == 0 ? words [row] : String.valueOf (row));
 		reference.setParents (r -> parents [r]);
-		reference.setText (new int [] {0, 1}, "w2*", M3TextMatch.WILDCARD);
+		reference.setText (new int [] {0, 1}, "w2*", TextMatch.WILDCARD);
 		assertEquals (reference.size (), synchronous);
 		filter.setAsync (null, 0);
 	}
@@ -333,7 +333,7 @@ public class Test_M3FilterAsync {
 	@Test
 	public void test_slowModelIsSupersededMidComputation () {
 		int n = 50_000;
-		M3ColumnFilter filter = new M3ColumnFilter (1, n, (row, column) -> {
+		ColumnFilter filter = new ColumnFilter (1, n, (row, column) -> {
 			if (row % 8192 == 0) {
 				try {
 					Thread.sleep (40);
@@ -346,11 +346,11 @@ public class Test_M3FilterAsync {
 		filter.setAsync (display, 0);
 		java.util.List<Integer> applied = new ArrayList<> ();
 		filter.addListener (change -> applied.add (filter.getAppliedGeneration ()));
-		filter.setText (0, "x1*", M3TextMatch.WILDCARD);
+		filter.setText (0, "x1*", TextMatch.WILDCARD);
 		pump (60);
-		filter.setText (0, "x2*", M3TextMatch.WILDCARD);
+		filter.setText (0, "x2*", TextMatch.WILDCARD);
 		pump (60);
-		filter.setText (0, "x3*", M3TextMatch.WILDCARD);
+		filter.setText (0, "x3*", TextMatch.WILDCARD);
 		int finalGeneration = filter.getGeneration ();
 		waitFor (() -> filter.getAppliedGeneration () == finalGeneration);
 		assertEquals (java.util.List.of (finalGeneration), applied);
@@ -366,18 +366,18 @@ public class Test_M3FilterAsync {
 	public void test_workerFailureSurfacesOnTheUserInterfaceThread () {
 		int n = 100;
 		boolean [] broken = {false};
-		M3ColumnFilter filter = new M3ColumnFilter (1, n, (row, column) -> {
+		ColumnFilter filter = new ColumnFilter (1, n, (row, column) -> {
 			if (broken [0] && row == 50) throw new IllegalStateException ("cell 50");
 			return "x" + row;
 		});
 		filter.setAsync (display, 0);
 		broken [0] = true;
-		filter.setText (0, "x5*", M3TextMatch.WILDCARD);
+		filter.setText (0, "x5*", TextMatch.WILDCARD);
 		SWTException e = assertThrows (SWTException.class, () -> pump (2000));
 		assertInstanceOf (IllegalStateException.class, e.getCause ());
 		assertEquals ("cell 50", e.getCause ().getMessage ());
 		broken [0] = false;
-		filter.setText (0, "x5*", M3TextMatch.WILDCARD);
+		filter.setText (0, "x5*", TextMatch.WILDCARD);
 		waitFor (() -> filter.getAppliedGeneration () == filter.getGeneration ());
 		assertEquals (11, filter.size ());
 		filter.setAsync (null, 0);

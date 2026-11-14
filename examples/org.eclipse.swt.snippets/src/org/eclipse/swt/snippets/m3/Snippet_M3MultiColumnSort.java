@@ -18,7 +18,7 @@ import java.util.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /*
@@ -57,13 +57,13 @@ public class Snippet_M3MultiColumnSort {
 			column.setWidth (140);
 		}
 
-		M3ColumnSort sort = new M3ColumnSort (3, rows);
-		sort.setKey (0, M3ColumnKey.ofText (r -> name [r], null));
-		sort.setKey (1, M3ColumnKey.ofText (r -> city [r], null));
-		sort.setKey (2, M3ColumnKey.ofInts (r -> amount [r]));
+		ColumnSort sort = new ColumnSort (3, rows);
+		sort.setKey (0, ColumnKey.ofText (r -> name [r], null));
+		sort.setKey (1, ColumnKey.ofText (r -> city [r], null));
+		sort.setKey (2, ColumnKey.ofInts (r -> amount [r]));
 		sort.setSortKeys (new int [] {1, 2}, new int [] {SWT.UP, SWT.DOWN});
 		sort.install (table);
-		M3RowBinding.bind (table, sort, (item, row) -> {
+		RowBinding.bind (table, sort, (item, row) -> {
 			item.setText (0, name [row]);
 			item.setText (1, city [row]);
 			item.setText (2, String.valueOf (amount [row]));
