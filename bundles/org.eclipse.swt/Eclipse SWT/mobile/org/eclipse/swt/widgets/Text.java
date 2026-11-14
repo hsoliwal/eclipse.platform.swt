@@ -70,8 +70,16 @@ public class Text extends Scrollable {
         checkWidget();
         if (replacement == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
         if (start < 0 || end < start || end > value.length()) SWT.error(SWT.ERROR_INVALID_RANGE);
+        // Verify listeners can reenter Text.setText(), change the selection or
+        // dispose the receiver. A nested edit becomes authoritative; never
+        // overwrite it using an obsolete edit range computed before Verify.
+        String beforeVerify = value;
         String permitted = verified(replacement, start, end);
         if (isDisposed()) return;
+        if (value != beforeVerify) {
+            if (fromNative) publish();
+            return;
+        }
         if (permitted == null) {
             if (fromNative) publish();
             return;
