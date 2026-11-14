@@ -2513,6 +2513,11 @@ void createItem (TableColumn column, int index) {
 }
 
 void createItem (TableItem item, int index) {
+	createTableItem (item, index);
+	M3Emptiness.changed (this);
+}
+
+void createTableItem (TableItem item, int index) {
     if (!(0 <= index && index <= itemCount)) {
         error(SWT.ERROR_INVALID_RANGE);
     }
@@ -2948,6 +2953,11 @@ void destroyItem (TableColumn column) {
 }
 
 void destroyItem (TableItem item) {
+	destroyTableItem (item);
+	M3Emptiness.changed (this);
+}
+
+void destroyTableItem (TableItem item) {
 	int index;
 	if ((style & SWT.VIRTUAL) != 0) {
 		index = virtualItems.indexOfIdentity (item);
@@ -4928,6 +4938,11 @@ void releaseWidget () {
  * </ul>
  */
 public void remove (int index) {
+	removeIndex (index);
+	M3Emptiness.changed (this);
+}
+
+void removeIndex (int index) {
 	checkWidget();
     if (!(0 <= index && index < itemCount)) {
         error(SWT.ERROR_ITEM_NOT_REMOVED);
@@ -4988,6 +5003,11 @@ public void remove (int index) {
  * </ul>
  */
 public void remove (int start, int end) {
+	removeSpan (start, end);
+	M3Emptiness.changed (this);
+}
+
+void removeSpan (int start, int end) {
 	checkWidget();
     if (start > end) {
         return;
@@ -5053,6 +5073,11 @@ public void remove (int start, int end) {
  * </ul>
  */
 public void remove (int [] indices) {
+	removeIndices (indices);
+	M3Emptiness.changed (this);
+}
+
+void removeIndices (int [] indices) {
 	checkWidget();
     if (indices == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -5133,6 +5158,11 @@ public void remove (int [] indices) {
  * </ul>
  */
 public void removeAll () {
+	removeAllItems ();
+	M3Emptiness.changed (this);
+}
+
+void removeAllItems () {
 	checkWidget();
 	checkSetDataInProcessBeforeRemoval(0, itemCount);
 	if (usesVirtualNativeModel ()) {
@@ -6315,6 +6345,15 @@ public void setHeaderVisible (boolean show) {
  * @since 3.0
  */
 public void setItemCount (int count) {
+	M3Emptiness.hold (this);
+	try {
+		setCount (count);
+	} finally {
+		M3Emptiness.release (this);
+	}
+}
+
+void setCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
     if (count == itemCount) {

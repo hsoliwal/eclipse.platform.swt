@@ -127,7 +127,8 @@ TableItem (Table parent, int style, int index, boolean create) {
 	this.parent = parent;
 	if (create) {
 		parent.createItem (this, index);
-		pinVirtualFacade ();
+		/* an M3Emptiness listener of the creation may have disposed the item */
+		if (!isDisposed ()) pinVirtualFacade ();
 	}
 }
 
