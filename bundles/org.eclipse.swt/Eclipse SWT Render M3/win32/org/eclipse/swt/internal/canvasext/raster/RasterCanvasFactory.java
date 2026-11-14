@@ -168,7 +168,7 @@ public class RasterCanvasFactory implements IExternalCanvasFactory {
 			return backend == null ? null : (backend == WidgetMode.GPU ? gpu : raster).apply(widget);
 		} catch (final Throwable t) {
 			// M3 initialization failed; log and disable M3 for all future calls
-			Logger.logException(t);
+			t.printStackTrace();
 			m3FailedWithErrors = true;
 			return null;
 		}

@@ -187,17 +187,17 @@ public class RasterTextDrawing {
 				final int MAX_SURFACE_WIDTH = 8192; // Documented practical limit
 				int surfaceWidth = size.x;
 				if (surfaceWidth > MAX_SURFACE_WIDTH) {
-					Logger.logException(new IllegalStateException("Surface width restricted: calculated=" + surfaceWidth //$NON-NLS-1$
+					new IllegalStateException("Surface width restricted: calculated=" + surfaceWidth //$NON-NLS-1$
 							+ ", max=" + MAX_SURFACE_WIDTH + ", font=" + props.name + ", size=" + size //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 							+ ", backgroundColor=" + backgroundColor + ", foregroundColor=" + foregroundColor //$NON-NLS-1$//$NON-NLS-2$
-							+ ", antiAlias=" + antiAlias + ", transparent=" + transparent + ", text='" + text + "'")); //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$//$NON-NLS-4$
+							+ ", antiAlias=" + antiAlias + ", transparent=" + transparent + ", text='" + text + "'").printStackTrace(); //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$//$NON-NLS-4$
 					surfaceWidth = MAX_SURFACE_WIDTH;
 				}
 				if (surfaceWidth <= 0 || size.y <= 0) {
 					final StringBuilder sb = new StringBuilder();
 					sb.append("Calculated text image size is invalid. font=").append(props.name).append(", size=") //$NON-NLS-1$ //$NON-NLS-2$
 					.append(size).append(", text='").append(text).append("'"); //$NON-NLS-1$ //$NON-NLS-2$
-					Logger.logException(new IllegalStateException(sb.toString()));
+					new IllegalStateException(sb.toString()).printStackTrace();
 					return;
 				}
 				try (IRasterSurface supportSurface = gc.getM3Extension().createSupportSurface(surfaceWidth, size.y)) {
