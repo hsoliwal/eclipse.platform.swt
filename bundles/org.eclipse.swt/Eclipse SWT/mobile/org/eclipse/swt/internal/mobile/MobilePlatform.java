@@ -14,7 +14,7 @@ package org.eclipse.swt.internal.mobile;
  * opaque and becomes invalid after disposal. Platforms must reject stale handles.
  */
 public interface MobilePlatform {
-	int SHELL = 1, COMPOSITE = 2, CANVAS = 3;
+	int SHELL = 1, COMPOSITE = 2, CANVAS = 3, TEXT = 4;
 	int ACTION_ACTIVATE = 1, ACTION_INCREMENT = 2, ACTION_DECREMENT = 3;
 
 	/** Receives OS events without running application listeners on an OS thread. */
