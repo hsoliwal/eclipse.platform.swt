@@ -192,6 +192,31 @@ public class Text extends Scrollable {
     public Point getSelection() { checkWidget(); return new Point(selectionStart, selectionEnd); }
     /** Return current caret UTF-16 position. */
     public int getCaretPosition() { checkWidget(); return selectionEnd; }
+    /** Return only the selected UTF-16 text. */
+    public String getSelectionText() { checkWidget(); return value.substring(selectionStart, selectionEnd); }
+    /** Return the number of selected UTF-16 code units. */
+    public int getSelectionCount() { checkWidget(); return selectionEnd - selectionStart; }
+    /** Copy the selected text to the platform clipboard without modifying the widget. */
+    public void copy() {
+        checkWidget();
+        if (selectionStart < selectionEnd)
+            display.internal_platform().setClipboardText(value.substring(selectionStart, selectionEnd));
+    }
+    /** Copy, then delete a selection through the original SWT Verify/Modify path. */
+    public void cut() {
+        checkWidget();
+        if (!editable || selectionStart == selectionEnd) return;
+        copy();
+        replace(selectionStart, selectionEnd, "", false, 0, 0);
+    }
+    /** Paste native clipboard text into the selection, respecting Verify and limit. */
+    public void paste() {
+        checkWidget();
+        if (!editable) return;
+        String replacement = display.internal_platform().getClipboardText();
+        if (replacement != null && !replacement.isEmpty())
+            replace(selectionStart, selectionEnd, replacement, false, 0, 0);
+    }
     /** Set a collapsed selection/caret. */
     public void setSelection(int offset) { setSelection(offset, offset); }
     /** Set a selection, clamped to the current text. */
