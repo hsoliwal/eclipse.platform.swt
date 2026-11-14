@@ -711,6 +711,10 @@
       "sha256": "03ee6f742f5670fb63a9f48c357117ef6d4d2a5e391dafd7e40fd66af0bcd27f"
     },
     {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/List.java",
+      "sha256": "7c1e1237d1c15bffe77562c75beb3b1f2ac921e49dc37dcae37531c0be6529c8"
+    },
+    {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/ProgressBar.java",
       "sha256": "af794e0400afd4edf09e1aadbf420c2306e590063c7c8ed1dd19a169700846be"
     },
