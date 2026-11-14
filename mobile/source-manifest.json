@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "javaRelease": 21,
-  "swtBaseCommit": "c7f07fbaa2c687a1bce18d3b67cfdb0e05b83840",
+  "swtBaseCommit": "815e208a493e1a47cb734e9a8ca355ef46a5d256",
   "nebulaBaseCommit": "91d01b4e3ff3ed0c298c4f5c148710b770756932",
   "scope": "Initial mobile Canvas/Composite/Shell platform; this manifest is not whole-SWT API coverage.",
   "shared": [
@@ -407,7 +407,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGFileFormat.java",
-      "sha256": "c579324d70b836befff1f1d8bcd95ee215df87a44a86d42f88f33cf78109b038"
+      "sha256": "223c1cb9895430f48b0b72fe3771df08c272310a62b3707b7aaf238a40459562"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGFixedSizeSegment.java",
@@ -591,7 +591,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/GridLayout.java",
-      "sha256": "3ae15a8fd1926496a9d60baa4b22d430d2f1a4b0647bf359cfc017695c293eb4"
+      "sha256": "e27460fe98d557082216efb5ba0eeaf33e692eef1a82dc056e56e0ed50648764"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/RowData.java",

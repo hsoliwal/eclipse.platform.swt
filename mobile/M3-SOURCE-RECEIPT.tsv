@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: EPL-2.0
 kind	key	value	detail
 receipt	schema	M3_MOBILE_SOURCE_RECEIPT_V1	Source delivery; native platform results remain separate
-receiver	repository	hsoliwal/eclipse.platform.swt	base c7f07fbaa2c687a1bce18d3b67cfdb0e05b83840
+receiver	repository	hsoliwal/eclipse.platform.swt	base c7f07fbaa2c687a1bce18d3b67cfdb0e05b83840; observed integration receiver 035b0030d6f204ac07dc2fb62d98a163cc579c77
 canonical	workspace	hsoliwal/com.synexia	Recipes and proof remain in canonical repository
 canonical	main_named_recipe_revision	4168e8ccff1ac5b98e0c545413562cf5feb63c8b	Named product descriptors and their frozen input resources
 canonical	text_engine_revision	4168e8ccff1ac5b98e0c545413562cf5feb63c8b	com.synexia.rewrite.M3HashPinnedTextSnapshotRecipe
@@ -18,6 +18,18 @@ gate	recipe_sdk_and_focused_maven	PASS	16 tests per named packet; fixed point ze
 gate	android_native_behavior	NOT_RUN	Official software-emulator boots did not produce a usable activity test session; no screenshot or native behavior pass claimed
 gate	ios_native_sdk_and_device	NOT_RUN	Apple SDK compile/link and embedded JVM/AOT device execution are separate required gates
 scope	desktop_and_widget_completeness	NOT_CLAIMED	No full desktop reactor or all-widget compatibility claim
+scope	receipt_coverage	43_NON_RECEIPT_CHANGED_PATHS	Includes initial mobile source and launcher outputs with the reviewed source-manifest integration update; this receipt itself is covered by the canonical complete handoff.
+source	observed_integration_receiver	035b0030d6f204ac07dc2fb62d98a163cc579c77	Actual GitHub merge object; parents 815e208a493e1a47cb734e9a8ca355ef46a5d256 and 31537a0cdf2b7b6fa31f3cef5e33e6422339e346
+source	upstream_source_baseline	815e208a493e1a47cb734e9a8ca355ef46a5d256	Original GridLayout, JPEG and root POM bodies preserved.
+source	previous_public_receipt_sha256	524b578014a85220bb67783b3fe4e0f0b467bf7f712a4527e42a2208defdfd49	Earlier receipt retained in phase B proof.
+input	integration_frozen_inputs_sha256	d3e325fa3571de9162ddaa52538776cb5a9ba3cfb1e67f6db2d1e3f7e531f160	synexia-openrewrite-recipes/recipe-crates/swt-mobile-20261114/prepared/upstream-integration/FROZEN_INPUTS.json
+input	unchanged_receiver_closure_sha256	234ec56d337e82fc132e32a47eba613b72add1371c14cb200c9080d1c8b30dcd	204 original receiver paths checked before and after execution
+execution	integration_sdk_receipt_sha256	d85cc0e1f5c7c7ac66b94212ad4d20475ff4720002612dc766964da191f7bb7c	synexia-openrewrite-recipes/recipe-crates/swt-mobile-20261114/evidence/upstream-integration-temurin21/result.json
+execution	integration_maven_receipt_sha256	ae73a3e85ebc5170f4ee05d997789997f94697d7753e4eacd59534d0f5d342d4	synexia-openrewrite-recipes/recipe-crates/swt-mobile-20261114/evidence/upstream-integration-maven-temurin21/result.json
+execution	unchanged_receiver_guard_receipt_sha256	d5d28058c9668cf190b415e5aadc740a1940565bf09923994b9841f73a80f811	synexia-openrewrite-recipes/recipe-crates/swt-mobile-20261114/evidence/upstream-integration-guards.json
+upstream_guard	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGFileFormat.java	223c1cb9895430f48b0b72fe3771df08c272310a62b3707b7aaf238a40459562	Unmodified original source at upstream baseline 815e208a493e1a47cb734e9a8ca355ef46a5d256
+upstream_guard	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/layout/GridLayout.java	e27460fe98d557082216efb5ba0eeaf33e692eef1a82dc056e56e0ed50648764	Unmodified original source at upstream baseline 815e208a493e1a47cb734e9a8ca355ef46a5d256
+upstream_guard	pom.xml	a1a039c313755c26c7a60af6cd3e4a626f258dde1896e28f8366660cd68a07b6	Unmodified original source at upstream baseline 815e208a493e1a47cb734e9a8ca355ef46a5d256
 output	.github/workflows/maven.yml	6c96ec577b5f707b32ba64f743c49f0c1305c3c0d466321dbb40184a4a48cf95	swt-mobile-native-images-20261114-text
 output	bundles/org.eclipse.swt/Eclipse SWT PI/ios/library/SWTUIKit.h	c626d9358c3bbd438051fffae9bcb6f5529d34e74dd0f11e11210d77022afcc0	swt-mobile-native-images-20261114-text
 output	bundles/org.eclipse.swt/Eclipse SWT PI/ios/library/SWTUIKit.m	cecbb7eeffba3ce1bf796a0adf9ee553650a0829555962d864b4dfdca21052a8	swt-mobile-native-images-20261114-text
@@ -57,7 +69,7 @@ output	mobile/ios/build.sh	ccc6d4c423117fc1c8a051b211c1170c7300c37486eb409dc5eed
 output	mobile/ios/main.m	7ff5dabfd4b4c0a11eb1e34aa2b27f067d302564cde9bc540d25ef1a135dced6	swt-mobile-native-images-20261114-text
 output	mobile/pom.xml	b35dfb53cf17a51b10a2461b0585a46e4764eb81a40d8e0c721c8c98e0cd18f9	swt-mobile-native-images-20261114-text
 output	mobile/prepare_sources.py	a7cd0e9270256c2ac471ffe7085a8065cdb058da04762c9a0f2d647ae7ca6549	swt-mobile-native-images-20261114-text
-output	mobile/source-manifest.json	4566e7c1947a388bbe63f6f3039769650a39c03945ae5bd2ae5eb6b4df65fa1d	swt-mobile-native-images-20261114-text
+output	mobile/source-manifest.json	917b1795dc54bd2ea5edb73fd29d04e632c47de2ec6752d94705051c14cd9007	swt-mobile-upstream-integration-20261114-text
 output	tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/ContractPlatform.java	b4fa0f1cdefcbc0b325863f18fc0120e2901db77d11a394c0a9bfc9de0c40e5b	swt-mobile-native-images-20261114-java
 output	tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCoreContractJUnitTest.java	58c73008f06cf22407e1bac21349cb2d42415dc03d06186f8eb2b5095f967243	swt-mobile-native-images-20261114-java
 output	tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCoreContractTest.java	93ab07efc591472136b24eb6632e23873ad849014b83a412e8c3878a5655d06c	swt-mobile-native-images-20261114-java
