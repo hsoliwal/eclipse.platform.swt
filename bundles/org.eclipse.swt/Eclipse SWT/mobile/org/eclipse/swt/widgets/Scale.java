@@ -114,7 +114,8 @@ public class Scale extends Control {
         Point size = getSize();
         int length = vertical() ? size.y : size.x;
         int span = Math.max(1, length - 2 * INSET);
-        int at = Math.max(0, Math.min(span, (vertical() ? y : x) - INSET));
+        long requested = (vertical() ? (long)y : (long)x) - INSET;
+        int at = (int)Math.max(0L, Math.min((long)span, requested));
         long fraction = (long)at * (maximum - (long)minimum) + span / 2L;
         int delta = (int)(fraction / span);
         return vertical() ? maximum - delta : minimum + delta;
@@ -130,8 +131,14 @@ public class Scale extends Control {
     }
 
     @Override public void setEnabled(boolean value) {
+        if (!value) dragging = false;
         super.setEnabled(value);
         if (!isDisposed()) publishAccessibility();
+    }
+
+    @Override public void setVisible(boolean value) {
+        if (!value) dragging = false;
+        super.setVisible(value);
     }
 
     private void publishAccessibility() {
