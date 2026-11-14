@@ -329,6 +329,8 @@ public final class MobileCoreContractTest {
 			list.setBounds(0, 0, 280, 120);
 			require((list.getStyle() & SWT.V_SCROLL) != 0, "Mobile List retains SWT scroll style");
 			require(platform.controls.get(peer).kind == MobilePlatform.CANVAS, "List owns actual Android/UIKit paintable input peer");
+			require(platform.controls.get(peer).role == org.eclipse.swt.accessibility.ACC.ROLE_LIST,
+					"List publishes native role for Android and UIKit accessibility");
 			list.setItems("alpha", "beta", "gamma", "delta");
 			list.add("extra", 2);
 			require(Arrays.equals(list.getItems(), new String[] {"alpha", "beta", "extra", "gamma", "delta"}),
@@ -369,6 +371,12 @@ public final class MobileCoreContractTest {
 					"Billion-row virtual List materializes only visible SetData cells");
 			require(virtual.getItem(999_999_999).equals("virtual-999999999"),
 					"VIRTUAL GetItem resolves the final logical index");
+			int selectionBeforeScroll = virtual.getSelectionIndex();
+			platform.sink.accessibility(platform.lastCreated, MobilePlatform.ACTION_INCREMENT);
+			drain(display);
+			require(virtual.getTopIndex() == 999_999_999
+					&& virtual.getSelectionIndex() == selectionBeforeScroll,
+					"Native accessibility scroll pages the List without synthesizing Selection");
 			int previous = loaded.get();
 			virtual.clear(999_999_999);
 			require(virtual.getItem(999_999_999).equals("virtual-999999999")
