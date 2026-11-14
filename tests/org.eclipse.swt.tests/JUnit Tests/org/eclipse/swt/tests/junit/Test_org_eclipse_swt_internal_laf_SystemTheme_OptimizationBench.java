@@ -25,13 +25,13 @@ import org.junit.jupiter.api.*;
 /**
  * Optimization pass bench of the OS light/dark switch (FlatLaf #204, docs/m3/allwidgets-viewport/OPTIMIZATION_LEDGER.tsv):
  * n canvases of 8 x 8 pixels in one shell, each with a delegate that paints with four colour keys and measures with
- * one metric key. The hot operation is the switch the {@link M3SystemTheme.Follower} makes when the preference changes
+ * one metric key. The hot operation is the switch the {@link SystemTheme.Follower} makes when the preference changes
  * (<code>setLookAndFeel</code> between <code>light</code> and <code>dark</code>, then the paint); the bench also
  * reports the follower's check when nothing changed, and counts the layouts and paints a switch causes (a cheap
  * repaint lays nothing out). Opt-in: <code>-Dswt.allwidgets.bench=true</code>; sizes
  * <code>-Dswt.allwidgets.bench.theme=1000,5000</code> (the per-process window quota caps the count below 10^4).
  */
-public class Test_org_eclipse_swt_internal_laf_M3SystemTheme_OptimizationBench {
+public class Test_org_eclipse_swt_internal_laf_SystemTheme_OptimizationBench {
 	static final int BACKGROUND = UIKeys.intern ("Table.background", UIKeys.COLOR), FOREGROUND = UIKeys.intern ("Table.foreground", UIKeys.COLOR);
 	static final int SELECTION = UIKeys.intern ("Table.selectionBackground", UIKeys.COLOR), GRID = UIKeys.intern ("Table.gridColor", UIKeys.COLOR);
 	static final int ROW_HEIGHT = UIKeys.intern ("Table.rowHeight", UIKeys.INTEGER);
@@ -42,7 +42,7 @@ public class Test_org_eclipse_swt_internal_laf_M3SystemTheme_OptimizationBench {
 		int background, foreground, selection, grid, rowHeight;
 
 		@Override
-		public void installUI (Control control, M3UIDefaults defaults) {
+		public void installUI (Control control, UIDefaults defaults) {
 			background = defaults.color (BACKGROUND, 0xFFFFFFFF);
 			foreground = defaults.color (FOREGROUND, 0xFF000000);
 			selection = defaults.color (SELECTION, 0xFF0078D7);
@@ -67,7 +67,7 @@ public class Test_org_eclipse_swt_internal_laf_M3SystemTheme_OptimizationBench {
 		Display display = Display.getDefault ();
 		ViewportDifferential.parkCursor (display);
 		for (int count : AllWidgetsBench.counts ("swt.allwidgets.bench.theme", "1000,5000")) {
-			M3LookAndFeel.setLookAndFeel ("light");
+			LookAndFeelManager.setLookAndFeel ("light");
 			Shell shell = new Shell (display, SWT.NO_TRIM | SWT.ON_TOP);
 			shell.setBounds (40, 40, 800, 600);
 			int [] layouts = {0}, paints = {0};
@@ -88,30 +88,30 @@ public class Test_org_eclipse_swt_internal_laf_M3SystemTheme_OptimizationBench {
 				Canvas canvas = new Canvas (shell, SWT.NONE);
 				canvas.setBounds ((i % 100) * 8, (i / 100) * 8, 8, 8);
 				canvas.addListener (SWT.Paint, paint);
-				M3LookAndFeel.installUI (canvas, Cell.class, new Cell ());
+				LookAndFeelManager.installUI (canvas, Cell.class, new Cell ());
 			}
 			shell.open ();
 			ViewportDifferential.drain (display);
 			long create = (System.nanoTime () - start) / 1_000_000;
 			java.util.List<AllWidgetsBench.Result> results = new ArrayList<> ();
-			int changed = java.util.Arrays.stream (M3UIDefaults.diff (M3LookAndFeel.defaults ("light"), M3LookAndFeel.defaults ("dark"))).mapToInt (Long::bitCount).sum ();
+			int changed = java.util.Arrays.stream (UIDefaults.diff (LookAndFeelManager.defaults ("light"), LookAndFeelManager.defaults ("dark"))).mapToInt (Long::bitCount).sum ();
 			layouts [0] = paints [0] = 0;
 			results.add (AllWidgetsBench.measure ("switch", k -> {
-				M3LookAndFeel.setLookAndFeel ((k & 1) == 0 ? "dark" : "light");
+				LookAndFeelManager.setLookAndFeel ((k & 1) == 0 ? "dark" : "light");
 				ViewportDifferential.drain (display);
 				shell.update ();
 			}));
 			int switchLayouts = layouts [0] / AllWidgetsBench.ROUNDS, switchPaints = paints [0] / AllWidgetsBench.ROUNDS;
 			/* the switch alone (the diff and the delegates installed again, the widgets invalidated), without the paint */
-			results.add (AllWidgetsBench.measure ("update", k -> M3LookAndFeel.setLookAndFeel ((k & 1) == 0 ? "dark" : "light")));
+			results.add (AllWidgetsBench.measure ("update", k -> LookAndFeelManager.setLookAndFeel ((k & 1) == 0 ? "dark" : "light")));
 			ViewportDifferential.drain (display);
-			M3SystemTheme.Follower follower = M3SystemTheme.follow (display, "light", "dark");
+			SystemTheme.Follower follower = SystemTheme.follow (display, "light", "dark");
 			ViewportDifferential.drain (display);
 			results.add (AllWidgetsBench.measure ("check", k -> follower.check ()));
 			follower.close ();
 			AllWidgetsBench.log ("theme", "keys-changed " + changed + " layouts/switch " + switchLayouts + " paints/switch " + switchPaints, count, create, results);
 			shell.dispose ();
-			M3LookAndFeel.reset ();
+			LookAndFeelManager.reset ();
 		}
 	}
 }

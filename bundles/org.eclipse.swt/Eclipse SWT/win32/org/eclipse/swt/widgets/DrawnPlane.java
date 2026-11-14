@@ -40,7 +40,7 @@ abstract class DrawnPlane {
 	private final String widget;
 	/* the renderer of the theme in effect; replaced when the theme selection changes (Themes) */
 	RowRenderer renderer;
-	/* the look and feel delegate of the rows (M3LookAndFeel, LF6); a switch installs it again with a new theme */
+	/* the look and feel delegate of the rows (LookAndFeelManager, LF6); a switch installs it again with a new theme */
 	private final DrawnRowUI ui;
 	/* the run-time or user-defined theme that wins over the delegate's (Themes.explicit), read again after a Themes change */
 	private Theme explicit;
@@ -108,7 +108,7 @@ abstract class DrawnPlane {
 		/* rule 28: a plane is made on its display's thread, the UI thread */
 		if (ThreadRole.current () == ThreadRole.NONE) ThreadRole.assume (ThreadRole.UI);
 		ThreadRole.UI.check ("a drawn plane");
-		this.ui = M3LookAndFeel.installUI (control, DrawnRowUI.class, new DrawnRowUI (widget));
+		this.ui = LookAndFeelManager.installUI (control, DrawnRowUI.class, new DrawnRowUI (widget));
 		this.themeGeneration = Themes.generation ();
 		this.explicit = Themes.explicit (widget);
 		this.renderer = new RowRenderer (explicit != null ? explicit : ui.theme ());
@@ -518,7 +518,7 @@ abstract class DrawnPlane {
 	/** Frees the back buffer and the backend. */
 	void release () {
 		Themes.removeListener (themeChanged);
-		M3LookAndFeel.uninstallUI (control);
+		LookAndFeelManager.uninstallUI (control);
 		buffer.release ();
 		retainedRows.release ();
 		if (renderTarget != null) {

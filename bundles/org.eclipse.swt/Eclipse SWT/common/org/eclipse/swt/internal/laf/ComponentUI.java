@@ -18,8 +18,8 @@ import org.eclipse.swt.widgets.*;
 
 /**
  * The UI delegate of a drawn widget (docs/m3/LOOK_AND_FEEL.md, LF6), Swing's <code>ComponentUI</code>: it measures and
- * paints from the look and feel's {@link M3UIDefaults}, never owns widget state, and is created by the look and
- * feel's {@link RendererFactory} (or is the widget's default delegate). {@link M3LookAndFeel#installUI} keeps it in the
+ * paints from the look and feel's {@link UIDefaults}, never owns widget state, and is created by the look and
+ * feel's {@link RendererFactory} (or is the widget's default delegate). {@link LookAndFeelManager#installUI} keeps it in the
  * widget's data.
  * <p>
  * A delegate declares the keys it reads: when a look and feel switch changes one of its {@link #paintKeys()} the
@@ -35,7 +35,7 @@ public interface ComponentUI {
 	 * Installs the delegate on a widget with the defaults of its look and feel (also after a switch that changed a
 	 * key it reads).
 	 */
-	void installUI (Control control, M3UIDefaults defaults);
+	void installUI (Control control, UIDefaults defaults);
 
 	/** Uninstalls the delegate from a widget (before a switch replaces it, or when the widget drops it). */
 	default void uninstallUI (Control control) {

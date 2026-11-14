@@ -123,13 +123,13 @@ public final class M3TypeAhead {
 		check (tree, text);
 		/* one preorder walk from the start row, then (wrap) one from row 0 up to it: O(rows), not O(rows) per row */
 		int start = (int) Math.max (0, Math.min (from, Integer.MAX_VALUE));
-		M3TreeWalk walk = new M3TreeWalk (tree);
+		TreeWalk walk = new TreeWalk (tree);
 		long row = walk.advance (start);
 		for (TreeItem item = walk.next (); item != null; item = walk.next (), row++) {
 			if (matches (item.getText (), text, prefix)) return row;
 		}
 		if (!wrap) return -1;
-		walk = new M3TreeWalk (tree);
+		walk = new TreeWalk (tree);
 		row = 0;
 		for (TreeItem item = walk.next (); item != null && row < start; item = walk.next (), row++) {
 			if (matches (item.getText (), text, prefix)) return row;

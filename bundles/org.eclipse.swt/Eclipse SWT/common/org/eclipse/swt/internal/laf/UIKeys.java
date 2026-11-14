@@ -16,7 +16,7 @@ package org.eclipse.swt.internal.laf;
 
 /**
  * The key registry of the look and feel defaults (docs/m3/LOOK_AND_FEEL.md, LF6): every key name, for example
- * <code>Tree.selectionBackground</code>, is interned once to a dense int id with a kind, so that {@link M3UIDefaults}
+ * <code>Tree.selectionBackground</code>, is interned once to a dense int id with a kind, so that {@link UIDefaults}
  * keeps values in typed lanes indexed by id and a delegate reads them with an array access, not a
  * <code>Hashtable</code> lookup of a boxed value (Swing's <code>UIDefaults</code>).
  * <p>

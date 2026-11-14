@@ -32,7 +32,7 @@ import org.eclipse.swt.*;
  * (an unsupported function, a class name, a reference to a dropped key) is dropped the same way.
  * </p>
  */
-public final class M3ThemeImport {
+public final class ThemeImport {
 	/** An imported table: its text, the number of keys kept and the number dropped. */
 	public record Imported (String text, int keys, int dropped) {
 	}
@@ -63,7 +63,7 @@ public final class M3ThemeImport {
 	private static final Pattern CALL = Pattern.compile ("([A-Za-z]+)\\s*\\(");
 	private static final Pattern FAILED_KEY = Pattern.compile (": ([^ :=]+) = |^import: ([^ :=]+): unknown ");
 
-	private M3ThemeImport () {
+	private ThemeImport () {
 	}
 
 	/** The name of a catalogue key in a dialect ({@link #INTELLIJ}, {@link #SWING}): the first row that maps to it, else the key. */
@@ -131,9 +131,9 @@ public final class M3ThemeImport {
 		return new Imported (text (null, base, table), table.size (), dropped);
 	}
 
-	/** Registers an imported table as a look and feel ({@link M3LookAndFeel#register}). */
+	/** Registers an imported table as a look and feel ({@link LookAndFeelManager#register}). */
 	public static void install (String name, Imported imported) {
-		M3LookAndFeel.register (name, imported.text (), null);
+		LookAndFeelManager.register (name, imported.text (), null);
 	}
 
 	/* nested ui objects flattened; "*" collected apart; os.* objects reduced to this platform's value */

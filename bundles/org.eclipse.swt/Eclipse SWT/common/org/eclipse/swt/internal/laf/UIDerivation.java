@@ -82,7 +82,7 @@ final class UIDerivation {
 	 *
 	 * @throws IllegalArgumentException when a developer variable cannot be read where it is used
 	 */
-	LookAndFeelDefaults derive (M3UIDefaults.Lanes developer) {
+	LookAndFeelDefaults derive (UIDefaults.Lanes developer) {
 		boolean [] root = new boolean [nodes.length], cone = new boolean [nodes.length];
 		int [] queue = new int [nodes.length];
 		int tail = 0;
@@ -113,7 +113,7 @@ final class UIDerivation {
 	}
 
 	/* the developer's value of a node as table text, or null when the developer layer has none */
-	private static String base (M3UIDefaults.Lanes developer, String node) {
+	private static String base (UIDefaults.Lanes developer, String node) {
 		if (node.startsWith ("@")) return developer.variable (node);
 		int key = UIKeys.id (node);
 		if (key < 0 || !developer.has (key)) return null;

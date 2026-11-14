@@ -63,12 +63,12 @@ public class M3ThemeImportSnippet {
 				watcher = ThemeWatcher.watch (display, file, "file");
 			} else {
 				String text = Files.readString (file, StandardCharsets.UTF_8);
-				M3ThemeImport.install ("file", file.toString ().endsWith (".json") ? M3ThemeImport.intelliJ (text) : M3ThemeImport.flatLaf (text));
+				ThemeImport.install ("file", file.toString ().endsWith (".json") ? ThemeImport.intelliJ (text) : ThemeImport.flatLaf (text));
 			}
 			names.add ("file");
 		} else {
-			M3ThemeImport.install ("sample-intellij", M3ThemeImport.intelliJ (INTELLIJ));
-			M3ThemeImport.install ("sample-flatlaf", M3ThemeImport.flatLaf (FLATLAF));
+			ThemeImport.install ("sample-intellij", ThemeImport.intelliJ (INTELLIJ));
+			ThemeImport.install ("sample-flatlaf", ThemeImport.flatLaf (FLATLAF));
 			names.add ("sample-intellij");
 			names.add ("sample-flatlaf");
 		}
@@ -80,15 +80,15 @@ public class M3ThemeImportSnippet {
 		choice.select (0);
 		Canvas rows = M3LookAndFeelSwitchSnippet.rows (shell);
 		rows.setLayoutData (new GridData (SWT.FILL, SWT.FILL, true, true));
-		M3LookAndFeel.setLookAndFeel (names.get (0));
-		choice.addListener (SWT.Selection, e -> M3LookAndFeel.setLookAndFeel (choice.getText ()));
+		LookAndFeelManager.setLookAndFeel (names.get (0));
+		choice.addListener (SWT.Selection, e -> LookAndFeelManager.setLookAndFeel (choice.getText ()));
 		shell.setSize (420, 300);
 		shell.open ();
 		int screenshots = arguments.indexOf ("--screenshots");
 		if (screenshots >= 0 && screenshots + 1 < args.length) {
 			new java.io.File (args [screenshots + 1]).mkdirs ();
 			for (String name : names) {
-				M3LookAndFeel.setLookAndFeel (name);
+				LookAndFeelManager.setLookAndFeel (name);
 				M3LookAndFeelSwitchSnippet.save (display, shell, args [screenshots + 1] + "/import-" + name + ".png");
 			}
 		} else {

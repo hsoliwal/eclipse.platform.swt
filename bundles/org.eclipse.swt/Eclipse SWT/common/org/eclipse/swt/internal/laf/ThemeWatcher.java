@@ -24,8 +24,8 @@ import org.eclipse.swt.widgets.*;
 /**
  * Live reload of a theme file during development (docs/m3/LOOK_AND_FEEL.md, LF6, improvement 4): the file is
  * installed as a look and feel at once and again whenever it changes on disk, and the widgets of the display follow
- * ({@link M3LookAndFeel#reload}: only the widgets whose delegate reads a changed key). A <code>.json</code> file is an
- * IntelliJ theme, any other a FlatLaf or LF2 properties theme ({@link M3ThemeImport}). A file that cannot be read keeps
+ * ({@link LookAndFeelManager#reload}: only the widgets whose delegate reads a changed key). A <code>.json</code> file is an
+ * IntelliJ theme, any other a FlatLaf or LF2 properties theme ({@link ThemeImport}). A file that cannot be read keeps
  * the last good theme (logged).
  */
 public final class ThemeWatcher implements AutoCloseable {
@@ -55,7 +55,7 @@ public final class ThemeWatcher implements AutoCloseable {
 	 * @throws IllegalArgumentException when the file is not a theme
 	 */
 	public static ThemeWatcher watch (Display display, Path file, String name) throws IOException {
-		M3ThemeImport.install (name, imported (file, Files.readString (file, StandardCharsets.UTF_8)));
+		ThemeImport.install (name, imported (file, Files.readString (file, StandardCharsets.UTF_8)));
 		ThemeWatcher watcher = new ThemeWatcher (display, file, name);
 		watcher.thread.start ();
 		return watcher;
@@ -105,7 +105,7 @@ public final class ThemeWatcher implements AutoCloseable {
 		if (display.isDisposed ()) return;
 		try {
 			display.asyncExec (() -> {
-				M3LookAndFeel.reload (name, text);
+				LookAndFeelManager.reload (name, text);
 				reloads++;
 			});
 		} catch (org.eclipse.swt.SWTException e) {
@@ -113,7 +113,7 @@ public final class ThemeWatcher implements AutoCloseable {
 		}
 	}
 
-	static M3ThemeImport.Imported imported (Path file, String text) {
-		return file.getFileName ().toString ().endsWith (".json") ? M3ThemeImport.intelliJ (text) : M3ThemeImport.flatLaf (text);
+	static ThemeImport.Imported imported (Path file, String text) {
+		return file.getFileName ().toString ().endsWith (".json") ? ThemeImport.intelliJ (text) : ThemeImport.flatLaf (text);
 	}
 }

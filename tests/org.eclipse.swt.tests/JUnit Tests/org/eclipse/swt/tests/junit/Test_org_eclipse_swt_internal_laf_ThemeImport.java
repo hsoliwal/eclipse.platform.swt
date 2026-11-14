@@ -31,7 +31,7 @@ import org.junit.jupiter.api.*;
  * and a FlatLaf properties theme become LF2 tables (with FlatLaf's colour functions), and a watched theme file reloads
  * into the open widgets. Only {@link #aWatchedFileReloadsIntoTheWidgets} needs a display.
  */
-public class Test_org_eclipse_swt_internal_laf_M3ThemeImport {
+public class Test_org_eclipse_swt_internal_laf_ThemeImport {
 	static final String INTELLIJ = """
 		{ "name": "Coverage Dark", "dark": true, "author": "test",
 		  "colors": { "primary": "#3c3f41", "accent": "#4a88c7" },
@@ -76,13 +76,13 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeImport {
 		Link.hoverForeground = {instance}
 		""";
 
-	static LookAndFeelDefaults load (M3ThemeImport.Imported imported) {
+	static LookAndFeelDefaults load (ThemeImport.Imported imported) {
 		return new LookAndFeelLoader (n -> n.equals ("imported") ? imported.text () : LookAndFeelThemes.text (n), name -> 0x808080).load ("imported");
 	}
 
 	@Test
 	public void anIntelliJThemeBecomesATable () {
-		M3ThemeImport.Imported imported = M3ThemeImport.intelliJ (INTELLIJ);
+		ThemeImport.Imported imported = ThemeImport.intelliJ (INTELLIJ);
 		assertTrue (imported.text ().startsWith ("# imported: Coverage Dark\n@extends = flatdark\n"), imported.text ());
 		LookAndFeelDefaults table = load (imported);
 		assertEquals (0xFF3C3F41, table.color ("Table.background", 0), "* background, a named colour");
@@ -105,31 +105,31 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeImport {
 
 	@Test
 	public void aLightThemeAndEmptyParts () {
-		M3ThemeImport.Imported light = M3ThemeImport.intelliJ ("{\"ui\": {\"Tree\": {\"foreground\": {\"os.mac\": \"#000000\"}}}, \"colors\": {}}");
+		ThemeImport.Imported light = ThemeImport.intelliJ ("{\"ui\": {\"Tree\": {\"foreground\": {\"os.mac\": \"#000000\"}}}, \"colors\": {}}");
 		assertEquals ("@extends = flat\n", light.text ());
 		assertEquals (0, light.keys ());
-		assertEquals ("@extends = flat\n", M3ThemeImport.intelliJ ("{}").text ());
-		assertEquals ("@extends = flat\n", M3ThemeImport.intelliJ ("{\"ui\": 3, \"colors\": []}").text ());
-		IllegalArgumentException array = assertThrows (IllegalArgumentException.class, () -> M3ThemeImport.intelliJ ("[]"));
+		assertEquals ("@extends = flat\n", ThemeImport.intelliJ ("{}").text ());
+		assertEquals ("@extends = flat\n", ThemeImport.intelliJ ("{\"ui\": 3, \"colors\": []}").text ());
+		IllegalArgumentException array = assertThrows (IllegalArgumentException.class, () -> ThemeImport.intelliJ ("[]"));
 		assertEquals ("an IntelliJ theme is a JSON object", array.getMessage ());
 	}
 
 	@Test
 	public void theJsonReader () {
 		String json = "{\"name\": \"A\\u0042\\n\\t\\\\\\\"\\/\\b\\f\\r\", \"dark\": false, \"ui\": {\"Tree\": {\"indent\": -2}}, \"x\": [1, -2, 3.5e1, true, false, null, [], {}]}";
-		M3ThemeImport.Imported imported = M3ThemeImport.intelliJ (json);
+		ThemeImport.Imported imported = ThemeImport.intelliJ (json);
 		assertTrue (imported.text ().startsWith ("# imported: AB\n\t\\\"/\b\f\r\n"), imported.text ());
 		assertTrue (imported.text ().contains ("Tree.indent = -2"));
 		for (String bad : new String [] {"{", "{\"a\" 1}", "{\"a\":}", "[1,]", "\"abc", "{\"a\":\"\\u12\"}", "{\"a\":\"\\uZZZZ\"}", "{} x", "tru", "-",
 			"", "[1 2]", "{1: 2}", "{\"a\":\"x\\", "{\"a\":1,}"}) {
-			IllegalArgumentException e = assertThrows (IllegalArgumentException.class, () -> M3ThemeImport.intelliJ (bad), bad);
+			IllegalArgumentException e = assertThrows (IllegalArgumentException.class, () -> ThemeImport.intelliJ (bad), bad);
 			assertTrue (e.getMessage ().startsWith ("JSON at offset ") || e.getMessage ().equals ("an IntelliJ theme is a JSON object"), bad + ": " + e.getMessage ());
 		}
 	}
 
 	@Test
 	public void aFlatLafThemeImportsWithItsFunctions () {
-		M3ThemeImport.Imported imported = M3ThemeImport.flatLaf (FLATLAF);
+		ThemeImport.Imported imported = ThemeImport.flatLaf (FLATLAF);
 		assertTrue (imported.text ().startsWith ("@extends = flatdark\n"), imported.text ());
 		LookAndFeelDefaults table = load (imported);
 		assertEquals (0xFF0A141E, table.color ("Tree.selectionBackground", 0), "rgb");
@@ -151,11 +151,11 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeImport {
 		assertTrue (table.color ("Component.focusColor", 0) != 0xFF4A88C7, "lighten with the derived option removed");
 		assertArrayEquals (new int [] {2, 2, 2, 2}, table.insets ("Text.margin"));
 		assertEquals (8, imported.dropped (), "[light], [win], relative, $Missing.key, bold +1, a class name, if, {instance}");
-		M3ThemeImport.Imported light = M3ThemeImport.flatLaf ("Tree.selectionBackground = #010203\n[light]Tree.lineColor = #040506\n");
+		ThemeImport.Imported light = ThemeImport.flatLaf ("Tree.selectionBackground = #010203\n[light]Tree.lineColor = #040506\n");
 		assertTrue (light.text ().startsWith ("@extends = flat\n"));
 		assertEquals (0xFF040506, load (light).color ("Tree.lineColor", 0));
-		assertEquals ("@extends = flatdark\n", M3ThemeImport.flatLaf ("@baseTheme = darcula\n").text ());
-		IllegalArgumentException circular = assertThrows (IllegalArgumentException.class, () -> M3ThemeImport.flatLaf ("A.x = $A.y\nA.y = $A.x\n"));
+		assertEquals ("@extends = flatdark\n", ThemeImport.flatLaf ("@baseTheme = darcula\n").text ());
+		IllegalArgumentException circular = assertThrows (IllegalArgumentException.class, () -> ThemeImport.flatLaf ("A.x = $A.y\nA.y = $A.x\n"));
 		assertTrue (circular.getMessage ().contains ("circular"), circular.getMessage ());
 	}
 
@@ -175,10 +175,10 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeImport {
 
 	@Test
 	public void anImportIsInstalledAsALookAndFeel () {
-		M3ThemeImport.install ("test-import-ij", M3ThemeImport.intelliJ (INTELLIJ));
+		ThemeImport.install ("test-import-ij", ThemeImport.intelliJ (INTELLIJ));
 		assertTrue (LookAndFeel.names ().contains ("test-import-ij"));
 		int tree = UIKeys.intern ("Tree.selectionBackground", UIKeys.COLOR);
-		assertEquals (0xFF112233, M3LookAndFeel.defaults ("test-import-ij").color (tree, 0));
+		assertEquals (0xFF112233, LookAndFeelManager.defaults ("test-import-ij").color (tree, 0));
 	}
 
 	@Test
@@ -191,27 +191,27 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeImport {
 		Files.writeString (json, INTELLIJ, StandardCharsets.UTF_8);
 		int selection = UIKeys.intern ("Table.selectionBackground", UIKeys.COLOR);
 		try (ThemeWatcher watcher = ThemeWatcher.watch (display, file, "test-live"); ThemeWatcher other = ThemeWatcher.watch (display, json, "test-live-ij")) {
-			assertEquals (0xFF112233, M3LookAndFeel.defaults ("test-live-ij").color (UIKeys.intern ("Tree.selectionBackground", UIKeys.COLOR), 0));
-			M3LookAndFeel.setLookAndFeel ("test-live");
+			assertEquals (0xFF112233, LookAndFeelManager.defaults ("test-live-ij").color (UIKeys.intern ("Tree.selectionBackground", UIKeys.COLOR), 0));
+			LookAndFeelManager.setLookAndFeel ("test-live");
 			Canvas canvas = new Canvas (shell, SWT.NONE);
-			Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe probe = new Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe (new int [] {selection}, ComponentUI.NO_KEYS);
-			M3LookAndFeel.installUI (canvas, Test_org_eclipse_swt_internal_laf_M3LookAndFeel.Probe.class, probe);
+			Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe probe = new Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe (new int [] {selection}, ComponentUI.NO_KEYS);
+			LookAndFeelManager.installUI (canvas, Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe.class, probe);
 			assertEquals (0xFF102030, probe.defaults.color (selection, 0));
 			Files.writeString (file, "@extends = flat\nTable.selectionBackground = #405060\n", StandardCharsets.UTF_8);
 			assertTrue (await (display, () -> watcher.reloads () > 0), "reloaded");
-			assertEquals (0xFF405060, M3LookAndFeel.getDefaults ().color (selection, 0));
+			assertEquals (0xFF405060, LookAndFeelManager.getDefaults ().color (selection, 0));
 			assertEquals (0xFF405060, probe.defaults.color (selection, 0), "the delegate was installed again with the new table");
 			assertTrue (probe.installs >= 2);
 			Files.writeString (file, "A.x = $A.x\n", StandardCharsets.UTF_8);
 			assertTrue (await (display, () -> watcher.failures () > 0), "a broken file is reported");
-			assertEquals (0xFF405060, M3LookAndFeel.getDefaults ().color (selection, 0), "the last good theme stays");
+			assertEquals (0xFF405060, LookAndFeelManager.getDefaults ().color (selection, 0), "the last good theme stays");
 			Files.writeString (directory.resolve ("other.txt"), "unrelated", StandardCharsets.UTF_8);
 			assertEquals (0, other.reloads ());
 		} finally {
-			M3LookAndFeel.reset ();
+			LookAndFeelManager.reset ();
 			shell.dispose ();
 		}
-		assertEquals (0, M3LookAndFeel.reload ("test-live", "@extends = flat\n"), "no widget uses it any more");
+		assertEquals (0, LookAndFeelManager.reload ("test-live", "@extends = flat\n"), "no widget uses it any more");
 	}
 
 	/* runs the event loop until the condition holds (at most 10 s) */

@@ -19,7 +19,7 @@ import java.util.*;
 import org.eclipse.swt.internal.laf.*;
 
 /**
- * The theme of a widget class's drawn rows read from a look and feel's {@link M3UIDefaults} (docs/m3/LOOK_AND_FEEL.md
+ * The theme of a widget class's drawn rows read from a look and feel's {@link UIDefaults} (docs/m3/LOOK_AND_FEEL.md
  * LF6; the keys in docs/m3/render-modes/LAF_KEYS.tsv): every colour by its key id ({@link UIKeys}), so the colours of
  * a look and feel live in its table, not in the drawn modes. The look (how selection, expanders and check boxes are
  * drawn) comes from the look and feel's name ({@link #look}); a key the table leaves out answers that look's built-in
@@ -66,7 +66,7 @@ public final class ThemeDefaults {
 	 * @param look the built-in theme whose look this is (its values answer the keys the table leaves out)
 	 * @param defaults the look and feel's defaults
 	 */
-	public static Theme of (String widget, Theme look, M3UIDefaults defaults) {
+	public static Theme of (String widget, Theme look, UIDefaults defaults) {
 		int [] ids = keys (widget);
 		Theme.Builder b = look.derive (defaults.name ());
 		if (look.look != Theme.LOOK_NATIVE) {
@@ -81,7 +81,7 @@ public final class ThemeDefaults {
 	}
 
 	/* the 0xRRGGBB of a colour key (ARGB without alpha), or the fallback when neither the key nor its parent has one */
-	private static int rgb (M3UIDefaults defaults, int key, int fallback) {
+	private static int rgb (UIDefaults defaults, int key, int fallback) {
 		return defaults.contains (key) ? defaults.color (key, fallback) & 0xFFFFFF : fallback;
 	}
 }

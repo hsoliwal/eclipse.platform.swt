@@ -226,7 +226,7 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeCompleter {
 		assertTrue (lf2.contains ("Component.focusColor = @accent"), "accent references keep setAccent working");
 		assertTrue (flatLaf.contains ("@baseTheme = dark\n") && flatLaf.contains ("TableHeader.background = ") && flatLaf.contains ("Table.alternateRowColor = "), flatLaf);
 		assertTrue (intelliJ.contains ("\"author\": \"M3ThemeCompleter " + M3ThemeCompleter.VERSION + " sha256:" + theme.hash () + "\""), intelliJ);
-		LookAndFeelDefaults fromLf2 = load (lf2), fromFlatLaf = load (M3ThemeImport.flatLaf (flatLaf).text ()), fromIntelliJ = load (M3ThemeImport.intelliJ (intelliJ).text ());
+		LookAndFeelDefaults fromLf2 = load (lf2), fromFlatLaf = load (ThemeImport.flatLaf (flatLaf).text ()), fromIntelliJ = load (ThemeImport.intelliJ (intelliJ).text ());
 		for (Map.Entry<String, String> entry : theme.table ().entrySet ()) {
 			String key = entry.getKey ();
 			assertEquals (entry.getValue (), text (fromLf2, key), "lf2 " + key);

@@ -22,8 +22,8 @@ import org.eclipse.swt.widgets.*;
  * LF6; Swing's <code>ComponentUI</code>). One row delegate type: the LF6 contract is the all-widgets track's
  * {@link ComponentUI} (<code>installUI</code>, <code>uninstallUI</code>, <code>paintKeys</code>,
  * <code>metricKeys</code>; there is no separate row interface) and this class is the drawn planes' implementation
- * of it. A drawn plane installs it with {@link M3LookAndFeel#installUI}; it reads the
- * row colours of its look and feel from {@link M3UIDefaults} into a {@link Theme} ({@link ThemeDefaults}), and the
+ * of it. A drawn plane installs it with {@link LookAndFeelManager#installUI}; it reads the
+ * row colours of its look and feel from {@link UIDefaults} into a {@link Theme} ({@link ThemeDefaults}), and the
  * plane's {@link RowRenderer} paints with that theme. Its paint keys are the colour keys it reads, so a look and feel
  * switch that changes one of them installs it again and repaints the widget; it has no metric keys (stage 1: the
  * native control owns the geometry). It keeps no widget state.
@@ -41,7 +41,7 @@ public final class DrawnRowUI implements ComponentUI {
 	}
 
 	@Override
-	public void installUI (Control control, M3UIDefaults defaults) {
+	public void installUI (Control control, UIDefaults defaults) {
 		theme = ThemeDefaults.of (widget, ThemeDefaults.look (defaults.name ()), defaults);
 	}
 

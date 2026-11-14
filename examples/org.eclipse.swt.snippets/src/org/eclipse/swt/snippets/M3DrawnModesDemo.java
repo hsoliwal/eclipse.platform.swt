@@ -33,7 +33,7 @@ import org.eclipse.swt.widgets.*;
  * </pre>
  * <code>custom</code> draws with GDI, <code>m3</code> with the M3 renderer on the CPU, <code>gpu</code> with the M3
  * renderer on the graphics hardware. The buttons switch the look and feel at run time
- * ({@link M3LookAndFeel#setLookAndFeel}): the rows' delegate is installed again and the table repaints. Scroll fast
+ * ({@link LookAndFeelManager#setLookAndFeel}): the rows' delegate is installed again and the table repaints. Scroll fast
  * and type to see the overlay's frame time and input-to-pixel latency.
  * </p>
  */
@@ -45,7 +45,7 @@ public class M3DrawnModesDemo {
 	public static void main (String [] args) {
 		Display display = new Display ();
 		Shell shell = new Shell (display);
-		shell.setText ("Drawn modes: " + System.getProperty ("swt.widget.mode", "viewport") + ", look and feel " + M3LookAndFeel.getLookAndFeel ());
+		shell.setText ("Drawn modes: " + System.getProperty ("swt.widget.mode", "viewport") + ", look and feel " + LookAndFeelManager.getLookAndFeel ());
 		shell.setLayout (new GridLayout (LOOK_AND_FEELS.length, true));
 		Table table = new Table (shell, SWT.VIRTUAL | SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION);
 		table.setLayoutData (new GridData (SWT.FILL, SWT.FILL, true, true, LOOK_AND_FEELS.length, 1));
@@ -68,7 +68,7 @@ public class M3DrawnModesDemo {
 			button.setText (name);
 			button.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
 			button.addListener (SWT.Selection, event -> {
-				M3LookAndFeel.setLookAndFeel (name);
+				LookAndFeelManager.setLookAndFeel (name);
 				shell.setText ("Drawn modes: " + System.getProperty ("swt.widget.mode", "viewport") + ", look and feel " + name);
 				LOG.info (() -> "look and feel " + name);
 			});
@@ -81,7 +81,7 @@ public class M3DrawnModesDemo {
 			table.setTopIndex (ROWS / 2);
 			table.setSelection (ROWS / 2 + 3);
 			display.timerExec (800, () -> {
-				M3LookAndFeel.setLookAndFeel ("flatdark");
+				LookAndFeelManager.setLookAndFeel ("flatdark");
 				display.timerExec (800, () -> {
 					save (table, capture);
 					shell.dispose ();

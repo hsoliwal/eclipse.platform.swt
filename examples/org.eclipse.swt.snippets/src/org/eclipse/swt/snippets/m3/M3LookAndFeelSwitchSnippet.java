@@ -55,10 +55,10 @@ public class M3LookAndFeelSwitchSnippet {
 		for (int i = 0; i < 8; i++) new TableItem (table, SWT.NONE).setText ("Native row " + i);
 		table.select (2);
 		table.setLayoutData (new GridData (SWT.FILL, SWT.FILL, true, true));
-		M3LookAndFeel.setLookAndFeel (LOOKS [0]);
-		choice.addListener (SWT.Selection, e -> M3LookAndFeel.setLookAndFeel (choice.getText ()));
+		LookAndFeelManager.setLookAndFeel (LOOKS [0]);
+		choice.addListener (SWT.Selection, e -> LookAndFeelManager.setLookAndFeel (choice.getText ()));
 		int [] next = {0};
-		accent.addListener (SWT.Selection, e -> M3LookAndFeel.setAccent (ACCENTS [++next [0] % ACCENTS.length]));
+		accent.addListener (SWT.Selection, e -> LookAndFeelManager.setAccent (ACCENTS [++next [0] % ACCENTS.length]));
 		shell.setSize (640, 320);
 		shell.open ();
 		int screenshots = Arrays.asList (args).indexOf ("--screenshots");
@@ -84,7 +84,7 @@ public class M3LookAndFeelSwitchSnippet {
 		int background, foreground, selection, selectionText, stripe, rowHeight;
 
 		@Override
-		public void installUI (Control control, M3UIDefaults defaults) {
+		public void installUI (Control control, UIDefaults defaults) {
 			background = defaults.color (BACKGROUND, 0xFFFFFFFF);
 			foreground = defaults.color (FOREGROUND, 0xFF000000);
 			selection = defaults.color (SELECTION, 0xFF0078D7);
@@ -107,9 +107,9 @@ public class M3LookAndFeelSwitchSnippet {
 	/* a canvas whose rows its delegate's colours paint: row 2 selected, odd rows striped */
 	static Canvas rows (Composite parent) {
 		Canvas canvas = new Canvas (parent, SWT.DOUBLE_BUFFERED | SWT.BORDER);
-		M3LookAndFeel.installUI (canvas, Rows.class, new Rows ());
+		LookAndFeelManager.installUI (canvas, Rows.class, new Rows ());
 		canvas.addListener (SWT.Paint, e -> {
-			Rows ui = (Rows) M3LookAndFeel.getUI (canvas);
+			Rows ui = (Rows) LookAndFeelManager.getUI (canvas);
 			UIResources resources = UIResources.of (canvas.getDisplay ());
 			int width = canvas.getClientArea ().width;
 			for (int i = 0, y = 0; y < canvas.getClientArea ().height; i++, y += ui.rowHeight) {
@@ -130,11 +130,11 @@ public class M3LookAndFeelSwitchSnippet {
 			for (Control child : shell.getChildren ()) {
 				if (child instanceof Combo combo) combo.setText (look);
 			}
-			M3LookAndFeel.setLookAndFeel (look);
+			LookAndFeelManager.setLookAndFeel (look);
 			save (display, shell, directory + "/switch-" + look + ".png");
 		}
-		M3LookAndFeel.setLookAndFeel ("light");
-		M3LookAndFeel.setAccent (ACCENTS [1]);
+		LookAndFeelManager.setLookAndFeel ("light");
+		LookAndFeelManager.setAccent (ACCENTS [1]);
 		save (display, shell, directory + "/switch-light-accent.png");
 	}
 

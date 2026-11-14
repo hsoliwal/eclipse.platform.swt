@@ -21,7 +21,7 @@ import org.eclipse.swt.widgets.*;
  * The SWT colours and fonts of the drawn widgets of one display (docs/m3/LOOK_AND_FEEL.md, LF6): the defaults hold
  * ARGB ints and font ids; a delegate asks here at paint time and gets one shared <code>Color</code> per ARGB value
  * (open addressing over the ints) and one <code>Font</code> per font id. A look and feel switch disposes them all
- * ({@link M3LookAndFeel#setLookAndFeel}), as Swing's look and feels drop their <code>UIResource</code>s, so a delegate
+ * ({@link LookAndFeelManager#setLookAndFeel}), as Swing's look and feels drop their <code>UIResource</code>s, so a delegate
  * never keeps one across paints. Disposed with the display.
  */
 public final class UIResources {

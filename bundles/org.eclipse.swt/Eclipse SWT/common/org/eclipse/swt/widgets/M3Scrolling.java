@@ -172,7 +172,7 @@ public final class M3Scrolling {
 		int header = tree.getHeaderVisible () ? tree.getHeaderHeight () : 0;
 		int area = tree.getClientArea ().height - header;
 		TreeItem top = tree.getTopItem ();
-		M3TreeWalk walk = new M3TreeWalk (tree);
+		TreeWalk walk = new TreeWalk (tree);
 		/* without a top item (no rows) the walk counts the rows: 0 */
 		int topIndex = walk.indexOf (top);
 		int rows = top == null ? topIndex : topIndex + 1 + walk.advance (Integer.MAX_VALUE);
@@ -204,10 +204,10 @@ public final class M3Scrolling {
 		checkAlignment (alignment);
 		expandAncestors (item);
 		M3ScrollInfo info = getScrollInfo (tree);
-		M3TreeWalk walk = new M3TreeWalk (tree);
+		TreeWalk walk = new TreeWalk (tree);
 		int row = walk.indexOf (item);
 		int target = targetTop (info, row, alignment);
-		M3TreeWalk toTarget = new M3TreeWalk (tree);
+		TreeWalk toTarget = new TreeWalk (tree);
 		toTarget.advance (target);
 		tree.setTopItem (toTarget.next ());
 		return tree.getTopItem ();
