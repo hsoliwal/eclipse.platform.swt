@@ -21,7 +21,6 @@ import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.Random;
 
-import org.eclipse.swt.internal.ViewportRuntime;
 import org.eclipse.swt.internal.ViewportRuntime.RowWindow;
 import org.junit.jupiter.api.Test;
 
