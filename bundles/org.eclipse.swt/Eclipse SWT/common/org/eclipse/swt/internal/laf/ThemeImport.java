@@ -43,7 +43,7 @@ public final class ThemeImport {
 	static final char SWING = 'S';
 	/*
 	 * Foreign key names -> LF2 catalogue key names, with the dialects that use them (the first row of a dialect for a
-	 * catalogue key is the name M3ThemeExport writes); every row is read on import.
+	 * catalogue key is the name an export to that dialect uses); every row is read on import.
 	 */
 	private static final String [][] NAMES = {{"TableHeader.background", "Table.headerBackground", "IS"},
 		{"TableHeader.foreground", "Table.headerForeground", "IS"}, {"TableHeader.separatorColor", "Table.headerSeparatorColor", "IS"},

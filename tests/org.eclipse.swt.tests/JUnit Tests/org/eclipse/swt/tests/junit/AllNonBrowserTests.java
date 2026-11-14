@@ -129,7 +129,6 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_internal_laf_Palette.class, //
 			Test_org_eclipse_swt_internal_laf_SystemTheme.class, //
 			Test_org_eclipse_swt_internal_laf_SystemTheme_OptimizationBench.class, //
-			Test_org_eclipse_swt_internal_laf_M3ThemeCompleter.class, //
 			Test_org_eclipse_swt_internal_laf_ThemeImport.class, //
 			Test_org_eclipse_swt_internal_laf_UIDefaults.class, //
 			Test_org_eclipse_swt_internal_laf_UIDerivation.class, //
