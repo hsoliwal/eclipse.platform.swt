@@ -171,8 +171,8 @@ public class RowModelTests {
 		Random random = new Random (190 + style);
 		Table model = table (style, 300, 5), stock = table (style, 300, 320);
 		java.util.List<int []> modelEvents = new ArrayList<> (), stockEvents = new ArrayList<> ();
-		M3Emptiness.addListener (model, e -> modelEvents.add (new int [] {e.detail, e.count}));
-		M3Emptiness.addListener (stock, e -> stockEvents.add (new int [] {e.detail, e.count}));
+		model.addListener (SWT.EmptinessChanged, e -> modelEvents.add (new int [] {e.detail, e.count}));
+		stock.addListener (SWT.EmptinessChanged, e -> stockEvents.add (new int [] {e.detail, e.count}));
 		RowModel m3 = RowModel.of (model);
 		long [] ids = new long [300];
 		for (int i = 0; i < ids.length; i++) ids [i] = i;

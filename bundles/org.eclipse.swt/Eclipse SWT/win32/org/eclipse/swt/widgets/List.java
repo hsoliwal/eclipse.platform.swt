@@ -31,7 +31,7 @@ import org.eclipse.swt.internal.win32.*;
  * <dt><b>Styles:</b></dt>
  * <dd>SINGLE, MULTI, NO_SEARCH, VIRTUAL</dd>
  * <dt><b>Events:</b></dt>
- * <dd>Selection, DefaultSelection, SetData</dd>
+ * <dd>Selection, DefaultSelection, SetData, EmptinessChanged</dd>
  * </dl>
  * <p>
  * Note: Only one of SINGLE and MULTI may be specified.
@@ -173,6 +173,13 @@ public List (Composite parent, int style) {
 	}
 	drawnPlane = ListDrawnPlane.install (this);
 }
+
+@Override
+void _addListener (int eventType, Listener listener) {
+	if (eventType == SWT.EmptinessChanged) Emptiness.watch (this);
+	super._addListener (eventType, listener);
+}
+
 /**
  * Adds the argument to the end of the receiver's list.
  * <p>
@@ -193,7 +200,7 @@ public List (Composite parent, int style) {
  */
 public void add (String string) {
 	addItem (string);
-	M3Emptiness.changed (this);
+	Emptiness.changed (this);
 }
 
 void addItem (String string) {
@@ -250,7 +257,7 @@ void addItem (String string) {
  */
 public void add (String string, int index) {
 	insertItem (string, index);
-	M3Emptiness.changed (this);
+	Emptiness.changed (this);
 }
 
 void insertItem (String string, int index) {
@@ -1129,7 +1136,7 @@ boolean isUseWsBorder () {
  */
 public void remove (int [] indices) {
 	removeIndices (indices);
-	M3Emptiness.changed (this);
+	Emptiness.changed (this);
 }
 
 void removeIndices (int [] indices) {
@@ -1234,7 +1241,7 @@ void removeIndices (int [] indices) {
  */
 public void remove (int index) {
 	removeIndex (index);
-	M3Emptiness.changed (this);
+	Emptiness.changed (this);
 }
 
 void removeIndex (int index) {
@@ -1314,7 +1321,7 @@ void removeIndex (int index) {
  */
 public void remove (int start, int end) {
 	removeSpan (start, end);
-	M3Emptiness.changed (this);
+	Emptiness.changed (this);
 }
 
 void removeSpan (int start, int end) {
@@ -1437,7 +1444,7 @@ public void remove (String string) {
  */
 public void removeAll () {
 	removeAllItems ();
-	M3Emptiness.changed (this);
+	Emptiness.changed (this);
 }
 
 void removeAllItems () {
@@ -1732,11 +1739,11 @@ public void setFont (Font font) {
  */
 public void setItem (int index, String string) {
 	/* remove and add: the transient count is not an emptiness change */
-	M3Emptiness.hold (this);
+	Emptiness.hold (this);
 	try {
 		setItemText (index, string);
 	} finally {
-		M3Emptiness.release (this);
+		Emptiness.release (this);
 	}
 }
 
@@ -1780,11 +1787,11 @@ void setItemText (int index, String string) {
  */
 public void setItemCount (int count) {
 	/* the native path adds and removes through the public methods: one announcement, at the end */
-	M3Emptiness.hold (this);
+	Emptiness.hold (this);
 	try {
 		setCount (count);
 	} finally {
-		M3Emptiness.release (this);
+		Emptiness.release (this);
 	}
 }
 
@@ -1828,7 +1835,7 @@ void setCount (int count) {
  */
 public void setItems (String... items) {
 	setAllItems (items);
-	M3Emptiness.changed (this);
+	Emptiness.changed (this);
 }
 
 void setAllItems (String... items) {

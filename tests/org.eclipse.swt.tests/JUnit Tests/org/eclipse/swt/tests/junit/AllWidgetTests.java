@@ -27,7 +27,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_internal_Collation.class, //
 		Test_org_eclipse_swt_internal_ColumnFilter.class, //
 		Test_org_eclipse_swt_internal_ColumnSort.class, //
-		Test_M3Emptiness.class, //
+		Test_EmptinessChanged.class, //
 		Test_M3FilterAsync.class, //
 		Test_org_eclipse_swt_internal_ItemRange.class, //
 		Test_org_eclipse_swt_internal_RowPatch.class, //

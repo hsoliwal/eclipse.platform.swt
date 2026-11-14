@@ -60,7 +60,7 @@ import org.eclipse.swt.internal.win32.*;
  * <dt><b>Styles:</b></dt>
  * <dd>SINGLE, MULTI, CHECK, FULL_SELECTION, HIDE_SELECTION, VIRTUAL, NO_SCROLL, NO_SEARCH</dd>
  * <dt><b>Events:</b></dt>
- * <dd>Selection, DefaultSelection, SetData, MeasureItem, EraseItem, PaintItem</dd>
+ * <dd>Selection, DefaultSelection, SetData, MeasureItem, EraseItem, PaintItem, EmptinessChanged</dd>
  * </dl>
  * <p>
  * Note: Only one of the styles SINGLE, and MULTI may be specified.
@@ -173,6 +173,7 @@ public Table (Composite parent, int style) {
 
 @Override
 void _addListener (int eventType, Listener listener) {
+	if (eventType == SWT.EmptinessChanged) Emptiness.watch (this);
 	super._addListener (eventType, listener);
 	switch (eventType) {
 		case SWT.MeasureItem:
@@ -5305,11 +5306,11 @@ public void setHeaderVisible (boolean show) {
  */
 public void setItemCount (int count) {
 	/* the stock path creates items through createItem: one announcement, at the end, with the final count */
-	M3Emptiness.hold (this);
+	Emptiness.hold (this);
 	try {
 		setCount (count);
 	} finally {
-		M3Emptiness.release (this);
+		Emptiness.release (this);
 	}
 	if (viewport != null) Prefetch.windowChanged (this);
 	VisibilityObserver.changed (this);
@@ -5317,7 +5318,7 @@ public void setItemCount (int count) {
 
 /* M3 seams after a structural change: the emptiness crossing, and the prefetch window clamped to the rows */
 void m3StructureChanged () {
-	M3Emptiness.changed (this);
+	Emptiness.changed (this);
 	if (viewport != null) Prefetch.windowChanged (this);
 	VisibilityObserver.changed (this);
 }

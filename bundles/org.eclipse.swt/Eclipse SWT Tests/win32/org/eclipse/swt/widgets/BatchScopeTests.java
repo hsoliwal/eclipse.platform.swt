@@ -212,7 +212,7 @@ public class BatchScopeTests {
 	public void test_oneEmptinessAnnouncementWithTheFinalCount () {
 		List list = new List (shell, SWT.SINGLE);
 		java.util.List<int []> events = new java.util.ArrayList<> ();
-		M3Emptiness.addListener (list, event -> events.add (new int [] {event.detail, event.count}));
+		list.addListener (SWT.EmptinessChanged, event -> events.add (new int [] {event.detail, event.count}));
 		BatchScope.bulk (list, () -> {
 			list.add ("a");
 			list.removeAll ();
@@ -220,7 +220,7 @@ public class BatchScopeTests {
 			list.add ("c");
 		});
 		assertEquals (1, events.size ());
-		assertArrayEquals (new int [] {M3Emptiness.BECAME_NON_EMPTY, 2}, events.get (0));
+		assertArrayEquals (new int [] {Emptiness.BECAME_NON_EMPTY, 2}, events.get (0));
 		BatchScope.bulk (list, () -> {
 			list.removeAll ();
 			list.add ("d");
@@ -235,7 +235,7 @@ public class BatchScopeTests {
 		Table table = new Table (shell, SWT.SINGLE);
 		table.setBounds (5, 5, 300, 380);
 		java.util.List<Integer> details = new java.util.ArrayList<> ();
-		M3Emptiness.addListener (table, event -> details.add (event.detail));
+		table.addListener (SWT.EmptinessChanged, event -> details.add (event.detail));
 		IllegalStateException failure = new IllegalStateException ("edit failed");
 		IllegalStateException thrown = assertThrows (IllegalStateException.class, () -> BatchScope.bulk (table, () -> {
 			new TableItem (table, SWT.NONE).setText ("partial");
@@ -243,7 +243,7 @@ public class BatchScopeTests {
 		}));
 		assertSame (failure, thrown);
 		/* the crossing made before the failure is announced when the update closes */
-		assertEquals (java.util.List.of (M3Emptiness.BECAME_NON_EMPTY), details);
+		assertEquals (java.util.List.of (Emptiness.BECAME_NON_EMPTY), details);
 		flush ();
 		int [] paints = new int [1];
 		table.addListener (SWT.Paint, event -> paints [0]++);
@@ -252,7 +252,7 @@ public class BatchScopeTests {
 		flush ();
 		assertTrue (paints [0] > 0, "the table still paints");
 		table.removeAll ();
-		assertEquals (java.util.List.of (M3Emptiness.BECAME_NON_EMPTY, M3Emptiness.BECAME_EMPTY), details);
+		assertEquals (java.util.List.of (Emptiness.BECAME_NON_EMPTY, Emptiness.BECAME_EMPTY), details);
 	}
 
 	@Test
