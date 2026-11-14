@@ -1,0 +1,128 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.swt.tests.junit;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.eclipse.swt.*;
+import org.eclipse.swt.internal.laf.*;
+import org.eclipse.swt.widgets.*;
+import org.junit.jupiter.api.*;
+
+/**
+ * Palettes, accent, high contrast, DPI-aware metrics and the light and dark built-ins (docs/m3/LOOK_AND_FEEL.md, LF6,
+ * improvement 5). {@link #theAccentUpdatesOnlyItsReaders} and the high-contrast cases need a display.
+ */
+public class Test_org_eclipse_swt_internal_laf_Palette {
+	static final int SELECTION = UIKeys.intern ("Table.selectionBackground", UIKeys.COLOR);
+	static final int GRID = UIKeys.intern ("Table.gridColor", UIKeys.COLOR);
+	static final int ROW_HEIGHT = UIKeys.intern ("Tree.rowHeight", UIKeys.INTEGER);
+	static final int MARGIN = UIKeys.intern ("Button.margin", UIKeys.INSETS);
+
+	@Test
+	public void aRampGoesFromTintToShade () {
+		int [] ramp = Palette.ramp (0xFF2F6FD0);
+		assertEquals (Palette.STEPS.length, ramp.length);
+		for (int i = 1; i < ramp.length; i++) {
+			assertTrue (Palette.luminance (ramp [i]) < Palette.luminance (ramp [i - 1]), "step " + i);
+			assertEquals (0xFF, ramp [i] >>> 24);
+		}
+		int [] grey = Palette.ramp (0xFF808080);
+		assertEquals ((grey [5] >> 16) & 0xFF, grey [5] & 0xFF, "a grey accent gives a grey ramp");
+	}
+
+	@Test
+	public void contrastPicksReadableText () {
+		assertEquals (21.0, Palette.contrast (0xFF000000, 0xFFFFFFFF), 1e-9);
+		assertEquals (1.0, Palette.contrast (0xFF2F6FD0, 0xFF2F6FD0), 1e-9);
+		assertEquals (0xFF000000, Palette.readableOn (0xFFFFFFFF));
+		assertEquals (0xFFFFFFFF, Palette.readableOn (0xFF000000));
+		assertEquals (0xFFFFFFFF, Palette.readableOn (0xFF2F6FD0), "white on the flat accent");
+		for (int background : new int [] {0xFF777777, 0xFFFFD700, 0xFF123456, 0xFFE0EEFE}) {
+			int text = Palette.readableOn (background), other = text == 0xFF000000 ? 0xFFFFFFFF : 0xFF000000;
+			assertTrue (Palette.contrast (text, background) >= Palette.contrast (other, background), Integer.toHexString (background));
+		}
+		assertTrue (Palette.contrast (0xFF000000, 0xFF777777) >= Palette.READABLE);
+		assertEquals ("#2f6fd0", Palette.text (0xFF2F6FD0));
+		assertEquals ("#2f6fd080", Palette.text (0x802F6FD0));
+	}
+
+	@Test
+	public void metricsScaleWithTheZoom () {
+		UIDefaults defaults = new UIDefaults (new LookAndFeelLoader (LookAndFeelThemes::text, name -> 0x808080).load ("flat"), new UIDefaults.Lanes ());
+		int rowHeight = defaults.integer (ROW_HEIGHT, 0);
+		assertEquals (rowHeight, defaults.metric (ROW_HEIGHT, 0, 100));
+		assertEquals (rowHeight * 2, defaults.metric (ROW_HEIGHT, 0, 200));
+		assertEquals (Math.round (rowHeight * 1.5f), defaults.metric (ROW_HEIGHT, 0, 150));
+		int [] points = new int [4], pixels = new int [4];
+		assertTrue (defaults.insets (MARGIN, points));
+		assertTrue (defaults.insets (MARGIN, pixels, 200));
+		for (int i = 0; i < 4; i++) assertEquals (points [i] * 2, pixels [i]);
+		assertFalse (defaults.insets (UIKeys.intern ("Button.coverageNoInsets", UIKeys.INSETS), pixels, 200));
+	}
+
+	@Test
+	public void lightAndDarkAreBuiltIn () {
+		int flat = new LookAndFeelLoader (LookAndFeelThemes::text, name -> 0x808080).load ("flatdark").color ("Table.background", 0);
+		LookAndFeelManager.setLookAndFeel ("dark");
+		try {
+			assertEquals ("dark", LookAndFeelManager.getLookAndFeel ());
+			assertEquals (flat, LookAndFeelManager.getDefaults ().color (UIKeys.intern ("Table.background", UIKeys.COLOR), 0));
+			LookAndFeelManager.setLookAndFeel ("light");
+			assertEquals ("light", LookAndFeelManager.getLookAndFeel ());
+		} finally {
+			LookAndFeelManager.reset ();
+		}
+	}
+
+	@Test
+	public void theAccentUpdatesOnlyItsReaders () {
+		Display display = Display.getDefault ();
+		Shell shell = new Shell (display);
+		LookAndFeelManager.register ("test-accent", "@extends = flat\n", null);
+		LookAndFeelManager.setLookAndFeel ("test-accent");
+		try {
+			int gridBefore = LookAndFeelManager.getDefaults ().color (GRID, 0);
+			Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe reader = new Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe (new int [] {SELECTION}, ComponentUI.NO_KEYS);
+			Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe grid = new Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe (new int [] {GRID}, ComponentUI.NO_KEYS);
+			LookAndFeelManager.installUI (new Canvas (shell, SWT.NONE), Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe.class, reader);
+			LookAndFeelManager.installUI (new Canvas (shell, SWT.NONE), Test_org_eclipse_swt_internal_laf_LookAndFeelManager.Probe.class, grid);
+			assertEquals (1, LookAndFeelManager.setAccent (0xFFC0392B), "only the reader of an accent-derived key");
+			assertEquals (2, reader.installs);
+			assertEquals (1, grid.installs);
+			assertEquals (0xFFC0392B, LookAndFeelManager.getDefaults ().color (SELECTION, 0), "Table.selectionBackground follows @accent");
+			assertEquals (gridBefore, LookAndFeelManager.getDefaults ().color (GRID, 0));
+			assertEquals (0xFFC0392B, reader.defaults.color (SELECTION, 0));
+		} finally {
+			LookAndFeelManager.getDefaults ().removeVariable ("accent");
+			LookAndFeelManager.reset ();
+			shell.dispose ();
+		}
+		assertEquals (0, LookAndFeelManager.setAccent (0xFF2F6FD0), "no widget left");
+		LookAndFeelManager.getDefaults ().removeVariable ("accent");
+	}
+
+	@Test
+	public void highContrastFromThePlatform () {
+		Display display = Display.getDefault ();
+		String table = Palette.highContrastTable (display);
+		LookAndFeelDefaults defaults = new LookAndFeelLoader (n -> n.equals ("hc") ? table : LookAndFeelThemes.text (n), name -> 0x808080).load ("hc");
+		assertEquals (2, defaults.integer ("Component.focusWidth", 0));
+		assertEquals (defaults.color ("Component.foreground", 0), defaults.color ("Component.borderColor", 1), "borders in the foreground colour");
+		org.eclipse.swt.graphics.RGB list = display.getSystemColor (SWT.COLOR_LIST_BACKGROUND).getRGB ();
+		assertEquals (0xFF000000 | list.red << 16 | list.green << 8 | list.blue, defaults.color ("Component.background", 0));
+		if (!display.getHighContrast ()) assertEquals (LookAndFeelManager.getLookAndFeel (), Palette.preferred (display));
+	}
+}

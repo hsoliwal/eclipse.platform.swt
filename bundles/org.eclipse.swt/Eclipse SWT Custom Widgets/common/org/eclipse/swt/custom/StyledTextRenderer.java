@@ -229,7 +229,7 @@ int addMerge(int[] mergeRanges, StyleRange[] mergeStyles, int mergeCount, int mo
 			System.arraycopy(ranges, modifyStart + mergeCount, ranges, j, rangeCount - modifyEnd);
 			System.arraycopy(styles, (modifyStart + mergeCount) >> 1, styles, j >> 1, styleCount - (modifyEnd >> 1));
 		}
-		grow = (j - modifyStart) - (modifyEnd - modifyStart);
+		grow = j - modifyEnd;
 	} else {
 		System.arraycopy(mergeRanges, 0, ranges, modifyStart, mergeCount);
 		System.arraycopy(mergeStyles, 0, styles, modifyStart >> 1, mergeCount >> 1);
@@ -1812,12 +1812,7 @@ private TextLayout buildTextLayout(int lineIndex, int orientation, int width, in
 				int topIndex = styledText.topIndex;
 				int topIndexY = styledText.topIndexY;
 				int lineHeight = getLineHeight();
-				int newVerticalScrollOffset;
-				if (topIndexY >= 0) {
-					newVerticalScrollOffset = (topIndex - 1) * lineHeight + lineHeight - topIndexY;
-				} else {
-					newVerticalScrollOffset = topIndex * lineHeight - topIndexY;
-				}
+				int newVerticalScrollOffset = topIndex * lineHeight - topIndexY;
 				styledText.scrollVertical(newVerticalScrollOffset - styledText.verticalScrollOffset, true);
 			}
             if (styledText.isBidiCaret()) {

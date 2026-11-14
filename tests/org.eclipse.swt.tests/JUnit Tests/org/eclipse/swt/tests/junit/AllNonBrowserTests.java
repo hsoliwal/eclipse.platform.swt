@@ -83,6 +83,7 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_internal_ViewportGcProxy.class, //
 			Test_org_eclipse_swt_internal_SVGRasterizer.class, //
 			Test_org_eclipse_swt_internal_render_RowPaintRetention.class, //
+			Test_org_eclipse_swt_internal_render_Features.class, //
 			Test_org_eclipse_swt_layout_BorderLayout.class, //
 			Test_org_eclipse_swt_layout_FormAttachment.class, //
 			Test_org_eclipse_swt_layout_GridData.class, //
@@ -124,19 +125,18 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_internal_WidgetModeAllWidgets.class, //
 			Test_org_eclipse_swt_internal_gpu_RetainedPlanes.class, //
 			Test_org_eclipse_swt_internal_laf_LookAndFeel.class, //
-			Test_org_eclipse_swt_internal_laf_M3LookAndFeel.class, //
-			Test_org_eclipse_swt_internal_laf_M3Palette.class, //
-			Test_org_eclipse_swt_internal_laf_M3SystemTheme.class, //
-			Test_org_eclipse_swt_internal_laf_M3SystemTheme_OptimizationBench.class, //
-			Test_org_eclipse_swt_internal_laf_M3ThemeCompleter.class, //
-			Test_org_eclipse_swt_internal_laf_M3ThemeImport.class, //
-			Test_org_eclipse_swt_internal_laf_M3UIDefaults.class, //
-			Test_org_eclipse_swt_internal_laf_M3UIDerivation.class, //
-			Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes.class, //
-			Test_org_eclipse_swt_internal_m3_collections_M3LabelPool.class, //
-			Test_org_eclipse_swt_internal_m3_collections_M3ShortLabel.class, //
-			Test_org_eclipse_swt_internal_m3_collections_M3TextExtentCache.class, //
-			Test_org_eclipse_swt_internal_m3_collections_M3TreePathTrie.class, //
+			Test_org_eclipse_swt_internal_laf_LookAndFeelManager.class, //
+			Test_org_eclipse_swt_internal_laf_Palette.class, //
+			Test_org_eclipse_swt_internal_laf_SystemTheme.class, //
+			Test_org_eclipse_swt_internal_laf_SystemTheme_OptimizationBench.class, //
+			Test_org_eclipse_swt_internal_laf_ThemeImport.class, //
+			Test_org_eclipse_swt_internal_laf_UIDefaults.class, //
+			Test_org_eclipse_swt_internal_laf_UIDerivation.class, //
+			Test_org_eclipse_swt_internal_residency_LabelLanes.class, //
+			Test_org_eclipse_swt_internal_residency_LabelPool.class, //
+			Test_org_eclipse_swt_internal_residency_ShortLabel.class, //
+			Test_org_eclipse_swt_internal_residency_TextExtentCache.class, //
+			Test_org_eclipse_swt_internal_residency_TreePathTrie.class, //
 			Test_org_eclipse_swt_internal_render_FrameLog.class, //
 			Test_org_eclipse_swt_internal_render_FrameSlab.class, //
 			Test_org_eclipse_swt_internal_render_GlyphCache.class, //

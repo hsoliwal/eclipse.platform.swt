@@ -45,7 +45,7 @@
     <plugins>
       <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.1</version>
         <configuration><release>21</release><proc>none</proc><compilerArgs><arg>-Xlint:all</arg><arg>-Werror</arg></compilerArgs>
-          <includes><include>org/eclipse/swt/internal/gpu/m3/Replay.java</include><include>org/eclipse/swt/internal/gpu/m3/M3PlaneBackend.java</include><include>org/eclipse/swt/internal/gpu/m3/M3Target.java</include></includes>
+          <includes><include>org/eclipse/swt/internal/gpu/OpStreamReplay.java</include><include>org/eclipse/swt/internal/gpu/GlPlaneBackend.java</include><include>org/eclipse/swt/internal/gpu/GpuTarget.java</include></includes>
         </configuration>
       </plugin>
       <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-dependency-plugin</artifactId><version>3.8.1</version>
@@ -55,7 +55,7 @@
       </plugin>
       <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version>
         <configuration><archive><manifestFile>${m3.gpu.manifest}</manifestFile></archive>
-          <includes><include>org/eclipse/swt/internal/gpu/m3/**</include><include>lib/*.jar</include><include>META-INF/**</include></includes>
+          <includes><include>org/eclipse/swt/internal/gpu/**</include><include>lib/*.jar</include><include>META-INF/**</include></includes>
         </configuration>
       </plugin>
     </plugins>

@@ -252,7 +252,7 @@ public final class ViewportPaintGraph {
 	}
 
 	/**
-	 * Replay counters used by diagnostics and regression tests.
+	 * OpStreamReplay counters used by diagnostics and regression tests.
 	 *
 	 * @noreference This type is not intended to be referenced by clients.
 	 */

@@ -1,2 +1,0 @@
-label	ecj_rc	errors	warnings	access_forbidden	error_kinds	warning_kinds	sources	rules	source_commit
-master	127	6176	4129	5242	access_forbidden_junit4=1 access_forbidden_swt=5241 unresolved=918 unused_import=16 	access_discouraged=4079 other=50 	424	23	6060fce91308ad818116896214cd637475c66d7c

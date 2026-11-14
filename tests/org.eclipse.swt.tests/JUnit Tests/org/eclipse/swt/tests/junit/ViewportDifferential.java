@@ -153,8 +153,8 @@ public final class ViewportDifferential<S> {
 	 */
 	private static final String THEME_SWITCH = System.getProperty ("swt.viewport.themeSwitch");
 	/*
-	 * -Dswt.viewport.lafSwitch=<step>:<look and feel>: the same through the look and feel manager (M3LookAndFeel
-	 * .setLookAndFeel, LF6: the row delegates of the drawn widgets are installed again), and M3LookAndFeel.reset before
+	 * -Dswt.viewport.lafSwitch=<step>:<look and feel>: the same through the look and feel manager (LookAndFeelManager
+	 * .setLookAndFeel, LF6: the row delegates of the drawn widgets are installed again), and LookAndFeelManager.reset before
 	 * each seed.
 	 */
 	private static final String LAF_SWITCH = System.getProperty ("swt.viewport.lafSwitch");
@@ -391,13 +391,13 @@ public final class ViewportDifferential<S> {
 
 	/*
 	 * Selects the theme of the widget class at run time (Themes.select of this SWT's render package, or with
-	 * -Dswt.viewport.lafSwitch the look and feel of M3LookAndFeel; null goes back to the startup properties) and
+	 * -Dswt.viewport.lafSwitch the look and feel of LookAndFeelManager; null goes back to the startup properties) and
 	 * dispatches, so that the drawn planes repaint before the step.
 	 */
 	private void selectTheme (String theme) {
 		try {
 			if (THEME_SWITCH == null) {
-				Class<?> manager = Class.forName ("org.eclipse.swt.internal.laf.M3LookAndFeel");
+				Class<?> manager = Class.forName ("org.eclipse.swt.internal.laf.LookAndFeelManager");
 				if (theme == null) manager.getMethod ("reset").invoke (null); else manager.getMethod ("setLookAndFeel", String.class).invoke (null, theme);
 				drain (Display.getCurrent ());
 				return;

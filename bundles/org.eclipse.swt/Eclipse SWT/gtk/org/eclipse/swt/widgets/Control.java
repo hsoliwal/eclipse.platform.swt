@@ -3674,6 +3674,7 @@ void gtk_style_context_get_border (long context, int state, GtkBorder padding) {
 @Override
 int gtk_gesture_press_event (long gesture, int n_press, double x, double y, long event) {
 	mouseDown = true;
+	Shell shell = _getShell ();
 
 	int eventButton = GDK.gdk_button_event_get_button(event);
 	int eventTime = GDK.gdk_event_get_time(event);
@@ -3705,6 +3706,8 @@ int gtk_gesture_press_event (long gesture, int n_press, double x, double y, long
 			sendMouseEvent(SWT.MouseDoubleClick, eventButton, n_press, 0, false, eventTime, x, y, false, eventState);
 		}
 	}
+	// Like GTK3, a click activates the control also when it does not take the focus
+	if (!shell.isDisposed ()) shell.setActiveControl (this, SWT.MouseDown);
 	return result;
 }
 
@@ -7171,18 +7174,11 @@ void showWidget () {
 }
 
 void sort (int [] items) {
-	/* Shell Sort from K&R, pg 108 */
-	int length = items.length;
-	for (int gap=length/2; gap>0; gap/=2) {
-		for (int i=gap; i<length; i++) {
-			for (int j=i-gap; j>=0; j-=gap) {
-				if (items [j] <= items [j + gap]) {
-					int swap = items [j];
-					items [j] = items [j + gap];
-					items [j + gap] = swap;
-				}
-			}
-		}
+	Arrays.sort (items);
+	for (int i = 0, j = items.length - 1; i < j; i++, j--) {
+		int swap = items [i];
+		items [i] = items [j];
+		items [j] = swap;
 	}
 }
 

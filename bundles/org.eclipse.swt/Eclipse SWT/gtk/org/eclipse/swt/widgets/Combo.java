@@ -2087,6 +2087,13 @@ void releaseHandle () {
 }
 
 @Override
+void releaseParent () {
+	parent.fixClipMap.remove (this);
+	firstDraw = true;
+	super.releaseParent ();
+}
+
+@Override
 void releaseWidget () {
 	super.releaseWidget ();
 	textRenderer = 0;

@@ -46,6 +46,7 @@ jobs:
       cocoa: ${{ steps.filter.outputs.cocoa  || 'false' }}
       md:    ${{ steps.filter.outputs.md     || 'false' }}
       other: ${{ steps.filter.outputs.other  || 'false' }}
+      mobile: ${{ steps.filter.outputs.mobile || 'false' }}
     steps:
       - name: Upload event file
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -69,6 +70,8 @@ jobs:
               - '**/*.md'
             jenkins:
               - 'Jenkinsfile'
+            mobile:
+              - '{mobile/**,bundles/org.eclipse.swt/**/{mobile,android,ios,common}/**,tests/org.eclipse.swt.tests.mobile/**,.github/workflows/maven.yml}'
             # "other" = anything not matching the above buckets
             other:
               - '**'
@@ -77,6 +80,11 @@ jobs:
               - '!**/cocoa/**'
               - '!**/*.md'
               - '!Jenkinsfile'
+              - '!mobile/**'
+              - '!bundles/org.eclipse.swt/**/mobile/**'
+              - '!bundles/org.eclipse.swt/**/android/**'
+              - '!bundles/org.eclipse.swt/**/ios/**'
+              - '!tests/org.eclipse.swt.tests.mobile/**'
 
   build-linux:
     name: Build (Linux)
@@ -104,6 +112,82 @@ jobs:
       api_check: ${{ matrix.java == '25' && matrix.gtk == 'gtk3' && matrix.gdk_backend == 'x11' }}
       performance: ${{ contains(github.event.pull_request.labels.*.name, 'performance') }}
       runtodotests: ${{ contains(github.event.pull_request.labels.*.name, 'runtodotests') }}
+
+  mobile-java-android:
+    name: Mobile owner contracts and Android Java
+    needs: changes
+    if: ${{ github.event_name != 'pull_request' || needs.changes.outputs.mobile == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v5.0.0
+        with:
+          lfs: false
+      - name: Checkout unchanged Nebula contract subjects
+        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v5.0.0
+        with:
+          repository: hsoliwal/nebula
+          ref: 91d01b4e3ff3ed0c298c4f5c148710b770756932
+          path: .mobile-nebula
+          lfs: false
+      - uses: actions/setup-java@de5a937a1dc73fbc1a67d7d1aa4bebc1082f3190 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: '21.0.13+9'
+          cache: maven
+          cache-dependency-path: mobile/pom.xml
+      - uses: stCarolas/setup-maven@07fbbe97d97ef44336b7382563d66743297e442f # v4.5
+        with:
+          maven-version: 3.9.11
+      - name: Execute original-owner JUnit contracts
+        run: mvn -B --no-transfer-progress -f mobile/pom.xml -Pcontracts -Dnebula.checkout="$GITHUB_WORKSPACE/.mobile-nebula" verify
+      - name: Preserve executed Surefire reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mobile-owner-surefire
+          path: mobile/target/surefire-reports/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Select Android platform SDK
+        run: sdkmanager 'platforms;android-35'
+      - name: Compile Android binding with the actual SDK
+        run: mvn -B --no-transfer-progress -f mobile/pom.xml -Dmobile.platform=android -Dandroid.sdk="$ANDROID_HOME" clean verify
+
+  mobile-ios-compile:
+    name: Mobile iOS UIKit compile
+    needs: changes
+    if: ${{ github.event_name != 'pull_request' || needs.changes.outputs.mobile == 'true' }}
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v5.0.0
+        with:
+          lfs: false
+      - uses: actions/setup-java@de5a937a1dc73fbc1a67d7d1aa4bebc1082f3190 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: '21.0.13+9'
+          cache: maven
+          cache-dependency-path: mobile/pom.xml
+      - uses: stCarolas/setup-maven@07fbbe97d97ef44336b7382563d66743297e442f # v4.5
+        with:
+          maven-version: 3.9.11
+      - name: Compile original mobile owners and JNI declarations
+        run: mvn -B --no-transfer-progress -f mobile/pom.xml -Dmobile.platform=ios verify
+      - name: Compile UIKit backend and bootstrap against Xcode SDK
+        run: bash mobile/ios/build.sh iphonesimulator arm64 "$GITHUB_WORKSPACE/mobile/target/swt-mobile-ios.jar"
+      - name: Preserve native compile products
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mobile-ios-compile
+          path: |
+            mobile/target/swt-mobile-ios.jar
+            build/ios-iphonesimulator-arm64/jni-generated/
+            build/ios-iphonesimulator-arm64/Release-iphonesimulator/*.a
+          if-no-files-found: error
+          retention-days: 7
 
   build-windows:
     name: Build (Windows)

@@ -101,7 +101,7 @@ Java reference model. The release reviewer must capture:
 | --- | --- |
 | `Test_M3BulkUpdatesDifferential` | Official unbatched Table/List/Tree edits vs M3 grouped updates, identical public state |
 | `Test_M3DiffApplyDifferential` | Official item rebuild vs M3 diff/splice, identical items and selection |
-| `Test_M3ProxyModelDifferential` | Official virtual Table `SetData` model vs M3 proxy filtered/sorted rows |
+| `Test_org_eclipse_swt_internal_ProxyModelDifferential` | Official virtual Table `SetData` model vs M3 proxy filtered/sorted rows |
 | `Test_M3RowMathDifferential` | Official public Tree preorder vs M3 row/subtree/scroll mathematics |
 | `Test_M3ScrollBarModelDifferential` | Official scrollbar getter values vs M3 scrollbar state lanes |
 | `Test_M3ScrollMementoDifferential` | Official top-index remapping vs M3 save/remap/restore |
@@ -229,4 +229,4 @@ blocked until the complete native/GUI/platform and license gates pass.
 
 ## Integrated receiving candidate
 
-The current additive receiving scope and unresolved OSGi/native gates are recorded in [the integration contract](m3/release/INTEGRATION.md).
+The current additive receiving scope and unresolved OSGi/native gates are recorded in [the integration contract](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/release/INTEGRATION.md).

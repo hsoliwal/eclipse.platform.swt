@@ -21,6 +21,7 @@ import org.eclipse.swt.*;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.*;
+import org.eclipse.swt.internal.cairo.*;
 import org.eclipse.swt.internal.gtk.*;
 import org.eclipse.swt.internal.gtk3.*;
 import org.eclipse.swt.internal.gtk4.*;
@@ -71,9 +72,9 @@ public abstract class Widget {
 	EventTable eventTable;
 	Object data;
 	/**
-	 * The web-UI feature switches of this widget (<code>M3Features</code>): a packed bitset, one bit per feature id, or
+	 * The web-UI feature switches of this widget (<code>Features</code>): a packed bitset, one bit per feature id, or
 	 * <code>null</code> while every switch is at its class default (the stock widget allocates nothing). Read and written by
-	 * <code>M3Features</code> only.
+	 * <code>Features</code> only.
 	 * <p>
 	 * <b>IMPORTANT:</b> This field is <em>not</em> part of the SWT public API. It is marked public only so that it can be
 	 * shared within the packages provided by SWT. It should never be accessed from application code.
@@ -2445,12 +2446,15 @@ void snapshotPaint (long handle, long snapshot) {
 	Graphene.graphene_rect_init(rect, 0, 0, allocation.width, allocation.height);
 
 	long cairo = GTK4.gtk_snapshot_append_cairo(snapshot, rect);
-	if (cairo != 0) {
-		Rectangle bounds = new Rectangle(0, 0, allocation.width, allocation.height);
-		gtk4_draw(handle, cairo, bounds);
+	try {
+		if (cairo != 0) {
+			Rectangle bounds = new Rectangle(0, 0, allocation.width, allocation.height);
+			gtk4_draw(handle, cairo, bounds);
+		}
+	} finally {
+		if (cairo != 0) Cairo.cairo_destroy(cairo);
+		Graphene.graphene_rect_free(rect);
 	}
-
-	Graphene.graphene_rect_free(rect);
 }
 
 /**

@@ -1,2 +1,0 @@
-platform	fragment	jdk	release	source_dirs	sources	classes	rc	errors	warnings	seconds	source_commit
-win32	org.eclipse.swt.win32.win32.x86_64	javac 21.0.9	21	20	893	1373	0	0	0	54	1cab89c6a3f2874bb10adec6f03e7775ef7bb7ad

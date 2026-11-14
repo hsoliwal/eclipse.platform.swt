@@ -50,7 +50,7 @@ public class Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom {
 		Assumptions.assumeTrue (Glyphs.rasterizer (glyph -> 0) != null, "no SVG rasterizer (org.eclipse.swt.svg fragment) on the class path");
 		Display display = Display.getDefault ();
 		int zoom = DPIUtil.getDeviceZoom ();
-		String laf = M3LookAndFeel.getLookAndFeel ();
+		String laf = LookAndFeelManager.getLookAndFeel ();
 		Assumptions.assumeFalse ("native".equals (laf), "a non-native look and feel draws the SVG glyphs");
 		Shell shell = new Shell (display);
 		shell.setBounds (display.getBounds ().x, display.getBounds ().y, 420, 420);
@@ -75,11 +75,11 @@ public class Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom {
 		ImageData capture = ViewportDifferential.render (tree, zoom);
 		String mode = ViewportDifferential.reference ("Tree");
 		String file = ViewportDifferential.save ("glyphzoom-" + zoom + "-" + laf + "-" + mode, capture);
-		M3UIDefaults defaults = M3LookAndFeel.getDefaults ();
+		UIDefaults defaults = LookAndFeelManager.getDefaults ();
 		/* the theme the plane paints with: its installed row delegate's */
-		Theme theme = M3LookAndFeel.getUI (tree) instanceof M3DrawnRowUI drawn ? drawn.theme () : ThemeDefaults.of ("Tree", ThemeDefaults.look (laf), defaults);
-		int background = defaults.color (M3UIKeys.of ("Tree", "background", M3UIKeys.COLOR), 0xFFFFFF) & 0xFFFFFF;
-		int inactive = defaults.color (M3UIKeys.of ("Tree", "selectionInactiveBackground", M3UIKeys.COLOR), -1) & 0xFFFFFF;
+		Theme theme = LookAndFeelManager.getUI (tree) instanceof DrawnRowUI drawn ? drawn.theme () : ThemeDefaults.of ("Tree", ThemeDefaults.look (laf), defaults);
+		int background = defaults.color (UIKeys.of ("Tree", "background", UIKeys.COLOR), 0xFFFFFF) & 0xFFFFFF;
+		int inactive = defaults.color (UIKeys.of ("Tree", "selectionInactiveBackground", UIKeys.COLOR), -1) & 0xFFFFFF;
 		Rectangle row0 = pixels (tree.getItem (0).getBounds (), zoom), row1 = pixels (tree.getItem (1).getBounds (), zoom);
 		/*
 		 * crisp: the open chevron of root 0 (expanded), tinted as the renderer tints it, found 1:1 left of the label. The
