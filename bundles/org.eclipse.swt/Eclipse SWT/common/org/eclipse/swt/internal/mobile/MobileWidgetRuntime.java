@@ -28,16 +28,43 @@ public final class MobileWidgetRuntime implements AutoCloseable {
 	public enum EventType { SELECT, MODIFY, TOUCH_DOWN, TOUCH_MOVE, TOUCH_UP, FOCUS_IN, FOCUS_OUT, SCROLL }
 	public enum Lifecycle { FOREGROUND, BACKGROUND, DISPOSED }
 
-	public record Bounds(int x, int y, int width, int height) {
-		public Bounds {
+	/** Java 8 runtime shape avoids the missing java.lang.Record on older Android. */
+	public static final class Bounds {
+		private final int x, y, width, height;
+		public Bounds(int x, int y, int width, int height) {
 			if (width < 0 || height < 0) throw new IllegalArgumentException("negative extent");
+			this.x = x; this.y = y; this.width = width; this.height = height;
+		}
+		public int x() { return x; }
+		public int y() { return y; }
+		public int width() { return width; }
+		public int height() { return height; }
+		@Override public boolean equals(Object other) {
+			return other instanceof Bounds b && b.x == x && b.y == y
+					&& b.width == width && b.height == height;
+		}
+		@Override public int hashCode() {
+			return Objects.hash(x, y, width, height);
 		}
 	}
 
-	public record Event(long id, EventType type, String text, float x, float y) {
-		public Event {
-			Objects.requireNonNull(type);
+	public static final class Event {
+		private final long id;
+		private final EventType type;
+		private final String text;
+		private final float x, y;
+		public Event(long id, EventType type, String text, float x, float y) {
+			this.id = id;
+			this.type = Objects.requireNonNull(type);
+			this.text = text;
+			this.x = x;
+			this.y = y;
 		}
+		public long id() { return id; }
+		public EventType type() { return type; }
+		public String text() { return text; }
+		public float x() { return x; }
+		public float y() { return y; }
 	}
 
 	@FunctionalInterface
