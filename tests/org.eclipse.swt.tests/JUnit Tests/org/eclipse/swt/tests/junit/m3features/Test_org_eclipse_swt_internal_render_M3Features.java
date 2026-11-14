@@ -31,7 +31,7 @@ import org.junit.jupiter.api.*;
  * (one widget class over every widget over the alias over the default, most specific class first), the read-only
  * <code>NATIVE_HAS</code> rows, the unshipped rows, the set/isOn kernel with its null-at-defaults bitset and its refusals,
  * discovery, and the generated table against the generated view <code>FEATURES.tsv</code> (the generator's fixed point:
- * <code>-Dm3.features.tsv</code> names the file, default the worktree-relative path).
+ * <code>-Dm3.features.tsv</code> names the file, default the copy next to this test).
  */
 @SuppressWarnings("restriction")
 public class Test_org_eclipse_swt_internal_render_M3Features {
@@ -195,9 +195,7 @@ public class Test_org_eclipse_swt_internal_render_M3Features {
 
 	@Test
 	public void test_generatedTableMatchesGeneratedView () throws IOException {
-		Path view = Path.of (System.getProperty ("m3.features.tsv", "docs/m3/feature-switches/FEATURES.tsv"));
-		Assumptions.assumeTrue (Files.exists (view), "FEATURES.tsv of the worktree: " + view.toAbsolutePath ());
-		List<String> lines = Files.readAllLines (view, StandardCharsets.UTF_8);
+		List<String> lines = generatedView ();
 		assertEquals (M3Features.COUNT + 1, lines.size (), "one row per feature");
 		IntStream.of (M3Features.ids ()).forEach (id -> {
 			String [] cells = lines.get (id + 1).split ("\t", -1);
@@ -205,6 +203,15 @@ public class Test_org_eclipse_swt_internal_render_M3Features {
 			assertEquals (described, M3Features.describe (id), "row " + id);
 			assertEquals (id, constant (cells [2]), cells [2] + " = bit " + id);
 		});
+	}
+
+	private static List<String> generatedView () throws IOException {
+		String file = System.getProperty ("m3.features.tsv");
+		if (file != null) return Files.readAllLines (Path.of (file), StandardCharsets.UTF_8);
+		try (InputStream in = Test_org_eclipse_swt_internal_render_M3Features.class.getResourceAsStream ("FEATURES.tsv")) {
+			assertNotNull (in, "FEATURES.tsv next to the test");
+			return new String (in.readAllBytes (), StandardCharsets.UTF_8).lines ().toList ();
+		}
 	}
 
 	private static int constant (String name) {
