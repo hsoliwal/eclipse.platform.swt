@@ -1,0 +1,6 @@
+path	class	base	head	master	added_total	added_on_master	removed_total	removed_back
+bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/TableViewport.java	EVOLVED	250338c580	be36bba20a	999e0e9aa3	12	12	2	0
+docs/m3/ENHANCED_API_MAP.tsv	EVOLVED	7be9b4c98d	95ad22d7df	839f5946a6	1	1	1	0
+docs/m3/enhanced-api/LEAF7_RESIDENCY.md	PRESENT	6c394039be	3787c08e8a	3787c08e8a	0	0	0	0
+tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/M3OfficialScene.java	PRESENT	-	1aacbbb384	1aacbbb384	0	0	0	0
+tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3ResidencyDifferential.java	PRESENT	-	41de473341	41de473341	0	0	0	0

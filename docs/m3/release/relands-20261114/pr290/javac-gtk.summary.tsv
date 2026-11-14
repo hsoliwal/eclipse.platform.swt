@@ -1,0 +1,2 @@
+platform	fragment	jdk	release	source_dirs	sources	classes	rc	errors	warnings	seconds	source_commit
+gtk	org.eclipse.swt.gtk.linux.x86_64	javac 21.0.9	21	26	682	1020	0	0	0	193	3e6ae4bea1e54875e60b78ee9e7063eaf433d7ff
