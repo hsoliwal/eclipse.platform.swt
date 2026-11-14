@@ -22,12 +22,12 @@ import java.util.Random;
 import java.util.stream.*;
 
 import org.eclipse.swt.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
 
 /**
- * Contract of M3ProxyModel (enhanced M3 API, leaf 14). Oracle: the same stages as a stream over
+ * Contract of ProxyModel (enhanced M3 API, leaf 14). Oracle: the same stages as a stream over
  * boxed source rows (filter, then a stable sort). The widget bindings run on the test display.
  */
 public class Test_M3ProxyModel {
@@ -39,20 +39,20 @@ public class Test_M3ProxyModel {
 			if (stage instanceof java.util.function.IntPredicate keep) {
 				rows = rows.stream ().filter (keep::test).collect (Collectors.toList ());
 			} else {
-				M3ProxyModel.RowComparator comparator = (M3ProxyModel.RowComparator) stage;
+				ProxyModel.RowComparator comparator = (ProxyModel.RowComparator) stage;
 				rows = rows.stream ().sorted ((Comparator<Integer>) (a, b) -> comparator.compare (a, b)).collect (Collectors.toList ());
 			}
 		}
 		return rows.stream ().mapToInt (Integer::intValue).toArray ();
 	}
 
-	private static int [] view (M3ProxyModel model) {
+	private static int [] view (ProxyModel model) {
 		return IntStream.range (0, model.size ()).map (model::map).toArray ();
 	}
 
 	@Test
 	public void test_identityModel () {
-		M3ProxyModel model = new M3ProxyModel (5);
+		ProxyModel model = new ProxyModel (5);
 		assertEquals (5, model.size ());
 		assertEquals (5, model.sourceSize ());
 		assertArrayEquals (new int [] {0, 1, 2, 3, 4}, view (model));
@@ -68,9 +68,9 @@ public class Test_M3ProxyModel {
 			int [] keys = random.ints (n, 0, 20).toArray ();
 			int modulus = 2 + random.nextInt (4);
 			java.util.function.IntPredicate even = s -> keys [s] % modulus != 0;
-			M3ProxyModel.RowComparator byKey = (a, b) -> Integer.compare (keys [a], keys [b]);
-			M3ProxyModel.RowComparator byKeyDescending = (a, b) -> Integer.compare (keys [b] / 3, keys [a] / 3);
-			M3ProxyModel model = new M3ProxyModel (n).addFilter (even).addSort (byKey).addSort (byKeyDescending).refresh ();
+			ProxyModel.RowComparator byKey = (a, b) -> Integer.compare (keys [a], keys [b]);
+			ProxyModel.RowComparator byKeyDescending = (a, b) -> Integer.compare (keys [b] / 3, keys [a] / 3);
+			ProxyModel model = new ProxyModel (n).addFilter (even).addSort (byKey).addSort (byKeyDescending).refresh ();
 			int [] expected = oracle (n, even, byKey, byKeyDescending);
 			assertArrayEquals (expected, view (model), "round " + round);
 			assertEquals (expected.length, model.size ());
@@ -84,7 +84,7 @@ public class Test_M3ProxyModel {
 
 	@Test
 	public void test_editsTakeEffectAtRefresh () {
-		M3ProxyModel model = new M3ProxyModel (10).addFilter (s -> s % 2 == 0).refresh ();
+		ProxyModel model = new ProxyModel (10).addFilter (s -> s % 2 == 0).refresh ();
 		assertEquals (5, model.size ());
 		model.setSourceSize (20);
 		assertEquals (5, model.size ());
@@ -100,19 +100,19 @@ public class Test_M3ProxyModel {
 	@Test
 	public void test_sortByCollationKeys () {
 		String [] names = {"Zoë", "anna", "Åsa", "Ärla", "bob", "Anna"};
-		M3SortKeys keys = M3Collation.keys (names, Locale.forLanguageTag ("sv"));
-		M3ProxyModel model = new M3ProxyModel (names.length).addSort (keys).refresh ();
+		SortKeys keys = Collation.keys (names, Locale.forLanguageTag ("sv"));
+		ProxyModel model = new ProxyModel (names.length).addSort (keys).refresh ();
 		assertArrayEquals (keys.sortedOrder (), view (model));
 	}
 
 	@Test
 	public void test_argumentsAreChecked () {
-		assertThrows (IllegalArgumentException.class, () -> new M3ProxyModel (-1));
-		M3ProxyModel model = new M3ProxyModel (3);
+		assertThrows (IllegalArgumentException.class, () -> new ProxyModel (-1));
+		ProxyModel model = new ProxyModel (3);
 		assertThrows (IllegalArgumentException.class, () -> model.setSourceSize (-1));
 		assertThrows (IllegalArgumentException.class, () -> model.addFilter (null));
-		assertThrows (IllegalArgumentException.class, () -> model.addSort ((M3ProxyModel.RowComparator) null));
-		assertThrows (IllegalArgumentException.class, () -> model.addSort ((M3SortKeys) null));
+		assertThrows (IllegalArgumentException.class, () -> model.addSort ((ProxyModel.RowComparator) null));
+		assertThrows (IllegalArgumentException.class, () -> model.addSort ((SortKeys) null));
 		assertThrows (IllegalArgumentException.class, () -> model.map (3));
 		assertThrows (IllegalArgumentException.class, () -> model.map (-1));
 		assertThrows (IllegalArgumentException.class, () -> model.unmap (3));
@@ -131,7 +131,7 @@ public class Test_M3ProxyModel {
 			table.setBounds (5, 5, 300, 380);
 			shell.open ();
 			int n = 10_000;
-			M3ProxyModel model = new M3ProxyModel (n).addFilter (s -> s % 3 == 0).addSort ((a, b) -> Integer.compare (b, a)).refresh ();
+			ProxyModel model = new ProxyModel (n).addFilter (s -> s % 3 == 0).addSort ((a, b) -> Integer.compare (b, a)).refresh ();
 			java.util.Set<Integer> asked = new java.util.HashSet<> ();
 			model.bind (table, (item, source) -> {
 				asked.add (source);
@@ -163,7 +163,7 @@ public class Test_M3ProxyModel {
 		try {
 			List list = new List (shell, SWT.SINGLE);
 			String [] names = {"pear", "apple", "fig", "kiwi"};
-			M3ProxyModel model = new M3ProxyModel (names.length).addFilter (s -> !names [s].equals ("fig")).addSort ((a, b) -> names [a].compareTo (names [b])).refresh ();
+			ProxyModel model = new ProxyModel (names.length).addFilter (s -> !names [s].equals ("fig")).addSort ((a, b) -> names [a].compareTo (names [b])).refresh ();
 			model.bind (list, s -> names [s]);
 			assertArrayEquals (new String [] {"apple", "kiwi", "pear"}, list.getItems ());
 			assertThrows (IllegalArgumentException.class, () -> model.bind ((List) null, s -> ""));
@@ -179,7 +179,7 @@ public class Test_M3ProxyModel {
 		try {
 			Table table = new Table (shell, SWT.VIRTUAL);
 			int [] filled = new int [1];
-			M3ProxyModel model = new M3ProxyModel (5).addFilter (s -> s % 2 == 0).refresh ();
+			ProxyModel model = new ProxyModel (5).addFilter (s -> s % 2 == 0).refresh ();
 			model.bind (table, (item, source) -> filled [0]++);
 			/* a SetData request for a row the view no longer has (the view shrank under a queued request) */
 			Event event = new Event ();

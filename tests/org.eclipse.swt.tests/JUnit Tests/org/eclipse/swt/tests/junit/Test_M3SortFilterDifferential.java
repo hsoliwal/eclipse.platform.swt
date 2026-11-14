@@ -22,7 +22,7 @@ import java.nio.file.*;
 import java.util.*;
 
 import org.eclipse.swt.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.junit.jupiter.api.*;
 
 /**
@@ -96,22 +96,22 @@ public class Test_M3SortFilterDifferential {
 			time ("reference-filter-sort", n, System.nanoTime () - start);
 
 			start = System.nanoTime ();
-			M3ColumnFilter filter = new M3ColumnFilter (4, n, data::text);
-			M3ColumnSort sort = new M3ColumnSort (4, filter);
-			sort.setKey (0, M3ColumnKey.ofInts (r -> data.ints [r]));
-			sort.setKey (2, M3ColumnKey.ofDoubles (r -> data.doubles [r]));
-			sort.setKey (3, M3ColumnKey.ofText (r -> data.texts [r], null));
+			ColumnFilter filter = new ColumnFilter (4, n, data::text);
+			ColumnSort sort = new ColumnSort (4, filter);
+			sort.setKey (0, ColumnKey.ofInts (r -> data.ints [r]));
+			sort.setKey (2, ColumnKey.ofDoubles (r -> data.doubles [r]));
+			sort.setKey (3, ColumnKey.ofText (r -> data.texts [r], null));
 			time ("m3-chain-create", n, System.nanoTime () - start);
 			start = System.nanoTime ();
-			filter.setText (3, "w1*,w2*", M3TextMatch.WILDCARD);
-			filter.setText (0, "-", M3TextMatch.CONTAINS | M3TextMatch.NEGATE);
+			filter.setText (3, "w1*,w2*", TextMatch.WILDCARD);
+			filter.setText (0, "-", TextMatch.CONTAINS | TextMatch.NEGATE);
 			time ("m3-filter-two-criteria", n, System.nanoTime () - start);
 			start = System.nanoTime ();
 			sort.setSortKeys (new int [] {3, 0, 2}, new int [] {SWT.UP, SWT.DOWN, SWT.UP});
 			time ("m3-sort-three-keys", n, System.nanoTime () - start);
 			assertArrayEquals (expected, Test_M3ColumnSort.order (sort), "n " + n);
 
-			M3RowWindow window = new M3RowWindow (sort);
+			RowWindow window = new RowWindow (sort);
 			window.setWindow (expected.length / 2, 40);
 			for (int i = 0; i < window.size (); i++) assertEquals (expected [expected.length / 2 + i], window.map (i));
 
@@ -137,8 +137,8 @@ public class Test_M3SortFilterDifferential {
 			assertEquals (sortPasses, Test_M3ColumnFilter.fullPasses (sort), "n " + n + ": value updates are sort deltas");
 			assertEquals (0, Test_M3ColumnFilter.fullPasses (window), "n " + n + ": the window applies deltas");
 			start = System.nanoTime ();
-			filter.setText (3, "w1*", M3TextMatch.WILDCARD);
-			filter.setText (3, "w1*,w2*", M3TextMatch.WILDCARD);
+			filter.setText (3, "w1*", TextMatch.WILDCARD);
+			filter.setText (3, "w1*,w2*", TextMatch.WILDCARD);
 			time ("m3-filter-narrow-widen", n, System.nanoTime () - start);
 			start = System.nanoTime ();
 			expected = data.reference (n);
@@ -153,9 +153,9 @@ public class Test_M3SortFilterDifferential {
 		Random random = new Random (77);
 		for (int seed = 0; seed < 40; seed++) {
 			Test_M3ColumnSort.Rows rows = new Test_M3ColumnSort.Rows (random.nextInt (300), seed, 2 + random.nextInt (9));
-			M3CellText text = Test_M3ColumnFilter.text (rows);
-			M3ColumnFilter filter = new M3ColumnFilter (4, rows.size (), text);
-			M3ColumnSort sort = new M3ColumnSort (4, filter);
+			CellText text = Test_M3ColumnFilter.text (rows);
+			ColumnFilter filter = new ColumnFilter (4, rows.size (), text);
+			ColumnSort sort = new ColumnSort (4, filter);
 			rows.keys (sort);
 			int keys = 1 + random.nextInt (3);
 			int [] c = new int [keys], d = new int [keys];
@@ -167,8 +167,8 @@ public class Test_M3SortFilterDifferential {
 			}
 			sort.setSortKeys (c, d);
 			int [] resets = {0, 0};
-			filter.addListener (change -> resets [0] += change.kind () == M3RowChange.RESET ? 1 : 0);
-			sort.addListener (change -> resets [1] += change.kind () == M3RowChange.RESET ? 1 : 0);
+			filter.addListener (change -> resets [0] += change.kind () == RowChange.RESET ? 1 : 0);
+			sort.addListener (change -> resets [1] += change.kind () == RowChange.RESET ? 1 : 0);
 			int filterPasses = Test_M3ColumnFilter.fullPasses (filter), sortPasses = Test_M3ColumnFilter.fullPasses (sort);
 			for (int step = 0; step < 40; step++) {
 				if (random.nextInt (3) == 0) Test_M3ColumnFilter.criterion (filter, random); else Test_M3ColumnSort.edit (rows, sort, random);

@@ -9,7 +9,7 @@ resource-lifetime problem; use Platform UI for JFace viewers and workbench parts
 [Source map](#swt-source-map) · [Concepts](#swt-key-concepts) ·
 [Quickstart](#swt-quickstart) · [Example](#swt-worked-example) ·
 [Development guide](docs/DEVELOPMENT_GUIDE.md) ·
-[Release preparation and coverage](docs/m3/RELEASE.md) ·
+[Release preparation and coverage](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/RELEASE.md) ·
 [Fork release-readiness gates](docs/RELEASE_READINESS.md) ·
 [Candidate packaging and naming](docs/RELEASE_PACKAGING.md) ·
 [Release preparation and suite inventory](docs/RELEASE_PREPARATION.md)
@@ -47,12 +47,12 @@ This is an experimental downstream fork of
 [Eclipse SWT](https://github.com/eclipse-platform/eclipse.platform.swt).
 The checkout contains SWT APIs/backends, fork-specific implementation work such
 as [ItemBitSet](bundles/org.eclipse.swt/Eclipse%20SWT/common/org/eclipse/swt/internal/residency/ItemBitSet.java),
-and [M3 recipe/inventory tooling](.m3/README.md). Source presence is not a claim
+and [M3 recipe/inventory tooling](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/.m3/README.md). Source presence is not a claim
 that every backend, default model or optimization is qualified. The
 [development guide](docs/DEVELOPMENT_GUIDE.md) distinguishes native rendering,
 visible-screen evidence, behavior tests and independent resource measurements.
 Upstream releases and badges below describe their linked upstream projects.
-The [SWT M3 release contract](docs/m3/RELEASE.md) fixes the naming, test-selection
+The [SWT M3 release contract](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/RELEASE.md) fixes the naming, test-selection
 and platform-evidence requirements for this fork. Its Windows/macOS CI archive
 is a candidate package; Linux and executed test evidence are separate gates.
 
@@ -564,8 +564,8 @@ Appended by the additive superset resolution (DOC recipe: keep ours, append the 
 [claesrosell/prototype-skija](https://github.com/claesrosell/prototype-skija) at `f262d18f088f` (2025-02-22), the
 Initiative 31 prototype-skija history before its 2025 rebase, carried in this repository's history as a merge parent.
 The text describes that donor branch, not this tree: here the native widgets stay on the M3 viewport, the Initiative 31
-look is a renderer and look-and-feel option ([ALL_WIDGETS_VIEWPORT_PLAN.md](docs/m3/ALL_WIDGETS_VIEWPORT_PLAN.md),
-[LOOK_AND_FEEL.md](docs/m3/LOOK_AND_FEEL.md)), and the `SkijaGC` operation mapping was adapted for the M3 GPU planes.
+look is a renderer and look-and-feel option ([ALL_WIDGETS_VIEWPORT_PLAN.md](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/ALL_WIDGETS_VIEWPORT_PLAN.md),
+[LOOK_AND_FEEL.md](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/LOOK_AND_FEEL.md)), and the `SkijaGC` operation mapping was adapted for the M3 GPU planes.
 
 ## SWT on Custom-Rendered Widgets With Ski(j)a
 

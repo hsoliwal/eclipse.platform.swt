@@ -100,7 +100,7 @@ final class TableSplice {
 	}
 
 	/**
-	 * Replaces the rows [at, at + removed) of a mediated Table by inserted empty rows. The caller validated the run (M3Patch.apply: inside the
+	 * Replaces the rows [at, at + removed) of a mediated Table by inserted empty rows. The caller validated the run (RowPatch.apply: inside the
 	 * rows, not empty).
 	 * @return false when the caller is to make the edit through the item API
 	 */

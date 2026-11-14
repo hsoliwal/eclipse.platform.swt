@@ -19,12 +19,12 @@ import java.util.*;
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
- * Enhanced M3 language API, leaf 12: <code>org.eclipse.swt.m3.M3Collation</code> and
- * <code>M3SortKeys</code>. Sorts the 1,000,000 products by product name with the collation of
+ * Enhanced M3 language API, leaf 12: <code>org.eclipse.swt.m3.Collation</code> and
+ * <code>SortKeys</code>. Sorts the 1,000,000 products by product name with the collation of
  * the chosen locale: in German "Äpfel" sorts with "apple", in Swedish after "Zucchini". The
  * keys are built once per locale; the stable order keeps the product numbers ascending in a group.
  */
@@ -76,11 +76,11 @@ public static void main (String [] args) {
 		long start = System.nanoTime ();
 		String [] names = new String [COUNT];
 		Arrays.setAll (names, i -> FRUITS [i % FRUITS.length]);
-		M3SortKeys keys = M3Collation.keys (names, l);
+		SortKeys keys = Collation.keys (names, l);
 		order = keys.sortedOrder ();
 		long ms = (System.nanoTime () - start) / 1_000_000;
 		StringBuilder groups = new StringBuilder ();
-		for (int f : M3Collation.keys (FRUITS, l).sortedOrder ()) groups.append (groups.length () == 0 ? "" : " < ").append (FRUITS [f]);
+		for (int f : Collation.keys (FRUITS, l).sortedOrder ()) groups.append (groups.length () == 0 ? "" : " < ").append (FRUITS [f]);
 		status.setText (l.getDisplayLanguage (Locale.ENGLISH) + ": " + keys.size () + " keys and the stable order in " + ms + " ms\n" + groups);
 		table.clearAll ();
 		table.setTopIndex (0);

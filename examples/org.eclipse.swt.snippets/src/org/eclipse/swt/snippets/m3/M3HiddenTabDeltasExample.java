@@ -19,7 +19,7 @@ import java.util.logging.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
@@ -80,11 +80,11 @@ public static void main (String [] args) {
 		row.setText (1, "product " + id);
 		row.setText (2, String.format (Locale.ROOT, "%.2f", ((id * 37 + tick) % 10000) / 100.0));
 	};
-	model.apply (M3Patch.builder (M3Patch.ROOT).update (0, 1).build (), labels);
+	model.apply (RowPatch.builder (RowPatch.ROOT).update (0, 1).build (), labels);
 	table.setTopIndex (rows / 2);
 	table.addListener (SWT.Paint, event -> paints++);
 	pump (display);
-	long anchor = model.id (M3Patch.ROOT, table.getTopIndex ());
+	long anchor = model.id (RowPatch.ROOT, table.getTopIndex ());
 
 	/* the view goes to the background: the overview tab comes to the front */
 	folder.setSelection (0);
@@ -96,8 +96,8 @@ public static void main (String [] args) {
 	long nextId = rows;
 	long start = System.nanoTime ();
 	for (int k = 0; k < deltas; k++) {
-		int size = model.size (M3Patch.ROOT), kind = random.nextInt (100);
-		M3Patch.Builder builder = M3Patch.builder (M3Patch.ROOT);
+		int size = model.size (RowPatch.ROOT), kind = random.nextInt (100);
+		RowPatch.Builder builder = RowPatch.builder (RowPatch.ROOT);
 		if (kind < 70) {
 			builder.update (random.nextInt (size), 1);
 		} else if (kind < 85) {
@@ -113,10 +113,10 @@ public static void main (String [] args) {
 	}
 	long streamMillis = (System.nanoTime () - start) / 1_000_000;
 	pump (display);
-	long topWhileHidden = model.id (M3Patch.ROOT, table.getTopIndex ());
+	long topWhileHidden = model.id (RowPatch.ROOT, table.getTopIndex ());
 	String hidden = String.format (Locale.ROOT,
 		"hidden: %,d deltas in %,d ms (median %,d us, p99 %,d us), %,d labels asked, %,d paints, %,d rows, top row id %d",
-		deltas, streamMillis, percentile (nanos, 50), percentile (nanos, 99), labelsAsked, paints, model.size (M3Patch.ROOT),
+		deltas, streamMillis, percentile (nanos, 50), percentile (nanos, 99), labelsAsked, paints, model.size (RowPatch.ROOT),
 		topWhileHidden);
 	labelsAsked = 0;
 	paints = 0;
@@ -126,7 +126,7 @@ public static void main (String [] args) {
 	folder.setSelection (1);
 	pump (display);
 	long showMillis = (System.nanoTime () - shown) / 1_000_000;
-	long top = model.id (M3Patch.ROOT, table.getTopIndex ());
+	long top = model.id (RowPatch.ROOT, table.getTopIndex ());
 	String back = String.format (Locale.ROOT,
 		"shown: %d ms to the first idle loop, %,d paints, %,d labels asked, top row id %d (%s; id on top when hidden %d)",
 		showMillis, paints, labelsAsked, top, top == anchor ? "re-anchored" : "moved", anchor);

@@ -19,11 +19,11 @@ import java.util.*;
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.m3.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
- * Enhanced M3 API, leaf 14: <code>org.eclipse.swt.m3.M3ProxyModel</code>. A filtered and sorted
+ * Enhanced M3 API, leaf 14: <code>org.eclipse.swt.m3.ProxyModel</code>. A filtered and sorted
  * view of the 1,000,000 source products, kept as int lanes and bound to a virtual table: filter
  * by a name fragment, then sort by price or by German collation of the name. The status maps
  * between view rows and source rows.
@@ -69,8 +69,8 @@ public static void main (String [] args) {
 	Arrays.setAll (lower, f -> FRUITS [f].toLowerCase (Locale.ROOT));
 	String [] names = new String [COUNT];
 	Arrays.setAll (names, i -> FRUITS [i % FRUITS.length]);
-	M3SortKeys [] german = new M3SortKeys [1];
-	M3ProxyModel model = new M3ProxyModel (COUNT);
+	SortKeys [] german = new SortKeys [1];
+	ProxyModel model = new ProxyModel (COUNT);
 	Runnable rebuild = () -> {
 		long start = System.nanoTime ();
 		String fragment = filter.getText ().trim ().toLowerCase (Locale.ROOT);
@@ -78,7 +78,7 @@ public static void main (String [] args) {
 		if (!fragment.isEmpty ()) model.addFilter (s -> lower [s % FRUITS.length].contains (fragment));
 		if (sort.getSelectionIndex () == 1) model.addSort ((a, b) -> Long.compare (a * 37L % 10000, b * 37L % 10000));
 		if (sort.getSelectionIndex () == 2) {
-			if (german [0] == null) german [0] = M3Collation.keys (names, Locale.GERMAN);
+			if (german [0] == null) german [0] = Collation.keys (names, Locale.GERMAN);
 			model.addSort (german [0]);
 		}
 		model.refresh ();

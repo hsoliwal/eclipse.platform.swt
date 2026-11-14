@@ -56,10 +56,10 @@ The scale-only `Test_M3SortFilterDifferential` runs its existing seeded campaign
 up to one million rows when the default suite selects it; qualify the added
 runtime and memory cost on each release platform.
 
-Use the [existing differential harness](../../docs/m3/VIEWPORT_DIFFERENTIAL_HARNESS.md)
-and [release guide](../../docs/m3/RELEASE.md) to supply the independent oracle,
+Use the [existing differential harness](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/VIEWPORT_DIFFERENTIAL_HARNESS.md)
+and [release guide](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/RELEASE.md) to supply the independent oracle,
 mode and budget. A missing recording may be reported as a JUnit skip, so the
-[exact M3 report gate](../../docs/m3/release/REPORT_GATE.md) must follow a
+[exact M3 report gate](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/release/REPORT_GATE.md) must follow a
 successful complete `AllTests` run. It requires 245 passes in viewport mode and
 244 passes plus the existing one-method RowMath skip in original mode; all 11
 recorded-oracle methods must pass in both modes. The focused ordinary-only
@@ -84,7 +84,7 @@ compiled. The recorded 7 November 2026 run used the actual GTK Java source set,
 Java 21, JUnit Platform 1.14.4 and JaCoCo 0.8.15. It passed 77/77 tests with zero
 skips or aborts. It did not execute native widget tests. Its exact class/source
 scope and raw counters are in
-[HEADLESS_20261107.json](../../docs/m3/enhanced-api/coverage/HEADLESS_20261107.json).
+[HEADLESS_20261107.json](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/enhanced-api/coverage/HEADLESS_20261107.json).
 That historical run predates the two added ItemRange methods and one added
 RowExtents method in the reviewed PR #324 source. All three remain required
 in current reports, and the ItemRange adjacency repair needs fresh Java and
@@ -113,4 +113,4 @@ manually increased percentages. The per-widget coverage scripts under
 not a current release test result.
 
 The complete SWT M3 release requirements are in
-[RELEASE.md](../../docs/m3/RELEASE.md).
+[RELEASE.md](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/RELEASE.md).

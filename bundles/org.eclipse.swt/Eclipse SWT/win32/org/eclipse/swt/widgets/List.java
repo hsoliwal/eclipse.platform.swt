@@ -3556,7 +3556,7 @@ void handleDPIChange(Event event, float scalingFactor) {
 }
 
 /*
- * The model seam (docs/m3/enhanced-api/LEAF19_MODEL_SEAM.md, step 3): one edit run, which M3Model.apply (M3Patch)
+ * The model seam (docs/m3/enhanced-api/LEAF19_MODEL_SEAM.md, step 3): one edit run, which M3Model.apply (RowPatch)
  * uses for a widget with a viewport. The rows [at, at + removed) leave and the inserted strings enter at `at`; the
  * top row stays the same row. Without a viewport the run goes through the item API, with the top row put back.
  */

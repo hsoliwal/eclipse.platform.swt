@@ -19,7 +19,7 @@ import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.m3.M3Patch;
+import org.eclipse.swt.internal.RowPatch;
 import org.eclipse.swt.widgets.*;
 import org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_ViewportDifferential.Scene;
 
@@ -144,7 +144,7 @@ final class TableHiddenScripts {
 		}
 
 		static void apply (Table table, int at, int removed, long [] ids) {
-			M3Patch.Builder builder = M3Patch.builder (M3Model.ROOT);
+			RowPatch.Builder builder = RowPatch.builder (M3Model.ROOT);
 			if (removed > 0) builder.remove (at, removed);
 			if (ids.length > 0) builder.insert (at, ids);
 			M3Model.of (table).apply (builder.build (), (id, row) -> row.setText (0, "row " + id));
