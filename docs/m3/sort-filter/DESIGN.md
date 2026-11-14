@@ -200,3 +200,12 @@ logs each generation at FINE through `SwtLog` (`org.eclipse.swt.m3.M3ColumnFilte
   `clearAll` (M3Patch over the CSR index); `ViewerFiltersDialog` (named filter sets; EPL-1.0 header kept verbatim);
   the M3JDK adapters once `m3/collections` ships `M3FlatteningView`/`M3WindowView` (rename by recipe); JFace
   `TableViewer`/`TreeViewer` comparator and filter bridges over the same lanes (one model).
+
+## 8. Filter-row fix (2026-10-31)
+
+`Test_M3SortFilterWidgets.test_filterRowFollowsColumnsAndFilters` failed on master in both modes. `M3FilterRow`
+re-laid its fields out only on resizes, so a move of the row or the control (the first GridLayout pass places the row
+after the constructor's layout) left the fields offset by the move (original mode: x 152 instead of 157); the row now
+listens to `SWT.Move` of itself and the control (new test `test_filterRowFollowsMovesOfTheRowAndTheControl`). The test's
+wait for the asynchronous filter, lost in WIP checkpoint 3d26083fcf3, is back (viewport mode). Result: the class 6/6 and
+with `Test_M3ColumnFilter` and `Test_M3FilterAsync` 27/27 in viewport and original mode (PR #303).

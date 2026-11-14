@@ -422,6 +422,23 @@ public class Test_M3SortFilterWidgets {
 	}
 
 	@Test
+	public void test_filterRowFollowsMovesOfTheRowAndTheControl () {
+		M3ColumnFilter filter = new M3ColumnFilter (3, ROWS, this::cell);
+		shell.setLayout (null);
+		Table table = table (SWT.NONE);
+		table.setBounds (10, 40, 400, 200);
+		M3FilterRow row = new M3FilterRow (shell, table, filter);
+		row.setBounds (10, 10, 400, 24);
+		shell.open ();
+		drain ();
+		int x = row.getText (1).getLocation ().x;
+		table.setLocation (30, 40);
+		assertEquals (x + 20, row.getText (1).getLocation ().x, "the control moved right");
+		row.setLocation (20, 10);
+		assertEquals (x + 10, row.getText (1).getLocation ().x, "the row moved right");
+	}
+
+	@Test
 	public void test_filterRowFollowsColumnsAndFilters () {
 		M3ColumnFilter filter = new M3ColumnFilter (3, ROWS, this::cell);
 		Table table = table (SWT.H_SCROLL);
@@ -443,6 +460,7 @@ public class Test_M3SortFilterWidgets {
 		assertTrue (row.getText (1).getLocation ().x < row.getText (0).getLocation ().x);
 		table.getHorizontalBar ().notifyListeners (SWT.Selection, new Event ());
 		row.getText (1).setText ("N12");
+		waitFor (() -> filter.isActive (1));
 		new TableColumn (table, SWT.NONE).setWidth (40);
 		row.refresh ();
 		table.getColumn (3).dispose ();
