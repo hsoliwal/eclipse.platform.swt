@@ -1,0 +1,80 @@
+name: SWT original mobile Text Java/Android/UIKit contract gate
+on:
+  pull_request:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT/mobile/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/android/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/ios/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT PI/ios/**'
+      - 'tests/org.eclipse.swt.tests.mobile/**'
+      - 'mobile/**'
+      - '.github/workflows/m3-mobile-original-text.yml'
+  push:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT/mobile/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/android/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/ios/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT PI/ios/**'
+      - 'tests/org.eclipse.swt.tests.mobile/**'
+      - 'mobile/**'
+      - '.github/workflows/m3-mobile-original-text.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-text-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: hsoliwal/nebula
+          ref: 03146b76a5c502d838c8b7e8a4fac71c78188a42
+          path: nebula
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify original Text and SWT/Nebula source contracts
+        run: mvn -B -ntp -f mobile/pom.xml -Pcontracts "-Dnebula.checkout=$GITHUB_WORKSPACE/nebula" clean verify
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swt-mobile-original-text-junit
+          path: mobile/target/surefire-reports/**
+          if-no-files-found: warn
+  android-java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: android-actions/setup-android@v3
+      - name: Install real Android API 35
+        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Compile original Text and native Android EditText host
+        run: mvn -B -ntp -f mobile/pom.xml -Dmobile.platform=android "-Dandroid.sdk=$ANDROID_SDK_ROOT" clean verify
+  ios-java-and-uikit:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile original Text and UIKit JNI interface
+        run: mvn -B -ntp -f mobile/pom.xml -Dmobile.platform=ios clean verify
+      - name: Compile real Apple UIKit bridge and generated JNI declarations
+        run: bash mobile/ios/build.sh iphonesimulator arm64 "$GITHUB_WORKSPACE/mobile/target/swt-mobile-ios.jar"
