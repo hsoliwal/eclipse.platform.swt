@@ -268,12 +268,12 @@ public final class MobileWidgetRuntime implements AutoCloseable {
 		try {
 			host.post(() -> {
 				checkThread();
-				try {
-					if (lifecycle == Lifecycle.DISPOSED) work.cancel(false);
-					else work.run();
-				} finally {
-					synchronized (pendingSync) { pendingSync.remove(work); }
-				}
+				// A running syncExec is no longer a queued waiter. If it
+				// disposes the display itself, its caller must still observe
+				// completion rather than an artificial cancellation.
+				synchronized (pendingSync) { pendingSync.remove(work); }
+				if (lifecycle == Lifecycle.DISPOSED) work.cancel(false);
+				else work.run();
 			});
 		} catch (RuntimeException | Error failure) {
 			synchronized (pendingSync) { pendingSync.remove(work); }
