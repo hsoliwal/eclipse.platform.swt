@@ -464,6 +464,7 @@ public final class MobileCoreContractTest {
 			require(editor.getText().equals(old) && !platform.controls.get(peer).editable,
 					"Read-only original Text rejects native input and republishes canonical text");
 			editor.setEditable(true);
+			editor.setTextLimit(Text.LIMIT);
 			editor.setText("line1\nline2");
 			require(editor.getLineCount() == 2 && editor.getLineAtOffset(6) == 1
 					&& editor.getOffsetAtLine(1) == 6,
@@ -473,7 +474,13 @@ public final class MobileCoreContractTest {
 			require(editor.getCharCount() == 4, "Supplementary Unicode retains UTF-16 width");
 			require(editor.getText(1, 2).equals("\uD83D\uDE03"),
 					"Inclusive getText range preserves complete surrogate pair");
-			expectSwt(SWT.ERROR_CANNOT_BE_ZERO, () -> editor.setTextLimit(0));
+			try {
+				editor.setTextLimit(0);
+				throw new AssertionError("Zero TextLimit must fail");
+			} catch (IllegalArgumentException expected) {
+				require(editor.getTextLimit() == Text.LIMIT,
+						"Invalid TextLimit does not mutate the editor");
+			}
 			Control child = editor;
 			shell.dispose();
 			require(child.isDisposed(), "Parent disposal closes original Text native peer");
