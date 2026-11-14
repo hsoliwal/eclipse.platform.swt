@@ -246,6 +246,13 @@ public class Display extends Device implements Executor {
 				c.sendEvent(type, e);
 			});
 		}
+		@Override public void textChanged(long peer, String text, int selectionStart, int selectionEnd) {
+			enqueue(() -> {
+				Control c = control(peer);
+				if (c instanceof Text editor && !editor.isDisposed())
+					editor.nativeText(text, selectionStart, selectionEnd);
+			});
+		}
 		@Override public void resize(long peer, int width, int height) { enqueue(() -> { Control c = control(peer); if (c != null) c.nativeResize(width, height); }); }
 		@Override public void paint(long peer) { enqueue(() -> { Control c = control(peer); if (c != null) c.redraw(); }); }
 		@Override public void close(long peer) { enqueue(() -> { Control c = control(peer); if (c instanceof Shell shell) shell.close(); }); }
