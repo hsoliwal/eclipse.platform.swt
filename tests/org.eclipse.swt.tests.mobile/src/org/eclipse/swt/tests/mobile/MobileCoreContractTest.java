@@ -37,6 +37,7 @@ public final class MobileCoreContractTest {
 		testOwnedShellCoordinateMapping();
 		testMobileButtonLabelContracts();
 		testMobileProgressAndScaleContracts();
+		testMobileListContracts();
 		System.out.println("PASS: "+assertions+" SWT/Nebula owner-contract assertions. Native device qualification is separate.");
 	}
 	static void testOriginalWidgetAndPainting()throws Exception {
@@ -314,5 +315,77 @@ public final class MobileCoreContractTest {
 				"Range widgets release all native peers and images");
 		require(platform.openedGraphics == platform.closedGraphics,
 				"Range widgets close every native graphics context");
+	}
+
+	/** Original List's native-peer input, segmented state and virtual row contracts. */
+	static void testMobileListContracts() {
+		ContractPlatform platform = new ContractPlatform();
+		MobileRuntime.install(platform);
+		Display display = new Display();
+		try {
+			Shell shell = new Shell(display);
+			org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List(shell, SWT.MULTI | SWT.V_SCROLL);
+			long peer = platform.lastCreated;
+			list.setBounds(0, 0, 280, 120);
+			require((list.getStyle() & SWT.V_SCROLL) != 0, "Mobile List retains SWT scroll style");
+			require(platform.controls.get(peer).kind == MobilePlatform.CANVAS, "List owns actual Android/UIKit paintable input peer");
+			list.setItems("alpha", "beta", "gamma", "delta");
+			list.add("extra", 2);
+			require(Arrays.equals(list.getItems(), new String[] {"alpha", "beta", "extra", "gamma", "delta"}),
+					"List insert preserves indexed array contents");
+			list.setSelection(new int[] {1, 3});
+			require(Arrays.equals(list.getSelectionIndices(), new int[] {1, 3}),
+					"List multi-selection returns stable sorted bit indices");
+			list.remove(0);
+			require(Arrays.equals(list.getSelectionIndices(), new int[] {0, 2}),
+					"List removal shifts selected logical indices without notifying");
+			list.clear(1);
+			require(list.getItem(1).isEmpty(), "List clear retains logical slot");
+			AtomicInteger selections = new AtomicInteger();
+			list.addListener(SWT.Selection, e -> selections.incrementAndGet());
+			shell.open();
+			drain(display);
+			require(platform.controls.get(peer).frame != null, "List rows paint through real SWT mobile Image/GC");
+			list.setSelection(1);
+			require(selections.get() == 0, "Programmatic List selection is silent");
+			int y = list.getItemHeight() / 2;
+			platform.sink.input(peer, SWT.MouseDown, 10, y, 1, 0, '\0', 0, 1, 1);
+			platform.sink.input(peer, SWT.MouseUp, 10, y, 1, 0, '\0', 0, 1, 2);
+			drain(display);
+			require(list.getSelectionIndex() == 0 && selections.get() == 1,
+					"Native List tap updates index and emits Selection once");
+			org.eclipse.swt.widgets.List virtual = new org.eclipse.swt.widgets.List(
+					shell, SWT.SINGLE | SWT.VIRTUAL | SWT.V_SCROLL);
+			virtual.setBounds(0, 0, 280, 100);
+			AtomicInteger loaded = new AtomicInteger();
+			virtual.addListener(SWT.SetData, e -> {
+				loaded.incrementAndGet();
+				virtual.setItem(e.index, "virtual-" + e.index);
+			});
+			virtual.setItemCount(1_000_000_000);
+			virtual.setTopIndex(999_999_998);
+			drain(display);
+			require(loaded.get() <= 7 && loaded.get() >= 2,
+					"Billion-row virtual List materializes only visible SetData cells");
+			require(virtual.getItem(999_999_999).equals("virtual-999999999"),
+					"VIRTUAL GetItem resolves the final logical index");
+			int previous = loaded.get();
+			virtual.clear(999_999_999);
+			require(virtual.getItem(999_999_999).equals("virtual-999999999")
+					&& loaded.get() == previous + 1, "Virtual clear triggers exactly one new SetData");
+			virtual.setItemCount(1);
+			require(virtual.getItemCount() == 1 && virtual.getTopIndex() == 0,
+					"Sparse virtual List shrinks from a billion without per-row enumeration");
+			shell.dispose();
+			require(list.isDisposed() && virtual.isDisposed(),
+					"Original list native owners disposed with their SWT parent");
+		} finally {
+			display.dispose();
+			MobileRuntime.uninstall(platform);
+		}
+		require(platform.controls.isEmpty() && platform.images.isEmpty(),
+				"List releases native control and image ownership");
+		require(platform.openedGraphics == platform.closedGraphics,
+				"List closes all native SWT graphics contexts");
 	}
 }
