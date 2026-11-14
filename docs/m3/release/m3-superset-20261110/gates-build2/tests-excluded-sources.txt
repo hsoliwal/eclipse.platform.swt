@@ -1,9 +1,0 @@
-JUnit Tests/org/eclipse/swt/tests/junit/performance/BenchmarkSwtMultithreading.java
-JUnit Tests/org/eclipse/swt/tests/junit/performance/PerformanceTests.java
-JUnit Tests/org/eclipse/swt/tests/junit/performance/SwtPerformanceTestCase.java
-JUnit Tests/org/eclipse/swt/tests/junit/performance/Test_org_eclipse_swt_widgets_Tree.java
-JUnit Tests/org/eclipse/swt/tests/junit/performance/Test_org_eclipse_swt_widgets_Tree_Binary.java
-JUnit Tests/org/eclipse/swt/tests/junit/performance/Test_org_eclipse_swt_widgets_Tree_Binary_Virtual.java
-JUnit Tests/org/eclipse/swt/tests/junit/performance/Test_org_eclipse_swt_widgets_Tree_Star.java
-JUnit Tests/org/eclipse/swt/tests/junit/performance/Test_org_eclipse_swt_widgets_Tree_Star_Virtual.java
-JUnit Tests/org/eclipse/swt/tests/junit/performance/Test_situational.java

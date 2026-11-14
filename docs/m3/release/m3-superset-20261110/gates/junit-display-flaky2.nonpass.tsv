@@ -1,5 +1,0 @@
-mark	node	parent	test	message
-ABORT	leaf	JUnit Jupiter/Test_ItemResidencyPrint	printPixelHashIdenticalAfterRoundTrip()	Assumption failed: capture of 'before' cut off by the desktop after 5 attempts
-ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_dnd_Clipboard	test_setContentsBothClipboards()	Assumption failed: assumption is not true
-FAIL	container	Test_org_eclipse_swt_dnd_Clipboard/test_getAvailableTypes(int)	[1] 1	expected: <true> but was: <false>
-ABORT	leaf	JUnit Jupiter/Test_org_eclipse_swt_dnd_Clipboard	test_getContentsBothClipboards()	Assumption failed: assumption is not true

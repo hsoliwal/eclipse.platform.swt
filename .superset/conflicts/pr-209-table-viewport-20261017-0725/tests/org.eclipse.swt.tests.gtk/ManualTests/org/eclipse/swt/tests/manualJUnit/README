@@ -1,3 +1,0 @@
- Some tests can't be automated and have to be tested manually by visual inspection.
- 
- See MJ_root's javadoc for detail. (MJ = manual JUnit).
