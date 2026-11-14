@@ -1,0 +1,71 @@
+name: SWT mobile Java and Android
+on:
+  pull_request:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/mobile/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/android/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/ios/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT PI/common/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT PI/ios/**'
+      - 'm3/mobile/**'
+      - 'tools/mobile/**'
+      - 'tests/org.eclipse.swt.tests/mobile/**'
+      - '.github/workflows/mobile-java-android.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  java-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Obtain the checksum-pinned JUnit runner
+        run: |
+          mkdir -p target/mobile-tools
+          curl --fail --location --retry 3 https://repo.maven.apache.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.2/junit-platform-console-standalone-1.10.2.jar -o target/mobile-tools/junit.jar
+      - name: Execute shared SWT contracts and compare generated JNI declarations
+        run: python3 tools/mobile/verify-java.py --jdk "$JAVA_HOME" --junit target/mobile-tools/junit.jar
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swt-mobile-java-contracts
+          path: target/mobile-java/
+  android-native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install the declared Android compilation target
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Build real Android application and instrumentation APKs
+        run: python3 m3/mobile/android/build-apk.py --swt-checkout . --android-sdk "$ANDROID_HOME" --jdk "$JAVA_HOME" --output target/mobile-android
+      - name: Execute native paint, pointer and lifecycle assertions
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 35
+          target: default
+          arch: x86_64
+          emulator-port: 5554
+          emulator-boot-timeout: 900
+          disable-animations: true
+          script: python3 m3/mobile/android/run-instrumentation.py --build-output target/mobile-android --adb "$ANDROID_HOME/platform-tools/adb" --serial emulator-5554
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swt-mobile-android-native
+          path: target/mobile-android/

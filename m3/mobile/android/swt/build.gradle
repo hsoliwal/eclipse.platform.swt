@@ -1,0 +1,30 @@
+plugins { id 'com.android.library' }
+
+def swtRoot = providers.gradleProperty('swtCheckout').map { file(it) }
+        .getOrElse(file('../../../..'))
+def swtSource = new File(swtRoot, 'bundles/org.eclipse.swt/Eclipse SWT')
+def commonSources = layout.buildDirectory.dir('generated/sources/swtCommon')
+def prepareCommonSources = tasks.register('prepareCommonSources', Sync) {
+    def manifest = new File(swtRoot, 'm3/mobile/common-sources.txt')
+    inputs.file(manifest)
+    from(swtRoot) {
+        include manifest.readLines('UTF-8').findAll { it.endsWith('.java') }
+    }
+    into(commonSources)
+}
+
+android {
+    namespace 'org.eclipse.swt.android'
+    compileSdk 35
+    defaultConfig { minSdk 35 }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    sourceSets.main {
+        java.srcDirs = [commonSources, new File(swtSource, 'mobile'), new File(swtSource, 'android')]
+        manifest.srcFile 'src/main/AndroidManifest.xml'
+    }
+}
+tasks.named('preBuild').configure { dependsOn(prepareCommonSources) }
+tasks.withType(JavaCompile).configureEach { options.compilerArgs.add('-XDstringConcat=inline') }

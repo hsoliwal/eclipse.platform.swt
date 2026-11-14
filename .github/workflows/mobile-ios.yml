@@ -1,0 +1,33 @@
+name: SWT iOS native bridge
+on:
+  pull_request:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT/mobile/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/ios/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT PI/ios/**'
+      - 'tests/org.eclipse.swt.tests/ios/**'
+      - 'tools/mobile/verify-ios.sh'
+      - '.github/workflows/mobile-ios.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-simulator:
+    runs-on: macos-14
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile UIKit JNI bridge and execute CoreGraphics simulator assertions
+        run: bash tools/mobile/verify-ios.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-native-bridge-and-render-test
+          path: target/mobile-ios/
+          if-no-files-found: warn
