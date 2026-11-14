@@ -23,6 +23,7 @@ import org.eclipse.swt.internal.mobile.MobilePlatform;
 final class ContractPlatform implements MobilePlatform {
 	EventSink sink;
 	Thread owner;
+	String clipboard = "";
 	long next = 1, lastCreated;
 	int connects, disconnects, openedGraphics, closedGraphics;
 	final Map<Long, Peer> controls = new HashMap<>();
@@ -48,6 +49,8 @@ final class ContractPlatform implements MobilePlatform {
 	@Override public void setVisible(long id,boolean visible){peer(id).visible=visible;}
 	@Override public void setEnabled(long id,boolean enabled){peer(id).enabled=enabled;}
 	@Override public void setTitle(long id,String title){peer(id).title=title;}
+	@Override public String getClipboardText(){check();return clipboard;}
+	@Override public void setClipboardText(String text){check();clipboard=java.util.Objects.requireNonNull(text);}
 	@Override public void textContent(long id,String text,int start,int end,boolean editable,int limit,String hint){
 		Peer p=peer(id);
 		if(p.kind!=TEXT)throw new AssertionError("Only a real TEXT peer can receive native text");
