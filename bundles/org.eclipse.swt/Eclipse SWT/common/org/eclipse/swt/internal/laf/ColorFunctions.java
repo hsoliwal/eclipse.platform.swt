@@ -25,11 +25,11 @@ import java.util.function.*;
  * <code>ColorFunctions</code>, Apache-2.0, FormDev Software GmbH), which follow the Less colour functions; the code is
  * written for the LF2 loader (packed ARGB ints, HSL in degrees and percentage points).
  */
-final class M3ColorFunctions {
+final class ColorFunctions {
 	/** The function names handled here. */
 	static final Set<String> NAMES = Set.of ("rgb", "rgba", "hsl", "hsla", "saturate", "desaturate", "spin", "tint", "shade", "fadein", "fadeout");
 
-	private M3ColorFunctions () {
+	private ColorFunctions () {
 	}
 
 	/**

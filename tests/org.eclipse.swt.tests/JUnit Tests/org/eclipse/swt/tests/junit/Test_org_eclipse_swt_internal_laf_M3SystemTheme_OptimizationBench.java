@@ -32,13 +32,13 @@ import org.junit.jupiter.api.*;
  * <code>-Dswt.allwidgets.bench.theme=1000,5000</code> (the per-process window quota caps the count below 10^4).
  */
 public class Test_org_eclipse_swt_internal_laf_M3SystemTheme_OptimizationBench {
-	static final int BACKGROUND = M3UIKeys.intern ("Table.background", M3UIKeys.COLOR), FOREGROUND = M3UIKeys.intern ("Table.foreground", M3UIKeys.COLOR);
-	static final int SELECTION = M3UIKeys.intern ("Table.selectionBackground", M3UIKeys.COLOR), GRID = M3UIKeys.intern ("Table.gridColor", M3UIKeys.COLOR);
-	static final int ROW_HEIGHT = M3UIKeys.intern ("Table.rowHeight", M3UIKeys.INTEGER);
+	static final int BACKGROUND = UIKeys.intern ("Table.background", UIKeys.COLOR), FOREGROUND = UIKeys.intern ("Table.foreground", UIKeys.COLOR);
+	static final int SELECTION = UIKeys.intern ("Table.selectionBackground", UIKeys.COLOR), GRID = UIKeys.intern ("Table.gridColor", UIKeys.COLOR);
+	static final int ROW_HEIGHT = UIKeys.intern ("Table.rowHeight", UIKeys.INTEGER);
 	static final int [] PAINT = {BACKGROUND, FOREGROUND, SELECTION, GRID}, METRIC = {ROW_HEIGHT};
 
 	/* the delegate: four colours and one metric, read at install */
-	static final class Cell implements M3ComponentUI {
+	static final class Cell implements ComponentUI {
 		int background, foreground, selection, grid, rowHeight;
 
 		@Override

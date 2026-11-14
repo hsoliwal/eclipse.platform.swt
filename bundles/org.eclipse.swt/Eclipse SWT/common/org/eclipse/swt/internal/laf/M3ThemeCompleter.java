@@ -21,7 +21,7 @@ import java.util.*;
 /**
  * Completes an LLM's theme proposal into a full look and feel (docs/m3/look-and-feel/GENERATOR.md), on the CPU and
  * deterministically: missing palette colours, WCAG 2.x contrast (4.5:1 for text, 3:1 for UI elements, solved by
- * bisection over OKLCH lightness, {@link M3Oklch}), hover, pressed, disabled, focus and inactive-selection states by
+ * bisection over OKLCH lightness, {@link Oklch}), hover, pressed, disabled, focus and inactive-selection states by
  * OKLCH arithmetic, metrics from the density and the font size, and a value for every key of the LF2 catalogue
  * ({@link LookAndFeelThemes#KEYS}). The same accepted input and {@link #VERSION} give the same theme and the same
  * {@link Theme#hash()}.
@@ -84,39 +84,39 @@ public final class M3ThemeCompleter {
 	 * ratio; black or white when no lightness of its hue reaches it.
 	 */
 	public static int ensure (int colour, int against, double ratio) {
-		if (M3Palette.contrast (colour, against) >= ratio) return colour;
-		boolean lighter = M3Palette.luminance (colour) >= M3Palette.luminance (against);
+		if (Palette.contrast (colour, against) >= ratio) return colour;
+		boolean lighter = Palette.luminance (colour) >= Palette.luminance (against);
 		int solved = solve (colour, against, ratio, lighter);
 		if (solved == 0) solved = solve (colour, against, ratio, !lighter);
-		return solved != 0 ? solved : M3Palette.readableOn (against);
+		return solved != 0 ? solved : Palette.readableOn (against);
 	}
 
 	/* the least lightness move towards white (lighter) or black that reaches the ratio, 0 when even the end fails */
 	private static int solve (int colour, int against, double ratio, boolean lighter) {
-		double [] lch = M3Oklch.of (colour);
+		double [] lch = Oklch.of (colour);
 		double end = lighter ? 1 : 0;
-		if (M3Palette.contrast (M3Oklch.argb (end, lch [1], lch [2]), against) < ratio) return 0;
+		if (Palette.contrast (Oklch.argb (end, lch [1], lch [2]), against) < ratio) return 0;
 		double fail = lch [0], pass = end;
 		for (int i = 0; i < 32; i++) {
 			double middle = (fail + pass) / 2;
-			if (M3Palette.contrast (M3Oklch.argb (middle, lch [1], lch [2]), against) >= ratio) pass = middle;
+			if (Palette.contrast (Oklch.argb (middle, lch [1], lch [2]), against) >= ratio) pass = middle;
 			else fail = middle;
 		}
-		return M3Oklch.argb (pass, lch [1], lch [2]);
+		return Oklch.argb (pass, lch [1], lch [2]);
 	}
 
 	/** A colour mixed with another in Oklab: <code>0</code> is the first, <code>1</code> the second. */
 	public static int mix (int a, int b, double t) {
-		double [] x = M3Oklch.of (a), y = M3Oklch.of (b);
+		double [] x = Oklch.of (a), y = Oklch.of (b);
 		double xa = x [1] * Math.cos (Math.toRadians (x [2])), xb = x [1] * Math.sin (Math.toRadians (x [2]));
 		double ya = y [1] * Math.cos (Math.toRadians (y [2])), yb = y [1] * Math.sin (Math.toRadians (y [2]));
 		double ma = xa + (ya - xa) * t, mb = xb + (yb - xb) * t;
-		return M3Oklch.argb (x [0] + (y [0] - x [0]) * t, Math.hypot (ma, mb), Math.toDegrees (Math.atan2 (mb, ma)));
+		return Oklch.argb (x [0] + (y [0] - x [0]) * t, Math.hypot (ma, mb), Math.toDegrees (Math.atan2 (mb, ma)));
 	}
 
 	private static int mirror (int colour) {
-		double [] lch = M3Oklch.of (colour);
-		return M3Oklch.argb (1 - lch [0], lch [1], lch [2]);
+		double [] lch = Oklch.of (colour);
+		return Oklch.argb (1 - lch [0], lch [1], lch [2]);
 	}
 
 	static String hash (String canonical) {
@@ -138,9 +138,9 @@ public final class M3ThemeCompleter {
 		Base (M3ThemeSpec spec) {
 			notes.addAll (spec.repairs ());
 			int given = spec.colour (0);
-			boolean dark = spec.dark () != null ? spec.dark () : M3Oklch.lightness (given) < 0.5;
-			if (given != M3ThemeSpec.MISSING && spec.dark () != null && dark != M3Oklch.lightness (given) < 0.5) {
-				notes.add ("dark=" + dark + " contradicts the background " + M3Palette.text (given) + ": the background decides");
+			boolean dark = spec.dark () != null ? spec.dark () : Oklch.lightness (given) < 0.5;
+			if (given != M3ThemeSpec.MISSING && spec.dark () != null && dark != Oklch.lightness (given) < 0.5) {
+				notes.add ("dark=" + dark + " contradicts the background " + Palette.text (given) + ": the background decides");
 				dark = !dark;
 			}
 			this.dark = dark;
@@ -155,7 +155,7 @@ public final class M3ThemeCompleter {
 			foreground = text (or (spec.colour (1), dark ? 0xFFDFE1E5 : 0xFF1F1F1F), background, "foreground");
 			accent = element (or (spec.colour (2), 0xFF2F6FD0), background, "accent");
 			selection = or (spec.colour (3), accent);
-			selectionText = text (M3Palette.readableOn (selection), selection, "selection text");
+			selectionText = text (Palette.readableOn (selection), selection, "selection text");
 			inactive = mix (selection, background, 0.5);
 			inactiveText = text (foreground, inactive, "inactive selection text");
 			border = element (or (spec.colour (4), mix (background, foreground, 0.2)), background, "border");
@@ -168,9 +168,9 @@ public final class M3ThemeCompleter {
 		String value (String key, byte kind) {
 			String widget = key.substring (0, key.indexOf ('.')), property = key.substring (key.indexOf ('.') + 1);
 			switch (kind) {
-				case M3UIKeys.COLOR: return M3Palette.text (colour (widget, property));
-				case M3UIKeys.INTEGER: return Integer.toString (integer (property));
-				case M3UIKeys.BOOLEAN: return "false";
+				case UIKeys.COLOR: return Palette.text (colour (widget, property));
+				case UIKeys.INTEGER: return Integer.toString (integer (property));
+				case UIKeys.BOOLEAN: return "false";
 				default: return insets (widget);
 			}
 		}
@@ -235,9 +235,9 @@ public final class M3ThemeCompleter {
 		/* towards the foreground's side (lighter on dark themes, darker on light ones) by an OKLCH lightness amount; a
 		 * negative amount moves away from it */
 		int shift (int colour, double amount) {
-			double lightness = M3Oklch.lightness (colour);
+			double lightness = Oklch.lightness (colour);
 			double step = dark ? amount : -amount;
-			return M3Oklch.withLightness (colour, lightness + step);
+			return Oklch.withLightness (colour, lightness + step);
 		}
 
 		int text (int colour, int against, String what) {
@@ -250,7 +250,7 @@ public final class M3ThemeCompleter {
 
 		int noted (int before, int after, int against, double ratio, String what) {
 			if (before != after) {
-				String note = what + " " + M3Palette.text (before) + " -> " + M3Palette.text (after) + " for " + ratio + ":1 on " + M3Palette.text (against);
+				String note = what + " " + Palette.text (before) + " -> " + Palette.text (after) + " for " + ratio + ":1 on " + Palette.text (against);
 				if (!notes.contains (note)) notes.add (note);
 			}
 			return after;

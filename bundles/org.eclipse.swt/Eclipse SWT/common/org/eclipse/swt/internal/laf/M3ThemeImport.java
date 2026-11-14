@@ -80,7 +80,7 @@ public final class M3ThemeImport {
 	 * @throws IllegalArgumentException when the text is not a JSON object
 	 */
 	public static Imported intelliJ (String json) {
-		if (!(M3Json.parse (json) instanceof Map<?, ?> theme)) throw new IllegalArgumentException ("an IntelliJ theme is a JSON object");
+		if (!(ThemeJson.parse (json) instanceof Map<?, ?> theme)) throw new IllegalArgumentException ("an IntelliJ theme is a JSON object");
 		Map<String, String> colours = new HashMap<> ();
 		if (theme.get ("colors") instanceof Map<?, ?> named) {
 			for (Map.Entry<?, ?> entry : named.entrySet ()) colours.put (String.valueOf (entry.getKey ()), String.valueOf (entry.getValue ()));
@@ -190,7 +190,7 @@ public final class M3ThemeImport {
 		Matcher call = CALL.matcher (out);
 		while (call.find ()) {
 			String function = call.group (1);
-			if (!M3ColorFunctions.NAMES.contains (function) && !Set.of ("darken", "lighten", "fade", "mix", "system").contains (function)) return null;
+			if (!ColorFunctions.NAMES.contains (function) && !Set.of ("darken", "lighten", "fade", "mix", "system").contains (function)) return null;
 		}
 		return out.toString ().trim ();
 	}

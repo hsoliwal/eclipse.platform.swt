@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.internal.m3.collections;
+package org.eclipse.swt.internal.residency;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -51,7 +51,7 @@ import java.util.function.IntConsumer;
  * <p>The pool is not thread-safe; the model that owns it confines it to one
  * thread, normally the user-interface thread.</p>
  */
-public final class M3LabelPool {
+public final class LabelPool {
 	/** Id of the empty string. It is always present and never evicted. */
 	public static final int EMPTY = 0;
 
@@ -100,12 +100,12 @@ public final class M3LabelPool {
 	private int probeOffset;
 
 	/** Creates a pool that keeps up to 4096 unreferenced labels. */
-	public M3LabelPool () {
+	public LabelPool () {
 		this (4096);
 	}
 
 	/** Creates a pool that keeps up to {@code maxCached} unreferenced labels. */
-	public M3LabelPool (int maxCached) {
+	public LabelPool (int maxCached) {
 		this (maxCached, null);
 	}
 
@@ -113,7 +113,7 @@ public final class M3LabelPool {
 	 * Creates a pool that keeps up to {@code maxCached} unreferenced labels and,
 	 * when {@code canonical} is not null, keys labels on their canonical ids.
 	 */
-	public M3LabelPool (int maxCached, CanonicalIds canonical) {
+	public LabelPool (int maxCached, CanonicalIds canonical) {
 		this (maxCached, canonical, 4096);
 	}
 
@@ -122,7 +122,7 @@ public final class M3LabelPool {
 	 * labels on canonical ids when {@code canonical} is not null, and keeps String
 	 * facades in {@code facadeSlots} direct-mapped slots (rounded up to a power of two).
 	 */
-	public M3LabelPool (int maxCached, CanonicalIds canonical, int facadeSlots) {
+	public LabelPool (int maxCached, CanonicalIds canonical, int facadeSlots) {
 		if (maxCached < 0) throw new IllegalArgumentException ("maxCached < 0: " + maxCached);
 		if (facadeSlots < 1 || facadeSlots > 1 << 30) throw new IllegalArgumentException ("facadeSlots out of range: " + facadeSlots);
 		this.maxCached = maxCached;

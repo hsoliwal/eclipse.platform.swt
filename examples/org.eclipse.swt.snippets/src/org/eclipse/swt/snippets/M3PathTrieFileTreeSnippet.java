@@ -18,8 +18,8 @@ package org.eclipse.swt.snippets;
  * A lazy file-system Tree driven by path ids, whose expansion survives a full
  * refresh.
  *
- * Every node is one int path id in an M3TreePathTrie whose segments are pooled
- * file names (M3LabelPool): "S:/a/b/c.txt" is the id of "c.txt" under the id of
+ * Every node is one int path id in an TreePathTrie whose segments are pooled
+ * file names (LabelPool): "S:/a/b/c.txt" is the id of "c.txt" under the id of
  * "b" under the id of "a". The item keeps only its path id; its file path is
  * rebuilt from the trie when the children are listed (lazy, on SetData).
  * Expand and Collapse set the EXPANDED flag of the path; "Refresh" disposes
@@ -35,14 +35,14 @@ import java.util.*;
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.*;
-import org.eclipse.swt.internal.m3.collections.*;
+import org.eclipse.swt.internal.residency.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 public class M3PathTrieFileTreeSnippet {
 	static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.snippets.M3PathTrieFileTreeSnippet");
-	static final M3LabelPool NAMES = new M3LabelPool (1024);
-	static final M3TreePathTrie PATHS = new M3TreePathTrie (NAMES);
+	static final LabelPool NAMES = new LabelPool (1024);
+	static final TreePathTrie PATHS = new TreePathTrie (NAMES);
 	static int rootPath;
 	static int listed;
 
@@ -75,7 +75,7 @@ public class M3PathTrieFileTreeSnippet {
 		int [] restored = new int [1];
 		for (int depth = PATHS.depth (rootPath) + 1; depth < 64; depth++) {
 			int level = depth;
-			int found = PATHS.forEachFlagged (M3TreePathTrie.EXPANDED, path -> {
+			int found = PATHS.forEachFlagged (TreePathTrie.EXPANDED, path -> {
 				if (PATHS.depth (path) != level) return;
 				TreeItem item = itemOf (tree, path);
 				if (item != null) {
@@ -122,8 +122,8 @@ public class M3PathTrieFileTreeSnippet {
 			TreeItem item = (TreeItem) event.item, parent = item.getParentItem ();
 			bind (item, parent == null ? rootPath : pathOf (parent), event.index);
 		});
-		tree.addListener (SWT.Expand, event -> PATHS.flag (pathOf ((TreeItem) event.item), M3TreePathTrie.EXPANDED, true));
-		tree.addListener (SWT.Collapse, event -> PATHS.flag (pathOf ((TreeItem) event.item), M3TreePathTrie.EXPANDED, false));
+		tree.addListener (SWT.Expand, event -> PATHS.flag (pathOf ((TreeItem) event.item), TreePathTrie.EXPANDED, true));
+		tree.addListener (SWT.Collapse, event -> PATHS.flag (pathOf ((TreeItem) event.item), TreePathTrie.EXPANDED, false));
 		refresh.addListener (SWT.Selection, event -> refresh (tree));
 		tree.setItemCount (children (rootPath).length);
 		shell.setSize (520, 640);
@@ -154,7 +154,7 @@ public class M3PathTrieFileTreeSnippet {
 			}
 			display.timerExec (800, () -> {
 				String before = save (display, shell, "tree-before-refresh");
-				int expanded = PATHS.forEachFlagged (M3TreePathTrie.EXPANDED, path -> { });
+				int expanded = PATHS.forEachFlagged (TreePathTrie.EXPANDED, path -> { });
 				refresh (tree);
 				display.timerExec (800, () -> {
 					String after = save (display, shell, "tree-after-refresh");
@@ -167,7 +167,7 @@ public class M3PathTrieFileTreeSnippet {
 
 	static void expand (TreeItem item) {
 		item.setExpanded (true);
-		PATHS.flag (pathOf (item), M3TreePathTrie.EXPANDED, true);
+		PATHS.flag (pathOf (item), TreePathTrie.EXPANDED, true);
 	}
 
 	static String save (Display display, Shell shell, String name) {

@@ -12,9 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.internal.gpu.m3;
-
-import org.eclipse.swt.internal.gpu.*;
+package org.eclipse.swt.internal.gpu;
 
 import io.github.humbleui.skija.*;
 
@@ -24,18 +22,18 @@ import io.github.humbleui.skija.*;
  * hairlines through pixel centres, lines include their end pixel, text cells
  * are positioned by their GDI ascent.
  */
-final class Replay {
+final class OpStreamReplay {
 	static final int INTERSECT = ClipMode.INTERSECT.ordinal ();
-	static final int TEXT_MASK = M3Target.TEXT_MASK;
+	static final int TEXT_MASK = GpuTarget.TEXT_MASK;
 
-	private Replay () {
+	private OpStreamReplay () {
 	}
 
 	static int fillMask (int mask) {
 		return (mask & ~3) | PaintKeys.KIND_FILL;
 	}
 
-	static void run (M3PlaneBackend backend, long canvas, OpStream ops) {
+	static void run (GlPlaneBackend backend, long canvas, OpStream ops) {
 		int [] a = ops.ops ();
 		int n = ops.size (), clipSave = -1, transformAt = -1;
 		for (int i = 0; i < n;) {
@@ -109,7 +107,7 @@ final class Replay {
 		if (clipSave >= 0) Canvas._nRestoreToCount (canvas, clipSave);
 	}
 
-	static void transform (M3PlaneBackend backend, long canvas, int [] a, int o) {
+	static void transform (GlPlaneBackend backend, long canvas, int [] a, int o) {
 		float [] m = backend.matrix33;
 		/*
 		 * SWT/GDI+ exposes {m11,m12,m21,m22,dx,dy}; Skia Matrix33 is
@@ -126,20 +124,20 @@ final class Replay {
 		Canvas._nSetMatrix (canvas, m);
 	}
 
-	static void fillRect (M3PlaneBackend backend, long canvas, int x, int y, int w, int h, int argb, int mask) {
+	static void fillRect (GlPlaneBackend backend, long canvas, int x, int y, int w, int h, int argb, int mask) {
 		if (w < 0) { x += w; w = -w; }
 		if (h < 0) { y += h; h = -h; }
 		Canvas._nDrawRect (canvas, x, y, x + w, y + h, backend.paint (mask, argb));
 	}
 
-	static void drawRect (M3PlaneBackend backend, long canvas, int [] a, int o) {
+	static void drawRect (GlPlaneBackend backend, long canvas, int [] a, int o) {
 		int x = a [o], y = a [o + 1], w = a [o + 2], h = a [o + 3];
 		if (w < 0) { x += w; w = -w; }
 		if (h < 0) { y += h; h = -h; }
 		Canvas._nDrawRect (canvas, x + .5f, y + .5f, x + w + .5f, y + h + .5f, backend.paint (a [o + 5], a [o + 4]));
 	}
 
-	static void drawLine (M3PlaneBackend backend, long canvas, int [] a, int o) {
+	static void drawLine (GlPlaneBackend backend, long canvas, int [] a, int o) {
 		int mask = a [o + 5], argb = a [o + 4];
 		Canvas._nDrawLine (canvas, a [o] + .5f, a [o + 1] + .5f, a [o + 2] + .5f, a [o + 3] + .5f, backend.paint (mask, argb));
 		if (PaintKeys.lineWidth (mask) <= 1f) {
@@ -147,7 +145,7 @@ final class Replay {
 		}
 	}
 
-	static void text (M3PlaneBackend backend, long canvas, OpStream ops, int [] a, int o) {
+	static void text (GlPlaneBackend backend, long canvas, OpStream ops, int [] a, int o) {
 		String string = (String) ops.ref (a [o]);
 		int fontId = a [o + 3], x = a [o + 4], y = a [o + 5];
 		if ((a [o + 8] & 1) != 0) {
@@ -168,7 +166,7 @@ final class Replay {
 		}
 	}
 
-	static void poly (M3PlaneBackend backend, long canvas, int [] a, int o, int op) {
+	static void poly (GlPlaneBackend backend, long canvas, int [] a, int o, int op) {
 		int count = a [o];
 		if (count < 2) return;
 		try (Path builder = new Path ()) {

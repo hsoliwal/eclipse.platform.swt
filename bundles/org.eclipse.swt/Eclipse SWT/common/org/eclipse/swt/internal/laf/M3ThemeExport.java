@@ -30,7 +30,7 @@ public final class M3ThemeExport {
 	/** The LF2 table: <code>@background</code>, <code>@foreground</code>, <code>@accent</code> and every catalogue key; values equal to the accent refer to <code>@accent</code>. */
 	public static String lf2 (M3ThemeCompleter.Theme theme) {
 		StringBuilder out = header (theme, "#");
-		String accent = M3Palette.text (theme.palette () [2]);
+		String accent = Palette.text (theme.palette () [2]);
 		variables (out, theme, "@accent");
 		for (Map.Entry<String, String> entry : theme.table ().entrySet ()) {
 			out.append (entry.getKey ()).append (" = ").append (entry.getValue ().equals (accent) ? "@accent" : entry.getValue ()).append ('\n');
@@ -63,7 +63,7 @@ public final class M3ThemeExport {
 		out.append ("  \"author\": ").append (M3ThemeSpec.quote ("M3ThemeCompleter " + M3ThemeCompleter.VERSION + " sha256:" + theme.hash ())).append (",\n");
 		out.append ("  \"colors\": {");
 		for (int i = 0; i < M3ThemeSpec.PALETTE.size (); i++) {
-			out.append (i == 0 ? "\n" : ",\n").append ("    \"").append (M3ThemeSpec.PALETTE.get (i)).append ("\": \"").append (M3Palette.text (theme.palette () [i])).append ('"');
+			out.append (i == 0 ? "\n" : ",\n").append ("    \"").append (M3ThemeSpec.PALETTE.get (i)).append ("\": \"").append (Palette.text (theme.palette () [i])).append ('"');
 		}
 		out.append ("\n  },\n  \"ui\": {");
 		String separator = "\n";
@@ -86,9 +86,9 @@ public final class M3ThemeExport {
 	}
 
 	private static void variables (StringBuilder out, M3ThemeCompleter.Theme theme, String accent) {
-		out.append ("@background = ").append (M3Palette.text (theme.palette () [0])).append ('\n');
-		out.append ("@foreground = ").append (M3Palette.text (theme.palette () [1])).append ('\n');
-		out.append (accent).append (" = ").append (M3Palette.text (theme.palette () [2])).append ('\n');
+		out.append ("@background = ").append (Palette.text (theme.palette () [0])).append ('\n');
+		out.append ("@foreground = ").append (Palette.text (theme.palette () [1])).append ('\n');
+		out.append (accent).append (" = ").append (Palette.text (theme.palette () [2])).append ('\n');
 	}
 
 	/* a table value as JSON: numbers and booleans bare, colours and insets as strings */

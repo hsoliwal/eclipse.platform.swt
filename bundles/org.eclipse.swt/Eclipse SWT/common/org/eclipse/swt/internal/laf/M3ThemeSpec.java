@@ -54,7 +54,7 @@ public final class M3ThemeSpec {
 	 * @throws IllegalArgumentException when the answer is not JSON or breaks the schema
 	 */
 	public static M3ThemeSpec parse (String json) {
-		if (!(M3Json.parse (json) instanceof Map<?, ?> top)) throw new IllegalArgumentException ("a theme is a JSON object");
+		if (!(ThemeJson.parse (json) instanceof Map<?, ?> top)) throw new IllegalArgumentException ("a theme is a JSON object");
 		only (top, TOP, "");
 		Boolean dark = top.containsKey ("dark") ? type (top.get ("dark"), Boolean.class, "dark") : null;
 		List<String> repairs = new ArrayList<> ();
@@ -141,7 +141,7 @@ public final class M3ThemeSpec {
 		Collections.sort (sorted);
 		for (String slot : sorted) {
 			int colour = palette [PALETTE.indexOf (slot)];
-			if (colour != MISSING) colours.append (colours.length () == 0 ? "" : ",").append ('"').append (slot).append ("\":\"").append (M3Palette.text (colour)).append ('"');
+			if (colour != MISSING) colours.append (colours.length () == 0 ? "" : ",").append ('"').append (slot).append ("\":\"").append (Palette.text (colour)).append ('"');
 		}
 		if (colours.length () > 0) out.append ("\"palette\":{").append (colours).append ("},");
 		if (out.charAt (out.length () - 1) == ',') out.setLength (out.length () - 1);

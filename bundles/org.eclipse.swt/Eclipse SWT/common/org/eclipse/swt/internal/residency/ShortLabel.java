@@ -12,14 +12,14 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.internal.m3.collections;
+package org.eclipse.swt.internal.residency;
 
 import java.util.Objects;
 
 /**
  * A user-interface label carried in one {@code long}: either the whole text of
  * a short label (an immediate) or the id of a longer label in an
- * {@link M3LabelPool}.
+ * {@link LabelPool}.
  *
  * <p>Short labels (severities, units, numbers, file extensions, short names)
  * need no String, no pool entry and no reference count: their text is the
@@ -41,7 +41,7 @@ import java.util.Objects;
  * <p>All methods are static and allocation-free except {@link #toString(long)}
  * and the pool's String facades.</p>
  */
-public final class M3ShortLabel {
+public final class ShortLabel {
 	/** The value of the empty label (pool id 0). */
 	public static final long EMPTY = 0L;
 	/** Never a label value; returned by {@link #pack(CharSequence)} for text that needs a pool entry. */
@@ -64,7 +64,7 @@ public final class M3ShortLabel {
 		for (int i = 0; i < ALPHABET.length (); i++) CODES [ALPHABET.charAt (i)] = (byte) i;
 	}
 
-	private M3ShortLabel () {
+	private ShortLabel () {
 	}
 
 	/** The immediate value of {@code text}, {@link #EMPTY} for "", or {@link #NONE} when it needs a pool entry. */

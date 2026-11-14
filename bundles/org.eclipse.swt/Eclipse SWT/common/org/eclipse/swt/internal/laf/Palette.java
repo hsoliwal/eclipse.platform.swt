@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.*;
  * Radiance's derived colour schemes), WCAG 2 contrast to pick a readable text colour, and the high-contrast look and
  * feel taken from the platform's colours when the platform runs in high contrast.
  */
-public final class M3Palette {
+public final class Palette {
 	/** The lightness (percent) of the steps of {@link #ramp}: from the lightest tint to the darkest shade. */
 	public static final int [] STEPS = {95, 90, 80, 70, 60, 50, 40, 30, 20, 10};
 	/** WCAG 2 AA contrast for normal text. */
@@ -32,7 +32,7 @@ public final class M3Palette {
 	/** The name of the high-contrast look and feel. */
 	public static final String HIGH_CONTRAST = "highcontrast";
 
-	private M3Palette () {
+	private Palette () {
 	}
 
 	/** The tonal ramp of an accent: one opaque ARGB colour per {@link #STEPS} lightness, at the accent's hue and saturation. */

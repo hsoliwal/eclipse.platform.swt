@@ -16,9 +16,8 @@
  *         follows the JetBrains Skiko (Apache-2.0) Windows OpenGL renderer pattern, no
  *         Skiko source copied. See docs/licenses/swt-gpu-retained-planes-NOTICE.txt
  *******************************************************************************/
-package org.eclipse.swt.internal.gpu.m3;
+package org.eclipse.swt.internal.gpu;
 
-import org.eclipse.swt.internal.gpu.*;
 import org.eclipse.swt.internal.opengl.win32.*;
 import org.eclipse.swt.internal.win32.*;
 
@@ -38,11 +37,11 @@ import io.github.humbleui.skija.*;
  * Native objects are created only when a replayed op needs them and are cached
  * by int key: Paint by {@link PaintKeys} key, Font by {@link FontTable} id,
  * TextBlob by (slice hash, length, font id) with range equality on hit.
- * Replay calls Skija's primitive native entry points, so steady frames do not
+ * OpStreamReplay calls Skija's primitive native entry points, so steady frames do not
  * allocate Java objects.
  * </p>
  */
-public final class M3PlaneBackend implements PlaneBackend {
+public final class GlPlaneBackend implements PlaneBackend {
 	static final int TILE = TileGrid.SIZE;
 	static final int PAINTS = 512, BLOBS = Integer.getInteger ("swt.gpu.blobs", 4096);
 
@@ -110,7 +109,7 @@ public final class M3PlaneBackend implements PlaneBackend {
 
 	@Override
 	public Target createTarget (int tileCapacity) {
-		return new M3Target (this, tileCapacity);
+		return new GpuTarget (this, tileCapacity);
 	}
 
 	/** Creates the Skija font of id {@code id} from its {@link FontTable} value; called on first replay. */

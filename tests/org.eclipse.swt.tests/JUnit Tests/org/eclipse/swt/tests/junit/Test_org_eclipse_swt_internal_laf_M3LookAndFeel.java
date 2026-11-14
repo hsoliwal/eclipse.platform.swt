@@ -33,12 +33,12 @@ import org.junit.jupiter.api.*;
  * and the colour and font resources disposed by a switch. Needs a display (hidden desktop).
  */
 public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
-	static final int SELECTION = M3UIKeys.intern ("Table.selectionBackground", M3UIKeys.COLOR);
-	static final int ROW_HEIGHT = M3UIKeys.intern ("Tree.rowHeight", M3UIKeys.INTEGER);
-	static final int GRID = M3UIKeys.intern ("Table.gridColor", M3UIKeys.COLOR);
+	static final int SELECTION = UIKeys.intern ("Table.selectionBackground", UIKeys.COLOR);
+	static final int ROW_HEIGHT = UIKeys.intern ("Tree.rowHeight", UIKeys.INTEGER);
+	static final int GRID = UIKeys.intern ("Table.gridColor", UIKeys.COLOR);
 
 	/** A delegate that counts its installs and remembers its defaults. */
-	static class Probe implements M3ComponentUI {
+	static class Probe implements ComponentUI {
 		final int [] paint, metric;
 		int installs, uninstalls;
 		M3UIDefaults defaults;
@@ -60,7 +60,7 @@ public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
 		}
 
 		@Override
-		public Class<? extends M3ComponentUI> type () {
+		public Class<? extends ComponentUI> type () {
 			return Probe.class;
 		}
 
@@ -78,7 +78,7 @@ public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
 	/** The delegate the factory of test-m3-c creates. */
 	static class Special extends Probe {
 		Special () {
-			super (new int [] {SELECTION}, M3ComponentUI.NO_KEYS);
+			super (new int [] {SELECTION}, ComponentUI.NO_KEYS);
 		}
 	}
 
@@ -167,9 +167,9 @@ public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
 	@Test
 	public void aSwitchTouchesOnlyTheWidgetsThatReadAChangedKey () {
 		AtomicInteger paintsSelection = new AtomicInteger (), paintsRow = new AtomicInteger (), paintsGrid = new AtomicInteger ();
-		Probe selection = new Probe (new int [] {SELECTION}, M3ComponentUI.NO_KEYS);
+		Probe selection = new Probe (new int [] {SELECTION}, ComponentUI.NO_KEYS);
 		Probe row = new Probe (new int [] {GRID}, new int [] {ROW_HEIGHT});
-		Probe grid = new Probe (new int [] {GRID}, M3ComponentUI.NO_KEYS);
+		Probe grid = new Probe (new int [] {GRID}, ComponentUI.NO_KEYS);
 		canvas (selection, paintsSelection);
 		canvas (row, paintsRow);
 		canvas (grid, paintsGrid);
@@ -202,15 +202,15 @@ public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
 
 	@Test
 	public void theFactoryOfTheNewLookAndFeelCreatesTheDelegate () {
-		Canvas canvas = canvas (new Probe (new int [] {SELECTION}, M3ComponentUI.NO_KEYS), new AtomicInteger ());
+		Canvas canvas = canvas (new Probe (new int [] {SELECTION}, ComponentUI.NO_KEYS), new AtomicInteger ());
 		Probe installed = (Probe) M3LookAndFeel.getUI (canvas);
 		M3LookAndFeel.setLookAndFeel ("test-m3-c");
-		M3ComponentUI special = M3LookAndFeel.getUI (canvas);
+		ComponentUI special = M3LookAndFeel.getUI (canvas);
 		assertInstanceOf (Special.class, special);
 		assertEquals (1, installed.uninstalls);
 		assertEquals (1, ((Special) special).installs);
 		Canvas direct = new Canvas (shell, SWT.NONE);
-		assertInstanceOf (Special.class, M3LookAndFeel.installUI (direct, Probe.class, new Probe (M3ComponentUI.NO_KEYS, M3ComponentUI.NO_KEYS)));
+		assertInstanceOf (Special.class, M3LookAndFeel.installUI (direct, Probe.class, new Probe (ComponentUI.NO_KEYS, ComponentUI.NO_KEYS)));
 		M3LookAndFeel.setLookAndFeel ("test-m3-a");
 		assertSame (special, M3LookAndFeel.getUI (canvas), "a factory without a delegate keeps the current one");
 	}
@@ -218,7 +218,7 @@ public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
 	@Test
 	public void aPinnedWidgetClassKeepsItsLookAndFeel () {
 		System.setProperty ("swt.widget.theme.Canvas", "test-m3-a");
-		Probe pinned = new Probe (new int [] {SELECTION}, M3ComponentUI.NO_KEYS);
+		Probe pinned = new Probe (new int [] {SELECTION}, ComponentUI.NO_KEYS);
 		canvas (pinned, new AtomicInteger ());
 		M3LookAndFeel.setLookAndFeel ("test-m3-b");
 		assertEquals (1, pinned.installs);
@@ -232,7 +232,7 @@ public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
 
 	@Test
 	public void updateComponentTreeUIInstallsEveryDelegateAgain () {
-		Probe a = new Probe (M3ComponentUI.NO_KEYS, M3ComponentUI.NO_KEYS), b = new Probe (new int [] {GRID}, M3ComponentUI.NO_KEYS);
+		Probe a = new Probe (ComponentUI.NO_KEYS, ComponentUI.NO_KEYS), b = new Probe (new int [] {GRID}, ComponentUI.NO_KEYS);
 		canvas (a, new AtomicInteger ());
 		Composite group = new Composite (shell, SWT.NONE);
 		Canvas inner = new Canvas (group, SWT.NONE);
@@ -249,10 +249,10 @@ public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
 	@Test
 	public void delegatesLeaveWithTheirWidgets () {
 		int before = M3LookAndFeel.installed (display);
-		Probe first = new Probe (M3ComponentUI.NO_KEYS, M3ComponentUI.NO_KEYS), second = new Probe (M3ComponentUI.NO_KEYS, M3ComponentUI.NO_KEYS);
-		Canvas a = canvas (first, new AtomicInteger ()), b = canvas (second, new AtomicInteger ()), c = canvas (new Probe (M3ComponentUI.NO_KEYS, M3ComponentUI.NO_KEYS), new AtomicInteger ());
+		Probe first = new Probe (ComponentUI.NO_KEYS, ComponentUI.NO_KEYS), second = new Probe (ComponentUI.NO_KEYS, ComponentUI.NO_KEYS);
+		Canvas a = canvas (first, new AtomicInteger ()), b = canvas (second, new AtomicInteger ()), c = canvas (new Probe (ComponentUI.NO_KEYS, ComponentUI.NO_KEYS), new AtomicInteger ());
 		assertEquals (before + 3, M3LookAndFeel.installed (display));
-		M3LookAndFeel.installUI (a, Probe.class, new Probe (M3ComponentUI.NO_KEYS, M3ComponentUI.NO_KEYS));
+		M3LookAndFeel.installUI (a, Probe.class, new Probe (ComponentUI.NO_KEYS, ComponentUI.NO_KEYS));
 		assertEquals (1, first.uninstalls, "installing again replaces the delegate");
 		assertEquals (before + 3, M3LookAndFeel.installed (display));
 		M3LookAndFeel.uninstallUI (b);
@@ -264,7 +264,7 @@ public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
 		assertNotNull (M3LookAndFeel.getUI (c), "the moved slot still finds its widget");
 		M3LookAndFeel.uninstallUI (c);
 		assertEquals (before, M3LookAndFeel.installed (display));
-		for (int i = 0; i < 40; i++) canvas (new Probe (M3ComponentUI.NO_KEYS, M3ComponentUI.NO_KEYS), new AtomicInteger ());
+		for (int i = 0; i < 40; i++) canvas (new Probe (ComponentUI.NO_KEYS, ComponentUI.NO_KEYS), new AtomicInteger ());
 		assertEquals (before + 40, M3LookAndFeel.installed (display), "the registry grows");
 	}
 
@@ -272,7 +272,7 @@ public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
 	public void overridesRepaintOnlyTheirReaders () {
 		AtomicInteger readerPaints = new AtomicInteger (), otherPaints = new AtomicInteger ();
 		Canvas reader = canvas (new Probe (new int [] {SELECTION}, new int [] {ROW_HEIGHT}), readerPaints);
-		Canvas other = canvas (new Probe (new int [] {GRID}, M3ComponentUI.NO_KEYS), otherPaints);
+		Canvas other = canvas (new Probe (new int [] {GRID}, ComponentUI.NO_KEYS), otherPaints);
 		Canvas plain = new Canvas (shell, SWT.NONE);
 		drain ();
 		int readerBefore = readerPaints.get (), otherBefore = otherPaints.get ();
@@ -288,31 +288,31 @@ public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
 		M3LookAndFeel.override (reader, ROW_HEIGHT, 44);
 		ViewportDifferential.drain (display);
 		assertTrue (layouts > 0, "a measured key relays out");
-		M3UIOverrides lane = M3UIOverrides.of (display);
+		UIOverrides lane = UIOverrides.of (display);
 		assertEquals (0xFF0000FF, M3LookAndFeel.getDefaults ().color (lane, plain, SELECTION, 0));
 		assertEquals (44, M3LookAndFeel.getDefaults ().integer (lane, reader, ROW_HEIGHT, 0));
 	}
 
 	@Test
 	public void resourcesAreSharedAndDisposedByASwitch () {
-		M3UIResources resources = M3UIResources.of (display);
-		assertSame (resources, M3UIResources.of (display));
+		UIResources resources = UIResources.of (display);
+		assertSame (resources, UIResources.of (display));
 		Color colour = resources.color (0x80112233);
 		assertSame (colour, resources.color (0x80112233));
 		assertEquals (new RGBA (0x11, 0x22, 0x33, 0x80), colour.getRGBA ());
 		for (int i = 0; i < 100; i++) resources.color (0xFF000000 | i * 977);
 		assertSame (colour, resources.color (0x80112233), "found after the table grew");
-		int id = M3UIFonts.intern ("Arial", 11, SWT.BOLD);
-		assertEquals (id, M3UIFonts.intern ("Arial", 11, SWT.BOLD));
-		assertEquals ("Arial", M3UIFonts.name (id));
-		assertEquals (11, M3UIFonts.height (id));
-		assertEquals (SWT.BOLD, M3UIFonts.style (id));
-		for (int i = 0; i < 20; i++) M3UIFonts.intern ("Coverage", 8 + i, SWT.NORMAL);
-		assertTrue (M3UIFonts.count () > 20);
+		int id = UIFonts.intern ("Arial", 11, SWT.BOLD);
+		assertEquals (id, UIFonts.intern ("Arial", 11, SWT.BOLD));
+		assertEquals ("Arial", UIFonts.name (id));
+		assertEquals (11, UIFonts.height (id));
+		assertEquals (SWT.BOLD, UIFonts.style (id));
+		for (int i = 0; i < 20; i++) UIFonts.intern ("Coverage", 8 + i, SWT.NORMAL);
+		assertTrue (UIFonts.count () > 20);
 		Font font = resources.font (id);
 		assertSame (font, resources.font (id));
 		assertEquals (11, font.getFontData () [0].getHeight ());
-		assertSame (resources.font (M3UIFonts.count () - 1), resources.font (M3UIFonts.count () - 1), "the font lane grows");
+		assertSame (resources.font (UIFonts.count () - 1), resources.font (UIFonts.count () - 1), "the font lane grows");
 		assertTrue (resources.colours () >= 101);
 		assertTrue (resources.fonts () >= 2);
 		int disposals = resources.disposals ();

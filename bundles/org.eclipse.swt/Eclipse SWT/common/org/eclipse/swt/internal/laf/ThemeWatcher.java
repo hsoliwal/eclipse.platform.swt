@@ -28,8 +28,8 @@ import org.eclipse.swt.widgets.*;
  * IntelliJ theme, any other a FlatLaf or LF2 properties theme ({@link M3ThemeImport}). A file that cannot be read keeps
  * the last good theme (logged).
  */
-public final class M3ThemeWatcher implements AutoCloseable {
-	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.internal.laf.M3ThemeWatcher");
+public final class ThemeWatcher implements AutoCloseable {
+	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.internal.laf.ThemeWatcher");
 
 	private final Display display;
 	private final Path file;
@@ -38,7 +38,7 @@ public final class M3ThemeWatcher implements AutoCloseable {
 	private final Thread thread;
 	private volatile int reloads, failures;
 
-	private M3ThemeWatcher (Display display, Path file, String name) throws IOException {
+	private ThemeWatcher (Display display, Path file, String name) throws IOException {
 		this.display = display;
 		this.file = file.toAbsolutePath ();
 		this.name = name;
@@ -54,9 +54,9 @@ public final class M3ThemeWatcher implements AutoCloseable {
 	 * @throws IOException when the file cannot be read or watched
 	 * @throws IllegalArgumentException when the file is not a theme
 	 */
-	public static M3ThemeWatcher watch (Display display, Path file, String name) throws IOException {
+	public static ThemeWatcher watch (Display display, Path file, String name) throws IOException {
 		M3ThemeImport.install (name, imported (file, Files.readString (file, StandardCharsets.UTF_8)));
-		M3ThemeWatcher watcher = new M3ThemeWatcher (display, file, name);
+		ThemeWatcher watcher = new ThemeWatcher (display, file, name);
 		watcher.thread.start ();
 		return watcher;
 	}
@@ -96,7 +96,7 @@ public final class M3ThemeWatcher implements AutoCloseable {
 	private void reload () {
 		String text;
 		try {
-			text = M3ThemeWatcher.imported (file, Files.readString (file, StandardCharsets.UTF_8)).text ();
+			text = ThemeWatcher.imported (file, Files.readString (file, StandardCharsets.UTF_8)).text ();
 		} catch (IOException | IllegalArgumentException e) {
 			failures++;
 			LOG.info (() -> "theme " + name + " not reloaded from " + file + ": " + e.getMessage ());

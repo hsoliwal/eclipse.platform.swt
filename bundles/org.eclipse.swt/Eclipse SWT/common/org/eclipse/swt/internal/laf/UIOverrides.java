@@ -30,11 +30,11 @@ import org.eclipse.swt.widgets.*;
  * lane belongs to its display's thread.
  * </p>
  */
-public final class M3UIOverrides {
+public final class UIOverrides {
 	/** The answer of {@link #lookup} when the owner has no value for the key. */
 	public static final long NONE = 0;
 	private static final Listener DISPOSED = event -> {
-		M3UIOverrides lane = (M3UIOverrides) event.display.getData (M3UIOverrides.class.getName ());
+		UIOverrides lane = (UIOverrides) event.display.getData (UIOverrides.class.getName ());
 		if (lane != null) lane.clear (event.widget);
 	};
 
@@ -49,10 +49,10 @@ public final class M3UIOverrides {
 	private int valueCount, valueUsed;
 
 	/** The lane of a display, created on first use (kept in the display's data). */
-	public static M3UIOverrides of (Display display) {
-		String key = M3UIOverrides.class.getName ();
-		M3UIOverrides lane = (M3UIOverrides) display.getData (key);
-		if (lane == null) display.setData (key, lane = new M3UIOverrides ());
+	public static UIOverrides of (Display display) {
+		String key = UIOverrides.class.getName ();
+		UIOverrides lane = (UIOverrides) display.getData (key);
+		if (lane == null) display.setData (key, lane = new UIOverrides ());
 		return lane;
 	}
 
@@ -88,13 +88,13 @@ public final class M3UIOverrides {
 
 	/** Sets the value of a scalar key for one owner (a widget is cleared when disposed). */
 	public void put (Object owner, int key, int value) {
-		if (M3UIKeys.kind (key) == M3UIKeys.INSETS) throw new IllegalArgumentException (M3UIKeys.name (key) + " is insets");
+		if (UIKeys.kind (key) == UIKeys.INSETS) throw new IllegalArgumentException (UIKeys.name (key) + " is insets");
 		store (pack (slotFor (owner), key, 0), value);
 	}
 
 	/** Sets the insets of a key for one owner. */
 	public void putInsets (Object owner, int key, int top, int left, int bottom, int right) {
-		if (M3UIKeys.kind (key) != M3UIKeys.INSETS) throw new IllegalArgumentException (M3UIKeys.name (key) + " is not insets");
+		if (UIKeys.kind (key) != UIKeys.INSETS) throw new IllegalArgumentException (UIKeys.name (key) + " is not insets");
 		int slot = slotFor (owner);
 		int [] quad = {top, left, bottom, right};
 		for (int i = 0; i < 4; i++) store (pack (slot, key, i), quad [i]);
@@ -104,7 +104,7 @@ public final class M3UIOverrides {
 	public void remove (Object owner, int key) {
 		int slot = ownerCount == 0 ? 0 : slotOf (owner);
 		if (slot == 0) return;
-		int parts = M3UIKeys.kind (key) == M3UIKeys.INSETS ? 4 : 1;
+		int parts = UIKeys.kind (key) == UIKeys.INSETS ? 4 : 1;
 		for (int i = 0; i < parts; i++) delete (pack (slot, key, i));
 	}
 

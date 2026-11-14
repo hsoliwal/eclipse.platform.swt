@@ -14,7 +14,7 @@
  *******************************************************************************/
 package org.eclipse.swt.tests.junit;
 
-import org.eclipse.swt.internal.m3.collections.*;
+import org.eclipse.swt.internal.residency.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,29 +26,29 @@ import java.util.Map;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 
-/** Contract and seeded differential tests of {@link M3LabelPool}. */
+/** Contract and seeded differential tests of {@link LabelPool}. */
 public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 
 	@Test
 	void emptyStringIsPermanentIdZero () {
-		M3LabelPool pool = new M3LabelPool (0);
-		assertEquals (M3LabelPool.EMPTY, pool.intern (""));
-		assertEquals (M3LabelPool.EMPTY, pool.intern (new char [3], 1, 0));
-		assertEquals (M3LabelPool.EMPTY, pool.find (""));
-		pool.acquire (M3LabelPool.EMPTY);
-		pool.release (M3LabelPool.EMPTY);
-		pool.release (M3LabelPool.EMPTY);
-		assertEquals ("", pool.text (M3LabelPool.EMPTY));
-		assertEquals (0, pool.length (M3LabelPool.EMPTY));
-		assertEquals (0, pool.hash (M3LabelPool.EMPTY));
-		assertEquals (1, pool.refCount (M3LabelPool.EMPTY));
+		LabelPool pool = new LabelPool (0);
+		assertEquals (LabelPool.EMPTY, pool.intern (""));
+		assertEquals (LabelPool.EMPTY, pool.intern (new char [3], 1, 0));
+		assertEquals (LabelPool.EMPTY, pool.find (""));
+		pool.acquire (LabelPool.EMPTY);
+		pool.release (LabelPool.EMPTY);
+		pool.release (LabelPool.EMPTY);
+		assertEquals ("", pool.text (LabelPool.EMPTY));
+		assertEquals (0, pool.length (LabelPool.EMPTY));
+		assertEquals (0, pool.hash (LabelPool.EMPTY));
+		assertEquals (1, pool.refCount (LabelPool.EMPTY));
 		assertEquals (0, pool.size ());
 		assertEquals (0, pool.misses ());
 	}
 
 	@Test
 	void repeatedTextSharesOneIdAndCountsReferences () {
-		M3LabelPool pool = new M3LabelPool ();
+		LabelPool pool = new LabelPool ();
 		int a = pool.intern ("JAVA File");
 		int b = pool.intern (new String ("JAVA File"));
 		int c = pool.intern ("xJAVA Filex".toCharArray (), 1, 9);
@@ -59,14 +59,14 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 		assertEquals (2, pool.hits ());
 		assertEquals (1, pool.size ());
 		assertEquals (a, pool.find ("JAVA File"));
-		assertEquals (M3LabelPool.NOT_FOUND, pool.find ("JAVA file"));
+		assertEquals (LabelPool.NOT_FOUND, pool.find ("JAVA file"));
 		assertEquals (3, pool.refCount (a));
 		assertEquals (4096, pool.maxCached ());
 	}
 
 	@Test
 	void releasedLabelsStayCachedUntilTheBoundEvictsTheOldest () {
-		M3LabelPool pool = new M3LabelPool (2);
+		LabelPool pool = new LabelPool (2);
 		List<Integer> evicted = new ArrayList<> ();
 		pool.setEvictionListener (evicted::add);
 		int a = pool.intern ("a"), b = pool.intern ("b"), c = pool.intern ("c"), d = pool.intern ("d");
@@ -77,7 +77,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 		assertEquals (0, pool.refCount (a));
 		pool.release (c);
 		assertEquals (List.of (a), evicted);
-		assertEquals (M3LabelPool.NOT_FOUND, pool.find ("a"));
+		assertEquals (LabelPool.NOT_FOUND, pool.find ("a"));
 		assertFalse (pool.isLive (a));
 		assertEquals (b, pool.intern ("b"));
 		assertEquals (1, pool.cachedCount ());
@@ -95,20 +95,20 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 
 	@Test
 	void zeroBoundEvictsOnRelease () {
-		M3LabelPool pool = new M3LabelPool (0);
+		LabelPool pool = new LabelPool (0);
 		int id = pool.intern ("gone");
 		pool.text (id);
 		assertEquals (1, pool.facadeCount ());
 		pool.release (id);
 		assertEquals (0, pool.facadeCount ());
-		assertEquals (M3LabelPool.NOT_FOUND, pool.find ("gone"));
+		assertEquals (LabelPool.NOT_FOUND, pool.find ("gone"));
 		assertEquals (4, pool.garbageBytes ());
 		assertEquals (0, pool.textBytes ());
 	}
 
 	@Test
 	void unlinkingFromTheMiddleHeadAndTailOfTheReleasedList () {
-		M3LabelPool pool = new M3LabelPool (10);
+		LabelPool pool = new LabelPool (10);
 		int [] ids = new int [5];
 		for (int i = 0; i < ids.length; i++) ids [i] = pool.intern ("l" + i);
 		for (int id : ids) pool.release (id);
@@ -124,7 +124,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 
 	@Test
 	void utf16AndLatin1TextAnswerWithoutFacades () {
-		M3LabelPool pool = new M3LabelPool ();
+		LabelPool pool = new LabelPool ();
 		String wide = "नमस्ते world";
 		int w = pool.intern (wide), l = pool.intern ("café");
 		assertEquals (wide.length (), pool.length (w));
@@ -151,7 +151,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 
 	@Test
 	void compareOrdersLikeString () {
-		M3LabelPool pool = new M3LabelPool ();
+		LabelPool pool = new LabelPool ();
 		String [] texts = {"apple", "app", "apples", "bā", "ba", "B", ""};
 		for (String a : texts) {
 			for (String b : texts) {
@@ -162,7 +162,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 
 	@Test
 	void equalHashCodesWithDifferentTextGetDifferentIds () {
-		M3LabelPool pool = new M3LabelPool ();
+		LabelPool pool = new LabelPool ();
 		assertEquals ("Aa".hashCode (), "BB".hashCode ());
 		int aa = pool.intern ("Aa"), bb = pool.intern ("BB");
 		assertNotEquals (aa, bb);
@@ -173,7 +173,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 
 	@Test
 	void facadeCacheIsBoundedAndDirectMapped () {
-		M3LabelPool pool = new M3LabelPool (8, null, 1);
+		LabelPool pool = new LabelPool (8, null, 1);
 		int a = pool.intern ("alpha"), b = pool.intern ("beta");
 		String first = pool.text (a);
 		assertSame (first, pool.text (a));
@@ -182,24 +182,24 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 		String again = pool.text (a);
 		assertEquals ("alpha", again);
 		assertNotSame (first, again);
-		M3LabelPool zero = new M3LabelPool (0, null, 1);
+		LabelPool zero = new LabelPool (0, null, 1);
 		int x = zero.intern ("x"), y = zero.intern ("y");
 		zero.text (x);
 		zero.release (y);
 		assertEquals (1, zero.facadeCount ());
 		zero.release (x);
 		assertEquals (0, zero.facadeCount ());
-		M3LabelPool wide = new M3LabelPool (8, null, 3000);
+		LabelPool wide = new LabelPool (8, null, 3000);
 		for (int i = 0; i < 100; i++) wide.text (wide.intern ("w" + i));
 		assertTrue (wide.facadeCount () > 90 && wide.facadeCount () <= 100, "facades " + wide.facadeCount ());
 		assertTrue (wide.retainedBytes () > 4096 * 8);
-		assertThrows (IllegalArgumentException.class, () -> new M3LabelPool (1, null, 0));
-		assertThrows (IllegalArgumentException.class, () -> new M3LabelPool (1, null, (1 << 30) + 1));
+		assertThrows (IllegalArgumentException.class, () -> new LabelPool (1, null, 0));
+		assertThrows (IllegalArgumentException.class, () -> new LabelPool (1, null, (1 << 30) + 1));
 	}
 
 	@Test
 	void facadesAreDroppedOnTrimAndCountedInRetainedBytes () {
-		M3LabelPool pool = new M3LabelPool ();
+		LabelPool pool = new LabelPool ();
 		int id = pool.intern ("facade");
 		long before = pool.retainedBytes ();
 		String text = pool.text (id);
@@ -208,12 +208,12 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 		assertEquals (0, pool.facadeCount ());
 		assertEquals (before, pool.retainedBytes ());
 		assertNotSame (text, pool.text (id));
-		assertEquals ("", pool.text (M3LabelPool.EMPTY));
+		assertEquals ("", pool.text (LabelPool.EMPTY));
 	}
 
 	@Test
 	void arenaCompactsWhenGarbageOutweighsLiveText () {
-		M3LabelPool pool = new M3LabelPool (0);
+		LabelPool pool = new LabelPool (0);
 		String big = "x".repeat (3000);
 		int keep = pool.intern ("keep क");
 		int first = pool.intern (big + 1), second = pool.intern (big + 2);
@@ -233,7 +233,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 
 	@Test
 	void arenaGrowsInsteadOfCompactingWhileLiveTextDominates () {
-		M3LabelPool pool = new M3LabelPool (0);
+		LabelPool pool = new LabelPool (0);
 		String big = "y".repeat (5000);
 		int live = pool.intern (big + big), dead = pool.intern (big + "dead");
 		pool.release (dead);
@@ -242,7 +242,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 		assertEquals (5004, pool.garbageBytes ());
 		assertEquals (big + big, pool.text (live));
 		assertEquals (big + "next", pool.text (next));
-		M3LabelPool small = new M3LabelPool (0);
+		LabelPool small = new LabelPool (0);
 		int a = small.intern ("z".repeat (5000)), b = small.intern ("w".repeat (100));
 		small.release (a);
 		small.intern ("v".repeat (100_000));
@@ -252,7 +252,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 
 	@Test
 	void manyLabelsRehashAndStayFindable () {
-		M3LabelPool pool = new M3LabelPool ();
+		LabelPool pool = new LabelPool ();
 		int [] ids = new int [20_000];
 		for (int i = 0; i < ids.length; i++) ids [i] = pool.intern ("row " + i);
 		for (int i = 0; i < ids.length; i++) {
@@ -261,21 +261,21 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 		}
 		assertEquals (ids.length, pool.size ());
 		assertTrue (pool.retainedBytes () > 20_000L * 4);
-		M3LabelPool holes = new M3LabelPool (0);
+		LabelPool holes = new LabelPool (0);
 		for (int i = 0; i < 16; i++) holes.intern ("h" + i);
 		holes.release (holes.find ("h3"));
 		holes.release (holes.find ("h9"));
 		for (int i = 0; i < 3; i++) holes.intern ("after rehash " + i);
-		assertEquals (M3LabelPool.NOT_FOUND, holes.find ("h3"));
+		assertEquals (LabelPool.NOT_FOUND, holes.find ("h3"));
 		for (int i = 0; i < 3; i++) assertEquals ("after rehash " + i, holes.text (holes.find ("after rehash " + i)));
-		for (int i = 0; i < 16; i++) assertEquals (i != 3 && i != 9, holes.find ("h" + i) != M3LabelPool.NOT_FOUND);
+		for (int i = 0; i < 16; i++) assertEquals (i != 3 && i != 9, holes.find ("h" + i) != LabelPool.NOT_FOUND);
 		assertEquals (17, holes.size ());
 	}
 
 	@Test
 	void invalidUseIsRefused () {
-		M3LabelPool pool = new M3LabelPool (1);
-		assertThrows (IllegalArgumentException.class, () -> new M3LabelPool (-1));
+		LabelPool pool = new LabelPool (1);
+		assertThrows (IllegalArgumentException.class, () -> new LabelPool (-1));
 		assertThrows (NullPointerException.class, () -> pool.intern ((String) null));
 		assertThrows (IllegalArgumentException.class, () -> pool.text (-1));
 		assertThrows (IllegalArgumentException.class, () -> pool.release (7));
@@ -290,28 +290,28 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 
 	@Test
 	void clearForgetsLabelsButKeepsCounters () {
-		M3LabelPool pool = new M3LabelPool ();
+		LabelPool pool = new LabelPool ();
 		int id = pool.intern ("x");
 		pool.intern ("x");
 		pool.clear ();
 		assertFalse (pool.isLive (id));
 		assertEquals (0, pool.size ());
 		assertEquals (1, pool.hits ());
-		assertEquals (M3LabelPool.NOT_FOUND, pool.find ("x"));
+		assertEquals (LabelPool.NOT_FOUND, pool.find ("x"));
 		assertEquals (1, pool.intern ("y"));
 	}
 
 	@Test
 	void canonicalIdsReplaceTextComparison () {
 		Map<String, Long> canonical = new HashMap<> ();
-		M3LabelPool pool = new M3LabelPool (8, text -> canonical.computeIfAbsent (text, t -> canonical.size () + 1L));
+		LabelPool pool = new LabelPool (8, text -> canonical.computeIfAbsent (text, t -> canonical.size () + 1L));
 		int a = pool.intern ("alpha");
 		assertEquals (a, pool.intern ("alpha".toCharArray (), 0, 5));
 		assertEquals (a, pool.find ("alpha"));
 		assertEquals ("alpha".hashCode (), pool.hash (a));
 		assertEquals ("alpha", pool.text (a));
 		assertNotEquals (a, pool.intern ("beta"));
-		M3LabelPool broken = new M3LabelPool (8, text -> 0L);
+		LabelPool broken = new LabelPool (8, text -> 0L);
 		assertThrows (IllegalStateException.class, () -> broken.intern ("x"));
 	}
 
@@ -321,7 +321,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 		for (int seed = 1; seed <= 12; seed++) {
 			Random random = new Random (seed);
 			int bound = seed % 4;
-			M3LabelPool pool = new M3LabelPool (bound);
+			LabelPool pool = new LabelPool (bound);
 			Map<String, Integer> refs = new HashMap<> ();
 			LinkedHashMap<String, Boolean> released = new LinkedHashMap<> ();
 			for (int step = 0; step < 4000; step++) {
@@ -344,12 +344,12 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 		}
 	}
 
-	private static void verify (M3LabelPool pool, String [] universe, Map<String, Integer> refs, Map<String, Boolean> released, int seed, int step) {
+	private static void verify (LabelPool pool, String [] universe, Map<String, Integer> refs, Map<String, Boolean> released, int seed, int step) {
 		for (String text : universe) {
 			int id = pool.find (text);
 			int count = refs.getOrDefault (text, 0);
 			boolean present = count > 0 || released.containsKey (text);
-			assertEquals (present, id != M3LabelPool.NOT_FOUND, "seed " + seed + " step " + step + " " + text);
+			assertEquals (present, id != LabelPool.NOT_FOUND, "seed " + seed + " step " + step + " " + text);
 			if (present) {
 				assertEquals (count, pool.refCount (id));
 				assertTrue (pool.contentEquals (id, text));

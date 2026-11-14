@@ -46,7 +46,7 @@ public class Test_org_eclipse_swt_internal_laf_M3SystemTheme {
 	public void thePreferenceAndTheHighContrastOverride () throws Exception {
 		assertEquals (Display.isSystemDarkTheme (), M3SystemTheme.dark ());
 		String preferred = M3SystemTheme.preferred (display, "light", "dark");
-		if (display.getHighContrast ()) assertEquals (M3Palette.HIGH_CONTRAST, preferred);
+		if (display.getHighContrast ()) assertEquals (Palette.HIGH_CONTRAST, preferred);
 		else assertEquals (M3SystemTheme.dark () ? "dark" : "light", preferred);
 		Method method = M3SystemTheme.class.getDeclaredMethod ("preferred", Display.class, String.class, String.class, java.util.function.BooleanSupplier.class);
 		method.setAccessible (true);

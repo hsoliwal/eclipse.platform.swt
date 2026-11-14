@@ -20,7 +20,6 @@ Export-Package:
  org.eclipse.swt.internal.gpu;x-friends:="org.eclipse.swt.tests",
  org.eclipse.swt.internal.image;x-internal:=true,
  org.eclipse.swt.internal.laf;x-internal:=true,
- org.eclipse.swt.internal.m3.collections;x-friends:="org.eclipse.swt.tests",
  org.eclipse.swt.internal.render;x-friends:="org.eclipse.swt.tests",
  org.eclipse.swt.internal.residency;x-internal:=true,
  org.eclipse.swt.internal.swap;x-internal:=true,

@@ -24,10 +24,10 @@ import org.eclipse.swt.widgets.*;
  * <p>
  * A delegate declares the keys it reads: when a look and feel switch changes one of its {@link #paintKeys()} the
  * widget is repainted, one of its {@link #metricKeys()} relaid out; a switch that changes neither leaves the widget
- * alone. Colours and fonts come from {@link M3UIResources} at paint time and are not kept across a switch.
+ * alone. Colours and fonts come from {@link UIResources} at paint time and are not kept across a switch.
  * </p>
  */
-public interface M3ComponentUI {
+public interface ComponentUI {
 	/** No keys. */
 	int [] NO_KEYS = {};
 
@@ -42,11 +42,11 @@ public interface M3ComponentUI {
 	}
 
 	/** The type a look and feel's factory is asked for when the delegate is created again, for example its interface. */
-	default Class<? extends M3ComponentUI> type () {
+	default Class<? extends ComponentUI> type () {
 		return getClass ();
 	}
 
-	/** The key ids ({@link M3UIKeys}) the delegate paints with. */
+	/** The key ids ({@link UIKeys}) the delegate paints with. */
 	int [] paintKeys ();
 
 	/** The key ids the delegate measures with (sizes, insets, fonts). */

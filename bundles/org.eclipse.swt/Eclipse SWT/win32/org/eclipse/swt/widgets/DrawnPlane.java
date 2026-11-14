@@ -41,7 +41,7 @@ abstract class DrawnPlane {
 	/* the renderer of the theme in effect; replaced when the theme selection changes (Themes) */
 	RowRenderer renderer;
 	/* the look and feel delegate of the rows (M3LookAndFeel, LF6); a switch installs it again with a new theme */
-	private final M3DrawnRowUI ui;
+	private final DrawnRowUI ui;
 	/* the run-time or user-defined theme that wins over the delegate's (Themes.explicit), read again after a Themes change */
 	private Theme explicit;
 	private int themeGeneration;
@@ -108,7 +108,7 @@ abstract class DrawnPlane {
 		/* rule 28: a plane is made on its display's thread, the UI thread */
 		if (ThreadRole.current () == ThreadRole.NONE) ThreadRole.assume (ThreadRole.UI);
 		ThreadRole.UI.check ("a drawn plane");
-		this.ui = M3LookAndFeel.installUI (control, M3DrawnRowUI.class, new M3DrawnRowUI (widget));
+		this.ui = M3LookAndFeel.installUI (control, DrawnRowUI.class, new DrawnRowUI (widget));
 		this.themeGeneration = Themes.generation ();
 		this.explicit = Themes.explicit (widget);
 		this.renderer = new RowRenderer (explicit != null ? explicit : ui.theme ());
@@ -147,7 +147,7 @@ abstract class DrawnPlane {
 			});
 		};
 		Themes.addListener (themeChanged);
-		if (M3Features.isOn (control, M3Features.FRAME_OVERLAY)) display.timerExec (500, new Runnable () {
+		if (Features.isOn (control, Features.FRAME_OVERLAY)) display.timerExec (500, new Runnable () {
 			@Override
 			public void run () {
 				if (control.isDisposed ()) return;
@@ -286,14 +286,14 @@ abstract class DrawnPlane {
 		 * With a render thread this path serves captures (WM_PRINTCLIENT) and owner-drawn frames only: its slots are not kept
 		 * up, so it draws every row; a listener's drawing is never kept either (it may draw anything, from state no key holds)
 		 */
-		boolean retain = renderTarget == null && !M3Features.isOn (control, M3Features.FRAME_OVERLAY) && !owner && theme.rowPainter == null && theme.cellPainter == null;
+		boolean retain = renderTarget == null && !Features.isOn (control, Features.FRAME_OVERLAY) && !owner && theme.rowPainter == null && theme.cellPainter == null;
 		canvas.target (buffer);
 		canvas.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		if (owner) ownerDraw.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		retainedRows.begin (canvas, renderer, buffer, damage.left, damage.top, damage.right, damage.bottom, client.right, rowsTop, retain);
 		try {
 			drawRows (hwnd);
-			if (M3Features.isOn (control, M3Features.FRAME_OVERLAY)) overlay ();
+			if (Features.isOn (control, Features.FRAME_OVERLAY)) overlay ();
 		} finally {
 			if (owner) ownerDraw.end ();
 			canvas.end ();
@@ -311,7 +311,7 @@ abstract class DrawnPlane {
 	}
 
 	/*
-	 * -Dswt.widget.feature.frame-overlay=true (M3Features.FRAME_OVERLAY; -Dswt.drawn.overlay=true is its alias): the frame time (last, p99) and the input-to-pixel latency p99 in the bottom right corner of
+	 * -Dswt.widget.feature.frame-overlay=true (Features.FRAME_OVERLAY; -Dswt.drawn.overlay=true is its alias): the frame time (last, p99) and the input-to-pixel latency p99 in the bottom right corner of
 	 * the client area (a header covers the top), repainted twice a second. A debugging aid: building its text allocates.
 	 */
 	private void overlay () {

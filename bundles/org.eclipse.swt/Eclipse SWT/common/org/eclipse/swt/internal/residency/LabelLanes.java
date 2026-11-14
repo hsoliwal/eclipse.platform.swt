@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.internal.m3.collections;
+package org.eclipse.swt.internal.residency;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -25,12 +25,12 @@ import java.util.Objects;
  * Every layer reads and writes the same labels, so no layer keeps a String per
  * row: label providers set their text here, items and renderers read it back,
  * and measurement goes through the shared extent cache. A pooled cell holds
- * one reference on its label in the {@link M3LabelPool}; the pool's evictions
- * are wired to the {@link M3TextExtentCache}.</p>
+ * one reference on its label in the {@link LabelPool}; the pool's evictions
+ * are wired to the {@link TextExtentCache}.</p>
  *
  * <p>Two lane widths. Pooled lanes ({@code immediates == false}) keep an
  * {@code int} pool id per cell (4 bytes). Immediate lanes keep an
- * {@link M3ShortLabel} {@code long} per cell (8 bytes): short labels carry
+ * {@link ShortLabel} {@code long} per cell (8 bytes): short labels carry
  * their own text and need no pool entry, longer labels hold a pool id. Pick
  * immediate lanes for columns whose labels are mostly short and distinct
  * (severities, units, locations, extensions); the extra 4 bytes per cell pay
@@ -40,9 +40,9 @@ import java.util.Objects;
  * by {@link System#arraycopy}. A new row's cells hold the empty label. Not
  * thread-safe; owned by the model's thread.</p>
  */
-public final class M3LabelLanes {
-	private final M3LabelPool pool;
-	private final M3TextExtentCache extents;
+public final class LabelLanes {
+	private final LabelPool pool;
+	private final TextExtentCache extents;
 	private final boolean immediates;
 	private final int [] [] ids;
 	private final long [] [] labels;
@@ -50,7 +50,7 @@ public final class M3LabelLanes {
 	private int rows, capacity = 16;
 
 	/** Creates pooled lanes (an int pool id per cell). */
-	public M3LabelLanes (int columns, M3LabelPool pool, M3TextExtentCache extents) {
+	public LabelLanes (int columns, LabelPool pool, TextExtentCache extents) {
 		this (columns, pool, extents, false);
 	}
 
@@ -59,7 +59,7 @@ public final class M3LabelLanes {
 	 * {@code extents}, immediate lanes when {@code immediates} is true, and wires
 	 * the pool's evictions to the extent cache.
 	 */
-	public M3LabelLanes (int columns, M3LabelPool pool, M3TextExtentCache extents, boolean immediates) {
+	public LabelLanes (int columns, LabelPool pool, TextExtentCache extents, boolean immediates) {
 		if (columns < 1) throw new IllegalArgumentException ("columns < 1: " + columns);
 		this.pool = Objects.requireNonNull (pool);
 		this.extents = Objects.requireNonNull (extents);
@@ -80,7 +80,7 @@ public final class M3LabelLanes {
 		return columns;
 	}
 
-	/** Answers whether the lanes hold {@link M3ShortLabel} values. */
+	/** Answers whether the lanes hold {@link ShortLabel} values. */
 	public boolean immediates () {
 		return immediates;
 	}
@@ -99,10 +99,10 @@ public final class M3LabelLanes {
 		for (int c = 0; c < columns; c++) {
 			if (immediates) {
 				System.arraycopy (labels [c], row, labels [c], row + count, rows - row);
-				Arrays.fill (labels [c], row, row + count, M3ShortLabel.EMPTY);
+				Arrays.fill (labels [c], row, row + count, ShortLabel.EMPTY);
 			} else {
 				System.arraycopy (ids [c], row, ids [c], row + count, rows - row);
-				Arrays.fill (ids [c], row, row + count, M3LabelPool.EMPTY);
+				Arrays.fill (ids [c], row, row + count, LabelPool.EMPTY);
 			}
 		}
 		rows += count;
@@ -126,8 +126,8 @@ public final class M3LabelLanes {
 	 */
 	public void setText (int row, int column, String text) {
 		check (row, column);
-		long label = immediates ? M3ShortLabel.pack (text) : M3ShortLabel.NONE;
-		if (label == M3ShortLabel.NONE) label = pool.intern (text);
+		long label = immediates ? ShortLabel.pack (text) : ShortLabel.NONE;
+		if (label == ShortLabel.NONE) label = pool.intern (text);
 		release (get (column, row));
 		put (column, row, label);
 	}
@@ -140,7 +140,7 @@ public final class M3LabelLanes {
 
 	/** The pool id of a cell; refused for a cell that holds an immediate label. */
 	public int labelId (int row, int column) {
-		return M3ShortLabel.poolId (label (row, column));
+		return ShortLabel.poolId (label (row, column));
 	}
 
 	/** Text of a cell. Pooled labels answer their String facade; immediates a new String. */
@@ -150,13 +150,13 @@ public final class M3LabelLanes {
 
 	/** Text of {@code label} of this model. */
 	public String text (long label) {
-		return M3ShortLabel.isImmediate (label) ? M3ShortLabel.toString (label) : pool.text (M3ShortLabel.poolId (label));
+		return ShortLabel.isImmediate (label) ? ShortLabel.toString (label) : pool.text (ShortLabel.poolId (label));
 	}
 
 	/** Number of characters of a cell's text. */
 	public int length (int row, int column) {
 		long label = label (row, column);
-		return M3ShortLabel.isImmediate (label) ? M3ShortLabel.length (label) : pool.length ((int) label);
+		return ShortLabel.isImmediate (label) ? ShortLabel.length (label) : pool.length ((int) label);
 	}
 
 	/**
@@ -170,16 +170,16 @@ public final class M3LabelLanes {
 
 	/** Copies the text of {@code label} of this model into {@code dst}; returns its length. */
 	public int getChars (long label, char [] dst, int offset) {
-		return M3ShortLabel.isImmediate (label) ? M3ShortLabel.getChars (label, dst, offset) : pool.getChars (M3ShortLabel.poolId (label), dst, offset);
+		return ShortLabel.isImmediate (label) ? ShortLabel.getChars (label, dst, offset) : pool.getChars (ShortLabel.poolId (label), dst, offset);
 	}
 
 	/** Extent of a cell's label in {@code fontId}, measured once per distinct label. */
-	public long extent (int row, int column, int fontId, M3TextExtentCache.Measurer measurer) {
+	public long extent (int row, int column, int fontId, TextExtentCache.Measurer measurer) {
 		return extents.extent (label (row, column), fontId, measurer);
 	}
 
 	/** Width of the widest label of {@code column} among rows {@code [from, to)}. */
-	public int widest (int column, int from, int to, int fontId, M3TextExtentCache.Measurer measurer) {
+	public int widest (int column, int from, int to, int fontId, TextExtentCache.Measurer measurer) {
 		Objects.checkIndex (column, columns);
 		Objects.checkFromToIndex (from, to, rows);
 		return immediates ? extents.widest (labels [column], from, to, fontId, measurer) : extents.widest (ids [column], from, to, fontId, measurer);
@@ -190,18 +190,18 @@ public final class M3LabelLanes {
 		Objects.checkIndex (column, columns);
 		int count = 0;
 		for (int r = 0; r < rows && immediates; r++) {
-			if (M3ShortLabel.isImmediate (labels [column] [r])) count++;
+			if (ShortLabel.isImmediate (labels [column] [r])) count++;
 		}
 		return count;
 	}
 
 	/** The label pool of this model. */
-	public M3LabelPool pool () {
+	public LabelPool pool () {
 		return pool;
 	}
 
 	/** The extent cache of this model. */
-	public M3TextExtentCache extents () {
+	public TextExtentCache extents () {
 		return extents;
 	}
 
@@ -220,7 +220,7 @@ public final class M3LabelLanes {
 	}
 
 	private void release (long label) {
-		if (!M3ShortLabel.isImmediate (label)) pool.release ((int) label);
+		if (!ShortLabel.isImmediate (label)) pool.release ((int) label);
 	}
 
 	private void check (int row, int column) {

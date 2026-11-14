@@ -23,11 +23,11 @@ import java.util.*;
  * Written for this package; FlatLaf's reader (derived from minimal-json) is the pattern
  * (look-and-feel/FOSS_REUSE_DECISION.tsv, json_reader).
  */
-final class M3Json {
+final class ThemeJson {
 	private final String text;
 	private int at;
 
-	private M3Json (String text) {
+	private ThemeJson (String text) {
 		this.text = text;
 	}
 
@@ -37,7 +37,7 @@ final class M3Json {
 	 * @throws IllegalArgumentException with the offset when the text is not JSON
 	 */
 	static Object parse (String text) {
-		M3Json reader = new M3Json (text);
+		ThemeJson reader = new ThemeJson (text);
 		Object value = reader.value ();
 		reader.space ();
 		if (reader.at != text.length ()) throw reader.error ("text after the value");

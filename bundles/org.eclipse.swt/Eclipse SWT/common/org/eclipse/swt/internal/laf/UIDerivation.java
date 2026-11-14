@@ -25,7 +25,7 @@ import java.util.regex.*;
  * <code>@accent</code>), {@link #derive} resolves only the values that depend on it, transitively, against the
  * developer's bases; every other value keeps its resolution.
  */
-final class M3UIDerivation {
+final class UIDerivation {
 	private static final Pattern REFERENCE = Pattern.compile ("[$@][A-Za-z0-9_.\\-]+");
 
 	private final String name;
@@ -35,7 +35,7 @@ final class M3UIDerivation {
 	private final int [] start, dependents;
 	private int lastCone;
 
-	private M3UIDerivation (String name, LookAndFeelLoader loader, Map<String, String> raw) {
+	private UIDerivation (String name, LookAndFeelLoader loader, Map<String, String> raw) {
 		this.name = name;
 		this.loader = loader;
 		this.raw = raw;
@@ -62,8 +62,8 @@ final class M3UIDerivation {
 	}
 
 	/** The dependencies of a look and feel's merged table. */
-	static M3UIDerivation of (String name, LookAndFeelLoader loader) {
-		return new M3UIDerivation (name, loader, loader.merged (name, new ArrayList<> ()));
+	static UIDerivation of (String name, LookAndFeelLoader loader) {
+		return new UIDerivation (name, loader, loader.merged (name, new ArrayList<> ()));
 	}
 
 	/** The number of nodes (keys and variables). */
@@ -115,13 +115,13 @@ final class M3UIDerivation {
 	/* the developer's value of a node as table text, or null when the developer layer has none */
 	private static String base (M3UIDefaults.Lanes developer, String node) {
 		if (node.startsWith ("@")) return developer.variable (node);
-		int key = M3UIKeys.id (node);
+		int key = UIKeys.id (node);
 		if (key < 0 || !developer.has (key)) return null;
 		int value = developer.value (key);
-		switch (M3UIKeys.kind (key)) {
-			case M3UIKeys.COLOR: return String.format ("#%06x%02x", value & 0xFFFFFF, value >>> 24);
-			case M3UIKeys.BOOLEAN: return value != 0 ? "true" : "false";
-			case M3UIKeys.INSETS: {
+		switch (UIKeys.kind (key)) {
+			case UIKeys.COLOR: return String.format ("#%06x%02x", value & 0xFFFFFF, value >>> 24);
+			case UIKeys.BOOLEAN: return value != 0 ? "true" : "false";
+			case UIKeys.INSETS: {
 				int [] quad = new int [4];
 				developer.quad (key, quad);
 				return quad [0] + "," + quad [1] + "," + quad [2] + "," + quad [3];

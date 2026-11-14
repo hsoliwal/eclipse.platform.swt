@@ -20,7 +20,7 @@ import org.eclipse.swt.widgets.*;
 /**
  * The UI delegate of the drawn rows of a Tree, Table or List in the custom, m3 and gpu modes (docs/m3/LOOK_AND_FEEL.md
  * LF6; Swing's <code>ComponentUI</code>). One row delegate type: the LF6 contract is the all-widgets track's
- * {@link M3ComponentUI} (<code>installUI</code>, <code>uninstallUI</code>, <code>paintKeys</code>,
+ * {@link ComponentUI} (<code>installUI</code>, <code>uninstallUI</code>, <code>paintKeys</code>,
  * <code>metricKeys</code>; there is no separate row interface) and this class is the drawn planes' implementation
  * of it. A drawn plane installs it with {@link M3LookAndFeel#installUI}; it reads the
  * row colours of its look and feel from {@link M3UIDefaults} into a {@link Theme} ({@link ThemeDefaults}), and the
@@ -28,13 +28,13 @@ import org.eclipse.swt.widgets.*;
  * switch that changes one of them installs it again and repaints the widget; it has no metric keys (stage 1: the
  * native control owns the geometry). It keeps no widget state.
  */
-public final class M3DrawnRowUI implements M3ComponentUI {
+public final class DrawnRowUI implements ComponentUI {
 	private final String widget;
 	private final int [] keys;
 	private volatile Theme theme;
 
 	/** @param widget the widget's simple class name (<code>Tree</code>, <code>Table</code>, <code>List</code>) */
-	public M3DrawnRowUI (String widget) {
+	public DrawnRowUI (String widget) {
 		this.widget = widget;
 		this.keys = ThemeDefaults.keys (widget);
 		this.theme = Theme.NATIVE;

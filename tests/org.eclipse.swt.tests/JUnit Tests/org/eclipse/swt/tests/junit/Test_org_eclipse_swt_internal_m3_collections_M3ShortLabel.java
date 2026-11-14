@@ -14,7 +14,7 @@
  *******************************************************************************/
 package org.eclipse.swt.tests.junit;
 
-import org.eclipse.swt.internal.m3.collections.*;
+import org.eclipse.swt.internal.residency.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 
-/** Layout, round trip and canonicity of {@link M3ShortLabel}. */
+/** Layout, round trip and canonicity of {@link ShortLabel}. */
 public class Test_org_eclipse_swt_internal_m3_collections_M3ShortLabel {
 	private static final String IDENT = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$";
 
@@ -42,16 +42,16 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3ShortLabel {
 	@Test
 	void packsLikeTheJdkImmediateOwner () {
 		for (String text : new String [] {"a", "Error", "Warning", "12 KB", "café", "line 42", "identifier", "M3String", "abc_$XYZ09", "zzzzzzzzzz"}) {
-			long label = M3ShortLabel.pack (text);
+			long label = ShortLabel.pack (text);
 			assertEquals (expected (text), label, text);
-			assertTrue (M3ShortLabel.isImmediate (label));
-			assertFalse (M3ShortLabel.isPoolId (label));
-			assertEquals (text.length (), M3ShortLabel.length (label));
-			assertEquals (text, M3ShortLabel.toString (label));
-			assertEquals (text.hashCode (), M3ShortLabel.hash (label));
-			for (int i = 0; i < text.length (); i++) assertEquals (text.charAt (i), M3ShortLabel.charAt (label, i));
+			assertTrue (ShortLabel.isImmediate (label));
+			assertFalse (ShortLabel.isPoolId (label));
+			assertEquals (text.length (), ShortLabel.length (label));
+			assertEquals (text, ShortLabel.toString (label));
+			assertEquals (text.hashCode (), ShortLabel.hash (label));
+			for (int i = 0; i < text.length (); i++) assertEquals (text.charAt (i), ShortLabel.charAt (label, i));
 			char [] buffer = new char [12];
-			assertEquals (text.length (), M3ShortLabel.getChars (label, buffer, 2));
+			assertEquals (text.length (), ShortLabel.getChars (label, buffer, 2));
 			assertEquals (text, new String (buffer, 2, text.length ()));
 			assertTrue (label > 0);
 		}
@@ -59,22 +59,22 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3ShortLabel {
 
 	@Test
 	void refusesTextThatNeedsAPoolEntry () {
-		assertEquals (M3ShortLabel.EMPTY, M3ShortLabel.pack (""));
+		assertEquals (ShortLabel.EMPTY, ShortLabel.pack (""));
 		for (String text : new String [] {"अ", "12345678901", "with space", "dot.java!", "éééééééé", "abcdefgĀ"}) {
-			assertEquals (M3ShortLabel.NONE, M3ShortLabel.pack (text), text);
+			assertEquals (ShortLabel.NONE, ShortLabel.pack (text), text);
 		}
-		assertFalse (M3ShortLabel.isImmediate (M3ShortLabel.NONE));
-		assertFalse (M3ShortLabel.isPoolId (M3ShortLabel.NONE));
-		assertFalse (M3ShortLabel.isPoolId (1L << 31));
-		assertThrows (IllegalArgumentException.class, () -> M3ShortLabel.poolId (M3ShortLabel.pack ("x")));
-		assertThrows (IllegalArgumentException.class, () -> M3ShortLabel.ofPoolId (-1));
-		assertEquals (7L, M3ShortLabel.ofPoolId (7));
-		assertEquals (7, M3ShortLabel.poolId (7L));
-		assertTrue (M3ShortLabel.isPoolId (M3ShortLabel.EMPTY));
-		assertThrows (IllegalArgumentException.class, () -> M3ShortLabel.length (5L));
-		assertThrows (IllegalArgumentException.class, () -> M3ShortLabel.length (3L << 61));
-		assertThrows (IndexOutOfBoundsException.class, () -> M3ShortLabel.charAt (M3ShortLabel.pack ("ab"), 2));
-		assertThrows (IndexOutOfBoundsException.class, () -> M3ShortLabel.getChars (M3ShortLabel.pack ("abcdefghij"), new char [9], 0));
+		assertFalse (ShortLabel.isImmediate (ShortLabel.NONE));
+		assertFalse (ShortLabel.isPoolId (ShortLabel.NONE));
+		assertFalse (ShortLabel.isPoolId (1L << 31));
+		assertThrows (IllegalArgumentException.class, () -> ShortLabel.poolId (ShortLabel.pack ("x")));
+		assertThrows (IllegalArgumentException.class, () -> ShortLabel.ofPoolId (-1));
+		assertEquals (7L, ShortLabel.ofPoolId (7));
+		assertEquals (7, ShortLabel.poolId (7L));
+		assertTrue (ShortLabel.isPoolId (ShortLabel.EMPTY));
+		assertThrows (IllegalArgumentException.class, () -> ShortLabel.length (5L));
+		assertThrows (IllegalArgumentException.class, () -> ShortLabel.length (3L << 61));
+		assertThrows (IndexOutOfBoundsException.class, () -> ShortLabel.charAt (ShortLabel.pack ("ab"), 2));
+		assertThrows (IndexOutOfBoundsException.class, () -> ShortLabel.getChars (ShortLabel.pack ("abcdefghij"), new char [9], 0));
 	}
 
 	@Test
@@ -85,11 +85,11 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3ShortLabel {
 			int length = 1 + random.nextInt (10);
 			StringBuilder text = new StringBuilder ();
 			for (int k = 0; k < length; k++) text.append (random.nextInt (4) == 0 ? (char) random.nextInt (256) : IDENT.charAt (random.nextInt (64)));
-			long label = M3ShortLabel.pack (text);
-			if (label == M3ShortLabel.NONE) continue;
+			long label = ShortLabel.pack (text);
+			if (label == ShortLabel.NONE) continue;
 			String previous = seen.putIfAbsent (label, text.toString ());
 			if (previous != null) assertEquals (previous, text.toString ());
-			assertEquals (text.toString (), M3ShortLabel.toString (label));
+			assertEquals (text.toString (), ShortLabel.toString (label));
 		}
 		assertTrue (seen.size () > 50_000);
 	}

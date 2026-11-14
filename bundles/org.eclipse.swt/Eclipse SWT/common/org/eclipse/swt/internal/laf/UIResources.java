@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.*;
  * ({@link M3LookAndFeel#setLookAndFeel}), as Swing's look and feels drop their <code>UIResource</code>s, so a delegate
  * never keeps one across paints. Disposed with the display.
  */
-public final class M3UIResources {
+public final class UIResources {
 	private final Display display;
 	private int [] keys = new int [64];
 	private Color [] colours = new Color [64];
@@ -32,16 +32,16 @@ public final class M3UIResources {
 	private Font [] fonts = new Font [16];
 	private int fontCount, disposals;
 
-	private M3UIResources (Display display) {
+	private UIResources (Display display) {
 		this.display = display;
 	}
 
 	/** The resources of a display, created on first use (kept in the display's data, disposed with it). */
-	public static M3UIResources of (Display display) {
-		String key = M3UIResources.class.getName ();
-		M3UIResources resources = (M3UIResources) display.getData (key);
+	public static UIResources of (Display display) {
+		String key = UIResources.class.getName ();
+		UIResources resources = (UIResources) display.getData (key);
 		if (resources == null) {
-			M3UIResources created = resources = new M3UIResources (display);
+			UIResources created = resources = new UIResources (display);
 			display.setData (key, created);
 			display.disposeExec (created::dispose);
 		}
@@ -63,12 +63,12 @@ public final class M3UIResources {
 		return colour;
 	}
 
-	/** The font of a font id ({@link M3UIFonts}). */
+	/** The font of a font id ({@link UIFonts}). */
 	public Font font (int id) {
 		if (id >= fonts.length) fonts = java.util.Arrays.copyOf (fonts, Math.max (fonts.length * 2, id + 1));
 		Font font = fonts [id];
 		if (font == null) {
-			fonts [id] = font = new Font (display, M3UIFonts.name (id), M3UIFonts.height (id), M3UIFonts.style (id));
+			fonts [id] = font = new Font (display, UIFonts.name (id), UIFonts.height (id), UIFonts.style (id));
 			fontCount++;
 		}
 		return font;

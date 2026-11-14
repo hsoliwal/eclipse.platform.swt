@@ -68,17 +68,17 @@ public class Test_org_eclipse_swt_internal_render_Themes {
 	/* the row delegate of LF6: its paint keys, the theme of each look and feel, and the look of a look and feel's name */
 	@Test
 	public void rowDelegateReadsItsLookAndFeelDefaults () {
-		M3DrawnRowUI ui = new M3DrawnRowUI ("Table");
+		DrawnRowUI ui = new DrawnRowUI ("Table");
 		assertEquals (12, ui.paintKeys ().length);
-		assertTrue (Arrays.stream (ui.paintKeys ()).anyMatch (id -> "Table.selectionBackground".equals (M3UIKeys.name (id))));
+		assertTrue (Arrays.stream (ui.paintKeys ()).anyMatch (id -> "Table.selectionBackground".equals (UIKeys.name (id))));
 		assertSame (Theme.NATIVE, ui.theme (), "before it is installed");
 		for (String name : new String [] {"native", "swing", "initiative31", "light", "dark"}) {
 			M3UIDefaults defaults = M3LookAndFeel.defaults (name);
 			ui.installUI (null, defaults);
 			Theme theme = ui.theme ();
 			assertEquals (ThemeDefaults.look (defaults.name ()).look, theme.look, name);
-			assertEquals (defaults.color (M3UIKeys.id ("Table.selectionBackground"), 0) & 0xFFFFFF, theme.selectionBackground, name);
-			assertEquals (defaults.color (M3UIKeys.id ("Table.gridColor"), 0) & 0xFFFFFF, theme.grid, name);
+			assertEquals (defaults.color (UIKeys.id ("Table.selectionBackground"), 0) & 0xFFFFFF, theme.selectionBackground, name);
+			assertEquals (defaults.color (UIKeys.id ("Table.gridColor"), 0) & 0xFFFFFF, theme.grid, name);
 		}
 		assertSame (Theme.SWING, ThemeDefaults.look ("Metal"));
 		assertSame (Theme.NATIVE, ThemeDefaults.look (null));

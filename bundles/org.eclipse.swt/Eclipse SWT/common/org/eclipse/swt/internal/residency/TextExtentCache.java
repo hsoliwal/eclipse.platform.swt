@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.internal.m3.collections;
+package org.eclipse.swt.internal.residency;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -22,7 +22,7 @@ import java.util.Objects;
  *
  * <p>Rows that share a label share its measurement: computing the widest row
  * of a column measures every distinct label once, not every row. A label is an
- * {@link M3LabelPool} id or an {@link M3ShortLabel} value (both non-negative
+ * {@link LabelPool} id or an {@link ShortLabel} value (both non-negative
  * {@code long}s); values pack width and height into one {@code long}
  * ({@link #pack(int, int)}). Lookup is open addressing with linear probing and
  * backward-shift deletion over parallel label, font and extent lanes; when the
@@ -35,11 +35,11 @@ import java.util.Objects;
  * are reused; immediate labels never are). Not thread-safe; owned by one
  * model.</p>
  */
-public final class M3TextExtentCache {
+public final class TextExtentCache {
 	/** Measures the text of a label in a font; called only on a cache miss. */
 	@FunctionalInterface
 	public interface Measurer {
-		/** Returns the extent of {@code label} in {@code fontId}, packed by {@link M3TextExtentCache#pack(int, int)}. */
+		/** Returns the extent of {@code label} in {@code fontId}, packed by {@link TextExtentCache#pack(int, int)}. */
 		long measure (long label, int fontId);
 	}
 
@@ -57,7 +57,7 @@ public final class M3TextExtentCache {
 	private long hits, misses, evictions;
 
 	/** Creates a cache that holds at most {@code maxEntries} extents. */
-	public M3TextExtentCache (int maxEntries) {
+	public TextExtentCache (int maxEntries) {
 		if (maxEntries < 1 || maxEntries > 1 << 29) throw new IllegalArgumentException ("maxEntries out of range: " + maxEntries);
 		this.maxEntries = maxEntries;
 		int capacity = Integer.highestOneBit (maxEntries * 2 - 1) << 1;
