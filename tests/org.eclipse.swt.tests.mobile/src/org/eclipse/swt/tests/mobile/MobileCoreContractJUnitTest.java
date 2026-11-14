@@ -32,5 +32,8 @@ public final class MobileCoreContractJUnitTest {
 	@Test void originalMobileListInputAndSparseVirtualRows() {
 		MobileCoreContractTest.testMobileListContracts();
 	}
+	@Test void originalMobileNativeTextVerifyModifyAndUtf16() {
+		MobileCoreContractTest.testMobileOriginalTextContracts();
+	}
 
 }

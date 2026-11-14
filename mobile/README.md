@@ -181,9 +181,17 @@ bitset selection, software viewport scrolling, on-demand SWT.SetData and
 native-backed Canvas paint/input on Android and iOS. It does **not** provide
 native ScrollBar objects, full list-item accessibility semantics, platform
 gesture physics, RTL layout or drag-and-drop.
-Text, Combo, Table, Tree, menus, ToolBar, TabFolder, StyledText, Browser, printing,
-drag-and-drop, OpenGL, complete IME/text composition, and the public Accessible
-API are not implemented by this source closure. Other Nebula widgets are not
+The original Text widget now has Java-owned UTF-16 text, Verify/Modify event
+ordering, selection, text limits, password/single/multiline style entrypoints,
+Android EditText and UIKit UITextField/UITextView native editors, and native
+clipboard-backed copy/cut/paste. The native UI thread reports immutable text
+snapshots to SWT's original Display event loop; user callbacks run only there.
+It does NOT yet provide qualified marked-text/IME composition, platform-specific
+spellcheck/autocorrect parity, bidi text segments, full SWT Accessible semantics
+or complete clipboard/DND integration.
+Combo, Table, Tree, menus, ToolBar, TabFolder, StyledText, Browser, printing,
+drag-and-drop, OpenGL and the remaining SWT/Nebula widget catalogue are not
+implemented by this source closure. Other Nebula widgets are not
 qualified merely because they derive from Canvas.
 
 Native scrollbars, RTL control layout, font enumeration/registration, nonempty

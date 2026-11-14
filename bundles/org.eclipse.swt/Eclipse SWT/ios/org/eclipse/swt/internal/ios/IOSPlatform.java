@@ -85,6 +85,15 @@ public final class IOSPlatform implements MobilePlatform {
 	@Override public void setBounds(long peer, int x, int y, int w, int h) { check(); OS.setBounds(peer, x, y, w, h); }
 	@Override public void setVisible(long peer, boolean visible) { check(); OS.setVisible(peer, visible); }
 	@Override public void setEnabled(long peer, boolean enabled) { check(); OS.setEnabled(peer, enabled); }
+	@Override public void textContent(long peer, String text, int selectionStart,
+			int selectionEnd, boolean editable, int limit, String hint) {
+		check();
+		OS.textContent(peer, text, selectionStart, selectionEnd, editable, limit, hint);
+	}
+	@Override public String getClipboardText() { check(); return OS.getClipboardText(); }
+	@Override public void setClipboardText(String text) {
+		check(); OS.setClipboardText(Objects.requireNonNull(text, "clipboard text"));
+	}
 	@Override public void setTitle(long peer, String title) { check(); OS.setTitle(peer, Objects.requireNonNull(title, "title")); }
 	@Override public boolean requestFocus(long peer) { check(); return OS.requestFocus(peer); }
 	@Override public void setAccessibility(long peer, String label, int role, int state) { check(); OS.setAccessibility(peer, Objects.requireNonNull(label, "label"), role, state); }

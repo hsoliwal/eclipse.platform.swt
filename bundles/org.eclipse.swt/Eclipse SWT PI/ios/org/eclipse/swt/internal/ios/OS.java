@@ -37,6 +37,9 @@ public final class OS {
 	public static final int ACTION_INCREMENT = MobilePlatform.ACTION_INCREMENT,
 		ACTION_DECREMENT = MobilePlatform.ACTION_DECREMENT;
 	public static final int NO_FOCUS = SWT.NO_FOCUS;
+	public static final int TEXT = MobilePlatform.TEXT;
+	public static final int MULTI = SWT.MULTI, PASSWORD = SWT.PASSWORD;
+	public static final int DEFAULT_SELECTION = SWT.DefaultSelection;
 	public static final int SHELL = MobilePlatform.SHELL, COMPOSITE = MobilePlatform.COMPOSITE,
 		CANVAS = MobilePlatform.CANVAS;
 	public static final int ROLE_LIST = ACC.ROLE_LIST, ROLE_LABEL = ACC.ROLE_LABEL, ROLE_PUSHBUTTON = ACC.ROLE_PUSHBUTTON,
@@ -56,6 +59,9 @@ public final class OS {
 	public static native void setVisible(long peer, boolean visible);
 	public static native void setEnabled(long peer, boolean enabled);
 	public static native void setTitle(long peer, String title);
+	public static native String getClipboardText();
+	public static native void setClipboardText(String text);
+	public static native void textContent(long peer, String text, int start, int end, boolean editable, int limit, String hint);
 	public static native boolean requestFocus(long peer);
 	public static native void setAccessibility(long peer, String label, int role, int state);
 	public static native void present(long peer, long image);

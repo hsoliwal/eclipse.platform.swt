@@ -98,7 +98,7 @@ static __weak UIView *swtRoot;
 static BOOL swtHostTerminated;
 static SWTHandleRegistry swtViews = {.kind = 1};
 static jobject swtSink;
-static jmethodID swtInput, swtResize, swtPaint, swtClose, swtLifecycle, swtAccessibility, swtTerminate;
+static jmethodID swtInput, swtTextChanged, swtResize, swtPaint, swtClose, swtLifecycle, swtAccessibility, swtTerminate;
 static id swtActiveObserver, swtInactiveObserver, swtTerminationObserver;
 /* Images and graphics belong to the connected Java Display thread. */
 static SWTHandleRegistry swtImages = {.kind = 2};
@@ -225,12 +225,15 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 	});
 }
 
-@interface SWTUIKitView : UIView
+@interface SWTUIKitView : UIView <UITextFieldDelegate, UITextViewDelegate>
 @property(nonatomic) jlong peer;
 @property(nonatomic) jlong owner;
 @property(nonatomic) jint kind;
 @property(nonatomic) jint style;
 @property(nonatomic) jint accessibilityRole;
+@property(nonatomic, strong) UIView *nativeEditor;
+@property(nonatomic) BOOL suppressTextCallbacks;
+@property(nonatomic) NSInteger textLimit;
 @property(nonatomic) BOOL disposed;
 @property(nonatomic, strong) UITouch *primaryTouch;
 @property(nonatomic) BOOL enabled;
@@ -249,6 +252,96 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 		self.hidden = YES;
 	}
 	return self;
+}
+/** Native UIKit editor is a peer child; Java SWT Text owns its canonical string. */
+- (void)installNativeEditor {
+	if (_kind != SWT(TEXT)) return;
+	if ((_style & SWT(MULTI)) != 0) {
+		UITextView *editor = [[UITextView alloc] initWithFrame:CGRectZero];
+		editor.delegate = self;
+		editor.backgroundColor = UIColor.clearColor;
+		editor.font = [UIFont systemFontOfSize:17];
+		editor.scrollEnabled = YES;
+		_nativeEditor = editor;
+	} else {
+		UITextField *editor = [[UITextField alloc] initWithFrame:CGRectZero];
+		editor.delegate = self;
+		editor.backgroundColor = UIColor.clearColor;
+		editor.font = [UIFont systemFontOfSize:17];
+		editor.secureTextEntry = (_style & SWT(PASSWORD)) != 0;
+		editor.returnKeyType = UIReturnKeyDone;
+		[editor addTarget:self action:@selector(fieldChanged:) forControlEvents:UIControlEventEditingChanged];
+		_nativeEditor = editor;
+	}
+	_textLimit = INT_MAX;
+	[self addSubview:_nativeEditor];
+}
+- (void)publishNativeText {
+	if (_disposed || _suppressTextCallbacks || _peer == 0 || _nativeEditor == nil || swtTextChanged == NULL) return;
+	NSString *copy = nil;
+	if ([_nativeEditor isKindOfClass:UITextField.class]) copy = ((UITextField *)_nativeEditor).text;
+	else copy = ((UITextView *)_nativeEditor).text;
+	if (copy == nil) copy = @"";
+	id<UITextInput> editor = (id<UITextInput>)_nativeEditor;
+	UITextRange *selection = editor.selectedTextRange;
+	jint start = 0, end = 0;
+	if (selection != nil) {
+		start = (jint)[editor offsetFromPosition:editor.beginningOfDocument toPosition:selection.start];
+		end = (jint)[editor offsetFromPosition:editor.beginningOfDocument toPosition:selection.end];
+	}
+	jlong peer = _peer;
+	swtCallback(^(JNIEnv *env, jobject sink) {
+		if (copy.length > INT_MAX) {
+			swtThrow(env, "java/lang/IllegalArgumentException", "Text input exceeds JNI UTF-16 capacity");
+			return;
+		}
+		unichar *chars = calloc(MAX((NSUInteger)1, copy.length), sizeof(unichar));
+		if (chars == NULL) {
+			swtThrow(env, "java/lang/OutOfMemoryError", "Cannot copy native UTF-16 text");
+			return;
+		}
+		[copy getCharacters:chars range:NSMakeRange(0, copy.length)];
+		jstring text = (*env)->NewString(env, (const jchar *)chars, (jsize)copy.length);
+		free(chars);
+		if (text == NULL) return;
+		(*env)->CallVoidMethod(env, sink, swtTextChanged, peer, text, start, end);
+		(*env)->DeleteLocalRef(env, text);
+	});
+}
+- (void)fieldChanged:(UITextField *)editor { (void)editor; [self publishNativeText]; }
+- (void)textViewDidChange:(UITextView *)editor { (void)editor; [self publishNativeText]; }
+- (void)textViewDidChangeSelection:(UITextView *)editor { (void)editor; [self publishNativeText]; }
+- (void)textFieldDidChangeSelection:(UITextField *)editor { (void)editor; [self publishNativeText]; }
+- (void)textFieldDidBeginEditing:(UITextField *)editor {
+	(void)editor;
+	swtSendInput(_peer, SWT(FOCUS_IN), CGPointZero, 0, 0, 0, 0, 0, NSProcessInfo.processInfo.systemUptime);
+}
+- (void)textFieldDidEndEditing:(UITextField *)editor {
+	(void)editor;
+	swtSendInput(_peer, SWT(FOCUS_OUT), CGPointZero, 0, 0, 0, 0, 0, NSProcessInfo.processInfo.systemUptime);
+}
+- (void)textViewDidBeginEditing:(UITextView *)editor {
+	(void)editor;
+	swtSendInput(_peer, SWT(FOCUS_IN), CGPointZero, 0, 0, 0, 0, 0, NSProcessInfo.processInfo.systemUptime);
+}
+- (void)textViewDidEndEditing:(UITextView *)editor {
+	(void)editor;
+	swtSendInput(_peer, SWT(FOCUS_OUT), CGPointZero, 0, 0, 0, 0, 0, NSProcessInfo.processInfo.systemUptime);
+}
+- (BOOL)textFieldShouldReturn:(UITextField *)editor {
+	(void)editor;
+	swtSendInput(_peer, SWT(DEFAULT_SELECTION), CGPointZero, 0, 0, 0, 0, 0, NSProcessInfo.processInfo.systemUptime);
+	return NO;
+}
+- (BOOL)textField:(UITextField *)field shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)text {
+	return range.location <= field.text.length
+		&& range.length <= field.text.length - range.location
+		&& field.text.length - range.length + text.length <= (NSUInteger)_textLimit;
+}
+- (BOOL)textView:(UITextView *)editor shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
+	return range.location <= editor.text.length
+		&& range.length <= editor.text.length - range.location
+		&& editor.text.length - range.length + text.length <= (NSUInteger)_textLimit;
 }
 - (void)dealloc { if (_snapshot != NULL) CGImageRelease(_snapshot); }
 - (void)setSnapshot:(CGImageRef)value {
@@ -270,6 +363,7 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 }
 - (void)layoutSubviews {
 	[super layoutSubviews];
+	if (_nativeEditor != nil) _nativeEditor.frame = self.bounds;
 	if (_disposed || _peer == 0) return;
 	jlong peer = _peer;
 	CGSize size = self.bounds.size;
@@ -286,12 +380,14 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 }
 - (BOOL)canBecomeFirstResponder { return !_disposed && _enabled && (_style & SWT(NO_FOCUS)) == 0; }
 - (BOOL)becomeFirstResponder {
+	if (_nativeEditor != nil) return [_nativeEditor becomeFirstResponder];
 	BOOL was = self.isFirstResponder;
 	BOOL result = [super becomeFirstResponder];
 	if (result && !was && !_disposed) swtSendInput(_peer, SWT(FOCUS_IN), CGPointZero, 0, 0, 0, 0, 0, NSProcessInfo.processInfo.systemUptime);
 	return result;
 }
 - (BOOL)resignFirstResponder {
+	if (_nativeEditor != nil) return [_nativeEditor resignFirstResponder];
 	BOOL was = self.isFirstResponder;
 	BOOL result = [super resignFirstResponder];
 	if (result && was && !_disposed) swtSendInput(_peer, SWT(FOCUS_OUT), CGPointZero, 0, 0, 0, 0, 0, NSProcessInfo.processInfo.systemUptime);
@@ -446,7 +542,9 @@ JNIEXPORT void JNICALL JNI(connect)(JNI_ARGS, jobject sink) {
 		jclass type = (*env)->GetObjectClass(env, sink);
 		if (type == NULL) return;
 		jmethodID input = (*env)->GetMethodID(env, type, "input", "(JIIIIICIII)V");
-		jmethodID resize = input == NULL ? NULL : (*env)->GetMethodID(env, type, "resize", "(JII)V");
+		jmethodID textChanged = input == NULL ? NULL : (*env)->GetMethodID(env, type,
+			"textChanged", "(JLjava/lang/String;II)V");
+		jmethodID resize = textChanged == NULL ? NULL : (*env)->GetMethodID(env, type, "resize", "(JII)V");
 		jmethodID paint = resize == NULL ? NULL : (*env)->GetMethodID(env, type, "paint", "(J)V");
 		jmethodID close = paint == NULL ? NULL : (*env)->GetMethodID(env, type, "close", "(J)V");
 		jmethodID lifecycle = close == NULL ? NULL : (*env)->GetMethodID(env, type, "lifecycle", "(Z)V");
@@ -464,7 +562,7 @@ JNIEXPORT void JNICALL JNI(connect)(JNI_ARGS, jobject sink) {
 		}
 		BOOL success = swtUI(env, ^{
 			if (swtRoot == nil || swtRoot.window.windowScene == nil || swtHostTerminated || swtSink != NULL) [NSException raise:NSInternalInconsistencyException format:@"Install one live UIKit scene root before connecting SWT"];
-			swtInput = input; swtResize = resize; swtPaint = paint; swtClose = close;
+			swtInput = input; swtTextChanged = textChanged; swtResize = resize; swtPaint = paint; swtClose = close;
 			swtLifecycle = lifecycle; swtAccessibility = accessibility; swtTerminate = terminate;
 			NSNotificationCenter *center = NSNotificationCenter.defaultCenter;
 			@try {
@@ -521,6 +619,10 @@ JNIEXPORT void JNICALL JNI(disconnect)(JNI_ARGS) {
 				SWTUIKitView *view = swtViews.values[i];
 				if (view == nil) continue;
 				view.disposed = YES; view.primaryTouch = nil; view.snapshot = NULL;
+			if ([view.nativeEditor isKindOfClass:UITextView.class])
+				((UITextView *)view.nativeEditor).delegate = nil;
+			if ([view.nativeEditor isKindOfClass:UITextField.class])
+				((UITextField *)view.nativeEditor).delegate = nil;
 				[view removeFromSuperview];
 			}
 			swtRegistryClear(&swtViews);
@@ -553,7 +655,7 @@ JNIEXPORT jintArray JNICALL JNI(dpi)(JNI_ARGS) {
 JNIEXPORT jlong JNICALL JNI(createControl)(JNI_ARGS, jint kind, jlong parent, jint style) {
 	@autoreleasepool {
 		if (!swtOnDisplayThread(env)) return 0;
-		if ((kind != SWT(SHELL) && kind != SWT(COMPOSITE) && kind != SWT(CANVAS)) || (kind != SWT(SHELL) && parent == 0)) { swtThrow(env, "java/lang/IllegalArgumentException", "Unsupported peer kind or missing parent"); return 0; }
+		if ((kind != SWT(SHELL) && kind != SWT(COMPOSITE) && kind != SWT(CANVAS) && kind != SWT(TEXT)) || (kind != SWT(SHELL) && parent == 0)) { swtThrow(env, "java/lang/IllegalArgumentException", "Unsupported peer kind or missing parent"); return 0; }
 		__block jlong peer = 0;
 		swtUI(env, ^{
 			SWTUIKitView *owner = parent == 0 ? nil : swtView(parent);
@@ -570,7 +672,10 @@ JNIEXPORT jlong JNICALL JNI(createControl)(JNI_ARGS, jint kind, jlong parent, ji
 			peer = swtRegistryAdd(&swtViews, view, &error);
 			if (peer == 0) [NSException raise:error == SWTRegistryMemory ? NSMallocException : NSInternalInconsistencyException format:@"Cannot allocate SWT UIKit peer registry slot (%u)", (unsigned)error];
 			view.peer = peer;
-			@try { [host addSubview:view]; }
+			@try {
+				if (kind == SWT(TEXT)) [view installNativeEditor];
+				[host addSubview:view];
+			}
 			@catch (NSException *exception) {
 				view.disposed = YES;
 				swtRegistryRemove(&swtViews, peer);
@@ -626,6 +731,10 @@ JNIEXPORT void JNICALL JNI(setEnabled)(JNI_ARGS, jlong peer, jboolean enabled) {
 		if (!swtOnDisplayThread(env)) return;
 		swtUI(env, ^{
 			SWTUIKitView *view = swtView(peer); view.enabled = enabled; view.userInteractionEnabled = enabled;
+			if ([view.nativeEditor isKindOfClass:UITextField.class])
+				((UITextField *)view.nativeEditor).enabled = enabled;
+			if ([view.nativeEditor isKindOfClass:UITextView.class])
+				((UITextView *)view.nativeEditor).userInteractionEnabled = enabled;
 			if (enabled) view.accessibilityTraits &= ~UIAccessibilityTraitNotEnabled; else view.accessibilityTraits |= UIAccessibilityTraitNotEnabled;
 			if (!enabled) { view.primaryTouch = nil; [view resignFirstResponder]; }
 		});
@@ -646,6 +755,79 @@ JNIEXPORT jboolean JNICALL JNI(requestFocus)(JNI_ARGS, jlong peer) {
 		return focused ? JNI_TRUE : JNI_FALSE;
 	}
 }
+JNIEXPORT jstring JNICALL JNI(getClipboardText)(JNI_ARGS) {
+	@autoreleasepool {
+		if (!swtOnDisplayThread(env)) return NULL;
+		__block NSString *text = @"";
+		if (!swtUI(env, ^{ text = UIPasteboard.generalPasteboard.string ?: @""; })) return NULL;
+		if (text.length > INT_MAX) {
+			swtThrow(env, "java/lang/IllegalArgumentException", "Clipboard text exceeds UTF-16 JNI capacity");
+			return NULL;
+		}
+		unichar *chars = calloc(MAX((NSUInteger)1, text.length), sizeof(unichar));
+		if (chars == NULL) {
+			swtThrow(env, "java/lang/OutOfMemoryError", "Cannot copy clipboard UTF-16 text");
+			return NULL;
+		}
+		[text getCharacters:chars range:NSMakeRange(0, text.length)];
+		jstring result = (*env)->NewString(env, (const jchar *)chars, (jsize)text.length);
+		free(chars);
+		return result;
+	}
+}
+JNIEXPORT void JNICALL JNI(setClipboardText)(JNI_ARGS, jstring value) {
+	@autoreleasepool {
+		if (!swtOnDisplayThread(env)) return;
+		NSString *text = swtString(env, value);
+		if (text == nil) return;
+		swtUI(env, ^{ UIPasteboard.generalPasteboard.string = text; });
+	}
+}
+
+JNIEXPORT void JNICALL JNI(textContent)(JNI_ARGS, jlong peer, jstring value,
+	jint start, jint end, jboolean editable, jint limit, jstring hint) {
+	@autoreleasepool {
+		if (!swtOnDisplayThread(env)) return;
+		NSString *text = swtString(env, value);
+		NSString *placeholder = swtString(env, hint);
+		if (text == nil || placeholder == nil) return;
+		if (limit <= 0) {
+			swtThrow(env, "java/lang/IllegalArgumentException", "Text limit must be positive");
+			return;
+		}
+		swtUI(env, ^{
+			SWTUIKitView *view = swtView(peer);
+			if (view.kind != SWT(TEXT) || view.nativeEditor == nil) {
+				[NSException raise:NSInvalidArgumentException format:@"TEXT peer is required"];
+			}
+			view.suppressTextCallbacks = YES;
+			@try {
+				view.textLimit = limit;
+				if ([view.nativeEditor isKindOfClass:UITextField.class]) {
+					UITextField *field = (UITextField *)view.nativeEditor;
+					if (![field.text isEqualToString:text]) field.text = text;
+					field.enabled = editable && view.enabled;
+					field.placeholder = placeholder;
+				} else {
+					UITextView *editor = (UITextView *)view.nativeEditor;
+					if (![editor.text isEqualToString:text]) editor.text = text;
+					editor.editable = editable;
+					editor.userInteractionEnabled = view.enabled;
+					editor.accessibilityHint = placeholder;
+				}
+				id<UITextInput> editor = (id<UITextInput>)view.nativeEditor;
+				NSUInteger length = text.length;
+				NSInteger left = MAX(0, MIN((NSInteger)start, (NSInteger)length));
+				NSInteger right = MAX(left, MIN((NSInteger)end, (NSInteger)length));
+				UITextPosition *begin = editor.beginningOfDocument;
+				UITextPosition *from = [editor positionFromPosition:begin offset:left];
+				UITextPosition *to = [editor positionFromPosition:begin offset:right];
+				if (from != nil && to != nil) editor.selectedTextRange = [editor textRangeFromPosition:from toPosition:to];
+			} @finally { view.suppressTextCallbacks = NO; }
+		});
+	}
+}
+
 JNIEXPORT void JNICALL JNI(setAccessibility)(JNI_ARGS, jlong peer, jstring label, jint role, jint state) {
 	@autoreleasepool {
 		if (!swtOnDisplayThread(env)) return;
@@ -1113,6 +1295,9 @@ static JNINativeMethod swtMethods[] = {
 	{"setVisible", "(JZ)V", (void *)JNI(setVisible)},
 	{"setEnabled", "(JZ)V", (void *)JNI(setEnabled)},
 	{"setTitle", "(JLjava/lang/String;)V", (void *)JNI(setTitle)},
+	{"textContent", "(JLjava/lang/String;IIZILjava/lang/String;)V", (void *)JNI(textContent)},
+	{"getClipboardText", "()Ljava/lang/String;", (void *)JNI(getClipboardText)},
+	{"setClipboardText", "(Ljava/lang/String;)V", (void *)JNI(setClipboardText)},
 	{"requestFocus", "(J)Z", (void *)JNI(requestFocus)},
 	{"setAccessibility", "(JLjava/lang/String;II)V", (void *)JNI(setAccessibility)},
 	{"present", "(JJ)V", (void *)JNI(present)},

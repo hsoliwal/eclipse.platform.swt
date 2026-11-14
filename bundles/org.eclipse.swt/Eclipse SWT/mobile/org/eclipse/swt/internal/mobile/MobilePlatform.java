@@ -14,13 +14,17 @@ package org.eclipse.swt.internal.mobile;
  * opaque and becomes invalid after disposal. Platforms must reject stale handles.
  */
 public interface MobilePlatform {
-	int SHELL = 1, COMPOSITE = 2, CANVAS = 3;
+	int SHELL = 1, COMPOSITE = 2, CANVAS = 3, TEXT = 4;
 	int ACTION_ACTIVATE = 1, ACTION_INCREMENT = 2, ACTION_DECREMENT = 3;
 
 	/** Receives OS events without running application listeners on an OS thread. */
 	interface EventSink {
 		void input(long peer, int type, int x, int y, int button, int keyCode,
 			char character, int stateMask, int count, int time);
+		/** Native IME/editor snapshot; only the SWT Display thread applies it. */
+		default void textChanged(long peer, String text, int start, int end) {
+			throw new UnsupportedOperationException("Native text owner must implement textChanged");
+		}
 		void resize(long peer, int width, int height);
 		void paint(long peer);
 		void close(long peer);
@@ -43,6 +47,19 @@ public interface MobilePlatform {
 	void setVisible(long peer, boolean visible);
 	void setEnabled(long peer, boolean enabled);
 	void setTitle(long peer, String title);
+	/** Real system clipboard text, read only on the SWT Display thread. */
+	default String getClipboardText() {
+		throw new UnsupportedOperationException("OS clipboard is not available");
+	}
+	/** Publish text to the real native system clipboard. */
+	default void setClipboardText(String text) {
+		throw new UnsupportedOperationException("OS clipboard is not available");
+	}
+	/** Publish canonical Text state to the native editor, suppressing echo callbacks. */
+	default void textContent(long peer, String text, int start, int end,
+			boolean editable, int limit, String hint) {
+		throw new UnsupportedOperationException("Native Text widget is not implemented");
+	}
 	boolean requestFocus(long peer);
 	void setAccessibility(long peer, String label, int role, int state);
 

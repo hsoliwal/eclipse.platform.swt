@@ -23,11 +23,18 @@ import org.eclipse.swt.internal.mobile.MobilePlatform;
 final class ContractPlatform implements MobilePlatform {
 	EventSink sink;
 	Thread owner;
+	String clipboard = "";
 	long next = 1, lastCreated;
 	int connects, disconnects, openedGraphics, closedGraphics;
 	final Map<Long, Peer> controls = new HashMap<>();
 	final Map<Long, BufferedImage> images = new HashMap<>();
-	static final class Peer { long parent; int kind,x,y,width,height; boolean enabled=true,visible; String title,label; int role,state; int[] frame; }
+	static final class Peer {
+		long parent;
+		int kind,x,y,width,height,selectionStart,selectionEnd,textLimit=Integer.MAX_VALUE;
+		boolean enabled=true,visible,editable=true;
+		String title,label,text="",hint="";
+		int role,state; int[] frame;
+	}
 	private void check() { if (owner != Thread.currentThread()) throw new AssertionError("OS operations must run from the SWT owner thread in this transport"); }
 	private Peer peer(long id) { check(); Peer p=controls.get(id); if(p==null)throw new IllegalStateException("Stale test peer "+id); return p; }
 	private BufferedImage bitmap(long id) { check(); BufferedImage image=images.get(id); if(image==null)throw new IllegalStateException("Stale test image "+id);return image; }
@@ -42,6 +49,14 @@ final class ContractPlatform implements MobilePlatform {
 	@Override public void setVisible(long id,boolean visible){peer(id).visible=visible;}
 	@Override public void setEnabled(long id,boolean enabled){peer(id).enabled=enabled;}
 	@Override public void setTitle(long id,String title){peer(id).title=title;}
+	@Override public String getClipboardText(){check();return clipboard;}
+	@Override public void setClipboardText(String text){check();clipboard=java.util.Objects.requireNonNull(text);}
+	@Override public void textContent(long id,String text,int start,int end,boolean editable,int limit,String hint){
+		Peer p=peer(id);
+		if(p.kind!=TEXT)throw new AssertionError("Only a real TEXT peer can receive native text");
+		p.text=text; p.selectionStart=start; p.selectionEnd=end;
+		p.editable=editable; p.textLimit=limit; p.hint=hint;
+	}
 	@Override public boolean requestFocus(long id){Peer p=peer(id);return p.enabled&&p.visible;}
 	@Override public void setAccessibility(long id,String label,int role,int state){Peer p=peer(id);p.label=label;p.role=role;p.state=state;}
 	@Override public void present(long id,long image){peer(id).frame=imagePixels(image);}
