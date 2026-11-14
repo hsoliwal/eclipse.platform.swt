@@ -14,9 +14,13 @@ public final class MobileWidgetRuntimeTest {
 		final List<Long> removed = new ArrayList<>();
 		EventSink sink;
 		boolean failCreate;
+		volatile java.util.concurrent.CountDownLatch posted;
 		int boundsUpdates;
 		@Override public boolean isUiThread() { return Thread.currentThread() == ui; }
-		@Override public synchronized void post(Runnable task) { queue.add(task); }
+		@Override public synchronized void post(Runnable task) {
+			queue.add(task);
+			if (posted != null) posted.countDown();
+		}
 		@Override public void attach(EventSink sink) { this.sink = sink; }
 		@Override public void create(long id, long parent, Kind kind) {
 			if (failCreate) { failCreate = false; throw new IllegalStateException("forced creation failure"); }
@@ -81,7 +85,23 @@ public final class MobileWidgetRuntimeTest {
 		composite.close();
 		check(!host.live.contains(oldId) && host.live.size() == 1, "descendant disposal");
 		check(host.removed.indexOf(oldId) < host.removed.indexOf(composite.id()), "postorder native teardown");
+		// A syncExec caller queued on a background thread must be released when
+		// the UI closes without draining the queue (e.g. Android Activity teardown).
+		java.util.concurrent.CountDownLatch posted = new java.util.concurrent.CountDownLatch(1);
+		host.posted = posted;
+		java.util.concurrent.atomic.AtomicBoolean didRun = new java.util.concurrent.atomic.AtomicBoolean();
+		java.util.concurrent.atomic.AtomicBoolean canceled = new java.util.concurrent.atomic.AtomicBoolean();
+		Thread waiter = new Thread(() -> {
+			try { runtime.syncExec(() -> didRun.set(true)); }
+			catch (IllegalStateException expected) { canceled.set(true); }
+		}, "mobile-sync-waiter");
+		waiter.start();
+		check(posted.await(5, java.util.concurrent.TimeUnit.SECONDS), "syncExec task enqueued");
 		runtime.close();
+		waiter.join(5000);
+		check(!waiter.isAlive() && canceled.get() && !didRun.get(),
+				"dispose cancels pending syncExec without hanging its caller");
+		host.posted = null;
 		check(host.live.isEmpty() && runtime.lifecycle() == Lifecycle.DISPOSED, "display teardown");
 		runtime.asyncExec(() -> { throw new AssertionError("disposed callback"); });
 		host.drain();
