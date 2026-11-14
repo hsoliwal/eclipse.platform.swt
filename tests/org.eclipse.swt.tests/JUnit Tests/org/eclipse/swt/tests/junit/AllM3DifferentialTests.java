@@ -15,10 +15,10 @@ import org.junit.platform.suite.api.SelectClasses;
 import org.junit.platform.suite.api.Suite;
 
 /**
- * The seven differential M3 contracts, selected once by {@link AllNonBrowserTests}.
+ * The differential M3 contracts, selected once by {@link AllNonBrowserTests}.
  * The ordinary M3 contracts remain selected by {@link AllWidgetTests}.
  * <p>
- * Six classes require independently qualified official SWT recordings through
+ * Every class but {@link Test_M3SortFilterDifferential} requires independently qualified official SWT recordings through
  * {@code swt.viewport.recording}. Missing recordings can produce skipped tests;
  * registration does not make those skips release evidence. The release report
  * gate requires every recorded comparison to pass in both widget modes.
@@ -34,6 +34,7 @@ import org.junit.platform.suite.api.Suite;
 	Test_M3BulkUpdatesDifferential.class,
 	Test_M3DiffApplyDifferential.class,
 	Test_M3ProxyModelDifferential.class,
+	Test_M3ResidencyDifferential.class,
 	Test_M3RowMathDifferential.class,
 	Test_M3ScrollBarModelDifferential.class,
 	Test_M3ScrollMementoDifferential.class,
