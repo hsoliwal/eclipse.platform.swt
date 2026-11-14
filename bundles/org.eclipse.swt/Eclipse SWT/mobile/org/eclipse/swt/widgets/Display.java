@@ -259,6 +259,11 @@ public class Display extends Device implements Executor {
 		@Override public void accessibility(long peer, int action) {
 			enqueue(() -> {
 				Control c = control(peer); if (c == null || !c.isEnabled() || !c.isVisible()) return;
+				if (c instanceof List list && (action == MobilePlatform.ACTION_INCREMENT
+						|| action == MobilePlatform.ACTION_DECREMENT)) {
+					list.accessibilityScroll(action == MobilePlatform.ACTION_INCREMENT);
+					return;
+				}
 				if (c instanceof Scale && (action == MobilePlatform.ACTION_INCREMENT
 						|| action == MobilePlatform.ACTION_DECREMENT)) {
 					// The original Scale's keyboard owner applies its exact increment,
