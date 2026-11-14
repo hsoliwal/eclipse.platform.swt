@@ -92,6 +92,24 @@ relative source paths and hashes used by that invocation.
 To build the original Nebula application with Android's real SDK tools, use
 Nebula's `mobile/pom.xml` and pass this SWT checkout as `-Dswt.checkout=...`.
 
+## Button and Label original owner slice
+
+The mobile source manifest now selects the original SWT `Button extends Control`
+and `Label extends Control` API families, using the unchanged SWT shared
+`WidgetStylePolicy` and `StyleBits` algorithms. These controls draw through the
+existing platform-owned Image/GC and real Android/UIKit native peer rather than
+forking a second widget model. Button has selection/keyboard/pointer handling,
+radio sibling grouping and the existing platform accessibility role transport;
+Label has text, image, alignment, separator, wrap painting and no-focus semantics.
+Both preserve caller-owned Image lifetimes and the normal SWT disposal path.
+
+**Boundaries:** these are mobile Canvas-rendered controls, not wrappers around
+Android's `Button`/`TextView` or UIKit's `UIButton`/`UILabel`. Native text
+editing/IME, accessibility action parity, full mnemonic focus traversal,
+complex text layout, RTL, multi-touch and original desktop raster parity remain
+open. The qualified `-Pcontracts` lane includes a new Button/Label owner test,
+but a source commit alone does not prove a CI pass or native runtime parity.
+
 ## Implemented integration path and remaining scope
 
 The implemented path is a Shell/Composite/Canvas application, including the
@@ -101,8 +119,9 @@ resource/disposal ownership. `GC(Display).copyArea(...)` delegates to actual
 platform capture. `Control.print` is separately scoped offscreen composition and
 must not be presented as visible-screen evidence.
 
-This is **not the complete SWT or Nebula widget catalogue**. Button, Label, Text,
-List, Combo, Table, Tree, menus, ToolBar, TabFolder, StyledText, Browser, printing,
+This is **not the complete SWT or Nebula widget catalogue**. Button and Label
+have bounded Canvas-rendered source implementations; Text, List, Combo,
+Table, Tree, menus, ToolBar, TabFolder, StyledText, Browser, printing,
 drag-and-drop, OpenGL, complete IME/text composition, and the public Accessible
 API are not implemented by this source closure. Other Nebula widgets are not
 qualified merely because they derive from Canvas.
