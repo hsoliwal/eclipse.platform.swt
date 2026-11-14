@@ -5,6 +5,7 @@
 package org.eclipse.swt.internal.mobile;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -87,7 +88,7 @@ public final class MobileWidgetRuntime implements AutoCloseable {
 		public String text() { checkLive(); return text; }
 		public boolean isEnabled() { checkLive(); return enabled; }
 		public boolean isVisible() { checkLive(); return visible; }
-		public List<Node> children() { checkLive(); return List.copyOf(children); }
+		public List<Node> children() { checkLive(); return Collections.unmodifiableList(new ArrayList<>(children)); }
 		private void checkLive() {
 			checkThread();
 			if (disposed) throw new IllegalStateException("disposed mobile widget " + id);
@@ -135,7 +136,7 @@ public final class MobileWidgetRuntime implements AutoCloseable {
 			ArrayList<Listener> list = listeners.get(event.type());
 			if (list == null) return;
 			// Snapshot: listeners may add children, remove listeners, or dispose this widget.
-			for (Listener listener : List.copyOf(list)) {
+			for (Listener listener : new ArrayList<>(list)) {
 				if (disposed) return;
 				listener.handle(event);
 			}
@@ -144,7 +145,7 @@ public final class MobileWidgetRuntime implements AutoCloseable {
 			checkThread();
 			if (disposed) return;
 			disposed = true; // reentrancy fence before native removal
-			for (Node child : List.copyOf(children)) child.close();
+			for (Node child : new ArrayList<>(children)) child.close();
 			children.clear();
 			listeners.clear();
 			slots[(int) id] = null;
@@ -168,7 +169,7 @@ public final class MobileWidgetRuntime implements AutoCloseable {
 		host.attach(this::receive);
 	}
 	public Lifecycle lifecycle() { checkThread(); return lifecycle; }
-	public List<Node> roots() { checkThread(); return List.copyOf(roots); }
+	public List<Node> roots() { checkThread(); return new ArrayList<>(roots); }
 	public void checkThread() {
 		if (Thread.currentThread() != owner || !host.isUiThread())
 			throw new IllegalStateException("SWT mobile widget access requires owner UI thread");
@@ -249,7 +250,7 @@ public final class MobileWidgetRuntime implements AutoCloseable {
 	@Override public void close() {
 		checkThread();
 		if (lifecycle == Lifecycle.DISPOSED) return;
-		for (Node root : List.copyOf(roots)) root.close();
+		for (Node root : new ArrayList<>(roots)) root.close();
 		lifecycle = Lifecycle.DISPOSED;
 		host.lifecycle(Lifecycle.DISPOSED);
 		host.close();
