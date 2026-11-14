@@ -755,6 +755,50 @@ JNIEXPORT jboolean JNICALL JNI(requestFocus)(JNI_ARGS, jlong peer) {
 		return focused ? JNI_TRUE : JNI_FALSE;
 	}
 }
+JNIEXPORT void JNICALL JNI(textContent)(JNI_ARGS, jlong peer, jstring value,
+	jint start, jint end, jboolean editable, jint limit, jstring hint) {
+	@autoreleasepool {
+		if (!swtOnDisplayThread(env)) return;
+		NSString *text = swtString(env, value);
+		NSString *placeholder = swtString(env, hint);
+		if (text == nil || placeholder == nil) return;
+		if (limit <= 0) {
+			swtThrow(env, "java/lang/IllegalArgumentException", "Text limit must be positive");
+			return;
+		}
+		swtUI(env, ^{
+			SWTUIKitView *view = swtView(peer);
+			if (view.kind != SWT(TEXT) || view.nativeEditor == nil) {
+				[NSException raise:NSInvalidArgumentException format:@"TEXT peer is required"];
+			}
+			view.suppressTextCallbacks = YES;
+			@try {
+				view.textLimit = limit;
+				if ([view.nativeEditor isKindOfClass:UITextField.class]) {
+					UITextField *field = (UITextField *)view.nativeEditor;
+					if (![field.text isEqualToString:text]) field.text = text;
+					field.enabled = editable && view.enabled;
+					field.placeholder = placeholder;
+				} else {
+					UITextView *editor = (UITextView *)view.nativeEditor;
+					if (![editor.text isEqualToString:text]) editor.text = text;
+					editor.editable = editable;
+					editor.userInteractionEnabled = view.enabled;
+					editor.accessibilityHint = placeholder;
+				}
+				id<UITextInput> editor = (id<UITextInput>)view.nativeEditor;
+				NSUInteger length = text.length;
+				NSInteger left = MAX(0, MIN((NSInteger)start, (NSInteger)length));
+				NSInteger right = MAX(left, MIN((NSInteger)end, (NSInteger)length));
+				UITextPosition *begin = editor.beginningOfDocument;
+				UITextPosition *from = [editor positionFromPosition:begin offset:left];
+				UITextPosition *to = [editor positionFromPosition:begin offset:right];
+				if (from != nil && to != nil) editor.selectedTextRange = [editor textRangeFromPosition:from toPosition:to];
+			} @finally { view.suppressTextCallbacks = NO; }
+		});
+	}
+}
+
 JNIEXPORT void JNICALL JNI(setAccessibility)(JNI_ARGS, jlong peer, jstring label, jint role, jint state) {
 	@autoreleasepool {
 		if (!swtOnDisplayThread(env)) return;
@@ -1222,6 +1266,7 @@ static JNINativeMethod swtMethods[] = {
 	{"setVisible", "(JZ)V", (void *)JNI(setVisible)},
 	{"setEnabled", "(JZ)V", (void *)JNI(setEnabled)},
 	{"setTitle", "(JLjava/lang/String;)V", (void *)JNI(setTitle)},
+	{"textContent", "(JLjava/lang/String;IIZILjava/lang/String;)V", (void *)JNI(textContent)},
 	{"requestFocus", "(J)Z", (void *)JNI(requestFocus)},
 	{"setAccessibility", "(JLjava/lang/String;II)V", (void *)JNI(setAccessibility)},
 	{"present", "(JJ)V", (void *)JNI(present)},
