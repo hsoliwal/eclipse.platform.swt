@@ -187,6 +187,8 @@ public final class MobileWidgetRuntime implements AutoCloseable {
 	private Node[] slots = new Node[16];
 	private long nextId = 1;
 	private final ArrayList<Node> roots = new ArrayList<>();
+	/** Background syncExec waiters must not hang after UI-thread disposal. */
+	private final ArrayList<FutureTask<Void>> pendingSync = new ArrayList<>();
 	private volatile Lifecycle lifecycle = Lifecycle.FOREGROUND;
 
 	public MobileWidgetRuntime(Host host) {
@@ -257,16 +259,35 @@ public final class MobileWidgetRuntime implements AutoCloseable {
 	public void syncExec(Runnable task) {
 		Objects.requireNonNull(task);
 		if (Thread.currentThread() == owner) { checkOpen(); task.run(); return; }
-		if (lifecycle == Lifecycle.DISPOSED) throw new IllegalStateException("disposed mobile display");
 		FutureTask<Void> work = new FutureTask<>(task, null);
-		host.post(() -> {
-			checkThread();
-			if (lifecycle == Lifecycle.DISPOSED) work.cancel(false);
-			else work.run();
-		});
+		synchronized (pendingSync) {
+			if (lifecycle == Lifecycle.DISPOSED)
+				throw new IllegalStateException("disposed mobile display");
+			pendingSync.add(work);
+		}
+		try {
+			host.post(() -> {
+				checkThread();
+				try {
+					if (lifecycle == Lifecycle.DISPOSED) work.cancel(false);
+					else work.run();
+				} finally {
+					synchronized (pendingSync) { pendingSync.remove(work); }
+				}
+			});
+		} catch (RuntimeException | Error failure) {
+			synchronized (pendingSync) { pendingSync.remove(work); }
+			work.cancel(false);
+			throw failure;
+		}
 		try { work.get(); }
 		catch (CancellationException e) { throw new IllegalStateException("disposed mobile display", e); }
-		catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new IllegalStateException(e); }
+		catch (InterruptedException e) {
+			work.cancel(false);
+			synchronized (pendingSync) { pendingSync.remove(work); }
+			Thread.currentThread().interrupt();
+			throw new IllegalStateException("interrupted mobile syncExec", e);
+		}
 		catch (ExecutionException e) {
 			Throwable cause = e.getCause();
 			if (cause instanceof RuntimeException runtime) throw runtime;
@@ -277,8 +298,14 @@ public final class MobileWidgetRuntime implements AutoCloseable {
 	@Override public void close() {
 		checkThread();
 		if (lifecycle == Lifecycle.DISPOSED) return;
-		for (Node root : new ArrayList<>(roots)) root.close();
+		// Publish disposal before tearing down native nodes so concurrent
+		// syncExec calls cannot enqueue work that will never be serviced.
 		lifecycle = Lifecycle.DISPOSED;
+		synchronized (pendingSync) {
+			for (FutureTask<Void> work : pendingSync) work.cancel(false);
+			pendingSync.clear();
+		}
+		for (Node root : new ArrayList<>(roots)) root.close();
 		host.lifecycle(Lifecycle.DISPOSED);
 		host.close();
 		Arrays.fill(slots, null);
