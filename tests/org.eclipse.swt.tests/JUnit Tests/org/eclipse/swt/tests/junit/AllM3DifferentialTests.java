@@ -33,6 +33,7 @@ import org.junit.platform.suite.api.Suite;
 @SelectClasses({
 	Test_M3BulkUpdatesDifferential.class,
 	Test_M3DiffApplyDifferential.class,
+	Test_M3EmptinessDifferential.class,
 	Test_M3PrefetchDifferential.class,
 	Test_M3ProxyModelDifferential.class,
 	Test_M3ResidencyDifferential.class,
