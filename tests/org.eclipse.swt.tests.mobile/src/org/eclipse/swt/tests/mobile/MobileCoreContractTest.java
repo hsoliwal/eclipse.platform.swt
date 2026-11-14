@@ -38,6 +38,7 @@ public final class MobileCoreContractTest {
 		testMobileButtonLabelContracts();
 		testMobileProgressAndScaleContracts();
 		testMobileListContracts();
+		testMobileOriginalTextContracts();
 		System.out.println("PASS: "+assertions+" SWT/Nebula owner-contract assertions. Native device qualification is separate.");
 	}
 	static void testOriginalWidgetAndPainting()throws Exception {
@@ -395,5 +396,95 @@ public final class MobileCoreContractTest {
 				"List releases native control and image ownership");
 		require(platform.openedGraphics == platform.closedGraphics,
 				"List closes all native SWT graphics contexts");
+	}
+
+	/** Original SWT Text Verify/Modify with queued Android/UIKit editor snapshots. */
+	static void testMobileOriginalTextContracts() {
+		ContractPlatform platform = new ContractPlatform();
+		MobileRuntime.install(platform);
+		Display display = new Display();
+		try {
+			Shell shell = new Shell(display);
+			Text editor = new Text(shell, SWT.SINGLE | SWT.BORDER);
+			long peer = platform.lastCreated;
+			require(platform.controls.get(peer).kind == MobilePlatform.TEXT,
+					"Original Text receives a native Android/UIKit text peer");
+			editor.setBounds(0, 0, 210, 40);
+			require(platform.controls.get(peer).text.isEmpty(), "Native editor starts empty");
+			java.util.ArrayList<String> verify = new java.util.ArrayList<>();
+			java.util.ArrayList<String> modified = new java.util.ArrayList<>();
+			editor.addVerifyListener(e -> {
+				verify.add(e.start + ":" + e.end + "=" + e.text);
+				if ("X".equals(e.text)) e.text = "Q";
+				if ("!".equals(e.text)) e.doit = false;
+			});
+			editor.addModifyListener(e -> modified.add(editor.getText()));
+			editor.setText("abc");
+			require("abc".equals(editor.getText()) && modified.equals(java.util.List.of("abc")),
+					"Programmatic setText verifies then modifies canonical Java string");
+			editor.append("def");
+			editor.setSelection(3, 5);
+			require(editor.getSelection().equals(new Point(3, 5))
+					&& platform.controls.get(peer).selectionStart == 3
+					&& platform.controls.get(peer).selectionEnd == 5,
+					"UTF-16 selection is published to native text owner");
+			editor.insert("X");
+			require(editor.getText().equals("abcQf")
+					&& modified.get(modified.size() - 1).equals("abcQf"),
+					"Original Verify listener rewrites replacement before Modify");
+			int countBefore = modified.size();
+			editor.append("!");
+			require(editor.getText().equals("abcQf") && modified.size() == countBefore,
+					"Vetoed Verify never mutates text or emits Modify");
+			shell.open();
+			drain(display);
+			platform.sink.textChanged(peer, "abcQfZ", 6, 6);
+			drain(display);
+			require(editor.getText().equals("abcQfZ")
+					&& platform.controls.get(peer).text.equals(editor.getText())
+					&& editor.getCaretPosition() == 6
+					&& modified.size() == countBefore + 1,
+					"Native Text input is applied on SWT thread with exactly one Modify");
+			platform.sink.textChanged(peer, "abcQfZ!", 7, 7);
+			drain(display);
+			require(editor.getText().equals("abcQfZ")
+					&& platform.controls.get(peer).text.equals(editor.getText()),
+					"Native Verify veto rolls back the OS editor snapshot");
+			editor.setMessage("Search");
+			require(platform.controls.get(peer).hint.equals("Search"),
+					"Text message is forwarded to native editor placeholder");
+			editor.setTextLimit(7);
+			editor.append("abcdef");
+			require(editor.getText().length() == 7,
+					"TextLimit caps accepted UTF-16 insertion without exceeding limit");
+			editor.setEditable(false);
+			String old = editor.getText();
+			platform.sink.textChanged(peer, "native bypass", 13, 13);
+			drain(display);
+			require(editor.getText().equals(old) && !platform.controls.get(peer).editable,
+					"Read-only original Text rejects native input and republishes canonical text");
+			editor.setEditable(true);
+			editor.setText("line1\nline2");
+			require(editor.getLineCount() == 2 && editor.getLineAtOffset(6) == 1
+					&& editor.getOffsetAtLine(1) == 6,
+					"Text line navigation uses original SWT UTF-16 code unit offsets");
+			editor.setTextLimit(Text.LIMIT);
+			editor.setText("A\uD83D\uDE03B");
+			require(editor.getCharCount() == 4, "Supplementary Unicode retains UTF-16 width");
+			require(editor.getText(1, 2).equals("\uD83D\uDE03"),
+					"Inclusive getText range preserves complete surrogate pair");
+			expectSwt(SWT.ERROR_CANNOT_BE_ZERO, () -> editor.setTextLimit(0));
+			Control child = editor;
+			shell.dispose();
+			require(child.isDisposed(), "Parent disposal closes original Text native peer");
+			platform.sink.textChanged(peer, "stale", 5, 5);
+			drain(display);
+			require(!platform.controls.containsKey(peer), "Stale UI callback cannot resurrect Text");
+		} finally {
+			display.dispose();
+			MobileRuntime.uninstall(platform);
+		}
+		require(platform.controls.isEmpty() && platform.images.isEmpty(),
+				"Text releases native views and backing SWT resources");
 	}
 }
