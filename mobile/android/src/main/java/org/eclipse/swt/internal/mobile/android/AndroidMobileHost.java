@@ -83,7 +83,11 @@ public final class AndroidMobileHost implements Host {
 				});
 				view = editor;
 			}
-			case CANVAS -> view = new DrawView(activity, id);
+			case CANVAS -> {
+				DrawLayout canvas = new DrawLayout(activity, id);
+				view = canvas;
+				content = canvas; // SWT Canvas is a Composite and may own child controls.
+			}
 			case SCROLLER, TABLE, TREE -> {
 				ScrollView scroller = new ScrollView(activity);
 				FrameLayout body = new FrameLayout(activity);
@@ -147,7 +151,7 @@ public final class AndroidMobileHost implements Host {
 	/** Attach an SWT GC/Canvas renderer; the painting owner supplies its own resource lifetime. */
 	public void setPainter(long id, Painter painter) {
 		guardUi();
-		if (!(require(id) instanceof DrawView)) throw new IllegalArgumentException("CANVAS required");
+		if (!(require(id) instanceof DrawLayout)) throw new IllegalArgumentException("CANVAS required");
 		if (painter == null) painters.remove(id); else painters.put(id, painter);
 		require(id).invalidate();
 	}
@@ -164,9 +168,9 @@ public final class AndroidMobileHost implements Host {
 		closed = true;
 		sink = null;
 	}
-	private final class DrawView extends View {
+	private final class DrawLayout extends FrameLayout {
 		private final long handle;
-		DrawView(Context context, long id) { super(context); handle = id; setWillNotDraw(false); }
+		DrawLayout(Context context, long id) { super(context); handle = id; setWillNotDraw(false); }
 		@Override protected void onDraw(Canvas canvas) {
 			super.onDraw(canvas);
 			Painter painter = painters.get(handle);
