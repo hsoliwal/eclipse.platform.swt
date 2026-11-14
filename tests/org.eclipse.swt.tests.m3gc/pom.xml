@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+  SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+
+  JUnit tests of the M3 render backend (org.eclipse.swt.internal.render.m3, source folder
+  bundles/org.eclipse.swt/Eclipse SWT Render M3/win32), moved here from org.eclipse.swt.tests.
+  Plain Maven module, like bundles/org.eclipse.swt.gpu.m3: the render tree needs the Skija 0.116.3 binding, which is not
+  an OSGi bundle of the target platform, and no bundle of the reactor compiles the render tree. This module compiles the
+  render tree as test code against the reactor's win32 x86_64 fragment and Skija, then the tests next to it, in every
+  build (also with -DskipTests). Nothing of it is shipped. The tests run on Windows x86_64 only (win32 natives), when
+  -DskipNativeTests=false, as the other native SWT tests.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.eclipse.platform</groupId>
+  <artifactId>org.eclipse.swt.tests.m3gc</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <name>SWT M3 render backend tests (m3gc)</name>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>21</maven.compiler.release>
+    <m3gc.renderSources>${project.basedir}/../../bundles/org.eclipse.swt/Eclipse SWT Render M3/win32</m3gc.renderSources>
+    <m3gc.swt.version>3.138.0-SNAPSHOT</m3gc.swt.version>
+    <m3gc.skija.version>0.116.3</m3gc.skija.version>
+    <m3gc.types.version>0.1.1</m3gc.types.version>
+    <m3gc.jupiter.version>5.14.4</m3gc.jupiter.version>
+    <m3gc.platform.version>1.14.4</m3gc.platform.version>
+    <skipNativeTests>true</skipNativeTests>
+    <!-- the natives are win32 x86_64: other platforms compile the module and skip its tests -->
+    <skipTests>true</skipTests>
+  </properties>
+  <profiles>
+    <profile>
+      <id>m3gc-win32-x86_64</id>
+      <activation><os><family>windows</family><arch>amd64</arch></os></activation>
+      <properties><skipTests>${skipNativeTests}</skipTests></properties>
+    </profile>
+  </profiles>
+  <dependencies>
+    <dependency><groupId>org.eclipse.platform</groupId><artifactId>org.eclipse.swt.win32.win32.x86_64</artifactId><version>${m3gc.swt.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-shared</artifactId><version>${m3gc.skija.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-windows-x64</artifactId><version>${m3gc.skija.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>io.github.humbleui</groupId><artifactId>types</artifactId><version>${m3gc.types.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.jetbrains</groupId><artifactId>annotations</artifactId><version>24.1.0</version><scope>test</scope></dependency>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter-api</artifactId><version>${m3gc.jupiter.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter-engine</artifactId><version>${m3gc.jupiter.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.junit.platform</groupId><artifactId>junit-platform-suite-api</artifactId><version>${m3gc.platform.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.junit.platform</groupId><artifactId>junit-platform-suite-engine</artifactId><version>${m3gc.platform.version}</version><scope>test</scope></dependency>
+  </dependencies>
+  <build>
+    <testSourceDirectory>JUnit Tests</testSourceDirectory>
+    <plugins>
+      <plugin><groupId>org.codehaus.mojo</groupId><artifactId>build-helper-maven-plugin</artifactId><version>3.6.2</version>
+        <executions><execution><id>add-m3-render-tree</id><phase>generate-test-sources</phase><goals><goal>add-test-source</goal></goals>
+          <configuration><sources><source>${m3gc.renderSources}</source></sources></configuration>
+        </execution></executions>
+      </plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.1</version>
+        <configuration><release>21</release><proc>none</proc></configuration>
+      </plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.6.1</version>
+        <configuration>
+          <!-- the suite fixes the order: drawText_NoCache sets M3TextDrawing.NO_TEXT_CACHE and never clears it -->
+          <includes><include>**/AllM3GcTests.java</include></includes>
+          <argLine>-Xcheck:jni</argLine>
+          <systemPropertyVariables><user.home>${project.build.directory}</user.home></systemPropertyVariables>
+          <trimStackTrace>false</trimStackTrace>
+        </configuration>
+      </plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version></plugin>
+    </plugins>
+  </build>
+</project>

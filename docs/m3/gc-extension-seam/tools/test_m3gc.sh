@@ -10,7 +10,7 @@ WT=${1:-C:/m3-superset/swt-gcseam}; MAIN=${2:-H:/m3-scratch/gc-backend/main}; OU
 JDK=${M3_JDK:-C:/Program Files/Java/jdk-21}
 LIB=${M3_SKIJA_LIB:-C:/m3-superset/i31/binaries/org.eclipse.swt.win32.win32.x86_64/lib}
 JUNIT=${M3_JUNIT:-C:/Users/hsoliwal/.m2/repository/org/junit/platform/junit-platform-console-standalone/1.11.4/junit-platform-console-standalone-1.11.4.jar}
-SRC="$WT/tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/m3gc"
+SRC="$WT/tests/org.eclipse.swt.tests.m3gc/JUnit Tests/org/eclipse/swt/tests/junit/m3gc"
 free=$(powershell -NoProfile -Command "[int]((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1024)")
 [ "${free:-0}" -ge 1536 ] || { echo "MEMORY_GATE free=${free}MB < 1536MB"; exit 2; }
 rm -rf "$OUT"; mkdir -p "$OUT/classes"
