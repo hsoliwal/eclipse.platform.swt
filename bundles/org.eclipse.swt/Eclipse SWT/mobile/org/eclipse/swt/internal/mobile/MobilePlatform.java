@@ -47,6 +47,14 @@ public interface MobilePlatform {
 	void setVisible(long peer, boolean visible);
 	void setEnabled(long peer, boolean enabled);
 	void setTitle(long peer, String title);
+	/** Real system clipboard text, read only on the SWT Display thread. */
+	default String getClipboardText() {
+		throw new UnsupportedOperationException("OS clipboard is not available");
+	}
+	/** Publish text to the real native system clipboard. */
+	default void setClipboardText(String text) {
+		throw new UnsupportedOperationException("OS clipboard is not available");
+	}
 	/** Publish canonical Text state to the native editor, suppressing echo callbacks. */
 	default void textContent(long peer, String text, int start, int end,
 			boolean editable, int limit, String hint) {
