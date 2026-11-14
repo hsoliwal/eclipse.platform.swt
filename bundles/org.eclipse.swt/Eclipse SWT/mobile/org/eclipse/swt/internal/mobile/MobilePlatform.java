@@ -15,7 +15,7 @@ package org.eclipse.swt.internal.mobile;
  */
 public interface MobilePlatform {
 	int SHELL = 1, COMPOSITE = 2, CANVAS = 3;
-	int ACTION_ACTIVATE = 1;
+	int ACTION_ACTIVATE = 1, ACTION_INCREMENT = 2, ACTION_DECREMENT = 3;
 
 	/** Receives OS events without running application listeners on an OS thread. */
 	interface EventSink {
