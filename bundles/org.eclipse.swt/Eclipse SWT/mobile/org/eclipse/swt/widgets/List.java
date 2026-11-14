@@ -436,6 +436,7 @@ public class List extends Scrollable {
         int visible = Math.min(count - topIndex, area.height / height + 2);
         Color normalFg = getForeground();
         Color normalBg = gc.getBackground();
+        Color selectedBg = null, selectedFg = null;
         for (int offset = 0; offset < visible && !isDisposed(); offset++) {
             int index = topIndex + offset;
             int y = offset * height;
@@ -443,9 +444,13 @@ public class List extends Scrollable {
             if (isDisposed()) return;
             boolean active = selected.get(index);
             if (active) {
-                gc.setBackground(display.getSystemColor(SWT.COLOR_LIST_SELECTION));
+                if (selectedBg == null) {
+                    selectedBg = display.getSystemColor(SWT.COLOR_LIST_SELECTION);
+                    selectedFg = display.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT);
+                }
+                gc.setBackground(selectedBg);
                 gc.fillRectangle(0, y, area.width, Math.min(height, area.height - y));
-                gc.setForeground(display.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
+                gc.setForeground(selectedFg);
             } else {
                 gc.setBackground(normalBg);
                 gc.setForeground(normalFg);
