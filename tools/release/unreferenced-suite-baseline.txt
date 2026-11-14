@@ -10,7 +10,7 @@
 # baseline by itself cannot waive the release gate.
 Test_M3BulkUpdatesDifferential
 Test_M3DiffApplyDifferential
-Test_M3ProxyModelDifferential
+Test_org_eclipse_swt_internal_ProxyModelDifferential
 Test_M3RowMathDifferential
 Test_M3ScrollBarModelDifferential
 Test_M3ScrollMementoDifferential

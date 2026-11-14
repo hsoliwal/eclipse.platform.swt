@@ -27,7 +27,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 /** Contract and seeded differential tests of {@link LabelPool}. */
-public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
+public class Test_org_eclipse_swt_internal_residency_LabelPool {
 
 	@Test
 	void emptyStringIsPermanentIdZero () {

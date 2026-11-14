@@ -24,7 +24,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 /** Layout, round trip and canonicity of {@link ShortLabel}. */
-public class Test_org_eclipse_swt_internal_m3_collections_M3ShortLabel {
+public class Test_org_eclipse_swt_internal_residency_ShortLabel {
 	private static final String IDENT = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$";
 
 	/** The layout of the M3 JDK's immediate String owner, written out independently. */

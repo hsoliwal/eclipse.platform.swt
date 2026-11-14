@@ -24,7 +24,7 @@ import org.eclipse.swt.internal.*;
 import org.junit.jupiter.api.*;
 
 /** Headless tests of {@link ColumnSort}: order, stability, keys, toggling, incremental updates, tree mode. */
-public class Test_M3ColumnSort {
+public class Test_org_eclipse_swt_internal_ColumnSort {
 
 	/* a source of rows with an int, a long, a double and a text column, kept in lists so tests can edit it */
 	static final class Rows {
@@ -512,8 +512,8 @@ public class Test_M3ColumnSort {
 			};
 			ColumnSort sort = create.get ();
 			sort.childCount (-1);
-			Object order = Test_M3ColumnFilter.field (sort, "order");
-			int builds = (Integer) Test_M3ColumnFilter.field (order, "treeBuilds");
+			Object order = Test_org_eclipse_swt_internal_ColumnFilter.field (sort, "order");
+			int builds = (Integer) Test_org_eclipse_swt_internal_ColumnFilter.field (order, "treeBuilds");
 			for (int step = 0; step < 40; step++) {
 				int [] changed = new int [1 + random.nextInt (random.nextInt (4) == 0 ? n : 3)];
 				for (int k = 0; k < changed.length; k++) {
@@ -530,7 +530,7 @@ public class Test_M3ColumnSort {
 					}
 				}
 			}
-			assertEquals (builds, (Integer) Test_M3ColumnFilter.field (order, "treeBuilds"), "value updates keep the sibling index");
+			assertEquals (builds, (Integer) Test_org_eclipse_swt_internal_ColumnFilter.field (order, "treeBuilds"), "value updates keep the sibling index");
 		}
 	}
 
@@ -558,8 +558,8 @@ public class Test_M3ColumnSort {
 			};
 			ColumnSort sort = create.get ();
 			sort.childCount (-1);
-			Object order = Test_M3ColumnFilter.field (sort, "order");
-			int builds = (Integer) Test_M3ColumnFilter.field (order, "treeBuilds");
+			Object order = Test_org_eclipse_swt_internal_ColumnFilter.field (sort, "order");
+			int builds = (Integer) Test_org_eclipse_swt_internal_ColumnFilter.field (order, "treeBuilds");
 			for (int step = 0; step < 40; step++) {
 				int [] changed = new int [1 + random.nextInt (random.nextInt (4) == 0 ? n : 3)];
 				for (int k = 0; k < changed.length; k++) {
@@ -579,7 +579,7 @@ public class Test_M3ColumnSort {
 					}
 				}
 			}
-			assertEquals (builds, (Integer) Test_M3ColumnFilter.field (order, "treeBuilds"), "rows entering and leaving keep the sibling index");
+			assertEquals (builds, (Integer) Test_org_eclipse_swt_internal_ColumnFilter.field (order, "treeBuilds"), "rows entering and leaving keep the sibling index");
 		}
 	}
 

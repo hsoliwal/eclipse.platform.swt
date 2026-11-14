@@ -26,18 +26,18 @@ import org.junit.platform.suite.api.Suite;
 		// Enhanced M3 API contracts; recorded differentials have a separate oracle run.
 		Test_M3BulkUpdates.class, //
 		Test_M3CheckState.class, //
-		Test_M3Collation.class, //
-		Test_M3ColumnFilter.class, //
-		Test_M3ColumnSort.class, //
+		Test_org_eclipse_swt_internal_Collation.class, //
+		Test_org_eclipse_swt_internal_ColumnFilter.class, //
+		Test_org_eclipse_swt_internal_ColumnSort.class, //
 		Test_M3DiffApply.class, //
 		Test_M3Emptiness.class, //
 		Test_M3FilterAsync.class, //
 		Test_M3ItemRange.class, //
 		Test_M3ItemSelection.class, //
 		Test_M3Model.class, //
-		Test_M3Patch.class, //
+		Test_org_eclipse_swt_internal_RowPatch.class, //
 		Test_M3Prefetch.class, //
-		Test_M3ProxyModel.class, //
+		Test_org_eclipse_swt_internal_ProxyModel.class, //
 		Test_M3Residency.class, //
 		Test_M3RowExtents.class, //
 		Test_M3RowMath.class, //
@@ -45,9 +45,9 @@ import org.junit.platform.suite.api.Suite;
 		Test_M3ScrollMemento.class, //
 		Test_M3Scrolling.class, //
 		Test_M3SortFilterWidgets.class, //
-		Test_M3TextMatch.class, //
-		Test_M3TextSegments.class, //
-		Test_M3TokenMatch.class, //
+		Test_org_eclipse_swt_internal_TextMatch.class, //
+		Test_org_eclipse_swt_internal_TextSegments.class, //
+		Test_org_eclipse_swt_internal_TokenMatch.class, //
 		Test_M3TypeAhead.class, //
 		Test_M3VisibilityObserver.class, //
 		// Existing widget contracts

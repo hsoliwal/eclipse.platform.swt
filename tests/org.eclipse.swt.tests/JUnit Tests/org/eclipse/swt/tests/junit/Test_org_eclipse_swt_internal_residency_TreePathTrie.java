@@ -26,7 +26,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 /** Contract and seeded differential tests of {@link TreePathTrie}. */
-public class Test_org_eclipse_swt_internal_m3_collections_M3TreePathTrie {
+public class Test_org_eclipse_swt_internal_residency_TreePathTrie {
 
 	@Test
 	void pathsSharePrefixesAndAnswerTheirShape () {

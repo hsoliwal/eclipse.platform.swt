@@ -26,7 +26,7 @@ import org.junit.jupiter.api.*;
  * API, leaf 4). Headless. Oracles: a HashMap over folded substrings for the vocabulary, a naive
  * search for KMP, and matching over the folded word strings for matching over ids.
  */
-public class Test_M3TokenMatch {
+public class Test_org_eclipse_swt_internal_TokenMatch {
 
 	/* ------------------------------------------------------------------ vocabulary */
 

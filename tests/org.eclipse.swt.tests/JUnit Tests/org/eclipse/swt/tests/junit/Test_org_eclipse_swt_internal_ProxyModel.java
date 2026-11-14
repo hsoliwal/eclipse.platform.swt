@@ -30,7 +30,7 @@ import org.junit.jupiter.api.*;
  * Contract of ProxyModel (enhanced M3 API, leaf 14). Oracle: the same stages as a stream over
  * boxed source rows (filter, then a stable sort). The widget bindings run on the test display.
  */
-public class Test_M3ProxyModel {
+public class Test_org_eclipse_swt_internal_ProxyModel {
 
 	/* the oracle: stages applied to boxed rows in order */
 	private static int [] oracle (int n, Object... stages) {

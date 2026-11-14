@@ -25,7 +25,7 @@ import org.junit.jupiter.api.*;
 
 /** Headless tests of {@link ColumnFilter}, {@link RowWindow} and the filter-sort-window chain. */
 @SuppressWarnings ("nls")
-public class Test_M3ColumnFilter {
+public class Test_org_eclipse_swt_internal_ColumnFilter {
 
 	static final String [][] CELLS = {
 		{"apple", "red", "1"},
@@ -41,10 +41,10 @@ public class Test_M3ColumnFilter {
 	}
 
 	static int [] rows (RowView view) {
-		return Test_M3ColumnSort.order (view);
+		return Test_org_eclipse_swt_internal_ColumnSort.order (view);
 	}
 
-	static CellText text (Test_M3ColumnSort.Rows rows) {
+	static CellText text (Test_org_eclipse_swt_internal_ColumnSort.Rows rows) {
 		return (row, column) -> switch (column) {
 			case 0 -> String.valueOf (rows.ints.get (row));
 			case 1 -> String.valueOf (rows.longs.get (row));
@@ -281,7 +281,7 @@ public class Test_M3ColumnFilter {
 	public void test_incrementalEditsEqualAReference () {
 		Random random = new Random (31);
 		for (int n : new int [] {0, 3, 63, 64, 65, 200, 1500}) {
-			Test_M3ColumnSort.Rows rows = new Test_M3ColumnSort.Rows (n, n + 3, 7);
+			Test_org_eclipse_swt_internal_ColumnSort.Rows rows = new Test_org_eclipse_swt_internal_ColumnSort.Rows (n, n + 3, 7);
 			CellText text = text (rows);
 			ColumnFilter filter = new ColumnFilter (4, n, text);
 			ColumnSort sort = new ColumnSort (4, filter);
@@ -291,11 +291,11 @@ public class Test_M3ColumnFilter {
 			int [] c = {3, 0}, d = {SWT.UP, SWT.DOWN};
 			sort.setSortKeys (c, d);
 			for (int step = 0; step < 80; step++) {
-				if (random.nextInt (4) == 0) criterion (filter, random); else Test_M3ColumnSort.edit (rows, window, random);
+				if (random.nextInt (4) == 0) criterion (filter, random); else Test_org_eclipse_swt_internal_ColumnSort.edit (rows, window, random);
 				int [] expected = reference (rows, filter, text, c, d);
 				assertArrayEquals (expected, rows (sort), "n " + n + " step " + step);
-				Test_M3ColumnSort.assertInverse (filter);
-				Test_M3ColumnSort.assertInverse (sort);
+				Test_org_eclipse_swt_internal_ColumnSort.assertInverse (filter);
+				Test_org_eclipse_swt_internal_ColumnSort.assertInverse (sort);
 				assertEquals (Math.max (0, Math.min (10, expected.length - 2)), window.size ());
 				for (int i = 0; i < window.size (); i++) assertEquals (expected [i + 2], window.map (i));
 			}
@@ -318,7 +318,7 @@ public class Test_M3ColumnFilter {
 	}
 
 	/* the reference: test each row against a plain predicate fold, then List.sort by the key chain */
-	static int [] reference (Test_M3ColumnSort.Rows rows, ColumnFilter filter, CellText text, int [] c, int [] d) {
+	static int [] reference (Test_org_eclipse_swt_internal_ColumnSort.Rows rows, ColumnFilter filter, CellText text, int [] c, int [] d) {
 		List<Integer> kept = new ArrayList<> ();
 		for (int row = 0; row < rows.size (); row++) {
 			if (passes (filter, text, row)) kept.add (row);
@@ -414,7 +414,7 @@ public class Test_M3ColumnFilter {
 	public void test_sourceEditsAreDeltasThatReplay () {
 		Random random = new Random (24);
 		for (int seed = 0; seed < 30; seed++) {
-			Test_M3ColumnSort.Rows rows = new Test_M3ColumnSort.Rows (random.nextInt (400), seed, 2 + random.nextInt (9));
+			Test_org_eclipse_swt_internal_ColumnSort.Rows rows = new Test_org_eclipse_swt_internal_ColumnSort.Rows (random.nextInt (400), seed, 2 + random.nextInt (9));
 			CellText text = text (rows);
 			ColumnFilter filter = new ColumnFilter (4, rows.size (), text);
 			criterion (filter, random);
@@ -427,7 +427,7 @@ public class Test_M3ColumnFilter {
 			});
 			int passes = fullPasses (filter);
 			for (int step = 0; step < 60; step++) {
-				if (random.nextInt (4) == 0) criterion (filter, random); else Test_M3ColumnSort.edit (rows, filter, random);
+				if (random.nextInt (4) == 0) criterion (filter, random); else Test_org_eclipse_swt_internal_ColumnSort.edit (rows, filter, random);
 				List<Integer> expected = new ArrayList<> ();
 				for (int row = 0; row < rows.size (); row++) {
 					if (passes (filter, text, row)) expected.add (row);
@@ -669,7 +669,7 @@ public class Test_M3ColumnFilter {
 		assertTrue (filter.matches (0));
 		assertFalse (filter.matches (1));
 		assertEquals (-1, filter.unmap (2));
-		Test_M3ColumnSort.assertInverse (filter);
+		Test_org_eclipse_swt_internal_ColumnSort.assertInverse (filter);
 	}
 
 	@Test

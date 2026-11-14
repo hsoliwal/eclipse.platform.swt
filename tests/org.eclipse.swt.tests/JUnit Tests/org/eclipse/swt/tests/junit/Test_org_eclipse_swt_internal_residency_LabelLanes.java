@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
  * table script runs against plain String lanes measured on every call and
  * against the label lanes; every answer must be equal.
  */
-public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
+public class Test_org_eclipse_swt_internal_residency_LabelLanes {
 	private static final String [] TYPES = {"JAVA File", "File folder", "TSV File", "अनु File", ""};
 	private int measured;
 

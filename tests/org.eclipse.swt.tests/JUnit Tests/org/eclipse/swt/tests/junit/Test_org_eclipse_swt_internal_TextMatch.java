@@ -25,7 +25,7 @@ import org.junit.jupiter.api.*;
 
 /** Headless tests of {@link TextMatch}: modes, flags, tokens, wildcard and regular-expression semantics. */
 @SuppressWarnings ("nls")
-public class Test_M3TextMatch {
+public class Test_org_eclipse_swt_internal_TextMatch {
 
 	static boolean m (String pattern, int mode, String text) {
 		return TextMatch.compile (pattern, mode).matches (text);

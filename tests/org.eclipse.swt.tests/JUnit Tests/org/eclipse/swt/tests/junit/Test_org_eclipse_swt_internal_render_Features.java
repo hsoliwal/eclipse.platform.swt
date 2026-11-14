@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.tests.junit.m3features;
+package org.eclipse.swt.tests.junit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,7 +34,7 @@ import org.junit.jupiter.api.*;
  * <code>-Dm3.features.tsv</code> names the file, default the copy next to this test).
  */
 @SuppressWarnings("restriction")
-public class Test_org_eclipse_swt_internal_render_M3Features {
+public class Test_org_eclipse_swt_internal_render_Features {
 	private static final String WIDGET = "CoverageWidget", PARENT = "CoverageParent";
 	private static final int FEATURE = Features.FRAME_OVERLAY;
 	private static final String GLOBAL = Features.key (FEATURE);
@@ -208,7 +208,7 @@ public class Test_org_eclipse_swt_internal_render_M3Features {
 	private static List<String> generatedView () throws IOException {
 		String file = System.getProperty ("m3.features.tsv");
 		if (file != null) return Files.readAllLines (Path.of (file), StandardCharsets.UTF_8);
-		try (InputStream in = Test_org_eclipse_swt_internal_render_M3Features.class.getResourceAsStream ("FEATURES.tsv")) {
+		try (InputStream in = Test_org_eclipse_swt_internal_render_Features.class.getResourceAsStream ("FEATURES.tsv")) {
 			assertNotNull (in, "FEATURES.tsv next to the test");
 			return new String (in.readAllBytes (), StandardCharsets.UTF_8).lines ().toList ();
 		}

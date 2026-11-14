@@ -22,7 +22,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 /** Contract and seeded differential tests of {@link TextExtentCache}. */
-public class Test_org_eclipse_swt_internal_m3_collections_M3TextExtentCache {
+public class Test_org_eclipse_swt_internal_residency_TextExtentCache {
 	private int calls;
 
 	private long measure (long label, int font) {

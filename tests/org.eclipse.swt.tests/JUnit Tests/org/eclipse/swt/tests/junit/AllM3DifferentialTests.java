@@ -34,7 +34,7 @@ import org.junit.platform.suite.api.Suite;
 	Test_M3BulkUpdatesDifferential.class,
 	Test_M3DiffApplyDifferential.class,
 	Test_M3PrefetchDifferential.class,
-	Test_M3ProxyModelDifferential.class,
+	Test_org_eclipse_swt_internal_ProxyModelDifferential.class,
 	Test_M3ResidencyDifferential.class,
 	Test_M3RowMathDifferential.class,
 	Test_M3ScrollBarModelDifferential.class,

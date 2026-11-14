@@ -187,7 +187,7 @@ public class Test_M3FilterAsync {
 		assertEquals (applies + 1, counter (filter, "applies"), "applies after show");
 		assertEquals (refreshes + 1, counter (binding, "refreshes"), "widget refreshes after show");
 		int [] expected = reference ("n29");
-		assertArrayEquals (expected, Test_M3ColumnSort.order (sort));
+		assertArrayEquals (expected, Test_org_eclipse_swt_internal_ColumnSort.order (sort));
 		assertEquals (expected.length, table.getItemCount ());
 		for (int i = 0; i < Math.min (60, expected.length); i++) assertEquals (cell (expected [i], 1), table.getItem (i).getText (1), "row " + i);
 	}
@@ -249,7 +249,7 @@ public class Test_M3FilterAsync {
 		assertTrue (p95 < 2_000_000L, "keystroke p95 " + p95 + " ns");
 		assertEquals (1, applied.size ());
 		assertArrayEquals (new int [] {finalGeneration, finalGeneration}, applied.get (0));
-		assertArrayEquals (reference (last), Test_M3ColumnSort.order (sort));
+		assertArrayEquals (reference (last), Test_org_eclipse_swt_internal_ColumnSort.order (sort));
 		assertEquals (sort.size (), table.getItemCount ());
 		assertArrayEquals (new int [] {keep}, binding.getSelectedRows ());
 		assertArrayEquals (new int [] {sort.unmap (keep)}, table.getSelectionIndices ());
@@ -277,7 +277,7 @@ public class Test_M3FilterAsync {
 			waitFor (() -> filter.getAppliedGeneration () == finalGeneration);
 			for (int [] pair : applied) assertEquals (pair [1], pair [0]);
 			assertEquals (finalGeneration, applied.get (applied.size () - 1) [0]);
-			assertArrayEquals (reference ("77"), Test_M3ColumnSort.order (sort));
+			assertArrayEquals (reference ("77"), Test_org_eclipse_swt_internal_ColumnSort.order (sort));
 		} finally {
 			logger.setLevel (level);
 		}
