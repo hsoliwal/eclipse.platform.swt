@@ -182,6 +182,11 @@ public class Button extends Control {
         Point size = getSize();
         if (size.x <= 0 || size.y <= 0) return;
         gc.setForeground(getForeground());
+        // GC.fill* takes its fill color from Background, not Foreground.
+        // Keep the control's normal background restore for client listeners.
+        org.eclipse.swt.graphics.Color savedBackground = gc.getBackground();
+        gc.setBackground(getForeground());
+        try {
         int leftInset = 6, contentWidth = size.x - 12;
         if ((style & SWT.CHECK) != 0) {
             int y = Math.max(0, (size.y - 15) / 2);
@@ -228,6 +233,7 @@ public class Button extends Control {
             x += imageWidth + gap;
         }
         if (!caption.isEmpty()) gc.drawText(caption, x, Math.max(0, (size.y - extent.y) / 2), true);
+        } finally { gc.setBackground(savedBackground); }
     }
 
     @Override public Point computeSize(int wHint, int hHint, boolean changed) {
