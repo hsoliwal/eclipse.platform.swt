@@ -1,0 +1,79 @@
+name: SWT original mobile List source and platform contract gates
+on:
+  pull_request:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT/mobile/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/android/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT PI/ios/**'
+      - 'mobile/**'
+      - 'tests/org.eclipse.swt.tests.mobile/**'
+      - '.github/workflows/m3-mobile-original-list.yml'
+  push:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT/mobile/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/android/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT PI/ios/**'
+      - 'mobile/**'
+      - 'tests/org.eclipse.swt.tests.mobile/**'
+      - '.github/workflows/m3-mobile-original-list.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-java-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: hsoliwal/nebula
+          ref: d907d919d6917e17052ea2bd4529c37c6a6100f4
+          path: nebula
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build original SWT source closure and run JUnit5 contracts
+        run: mvn -B -ntp -f mobile/pom.xml -Pcontracts "-Dnebula.checkout=$GITHUB_WORKSPACE/nebula" clean verify
+      - name: Preserve JUnit results even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swt-mobile-list-owner-contracts
+          path: mobile/target/surefire-reports/**
+          if-no-files-found: warn
+  android-java-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: android-actions/setup-android@v3
+      - name: Install actual Android API 35 headers
+        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Compile SWT Android Java source closure (not device proof)
+        run: mvn -B -ntp -f mobile/pom.xml -Dmobile.platform=android "-Dandroid.sdk=$ANDROID_SDK_ROOT" clean verify
+  ios-java-uikit-compile:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile SWT iOS Java owner source
+        run: mvn -B -ntp -f mobile/pom.xml -Dmobile.platform=ios clean verify
+      - name: Compile actual UIKit source with generated JNI declarations
+        run: bash mobile/ios/build.sh iphonesimulator arm64 "$GITHUB_WORKSPACE/mobile/target/swt-mobile-ios.jar"
