@@ -17,6 +17,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.internal.mobile.MobileComboArrayOps;
+import org.eclipse.swt.internal.ExceptionStash;
 
 /**
  * The original SWT Combo API on Android and iOS.
@@ -126,9 +127,17 @@ public class Combo extends Composite {
     }
     private void choose(int index, boolean fromUser) {
         if (index < 0 || index >= itemCount) return;
-        text.setText(items[index]);
+        // Modify/Verify listeners may reenter add/remove/setItems or dispose
+        // the Combo. The requested row must still refer to the same item.
+        String requested = items[index];
+        text.setText(requested);
         if (isDisposed()) return;
-        selectionIndex = items[index].equals(text.getText()) ? index : indexOf(text.getText());
+        if (index >= itemCount || !requested.equals(items[index])) {
+            selectionIndex = indexOf(text.getText());
+            syncListSelection();
+            return;
+        }
+        selectionIndex = requested.equals(text.getText()) ? index : indexOf(text.getText());
         syncListSelection();
         if (fromUser && selectionIndex == index) {
             Event selection = new Event();
@@ -192,6 +201,8 @@ public class Combo extends Composite {
     }
     /** Register original SWT Verify listeners. */
     public void addVerifyListener(VerifyListener listener) { addTypedListener(listener, SWT.Verify); }
+    /** Accept the original SWT segment-listener API (native bidi shaping is unqualified). */
+    public void addSegmentListener(SegmentListener listener) { addTypedListener(listener, SWT.Segments); }
     /** Bidi segment listeners require a qualified mobile native text segment owner. */
     public void addSegmentListener(SegmentListener listener) {
         checkWidget();
@@ -310,6 +321,8 @@ public class Combo extends Composite {
     }
     /** Remove original SWT Verify listeners. */
     public void removeVerifyListener(VerifyListener listener) { removeTypedListener(SWT.Verify, listener); }
+    /** Remove an SWT segment listener without changing the text owner. */
+    public void removeSegmentListener(SegmentListener listener) { removeTypedListener(SWT.Segments, listener); }
     /** Select one item programmatically, without sending SWT.Selection. */
     public void select(int index) { checkWidget(); choose(index, false); }
     /** Replace a list entry without sending selection events. */
@@ -385,7 +398,7 @@ public class Combo extends Composite {
     /** Hide open popups with their Combo owner. */
     @Override public void setVisible(boolean visible) {
         super.setVisible(visible);
-        if (!visible && !simple()) setListVisible(false);
+        if (!isDisposed() && !visible && !simple()) setListVisible(false);
     }
     /** Return a native text measurement without exposing internal controls. */
     @Override public Point computeSize(int wHint, int hHint, boolean changed) {
@@ -401,8 +414,16 @@ public class Combo extends Composite {
     @Override public Control[] getChildren() { checkWidget(); return new Control[0]; }
     /** Dispose the popup and internal children before releasing Combo peer. */
     @Override void releaseChildren() {
-        if (popup != null && !popup.isDisposed()) popup.dispose();
-        for (Control child : super.getChildren())
-            if (!child.isDisposed()) child.dispose();
+        try (ExceptionStash failures = new ExceptionStash()) {
+            if (popup != null && !popup.isDisposed()) {
+                try { popup.dispose(); }
+                catch (RuntimeException | Error e) { failures.stash(e); }
+            }
+            for (Control child : super.getChildren()) {
+                if (child.isDisposed()) continue;
+                try { child.dispose(); }
+                catch (RuntimeException | Error e) { failures.stash(e); }
+            }
+        }
     }
 }
