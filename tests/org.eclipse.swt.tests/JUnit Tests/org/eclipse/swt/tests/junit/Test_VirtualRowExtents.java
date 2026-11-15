@@ -408,4 +408,126 @@ public class Test_VirtualRowExtents {
 		assertEquals(0, x.measured());
 		assertEquals(20L * rows, x.total());
 	}
+
+	@Test
+	public void visibleRangeClampsExtremeOffsetsWithoutWrapping() {
+		Extents x = new Extents(10);
+		x.reset(10);
+		assertArrayEquals(new int[] {9, 10}, x.visible(Long.MAX_VALUE, 2));
+		assertArrayEquals(new int[] {9, 10}, x.visible(Long.MAX_VALUE - 1, Integer.MAX_VALUE));
+		assertArrayEquals(new int[] {9, 10}, x.visible(Long.MAX_VALUE, 1));
+		assertArrayEquals(new int[] {9, 9}, x.visible(Long.MAX_VALUE, 0));
+		assertArrayEquals(new int[] {0, 1}, x.visible(Long.MIN_VALUE, Integer.MAX_VALUE));
+		assertArrayEquals(new int[] {0, 0}, x.visible(Long.MIN_VALUE, 0));
+		assertArrayEquals(new int[] {0, 10}, x.visible(-5, 105));
+		org.eclipse.swt.internal.ItemRange range = (org.eclipse.swt.internal.ItemRange)
+				x.call("visibleRange", new Class<?>[] {long.class, int.class}, Long.MAX_VALUE, 2);
+		assertEquals(9, range.start());
+		assertEquals(9, range.end());
+		assertFalse(range.isEmpty());
+		x.reset(0);
+		assertArrayEquals(new int[] {0, 0}, x.visible(Long.MAX_VALUE, Integer.MAX_VALUE));
+	}
+
+	@Test
+	public void clearingAndRemovingMeasurementBatchesAgreeWithDenseOracle() {
+		for (int seed = 0; seed < 40; seed++) {
+			Random random = new Random(0x43524541L + seed);
+			Extents x = new Extents(20);
+			Oracle oracle = new Oracle(20);
+			x.reset(128);
+			oracle.measured = new int[128];
+			Arrays.fill(oracle.measured, -1);
+			for (int group = 0; group < 80; group++) {
+				// Deliberately observe several mutations together. Both clean-prefix
+				// truncations and middle edits must survive subsequent remeasurement.
+				for (int operation = 0; operation < 16; operation++) {
+					int n = oracle.count();
+					if (n < 4) {
+						x.insert(n, 64);
+						oracle.insert(n, 64);
+						n = oracle.count();
+					}
+					switch (random.nextInt(8)) {
+						case 0 -> {
+							int row = n - 1;
+							while (row > 0 && oracle.measured[row] < 0) row--;
+							x.clearExtent(row);
+							oracle.measured[row] = -1;
+						}
+						case 1 -> {
+							int row = random.nextInt(n + 1);
+							x.clearFrom(row);
+							Arrays.fill(oracle.measured, row, n, -1);
+						}
+						case 2, 3 -> {
+							int row = random.nextInt(n);
+							int length = random.nextBoolean() ? n - row : random.nextInt(n - row + 1);
+							x.remove(row, length);
+							oracle.remove(row, length);
+						}
+						case 4 -> {
+							int row = random.nextInt(n);
+							x.clearExtent(row);
+							oracle.measured[row] = -1;
+						}
+						case 5 -> {
+							int index = random.nextInt(n + 1);
+							x.insert(index, 3);
+							oracle.insert(index, 3);
+						}
+						default -> {
+							int row = random.nextInt(n), extent = random.nextInt(80);
+							x.setExtent(row, extent);
+							oracle.measured[row] = extent;
+						}
+					}
+				}
+				same(x, oracle, random, "clear sequence seed=" + seed + " group=" + group);
+			}
+		}
+	}
+
+	@Test
+	public void suffixRemovalRetainsValuesAcrossRemeasurementAndAppend() {
+		for (int operation = 0; operation < 3; operation++) {
+			for (boolean pendingMiddleMeasurement : new boolean[] {false, true}) {
+				Extents x = new Extents(7);
+				Oracle oracle = new Oracle(7);
+				x.reset(65);
+				oracle.measured = new int[65];
+				Arrays.fill(oracle.measured, -1);
+				for (int row = 0; row < 65; row += 2) {
+					x.setExtent(row, row % 17);
+					oracle.measured[row] = row % 17;
+				}
+				assertEquals(oracle.total(), x.total());
+				if (pendingMiddleMeasurement) {
+					x.setExtent(1, 15);
+					oracle.measured[1] = 15;
+				}
+				for (int row = 64; row >= 2; row -= 2) {
+					if (operation == 0) x.clearFrom(row);
+					else if (operation == 1) x.clearExtent(row);
+					else x.remove(row, oracle.count() - row);
+					if (operation == 2) oracle.remove(row, oracle.count() - row);
+					else Arrays.fill(oracle.measured, row, oracle.count(), -1);
+					x.setExtent(0, row);
+					oracle.measured[0] = row;
+					assertEquals(oracle.total(), x.total());
+				}
+				int n = oracle.count();
+				x.insert(n, 3);
+				oracle.insert(n, 3);
+				x.setExtent(n + 2, 23);
+				oracle.measured[n + 2] = 23;
+				same(x, oracle, new Random(42), "suffix operation=" + operation);
+				x.clearFrom(0);
+				Arrays.fill(oracle.measured, -1);
+				x.setExtent(0, 11);
+				oracle.measured[0] = 11;
+				same(x, oracle, new Random(43), "reuse after clearing every measurement");
+			}
+		}
+	}
 }
