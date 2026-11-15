@@ -32,10 +32,14 @@ import org.eclipse.swt.internal.PackedHeapGrowth;
  * <p>Unmeasured rows are implicit: logical count and estimate allocate no row-sized
  * backing. Sorted primitive row IDs and measured extents carry only measured rows;
  * the existing Fenwick algorithm indexes their signed deltas from the estimate.
- * With m measured rows, offset and repeat measurement are O(log m), row lookup is
- * O(log squared m), and sequential first measurements append in O(log m). A first
+ * With m measured rows and a clean prefix cache, offset and repeat measurement
+ * are O(log m), row lookup is O(log squared m), and sequential first measurements
+ * append in O(log m). A first
  * measurement inserted in the middle, deletion of measurements, or an estimate
  * change is O(m). This is a sparse-residency tradeoff, not a universal speedup.
+ * Consecutive middle insertions invalidate the prefix cache; the next query that
+ * needs prefix sums rebuilds it once in O(m). Row IDs and extents remain
+ * authoritative throughout.
  * No Item/proxy or per-row object is created. Reset drops all measurement backing.
  * The behaviour follows two pattern donors, read at pinned commits and not copied:
  * react-window (MIT, 439cfee: lib/core getOffsetForIndex, getEstimatedSize,
@@ -63,6 +67,7 @@ final class VirtualRowExtents {
 	private int [] rowIds = EMPTY;
 	private int [] extents = EMPTY;
 	private long [] tree = EMPTY_TREE;
+	private boolean treeDirty;
 
 	VirtualRowExtents (int estimate) {
 		checkEstimate (estimate);
@@ -106,6 +111,7 @@ final class VirtualRowExtents {
 		measured = 0;
 		rowIds = extents = EMPTY;
 		tree = EMPTY_TREE;
+		treeDirty = false;
 	}
 
 	/** Records the measured extent of one row. */
@@ -126,12 +132,14 @@ final class VirtualRowExtents {
 		rowIds [at] = row;
 		extents [at] = extent;
 		measured++;
-		if (at == measured - 1) {
+		if (at == measured - 1 && !treeDirty) {
 			// New Fenwick node includes preceding nodes in its low-bit block.
 			tree [measured] = (long) extent - estimate + deltaPrefix (measured - 1)
 					- deltaPrefix (measured - (measured & -measured));
 		} else {
-			rebuild ();
+			// Insertion changes measured-slot positions. Rebuild before the next
+			// prefix query, coalescing consecutive measurements without queries.
+			treeDirty = true;
 		}
 	}
 
@@ -308,6 +316,7 @@ final class VirtualRowExtents {
 	}
 
 	private long deltaPrefix (int entries) {
+		if (treeDirty) rebuild ();
 		long sum = 0;
 		for (int i = entries; i > 0; i -= i & -i) sum += tree [i];
 		return sum;
@@ -315,7 +324,7 @@ final class VirtualRowExtents {
 
 	/** Adds a measured-slot delta; the tree is over measured slots, not logical rows. */
 	private void add (int slot, long delta) {
-		if (delta == 0) return;
+		if (delta == 0 || treeDirty) return;
 		for (int i = slot + 1; i <= measured;) {
 			tree [i] += delta;
 			int step = i & -i;
@@ -328,6 +337,7 @@ final class VirtualRowExtents {
 		if (measured == 0) {
 			rowIds = extents = EMPTY;
 			tree = EMPTY_TREE;
+			treeDirty = false;
 			return;
 		}
 		Arrays.fill (tree, 0, measured + 1, 0L);
@@ -336,6 +346,7 @@ final class VirtualRowExtents {
 			int step = i & -i;
 			if (step <= measured - i) tree [i + step] += tree [i];
 		}
+		treeDirty = false;
 	}
 
 	private void resizeLanes (int entries) {

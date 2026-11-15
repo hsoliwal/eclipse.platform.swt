@@ -353,4 +353,59 @@ public class Test_VirtualRowExtents {
 		assertEquals(rows / 2, x.rows());
 		assertEquals(prefix[rows] - prefix[rows / 2], x.total());
 	}
+
+	@Test
+	public void consecutiveMutationsAgreeWithOracleBeforeAndAfterQueries() {
+		Random random = new Random(0x5157524f57L);
+		Extents x = new Extents(20);
+		Oracle oracle = new Oracle(20);
+		x.reset(512);
+		oracle.measured = new int[512];
+		Arrays.fill(oracle.measured, -1);
+		// First measurements arrive out of order, followed by remeasurements and
+		// an append before the first offset query. No batch API is required.
+		for (int row = 500; row >= 0; row -= 3) {
+			x.setExtent(row, row % 41);
+			oracle.measured[row] = row % 41;
+		}
+		x.setExtent(200, 0);
+		oracle.measured[200] = 0;
+		x.setExtent(511, 73);
+		oracle.measured[511] = 73;
+		same(x, oracle, random, "unqueried middle insertions and remeasurement");
+		for (int round = 0; round < 80; round++) {
+			// Includes clear/remove/reset/estimate changes and anchored queries;
+			// mutations may be observed immediately or after several more changes.
+			for (int operation = 0; operation < 31; operation++) apply(x, oracle, random);
+			same(x, oracle, random, "mutation group " + round);
+		}
+	}
+
+	@Test
+	public void maximumLogicalCountRetainsSparseMeasurementBacking() throws Exception {
+		int rows = Integer.MAX_VALUE;
+		Extents x = new Extents(20);
+		x.reset(rows);
+		x.setExtent(rows - 1, 40);
+		x.setExtent(rows / 2, 10);
+		x.setExtent(0, 0);
+		assertEquals(3, x.measured());
+		assertEquals(20L * rows - 10, x.total());
+		assertEquals(rows - 1, x.rowAt(x.total() - 1));
+		long backingBytes = 0;
+		for (java.lang.reflect.Field field : x.target.getClass().getDeclaredFields()) {
+			if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+			field.setAccessible(true);
+			Object backing = field.get(x.target);
+			if (backing instanceof int[] lane) backingBytes += 4L * lane.length;
+			if (backing instanceof long[] lane) backingBytes += 8L * lane.length;
+		}
+		assertTrue(backingBytes < 4096, "three measurements allocated " + backingBytes + " bytes");
+		x.remove(rows - 4, 4);
+		assertEquals(2, x.measured());
+		assertEquals(20L * (rows - 4) - 30, x.total());
+		x.reset(rows);
+		assertEquals(0, x.measured());
+		assertEquals(20L * rows, x.total());
+	}
 }

@@ -113,6 +113,80 @@ class SuiteInventoryTest(unittest.TestCase):
         report = self.check()
         self.assertEqual(["Test_Unreferenced"], report["unreferenced"])
 
+    def test_noncode_annotations_cannot_complete_a_suite(self):
+        annotation = "@SelectClasses({AllWidgets.class, Test_Direct.class})"
+        for source in (
+                "/* " + annotation + " */ class AllTests {}",
+                "// " + annotation + "\nclass AllTests {}",
+                'class AllTests { String note = "' + annotation + '"; }',
+                'class AllTests { String note = """\n' + annotation + '\n"""; }'):
+            with self.subTest(source=source):
+                self.put("AllTests", source)
+                report = self.check()
+                self.assertFalse(report["nonregression_pass"])
+                self.assertFalse(report["suite_complete"])
+                self.assertEqual(["AllTests"], report["missing_suite_references"])
+                self.assertEqual(0, report["reachable_candidate_classes"])
+
+    def test_noncode_annotation_before_real_suite_does_not_select_omitted_test(self):
+        self.put("AllTests", '/* @SelectClasses({Test_Unreferenced.class}) */\n'
+                 '@SelectClasses({AllWidgets.class, Test_Direct.class})\n'
+                 'class AllTests { String note = "@SelectClasses({Test_Unreferenced.class})"; }')
+        report = self.check()
+        self.assertTrue(report["nonregression_pass"])
+        self.assertEqual(2, report["reachable_candidate_classes"])
+        self.assertEqual(["Test_Unreferenced"], report["unreferenced"])
+
+    def test_nested_suite_annotation_in_literal_is_not_a_suite(self):
+        self.put("Test_Nested", 'class Test_Nested {\n'
+                 'String note = "@SelectClasses({Test_Gone.class})";\n'
+                 '@Test void test() {} }')
+        report = self.check()
+        self.assertTrue(report["nonregression_pass"])
+        self.assertNotIn("Test_Nested", report["suites_seen"])
+        self.assertEqual([], report["missing_suite_references"])
+
+    def test_block_comments_inside_real_annotation_do_not_add_references(self):
+        self.put("AllWidgets", "@SelectClasses({Test_Nested.class, "
+                 "/* Test_Unreferenced.class */})")
+        self.assertEqual(["Test_Unreferenced"], self.check()["unreferenced"])
+
+    def test_java_unicode_comment_delimiters_are_masked_before_annotation_scan(self):
+        self.put("AllTests", r"\u002f\u002a @SelectClasses({AllWidgets.class, "
+                 r"Test_Direct.class}) \u002a\u002f class AllTests {}")
+        report = self.check()
+        self.assertFalse(report["nonregression_pass"])
+        self.assertEqual(["AllTests"], report["missing_suite_references"])
+
+    def test_eligible_unicode_annotation_and_doubled_backslash_literal(self):
+        self.put("AllTests", r"\uuuu0040SelectClasses({AllWidgets.class, Test_Direct.class})"
+                 + '\nclass AllTests { String note = "\\\\u0022'
+                 + '@SelectClasses({Test_Gone.class})"; }')
+        report = self.check()
+        self.assertTrue(report["nonregression_pass"])
+        self.assertEqual([], report["missing_suite_references"])
+
+    def test_qualified_value_annotation_and_single_class_shorthand(self):
+        self.put("AllTests", "@org.junit.platform.suite.api.SelectClasses(value = AllWidgets.class)")
+        self.put("AllWidgets", "@SelectClasses(value = {Test_Nested.class, Test_Direct.class})")
+        report = self.check()
+        self.assertTrue(report["nonregression_pass"])
+        self.assertEqual(2, report["reachable_candidate_classes"])
+
+    def test_literal_escape_sequences_cannot_expose_annotation_cues(self):
+        source = ('class Holder { char quote = \'\\\'\'; char slash = \'\\\\\'; '
+                  'String text = "escaped \\\" @SelectClasses({Test_Gone.class})"; }')
+        self.assertEqual([], inventory.selections(source))
+
+    def test_incomplete_java_lexical_input_is_refused(self):
+        for source in ('/* @SelectClasses({Test_Gone.class})',
+                       '"@SelectClasses({Test_Gone.class})',
+                       '"""\n@SelectClasses({Test_Gone.class})',
+                       r'\u00GG @SelectClasses({Test_Gone.class})'):
+            with self.subTest(source=source):
+                with self.assertRaises(ValueError):
+                    inventory.selections(source)
+
 
 if __name__ == "__main__":
     unittest.main()
