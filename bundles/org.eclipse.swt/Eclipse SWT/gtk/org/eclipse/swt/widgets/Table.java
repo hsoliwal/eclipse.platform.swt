@@ -258,7 +258,7 @@ void updateVirtualViewport () {
 		return;
 	}
 	Rectangle client = getClientAreaInPixels ();
-	int rowHeight = Math.max (1, getItemHeight ());
+	int rowHeight = Math.max (1, usesVirtualNativeModel () ? virtualItemHeight () : getItemHeight ());
 	int chromeHeight = getHeaderVisible () ? getHeaderHeight () : 0;
 	int bodyHeight = isVisible () && client.width > 0 ? Math.max (0, client.height - chromeHeight) : 0;
 	int first = itemCount == 0 ? 0 : Math.min (getTopIndex (), itemCount - 1);
@@ -3595,6 +3595,43 @@ boolean m3SetRow (int index, String [] texts, Image [] images, boolean checked) 
 	return false;
 }
 
+int virtualItemHeight () {
+	/* Damage planning also runs while an item is being cleared. Do not request
+	 * payload here: the public sizing path can re-cache row zero through SetData
+	 * before clear() returns. Use native geometry without populating a cold row. */
+	if ((usesBoundedVirtualView () ? virtualViewCount : itemCount) > 0 && GTK.gtk_widget_get_realized (handle)) {
+		long path = GTK.gtk_tree_path_new ();
+		GTK.gtk_tree_path_append_index (path, usesBoundedVirtualView () ? 0 : getTopIndex ());
+		try {
+			GdkRectangle area = new GdkRectangle ();
+			GTK.gtk_tree_view_get_background_area (handle, path, 0, area);
+			if (area.height > 0) return area.height;
+		} finally {
+			GTK.gtk_tree_path_free (path);
+		}
+	}
+	int height = 0;
+	boolean previousIgnoreSize = ignoreSize;
+	ignoreSize = true;
+	try {
+		for (int index = 0; index < Math.max (1, columnCount); index++) {
+			long column = GTK.gtk_tree_view_get_column (handle, index);
+			int [] size = new int [1];
+			GTK3.gtk_tree_view_column_cell_get_size (column, null, null, null, null, size);
+			int cellHeight = size [0];
+			long text = getTextRenderer (column);
+			if (text != 0) {
+				GTK.gtk_cell_renderer_get_preferred_height_for_width (text, handle, 0, size, null);
+				cellHeight = Math.max (cellHeight, size [0]);
+			}
+			height = Math.max (height, cellHeight);
+		}
+	} finally {
+		ignoreSize = previousIgnoreSize;
+	}
+	return height;
+}
+
 /**
  * Returns the height of the area which would be used to
  * display <em>one</em> of the items in the receiver.
@@ -3608,40 +3645,7 @@ boolean m3SetRow (int index, String [] texts, Image [] images, boolean checked) 
  */
 public int getItemHeight () {
 	checkWidget ();
-	if (usesBoundedVirtualView ()) {
-		/* Geometry is independent of payload population. In particular, sizing a
-		 * distant window must not ask the semantic model to populate row zero. */
-		if (virtualViewCount > 0 && GTK.gtk_widget_get_realized (handle)) {
-			long path = virtualViewPath (virtualViewStart);
-			try {
-				GdkRectangle area = new GdkRectangle ();
-				GTK.gtk_tree_view_get_background_area (handle, path, 0, area);
-				if (area.height > 0) return area.height;
-			} finally {
-				GTK.gtk_tree_path_free (path);
-			}
-		}
-		int height = 0;
-		boolean previousIgnoreSize = ignoreSize;
-		ignoreSize = true;
-		try {
-			for (int index = 0; index < Math.max (1, columnCount); index++) {
-				long column = GTK.gtk_tree_view_get_column (handle, index);
-				int [] size = new int [1];
-				GTK3.gtk_tree_view_column_cell_get_size (column, null, null, null, null, size);
-				int cellHeight = size [0];
-				long text = getTextRenderer (column);
-				if (text != 0) {
-					GTK.gtk_cell_renderer_get_preferred_height_for_width (text, handle, 0, size, null);
-					cellHeight = Math.max (cellHeight, size [0]);
-				}
-				height = Math.max (height, cellHeight);
-			}
-		} finally {
-			ignoreSize = previousIgnoreSize;
-		}
-		return height;
-	}
+	if (usesBoundedVirtualView ()) return virtualItemHeight ();
 	int height = 0;
 
 	if (itemCount == 0) {

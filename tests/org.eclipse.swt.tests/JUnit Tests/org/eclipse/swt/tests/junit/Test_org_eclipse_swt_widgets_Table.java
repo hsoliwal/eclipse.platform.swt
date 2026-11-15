@@ -490,6 +490,44 @@ public void test_virtualGtkBoundedTableOwnsLogicalRangeAndAttachedRows() throws 
 }
 
 @Test
+public void test_virtualGtkClearKeepsDataInvalidated() throws Exception {
+	if (!isGtk3()) return;
+	for (String mode : new String[] {"false", "true"}) {
+		Table virtualTable = newGtkViewportTable(SWT.VIRTUAL, mode);
+		virtualTable.setBounds(0, 0, 300, 180);
+		int[] generation = {0};
+		virtualTable.addListener(SWT.SetData, event ->
+				((TableItem) event.item).setText(generation[0] + ":" + event.index));
+		virtualTable.setItemCount(3);
+		shell.setSize(360, 240);
+		shell.open();
+		SwtTestUtil.processEvents();
+		Runnable[] clears = {
+				() -> virtualTable.clear(0),
+				() -> virtualTable.clear(0, 1),
+				() -> virtualTable.clear(new int[] {0, 1}),
+				virtualTable::clearAll
+		};
+		for (int operation = 0; operation < clears.length; operation++) {
+			for (TableItem item : virtualTable.getItems()) item.getText();
+			virtualTable.setRedraw(false);
+			try {
+				clears[operation].run();
+				generation[0]++;
+				int lastCleared = operation == 0 ? 0 : operation == 3 ? 2 : 1;
+				for (int index = 0; index <= lastCleared; index++) {
+					assertEquals(generation[0] + ":" + index, virtualTable.getItem(index).getText(),
+							"cleared row must request the current provider data: mode=" + mode + ", operation=" + operation);
+				}
+			} finally {
+				virtualTable.setRedraw(true);
+			}
+		}
+		virtualTable.dispose();
+	}
+}
+
+@Test
 public void test_virtualGtkBoundedTableSizingDoesNotPopulateColdLogicalRows() throws Exception {
 	if (!isGtk3()) return;
 	Table virtualTable = newGtkViewportTable(SWT.VIRTUAL | SWT.V_SCROLL, "true");
