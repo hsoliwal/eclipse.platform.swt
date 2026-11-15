@@ -904,13 +904,8 @@ void captureVirtualSelection () {
 
 int firstVirtualSelectionIndex () {
 	VirtualSelectionModel selection = virtualViewport.selection ();
-	if (selection.selectedCount () == 0) return -1;
-	if (!selection.complementMode ()) return selection.rangeStart (0);
-	int first = 0;
-	for (int range = 0; range < selection.rangeCount () && selection.rangeStart (range) == first; range++) {
-		first = selection.rangeEndExclusive (range);
-	}
-	return first < itemCount ? first : -1;
+	int first = selection.firstSelectedIndex ();
+	return selection.complementMode () && first >= itemCount ? -1 : first;
 }
 
 void virtualNavigate (int key, int mask) {

@@ -187,6 +187,20 @@ final class VirtualSelectionModel {
 		return bits != null ? bitsSelected : selection.selectedCount ();
 	}
 
+	/** First selected row, or -1, without enumerating selections or building bitmap runs. */
+	int firstSelectedIndex () {
+		if (bits != null) return bitsSelected == 0 ? -1 : bits.nextSet (0, 0);
+		int count = selection.logicalCount ();
+		if (count == 0) return -1;
+		int ranges = selection.rangeCount ();
+		if (!selection.complementMode ()) return ranges == 0 ? -1 : selection.rangeStart (0);
+		if (ranges == 0 || selection.rangeStart (0) > 0) return 0;
+		// Adjacent exceptions are merged, so the first exception's end begins
+		// the first selected gap, unless the exception covers the whole model.
+		int first = selection.rangeEndExclusive (0);
+		return first < count ? first : -1;
+	}
+
 	int [] toArray () {
 		if (bits == null) return selection.toArray ();
 		int [] result = new int [bitsSelected];

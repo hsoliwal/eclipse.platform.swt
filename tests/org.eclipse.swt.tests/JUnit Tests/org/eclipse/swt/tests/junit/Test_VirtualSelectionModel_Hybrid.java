@@ -70,7 +70,9 @@ public class Test_VirtualSelectionModel_Hybrid {
 		int count = expected.number ("logicalCount");
 		assertEquals (count, actual.number ("logicalCount"), context);
 		assertEquals (expected.number ("selectedCount"), actual.number ("selectedCount"), context);
-		assertArrayEquals ((int []) expected.call ("toArray"), (int []) actual.call ("toArray"), context);
+		int [] selected = (int []) expected.call ("toArray");
+		assertArrayEquals (selected, (int []) actual.call ("toArray"), context);
+		assertEquals (selected.length == 0 ? -1 : selected [0], actual.number ("firstSelectedIndex"), context);
 		for (int i = 0; i < count; i++) {
 			assertEquals (expected.call ("isSelected", i), actual.call ("isSelected", i), context + " row " + i);
 		}
@@ -155,5 +157,89 @@ public class Test_VirtualSelectionModel_Hybrid {
 		assertFalse ((Boolean) hybrid.call ("bitmapMode"), "select-all stays a complement range set");
 		System.out.println ("selectAll+count 10M: " + (t1 - t0) / 1000 + " us; deselect one: " + (t2 - t1) / 1000 + " us");
 		assertTrue (t1 - t0 < 50_000_000L, "select-all over 10M rows took " + (t1 - t0) + " ns");
+	}
+
+	@Test
+	public void firstSelectedPreservesMaximumCountComplementAndSpliceSemantics () {
+		Model ranges = new Model (false);
+		ranges.call ("setLogicalCount", Integer.MAX_VALUE);
+		assertEquals (-1, ranges.number ("firstSelectedIndex"));
+		ranges.call ("selectRange", Integer.MAX_VALUE - 1, Integer.MAX_VALUE);
+		assertEquals (Integer.MAX_VALUE - 1, ranges.number ("firstSelectedIndex"));
+		ranges.call ("selectAll");
+		assertEquals (0, ranges.number ("firstSelectedIndex"));
+		ranges.call ("deselectRange", 0, Integer.MAX_VALUE - 1);
+		assertEquals (Integer.MAX_VALUE - 1, ranges.number ("firstSelectedIndex"));
+		ranges.call ("setSelected", Integer.MAX_VALUE - 1, false);
+		assertEquals (-1, ranges.number ("firstSelectedIndex"), "fully excluded complement");
+		ranges.call ("setLogicalCount", 0);
+		assertEquals (-1, ranges.number ("firstSelectedIndex"), "select-all over an empty model");
+		ranges.call ("setLogicalCount", 17);
+		assertEquals (-1, ranges.number ("firstSelectedIndex"), "new rows remain unselected");
+		ranges.call ("setSelected", 16, true);
+		assertEquals (16, ranges.number ("firstSelectedIndex"));
+		ranges.call ("insert", 0, 3);
+		assertEquals (19, ranges.number ("firstSelectedIndex"));
+		ranges.call ("remove", 0, 19);
+		assertEquals (0, ranges.number ("firstSelectedIndex"));
+		ranges.call ("invert");
+		assertEquals (-1, ranges.number ("firstSelectedIndex"));
+	}
+
+	@Test
+	public void firstSelectedDoesNotBuildOrInvalidateBitmapRunCache () throws Exception {
+		Model hybrid = new Model (true);
+		hybrid.call ("setLogicalCount", 100_000);
+		for (int row = 0; row < 100_000; row += 7) hybrid.call ("setSelected", row, true);
+		assertTrue ((Boolean) hybrid.call ("bitmapMode"));
+		Class<?> owner = hybrid.target.getClass ();
+		java.lang.reflect.Field starts = owner.getDeclaredField ("runStarts");
+		java.lang.reflect.Field ends = owner.getDeclaredField ("runEnds");
+		java.lang.reflect.Field count = owner.getDeclaredField ("runCount");
+		starts.setAccessible (true); ends.setAccessible (true); count.setAccessible (true);
+		Object beforeStarts = starts.get (hybrid.target), beforeEnds = ends.get (hybrid.target);
+		assertEquals (-1, count.getInt (hybrid.target));
+		assertEquals (0, hybrid.number ("firstSelectedIndex"));
+		hybrid.call ("setSelected", 0, false);
+		assertEquals (7, hybrid.number ("firstSelectedIndex"));
+		hybrid.call ("setSelected", 7, false);
+		assertEquals (14, hybrid.number ("firstSelectedIndex"));
+		assertSame (beforeStarts, starts.get (hybrid.target), "first-row query allocated a run directory");
+		assertSame (beforeEnds, ends.get (hybrid.target));
+		assertEquals (-1, count.getInt (hybrid.target), "first-row query rebuilt every bitmap run");
+		assertEquals (14, hybrid.number ("rangeStart", 0));
+		int built = count.getInt (hybrid.target);
+		assertTrue (built > 0);
+		assertEquals (14, hybrid.number ("firstSelectedIndex"));
+		assertEquals (built, count.getInt (hybrid.target), "read-only first-row query invalidated a valid cache");
+	}
+
+	@Test
+	public void firstSelectedMatchesBooleanOracleAtBitmapWordAndTailBoundaries () {
+		int rows = 4097;
+		boolean [] selected = new boolean [rows];
+		Model hybrid = new Model (true);
+		hybrid.call ("setLogicalCount", rows);
+		for (int row = 0; row < rows; row += 2) {
+			hybrid.call ("setSelected", row, true);
+			selected [row] = true;
+		}
+		assertTrue ((Boolean) hybrid.call ("bitmapMode"));
+		for (int row = 0; row < rows; row++) {
+			hybrid.call ("setSelected", row, false);
+			selected [row] = false;
+			int expected = -1;
+			for (int i = 0; i < rows; i++) if (selected [i]) { expected = i; break; }
+			assertEquals (expected, hybrid.number ("firstSelectedIndex"), "cleared prefix through " + row);
+		}
+		assertTrue ((Boolean) hybrid.call ("bitmapMode"), "an empty bitmap remains a supported representation");
+		hybrid.call ("setSelected", rows - 1, true);
+		assertEquals (rows - 1, hybrid.number ("firstSelectedIndex"));
+		hybrid.call ("setLogicalCount", rows - 1);
+		assertEquals (-1, hybrid.number ("firstSelectedIndex"), "shrinking clears the last partial word");
+		hybrid.call ("setLogicalCount", rows);
+		assertEquals (-1, hybrid.number ("firstSelectedIndex"), "growing cannot revive truncated tail bits");
+		hybrid.call ("setLogicalCount", 0);
+		assertEquals (-1, hybrid.number ("firstSelectedIndex"));
 	}
 }
