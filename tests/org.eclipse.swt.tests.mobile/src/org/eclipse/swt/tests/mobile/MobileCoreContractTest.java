@@ -40,6 +40,7 @@ public final class MobileCoreContractTest {
 		testMobileListContracts();
 		testMobileOriginalTextContracts();
 		testMobileComboContracts();
+		testMobileOriginalTableContracts();
 		System.out.println("PASS: "+assertions+" SWT/Nebula owner-contract assertions. Native device qualification is separate.");
 	}
 	static void testOriginalWidgetAndPainting()throws Exception {
@@ -666,5 +667,118 @@ public final class MobileCoreContractTest {
 				"Original Combo releases native Text/List/Button/Shell peers and graphics");
 		require(platform.openedGraphics == platform.closedGraphics,
 				"Original Combo closes native graphics contexts without leaking handles");
+	}
+
+	static void testMobileOriginalTableContracts() {
+		ContractPlatform platform = new ContractPlatform();
+		MobileRuntime.install(platform);
+		Display display = new Display();
+		try {
+			Shell shell = new Shell(display);
+			Table table = new Table(shell, SWT.VIRTUAL | SWT.MULTI | SWT.CHECK | SWT.FULL_SELECTION);
+			long tablePeer = platform.lastCreated;
+			table.setBounds(0, 0, 300, 150);
+			table.setHeaderVisible(true);
+			table.setLinesVisible(true);
+			require((table.getStyle() & SWT.VIRTUAL) != 0
+					&& platform.controls.get(tablePeer).kind == MobilePlatform.CANVAS
+					&& platform.controls.get(tablePeer).role == org.eclipse.swt.accessibility.ACC.ROLE_TABLE,
+					"Original Table owns native Android/UIKit Canvas peer and semantic Table role");
+			TableColumn first = new TableColumn(table, SWT.LEFT);
+			first.setText("Name"); first.setWidth(140);
+			TableColumn second = new TableColumn(table, SWT.RIGHT);
+			second.setText("Value"); second.setWidth(100);
+			require(table.getColumnCount() == 2 && table.getColumn(0) == first
+					&& Arrays.equals(table.getColumnOrder(), new int[] {0, 1}),
+					"TableColumn identity and initial order match original API");
+			table.setColumnOrder(new int[] {1, 0});
+			require(Arrays.equals(table.getColumnOrder(), new int[] {1, 0}),
+					"Original column-order permutation is retained without changing model columns");
+			table.setColumnOrder(new int[] {0, 1});
+			AtomicInteger loaded = new AtomicInteger();
+			table.addListener(SWT.SetData, event -> {
+				loaded.incrementAndGet();
+				TableItem item = (TableItem)event.item;
+				item.setText(0, "row-" + event.index);
+				item.setText(1, "value-" + event.index);
+				item.setChecked((event.index & 1) != 0);
+			});
+			AtomicInteger selectionEvents = new AtomicInteger();
+			table.addSelectionListener(SelectionListener.widgetSelectedAdapter(event ->
+					selectionEvents.incrementAndGet()));
+			table.setItemCount(1_000_000_000);
+			table.setTopIndex(999_999_998);
+			shell.open();
+			drain(display);
+			require(loaded.get() >= 2 && loaded.get() <= 9,
+					"One-billion-row virtual Table requests only its visible SWT.SetData rows");
+			TableItem last = table.getItem(999_999_999);
+			require("value-999999999".equals(last.getText(1))
+					&& last.getChecked() && table.indexOf(last) == 999_999_999,
+					"Sparse original TableItem supports columns and CHECK with high logical index");
+			int previousLoads = loaded.get();
+			last.getText();
+			require(loaded.get() == previousLoads, "Cached virtual row does not reenter SWT.SetData");
+			table.clear(999_999_999);
+			require(last == table.getItem(999_999_999)
+					&& "row-999999999".equals(last.getText())
+					&& loaded.get() == previousLoads + 1,
+					"Table.clear reuses stable row identity and reloads exactly one SWT.SetData");
+			TableColumn inserted = new TableColumn(table, SWT.CENTER, 0);
+			inserted.setText("Inserted"); inserted.setWidth(60);
+			require(last.getText(0).isEmpty()
+					&& "row-999999999".equals(last.getText(1))
+					&& "value-999999999".equals(last.getText(2)),
+					"Physical column insertion shifts original TableItem cell payload indices");
+			inserted.dispose();
+			require("row-999999999".equals(last.getText(0))
+					&& "value-999999999".equals(last.getText(1)),
+					"Column disposal restores original TableItem cell ordering");
+			table.select(999_999_999);
+			require(table.getSelectionIndex() == 999_999_999
+					&& table.getSelectionCount() == 1
+					&& selectionEvents.get() == 0,
+					"High-index programmatic Table selection uses sparse masks without user event");
+			table.selectAll();
+			require(table.getSelectionCount() == 1_000_000_000,
+					"Billion-row SWT.MULTI selectAll has constant-size interval storage");
+			table.deselect(10, 999_999_998);
+			require(table.getSelectionCount() == 11
+					&& table.getSelectionIndices().length == 11
+					&& table.isSelected(999_999_999),
+					"Multi-interval selection and huge deselect are bounded by range count");
+			table.setSelection(999_999_999);
+			table.setTopIndex(999_999_998);
+			int topBefore = table.getTopIndex();
+			platform.sink.accessibility(tablePeer, MobilePlatform.ACTION_DECREMENT);
+			drain(display);
+			require(table.getTopIndex() < topBefore
+					&& table.getSelectionIndex() == 999_999_999
+					&& selectionEvents.get() == 0,
+					"Native Table accessibility paging preserves selection without events");
+			table.setTopIndex(999_999_998);
+			int y = table.getHeaderHeight() + table.getItemHeight() / 2;
+			platform.sink.input(tablePeer, SWT.MouseDown, 18, y, 1, 0, '\0', 0, 1, 10);
+			platform.sink.input(tablePeer, SWT.MouseUp, 18, y, 1, 0, '\0', 0, 1, 11);
+			drain(display);
+			require(table.getSelectionIndex() == 999_999_998 && selectionEvents.get() == 1,
+					"Real native Table peer pointer selects correct virtual row once");
+			table.setItemCount(999_999_999);
+			require(last.isDisposed() && table.getItemCount() == 999_999_999,
+					"Shrinking a huge table disposes only out-of-range materialized TableItems");
+			table.removeAll();
+			require(table.getItemCount() == 0 && table.getSelectionCount() == 0,
+					"Table.removeAll compacts sparse row and selection state");
+			shell.dispose();
+			require(table.isDisposed() && first.isDisposed() && second.isDisposed(),
+					"Original Table and TableColumn owners dispose with their Shell");
+		} finally {
+			display.dispose();
+			MobileRuntime.uninstall(platform);
+		}
+		require(platform.controls.isEmpty() && platform.images.isEmpty(),
+				"Original Table releases native peers and GC-owned images");
+		require(platform.openedGraphics == platform.closedGraphics,
+				"Original Table closes all native drawing contexts");
 	}
 }

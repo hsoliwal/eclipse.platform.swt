@@ -480,7 +480,7 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 	});
 }
 - (BOOL)accessibilityScroll:(UIAccessibilityScrollDirection)direction {
-	if (_disposed || !_enabled || _accessibilityRole != SWT(ROLE_LIST)) return NO;
+	if (_disposed || !_enabled || (_accessibilityRole != SWT(ROLE_LIST) && _accessibilityRole != SWT(ROLE_TABLE))) return NO;
 	jint action;
 	switch (direction) {
 		case UIAccessibilityScrollDirectionUp: action = SWT(ACTION_INCREMENT); break;

@@ -1,0 +1,88 @@
+name: SWT original mobile Table Java and Android/UIKit qualification
+on:
+  pull_request:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT/mobile/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/android/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT PI/ios/**'
+      - 'tests/org.eclipse.swt.tests.mobile/**'
+      - 'mobile/**'
+      - '.github/workflows/m3-mobile-original-table.yml'
+  push:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT/mobile/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/android/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT PI/ios/**'
+      - 'tests/org.eclipse.swt.tests.mobile/**'
+      - 'mobile/**'
+      - '.github/workflows/m3-mobile-original-table.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sparse-selection-java21:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Run 630,953+ randomized sparse selection assertions
+        run: bash mobile/test-table-selection.sh
+  original-swt-owner-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: hsoliwal/nebula
+          ref: d79bade9f171fcad8e26cbcfd864b0431482eb59
+          path: nebula
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile native-independent SWT original Table and Nebula JUnit contracts
+        run: mvn -B -ntp -f mobile/pom.xml -Pcontracts "-Dnebula.checkout=$GITHUB_WORKSPACE/nebula" clean verify
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swt-original-mobile-table-junit
+          path: mobile/target/surefire-reports/**
+          if-no-files-found: warn
+  android-api35-owner-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android API 35
+        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Compile original SWT mobile Table plus Android native Canvas peer
+        run: mvn -B -ntp -f mobile/pom.xml -Dmobile.platform=android "-Dandroid.sdk=$ANDROID_SDK_ROOT" clean verify
+  ios-uikit-owner-source:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile original SWT mobile Table plus iOS Java source
+        run: mvn -B -ntp -f mobile/pom.xml -Dmobile.platform=ios clean verify
+      - name: Compile UIKit Objective-C JNI bridge with simulator SDK
+        run: bash mobile/ios/build.sh iphonesimulator arm64 "$GITHUB_WORKSPACE/mobile/target/swt-mobile-ios.jar"

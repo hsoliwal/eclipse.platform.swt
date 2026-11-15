@@ -48,4 +48,8 @@ public final class MobileCoreContractJUnitTest {
 		MobileListContractTest.testSetDataReentrancy();
 	}
 
+	@Test void originalMobileTableSparseVirtualRowsAndNativeSelection() {
+		MobileCoreContractTest.testMobileOriginalTableContracts();
+	}
+
 }

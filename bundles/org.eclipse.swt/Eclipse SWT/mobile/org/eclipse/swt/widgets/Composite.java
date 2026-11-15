@@ -19,6 +19,10 @@ public class Composite extends Scrollable {
 	private boolean layoutNeeded;
 	private boolean flushNeeded;
 	public Composite(Composite parent, int style) { super(parent, style); }
+	/** Retain original scroll flags for mobile controls with software viewports. */
+	Composite(Composite parent, int style, boolean softwareScroll) {
+		super(parent, style, softwareScroll);
+	}
 	Composite(Display display, int style) { super(display, style); }
 	@Override protected void checkSubclass() { }
 	void addChild(Control child) { if (childCount == children.length) children = Arrays.copyOf(children, childCount + 8); children[childCount++] = child; }
