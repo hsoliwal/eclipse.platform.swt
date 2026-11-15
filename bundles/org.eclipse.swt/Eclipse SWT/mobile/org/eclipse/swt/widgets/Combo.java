@@ -15,6 +15,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.internal.mobile.MobileComboArrayOps;
 
 /**
  * The original SWT Combo API on Android and iOS.
@@ -88,10 +89,6 @@ public class Combo extends Composite {
     private boolean readOnly() { return (style & SWT.READ_ONLY) != 0; }
     private void valid(int index) {
         if (index < 0 || index >= itemCount) SWT.error(SWT.ERROR_INVALID_RANGE);
-    }
-    private void ensureCapacity(int needed) {
-        if (needed <= items.length) return;
-        items = Arrays.copyOf(items, Math.max(needed, items.length + Math.max(8, items.length >>> 1)));
     }
     private void syncListSelection() {
         if (list == null || list.isDisposed()) return;
@@ -171,11 +168,9 @@ public class Combo extends Composite {
         if (string == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
         if (index < 0 || index > itemCount) SWT.error(SWT.ERROR_INVALID_RANGE);
         if (itemCount == Integer.MAX_VALUE) SWT.error(SWT.ERROR_ITEM_NOT_ADDED);
-        ensureCapacity(itemCount + 1);
-        System.arraycopy(items, index, items, index + 1, itemCount - index);
-        items[index] = string;
+        items = MobileComboArrayOps.insert(items, itemCount, index, string);
+        selectionIndex = MobileComboArrayOps.selectionAfterInsert(selectionIndex, index);
         itemCount++;
-        if (selectionIndex >= index) selectionIndex++;
         refreshList();
     }
     /** Register original SWT Modify event listeners. */
@@ -246,8 +241,7 @@ public class Combo extends Composite {
     public int indexOf(String string, int start) {
         checkWidget();
         if (string == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-        for (int i = Math.max(0, start); i < itemCount; i++) if (items[i].equals(string)) return i;
-        return -1;
+        return MobileComboArrayOps.indexOf(items, itemCount, string, start);
     }
     /** Paste through the native editor only when editable. */
     public void paste() { checkWidget(); if (!readOnly()) text.paste(); }
@@ -257,14 +251,14 @@ public class Combo extends Composite {
     public void remove(int start, int end) {
         checkWidget();
         if (start < 0 || end < start || end >= itemCount) SWT.error(SWT.ERROR_INVALID_RANGE);
-        int removed = end - start + 1;
-        System.arraycopy(items, end + 1, items, start, itemCount - end - 1);
-        Arrays.fill(items, itemCount - removed, itemCount, null);
-        itemCount -= removed;
-        if (selectionIndex >= start && selectionIndex <= end) {
-            selectionIndex = -1;
+        boolean removedSelection = selectionIndex >= start && selectionIndex <= end;
+        MobileComboArrayOps.removeRange(items, itemCount, start, end);
+        selectionIndex = MobileComboArrayOps.selectionAfterRemove(selectionIndex, start, end);
+        itemCount -= end - start + 1;
+        if (removedSelection) {
             text.setText("");
-        } else if (selectionIndex > end) selectionIndex -= removed;
+            selectionIndex = -1;
+        }
         refreshList();
     }
     /** Remove first equal item or throw SWT.ERROR_INVALID_ARGUMENT. */
@@ -278,7 +272,7 @@ public class Combo extends Composite {
     /** Remove all list entries and clear the editor. */
     public void removeAll() {
         checkWidget();
-        Arrays.fill(items, 0, itemCount, null);
+        items = new String[8];
         itemCount = 0;
         selectionIndex = -1;
         text.setText("");
@@ -350,7 +344,10 @@ public class Combo extends Composite {
         if (!simple() && getListVisible()) positionPopup();
     }
     /** Give focus to the Combo's native text child. */
-    @Override public boolean setFocus() { checkWidget(); return text.setFocus(); }
+    @Override public boolean setFocus() {
+        checkWidget();
+        return text.setFocus() || super.setFocus();
+    }
     /** Also disable the internal editor/list peers. */
     @Override public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
