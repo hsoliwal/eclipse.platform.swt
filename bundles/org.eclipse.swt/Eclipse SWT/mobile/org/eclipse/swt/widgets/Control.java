@@ -7,6 +7,7 @@ package org.eclipse.swt.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.ExceptionStash;
 import org.eclipse.swt.internal.mobile.MobilePlatform;
 
 /** One SWT control owns one native view, its bounds, and its drawing image. */
@@ -46,9 +47,16 @@ public abstract class Control extends Widget implements Drawable {
 	}
 	@Override void releaseParent() { if (parent != null) parent.removeChild(this); parent = null; }
 	@Override void releaseWidget() {
-		display.unregister(this);
-		try { if (image != null) image.internal_disposeWhenUnused(); }
-		finally { image = null; display.internal_platform().disposeControl(peer); peer = 0; }
+		try (ExceptionStash failures = new ExceptionStash()) {
+			try { display.clearFocus(this); } catch (RuntimeException | Error failure) { failures.stash(failure); }
+			display.unregister(this);
+			try { if (image != null) image.internal_disposeWhenUnused(); }
+			catch (RuntimeException | Error failure) { failures.stash(failure); }
+			finally { image = null; }
+			try { display.internal_platform().disposeControl(peer); }
+			catch (RuntimeException | Error failure) { failures.stash(failure); }
+			finally { peer = 0; }
+		}
 	}
 	public Composite getParent() { checkWidget(); return parent; }
 	public Shell getShell() {
@@ -68,7 +76,7 @@ public abstract class Control extends Widget implements Drawable {
 		if (nativeUpdate) display.internal_platform().setBounds(peer, x, y, width, height);
 		if (moved) sendEvent(SWT.Move, new Event());
 		if (disposed) return;
-		if (resized) { sendEvent(SWT.Resize, new Event()); if (!disposed) { resized(); redraw(); } }
+		if (resized) { sendEvent(SWT.Resize, new Event()); if (!disposed) { resized(); if (!disposed) redraw(); } }
 	}
 	void nativeResize(int width, int height) { setBoundsInternal(bounds.x, bounds.y, width, height, false); }
 	void resized() { }
@@ -89,6 +97,7 @@ public abstract class Control extends Widget implements Drawable {
 	public void setVisible(boolean value) {
 		checkWidget(); if (visible == value) return;
 		visible = value; display.internal_platform().setVisible(peer, value);
+		if (!value) { display.clearFocus(this); if (disposed) return; }
 		sendEvent(value ? SWT.Show : SWT.Hide, new Event());
 		if (value && !disposed) redrawAll();
 	}
@@ -96,7 +105,9 @@ public abstract class Control extends Widget implements Drawable {
 	public boolean isEnabled() { checkWidget(); return enabled && (parent == null || parent.isEnabled()); }
 	public void setEnabled(boolean value) {
 		checkWidget(); if (enabled == value) return;
-		enabled = value; display.internal_platform().setEnabled(peer, value); redrawAll();
+		enabled = value; display.internal_platform().setEnabled(peer, value);
+		try { if (!value) display.clearFocus(this); }
+		finally { redrawAll(); }
 	}
 	public Color getForeground() { checkWidget(); return foreground != null ? foreground : parent != null ? parent.getForeground() : display.getSystemColor(SWT.COLOR_WIDGET_FOREGROUND); }
 	public Color getBackground() { checkWidget(); return background != null ? background : parent != null ? parent.getBackground() : display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND); }
@@ -116,12 +127,15 @@ public abstract class Control extends Widget implements Drawable {
 	public String getToolTipText() { checkWidget(); return toolTipText; }
 	public boolean forceFocus() { return setFocus(); }
 	public boolean setFocus() {
-		checkWidget(); if (!isVisible() || !isEnabled() || (style & SWT.NO_FOCUS) != 0) return false;
+		checkWidget(); if (display.isDisposing() || !isVisible() || !isEnabled() || (style & SWT.NO_FOCUS) != 0) return false;
+		for (Control owner = this; owner != null; owner = owner.parent) if (owner.disposing) return false;
+		if (display.focusControl == this) return true;
 		if (!display.internal_platform().requestFocus(peer)) return false;
+		display.focusRequested();
 		Control previous = display.focusControl; display.focusControl = this;
 		if (previous != null && previous != this && !previous.isDisposed()) previous.sendEvent(SWT.FocusOut, new Event());
-		if (!disposed && previous != this) sendEvent(SWT.FocusIn, new Event());
-		return !disposed;
+		if (!disposed && display.focusControl == this) sendEvent(SWT.FocusIn, new Event());
+		return !disposed && display.focusControl == this;
 	}
 	public boolean isFocusControl() { checkWidget(); return display.focusControl == this; }
 	public Point toDisplay(int x, int y) {

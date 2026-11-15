@@ -26,6 +26,8 @@ final class ContractPlatform implements MobilePlatform {
 	String clipboard = "";
 	long next = 1, lastCreated;
 	int connects, disconnects, openedGraphics, closedGraphics;
+	boolean reportFocusChanges;
+	long focusedPeer;
 	final Map<Long, Peer> controls = new HashMap<>();
 	final Map<Long, BufferedImage> images = new HashMap<>();
 	static final class Peer {
@@ -57,7 +59,16 @@ final class ContractPlatform implements MobilePlatform {
 		p.text=text; p.selectionStart=start; p.selectionEnd=end;
 		p.editable=editable; p.textLimit=limit; p.hint=hint;
 	}
-	@Override public boolean requestFocus(long id){Peer p=peer(id);return p.enabled&&p.visible;}
+	@Override public boolean requestFocus(long id){
+		Peer p=peer(id);
+		if(!p.enabled||!p.visible)return false;
+		if(reportFocusChanges&&focusedPeer!=id){
+			long previous=focusedPeer;focusedPeer=id;
+			if(controls.containsKey(previous))sink.input(previous,SWT.FocusOut,0,0,0,0,'\0',0,0,1);
+			sink.input(id,SWT.FocusIn,0,0,0,0,'\0',0,0,2);
+		}
+		return true;
+	}
 	@Override public void setAccessibility(long id,String label,int role,int state){Peer p=peer(id);p.label=label;p.role=role;p.state=state;}
 	@Override public void present(long id,long image){peer(id).frame=imagePixels(image);}
 	@Override public long createImage(int w,int h,int[] pixels){check();BufferedImage image=new BufferedImage(w,h,BufferedImage.TYPE_INT_ARGB);if(pixels!=null)image.setRGB(0,0,w,h,pixels,0,w);long id=next++;images.put(id,image);return id;}

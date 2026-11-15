@@ -25,7 +25,10 @@ public class Widget {
 
 	public Widget(Widget parent, int style) {
 		if (parent == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+		if (parent.disposed) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		parent.checkWidget();
+		if (parent.disposing) SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+		parent.display.checkCreation();
 		this.display = parent.display;
 		this.style = style;
 		checkSubclass();
@@ -33,7 +36,7 @@ public class Widget {
 
 	Widget(Display display, int style) {
 		if (display == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		display.checkThread();
+		display.checkCreation();
 		this.display = display;
 		this.style = style;
 		checkSubclass();

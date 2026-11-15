@@ -63,12 +63,18 @@ mvn -f /path/to/swt/mobile/pom.xml -Pcontracts \
   -Dnebula.checkout=/path/to/nebula clean verify
 ```
 
-The `contracts` profile executes `MobileCoreContractJUnitTest` using JUnit 5 and
-Maven Surefire. It selects the original RoundedCheckbox's Selection, cancellation,
+The `contracts` profile executes `MobileCoreContractJUnitTest` and
+`MobileLifecycleContractJUnitTest` using JUnit 5 and Maven Surefire.
+It selects the original RoundedCheckbox's Selection, cancellation,
 painting and disposal checks; SWT event/thread/timer and graphics contracts;
 termination and blocked synchronous callers; owned-Shell geometry; and the
 Button/Label, ProgressBar/Scale, sparse virtual List, native Text and Combo
-owner contracts. The checked-in test sources define the current cases and assertions.
+owner contracts. Lifecycle cases cover disposal from Show, layout and focus
+callbacks; listener failures; focus changes during callbacks and queued native
+acknowledgements; hidden and disabled ancestors; and rejection of new native
+owners during disposal. They also retain the original null `disposeExec` and
+disposed-parent argument contracts. The checked-in test sources define the
+current cases and assertions.
 
 Reports are written to `mobile/target/surefire-reports`. A missing, skipped, or
 failed report is not an executed test pass. The Java2D transport exists only in

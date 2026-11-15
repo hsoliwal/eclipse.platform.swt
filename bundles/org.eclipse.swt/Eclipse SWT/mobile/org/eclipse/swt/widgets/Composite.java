@@ -36,7 +36,11 @@ public class Composite extends Scrollable {
 		checkWidget(); layoutNeeded = true; flushNeeded |= changed;
 		if (isLayoutDeferred()) return;
 		if (layout != null) { boolean flush = flushNeeded; layoutNeeded = false; flushNeeded = false; layout.layout(this, flush); }
-		if (all) for (Control c : getChildren()) if (c instanceof Composite nested) nested.layout(changed, true);
+		if (disposed) return;
+		if (all) for (Control c : getChildren()) {
+			if (disposed) return;
+			if (!c.isDisposed() && c instanceof Composite nested) nested.layout(changed, true);
+		}
 	}
 	public void layout(Control[] changed) { layout(changed, 0); }
 	public void layout(Control[] changed, int flags) {
