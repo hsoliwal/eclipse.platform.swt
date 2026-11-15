@@ -178,4 +178,152 @@ public class Test_org_eclipse_swt_internal_residency_TextExtentCache {
 		}
 		assertEquals (cache.size (), present);
 	}
+
+	@Test
+	void retainedMemoryIsBoundedAcrossDistinctFonts () {
+		assertAll ("font history stays bounded by cache capacity",
+				() -> assertBoundedFontHistory (1),
+				() -> assertBoundedFontHistory (2),
+				() -> assertBoundedFontHistory (3),
+				() -> assertBoundedFontHistory (7));
+	}
+
+	private void assertBoundedFontHistory (int capacity) {
+		TextExtentCache cache = new TextExtentCache (capacity);
+		long bound = cache.retainedBytes () + 4L * capacity;
+		for (int font = 0; font < 2048; font++) cache.extent (0L, font, this::measure);
+		assertEquals (capacity, cache.size ());
+		assertEquals (2048, cache.misses ());
+		assertEquals (2048 - capacity, cache.evictions ());
+		assertTrue (cache.retainedBytes () <= bound,
+				"capacity " + capacity + " retained " + cache.retainedBytes () + " bytes; bound " + bound);
+	}
+
+	@Test
+	void oneFontAcrossManyLabelsKeepsMeasurementsAndStorageStable () {
+		TextExtentCache cache = new TextExtentCache (257);
+		long retained = cache.retainedBytes ();
+		for (int round = 0; round < 32; round++) {
+			for (int label = 0; label < 128; label++) cache.extent (label, -7, this::measure);
+		}
+		assertEquals (128, calls);
+		assertEquals (128, cache.misses ());
+		assertEquals (3968, cache.hits ());
+		assertEquals (0, cache.evictions ());
+		assertEquals (retained, cache.retainedBytes ());
+		cache.invalidateLabel (57);
+		assertEquals (-1L, cache.peek (57, -7));
+		assertEquals (TextExtentCache.pack (385, 3), cache.peek (56, -7));
+		assertEquals (127, cache.size ());
+		assertEquals (128, calls);
+	}
+
+	private void churnFontsAndRemoveEntries (TextExtentCache cache) {
+		for (int font = 0; font < 32; font++) cache.extent (99L, font, this::measure);
+		cache.invalidateLabel (99L);
+		assertEquals (0, cache.size ());
+	}
+
+	@Test
+	void labelInvalidationAfterFontChurnKeepsOtherLabels () {
+		TextExtentCache cache = new TextExtentCache (3);
+		churnFontsAndRemoveEntries (cache);
+		cache.extent (11L, -7, this::measure);
+		cache.extent (11L, Integer.MIN_VALUE, this::measure);
+		cache.extent (12L, 123456, this::measure);
+		long misses = cache.misses (), hits = cache.hits (), evictions = cache.evictions ();
+		int measured = calls;
+		cache.invalidateLabel (11L);
+		cache.invalidateLabel (11L);
+		assertEquals (-1L, cache.peek (11L, -7));
+		assertEquals (-1L, cache.peek (11L, Integer.MIN_VALUE));
+		assertEquals (TextExtentCache.pack (123540, 123466), cache.peek (12L, 123456));
+		assertEquals (1, cache.size ());
+		assertEquals (misses, cache.misses ());
+		assertEquals (hits, cache.hits ());
+		assertEquals (evictions, cache.evictions ());
+		assertEquals (measured, calls);
+	}
+
+	@Test
+	void fontInvalidationAfterChurnAllowsFontReuse () {
+		TextExtentCache cache = new TextExtentCache (5);
+		churnFontsAndRemoveEntries (cache);
+		for (int label = 1; label <= 3; label++) cache.extent (label, -13, this::measure);
+		cache.extent (2L, 2, this::measure);
+		cache.extent (1L, 37, this::measure);
+		cache.invalidateFont (-13);
+		cache.invalidateFont (-13);
+		for (int label = 1; label <= 3; label++) assertEquals (-1L, cache.peek (label, -13));
+		assertEquals (TextExtentCache.pack (16, 12), cache.peek (2L, 2));
+		assertEquals (TextExtentCache.pack (44, 47), cache.peek (1L, 37));
+		assertEquals (2, cache.size ());
+		cache.extent (1L, -13, this::measure);
+		cache.invalidateLabel (1L);
+		assertEquals (-1L, cache.peek (1L, -13));
+		assertEquals (-1L, cache.peek (1L, 37));
+		assertEquals (TextExtentCache.pack (16, 12), cache.peek (2L, 2));
+		assertEquals (1, cache.size ());
+	}
+
+	@Test
+	void clearAfterFontChurnPreservesCountersAndAllowsRepopulation () {
+		TextExtentCache cache = new TextExtentCache (3);
+		churnFontsAndRemoveEntries (cache);
+		cache.extent (1L, -7, this::measure);
+		cache.extent (1L, -7, this::measure);
+		long misses = cache.misses (), hits = cache.hits (), evictions = cache.evictions ();
+		cache.invalidateAll ();
+		assertEquals (0, cache.size ());
+		assertEquals (-1L, cache.peek (1L, -7));
+		assertEquals (misses, cache.misses ());
+		assertEquals (hits, cache.hits ());
+		assertEquals (evictions, cache.evictions ());
+		cache.extent (1L, Integer.MIN_VALUE, this::measure);
+		cache.extent (2L, Integer.MIN_VALUE, this::measure);
+		cache.invalidateLabel (1L);
+		assertEquals (-1L, cache.peek (1L, Integer.MIN_VALUE));
+		assertEquals (TextExtentCache.pack (-2147483634, -2147483638), cache.peek (2L, Integer.MIN_VALUE));
+		cache.invalidateFont (Integer.MIN_VALUE);
+		assertEquals (0, cache.size ());
+	}
+
+	@Test
+	void labelInvalidationAfterChurnDeletesEveryMatchInWrappingCluster () {
+		TextExtentCache cache = new TextExtentCache (3);
+		churnFontsAndRemoveEntries (cache);
+		// These keys share home slot 7 in the eight-slot table. The two labels
+		// to remove wrap into slots 0 and 1; deletion must revisit the shifted slot.
+		cache.extent (9L, -94, this::measure);
+		cache.extent (11L, -100, this::measure);
+		cache.extent (11L, -93, this::measure);
+		cache.invalidateLabel (11L);
+		assertEquals (-1L, cache.peek (11L, -100));
+		assertEquals (-1L, cache.peek (11L, -93));
+		assertEquals (TextExtentCache.pack (-31, -84), cache.peek (9L, -94));
+		assertEquals (1, cache.size ());
+		cache.extent (11L, -93, this::measure);
+		cache.extent (11L, -100, this::measure);
+		cache.invalidateFont (-93);
+		assertEquals (-1L, cache.peek (11L, -93));
+		assertEquals (TextExtentCache.pack (-23, -90), cache.peek (11L, -100));
+		assertEquals (TextExtentCache.pack (-31, -84), cache.peek (9L, -94));
+	}
+
+	@Test
+	void failedMeasurementAfterFontChurnKeepsCachedEntry () {
+		TextExtentCache cache = new TextExtentCache (1);
+		churnFontsAndRemoveEntries (cache);
+		cache.extent (1L, -7, this::measure);
+		long misses = cache.misses (), hits = cache.hits (), evictions = cache.evictions ();
+		IllegalStateException failure = new IllegalStateException ("measurement failed");
+		assertSame (failure, assertThrows (IllegalStateException.class,
+				() -> cache.extent (2L, -8, (label, font) -> { throw failure; })));
+		assertEquals (TextExtentCache.pack (0, 3), cache.peek (1L, -7));
+		assertEquals (-1L, cache.peek (2L, -8));
+		assertEquals (1, cache.size ());
+		assertEquals (misses + 1, cache.misses ());
+		assertEquals (hits, cache.hits ());
+		assertEquals (evictions, cache.evictions ());
+	}
 }
