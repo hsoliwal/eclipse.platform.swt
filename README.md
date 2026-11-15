@@ -1,5 +1,5 @@
 <!-- fork-homepage-detail:v1:start -->
-# SWT: native desktop interfaces for Java
+# SWT: native interfaces for Java
 
 The Standard Widget Toolkit supplies Java widgets, events, layouts and graphics
 backed by the host desktop platform. It powers Eclipse and can also be used by
@@ -7,12 +7,41 @@ standalone JVM applications. Start here for a native widget, event-loop, JNI or
 resource-lifetime problem; use Platform UI for JFace viewers and workbench parts.
 
 [Source map](#swt-source-map) · [Concepts](#swt-key-concepts) ·
-[Quickstart](#swt-quickstart) · [Example](#swt-worked-example) ·
+[Quickstart](#swt-quickstart) · [Android and iOS preview](#android-and-ios-preview) ·
+[Example](#swt-worked-example) ·
 [Development guide](docs/DEVELOPMENT_GUIDE.md) ·
 [Release preparation and coverage](https://github.com/hsoliwal/com.synexia/blob/develop/forks/eclipse.platform.swt/docs/m3/RELEASE.md) ·
 [Fork release-readiness gates](docs/RELEASE_READINESS.md) ·
 [Candidate packaging and naming](docs/RELEASE_PACKAGING.md) ·
 [Release preparation and suite inventory](docs/RELEASE_PREPARATION.md)
+
+## Android and iOS preview
+
+This fork also contains a bounded mobile implementation of the original SWT
+`Display`, `Shell`, `Control`, `Canvas`, graphics and event-loop owners, with
+`Button`, `Label`, `ProgressBar`, `Scale`, `List` and native-editor `Text` source
+sets. Start with the [mobile build and scope guide](mobile/README.md) and its
+[explicit source manifest](mobile/source-manifest.json).
+
+- [Shared mobile SWT owners](bundles/org.eclipse.swt/Eclipse%20SWT/mobile/org/eclipse/swt/)
+  retain widget state, listeners, layouts and resource lifetime.
+- [Android platform binding](bundles/org.eclipse.swt/Eclipse%20SWT/android/org/eclipse/swt/internal/android/)
+  supplies the Activity/View/Canvas and EditText integration. The current
+  application minimum is Android 15 / API 35.
+- [iOS platform binding](bundles/org.eclipse.swt/Eclipse%20SWT/ios/org/eclipse/swt/internal/ios/)
+  and [UIKit/JNI owner](bundles/org.eclipse.swt/Eclipse%20SWT%20PI/ios/library/)
+  have a separate [Apple build and runtime route](mobile/ios/README.md#compile-the-native-library-with-xcode).
+- [Nebula's RoundedCheckbox mobile application](https://github.com/hsoliwal/nebula/tree/master/widgets/roundedcheckbox/org.eclipse.nebula.widgets.roundedcheckbox.mobile)
+  uses the original Nebula widget and these SWT controls. Its current build is
+  in the widget's `android/` directory.
+
+The [mobile guide](mobile/README.md) documents the JDK 21 / Maven source
+build, portable contract tests, Android SDK 35 integration and iOS Java/native
+compilation. Its explicit source manifest rejects an unreviewed source change;
+use a revision whose source pins have been qualified together. Device
+instrumentation is a separate gate. This preview does not cover every SWT or
+Nebula widget, bundle an iOS Java runtime, or establish accessibility, IME or
+full platform parity through compilation alone.
 
 ## SWT source map
 
