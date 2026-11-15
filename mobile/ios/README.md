@@ -53,23 +53,24 @@ callbacks, so application data must be saved during normal operation.
 
 | Area | Current behavior |
 | --- | --- |
-| Native ownership | UIKit peers for Shell, Composite and Canvas; hierarchy, bounds, visibility, enablement and focus. Owned Shells attach to the window root in display coordinates; Shells matching the viewport follow its size changes. |
+| Native ownership | UIKit peers for admitted mobile controls; hierarchy, bounds, visibility, enablement and focus. Owned Shells attach to the window root in display coordinates; Shells matching the viewport follow its size changes. |
 | Touch | One primary contact mapped to original SWT mouse events; cancellation sends MouseExit and does not activate a widget's MouseUp handler |
 | Hardware keyboard | Key down/up, modifiers and navigation key mapping; Event.character carries one UTF-16 code unit |
 | Lifecycle | Scene activation/deactivation and final host/session destruction enqueue shared SWT work |
 | Rendering | CoreGraphics lines, rectangles, ovals, polygons, clip/transform, alpha, image crop/scaling and CoreText text/font measurement |
 | Text rendering | UTF-16 shaping through CoreText; draw flags for delimiters, tabs, mnemonic underline and transparent background |
-| Accessibility transport | Native labels/traits and default activation through the original control's input path; the general SWT Accessible API is not implemented by this transport alone |
+| Text editing | The original SWT Text owner uses UITextField/UITextView peers, UTF-16 content and selection snapshots, Verify/Modify ordering for edits, and native clipboard transport. Native behavior still requires Apple simulator/device qualification. |
+| Accessibility transport | Native labels/traits, default activation, Scale increment/decrement and List scrolling callbacks through the original SWT owners; the general SWT Accessible API is not implemented by this transport alone |
 | Pixels | Straight ARGB Java ingress/readback with premultiplied native storage; immutable presentation snapshots |
 | Metrics | Logical points, with nominal 72-point DPI; physical panel DPI and Retina-resolution backing-store adaptation are not claimed |
 | Screen capture | `GC(Display).copyArea` fails explicitly through `captureScreen`; use an actual XCUI screenshot for device-visible evidence |
 
-This lane does not yet provide the native SWT Text/IME owner, marked-text and
-selection semantics, a complete Accessible implementation, adjustable accessible
-actions, full multitouch/gesture mapping, multiple simultaneous application
-scenes, every Shell/window style, or the remaining SWT/Nebula widget closure.
-Increment/decrement accessibility roles are rejected explicitly. UIKit layer
-rendering is never reported as visible-screen capture. Raster/text parity,
+Complex IME marked-text composition, a complete Accessible implementation,
+spin-button accessibility, full multitouch/gesture mapping, multiple simultaneous
+application scenes, every Shell/window style, and the remaining SWT/Nebula widget
+closure remain separate compatibility gates. Spin-button accessibility is rejected
+explicitly; Scale increment/decrement is implemented. UIKit layer rendering is
+never reported as visible-screen capture. Raster/text parity,
 rotation behavior, background/foreground recovery, VoiceOver, resource stress and
 original-widget interaction require the Apple simulator/device gate.
 
