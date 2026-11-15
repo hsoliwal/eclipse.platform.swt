@@ -7,6 +7,7 @@ package org.eclipse.swt.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.ExceptionStash;
 import org.eclipse.swt.internal.mobile.MobilePlatform;
 
 /** One SWT control owns one native view, its bounds, and its drawing image. */
@@ -51,6 +52,15 @@ public abstract class Control extends Widget implements Drawable {
 			display.unregister(this);
 			try { if (image != null) image.internal_disposeWhenUnused(); }
 			finally { image = null; display.internal_platform().disposeControl(peer); peer = 0; }
+		try (ExceptionStash failures = new ExceptionStash()) {
+			try { display.clearFocus(this); } catch (RuntimeException | Error failure) { failures.stash(failure); }
+			display.unregister(this);
+			try { if (image != null) image.internal_disposeWhenUnused(); }
+			catch (RuntimeException | Error failure) { failures.stash(failure); }
+			finally { image = null; }
+			try { display.internal_platform().disposeControl(peer); }
+			catch (RuntimeException | Error failure) { failures.stash(failure); }
+			finally { peer = 0; }
 		}
 	}
 	public Composite getParent() { checkWidget(); return parent; }
@@ -100,6 +110,7 @@ public abstract class Control extends Widget implements Drawable {
 	public void setVisible(boolean value) {
 		checkWidget(); if (visible == value) return;
 		visible = value; display.internal_platform().setVisible(peer, value);
+		if (!value) { display.clearFocus(this); if (disposed) return; }
 		sendEvent(value ? SWT.Show : SWT.Hide, new Event());
 		if (!disposed) {
 			if (value) redrawAll();
@@ -113,6 +124,8 @@ public abstract class Control extends Widget implements Drawable {
 		enabled = value; display.internal_platform().setEnabled(peer, value);
 		if (!value) display.clearFocus(this);
 		redrawAll();
+		try { if (!value) display.clearFocus(this); }
+		finally { redrawAll(); }
 	}
 	public Color getForeground() { checkWidget(); return foreground != null ? foreground : parent != null ? parent.getForeground() : display.getSystemColor(SWT.COLOR_WIDGET_FOREGROUND); }
 	public Color getBackground() { checkWidget(); return background != null ? background : parent != null ? parent.getBackground() : display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND); }
@@ -132,11 +145,15 @@ public abstract class Control extends Widget implements Drawable {
 	public String getToolTipText() { checkWidget(); return toolTipText; }
 	public boolean forceFocus() { return setFocus(); }
 	public boolean setFocus() {
-		checkWidget(); if (!isVisible() || !isEnabled() || (style & SWT.NO_FOCUS) != 0) return false;
+		checkWidget(); if (display.isDisposing() || !isVisible() || !isEnabled() || (style & SWT.NO_FOCUS) != 0) return false;
+		for (Control owner = this; owner != null; owner = owner.parent) if (owner.disposing) return false;
+		if (display.focusControl == this) return true;
 		if (!display.internal_platform().requestFocus(peer)) return false;
+		display.focusRequested();
 		Control previous = display.focusControl; display.focusControl = this;
 		if (previous != null && previous != this && !previous.isDisposed()) previous.sendEvent(SWT.FocusOut, new Event());
 		if (!disposed && display.focusControl == this && previous != this) sendEvent(SWT.FocusIn, new Event());
+		if (!disposed && display.focusControl == this) sendEvent(SWT.FocusIn, new Event());
 		return !disposed && display.focusControl == this;
 	}
 	public boolean isFocusControl() { checkWidget(); return display.focusControl == this; }

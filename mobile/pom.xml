@@ -53,6 +53,10 @@
         <configuration>
           <skipTests>${skipTests}</skipTests><failIfNoTests>true</failIfNoTests><trimStackTrace>false</trimStackTrace>
           <includes><include>**/Mobile*ContractJUnitTest.java</include></includes>
+          <includes>
+            <include>**/MobileCoreContractJUnitTest.java</include>
+            <include>**/MobileLifecycleContractJUnitTest.java</include>
+          </includes>
           <systemPropertyVariables><java.awt.headless>true</java.awt.headless></systemPropertyVariables>
           <properties><configurationParameters>junit.jupiter.execution.parallel.enabled=false</configurationParameters></properties>
         </configuration>

@@ -703,16 +703,19 @@
       "sha256": "b6f5a40c26c66fe52f2631ad7538a1af8bc171d3692e1c1d998649c91b64d52b"
     },
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Composite.java"
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Composite.java",
+      "sha256": "fb7a892b74be57959af406b628493adf463f249d5e81b61f969c396dcc12a7f1"
     },
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java"
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java",
+      "sha256": "656b2280b8927281a3c95bdf887d76a323ae28079e3999577a482f955c763bac"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Decorations.java"
     },
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java"
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java",
+      "sha256": "762333045892e54d85004990be91d742c333ff8c995ba1f03d58b6226cc679fb"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Label.java",
@@ -738,10 +741,12 @@
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Scrollable.java"
     },
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Shell.java"
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Shell.java",
+      "sha256": "7dfcf9c826f4d1c8341dbba3c4f9542ffce015d72ec4ea21bf31ac8ae8a9136d"
     },
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Widget.java"
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Widget.java",
+      "sha256": "ddbec3ebabad2ffd809f4653ea66cff9fcb903dbcb26483ebcdbaed0a9dbc46c"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/ViewportRuntime.java",
@@ -838,6 +843,7 @@
     },
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileGraphicsContractJUnitTest.java"
+      "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileLifecycleContractJUnitTest.java"
     }
   ]
 }

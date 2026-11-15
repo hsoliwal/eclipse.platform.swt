@@ -12,6 +12,8 @@ import json
 import re
 from pathlib import Path
 
+from audit_suite_inventory import java_code, selections
+
 REQUIRED = ("Test_ItemBitSetDifferential", "Test_ItemBitSetMaximumPosition")
 TEST_DIR = Path("tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit")
 
@@ -47,16 +49,15 @@ def audit(root: Path) -> dict:
     suite = (root / TEST_DIR / "AllTests.java").read_text(encoding="utf-8")
     pom = (root / "tests/org.eclipse.swt.tests/pom.xml").read_text(encoding="utf-8")
     matrix = (root / ".github/workflows/maven.yml").read_text(encoding="utf-8")
-    selected = re.search(r"@SelectClasses\s*\(\s*\{(.*?)\}\s*\)", suite, re.DOTALL)
-    entries = set(re.findall(r"\b([A-Za-z][A-Za-z0-9_]*)\.class\b",
-                             selected.group(1) if selected else ""))
+    entries = set(selections(suite))
     present = {}
     for name in REQUIRED:
         path = root / TEST_DIR / (name + ".java")
         source = path.read_text(encoding="utf-8") if path.is_file() else ""
+        source = java_code(source)
         present[name] = bool(
             re.search(r"\bclass\s+" + re.escape(name) + r"\b", source)
-            and "@Test" in source
+            and re.search(r"@\s*(?:org\.junit(?:\.jupiter\.api)?\.)?Test\b", source)
         )
     checks = {
         "osgi_symbolic_name_unchanged": (

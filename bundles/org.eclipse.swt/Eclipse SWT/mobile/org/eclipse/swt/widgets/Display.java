@@ -39,6 +39,7 @@ public class Display extends Device implements Executor {
 	private Consumer<RuntimeException> runtimeHandler = exception -> { throw exception; };
 	private Consumer<Error> errorHandler = error -> { throw error; };
 	private int lastEventTime;
+	private volatile long focusGeneration;
 	Control focusControl;
 	boolean active = true;
 
@@ -67,6 +68,13 @@ public class Display extends Device implements Executor {
 		if (disposed) SWT.error(SWT.ERROR_DEVICE_DISPOSED);
 		if (Thread.currentThread() != thread) SWT.error(SWT.ERROR_THREAD_INVALID_ACCESS);
 	}
+	void checkCreation() {
+		checkThread();
+		// Dispose callbacks may inspect live owners, but cannot extend the
+		// ownership tree after its cleanup traversal has started.
+		if (closing) SWT.error(SWT.ERROR_DEVICE_DISPOSED);
+	}
+	boolean isDisposing() { return closing; }
 	@Override protected void checkDevice() { checkThread(); }
 	public Thread getThread() { if (disposed) SWT.error(SWT.ERROR_DEVICE_DISPOSED); return thread; }
 	int getLastEventTime() { return lastEventTime == 0 ? (int) (System.nanoTime() / 1_000_000) : lastEventTime; }
@@ -231,6 +239,19 @@ public class Display extends Device implements Executor {
 			return;
 		}
 	}
+	void clearFocus(Control subtree) {
+		Control focused = focusControl;
+		for (Control owner = focused; owner != null; owner = owner.parent) {
+			if (owner != subtree) continue;
+			// Clear before notifying: listeners can dispose or focus another
+			// control, and a later native acknowledgement must not repeat it.
+			focusGeneration++;
+			focusControl = null;
+			if (!focused.isDisposed()) focused.sendEvent(SWT.FocusOut, new Event());
+			return;
+		}
+	}
+	void focusRequested() { focusGeneration++; }
 	Control control(long peer) { for (int i = 0; i < controlCount; i++) if (!controls[i].isDisposed() && controls[i].peer == peer) return controls[i]; return null; }
 	public Widget findWidget(long peer) { checkThread(); return control(peer); }
 	public Shell[] getShells() { checkThread(); return Arrays.stream(controls, 0, controlCount).filter(Shell.class::isInstance).map(Shell.class::cast).toArray(Shell[]::new); }
@@ -266,9 +287,14 @@ public class Display extends Device implements Executor {
 
 	private final class NativeEvents implements MobilePlatform.EventSink {
 		@Override public void input(long peer, int type, int x, int y, int button, int keyCode, char character, int stateMask, int count, int time) {
+			long focusAtEnqueue = focusGeneration;
 			enqueue(() -> {
 				Control c = control(peer); if (c == null || !c.isEnabled()) return;
 				if (type == SWT.FocusIn && (!c.isVisible() || (c.style & SWT.NO_FOCUS) != 0)) return;
+				Control c = control(peer); if (c == null || c.disposing || !c.isEnabled() || !c.isVisible()) return;
+				// A synchronous focus request already notifies SWT listeners.
+				// Its queued OS acknowledgements cannot undo a later request.
+				if ((type == SWT.FocusIn || type == SWT.FocusOut) && focusAtEnqueue != focusGeneration) return;
 				lastEventTime = time;
 				if (type == SWT.FocusIn) { if (focusControl == c) return; focusControl = c; }
 				else if (type == SWT.FocusOut) { if (focusControl != c) return; focusControl = null; }

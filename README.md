@@ -72,6 +72,16 @@ Find the actual host backend before explaining behavior from a source file.
 
 ## SWT fork status
 
+### Optimized superset compatibility contract
+
+This fork is an optimized superset of its supported upstream SWT subsets.
+Applications using those subsets must retain their API, behavior, event ordering,
+item identity, threading and disposal contracts when run on the fork. Integration
+must also preserve existing fork extensions and optimizations; replacing them with
+upstream-only implementations is not convergence. Compatibility is directional:
+an upstream subset need not provide APIs added by this fork. Release qualification
+tests both inherited contracts and retained extensions on each claimed platform.
+
 This is an experimental downstream fork of
 [Eclipse SWT](https://github.com/eclipse-platform/eclipse.platform.swt).
 The checkout contains SWT APIs/backends, fork-specific implementation work such

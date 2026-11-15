@@ -22,12 +22,13 @@ public class Shell extends Decorations {
 		if (disposed) return;
 		setFocus();
 		if (!disposed) redrawAll();
+		setFocus(); redrawAll();
 	}
 	public void close() { checkWidget(); Event e = new Event(); sendEvent(SWT.Close, e); if (!disposed && e.doit) dispose(); }
 	public void addShellListener(ShellListener listener) { addTypedListener(listener, SWT.Close, SWT.Activate, SWT.Deactivate, SWT.Iconify, SWT.Deiconify); }
 	public void removeShellListener(ShellListener listener) { for (int type : new int[] {SWT.Close,SWT.Activate,SWT.Deactivate,SWT.Iconify,SWT.Deiconify}) removeTypedListener(type, listener); }
 	public Shell[] getShells() { checkWidget(); return java.util.Arrays.stream(display.getShells()).filter(s -> s != this && isDescendant(s)).toArray(Shell[]::new); }
 	private boolean isDescendant(Shell shell) { for (Control c = shell.parent; c != null; c = c.parent) if (c == this) return true; return false; }
-	public void setActive() { checkWidget(); setVisible(true); setFocus(); }
+	public void setActive() { checkWidget(); setVisible(true); if (!disposed) setFocus(); }
 	public void forceActive() { setActive(); }
 }
