@@ -371,7 +371,19 @@ public class Table extends Composite {
                 long x = 0;
                 for (int columnIndex : order) {
                     TableColumn col = columns[columnIndex];
-                    if (x < area.width) gc.drawText(col.getText(), (int)x + 4, 3, true);
+                    if (x < area.width) {
+                        int textX = (int)x + 4;
+                        Image headerImage = col.getImage();
+                        if (headerImage != null && !headerImage.isDisposed()) {
+                            Rectangle bounds = headerImage.getBounds();
+                            gc.drawImage(headerImage, textX, 2);
+                            textX += bounds.width + 4;
+                        }
+                        String title = col.getText();
+                        if (sortColumn == col && sortDirection != SWT.NONE)
+                            title += sortDirection == SWT.UP ? " ▲" : " ▼";
+                        gc.drawText(title, textX, 3, true);
+                    }
                     x += col.getWidth();
                     if (x < area.width && linesVisible) gc.drawLine((int)x, 0, (int)x, headerOffset());
                 }
@@ -399,16 +411,18 @@ public class Table extends Composite {
                 gc.setForeground(selectedForeground);
                 gc.fillRectangle(0, y, area.width, Math.min(height, area.height - y));
             } else {
-                gc.setBackground(defaultBackground);
+                gc.setBackground(item.getBackground());
+                gc.fillRectangle(0, y, area.width, Math.min(height, area.height - y));
                 gc.setForeground(item.getForeground());
             }
+            gc.setFont(item.getFont());
             if (columnCount == 0) {
-                gc.drawText(item.getText(), 4, y + 2, true);
+                drawCell(gc, item, 0, 4, y + 2);
             } else {
                 long x = 0;
                 for (int col : order) {
                     if (x >= area.width) break;
-                    gc.drawText(item.getText(col), (int)x + 4, y + 2, true);
+                    drawCell(gc, item, col, (int)x + 4, y + 2);
                     x += columns[col].getWidth();
                     if (linesVisible && x < area.width) gc.drawLine((int)x, y, (int)x, y + height);
                 }
@@ -417,6 +431,15 @@ public class Table extends Composite {
         }
         gc.setForeground(defaultForeground);
         gc.setBackground(defaultBackground);
+        gc.setFont(getFont());
+    }
+    private void drawCell(GC gc, TableItem item, int column, int x, int y) {
+        Image cellImage = item.getImage(column);
+        if (cellImage != null && !cellImage.isDisposed()) {
+            gc.drawImage(cellImage, x, y);
+            x += cellImage.getBounds().width + 4;
+        }
+        gc.drawText(item.getText(column), x, y, true);
     }
     private void publishAccessibility() {
         display.internal_platform().setAccessibility(peer, "Table",
