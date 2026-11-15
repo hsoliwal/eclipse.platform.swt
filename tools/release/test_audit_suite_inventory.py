@@ -46,10 +46,26 @@ class SuiteInventoryTest(unittest.TestCase):
 
     def test_all_registered_after_repair(self):
         self.put("AllWidgets", "@SelectClasses({Test_Nested.class, Test_Unreferenced.class})")
+        # A repaired suite must also remove its no-longer-valid omission waiver.
+        self.baseline.write_text("# no active omissions\\n", encoding="utf-8")
         report = self.check()
         self.assertTrue(report["nonregression_pass"])
         self.assertTrue(report["suite_complete"])
         self.assertEqual(0, report["unreferenced_candidate_classes"])
+        self.assertEqual([], report["stale_baseline_entries"])
+
+    def test_stale_baseline_cannot_silently_claim_nonregression(self):
+        self.put("AllWidgets", "@SelectClasses({Test_Nested.class, Test_Unreferenced.class})")
+        stale = self.check()
+        self.assertFalse(stale["nonregression_pass"])
+        self.assertFalse(stale["suite_complete"])
+        self.assertEqual(0, stale["unreferenced_candidate_classes"])
+        self.assertEqual(["Test_Unreferenced"], stale["stale_baseline_entries"])
+        self.baseline.write_text("# historical Test_Unreferenced now registered\\n", encoding="utf-8")
+        repaired = self.check()
+        self.assertTrue(repaired["nonregression_pass"])
+        self.assertTrue(repaired["suite_complete"])
+        self.assertEqual([], repaired["stale_baseline_entries"])
 
     def test_new_test_without_default_suite_entry_fails(self):
         self.put("Test_New", "class Test_New { @Test void test() {} }")
@@ -81,7 +97,9 @@ class SuiteInventoryTest(unittest.TestCase):
                          after["candidate_sources_sha256"])
         self.assertNotEqual(before["suite_sources_sha256"],
                             after["suite_sources_sha256"])
-        self.assertTrue(after["suite_complete"])
+        # Registration without baseline reconciliation intentionally remains a failure.
+        self.assertFalse(after["suite_complete"])
+        self.assertEqual(["Test_Unreferenced"], after["stale_baseline_entries"])
 
     def test_missing_selected_class_fails(self):
         self.put("AllTests", "@SelectClasses({AllWidgets.class, Test_Gone.class})")
