@@ -560,6 +560,12 @@ public final class MobileCoreContractTest {
 			require(simple.getSelectionIndex() == 0 && simple.getText().equals("alpha")
 					&& selections.get() == 1,
 					"Native List tap sends exactly one original Combo Selection with chosen text");
+			Event arrowDown = new Event();
+			arrowDown.keyCode = SWT.ARROW_DOWN;
+			simple.notifyListeners(SWT.KeyDown, arrowDown);
+			require(simple.getSelectionIndex() == 1 && "beta".equals(simple.getText())
+					&& selections.get() == 2,
+					"Original Combo keyboard navigation updates selection and notifies once");
 			Combo dropdown = new Combo(shell, SWT.DROP_DOWN | SWT.READ_ONLY);
 			dropdown.setBounds(0, 190, 240, 34);
 			dropdown.setItems("first", "second");
@@ -582,7 +588,24 @@ public final class MobileCoreContractTest {
 			drain(display);
 			require(dropdown.getListVisible(),
 					"Native accessibility activate opens original owned Combo popup");
+			Event escape = new Event();
+			escape.keyCode = SWT.ESC;
+			dropdown.notifyListeners(SWT.KeyDown, escape);
+			require(!dropdown.getListVisible(),
+					"Native Combo Escape key closes an open popup");
+			AtomicInteger keyboardSelections = new AtomicInteger();
+			dropdown.addSelectionListener(SelectionListener.widgetSelectedAdapter(
+					e -> keyboardSelections.incrementAndGet()));
+			Event arrowUp = new Event();
+			arrowUp.keyCode = SWT.ARROW_UP;
+			dropdown.notifyListeners(SWT.KeyDown, arrowUp);
+			require(dropdown.getSelectionIndex() == 0 && "first".equals(dropdown.getText())
+					&& keyboardSelections.get() == 1,
+					"READ_ONLY Combo keyboard navigation sends one original SWT.Selection");
 			dropdown.setEnabled(false);
+			dropdown.notifyListeners(SWT.KeyDown, arrowDown);
+			require(dropdown.getSelectionIndex() == 0 && keyboardSelections.get() == 1,
+					"Disabled native Combo rejects keyboard-driven selection");
 			require(!dropdown.getListVisible(), "Disabling Combo closes native popup");
 			Combo changing = new Combo(shell, SWT.DROP_DOWN);
 			changing.setItems("one", "two");

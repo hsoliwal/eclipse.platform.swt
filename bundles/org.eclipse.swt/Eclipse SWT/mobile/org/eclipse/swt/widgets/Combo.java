@@ -77,13 +77,10 @@ public class Combo extends Composite {
             sendEvent(SWT.Modify, new Event());
         });
         text.addListener(SWT.DefaultSelection, event -> sendEvent(SWT.DefaultSelection, new Event()));
-        text.addListener(SWT.KeyDown, event -> {
-            if (event.keyCode == SWT.ESC) {
-                if (getListVisible() && !simple()) setListVisible(false);
-            } else if (event.keyCode == SWT.ARROW_DOWN && !simple()) {
-                setListVisible(true);
-            }
-        });
+        // EditText/UITextField may own focus, while a READ_ONLY Combo can
+        // focus its composite peer. Both paths share one selection policy.
+        text.addListener(SWT.KeyDown, this::keyboardInput);
+        addListener(SWT.KeyDown, this::keyboardInput);
         addListener(SWT.Resize, event -> layoutInternals());
         addListener(SWT.MouseUp, event -> {
             if (event.button == 1 && !simple() && isEnabled()) setListVisible(true);
@@ -146,6 +143,22 @@ public class Combo extends Composite {
             if (!isDisposed() && !simple()) setListVisible(false);
         }
     }
+    private void keyboardInput(Event event) {
+        if (isDisposed() || !isEnabled() || !isVisible()) return;
+        if (event.keyCode == SWT.ESC) {
+            if (!simple() && getListVisible()) setListVisible(false);
+            return;
+        }
+        if (event.keyCode != SWT.ARROW_UP && event.keyCode != SWT.ARROW_DOWN)
+            return;
+        if (itemCount == 0) return;
+        int target = selectionIndex < 0 ? 0
+                : event.keyCode == SWT.ARROW_DOWN
+                    ? Math.min(itemCount - 1, selectionIndex + 1)
+                    : Math.max(0, selectionIndex - 1);
+        if (target != selectionIndex) choose(target, true);
+    }
+
     private void createPopup() {
         if (popup != null && !popup.isDisposed()) return;
         popup = new Shell(getShell(), SWT.NO_TRIM | SWT.ON_TOP);
