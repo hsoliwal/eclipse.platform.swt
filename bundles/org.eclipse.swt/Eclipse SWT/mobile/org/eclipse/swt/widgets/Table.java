@@ -164,7 +164,8 @@ public class Table extends Composite {
     void removeItem(TableItem item) {
         if (mutatingRows || disposingChildren || isDisposed()) return;
         int index = item.rowIndex;
-        if (index >= 0 && index < count && locate(index) >= 0) remove(index);
+        int slot = index >= 0 && index < count ? locate(index) : -1;
+        if (slot >= 0 && rowValues[slot] == item) remove(index);
     }
     private void deleteRange(int first, int last) {
         if (first < 0 || last < first || last >= count) SWT.error(SWT.ERROR_INVALID_RANGE);
