@@ -584,6 +584,22 @@ public final class MobileCoreContractTest {
 					"Native accessibility activate opens original owned Combo popup");
 			dropdown.setEnabled(false);
 			require(!dropdown.getListVisible(), "Disabling Combo closes native popup");
+			Combo changing = new Combo(shell, SWT.DROP_DOWN);
+			changing.setItems("one", "two");
+			AtomicInteger reentrant = new AtomicInteger();
+			changing.addModifyListener(e -> {
+				if (reentrant.incrementAndGet() == 1) changing.removeAll();
+			});
+			changing.select(1);
+			require(changing.getItemCount() == 0 && changing.getSelectionIndex() == -1
+					&& changing.getText().isEmpty(),
+					"Modify may replace Combo row model without stale array access");
+			Combo hidden = new Combo(shell, SWT.DROP_DOWN);
+			hidden.setItems("one");
+			hidden.addListener(SWT.Hide, e -> hidden.dispose());
+			hidden.setVisible(false);
+			require(hidden.isDisposed(),
+					"Hide listener may dispose Combo before its popup close path");
 			shell.dispose();
 			require(simple.isDisposed() && dropdown.isDisposed(),
 					"Parent disposal closes all original Combo child/native popup owners");
