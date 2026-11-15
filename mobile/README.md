@@ -189,7 +189,14 @@ snapshots to SWT's original Display event loop; user callbacks run only there.
 It does NOT yet provide qualified marked-text/IME composition, platform-specific
 spellcheck/autocorrect parity, bidi text segments, full SWT Accessible semantics
 or complete clipboard/DND integration.
-Combo, Table, Tree, menus, ToolBar, TabFolder, StyledText, Browser, printing,
+The original Combo now composes native-backed SWT Text, List, Button and
+an owned popup Shell, preserving the standard editable/READ_ONLY and SIMPLE/
+DROP_DOWN API surface, input/selection/Verify event ownership and system
+clipboard behavior. A separate Java 21 array atom has deterministic randomized
+insertion/deletion tests; complex native popup routing, bidi SegmentListener,
+complete child accessibility, and full keyboard/IME parity are not qualified.
+
+Table, Tree, menus, ToolBar, TabFolder, StyledText, Browser, printing,
 drag-and-drop, OpenGL and the remaining SWT/Nebula widget catalogue are not
 implemented by this source closure. Other Nebula widgets are not
 qualified merely because they derive from Canvas.
