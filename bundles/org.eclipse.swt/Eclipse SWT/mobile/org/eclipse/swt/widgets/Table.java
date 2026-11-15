@@ -14,6 +14,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.internal.ExceptionStash;
+import org.eclipse.swt.internal.mobile.MobileTableSelection;
 
 /**
  * Original SWT Table API on Android/iOS, with a Java-owned sparse logical
@@ -34,11 +35,9 @@ public class Table extends Composite {
     private int[] rowKeys = new int[8];
     private TableItem[] rowValues = new TableItem[8];
     private int materialized;
-    // Sorted sparse index mask. When allSelected is true these indices are
-    // exclusions, otherwise inclusions. A high selected row costs O(1) words.
-    private int[] marks = new int[8];
-    private int markCount;
-    private boolean allSelected;
+    // Interval-backed sparse selection: selecting one billion rows creates
+    // one run, not a billion entries or a high-index BitSet allocation.
+    private final MobileTableSelection selected = new MobileTableSelection();
     private TableColumn[] columns = new TableColumn[4];
     private int columnCount;
     private int[] order = new int[0];
@@ -135,8 +134,8 @@ public class Table extends Composite {
             Event event = new Event();
             event.index = index; event.item = item;
             sendEvent(SWT.SetData, event);
-            if (!isDisposed() && !item.isDisposed() && item.rowIndex == index
-                    && locate(index) >= 0)
+            int slot = !isDisposed() && !item.isDisposed() ? locate(index) : -1;
+            if (slot >= 0 && rowValues[slot] == item && item.rowIndex == index)
                 item.cached = true;
         } finally { item.settingData = false; }
     }
@@ -152,8 +151,7 @@ public class Table extends Composite {
                 rowValues[i].rowIndex++;
             }
         }
-        for (int i = 0; i < markCount; i++) if (marks[i] >= index) marks[i]++;
-        if (allSelected) mark(index, true);
+        selected.insertRow(index);
         if (focusIndex >= index) focusIndex++;
         if (anchorIndex >= index) anchorIndex++;
         if (topIndex >= index && count > 0) topIndex++;
@@ -190,14 +188,7 @@ public class Table extends Composite {
         } finally { mutatingRows = false; }
         Arrays.fill(rowValues, output, materialized, null);
         materialized = output;
-        int kept = 0;
-        for (int i = 0; i < markCount; i++) {
-            int key = marks[i];
-            if (key >= first && key <= last) continue;
-            if (key > last) key -= length;
-            marks[kept++] = key;
-        }
-        markCount = kept;
+        selected.removeRows(first, last);
         count -= length;
         topIndex = Math.min(topIndex, Math.max(0, count - 1));
         focusIndex = transformAfterRemove(focusIndex, first, last);
@@ -244,38 +235,17 @@ public class Table extends Composite {
         redraw();
     }
 
-    private int markAt(int index) { return Arrays.binarySearch(marks, 0, markCount, index); }
-    private void mark(int index, boolean present) {
-        int slot = markAt(index);
-        if (present == (slot >= 0)) return;
-        if (present) {
-            slot = -slot - 1;
-            if (markCount == marks.length)
-                marks = Arrays.copyOf(marks, markCount + Math.max(8, markCount >>> 1));
-            System.arraycopy(marks, slot, marks, slot + 1, markCount - slot);
-            marks[slot] = index;
-            markCount++;
-        } else {
-            System.arraycopy(marks, slot + 1, marks, slot, markCount - slot - 1);
-            markCount--;
-        }
-    }
     private void selection(int index, boolean value) {
         if (index < 0 || index >= count) return;
-        mark(index, allSelected != value);
+        if (value) selected.select(index, index); else selected.deselect(index, index);
     }
-    /** True if this logical index is selected, without dense bitsets. */
+    /** Query a selected row using binary search over compact intervals. */
     public boolean isSelected(int index) {
         checkWidget();
-        return index >= 0 && index < count && (allSelected != (markAt(index) >= 0));
+        return index >= 0 && index < count && selected.contains(index);
     }
-    private void clearSelection() { markCount = 0; allSelected = false; }
-    private int firstSelected() {
-        if (!allSelected) return markCount == 0 ? -1 : marks[0];
-        int index = 0;
-        while (index < count && markAt(index) >= 0) index++;
-        return index >= count ? -1 : index;
-    }
+    private void clearSelection() { selected.clear(); }
+    private int firstSelected() { return selected.first(); }
 
     private int headerOffset() { return headerVisible ? getHeaderHeight() : 0; }
     private int rowsInView() {
@@ -338,10 +308,7 @@ public class Table extends Composite {
         if (shift) {
             int anchor = anchorIndex >= 0 ? anchorIndex : focusIndex >= 0 ? focusIndex : index;
             if (!control) clearSelection();
-            for (int i = Math.min(index, anchor); i <= Math.max(index, anchor); i++) {
-                selection(i, true);
-                if (i == Integer.MAX_VALUE) break;
-            }
+            selected.select(Math.min(index, anchor), Math.max(index, anchor));
             changed = true;
         } else if (control) {
             selection(index, !beforeSelected);
@@ -634,17 +601,13 @@ public class Table extends Composite {
         return slot >= 0 && rowValues[slot] == item ? index : -1;
     }
     /** Sorted logical selection count, without allocating an index-sized mask. */
-    public int getSelectionCount() { checkWidget(); return allSelected ? count - markCount : markCount; }
+    public int getSelectionCount() { checkWidget(); return selected.count(); }
     /** First selected row index, or -1. */
     public int getSelectionIndex() { checkWidget(); return firstSelected(); }
     /** Return selected row indices ascending. Caller requests a materialized array. */
     public int[] getSelectionIndices() {
         checkWidget();
-        if (!allSelected) return Arrays.copyOf(marks, markCount);
-        int[] output = new int[count - markCount];
-        int n = 0;
-        for (int i = 0; i < count; i++) if (markAt(i) < 0) output[n++] = i;
-        return output;
+        return selected.indices();
     }
     /** Return the selected item identities. */
     public TableItem[] getSelection() {
@@ -667,7 +630,7 @@ public class Table extends Composite {
         if (start > end || start >= count || end < 0 || (!multi() && start != end)) return;
         int begin = Math.max(0, start), stop = Math.min(count - 1, end);
         if (!multi()) clearSelection();
-        for (int i = begin; i <= stop; i++) { selection(i, true); if (i == Integer.MAX_VALUE) break; }
+        selected.select(begin, stop);
         focusIndex = stop; anchorIndex = begin; redraw();
     }
     /** Add selected row indices. */
@@ -680,7 +643,7 @@ public class Table extends Composite {
     /** Select all rows in O(1) space even for huge VIRTUAL tables. */
     public void selectAll() {
         checkWidget();
-        if (multi()) { allSelected = true; markCount = 0; redraw(); }
+        if (multi()) { selected.selectAll(count); redraw(); }
     }
     /** Deselect one logical row. */
     public void deselect(int index) { checkWidget(); selection(index, false); redraw(); }
@@ -688,9 +651,7 @@ public class Table extends Composite {
     public void deselect(int start, int end) {
         checkWidget();
         if (start > end || end < 0 || start >= count) return;
-        for (int i = Math.max(0, start); i <= Math.min(end, count - 1); i++) {
-            selection(i, false); if (i == Integer.MAX_VALUE) break;
-        }
+        selected.deselect(Math.max(0, start), Math.min(end, count - 1));
         redraw();
     }
     /** Deselect a list of indices. */
