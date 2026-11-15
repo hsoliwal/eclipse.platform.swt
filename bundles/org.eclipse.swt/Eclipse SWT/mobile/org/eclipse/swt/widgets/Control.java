@@ -14,6 +14,7 @@ import org.eclipse.swt.internal.mobile.MobilePlatform;
 public abstract class Control extends Widget implements Drawable {
 	Composite parent;
 	long peer;
+	long clearedFocusGeneration;
 	private Image image;
 	private Rectangle bounds = new Rectangle(0, 0, 0, 0);
 	private Rectangle damage;
@@ -47,11 +48,6 @@ public abstract class Control extends Widget implements Drawable {
 	}
 	@Override void releaseParent() { if (parent != null) parent.removeChild(this); parent = null; }
 	@Override void releaseWidget() {
-		try { display.clearFocus(this); }
-		finally {
-			display.unregister(this);
-			try { if (image != null) image.internal_disposeWhenUnused(); }
-			finally { image = null; display.internal_platform().disposeControl(peer); peer = 0; }
 		try (ExceptionStash failures = new ExceptionStash()) {
 			try { display.clearFocus(this); } catch (RuntimeException | Error failure) { failures.stash(failure); }
 			display.unregister(this);
@@ -112,18 +108,13 @@ public abstract class Control extends Widget implements Drawable {
 		visible = value; display.internal_platform().setVisible(peer, value);
 		if (!value) { display.clearFocus(this); if (disposed) return; }
 		sendEvent(value ? SWT.Show : SWT.Hide, new Event());
-		if (!disposed) {
-			if (value) redrawAll();
-			else display.clearFocus(this);
-		}
+		if (value && !disposed) redrawAll();
 	}
 	public boolean getEnabled() { checkWidget(); return enabled; }
 	public boolean isEnabled() { checkWidget(); return enabled && (parent == null || parent.isEnabled()); }
 	public void setEnabled(boolean value) {
 		checkWidget(); if (enabled == value) return;
 		enabled = value; display.internal_platform().setEnabled(peer, value);
-		if (!value) display.clearFocus(this);
-		redrawAll();
 		try { if (!value) display.clearFocus(this); }
 		finally { redrawAll(); }
 	}
@@ -148,12 +139,13 @@ public abstract class Control extends Widget implements Drawable {
 		checkWidget(); if (display.isDisposing() || !isVisible() || !isEnabled() || (style & SWT.NO_FOCUS) != 0) return false;
 		for (Control owner = this; owner != null; owner = owner.parent) if (owner.disposing) return false;
 		if (display.focusControl == this) return true;
+		long generation = display.beginFocusRequest();
 		if (!display.internal_platform().requestFocus(peer)) return false;
-		display.focusRequested();
+		// Later native changes within this request retain the same attempted generation.
+		display.commitFocusRequest(generation);
 		Control previous = display.focusControl; display.focusControl = this;
 		if (previous != null && previous != this && !previous.isDisposed()) previous.sendEvent(SWT.FocusOut, new Event());
 		if (!disposed && display.focusControl == this && previous != this) sendEvent(SWT.FocusIn, new Event());
-		if (!disposed && display.focusControl == this) sendEvent(SWT.FocusIn, new Event());
 		return !disposed && display.focusControl == this;
 	}
 	public boolean isFocusControl() { checkWidget(); return display.focusControl == this; }

@@ -79,22 +79,31 @@ public interface MobilePlatform {
 		void setAlpha(int alpha);
 		void setLineWidth(float width);
 		void setAntialias(boolean enabled);
-		void setTextAntialias(boolean enabled);
+		default void setTextAntialias(boolean enabled) {
+			throw new UnsupportedOperationException("Independent text antialiasing is not implemented by this graphics transport");
+		}
 		void setFont(String family, float size, int style);
 		void setTransform(float[] matrix);
 		void setClipping(int x, int y, int width, int height);
 		void resetClipping();
-		/** Effective x, y, width, height in the current user coordinate system. */
-		int[] getClipping();
+		/**
+		 * Effective x, y, width, height in the current user coordinate system.
+		 * Older transports return null; GC then retains its previous logical clip query.
+		 */
+		default int[] getClipping() { return null; }
 		void drawLine(int x1, int y1, int x2, int y2);
 		void drawRectangle(int x, int y, int width, int height);
 		void fillRectangle(int x, int y, int width, int height);
 		void drawOval(int x, int y, int width, int height);
 		void fillOval(int x, int y, int width, int height);
-		void drawRoundRectangle(int x, int y, int width, int height,
-			int arcWidth, int arcHeight, boolean fill);
+		default void drawRoundRectangle(int x, int y, int width, int height,
+			int arcWidth, int arcHeight, boolean fill) {
+			throw new UnsupportedOperationException("Rounded rectangles are not implemented by this graphics transport");
+		}
 		/** SWT angles: zero at the right, positive counterclockwise. */
-		void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle, boolean fill);
+		default void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle, boolean fill) {
+			throw new UnsupportedOperationException("Elliptical arcs are not implemented by this graphics transport");
+		}
 		void drawPolygon(int[] points, boolean fill);
 		void drawText(String text, int x, int y, int flags);
 		void drawImage(long image, int srcX, int srcY, int srcWidth, int srcHeight,

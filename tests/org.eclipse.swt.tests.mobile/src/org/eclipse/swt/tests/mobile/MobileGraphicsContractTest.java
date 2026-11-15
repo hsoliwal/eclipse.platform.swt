@@ -4,6 +4,8 @@
  *******************************************************************************/
 package org.eclipse.swt.tests.mobile;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
@@ -259,5 +261,179 @@ public final class MobileGraphicsContractTest {
 		testEffectiveClippingAndCopy();
 		testPublicHandleAndGuards();
 		System.out.println("PASS: six mobile graphics owner contracts; native platform qualification is separate.");
+	}
+
+	private static final int WHITE = 0xffffffff, BLACK = 0xff000000;
+	private static final int RED = 0xffff0000, BLUE = 0xff0000ff;
+
+	private static final class GeometryFixture implements AutoCloseable {
+		final ContractPlatform platform = new ContractPlatform();
+		final Display display;
+		final Image image;
+		final GC gc;
+
+		GeometryFixture() {
+			MobileRuntime.install(platform);
+			display = new Display();
+			image = new Image(display, 64, 64);
+			gc = new GC(image);
+			gc.setAntialias(SWT.OFF);
+			gc.setForeground(display.getSystemColor(SWT.COLOR_BLUE));
+			clear();
+		}
+
+		void clear() {
+			gc.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
+			gc.fillRectangle(0, 0, 64, 64);
+			gc.setBackground(display.getSystemColor(SWT.COLOR_RED));
+		}
+
+		int[] pixels() { return platform.imagePixels(image.internal_handle()); }
+		int pixel(int x, int y) { return pixels()[y * 64 + x]; }
+
+		@Override public void close() {
+			try {
+				try { if (!gc.isDisposed()) gc.dispose(); }
+				finally { if (!image.isDisposed()) image.dispose(); }
+			} finally {
+				try { if (!display.isDisposed()) display.dispose(); }
+				finally { MobileRuntime.uninstall(platform); }
+			}
+		}
+	}
+
+	static void arcDirectionAndNormalizedBounds() {
+		try (GeometryFixture f = new GeometryFixture()) {
+			f.gc.fillArc(8, 8, 32, 32, 0, 90);
+			assertEquals(RED, f.pixel(30, 18), "Positive SWT sweep fills the upper-right sector");
+			assertEquals(WHITE, f.pixel(18, 18));
+			assertEquals(WHITE, f.pixel(30, 30));
+			assertEquals(WHITE, f.pixel(18, 30));
+			int[] positive = f.pixels();
+			f.clear();
+			f.gc.fillArc(40, 40, -32, -32, 360, 90);
+			assertArrayEquals(positive, f.pixels(), "Negative extents preserve the same ellipse and angle origin");
+			f.clear();
+			f.gc.fillArc(8, 8, 32, 32, 0, -90);
+			assertEquals(RED, f.pixel(30, 30), "Negative SWT sweep fills the lower-right sector");
+			assertEquals(WHITE, f.pixel(30, 18));
+			f.clear();
+			f.gc.drawArc(8, 8, 32, 32, 0, 90);
+			assertEquals(BLUE, f.pixel(40, 24));
+			assertEquals(BLUE, f.pixel(24, 8));
+			assertEquals(WHITE, f.pixel(30, 24), "An outlined arc must not include a radius");
+			assertEquals(WHITE, f.pixel(24, 18));
+			f.clear();
+			f.gc.fillArc(8, 8, 32, 32, Integer.MIN_VALUE, Integer.MAX_VALUE);
+			for (int[] point : new int[][] {{30, 18}, {18, 18}, {30, 30}, {18, 30}})
+				assertEquals(RED, f.pixel(point[0], point[1]), "A sweep over a full turn fills the complete ellipse");
+			int[] complete = f.pixels();
+			f.gc.fillArc(0, 0, 64, 64, 0, 0);
+			f.gc.drawArc(0, 0, 0, 64, 0, 90);
+			assertArrayEquals(complete, f.pixels(), "Zero sweep and empty ellipses draw nothing");
+		}
+	}
+
+	static void roundedRectangleClippingAndTransform() {
+		try (GeometryFixture f = new GeometryFixture()) {
+			f.gc.fillRoundRectangle(4, 4, 24, 20, 12, 12);
+			assertEquals(WHITE, f.pixel(4, 4));
+			assertEquals(RED, f.pixel(16, 5));
+			assertEquals(RED, f.pixel(16, 14));
+			int[] positive = f.pixels();
+			f.clear();
+			f.gc.fillRoundRectangle(28, 24, -24, -20, -12, -12);
+			assertArrayEquals(positive, f.pixels());
+			f.clear();
+			f.gc.drawRoundRectangle(4, 4, 24, 20, 12, 12);
+			assertEquals(BLUE, f.pixel(16, 4));
+			assertEquals(WHITE, f.pixel(16, 14), "An outlined rounded rectangle leaves its center unfilled");
+			assertEquals(WHITE, f.pixel(4, 4));
+			f.clear();
+			f.gc.fillRoundRectangle(4, 4, 24, 20, Integer.MIN_VALUE, Integer.MIN_VALUE);
+			assertEquals(WHITE, f.pixel(4, 4));
+			assertEquals(RED, f.pixel(16, 14), "Oversized corner diameters are safely bounded by the rectangle");
+			f.clear();
+			f.gc.fillRoundRectangle(4, 4, 24, 20, 0, 12);
+			assertEquals(RED, f.pixel(4, 4), "A zero corner diameter uses the ordinary rectangle contract");
+			f.clear();
+			Transform translation = new Transform(f.display);
+			try {
+				translation.translate(7, 9);
+				f.gc.setTransform(translation);
+				f.gc.setClipping(0, 0, 12, 12);
+				f.gc.fillRoundRectangle(0, 0, 24, 24, 8, 8);
+				assertEquals(new Rectangle(0, 0, 12, 12), f.gc.getClipping());
+				assertEquals(RED, f.pixel(15, 17));
+				assertEquals(WHITE, f.pixel(21, 17), "The transformed shape cannot escape its client clipping");
+				assertEquals(WHITE, f.pixel(4, 17));
+			} finally {
+				translation.dispose();
+			}
+		}
+	}
+
+	static void textAntialiasStateAndDisposal() {
+		try (GeometryFixture f = new GeometryFixture()) {
+			assertNotEquals(0, f.gc.handle, "The original public GC handle remains available");
+			assertEquals(SWT.DEFAULT, f.gc.getTextAntialias());
+			f.gc.setTextAntialias(SWT.OFF);
+			f.gc.setAntialias(SWT.ON);
+			assertEquals(SWT.OFF, f.gc.getTextAntialias());
+			f.gc.setForeground(f.display.getSystemColor(SWT.COLOR_BLACK));
+			f.gc.drawString("Sg", 4, 4, true);
+			assertTrue(count(f.pixels(), BLACK) > 0);
+			assertEquals(0, partialPixels(f.pixels()), "Shape AA does not enable text AA");
+			f.clear();
+			f.gc.setAntialias(SWT.OFF);
+			f.gc.setTextAntialias(SWT.ON);
+			assertEquals(SWT.OFF, f.gc.getAntialias());
+			f.gc.drawString("Sg", 4, 4, true);
+			assertTrue(partialPixels(f.pixels()) > 0, "Text AA remains enabled while shape AA is disabled");
+			assertThrows(IllegalArgumentException.class, () -> f.gc.setTextAntialias(12345));
+			assertEquals(SWT.ON, f.gc.getTextAntialias());
+			f.gc.setAdvanced(false);
+			assertEquals(SWT.DEFAULT, f.gc.getAntialias());
+			assertEquals(SWT.DEFAULT, f.gc.getTextAntialias());
+			f.gc.dispose();
+			assertEquals(0, f.gc.handle);
+			SWTException disposed = assertThrows(SWTException.class, f.gc::getTextAntialias);
+			assertEquals(SWT.ERROR_GRAPHIC_DISPOSED, disposed.code);
+			assertThrows(SWTException.class, () -> f.gc.setTextAntialias(SWT.DEFAULT));
+			assertThrows(SWTException.class, () -> f.gc.drawArc(0, 0, 0, 0, 0, 0));
+			assertThrows(SWTException.class, () -> f.gc.fillRoundRectangle(0, 0, 0, 0, 0, 0));
+		}
+	}
+
+	private static int count(int[] pixels, int color) {
+		int count = 0;
+		for (int pixel : pixels) if (pixel == color) count++;
+		return count;
+	}
+
+	private static int partialPixels(int[] pixels) {
+		int count = 0;
+		for (int pixel : pixels) if (pixel != WHITE && pixel != BLACK) count++;
+		return count;
+	}
+
+	static void recoveredGraphicsRetainImageLifetime() {
+		try (GeometryFixture f = new GeometryFixture()) {
+			long imageHandle = f.image.internal_handle();
+			f.image.dispose();
+			assertTrue(f.image.isDisposed());
+			assertTrue(f.platform.images.containsKey(imageHandle), "The GC retains the existing native image lease");
+			assertDoesNotThrow(() -> {
+				f.gc.fillArc(8, 8, 32, 32, 0, 90);
+				f.gc.drawRoundRectangle(4, 4, 40, 40, 8, 8);
+				f.gc.setTextAntialias(SWT.ON);
+				f.gc.drawString("retained", 0, 48, true);
+			});
+			assertEquals(RED, f.platform.imagePixels(imageHandle)[18 * 64 + 30]);
+			f.gc.dispose();
+			assertEquals(0, f.gc.handle);
+			assertFalse(f.platform.images.containsKey(imageHandle));
+			assertEquals(f.platform.openedGraphics, f.platform.closedGraphics);
+		}
 	}
 }

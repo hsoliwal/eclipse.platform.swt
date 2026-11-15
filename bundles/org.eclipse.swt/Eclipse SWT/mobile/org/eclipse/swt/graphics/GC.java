@@ -40,7 +40,6 @@ public final class GC extends Resource {
 				graphics = device.internal_platform().graphics(handle);
 				graphics.setForeground(foreground.internal_argb()); graphics.setBackground(background.internal_argb());
 				graphics.setAlpha(alpha); graphics.setLineWidth(lineWidth); graphics.setAntialias(true);
-				graphics.setTextAntialias(true);
 				applyFont();
 			}
 			init();
@@ -88,14 +87,16 @@ public final class GC extends Resource {
 	public int getLineWidth() { check(); return lineWidth; }
 	public void setLineWidth(int width) { check(); if (width < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT); drawing().setLineWidth(width); lineWidth = width; }
 	public boolean getAdvanced() { check(); return advanced; }
-	public void setAdvanced(boolean value) { check(); if (!value) { setAlpha(255); setAntialias(SWT.DEFAULT); setTextAntialias(SWT.DEFAULT); setTransform(null); setClipping((Rectangle) null); } advanced = value; }
+	public void setAdvanced(boolean value) { check(); if (!value) { setAlpha(255); setAntialias(SWT.DEFAULT); if (textAntialias != SWT.DEFAULT) setTextAntialias(SWT.DEFAULT); setTransform(null); setClipping((Rectangle) null); } advanced = value; }
 	public void getTransform(Transform target) { check(); if (target == null) SWT.error(SWT.ERROR_NULL_ARGUMENT); if (target.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT); target.setElements(transform[0],transform[1],transform[2],transform[3],transform[4],transform[5]); }
 	public void setTransform(Transform value) { check(); float[] next = {1,0,0,1,0,0}; if (value != null) { if (value.isDisposed() || value.getDevice() != device) SWT.error(SWT.ERROR_INVALID_ARGUMENT); value.getElements(next); } drawing().setTransform(next); transform = next; }
 	public Rectangle getClipping() {
 		check();
 		if (data.screen) { Rectangle b = device.getBounds(); return new Rectangle(b.x,b.y,b.width,b.height); }
 		int[] b = drawing().getClipping();
-		return new Rectangle(b[0],b[1],b[2],b[3]);
+		if (b != null) return new Rectangle(b[0],b[1],b[2],b[3]);
+		Rectangle previous = clipping == null ? data.image.getBounds() : clipping;
+		return new Rectangle(previous.x,previous.y,previous.width,previous.height);
 	}
 	public boolean isClipped() { check(); return clipping != null; }
 	public void setClipping(int x, int y, int width, int height) { setClipping(new Rectangle(x,y,width,height)); }

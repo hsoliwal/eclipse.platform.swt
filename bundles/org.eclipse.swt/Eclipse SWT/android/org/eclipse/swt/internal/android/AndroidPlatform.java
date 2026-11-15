@@ -560,7 +560,17 @@ public final class AndroidPlatform implements MobilePlatform {
 			if (front != null) { front.recycle(); front = null; invalidate(); }
 		}
 		@Override protected void onMeasure(int width, int height) {
-			setMeasuredDimension(MeasureSpec.getSize(width), MeasureSpec.getSize(height));
+			int measuredWidth = MeasureSpec.getSize(width), measuredHeight = MeasureSpec.getSize(height);
+			if (borderWidth() != 0) {
+				// Round the client endpoints independently; symmetric rounded
+				// borders remove an extra pixel at fractional display densities.
+				int left = Math.min(measuredWidth, physical(1));
+				int top = Math.min(measuredHeight, physical(1));
+				int right = Math.max(0, measuredWidth - physical(Math.max(0, logical(measuredWidth) - 1)));
+				int bottom = Math.max(0, measuredHeight - physical(Math.max(0, logical(measuredHeight) - 1)));
+				setPadding(left, top, right, bottom);
+			}
+			setMeasuredDimension(measuredWidth, measuredHeight);
 			for (int i = 0; i < getChildCount(); i++) {
 				View child = getChildAt(i);
 				if (child instanceof PeerView peer) {
@@ -575,23 +585,24 @@ public final class AndroidPlatform implements MobilePlatform {
 		@Override protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
 			for (int i = 0; i < getChildCount(); i++) {
 				View child = getChildAt(i);
-				int x = child instanceof PeerView peer ? physical(peer.logicalX + borderWidth()) : getPaddingLeft();
-				int y = child instanceof PeerView peer ? physical(peer.logicalY + borderWidth()) : getPaddingTop();
+				int x = getPaddingLeft() + (child instanceof PeerView peer ? physical(peer.logicalX) : 0);
+				int y = getPaddingTop() + (child instanceof PeerView peer ? physical(peer.logicalY) : 0);
 				child.layout(x, y, x + child.getMeasuredWidth(), y + child.getMeasuredHeight());
 			}
 		}
 		@Override protected void onDraw(Canvas canvas) {
 			super.onDraw(canvas);
-			int width = getWidth(), height = getHeight(), border = getPaddingLeft();
-			if (border > 0 && width > 0 && height > 0) {
-				int top = Math.min(border, height), bottom = Math.max(top, height - border);
-				canvas.drawRect(0, 0, width, top, borderPaint);
-				canvas.drawRect(0, bottom, width, height, borderPaint);
-				canvas.drawRect(0, top, Math.min(border, width), bottom, borderPaint);
-				canvas.drawRect(Math.max(Math.min(border, width), width - border), top, width, bottom, borderPaint);
+			int left = getPaddingLeft(), top = getPaddingTop();
+			int right = Math.max(left, getWidth() - getPaddingRight());
+			int bottom = Math.max(top, getHeight() - getPaddingBottom());
+			if (borderWidth() != 0) {
+				canvas.drawRect(0, 0, getWidth(), top, borderPaint);
+				canvas.drawRect(0, bottom, getWidth(), getHeight(), borderPaint);
+				canvas.drawRect(0, top, left, bottom, borderPaint);
+				canvas.drawRect(right, top, getWidth(), bottom, borderPaint);
 			}
-			if (width > border * 2 && height > border * 2 && front != null && !front.isRecycled())
-				canvas.drawBitmap(front, null, new Rect(border, border, width - border, height - border), null);
+			if (right > left && bottom > top && front != null && !front.isRecycled())
+				canvas.drawBitmap(front, null, new Rect(left, top, right, bottom), null);
 		}
 		@Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 			super.onSizeChanged(w, h, oldw, oldh);
@@ -603,15 +614,18 @@ public final class AndroidPlatform implements MobilePlatform {
 			EventSink receiver = sink; long handle = id;
 			if (receiver != null && handle != 0) callback(() -> receiver.input(handle, type, x, y, button, key, ch, mask, count, time));
 		}
+		private int inputX(float x) { return Math.round((x - getPaddingLeft()) / density); }
+		private int inputY(float y) { return Math.round((y - getPaddingTop()) / density); }
 		@Override public boolean onTouchEvent(MotionEvent event) {
 			if (id == 0 || !isEnabled()) return false;
 			int action = event.getActionMasked();
 			if (action == MotionEvent.ACTION_DOWN) { pointer = event.getPointerId(0); requestFocus(); }
 			int index = event.findPointerIndex(pointer);
 			if (index < 0) { if (action == MotionEvent.ACTION_CANCEL) pointer = -1; return true; }
-			int x = logical(Math.round(event.getX(index))) - borderWidth(), y = logical(Math.round(event.getY(index))) - borderWidth();
-			int mask = modifiers(event.getMetaState());
-			if (action != MotionEvent.ACTION_DOWN && pointer != -1) mask |= SWT.BUTTON1;
+			int x = inputX(event.getX(index)), y = inputY(event.getY(index));
+			int mask = modifiers(event.getMetaState()) | buttonMask(event.getButtonState());
+			if (action == MotionEvent.ACTION_DOWN) mask &= ~SWT.BUTTON1;
+			else if (action == MotionEvent.ACTION_UP || event.getButtonState() == 0 && pointer != -1) mask |= SWT.BUTTON1;
 			int time = (int) event.getEventTime();
 			if (action == MotionEvent.ACTION_DOWN) event(SWT.MouseDown, x, y, 1, 0, '\0', mask, 1, time);
 			else if (action == MotionEvent.ACTION_MOVE) event(SWT.MouseMove, x, y, 0, 0, '\0', mask, 0, time);
@@ -627,14 +641,14 @@ public final class AndroidPlatform implements MobilePlatform {
 		@Override public boolean onHoverEvent(MotionEvent event) {
 			if (id == 0 || !isEnabled()) return false;
 			int type = switch (event.getActionMasked()) { case MotionEvent.ACTION_HOVER_ENTER -> SWT.MouseEnter; case MotionEvent.ACTION_HOVER_EXIT -> SWT.MouseExit; default -> SWT.MouseMove; };
-			event(type, logical(Math.round(event.getX())) - borderWidth(), logical(Math.round(event.getY())) - borderWidth(), 0, 0, '\0', modifiers(event.getMetaState()), 0, (int) event.getEventTime());
+			event(type, inputX(event.getX()), inputY(event.getY()), 0, 0, '\0', modifiers(event.getMetaState()) | buttonMask(event.getButtonState()), 0, (int) event.getEventTime());
 			return true;
 		}
 		@Override public boolean onGenericMotionEvent(MotionEvent event) {
 			if (id == 0 || !isEnabled()) return false;
 			if (event.getActionMasked() != MotionEvent.ACTION_SCROLL) return super.onGenericMotionEvent(event);
 			int count = Math.round(event.getAxisValue(MotionEvent.AXIS_VSCROLL));
-			if (count != 0) event(SWT.MouseVerticalWheel, logical(Math.round(event.getX())) - borderWidth(), logical(Math.round(event.getY())) - borderWidth(), 0, 0, '\0', modifiers(event.getMetaState()), count, (int) event.getEventTime());
+			if (count != 0) event(SWT.MouseVerticalWheel, inputX(event.getX()), inputY(event.getY()), 0, 0, '\0', modifiers(event.getMetaState()) | buttonMask(event.getButtonState()), count, (int) event.getEventTime());
 			return true;
 		}
 		@Override public boolean onKeyDown(int code, KeyEvent event) { return key(SWT.KeyDown, code, event); }
@@ -653,13 +667,15 @@ public final class AndroidPlatform implements MobilePlatform {
 				case KeyEvent.KEYCODE_CTRL_LEFT, KeyEvent.KEYCODE_CTRL_RIGHT -> SWT.CTRL;
 				case KeyEvent.KEYCODE_ALT_LEFT, KeyEvent.KEYCODE_ALT_RIGHT -> SWT.ALT;
 				case KeyEvent.KEYCODE_META_LEFT, KeyEvent.KEYCODE_META_RIGHT -> SWT.COMMAND;
-				case KeyEvent.KEYCODE_PAGE_DOWN -> SWT.PAGE_DOWN; default -> Character.toLowerCase(character);
+				case KeyEvent.KEYCODE_PAGE_DOWN -> SWT.PAGE_DOWN; case KeyEvent.KEYCODE_INSERT -> SWT.INSERT;
+				default -> Character.toLowerCase(character);
 			};
 			if (code == KeyEvent.KEYCODE_BACK) { if (type == SWT.KeyUp) { EventSink receiver = sink; if (receiver != null) callback(() -> receiver.close(shellId())); } return true; }
 			int state = modifiers(event.getMetaState());
-			if (key == SWT.SHIFT || key == SWT.CTRL || key == SWT.ALT || key == SWT.COMMAND)
+			boolean modifier = key == SWT.SHIFT || key == SWT.CTRL || key == SWT.ALT || key == SWT.COMMAND;
+			if (modifier)
 				state = type == SWT.KeyDown ? state & ~key : state | key;
-			event(type, 0, 0, 0, key, character <= Character.MAX_VALUE ? (char) character : '\0', state, event.getRepeatCount() + 1, (int) event.getEventTime());
+			event(type, 0, 0, 0, key, !modifier && character >= 0 && character <= Character.MAX_VALUE ? (char) character : '\0', state, event.getRepeatCount() + 1, (int) event.getEventTime());
 			return true;
 		}
 		private long shellId() { PeerView view = this; while (view.kind != SHELL) view = controls.get(view.parent); return view.id; }
@@ -717,6 +733,14 @@ public final class AndroidPlatform implements MobilePlatform {
 			}
 			return super.performAccessibilityAction(action, arguments);
 		}
+	}
+
+	private static int buttonMask(int buttons) {
+		int result = 0;
+		if ((buttons & MotionEvent.BUTTON_PRIMARY) != 0) result |= SWT.BUTTON1;
+		if ((buttons & MotionEvent.BUTTON_TERTIARY) != 0) result |= SWT.BUTTON2;
+		if ((buttons & MotionEvent.BUTTON_SECONDARY) != 0) result |= SWT.BUTTON3;
+		return result;
 	}
 
 	private static int modifiers(int meta) {

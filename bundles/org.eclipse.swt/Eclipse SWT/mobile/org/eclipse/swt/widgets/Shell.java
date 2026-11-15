@@ -22,7 +22,6 @@ public class Shell extends Decorations {
 		if (disposed) return;
 		setFocus();
 		if (!disposed) redrawAll();
-		setFocus(); redrawAll();
 	}
 	public void close() { checkWidget(); Event e = new Event(); sendEvent(SWT.Close, e); if (!disposed && e.doit) dispose(); }
 	public void addShellListener(ShellListener listener) { addTypedListener(listener, SWT.Close, SWT.Activate, SWT.Deactivate, SWT.Iconify, SWT.Deiconify); }

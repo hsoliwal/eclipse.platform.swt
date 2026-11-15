@@ -97,4 +97,91 @@ public final class MobileCoreContractJUnitTest {
 		MobileCoreContractTest.testMobileOriginalTableContracts();
 	}
 
+	@Test void childrenCannotEscapeDisposingParent() {
+		MobileLifecycleContractTest.childrenCannotEscapeDisposingParent();
+	}
+
+	@Test void shellsCannotEscapeDisposingDisplay() {
+		MobileLifecycleContractTest.shellsCannotEscapeDisposingDisplay();
+	}
+
+	@Test void lateDisposeCallbacksCannotEscapeCleanup() {
+		MobileLifecycleContractTest.lateDisposeCallbacksCannotEscapeCleanup();
+	}
+
+	@Test void throwingFocusOutStillReleasesOwner() {
+		MobileLifecycleContractTest.throwingFocusOutStillReleasesOwner();
+	}
+
+	@Test void disabledAndHiddenAncestorsClearFocusAndRejectInput() {
+		MobileLifecycleContractTest.disabledAndHiddenAncestorsClearFocusAndRejectInput();
+	}
+
+	@Test void focusOutMayDisposeDuringDisableAndHide() {
+		MobileLifecycleContractTest.focusOutMayDisposeDuringDisableAndHide();
+	}
+
+	@Test void reentrantFocusRedirectionKeepsFinalOwner() {
+		MobileLifecycleContractTest.reentrantFocusRedirectionKeepsFinalOwner();
+	}
+
+	@Test void showMayDisposeShellWithoutStaleAccess() {
+		MobileLifecycleContractTest.showMayDisposeShellWithoutStaleAccess();
+	}
+
+	@Test void throwingDisposeListenersStillReleaseOwner() {
+		MobileLifecycleContractTest.throwingDisposeListenersStillReleaseOwner();
+	}
+
+	@Test void borderedClientCoordinatesMatchPaintingAndInput() {
+		MobileLifecycleContractTest.borderedClientCoordinatesMatchPaintingAndInput();
+	}
+
+	@Test void modifierKeysReportStateBeforeTheirTransition() {
+		MobileLifecycleContractTest.modifierKeysReportStateBeforeTheirTransition();
+	}
+
+	@Test void hideListenerMayRestoreVisibleFocus() {
+		MobileLifecycleContractTest.hideListenerMayRestoreVisibleFocus();
+	}
+
+	@Test void arcDirectionAndNormalizedBounds() {
+		MobileGraphicsContractTest.arcDirectionAndNormalizedBounds();
+	}
+
+	@Test void roundedRectangleClippingAndTransform() {
+		MobileGraphicsContractTest.roundedRectangleClippingAndTransform();
+	}
+
+	@Test void textAntialiasStateAndDisposal() {
+		MobileGraphicsContractTest.textAntialiasStateAndDisposal();
+	}
+
+	@Test void recoveredGraphicsRetainImageLifetime() {
+		MobileGraphicsContractTest.recoveredGraphicsRetainImageLifetime();
+	}
+
+	@Test void queuedWorkRetainsFifoAndPaintFairness() {
+		MobileLifecycleContractTest.queuedWorkRetainsFifoAndPaintFairness();
+	}
+
+	@Test void paintingVisibilityLocksAndExternalGcRemainOwned() {
+		MobileLifecycleContractTest.paintingVisibilityLocksAndExternalGcRemainOwned();
+	}
+
+	@Test void childRemovalKeepsIdentityAndCommonEventContracts() {
+		MobileLifecycleContractTest.childRemovalKeepsIdentityAndCommonEventContracts();
+	}
+
+	@Test void graphicsClippingAlphaAndImageSnapshotsRemainOwned() {
+		MobileLifecycleContractTest.graphicsClippingAlphaAndImageSnapshotsRemainOwned();
+	}
+
+	@Test void queuedNativeFocusCannotOverrideReentrantOwner() {
+		MobileLifecycleContractTest.queuedNativeFocusCannotOverrideReentrantOwner();
+	}
+
+	@Test void findDisplayRetainsOriginalThreadLookup() {
+		MobileLifecycleContractTest.findDisplayRetainsOriginalThreadLookup();
+	}
 }

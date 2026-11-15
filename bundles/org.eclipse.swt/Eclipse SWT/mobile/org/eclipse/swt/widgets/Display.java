@@ -40,6 +40,7 @@ public class Display extends Device implements Executor {
 	private Consumer<Error> errorHandler = error -> { throw error; };
 	private int lastEventTime;
 	private volatile long focusGeneration;
+	private long committedFocusGeneration;
 	Control focusControl;
 	boolean active = true;
 
@@ -78,7 +79,6 @@ public class Display extends Device implements Executor {
 	@Override protected void checkDevice() { checkThread(); }
 	public Thread getThread() { if (disposed) SWT.error(SWT.ERROR_DEVICE_DISPOSED); return thread; }
 	int getLastEventTime() { return lastEventTime == 0 ? (int) (System.nanoTime() / 1_000_000) : lastEventTime; }
-	boolean isDisposing() { return closing; }
 
 	private boolean enqueue(Runnable task) {
 		synchronized (queueLock) {
@@ -180,6 +180,7 @@ public class Display extends Device implements Executor {
 	}
 	public void disposeExec(Runnable runnable) {
 		checkThread(); if (runnable == null) return;
+		if (closing) SWT.error(SWT.ERROR_DEVICE_DISPOSED);
 		disposal = Arrays.copyOf(disposal, disposal.length + 1); disposal[disposal.length - 1] = runnable;
 	}
 	@Override public void dispose() {
@@ -231,27 +232,19 @@ public class Display extends Device implements Executor {
 		for (int i = 0; i < controlCount; i++) if (controls[i] == control) { System.arraycopy(controls, i + 1, controls, i, --controlCount - i); controls[controlCount] = null; break; }
 	}
 	void clearFocus(Control control) {
-		Control previous = focusControl;
-		for (Control ancestor = previous; ancestor != null; ancestor = ancestor.parent) {
-			if (ancestor != control) continue;
-			focusControl = null;
-			if (!previous.isDisposed()) previous.sendEvent(SWT.FocusOut, new Event());
-			return;
-		}
-	}
-	void clearFocus(Control subtree) {
+		control.clearedFocusGeneration = ++focusGeneration;
 		Control focused = focusControl;
 		for (Control owner = focused; owner != null; owner = owner.parent) {
-			if (owner != subtree) continue;
-			// Clear before notifying: listeners can dispose or focus another
-			// control, and a later native acknowledgement must not repeat it.
-			focusGeneration++;
+			if (owner != control) continue;
 			focusControl = null;
 			if (!focused.isDisposed()) focused.sendEvent(SWT.FocusOut, new Event());
 			return;
 		}
 	}
-	void focusRequested() { focusGeneration++; }
+	long beginFocusRequest() { return ++focusGeneration; }
+	void commitFocusRequest(long generation) {
+		committedFocusGeneration = Math.max(committedFocusGeneration, generation);
+	}
 	Control control(long peer) { for (int i = 0; i < controlCount; i++) if (!controls[i].isDisposed() && controls[i].peer == peer) return controls[i]; return null; }
 	public Widget findWidget(long peer) { checkThread(); return control(peer); }
 	public Shell[] getShells() { checkThread(); return Arrays.stream(controls, 0, controlCount).filter(Shell.class::isInstance).map(Shell.class::cast).toArray(Shell[]::new); }
@@ -287,18 +280,25 @@ public class Display extends Device implements Executor {
 
 	private final class NativeEvents implements MobilePlatform.EventSink {
 		@Override public void input(long peer, int type, int x, int y, int button, int keyCode, char character, int stateMask, int count, int time) {
-			long focusAtEnqueue = focusGeneration;
+			boolean focusEvent = type == SWT.FocusIn || type == SWT.FocusOut;
+			long generation = focusEvent ? focusGeneration : 0;
 			enqueue(() -> {
-				Control c = control(peer); if (c == null || !c.isEnabled()) return;
-				if (type == SWT.FocusIn && (!c.isVisible() || (c.style & SWT.NO_FOCUS) != 0)) return;
 				Control c = control(peer); if (c == null || c.disposing || !c.isEnabled() || !c.isVisible()) return;
-				// A synchronous focus request already notifies SWT listeners.
-				// Its queued OS acknowledgements cannot undo a later request.
-				if ((type == SWT.FocusIn || type == SWT.FocusOut) && focusAtEnqueue != focusGeneration) return;
+				if (type == SWT.FocusIn && (c.style & SWT.NO_FOCUS) != 0) return;
+				// Successful requests supersede older focus packets; failed attempts do not.
+				if (focusEvent && generation < committedFocusGeneration) return;
+				if (focusEvent) for (Control owner = c; owner != null; owner = owner.parent) {
+					if (generation < owner.clearedFocusGeneration) return;
+				}
 				lastEventTime = time;
 				if (type == SWT.FocusIn) { if (focusControl == c) return; focusControl = c; }
 				else if (type == SWT.FocusOut) { if (focusControl != c) return; focusControl = null; }
 				Event e = new Event(); e.x = x; e.y = y; e.button = button; e.keyCode = keyCode; e.character = character; e.stateMask = stateMask; e.count = count; e.time = time;
+				// SWT reports state immediately before a modifier key transition.
+				if (keyCode == SWT.SHIFT || keyCode == SWT.CTRL || keyCode == SWT.ALT || keyCode == SWT.COMMAND) {
+					if (type == SWT.KeyDown) e.stateMask &= ~keyCode;
+					else if (type == SWT.KeyUp) e.stateMask |= keyCode;
+				}
 				c.sendEvent(type, e);
 			});
 		}

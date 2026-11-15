@@ -27,8 +27,8 @@ final class ContractPlatform implements MobilePlatform {
 	String clipboard = "";
 	long next = 1, lastCreated;
 	int connects, disconnects, openedGraphics, closedGraphics;
-	boolean reportFocusChanges;
-	long focusedPeer;
+	boolean reportFocusChanges, queueNativeFocusAcknowledgements, rejectFocusRequests;
+	long focusedPeer, nativeFocusAfterRequest;
 	final Map<Long, Peer> controls = new HashMap<>();
 	final Map<Long, BufferedImage> images = new HashMap<>();
 	static final class Peer {
@@ -62,13 +62,20 @@ final class ContractPlatform implements MobilePlatform {
 	}
 	@Override public boolean requestFocus(long id){
 		Peer p=peer(id);
-		if(!p.enabled||!p.visible)return false;
-		if(reportFocusChanges&&focusedPeer!=id){
-			long previous=focusedPeer;focusedPeer=id;
-			if(controls.containsKey(previous))sink.input(previous,SWT.FocusOut,0,0,0,0,'\0',0,0,1);
-			sink.input(id,SWT.FocusIn,0,0,0,0,'\0',0,0,2);
+		if(rejectFocusRequests||!p.enabled||!p.visible)return false;
+		if(reportFocusChanges||queueNativeFocusAcknowledgements){
+			nativeFocus(id);
+			long following=nativeFocusAfterRequest;nativeFocusAfterRequest=0;
+			if(following!=0)nativeFocus(following);
 		}
 		return true;
+	}
+	void nativeFocus(long id){
+		check();if(id!=0)peer(id);
+		long previous=focusedPeer;if(previous==id)return;
+		focusedPeer=id;
+		if(previous!=0&&controls.containsKey(previous))sink.input(previous,SWT.FocusOut,0,0,0,0,'\0',0,0,1);
+		if(id!=0)sink.input(id,SWT.FocusIn,0,0,0,0,'\0',0,0,2);
 	}
 	@Override public void setAccessibility(long id,String label,int role,int state){Peer p=peer(id);p.label=label;p.role=role;p.state=state;}
 	@Override public void present(long id,long image){peer(id).frame=imagePixels(image);}
@@ -80,7 +87,7 @@ final class ContractPlatform implements MobilePlatform {
 	final class TestGraphics implements Graphics {
 		final Graphics2D g; int foreground=0xff000000,background=0xffffffff,alpha=255; boolean closed;
 		final java.awt.Rectangle bounds;
-		TestGraphics(BufferedImage image){g=image.createGraphics();bounds=new java.awt.Rectangle(0,0,image.getWidth(),image.getHeight());}
+		TestGraphics(BufferedImage image){g=image.createGraphics();bounds=new java.awt.Rectangle(0,0,image.getWidth(),image.getHeight());g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);}
 		void drawing(){check();if(closed)throw new AssertionError("Drawing after GC disposal");}
 		void color(boolean back){drawing();g.setColor(new java.awt.Color(back?background:foreground,true));g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER,alpha/255f));}
 		@Override public void setForeground(int color){drawing();foreground=color;}
