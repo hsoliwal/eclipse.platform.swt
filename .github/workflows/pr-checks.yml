@@ -7,7 +7,7 @@ concurrency:
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ master, 'release/**' ]
 
 jobs:
   check-freeze-period:
