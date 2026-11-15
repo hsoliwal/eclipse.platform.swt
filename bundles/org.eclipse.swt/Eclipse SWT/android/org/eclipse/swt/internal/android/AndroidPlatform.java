@@ -594,7 +594,9 @@ public final class AndroidPlatform implements MobilePlatform {
 		@Override public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
 			super.onInitializeAccessibilityNodeInfo(info);
 			info.setEnabled(isEnabled() && (accessibleState & ACC.STATE_DISABLED) == 0);
-			info.setFocusable(isFocusable()); info.setClickable(kind == CANVAS && role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST);
+			info.setFocusable(isFocusable());
+			info.setClickable((kind == CANVAS && role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST)
+					|| role == ACC.ROLE_COMBOBOX);
 			info.setSelected((accessibleState & ACC.STATE_SELECTED) != 0);
 			if (role == ACC.ROLE_CHECKBUTTON || role == ACC.ROLE_RADIOBUTTON) {
 				info.setCheckable(true); info.setChecked((accessibleState & ACC.STATE_CHECKED) != 0);
@@ -608,10 +610,12 @@ public final class AndroidPlatform implements MobilePlatform {
 				case ACC.ROLE_PROGRESSBAR -> "android.widget.ProgressBar";
 				case ACC.ROLE_SLIDER -> "android.widget.SeekBar";
 				case ACC.ROLE_LIST -> "android.widget.ListView";
+				case ACC.ROLE_COMBOBOX -> "android.widget.Spinner";
 				default -> "android.view.View";
 			};
 			info.setClassName(className);
-			if (kind == CANVAS && role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST)
+			if ((kind == CANVAS && role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST)
+					|| role == ACC.ROLE_COMBOBOX)
 				info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK);
 			if (role == ACC.ROLE_SLIDER || role == ACC.ROLE_LIST) {
 				info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);

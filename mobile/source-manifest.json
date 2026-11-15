@@ -676,6 +676,10 @@
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Transform.java"
     },
     {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobileComboArrayOps.java",
+      "sha256": "a04dd0629f9e6191d25eff9b68572ad16f86ea0ffefa5bafab09c6a0dc98322f"
+    },
+    {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobilePlatform.java"
     },
     {
@@ -693,6 +697,10 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Canvas.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Combo.java",
+      "sha256": "ac11ad47e65ad3f6fed31f2f5897308a7ff20937ac368eead6842417ea0f9a25"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Composite.java"

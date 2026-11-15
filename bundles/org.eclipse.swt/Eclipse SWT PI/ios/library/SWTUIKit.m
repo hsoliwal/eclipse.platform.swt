@@ -839,7 +839,7 @@ JNIEXPORT void JNICALL JNI(setAccessibility)(JNI_ARGS, jlong peer, jstring label
 			SWTUIKitView *view = swtView(peer);
 			/* Roles/states are the unchanged ACC constants, not a new widget model. */
 			UIAccessibilityTraits traits = UIAccessibilityTraitNone;
-			if (role == SWT(ROLE_PUSHBUTTON) || role == SWT(ROLE_CHECKBUTTON) || role == SWT(ROLE_RADIOBUTTON)) traits |= UIAccessibilityTraitButton;
+			if (role == SWT(ROLE_PUSHBUTTON) || role == SWT(ROLE_CHECKBUTTON) || role == SWT(ROLE_RADIOBUTTON) || role == SWT(ROLE_COMBOBOX)) traits |= UIAccessibilityTraitButton;
 			if (role == SWT(ROLE_LABEL)) traits |= UIAccessibilityTraitStaticText;
 			if (role == SWT(ROLE_SLIDER)) traits |= UIAccessibilityTraitAdjustable;
 			if ((state & (SWT(STATE_SELECTED) | SWT(STATE_CHECKED))) != 0) traits |= UIAccessibilityTraitSelected;
