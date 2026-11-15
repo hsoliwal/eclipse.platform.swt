@@ -54,6 +54,7 @@ public final class TextExtentCache {
 	private final int shift;
 	private int size, hand, fontCount;
 	private int [] fontIds = new int [4];
+	private boolean fontIdsComplete = true;
 	private long hits, misses, evictions;
 
 	/** Creates a cache that holds at most {@code maxEntries} extents. */
@@ -146,6 +147,16 @@ public final class TextExtentCache {
 	/** Drops every extent of {@code label}, in every font measured so far. */
 	public void invalidateLabel (long label) {
 		checkLabel (label);
+		if (!fontIdsComplete) {
+			for (int i = 0; i < labels.length; ) {
+				if (labels [i] == label) {
+					deleteAt (i);
+				} else {
+					i++;
+				}
+			}
+			return;
+		}
 		for (int i = 0; i < fontCount; i++) {
 			int index = indexOf (label, fontIds [i]);
 			if (index >= 0) deleteAt (index);
@@ -171,6 +182,7 @@ public final class TextExtentCache {
 		size = 0;
 		hand = 0;
 		fontCount = 0;
+		fontIdsComplete = true;
 	}
 
 	/** Number of cached extents. */
@@ -256,10 +268,17 @@ public final class TextExtentCache {
 	}
 
 	private void noteFont (int fontId) {
+		if (!fontIdsComplete) return;
 		for (int i = 0; i < fontCount; i++) {
 			if (fontIds [i] == fontId) return;
 		}
-		if (fontCount == fontIds.length) fontIds = Arrays.copyOf (fontIds, fontCount * 2);
+		if (fontCount == maxEntries) {
+			// Font history can outlive cache entries. Stop retaining it and let
+			// label invalidation scan the bounded cache lanes instead.
+			fontIdsComplete = false;
+			return;
+		}
+		if (fontCount == fontIds.length) fontIds = Arrays.copyOf (fontIds, Math.min (maxEntries, fontCount * 2));
 		fontIds [fontCount++] = fontId;
 	}
 
