@@ -170,12 +170,15 @@ public class Table extends Composite {
         if (first < 0 || last < first || last >= count) SWT.error(SWT.ERROR_INVALID_RANGE);
         int length = last - first + 1, output = 0;
         mutatingRows = true;
-        try {
+        try (ExceptionStash failures = new ExceptionStash()) {
             for (int i = 0; i < materialized; i++) {
                 int key = rowKeys[i];
                 TableItem item = rowValues[i];
                 if (key >= first && key <= last) {
-                    if (!item.isDisposed()) item.dispose();
+                    if (!item.isDisposed()) {
+                        try { item.dispose(); }
+                        catch (RuntimeException | Error problem) { failures.stash(problem); }
+                    }
                 } else {
                     if (key > last) {
                         key -= length;
@@ -185,16 +188,17 @@ public class Table extends Composite {
                     rowValues[output++] = item;
                 }
             }
+            Arrays.fill(rowValues, output, materialized, null);
+            materialized = output;
+            selected.removeRows(first, last);
+            count -= length;
+            topIndex = Math.min(topIndex, Math.max(0, count - 1));
+            focusIndex = transformAfterRemove(focusIndex, first, last);
+            anchorIndex = transformAfterRemove(anchorIndex, first, last);
         } finally { mutatingRows = false; }
-        Arrays.fill(rowValues, output, materialized, null);
-        materialized = output;
-        selected.removeRows(first, last);
-        count -= length;
-        topIndex = Math.min(topIndex, Math.max(0, count - 1));
-        focusIndex = transformAfterRemove(focusIndex, first, last);
-        anchorIndex = transformAfterRemove(anchorIndex, first, last);
         redraw();
         if (count == 0) sendEvent(SWT.EmptinessChanged, new Event());
+
     }
     private static int transformAfterRemove(int index, int start, int end) {
         return index < start ? index : index <= end ? -1 : index - (end - start + 1);
@@ -208,6 +212,8 @@ public class Table extends Composite {
             columns = Arrays.copyOf(columns, columnCount + Math.max(4, columnCount >>> 1));
         System.arraycopy(columns, index, columns, index + 1, columnCount - index);
         columns[index] = column;
+        for (int i = 0; i < materialized; i++)
+            rowValues[i].columnInserted(index, columnCount);
         int[] next = new int[columnCount + 1];
         for (int i = 0; i < columnCount; i++)
             next[i] = order[i] >= index ? order[i] + 1 : order[i];
@@ -222,6 +228,8 @@ public class Table extends Composite {
         int index = -1;
         for (int i = 0; i < columnCount; i++) if (columns[i] == column) { index = i; break; }
         if (index < 0) return;
+        for (int i = 0; i < materialized; i++)
+            rowValues[i].columnRemoved(index, columnCount);
         System.arraycopy(columns, index + 1, columns, index, columnCount - index - 1);
         columns[--columnCount] = null;
         int[] next = new int[columnCount];
