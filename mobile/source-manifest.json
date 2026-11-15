@@ -703,16 +703,19 @@
       "sha256": "d459249e713db868ae160486ea11d807ae68517c51bb9ba0bc8b990b42a7e05f"
     },
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Composite.java"
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Composite.java",
+      "sha256": "b31587122af15ce48e9015e6fc84f6121a354bb0a8799856997359e705440051"
     },
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java"
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java",
+      "sha256": "2d66c1f29d6aba1cabe9e306c49774263bbe48b0b3d73c34bc0c57c04daaacb1"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Decorations.java"
     },
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java"
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java",
+      "sha256": "6189f260e88c77a231bcc6653df73474a46456d8b65eefba481c91e27fe3f7c8"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Label.java",
@@ -742,6 +745,26 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Widget.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Item.java",
+      "sha256": "95a6258eac2e3303714c6f0ff56418b60823839f791b97355256390c8030e604"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Table.java",
+      "sha256": "a6edaaaf0a21b8de05093d8ca2fbf1c36de965f4aba73b8a44ed274dde5b8f5c"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/TableItem.java",
+      "sha256": "03641b1773f6bcf47b21d110b6b86f63b715bf6cf2d2d8fa239f35c28fcfffe7"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/TableColumn.java",
+      "sha256": "f1f685602e23f68e93b2148541a500110ee374f2f148e244ac181c2884d3e64b"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobileTableSelection.java",
+      "sha256": "cb82f63c997a89f9a63b3c030a5717ee1cc56d64dc64e346775247f66a0af486"
     }
   ],
   "platforms": {
