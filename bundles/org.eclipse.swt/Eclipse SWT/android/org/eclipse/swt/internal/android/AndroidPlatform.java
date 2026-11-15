@@ -610,6 +610,7 @@ public final class AndroidPlatform implements MobilePlatform {
 				case ACC.ROLE_PROGRESSBAR -> "android.widget.ProgressBar";
 				case ACC.ROLE_SLIDER -> "android.widget.SeekBar";
 				case ACC.ROLE_LIST -> "android.widget.ListView";
+				case ACC.ROLE_TABLE -> "android.widget.GridView";
 				case ACC.ROLE_COMBOBOX -> "android.widget.Spinner";
 				default -> "android.view.View";
 			};
