@@ -473,14 +473,29 @@ public final class MobileCoreContractTest {
 					"Text line navigation uses original SWT UTF-16 code unit offsets");
 			editor.setTextLimit(Text.LIMIT);
 			editor.setText("clipboard");
-			editor.setSelection(0, 4);
+			int verifiesBeforeSelection = verify.size(), modifiesBeforeSelection = modified.size();
+			platform.sink.textChanged(peer, "clipboard", 2, 2);
+			drain(display);
+			require(editor.getCaretPosition() == 2 && editor.getSelectionCount() == 0,
+					"Native caret-only snapshot updates the original Text owner");
+			platform.sink.textChanged(peer, "clipboard", 0, 4);
+			drain(display);
+			require(editor.getSelection().equals(new Point(0, 4))
+					&& editor.getSelectionText().equals("clip")
+					&& verify.size() == verifiesBeforeSelection
+					&& modified.size() == modifiesBeforeSelection,
+					"Native selection-only snapshots never emit Verify or Modify");
 			editor.copy();
-			require(platform.clipboard.equals("clip") && editor.getSelectionText().equals("clip"),
-					"Text.copy writes original selected UTF-16 text to native clipboard");
+			require(platform.clipboard.equals("clip") && editor.getSelectionText().equals("clip")
+					&& verify.size() == verifiesBeforeSelection
+					&& modified.size() == modifiesBeforeSelection,
+					"Text.copy uses the native selection without Verify or Modify");
 			editor.cut();
 			require(editor.getText().equals("board")
-						&& editor.getCaretPosition() == 0,
-					"Text.cut deletes selected text through original Verify and Modify");
+					&& editor.getCaretPosition() == 0
+					&& verify.size() == verifiesBeforeSelection + 1
+					&& modified.size() == modifiesBeforeSelection + 1,
+					"Text.cut uses the native selection with exactly one Verify and Modify");
 			editor.paste();
 			require(editor.getText().equals("clipboard"),
 					"Text.paste reads system clipboard and applies exact canonical replacement");
@@ -519,6 +534,23 @@ public final class MobileCoreContractTest {
 			Combo simple = new Combo(shell, SWT.SIMPLE);
 			long listPeer = platform.lastCreated;
 			simple.setBounds(0, 0, 240, 180);
+			org.eclipse.swt.events.SegmentListener segmentListener = event -> {};
+			try {
+				simple.addSegmentListener(segmentListener);
+				throw new AssertionError("Unqualified Combo bidi segments must be rejected explicitly");
+			} catch (UnsupportedOperationException expected) { }
+			try {
+				simple.removeSegmentListener(segmentListener);
+				throw new AssertionError("Unqualified Combo bidi segment removal must be rejected explicitly");
+			} catch (UnsupportedOperationException expected) { }
+			try {
+				simple.addSegmentListener(null);
+				throw new AssertionError("Null Combo SegmentListener must report SWT.ERROR_NULL_ARGUMENT");
+			} catch (IllegalArgumentException expected) { }
+			try {
+				simple.removeSegmentListener(null);
+				throw new AssertionError("Null Combo SegmentListener removal must report SWT.ERROR_NULL_ARGUMENT");
+			} catch (IllegalArgumentException expected) { }
 			require(simple.getChildren().length == 0,
 					"Internal native Text/List peers are hidden by original Combo getChildren API");
 			require(platform.controls.get(listPeer).kind == MobilePlatform.CANVAS,
@@ -637,7 +669,6 @@ public final class MobileCoreContractTest {
 				"Original Combo closes native graphics contexts without leaking handles");
 	}
 
-	/** Original Table/Column/Item API with sparse billion-row SetData and input. */
 	static void testMobileOriginalTableContracts() {
 		ContractPlatform platform = new ContractPlatform();
 		MobileRuntime.install(platform);
