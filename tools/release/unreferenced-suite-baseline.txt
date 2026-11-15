@@ -1,17 +1,18 @@
 # SPDX-License-Identifier: EPL-2.0
-# Reviewed 2026-11-11 on SWT master plus release/coverage-matrix-docs-20261111.
-# Remaining classes are not selected by the default AllTests -> nested suite graph.
-# These recorded/differential-oracle tests may require a separate official-SWT
-# baseline, recording properties, seeded replay and GUI/native environment.
-# Their presence here is NOT executed test coverage and NOT a release waiver.
-# --strict rejects new omissions and source disappearances.
-# --release currently requires zero omissions. A qualified separate-oracle
-# evidence path would need explicit reviewed policy/validator changes; this
-# baseline by itself cannot waive the release gate.
-Test_org_eclipse_swt_widgets_BatchScopeDifferential
-Test_org_eclipse_swt_widgets_RowDiffDifferential
-Test_org_eclipse_swt_internal_ProxyModelDifferential
-Test_org_eclipse_swt_widgets_RowMathDifferential
-Test_org_eclipse_swt_widgets_ScrollBarModelDifferential
-Test_org_eclipse_swt_widgets_ScrollMementoDifferential
-Test_M3SortFilterDifferential
+# Reviewed 2026-11-15 against SWT master 9854166eda0a597d37849704de07c47a1e4a9dc8.
+# CURRENT ACTIVE DEFAULT-SUITE OMISSIONS: NONE.
+# Existing AllTests -> AllNonBrowserTests -> AllM3DifferentialTests selects
+# all seven formerly unreferenced differential classes listed below.
+# All 323 candidate test-class filenames are reachable through six source
+# suite definitions. This is static registration, NOT test execution/coverage.
+# --strict rejects newly omitted tests, unresolved suite refs and stale active
+# baseline entries; --release still does NOT qualify native/backend runtime.
+# Preserve historical names as commented audit context, not a release waiver.
+# Formerly outstanding (2026-11-11), now registered, still need oracle/runtime:
+# Test_org_eclipse_swt_widgets_BatchScopeDifferential
+# Test_org_eclipse_swt_widgets_RowDiffDifferential
+# Test_org_eclipse_swt_internal_ProxyModelDifferential
+# Test_org_eclipse_swt_widgets_RowMathDifferential
+# Test_org_eclipse_swt_widgets_ScrollBarModelDifferential
+# Test_org_eclipse_swt_widgets_ScrollMementoDifferential
+# Test_M3SortFilterDifferential
