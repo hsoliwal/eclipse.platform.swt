@@ -39,6 +39,7 @@ public final class MobileCoreContractTest {
 		testMobileProgressAndScaleContracts();
 		testMobileListContracts();
 		testMobileOriginalTextContracts();
+		testMobileComboContracts();
 		System.out.println("PASS: "+assertions+" SWT/Nebula owner-contract assertions. Native device qualification is separate.");
 	}
 	static void testOriginalWidgetAndPainting()throws Exception {
@@ -505,5 +506,94 @@ public final class MobileCoreContractTest {
 		}
 		require(platform.controls.isEmpty() && platform.images.isEmpty(),
 				"Text releases native views and backing SWT resources");
+	}
+
+	/** Original Combo API and native Text/List/Shell ownership on both mobile hosts. */
+	static void testMobileComboContracts() {
+		ContractPlatform platform = new ContractPlatform();
+		MobileRuntime.install(platform);
+		Display display = new Display();
+		try {
+			Shell shell = new Shell(display);
+			Combo simple = new Combo(shell, SWT.SIMPLE);
+			long listPeer = platform.lastCreated;
+			simple.setBounds(0, 0, 240, 180);
+			require(simple.getChildren().length == 0,
+					"Internal native Text/List peers are hidden by original Combo getChildren API");
+			require(platform.controls.get(listPeer).kind == MobilePlatform.CANVAS,
+					"SIMPLE Combo reuses original SWT List native canvas peer");
+			simple.setItems("alpha", "beta", "gamma");
+			AtomicInteger selections = new AtomicInteger();
+			AtomicInteger modifications = new AtomicInteger();
+			simple.addSelectionListener(SelectionListener.widgetSelectedAdapter(event -> selections.incrementAndGet()));
+			simple.addModifyListener(event -> modifications.incrementAndGet());
+			simple.addVerifyListener(event -> {
+				if ("blocked".equals(event.text)) event.doit = false;
+			});
+			simple.select(1);
+			require(simple.getText().equals("beta") && simple.getSelectionIndex() == 1
+					&& selections.get() == 0, "Combo select updates Text/List without Selection event");
+			simple.add("zero", 0);
+			require(simple.getSelectionIndex() == 2 && simple.getItem(2).equals("beta"),
+					"Array insert preserves selected Combo logical item identity");
+			simple.remove(0);
+			require(simple.getSelectionIndex() == 1 && simple.getText().equals("beta"),
+					"Array remove shifts selection without changing editor text");
+			simple.setText("custom");
+			require(simple.getSelectionIndex() == -1, "Editable Combo can display unmatched free text");
+			int beforeVeto = modifications.get();
+			simple.setText("blocked");
+			require(simple.getText().equals("custom") && modifications.get() == beforeVeto,
+					"Original Combo Verify veto prevents native text mutation and Modify");
+			simple.setSelection(new Point(0, 3));
+			simple.copy();
+			require(platform.clipboard.equals("cus"), "Combo copies original text selection via OS clipboard");
+			simple.cut();
+			require(simple.getText().equals("tom"), "Combo cut delegates to original Text Verify/Modify");
+			simple.paste();
+			require(simple.getText().equals("custom"), "Combo paste restores original selected clipboard text");
+			shell.open();
+			drain(display);
+			platform.sink.input(listPeer, SWT.MouseDown, 12, 6, 1, 0, '\0', 0, 1, 41);
+			platform.sink.input(listPeer, SWT.MouseUp, 12, 6, 1, 0, '\0', 0, 1, 42);
+			drain(display);
+			require(simple.getSelectionIndex() == 0 && simple.getText().equals("alpha")
+					&& selections.get() == 1,
+					"Native List tap sends exactly one original Combo Selection with chosen text");
+			Combo dropdown = new Combo(shell, SWT.DROP_DOWN | SWT.READ_ONLY);
+			dropdown.setBounds(0, 190, 240, 34);
+			dropdown.setItems("first", "second");
+			dropdown.setText("not present");
+			require(dropdown.getText().isEmpty(),
+					"READ_ONLY Combo refuses strings absent from its original item list");
+			dropdown.select(1);
+			require(dropdown.getText().equals("second") && dropdown.getSelectionIndex() == 1,
+					"READ_ONLY Combo select keeps Java-owned text and index coherent");
+			dropdown.setListVisible(true);
+			require(dropdown.getListVisible(), "Mobile Combo opens owned native popup Shell/List");
+			dropdown.setListVisible(false);
+			require(!dropdown.getListVisible(), "Mobile Combo popup can be hidden without losing items");
+			long comboPeer = -1;
+			for (var entry : platform.controls.entrySet())
+				if (entry.getValue().role == org.eclipse.swt.accessibility.ACC.ROLE_COMBOBOX
+						&& entry.getKey() > comboPeer) comboPeer = entry.getKey();
+			require(comboPeer > 0, "Native Android/UIKit Combo publishes its original accessibility role");
+			platform.sink.accessibility(comboPeer, MobilePlatform.ACTION_ACTIVATE);
+			drain(display);
+			require(dropdown.getListVisible(),
+					"Native accessibility activate opens original owned Combo popup");
+			dropdown.setEnabled(false);
+			require(!dropdown.getListVisible(), "Disabling Combo closes native popup");
+			shell.dispose();
+			require(simple.isDisposed() && dropdown.isDisposed(),
+					"Parent disposal closes all original Combo child/native popup owners");
+		} finally {
+			display.dispose();
+			MobileRuntime.uninstall(platform);
+		}
+		require(platform.controls.isEmpty() && platform.images.isEmpty(),
+				"Original Combo releases native Text/List/Button/Shell peers and graphics");
+		require(platform.openedGraphics == platform.closedGraphics,
+				"Original Combo closes native graphics contexts without leaking handles");
 	}
 }
