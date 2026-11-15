@@ -188,6 +188,44 @@ public class TableItem extends Item {
     /** Update a column font (row fallback). */
     public void setFont(int column, Font value) { setFont(value); }
 
+    /** Keep physical cell identities stable when columns are inserted. */
+    void columnInserted(int at, int previousCount) {
+        if (previousCount == 0) return; // implicit first column already owns text
+        int nextCount = previousCount + 1;
+        String[] nextText = new String[nextCount];
+        Image[] nextImages = new Image[nextCount];
+        for (int i = 0; i < previousCount; i++) {
+            int dest = i < at ? i : i + 1;
+            nextText[dest] = i == 0 ? text
+                    : cellTexts != null && i < cellTexts.length ? cellTexts[i] : "";
+            nextImages[dest] = i == 0 ? image
+                    : cellImages != null && i < cellImages.length ? cellImages[i] : null;
+        }
+        text = nextText[0] == null ? "" : nextText[0];
+        image = nextImages[0];
+        cellTexts = nextText;
+        cellImages = nextImages;
+    }
+    /** Remove cell data for a disposed physical column without leaking images. */
+    void columnRemoved(int at, int previousCount) {
+        if (previousCount <= 1) { cellTexts = null; cellImages = null; return; }
+        int nextCount = previousCount - 1;
+        String[] nextText = new String[nextCount];
+        Image[] nextImages = new Image[nextCount];
+        for (int i = 0; i < previousCount; i++) {
+            if (i == at) continue;
+            int dest = i < at ? i : i - 1;
+            nextText[dest] = i == 0 ? text
+                    : cellTexts != null && i < cellTexts.length ? cellTexts[i] : "";
+            nextImages[dest] = i == 0 ? image
+                    : cellImages != null && i < cellImages.length ? cellImages[i] : null;
+        }
+        text = nextText[0] == null ? "" : nextText[0];
+        image = nextImages[0];
+        cellTexts = nextText;
+        cellImages = nextImages;
+    }
+
     /** Forget virtual content without invalidating the stable row wrapper. */
     void clearData() {
         cached = false;
