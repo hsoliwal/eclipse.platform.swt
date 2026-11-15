@@ -283,6 +283,10 @@ final class VirtualListModel {
 		return planner.selection ().selectedCount ();
 	}
 
+	int firstSelectedIndex () {
+		return planner.selection ().firstSelectedIndex ();
+	}
+
 	int [] getSelectionIndices () {
 		return planner.selection ().toArray ();
 	}

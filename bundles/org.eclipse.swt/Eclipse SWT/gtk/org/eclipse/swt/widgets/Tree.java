@@ -7428,15 +7428,8 @@ public void showSelection () {
 		refreshVirtualSelectionCounts ();
 		for (var entry : virtualSelections.entrySet ()) {
 			VirtualSelectionModel selection = entry.getValue ();
-			if (selection.selectedCount () == 0) continue;
-			int index = selection.complementMode () ? 0 : selection.rangeStart (0);
-			while (!selection.isSelected (index)) {
-				for (int range = 0; range < selection.rangeCount (); range++) {
-					if (selection.rangeStart (range) <= index && index < selection.rangeEndExclusive (range)) {
-						index = selection.rangeEndExclusive (range); break;
-					}
-				}
-			}
+			int index = selection.firstSelectedIndex ();
+			if (index < 0) continue;
 			showItem (virtualCoordinateItem (entry.getKey (), index));
 			break;
 		}

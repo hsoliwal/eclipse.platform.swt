@@ -77,6 +77,7 @@ public class Test_VirtualListModel {
 		for (int i = 0; i < arguments.length; i++) {
 			Object argument = arguments[i];
 			if (argument instanceof Integer) types[i] = int.class;
+			else if (argument instanceof Boolean) types[i] = boolean.class;
 			else if (argument instanceof ToIntFunction) types[i] = ToIntFunction.class;
 			else types[i] = argument.getClass();
 		}
@@ -132,8 +133,10 @@ public class Test_VirtualListModel {
 	private static void assertSame(Handle model, Oracle oracle, String context) {
 		assertEquals(oracle.items.size(), model.number("getItemCount"), context);
 		assertArrayEquals(oracle.items.toArray(new String[0]), (String[]) model.call("getItems"), context);
-		assertArrayEquals(oracle.selection(), (int[]) model.call("getSelectionIndices"), context);
-		assertEquals(oracle.selection().length, model.number("getSelectionCount"), context);
+		int[] selected = oracle.selection();
+		assertArrayEquals(selected, (int[]) model.call("getSelectionIndices"), context);
+		assertEquals(selected.length, model.number("getSelectionCount"), context);
+		assertEquals(selected.length == 0 ? -1 : selected[0], model.number("firstSelectedIndex"), context);
 		assertEquals(oracle.widest(), model.number("getWidestWidth"), context);
 		int top = model.number("getTopIndex");
 		int visible = model.number("getVisibleCount");
@@ -230,6 +233,29 @@ public class Test_VirtualListModel {
 			}
 			assertEquals(oracle.entered, measured.get(), "every entering item is measured exactly once, seed=" + seed);
 		}
+	}
+
+	@Test
+	public void firstSelectedInLazyListDoesNotMaterializeOrMeasureRows() {
+		AtomicInteger measured = new AtomicInteger();
+		ToIntFunction<String> measure = text -> { measured.incrementAndGet(); return text.length(); };
+		Handle model = new Handle("VirtualListModel", measure, true);
+		model.call("setItemCount", 1_000_000);
+		assertEquals(-1, model.number("firstSelectedIndex"));
+		model.call("selectAll");
+		assertEquals(0, model.number("firstSelectedIndex"));
+		model.call("deselect", 0, 999_998);
+		assertEquals(999_999, model.number("firstSelectedIndex"));
+		assertEquals(1, model.number("getSelectionCount"));
+		model.call("remove", 0, 499_999);
+		assertEquals(499_999, model.number("firstSelectedIndex"));
+		model.call("setItemCount", 0);
+		model.call("setItemCount", 1_000_000);
+		assertEquals(-1, model.number("firstSelectedIndex"));
+		model.call("select", 700_000);
+		assertEquals(700_000, model.number("firstSelectedIndex"));
+		assertFalse((Boolean) model.call("isMaterialized", 700_000));
+		assertEquals(0, measured.get(), "selection lookup cannot request lazy text measurement");
 	}
 
 	@Test

@@ -1402,8 +1402,7 @@ final class ListViewport {
 	/* ---------------------------------------------------------------- selection */
 
 	private int firstSelected () {
-		int [] indices = model.getSelectionIndices ();
-		return indices.length == 0 ? -1 : indices [0];
+		return model.firstSelectedIndex ();
 	}
 
 	/** Stock select (index, scroll): LB_SETCURSEL (SINGLE) or LB_SETSEL (MULTI, the anchor moves; the caret is put back). */

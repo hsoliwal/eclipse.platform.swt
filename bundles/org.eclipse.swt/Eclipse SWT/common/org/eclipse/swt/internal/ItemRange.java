@@ -23,7 +23,7 @@ import org.eclipse.swt.*;
  * <p>
  * Ranges describe rows of a <code>Table</code> or <code>List</code>, children of one
  * <code>TreeItem</code> (or the roots of a <code>Tree</code>), or visible rows of a
- * <code>Tree</code>, as each method of {@link ItemSelection} documents. A range is a value:
+ * <code>Tree</code>, as documented by each range-selection operation. A range is a value:
  * two <code>int</code>s, immutable, never shared with the widget. A range whose end is
  * smaller than its start is empty; {@link #EMPTY} is the canonical empty range.
  * </p>
