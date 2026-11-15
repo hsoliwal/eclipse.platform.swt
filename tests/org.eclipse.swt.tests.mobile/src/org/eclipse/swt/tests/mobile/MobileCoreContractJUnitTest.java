@@ -38,5 +38,8 @@ public final class MobileCoreContractJUnitTest {
 	@Test void originalMobileComboTextListPopupAndSelection() {
 		MobileCoreContractTest.testMobileComboContracts();
 	}
+	@Test void originalMobileTableSparseVirtualRowsAndNativeSelection() {
+		MobileCoreContractTest.testMobileOriginalTableContracts();
+	}
 
 }
