@@ -459,6 +459,43 @@ public void test_virtualGtkSetDataDisposalReleasesCallbackState() throws Excepti
 }
 
 @Test
+public void test_virtualGtkExpansionSurvivesReplacingLastChild() throws Exception {
+	if (!isGtk3()) return;
+	Tree virtualTree = newVirtualTreeWithGtkLogicalMode(SWT.VIRTUAL, "false");
+	try {
+		List<TreeItem> requests = new ArrayList<>();
+		virtualTree.addListener(SWT.SetData, event -> {
+			TreeItem item = (TreeItem) event.item;
+			requests.add(item);
+			item.setText("row");
+		});
+		virtualTree.setBounds(0, 0, 360, 220);
+		virtualTree.setItemCount(1);
+		TreeItem root = virtualTree.getItem(0);
+		root.setItemCount(1);
+		TreeItem original = root.getItem(0);
+		root.setExpanded(true);
+		shell.setSize(400, 280);
+		shell.open();
+		SwtTestUtil.processEvents(1000, () -> requests.contains(original));
+		assertTrue(requests.contains(original), "the original expanded child is rendered");
+
+		root.setItemCount(0);
+		assertTrue(original.isDisposed());
+		requests.clear();
+		root.setItemCount(1);
+		TreeItem replacement = root.getItem(0);
+		SwtTestUtil.processEvents(1000, () -> requests.contains(replacement));
+
+		assertTrue(root.getExpanded(), "the parent retains its expanded state");
+		assertTrue(requests.contains(replacement),
+				"the replacement child must be rendered, not hidden behind a stale expanded flag");
+	} finally {
+		virtualTree.dispose();
+	}
+}
+
+@Test
 public void test_virtualGtk3LogicalModeOwnsFullRangeAndBoundsAttachedModel() throws Exception {
 	if (!isGtk3()) return;
 	Tree virtualTree = newVirtualTreeWithGtkLogicalMode(SWT.VIRTUAL | SWT.V_SCROLL, "true");

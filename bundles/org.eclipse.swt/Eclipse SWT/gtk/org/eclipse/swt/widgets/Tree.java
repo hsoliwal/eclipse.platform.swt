@@ -5243,7 +5243,7 @@ long gtk_row_has_child_toggled (long model, long path, long iter) {
         return 0;
     }
 	int childCount = GTK.gtk_tree_model_iter_n_children (modelHandle, item.handle);
-	if (childCount != 0 && item.isExpanded) {
+	if (childCount != 0 && item.isExpandedState ()) {
 		OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, TEST_EXPAND_ROW);
 		GTK.gtk_tree_view_expand_row (handle, path, false);
 		OS.g_signal_handlers_unblock_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, TEST_EXPAND_ROW);
