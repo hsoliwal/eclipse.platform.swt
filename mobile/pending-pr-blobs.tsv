@@ -1,0 +1,18 @@
+path	candidate_git_blob	baseline_git_blob
+bundles/org.eclipse.swt/Eclipse SWT PI/ios/org/eclipse/swt/internal/ios/OS.java	2fb270c381ce54547dec699c783c8fdfca64733d	731b19b3ccf6810d9e7a76a9ea32730a99f13317
+bundles/org.eclipse.swt/Eclipse SWT/android/org/eclipse/swt/internal/android/AndroidPlatform.java	41a0878070f86b6015a0c47a935e526b3aa8b527	26e3b5e4f11ae7cc7359eab2fbd704e51e6c398b
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Color.java	bc0ea6dcb3561a731d1682dd224968442d6c1f1e	0c64ae94bc4fa0a956a68114663b40e5a81dfcdf
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Device.java	cb4422f9a29d02320a5d97769c98f01277ee8809	c00c24bf8c5f6771981d78f45cdb696fe67b0cbe
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/Font.java	1d24af6d81bf66b67173f7d74cac741b3991e17b	99bc02f5d0714a41b912255a49c895241243ae29
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/FontData.java	85fb49725e02942fab60199f410565b9582a8471	a5aed42b9241e77f73636b2d017b9d2caeb4558f
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/GC.java	a954e3dcf83c04d0867e64c11fd19309dd071b43	c412aba2ad95e53572cefcaa1af37a8c2c8b0acc
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/graphics/GCData.java	e4ed41044210b5f66f0989d6537e3ecbcd36fe38	93071fef378efe5be19bc1e9fed5c914469aef56
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobilePlatform.java	af649552cce056a39d9cbdcb31aef5bc863a2212	44d72d6d3b06f6514d1e052d1fa3e3e9e41dd20c
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Canvas.java	2f4b5f604dee3f22ffbfe38f8482599481c73be0	ee9dafd9573f3fb740e8b87ac50aff3c086f1e0a
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Composite.java	c29976dfb8b4def76ff4b356e0ba52f90144c765	ce3abe7888ef8c510e18ef8458ab83308417cdbd
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java	ffe9599c5087f61a74ea0d3b295b0c00e6328ab0	16230e6288d4a39e2b15da9a5a34ba43583f47f8
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Decorations.java	5b85f2358e792eb0cf8a8c3da5c2e732c75883fb	fc49f1890972290c43c133a2bc9e3786e1e4f632
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java	3a7b255ee43f77318481eee9770c6784a2f9a201	156e0d349592d310408b3f8b1ee535396c6905bf
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Scrollable.java	caddfa674666258e812e2404828d2e8bdbf1cc09	2e1c27c71f2efd02223c7facff651eabeae691f5
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Shell.java	993f6e12fbf4ac821fc7a9db4f595976b7bf06de	c07de32785047c17c2d65d47480cc4d13a14b789
+bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Widget.java	6058cefa5c3c0051aebc104afeb1e9e40402479c	badd34013766f8af85b105cab6c55c5eec4c7a10

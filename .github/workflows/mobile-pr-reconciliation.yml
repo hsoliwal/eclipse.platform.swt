@@ -1,0 +1,95 @@
+name: SWT mobile PR blob reconciliation
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/mobile-pr-reconciliation.yml'
+      - 'mobile/PR_RECONCILIATION_2026-11-15.md'
+      - 'mobile/pending-pr-blobs.tsv'
+      - 'tools/mobile/reconcile_pending_pr.py'
+      - 'tools/mobile/test_reconcile_pending_pr.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-pinned-mobile-sources:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout audit implementation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: audit
+          persist-credentials: false
+
+      - name: Checkout exact pending SWT #362 source
+        uses: actions/checkout@v4
+        with:
+          ref: 3501dca71e25b88f6464cb6855a74c0fe5edbb0a
+          path: candidate
+          persist-credentials: false
+          sparse-checkout: |
+            bundles/org.eclipse.swt/Eclipse SWT/mobile
+            bundles/org.eclipse.swt/Eclipse SWT/android
+            bundles/org.eclipse.swt/Eclipse SWT PI/ios
+          sparse-checkout-cone-mode: false
+
+      - name: Checkout exact merged SWT baseline
+        uses: actions/checkout@v4
+        with:
+          ref: 2d626848385bb14a991cc749dfa293db7e35e26c
+          path: baseline
+          persist-credentials: false
+          sparse-checkout: |
+            bundles/org.eclipse.swt/Eclipse SWT/mobile
+            bundles/org.eclipse.swt/Eclipse SWT/android
+            bundles/org.eclipse.swt/Eclipse SWT PI/ios
+          sparse-checkout-cone-mode: false
+
+      - name: Check immutable commit identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C candidate rev-parse HEAD)" = "3501dca71e25b88f6464cb6855a74c0fe5edbb0a"
+          test "$(git -C baseline rev-parse HEAD)" = "2d626848385bb14a991cc749dfa293db7e35e26c"
+
+      - name: Lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          python3 -m tabnanny audit/tools/mobile/reconcile_pending_pr.py audit/tools/mobile/test_reconcile_pending_pr.py > evidence/lint.log 2>&1
+
+      - name: Compile
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile audit/tools/mobile/reconcile_pending_pr.py audit/tools/mobile/test_reconcile_pending_pr.py > evidence/compile.log 2>&1
+
+      - name: Unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s audit/tools/mobile -p 'test_reconcile_pending_pr.py' -v > evidence/tests.log 2>&1
+
+      - name: Audit exact source blobs (runtime)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 audit/tools/mobile/reconcile_pending_pr.py \
+            --candidate candidate \
+            --baseline baseline \
+            --manifest audit/mobile/pending-pr-blobs.tsv \
+            --report evidence/source-identity.json > evidence/runtime.log 2>&1
+          python3 -c 'import json; d=json.load(open("evidence/source-identity.json", encoding="utf-8")); assert d["summary"] == {"inspected": 17, "identical": 0, "different": 17}, d["summary"]'
+
+      - name: Retain deterministic evidence and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swt-mobile-pr-blob-reconciliation
+          path: evidence/
+          if-no-files-found: warn
+          retention-days: 14
