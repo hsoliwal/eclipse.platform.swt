@@ -3,8 +3,9 @@
 """Review default SWT JUnit suite reachability without hiding existing omissions.
 
 A strict *preflight* ratchets the known omission baseline: newly unreferenced
-test-like classes or disappearing baseline sources are errors. Release mode
-requires ZERO unreferenced test-like classes, but this is not a substitute for
+test-like classes, disappearing baseline sources, or obsolete baseline entries
+whose tests are now reachable are errors. Release mode requires ZERO
+unreferenced test-like classes, but this is not a substitute for
 Surefire execution receipts or line/branch/native coverage.
 """
 from __future__ import annotations
@@ -90,8 +91,10 @@ def audit(root: Path, baseline: Path = DEFAULT_BASELINE) -> dict:
     unreferenced = candidates - registered
     new_omissions = unreferenced - remembered
     missing_baseline_sources = remembered - candidates
+    stale_baseline_entries = remembered & registered
     nonregression_pass = bool(candidates) and not (
-        new_omissions or missing_baseline_sources or missing_references)
+        new_omissions or missing_baseline_sources or missing_references
+        or stale_baseline_entries)
     candidate_files = {TEST_DIR / (name + ".java") for name in candidates}
     suite_files = {TEST_DIR / (name + ".java") for name in suite_nodes}
     return {
@@ -107,6 +110,7 @@ def audit(root: Path, baseline: Path = DEFAULT_BASELINE) -> dict:
         "unreferenced": sorted(unreferenced),
         "new_omissions": sorted(new_omissions),
         "baseline_source_disappearances": sorted(missing_baseline_sources),
+        "stale_baseline_entries": sorted(stale_baseline_entries),
         "missing_suite_references": sorted(missing_references),
         "suites_seen": {key: len(value) for key, value in sorted(suite_nodes.items())},
         "nonregression_pass": nonregression_pass,
@@ -123,7 +127,7 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=Path("."))
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
     parser.add_argument("--strict", action="store_true",
-                        help="refuse new omissions, removed baseline files and missing references")
+                        help="refuse new omissions, missing sources/references and stale baseline entries")
     parser.add_argument("--release", action="store_true",
                         help="additionally require zero omissions (still not full release readiness)")
     parser.add_argument("--json-out", type=Path)
