@@ -595,7 +595,7 @@ public final class AndroidPlatform implements MobilePlatform {
 			super.onInitializeAccessibilityNodeInfo(info);
 			info.setEnabled(isEnabled() && (accessibleState & ACC.STATE_DISABLED) == 0);
 			info.setFocusable(isFocusable());
-			info.setClickable((kind == CANVAS && role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST)
+			info.setClickable((kind == CANVAS && role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST && role != ACC.ROLE_TABLE)
 					|| role == ACC.ROLE_COMBOBOX);
 			info.setSelected((accessibleState & ACC.STATE_SELECTED) != 0);
 			if (role == ACC.ROLE_CHECKBUTTON || role == ACC.ROLE_RADIOBUTTON) {
@@ -615,7 +615,7 @@ public final class AndroidPlatform implements MobilePlatform {
 				default -> "android.view.View";
 			};
 			info.setClassName(className);
-			if ((kind == CANVAS && role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST)
+			if ((kind == CANVAS && role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST && role != ACC.ROLE_TABLE)
 					|| role == ACC.ROLE_COMBOBOX)
 				info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK);
 			if (role == ACC.ROLE_SLIDER || role == ACC.ROLE_LIST || role == ACC.ROLE_TABLE) {
@@ -624,7 +624,7 @@ public final class AndroidPlatform implements MobilePlatform {
 			}
 		}
 		@Override public boolean performAccessibilityAction(int action, Bundle arguments) {
-			if ((role == ACC.ROLE_SLIDER || role == ACC.ROLE_LIST) && isEnabled()
+			if ((role == ACC.ROLE_SLIDER || role == ACC.ROLE_LIST || role == ACC.ROLE_TABLE) && isEnabled()
 					&& (action == AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
 					|| action == AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD)) {
 				EventSink receiver = sink;
@@ -634,7 +634,7 @@ public final class AndroidPlatform implements MobilePlatform {
 				callback(() -> receiver.accessibility(id, code));
 				return true;
 			}
-			if (role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST && action == AccessibilityNodeInfo.ACTION_CLICK && isEnabled()) {
+			if (role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST && role != ACC.ROLE_TABLE && action == AccessibilityNodeInfo.ACTION_CLICK && isEnabled()) {
 				EventSink receiver = sink;
 				if (receiver == null || id == 0) return false;
 				callback(() -> receiver.accessibility(id, ACTION_ACTIVATE)); return true;
