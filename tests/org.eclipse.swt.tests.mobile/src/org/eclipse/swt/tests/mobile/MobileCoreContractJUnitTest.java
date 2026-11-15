@@ -38,5 +38,14 @@ public final class MobileCoreContractJUnitTest {
 	@Test void originalMobileComboTextListPopupAndSelection() {
 		MobileCoreContractTest.testMobileComboContracts();
 	}
+	@Test void mobileListHighIndicesStayWithinSmallHeap() throws Exception {
+		MobileListContractTest.testBoundedHeapProcess();
+	}
+	@Test void mobileListMatchesStructuralAndSelectionOracle() {
+		MobileListContractTest.testStructuralAndSelectionOracle();
+	}
+	@Test void mobileListSetDataCanChangeItsOwner() {
+		MobileListContractTest.testSetDataReentrancy();
+	}
 
 }

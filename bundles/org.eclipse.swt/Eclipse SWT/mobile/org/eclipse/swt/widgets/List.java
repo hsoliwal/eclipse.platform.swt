@@ -5,7 +5,6 @@
 package org.eclipse.swt.widgets;
 
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Objects;
 
 import org.eclipse.swt.SWT;
@@ -17,11 +16,14 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.internal.ViewportRuntime;
+import org.eclipse.swt.internal.residency.ItemSparseTable;
 
 /**
  * Original SWT List API using the existing Android/iOS SWT native-backed
- * Control, GC and input event owners. The Java model is segmented into arrays;
- * VIRTUAL counts can be large without allocating one object per logical row.
+ * Control, GC and input event owners. Text and active callbacks use the original
+ * sparse item table; selection uses the original packed range model. Storage
+ * grows with materialized rows and selection ranges, not the highest row index.
  * Rendering and hit testing access only the visible row window.
  *
  * No native ScrollBar widget is implied: this List owns a software scroll
@@ -29,12 +31,9 @@ import org.eclipse.swt.graphics.Rectangle;
  * platform implementations and public package names remain unchanged.
  */
 public class List extends Scrollable {
-    private static final int PAGE_SHIFT = 8;
-    private static final int PAGE_SIZE = 1 << PAGE_SHIFT;
-    private static final int PAGE_MASK = PAGE_SIZE - 1;
-    private String[][] pages = new String[0][];
-    private final BitSet selected = new BitSet();
-    private final BitSet resolving = new BitSet();
+    private final ItemSparseTable items = new ItemSparseTable();
+    private final ViewportRuntime.Selection selected = new ViewportRuntime.Selection();
+    private final ItemSparseTable resolving = new ItemSparseTable();
     private int count, topIndex, focusIndex = -1, anchorIndex = -1;
     private int rowHeight;
     private int pointerY;
@@ -112,30 +111,45 @@ public class List extends Scrollable {
         if (index < 0 || index >= count) SWT.error(SWT.ERROR_INVALID_RANGE);
     }
     private String slot(int index) {
-        int page = index >>> PAGE_SHIFT;
-        return page >= pages.length || pages[page] == null ? null : pages[page][index & PAGE_MASK];
+        return (String) items.get(index);
     }
     private void slot(int index, String value) {
-        int page = index >>> PAGE_SHIFT;
-        if (value == null && (page >= pages.length || pages[page] == null)) return;
-        if (page >= pages.length) {
-            int next = Math.max(page + 1, pages.length + Math.max(8, pages.length >>> 1));
-            pages = Arrays.copyOf(pages, next);
-        }
-        if (pages[page] == null) pages[page] = new String[PAGE_SIZE];
-        pages[page][index & PAGE_MASK] = value;
+        items.put(index, value);
     }
     private String textAt(int index) {
         if (isDisposed() || index < 0 || index >= count) return "";
         String value = slot(index);
-        if (value != null || !virtual() || resolving.get(index)) return value == null ? "" : value;
-        resolving.set(index);
+        if (value != null || !virtual() || resolving.get(index) != null) return value == null ? "" : value;
+        resolving.put(index, Boolean.TRUE);
         try {
             Event event = new Event();
             event.index = index;
             sendEvent(SWT.SetData, event);
-        } finally { resolving.clear(index); }
+        } finally { resolving.put(index, null); }
         return isDisposed() || index >= count ? "" : Objects.requireNonNullElse(slot(index), "");
+    }
+    private int nextSelected(int from) {
+        if (from >= count) return -1;
+        int low = 0, high = selected.rangeCount();
+        while (low < high) {
+            int mid = (low + high) >>> 1;
+            if (selected.rangeEndExclusive(mid) <= from) low = mid + 1;
+            else high = mid;
+        }
+        if (!selected.complementMode())
+            return low == selected.rangeCount() ? -1 : Math.max(from, selected.rangeStart(low));
+        int next = low < selected.rangeCount() && selected.rangeStart(low) <= from
+                ? selected.rangeEndExclusive(low) : from;
+        return next < count ? next : -1;
+    }
+    private int selectedInRange(int start, int end) {
+        int represented = 0;
+        for (int i = 0; i < selected.rangeCount(); i++) {
+            int a = selected.rangeStart(i), b = selected.rangeEndExclusive(i);
+            if (a >= end) break;
+            if (b > start) represented += Math.min(b, end) - Math.max(a, start);
+        }
+        return selected.complementMode() ? end - start - represented : represented;
     }
     private int maxTop() { return Math.max(0, count - 1); }
     private void scrollBy(long amount) {
@@ -150,7 +164,7 @@ public class List extends Scrollable {
     }
     private void keyInput(int key, int stateMask) {
         if (!isEnabled() || !isVisible() || count == 0) return;
-        int current = focusIndex >= 0 ? focusIndex : selected.nextSetBit(0);
+        int current = focusIndex >= 0 ? focusIndex : nextSelected(0);
         if (current < 0) current = 0;
         int pageRows = Math.max(1, getClientArea().height / getItemHeight());
         int target = switch (key) {
@@ -171,17 +185,19 @@ public class List extends Scrollable {
         boolean changed;
         if (shift) {
             int anchor = anchorIndex >= 0 ? anchorIndex : focusIndex >= 0 ? focusIndex : index;
-            BitSet previous = (BitSet) selected.clone();
+            int start = Math.min(anchor, index), end = Math.max(anchor, index) + 1;
+            int before = selected.selectedCount();
+            int covered = selectedInRange(start, end);
+            changed = ctrl ? covered != end - start : before != end - start || covered != before;
             if (!ctrl) selected.clear();
-            selected.set(Math.min(anchor, index), Math.max(anchor, index) + 1);
-            changed = !selected.equals(previous);
+            selected.selectRange(start, end);
         } else if (ctrl) {
-            selected.flip(index);
+            selected.setSelected(index, !selected.isSelected(index));
             changed = true;
             anchorIndex = index;
         } else {
-            changed = selected.cardinality() != 1 || !selected.get(index);
-            selected.clear(); selected.set(index);
+            changed = selected.selectedCount() != 1 || !selected.isSelected(index);
+            selected.clear(); selected.setSelected(index, true);
             anchorIndex = index;
         }
         focusIndex = index;
@@ -199,20 +215,13 @@ public class List extends Scrollable {
         else if ((long)index >= (long)topIndex + rows) scrollBy((long)index - topIndex - rows + 1);
     }
     private void shiftSelectionRight(int index) {
-        for (int i = selected.previousSetBit(count - 1); i >= index && i >= 0; i = selected.previousSetBit(i - 1)) {
-            selected.clear(i);
-            selected.set(i + 1);
-        }
+        selected.insert(index, 1);
         if (focusIndex >= index) focusIndex++;
         if (anchorIndex >= index) anchorIndex++;
     }
     private void shiftSelectionLeft(int start, int end) {
         int length = end - start + 1;
-        selected.clear(start, end + 1);
-        for (int i = selected.nextSetBit(end + 1); i >= 0; i = selected.nextSetBit(i + 1)) {
-            selected.clear(i);
-            selected.set(i - length);
-        }
+        selected.remove(start, length);
         focusIndex = focusIndex >= start && focusIndex <= end ? -1 : focusIndex > end ? focusIndex - length : focusIndex;
         anchorIndex = anchorIndex >= start && anchorIndex <= end ? -1 : anchorIndex > end ? anchorIndex - length : anchorIndex;
     }
@@ -225,7 +234,7 @@ public class List extends Scrollable {
         if (index < 0 || index > count) SWT.error(SWT.ERROR_INVALID_RANGE);
         if (count == Integer.MAX_VALUE) SWT.error(SWT.ERROR_ITEM_NOT_ADDED);
         shiftSelectionRight(index);
-        for (int i = count; i > index; i--) slot(i, slot(i - 1));
+        items.shift(index, 1);
         slot(index, string);
         count++;
         if (index < topIndex) topIndex++;
@@ -237,19 +246,19 @@ public class List extends Scrollable {
     public void clear(int index) { checkWidget(); range(index); slot(index, virtual() ? null : ""); redraw(); }
     /** Unset all text cells without changing the logical item count or selection. */
     public void clearAll() {
-        checkWidget(); Arrays.fill(pages, null); redraw();
+        checkWidget(); items.truncate(0); redraw();
     }
     /** Silently deselect one item. */
-    public void deselect(int index) { checkWidget(); if (index >= 0 && index < count) { selected.clear(index); redraw(); } }
+    public void deselect(int index) { checkWidget(); if (index >= 0 && index < count) { selected.setSelected(index, false); redraw(); } }
     /** Silently deselect the inclusive index range. */
     public void deselect(int start, int end) {
         checkWidget(); if (start > end || end < 0 || start >= count) return;
-        selected.clear(Math.max(0, start), (int)Math.min((long)count, (long)end + 1)); redraw();
+        selected.deselectRange(Math.max(0, start), (int)Math.min((long)count, (long)end + 1)); redraw();
     }
     /** Silently deselect all valid indices. */
     public void deselect(int[] indices) {
         checkWidget(); if (indices == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-        for (int index : indices) if (index >= 0 && index < count) selected.clear(index);
+        for (int index : indices) if (index >= 0 && index < count) selected.setSelected(index, false);
         redraw();
     }
     /** Silently deselect every row. */
@@ -282,23 +291,24 @@ public class List extends Scrollable {
     }
     /** Return the selected texts in ascending row order. */
     public String[] getSelection() {
-        checkWidget(); String[] result = new String[selected.cardinality()];
+        checkWidget(); String[] result = new String[selected.selectedCount()];
         int n = 0;
-        for (int index = selected.nextSetBit(0); index >= 0 && index < count; index = index == Integer.MAX_VALUE ? -1 : selected.nextSetBit(index + 1)) {
+        for (int index = nextSelected(0); index >= 0 && index < count; index = nextSelected(index + 1)) {
+            // An earlier SetData callback may select additional later rows.
+            if (n == result.length)
+                result = Arrays.copyOf(result, Math.max(n + 1, n + (n >>> 1)));
             result[n++] = textAt(index);
             if (isDisposed()) break;
         }
         return n == result.length ? result : Arrays.copyOf(result, n);
     }
     /** Return the number of selected rows. */
-    public int getSelectionCount() { checkWidget(); return selected.cardinality(); }
+    public int getSelectionCount() { checkWidget(); return selected.selectedCount(); }
     /** Return the first selection index, or -1. */
-    public int getSelectionIndex() { checkWidget(); return selected.nextSetBit(0); }
+    public int getSelectionIndex() { checkWidget(); return nextSelected(0); }
     /** Return selected indices ascending. */
     public int[] getSelectionIndices() {
-        checkWidget(); int[] result = new int[selected.cardinality()]; int n = 0;
-        for (int index = selected.nextSetBit(0); index >= 0; index = index == Integer.MAX_VALUE ? -1 : selected.nextSetBit(index + 1)) result[n++] = index;
-        return result;
+        checkWidget(); return selected.toArray();
     }
     /** Return the first visible logical row. */
     public int getTopIndex() { checkWidget(); return topIndex; }
@@ -311,7 +321,7 @@ public class List extends Scrollable {
         return -1;
     }
     /** Test whether a row is selected. */
-    public boolean isSelected(int index) { checkWidget(); return index >= 0 && index < count && selected.get(index); }
+    public boolean isSelected(int index) { checkWidget(); return index >= 0 && index < count && selected.isSelected(index); }
     /** Remove exactly one item. */
     public void remove(int index) { remove(index, index); }
     /** Remove an inclusive range without emitting selection events. */
@@ -320,8 +330,8 @@ public class List extends Scrollable {
         if (start < 0 || end < start || end >= count) SWT.error(SWT.ERROR_INVALID_RANGE);
         int length = end - start + 1;
         shiftSelectionLeft(start, end);
-        for (int i = start; i < count - length; i++) slot(i, slot(i + length));
-        for (int i = count - length; i < count; i++) slot(i, null);
+        items.removeRange(start, end + 1);
+        items.shift(end + 1, -length);
         count -= length;
         topIndex = Math.min(topIndex, maxTop()); redraw();
     }
@@ -342,8 +352,8 @@ public class List extends Scrollable {
     }
     /** Remove all items and their selection. */
     public void removeAll() {
-        checkWidget(); Arrays.fill(pages, null); count = 0;
-        selected.clear(); resolving.clear(); topIndex = 0; focusIndex = anchorIndex = -1;
+        checkWidget(); items.truncate(0); count = 0;
+        selected.clear(); selected.setLogicalCount(0); resolving.truncate(0); topIndex = 0; focusIndex = anchorIndex = -1;
         redraw();
     }
     /** Remove registered selection callbacks. */
@@ -356,7 +366,7 @@ public class List extends Scrollable {
         checkWidget();
         if (index < 0 || index >= count) return;
         if (!multi()) selected.clear();
-        selected.set(index); focusIndex = anchorIndex = index; redraw();
+        selected.setSelected(index, true); focusIndex = anchorIndex = index; redraw();
     }
     /** Silently select an inclusive range, ignored when SINGLE and nontrivial. */
     public void select(int start, int end) {
@@ -364,7 +374,7 @@ public class List extends Scrollable {
         if (start > end || start >= count || end < 0 || (!multi() && start != end)) return;
         int a = Math.max(0, start), b = Math.min(count - 1, end);
         if (!multi()) selected.clear();
-        selected.set(a, b + 1); focusIndex = b; anchorIndex = a; redraw();
+        selected.selectRange(a, b + 1); focusIndex = b; anchorIndex = a; redraw();
     }
     /** Silently select specified indices. */
     public void select(int[] indices) {
@@ -372,14 +382,14 @@ public class List extends Scrollable {
         if (!multi() && indices.length != 1) return;
         for (int index : indices) if (index >= 0 && index < count) {
             if (!multi()) selected.clear();
-            selected.set(index); focusIndex = anchorIndex = index;
+            selected.setSelected(index, true); focusIndex = anchorIndex = index;
         }
         redraw();
     }
     /** Silently select all rows only in SWT.MULTI mode. */
     public void selectAll() {
         checkWidget(); if (!multi()) return;
-        selected.set(0, count); redraw();
+        selected.selectAll(); redraw();
     }
     /** Replace a single text cell without changing its selected state. */
     public void setItem(int index, String string) {
@@ -390,15 +400,9 @@ public class List extends Scrollable {
     public void setItemCount(int requested) {
         checkWidget(); int next = Math.max(0, requested);
         if (next == count) return;
+        selected.setLogicalCount(next);
         if (next < count) {
-            selected.clear(next, count);
-            int lastPage = next >>> PAGE_SHIFT;
-            if (lastPage < pages.length) {
-                if ((next & PAGE_MASK) != 0 && pages[lastPage] != null)
-                    Arrays.fill(pages[lastPage], next & PAGE_MASK, PAGE_SIZE, null);
-                int firstWholePage = lastPage + ((next & PAGE_MASK) == 0 ? 0 : 1);
-                Arrays.fill(pages, firstWholePage, pages.length, null);
-            }
+            items.truncate(next);
             if (focusIndex >= next) focusIndex = -1;
             if (anchorIndex >= next) anchorIndex = -1;
         }
@@ -408,9 +412,9 @@ public class List extends Scrollable {
     public void setItems(String... values) {
         checkWidget(); if (values == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
         for (String value : values) if (value == null) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-        Arrays.fill(pages, null); count = values.length;
+        items.truncate(0); count = values.length;
         for (int i = 0; i < count; i++) slot(i, values[i]);
-        selected.clear(); resolving.clear(); topIndex = 0; focusIndex = anchorIndex = -1;
+        selected.clear(); selected.setLogicalCount(count); resolving.truncate(0); topIndex = 0; focusIndex = anchorIndex = -1;
         redraw();
     }
     /** Replace selection with one index. */
@@ -436,7 +440,7 @@ public class List extends Scrollable {
     /** Scroll the receiver to a valid zero-based top row. */
     public void setTopIndex(int index) { checkWidget(); if (index >= 0 && index < count && index != topIndex) { topIndex = index; redraw(); } }
     /** Ensure the first selected row is visible. */
-    public void showSelection() { checkWidget(); int index = selected.nextSetBit(0); if (index >= 0) showIndex(index); }
+    public void showSelection() { checkWidget(); int index = nextSelected(0); if (index >= 0) showIndex(index); }
     /** Font change invalidates the native-row height cache. */
     @Override public void setFont(Font font) { super.setFont(font); rowHeight = 0; redraw(); }
     /** SWT preferred size for a text list. */
@@ -461,7 +465,7 @@ public class List extends Scrollable {
             int y = offset * height;
             String text = textAt(index);
             if (isDisposed()) return;
-            boolean active = selected.get(index);
+            boolean active = index < count && selected.isSelected(index);
             if (active) {
                 if (selectedBg == null) {
                     selectedBg = display.getSystemColor(SWT.COLOR_LIST_SELECTION);

@@ -19,7 +19,7 @@ resource-lifetime problem; use Platform UI for JFace viewers and workbench parts
 
 This fork also contains a bounded mobile implementation of the original SWT
 `Display`, `Shell`, `Control`, `Canvas`, graphics and event-loop owners, with
-`Button`, `Label`, `ProgressBar`, `Scale`, `List` and native-editor `Text` source
+`Button`, `Label`, `ProgressBar`, `Scale`, `List`, native-editor `Text` and `Combo` source
 sets. Start with the [mobile build and scope guide](mobile/README.md) and its
 [explicit source manifest](mobile/source-manifest.json).
 

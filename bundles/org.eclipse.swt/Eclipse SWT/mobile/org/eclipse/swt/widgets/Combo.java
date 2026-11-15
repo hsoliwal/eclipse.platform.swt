@@ -214,8 +214,6 @@ public class Combo extends Composite {
     }
     /** Register original SWT Verify listeners. */
     public void addVerifyListener(VerifyListener listener) { addTypedListener(listener, SWT.Verify); }
-    /** Accept the original SWT segment-listener API (native bidi shaping is unqualified). */
-    public void addSegmentListener(SegmentListener listener) { addTypedListener(listener, SWT.Segments); }
     /** Bidi segment listeners require a qualified mobile native text segment owner. */
     public void addSegmentListener(SegmentListener listener) {
         checkWidget();
@@ -334,8 +332,6 @@ public class Combo extends Composite {
     }
     /** Remove original SWT Verify listeners. */
     public void removeVerifyListener(VerifyListener listener) { removeTypedListener(SWT.Verify, listener); }
-    /** Remove an SWT segment listener without changing the text owner. */
-    public void removeSegmentListener(SegmentListener listener) { removeTypedListener(SWT.Segments, listener); }
     /** Select one item programmatically, without sending SWT.Selection. */
     public void select(int index) { checkWidget(); choose(index, false); }
     /** Replace a list entry without sending selection events. */

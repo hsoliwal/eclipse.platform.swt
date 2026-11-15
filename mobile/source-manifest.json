@@ -595,7 +595,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWT.java",
-      "sha256": "4e6c946b8f1a09b5fe54cacde4b8c6f0c0dea55d34890ec028d672f8c2630988"
+      "sha256": "6be60bc57f7d2cb45a8efebe0c3e302790c1ca348a8116078510bf30846843b3"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWTError.java",
@@ -700,7 +700,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Combo.java",
-      "sha256": "d459249e713db868ae160486ea11d807ae68517c51bb9ba0bc8b990b42a7e05f"
+      "sha256": "b6f5a40c26c66fe52f2631ad7538a1af8bc171d3692e1c1d998649c91b64d52b"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Composite.java"
@@ -720,7 +720,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/List.java",
-      "sha256": "87502a5645b6005a25134bf5719bdbb31093538bed2538003419c14231581222"
+      "sha256": "2f7ce1c7d72473a2ab15c0a360725150989fc1a280ce7c818f180741a5266722"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/ProgressBar.java",
@@ -742,6 +742,18 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Widget.java"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/ViewportRuntime.java",
+      "sha256": "3a1eec24bf7fe02b3947ca9f167af08d7b472f76a43fe740a1804ca02f6c2d46"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/PackedHeapGrowth.java",
+      "sha256": "3be327460db7e1a6ce2606c26fb95cde1397fa1b399a3b0206b22700f066a47b"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/residency/ItemSparseTable.java",
+      "sha256": "0ec8e9a29465e713fd979e860240fabcfa9e7b7c93adaf2a3c442844c0bae22b"
     }
   ],
   "platforms": {
@@ -797,6 +809,9 @@
     },
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCoreContractJUnitTest.java"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileListContractTest.java"
     }
   ]
 }
