@@ -7,6 +7,7 @@ package org.eclipse.swt.widgets;
 import java.util.Arrays;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.accessibility.ACC;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SegmentListener;
 import org.eclipse.swt.events.SelectionListener;
@@ -71,6 +72,7 @@ public class Combo extends Composite {
             if (isDisposed()) return;
             selectionIndex = indexOf(text.getText());
             syncListSelection();
+            publishAccessibility();
             sendEvent(SWT.Modify, new Event());
         });
         text.addListener(SWT.DefaultSelection, event -> sendEvent(SWT.DefaultSelection, new Event()));
@@ -82,9 +84,18 @@ public class Combo extends Composite {
             }
         });
         addListener(SWT.Resize, event -> layoutInternals());
+        addListener(SWT.MouseUp, event -> {
+            if (event.button == 1 && !simple() && isEnabled()) setListVisible(true);
+        });
+        publishAccessibility();
         layoutInternals();
     }
 
+    private void publishAccessibility() {
+        if (isDisposed()) return;
+        display.internal_platform().setAccessibility(peer, "Combo " + text.getText(),
+                ACC.ROLE_COMBOBOX, isEnabled() ? ACC.STATE_NORMAL : ACC.STATE_DISABLED);
+    }
     private boolean simple() { return (style & SWT.SIMPLE) != 0; }
     private boolean readOnly() { return (style & SWT.READ_ONLY) != 0; }
     private void valid(int index) {
@@ -181,6 +192,18 @@ public class Combo extends Composite {
     }
     /** Register original SWT Verify listeners. */
     public void addVerifyListener(VerifyListener listener) { addTypedListener(listener, SWT.Verify); }
+    /** Bidi segment listeners require a qualified mobile native text segment owner. */
+    public void addSegmentListener(SegmentListener listener) {
+        checkWidget();
+        if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        throw new UnsupportedOperationException("Mobile Combo bidi segments are not yet supported");
+    }
+    /** Bidi segment listeners require a qualified mobile native text segment owner. */
+    public void removeSegmentListener(SegmentListener listener) {
+        checkWidget();
+        if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        throw new UnsupportedOperationException("Mobile Combo bidi segments are not yet supported");
+    }
     /** Clear the editor selection without changing the selected list item. */
     public void clearSelection() { checkWidget(); text.clearSelection(); }
     /** Copy the native editor's selected text using the OS clipboard. */
@@ -356,6 +379,7 @@ public class Combo extends Composite {
             if (arrow != null && !arrow.isDisposed()) arrow.setEnabled(enabled);
             if (list != null && !list.isDisposed()) list.setEnabled(enabled);
             if (!enabled && !simple()) setListVisible(false);
+            publishAccessibility();
         }
     }
     /** Hide open popups with their Combo owner. */
