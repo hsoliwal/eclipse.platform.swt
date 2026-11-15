@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "passive_receipt": true,
+  "license": "Apache-2.0",
+  "workorder": "ui-superset-efficiency-20261115",
+  "repository": "hsoliwal/eclipse.platform.swt",
+  "base_revision": "f7e2a27ac1d544d7ed0fb9ef5c70aeb69ec2af79",
+  "canonical_engine": {
+    "repository": "hsoliwal/com.synexia",
+    "owner_revision": "b6638d5b1cdfe0227a16ce1e8bc653d071132f44",
+    "owners": [
+      "M3HashPinnedJavaSnapshotRecipe",
+      "M3HashPinnedTextSnapshotRecipe"
+    ],
+    "packet_location": "synexia-openrewrite-recipes/crates/ui-superset-efficiency-20261115",
+    "recipe_ids": [
+      "ui-superset-efficiency-20261115-swt-java"
+    ]
+  },
+  "outputs": [
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/VirtualLongIntTable.java",
+      "before_sha256": "031711b513fcc95ccb110d750eb23c1e36b1009a74d16af6d0c32934638aa2e9",
+      "after_sha256": "d5a2336a81598b4824bbd6d97d0fa43c6973bca5680920c2415e55f9b8a6e3cf"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/AllTests.java",
+      "before_sha256": "c74ad6da67b19b1d800bc5c9d995f42bcb2a4162e8e059279df09d39c0dbb112",
+      "after_sha256": "579a76be04a2794de6096214f35db6284716dd8caa1978589ffb9d9e8af7cba0"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_VirtualLongIntTable.java",
+      "before_sha256": "ABSENT",
+      "after_sha256": "b36a0964b501131bd7559d42ef7261d1d922962b96bc31a8e294cc662e5927d1"
+    }
+  ],
+  "implementation": "Replace existing primitive-table values without growing or reallocating either backing array. New-key growth behavior is retained.",
+  "compatibility_contract": "One-way upstream compatibility: retain API descriptors, identities, callback demand and order, threading, lifecycle and prior optimizations. Widgets retain their existing viewport ownership.",
+  "sdk_verification": {
+    "exact_output": "PASS",
+    "fixed_point_changed_files": 0,
+    "input_order_independence": "PASS",
+    "source_drift_refusal": "PASS",
+    "required_input_missing_refusal": "PASS",
+    "duplicate_target_refusal": "PASS"
+  },
+  "qualification": {
+    "owner_junit_tests_passed": 9,
+    "existing_resident_plan_tests_passed": 10,
+    "frozen_operations": 100000,
+    "frozen_behavior_sha256": "b8f92c81307279678604efb253a8aecee5054822ebd17cdbfa83004c9d332846",
+    "strict_java21_owner_compile": "PASS",
+    "jvm_fields_and_method_descriptors": "UNCHANGED",
+    "default_suite_class_reachability": "325/325; reachability only, not 325 executed tests"
+  },
+  "resource_observation": {
+    "scenario": "Replace an existing key at 524288 entries",
+    "before_allocated_bytes": 25165856,
+    "after_allocated_bytes": 0,
+    "before_capacity": 1048576,
+    "baseline_capacity_after_replacement": 2097152,
+    "candidate_capacity_after_replacement": 1048576
+  },
+  "remaining_gates": [
+    "Full offline Maven/Tycho verify stopped before compilation because inherited Tycho5.0.4 artifacts were unavailable.",
+    "Native GUI, other operating systems and complete SWT suite were not executed."
+  ],
+  "scope": "Only the listed outputs are admitted by this packet. This receipt does not assert whole-toolkit completion, universal speedup, release approval or full platform qualification."
+}

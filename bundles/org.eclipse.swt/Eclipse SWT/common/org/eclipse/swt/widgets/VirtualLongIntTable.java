@@ -17,8 +17,8 @@ package org.eclipse.swt.widgets;
 import java.util.*;
 
 /**
- * A <code>long -> int</code> table: open addressing with linear probing over two parallel arrays, so a lookup, an
- * insert or a removal allocates nothing (no boxed keys, no entry nodes). Values are non-negative; a missing key
+ * A <code>long -> int</code> table: open addressing with linear probing over two parallel arrays, so a lookup, a
+ * replacement or a removal allocates nothing (no boxed keys, no entry nodes). Values are non-negative; a missing key
  * answers -1. The load stays at most 1/2. A removal shifts the later entries of its probe cluster back into the hole,
  * so no tombstones are left. Used for the resident windows of the viewports (row key or native handle to window
  * entry, re-indexed by {@link #clear()}) and for the row-id positions of the row models.
@@ -59,10 +59,16 @@ final class VirtualLongIntTable {
 	 */
 	int put (long key, int value) {
 		if (value < 0) throw new IllegalArgumentException ("negative value");
-		if ((size + 1) * 2 > keys.length) grow ();
 		int mask = keys.length - 1;
 		for (int i = mix (key) & mask;; i = (i + 1) & mask) {
 			if (values [i] == 0) {
+				// Only a new key needs room; replacing a value never grows the lanes.
+				if ((size + 1) * 2 > keys.length) {
+					grow ();
+					mask = keys.length - 1;
+					i = mix (key) & mask;
+					while (values [i] != 0) i = (i + 1) & mask;
+				}
 				keys [i] = key;
 				values [i] = value + 1;
 				size++;
