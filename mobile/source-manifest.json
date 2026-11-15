@@ -708,14 +708,14 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java",
-      "sha256": "656b2280b8927281a3c95bdf887d76a323ae28079e3999577a482f955c763bac"
+      "sha256": "9c408f331401de0e07cd59b071f9dd528c27fdec20c71f98da9f34b10ac3b9fc"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Decorations.java"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java",
-      "sha256": "762333045892e54d85004990be91d742c333ff8c995ba1f03d58b6226cc679fb"
+      "sha256": "cca3e772d9150c79191618d482a83abf7b1b69f4e8ff256e6c9e2d9d125199b0"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Label.java",
@@ -742,11 +742,11 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Shell.java",
-      "sha256": "7dfcf9c826f4d1c8341dbba3c4f9542ffce015d72ec4ea21bf31ac8ae8a9136d"
+      "sha256": "9a1fb0c745933acd45c82eeac6df21f8aa7dd9c8de11b452770136668ce38ae7"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Widget.java",
-      "sha256": "ddbec3ebabad2ffd809f4653ea66cff9fcb903dbcb26483ebcdbaed0a9dbc46c"
+      "sha256": "b8f0370afc38a0174e914147fb371efd5a7bdb56924eda0f917ab8b278c6deaa"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/ViewportRuntime.java",
@@ -843,7 +843,12 @@
     },
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileGraphicsContractJUnitTest.java"
+    },
+    {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileLifecycleContractJUnitTest.java"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileLifecycleContractTest.java"
     }
   ]
 }

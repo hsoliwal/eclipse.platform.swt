@@ -37,7 +37,6 @@ public class Composite extends Scrollable {
 		if (isLayoutDeferred()) return;
 		if (layout != null) { boolean flush = flushNeeded; layoutNeeded = false; flushNeeded = false; layout.layout(this, flush); }
 		if (disposed) return;
-		if (all) for (Control c : getChildren()) if (!c.isDisposed() && c instanceof Composite nested) nested.layout(changed, true);
 		if (all) for (Control c : getChildren()) {
 			if (disposed) return;
 			if (!c.isDisposed() && c instanceof Composite nested) nested.layout(changed, true);
