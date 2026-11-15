@@ -35,9 +35,11 @@ import org.eclipse.swt.internal.PackedHeapGrowth;
  * With m measured rows and a clean prefix cache, offset and repeat measurement
  * are O(log m), row lookup is O(log squared m), and sequential first measurements
  * append in O(log m). A first
- * measurement inserted in the middle, deletion of measurements, or an estimate
- * change is O(m). This is a sparse-residency tradeoff, not a universal speedup.
- * Consecutive middle insertions invalidate the prefix cache; the next query that
+ * measurement inserted in the middle, deletion of measurements in the middle,
+ * or an estimate change is O(m). Removing a measured suffix retains the prefix
+ * cache; locating that suffix is O(log m). This is a sparse-residency tradeoff,
+ * not a universal speedup.
+ * Consecutive middle insertions or removals invalidate the prefix cache; the next query that
  * needs prefix sums rebuilds it once in O(m). Row IDs and extents remain
  * authoritative throughout.
  * No Item/proxy or per-row object is created. Reset drops all measurement backing.
@@ -151,7 +153,9 @@ final class VirtualRowExtents {
 		System.arraycopy (rowIds, at + 1, rowIds, at, measured - at - 1);
 		System.arraycopy (extents, at + 1, extents, at, measured - at - 1);
 		measured--;
-		rebuild ();
+		if (measured == 0) rebuild ();
+		else if (at < measured) treeDirty = true;
+		// Removing the last measurement leaves every retained Fenwick node valid.
 	}
 
 	/** Returns every row from {@code row} on to the estimate (react-window resetAfterIndex). */
@@ -160,7 +164,8 @@ final class VirtualRowExtents {
 		int keep = lowerBound (row);
 		if (keep == measured) return;
 		measured = keep;
-		rebuild ();
+		if (measured == 0) rebuild ();
+		// Truncation preserves the retained prefix; an already dirty cache stays dirty.
 	}
 
 	/** Opens {@code rows} unmeasured rows at {@code index}. */
@@ -184,7 +189,10 @@ final class VirtualRowExtents {
 		measured -= removed;
 		for (int i = left; i < measured; i++) rowIds [i] -= rows;
 		count -= rows;
-		if (removed != 0) rebuild ();
+		if (removed != 0) {
+			if (measured == 0) rebuild ();
+			else if (left < measured) treeDirty = true;
+		}
 	}
 
 	/** Start offset of {@code row}; {@code offsetOf (rowCount ())} is the total extent. */
@@ -230,7 +238,14 @@ final class VirtualRowExtents {
 		}
 		int first = rowAt (offset);
 		out [0] = first;
-		out [1] = viewport == 0 ? first : rowAt (offset + viewport - 1) + 1;
+		if (viewport == 0) {
+			out [1] = first;
+		} else {
+			long tail = viewport - 1L;
+			// rowAt clamps beyond the model; do not wrap a positive endpoint negative.
+			long last = offset > Long.MAX_VALUE - tail ? Long.MAX_VALUE : offset + tail;
+			out [1] = rowAt (last) + 1;
+		}
 	}
 
 	/** Rows a viewport shows, as a range: empty without rows or with an empty viewport. */
