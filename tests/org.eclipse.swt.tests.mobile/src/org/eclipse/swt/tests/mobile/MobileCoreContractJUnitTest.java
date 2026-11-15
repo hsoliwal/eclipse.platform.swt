@@ -20,6 +20,51 @@ public final class MobileCoreContractJUnitTest {
 	@Test void hostTerminationAndBlockedSynchronousCaller() throws Exception {
 		MobileCoreContractTest.testDestructionAndBlockedSyncExec();
 	}
+	@Test void disposingParentCannotCreateAnUnownedChild() {
+		MobileCoreContractTest.testDisposingParentRejectsNewChildren();
+	}
+	@Test void disposingDisplayCannotCreateUnownedWidgets() {
+		MobileCoreContractTest.testDisposingDisplayRejectsNewOwners();
+	}
+	@Test void shellOpeningToleratesListenerDisposal() {
+		MobileCoreContractTest.testShellOpenSurvivesListenerDisposal();
+	}
+	@Test void layoutCallbacksMayDisposeOwnersAndSiblings() {
+		MobileCoreContractTest.testLayoutCallbacksMayDisposeControls();
+	}
+	@Test void hiddenOrDisabledAncestorReleasesFocus() {
+		MobileCoreContractTest.testAncestorStateReleasesFocus();
+	}
+	@Test void nestedFocusChangesKeepTheirActualOwner() {
+		MobileCoreContractTest.testFocusOutReentrancyPreservesOwner();
+	}
+	@Test void failingFocusOutDoesNotRetainNativeOwners() {
+		MobileCoreContractTest.testFailingFocusOutStillReleasesControl();
+	}
+	@Test void disablingMayDisposeTheFocusOwnerOrAncestor() {
+		MobileCoreContractTest.testDisableFocusOutMayDisposeOwners();
+	}
+	@Test void executeNullFollowsExecutorContract() {
+		MobileCoreContractTest.testDisplayExecuteNullContract();
+	}
+	@Test void nullDisposeCallbackIsIgnored() {
+		MobileCoreContractTest.testDisplayDisposeExecNullContract();
+	}
+	@Test void nativePostingRefusesUnsupportedInjectionWithoutSyntheticEvents() throws Exception {
+		MobileCoreContractTest.testUnsupportedNativeEventPosting();
+	}
+	@Test void originalPublicResourceAccessorsRemainCompatible() {
+		MobileCoreContractTest.testMobilePublicResourceAliases();
+	}
+	@Test void equivalentDefaultFontLocalesHaveOneValueIdentity() {
+		MobileCoreContractTest.testFontDataDefaultLocaleNormalization();
+	}
+	@Test void bordersAlignClientCoordinatesImagesAndPrinting() {
+		MobileCoreContractTest.testBorderClientGeometryAndPainting();
+	}
+	@Test void emptyBorderClientReleasesItsImageAfterGcLeases() {
+		MobileCoreContractTest.testEmptyBorderClientReleasesImage();
+	}
 	@Test void ownedShellCoordinatesUseNativeRoot() {
 		MobileCoreContractTest.testOwnedShellCoordinateMapping();
 	}

@@ -4678,26 +4678,28 @@ public boolean post (Event event) {
 				 * 2) event.stateMask -> GdkModifierType(state)
 				 * 3) event.keyCode -> hardware_keycode, GdkModifierType(state) (i.e. SWT.SHIFT)
 				 */
-				int state = type == SWT.KeyDown ? GDK.GDK_KEY_PRESS_MASK : GDK.GDK_KEY_RELEASE_MASK;
-				if (cachedModifierState != 0) {
-					state |= cachedModifierState;
-				}
-				int is_modifier = 1;
-				int modifier = event.stateMask != 0 ? event.stateMask : event.keyCode;
-				switch (modifier) {
-					case SWT.SHIFT: state |= GDK.GDK_SHIFT_MASK; break;
-					case SWT.ALT: state |= GDK.GDK_MOD1_MASK; break;
-					case SWT.CONTROL: state |= GDK.GDK_CONTROL_MASK; break;
-					case SWT.ALT_GR: state |= GDK.GDK_MOD5_MASK; break;
-					default:
-						is_modifier = cachedModifierState == 0 ? 0 : 1;
-				}
-
-				// Save the modifier state pressed until it is released
-				if (is_modifier == 1 && type == SWT.KeyDown) {
-					cachedModifierState = state & (~GDK.GDK_KEY_PRESS_MASK | ~GDK.GDK_KEY_RELEASE_MASK);
-				} else {
-					cachedModifierState = 0;
+				// GdkEventKey.state contains GdkModifierType, never GdkEventMask bits.
+				int state = cachedModifierState;
+				if ((event.stateMask & SWT.SHIFT) != 0) state |= GDK.GDK_SHIFT_MASK;
+				if ((event.stateMask & SWT.ALT) != 0) state |= GDK.GDK_MOD1_MASK;
+				if ((event.stateMask & SWT.CONTROL) != 0) state |= GDK.GDK_CONTROL_MASK;
+				if ((event.stateMask & SWT.ALT_GR) != 0) state |= GDK.GDK_MOD5_MASK;
+				int modifier = switch (event.keyCode) {
+					case SWT.SHIFT -> GDK.GDK_SHIFT_MASK;
+					case SWT.ALT -> GDK.GDK_MOD1_MASK;
+					case SWT.CONTROL -> GDK.GDK_CONTROL_MASK;
+					case SWT.ALT_GR -> GDK.GDK_MOD5_MASK;
+					default -> 0;
+				};
+				int is_modifier = modifier == 0 ? 0 : 1;
+				if (modifier != 0) {
+					// Deliver the state before this transition and retain other held keys.
+					if (type == SWT.KeyDown) {
+						cachedModifierState |= modifier;
+					} else {
+						state |= modifier;
+						cachedModifierState &= ~modifier;
+					}
 				}
 
 				int hardware_keycode = 0;
@@ -4729,10 +4731,10 @@ public boolean post (Event event) {
 					}
 					OS.g_free(keys_list[0]);
 
-					GDK.gdk_keymap_translate_keyboard_state(keymap, hardware_keycode, state, 0, keyval, effective_group, level, consumed_modifiers);
-                    if (is_modifier == 1) {
-                        final_keyval = keyval[0];
-                    }
+					boolean translated = GDK.gdk_keymap_translate_keyboard_state(keymap, hardware_keycode, state, 0, keyval, effective_group, level, consumed_modifiers);
+					if (translated && state != 0) {
+						final_keyval = keyval[0];
+					}
 				}
 
 				/* Construct GdkEventKey */

@@ -120,15 +120,19 @@ public final class IOSPlatform implements MobilePlatform {
 		@Override public void setAlpha(int alpha) { OS.setAlpha(live(), alpha); }
 		@Override public void setLineWidth(float width) { OS.setLineWidth(live(), width); }
 		@Override public void setAntialias(boolean enabled) { OS.setAntialias(live(), enabled); }
+		@Override public void setTextAntialias(boolean enabled) { OS.setTextAntialias(live(), enabled); }
 		@Override public void setFont(String family, float size, int style) { OS.setFont(live(), Objects.requireNonNull(family, "family"), size, style); }
 		@Override public void setTransform(float[] matrix) { OS.setTransform(live(), matrix == null ? null : matrix.clone()); }
 		@Override public void setClipping(int x, int y, int width, int height) { OS.setClipping(live(), true, x, y, width, height); }
 		@Override public void resetClipping() { OS.setClipping(live(), false, 0, 0, 0, 0); }
+		@Override public int[] getClipping() { return OS.getClipping(live()); }
 		@Override public void drawLine(int x1, int y1, int x2, int y2) { OS.drawLine(live(), x1, y1, x2, y2); }
 		@Override public void drawRectangle(int x, int y, int w, int h) { OS.drawShape(live(), 0, false, x, y, w, h); }
 		@Override public void fillRectangle(int x, int y, int w, int h) { OS.drawShape(live(), 0, true, x, y, w, h); }
 		@Override public void drawOval(int x, int y, int w, int h) { OS.drawShape(live(), 1, false, x, y, w, h); }
 		@Override public void fillOval(int x, int y, int w, int h) { OS.drawShape(live(), 1, true, x, y, w, h); }
+		@Override public void drawRoundRectangle(int x, int y, int w, int h, int aw, int ah, boolean fill) { OS.drawRoundRectangle(live(), fill, x, y, w, h, aw, ah); }
+		@Override public void drawArc(int x, int y, int w, int h, int start, int sweep, boolean fill) { OS.drawArc(live(), fill, x, y, w, h, start, sweep); }
 		@Override public void drawPolygon(int[] points, boolean fill) { OS.drawPolygon(live(), Objects.requireNonNull(points, "points"), fill); }
 		@Override public void drawText(String text, int x, int y, int flags) { OS.drawText(live(), Objects.requireNonNull(text, "text"), x, y, flags); }
 		@Override public void drawImage(long image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh) { OS.drawImage(live(), image, sx, sy, sw, sh, dx, dy, dw, dh); }

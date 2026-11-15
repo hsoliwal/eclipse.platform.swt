@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "javaRelease": 21,
-  "swtBaseCommit": "815e208a493e1a47cb734e9a8ca355ef46a5d256",
-  "nebulaBaseCommit": "91d01b4e3ff3ed0c298c4f5c148710b770756932",
-  "scope": "Initial mobile Canvas/Composite/Shell plus Canvas-rendered original Label and Button classes; not complete SWT API coverage.",
+  "swtBaseCommit": "2d626848385bb14a991cc749dfa293db7e35e26c",
+  "nebulaBaseCommit": "b105f8843e5046b4a0e4d84b4778302a7f7ad504",
+  "scope": "Mobile Display/Shell/Canvas and existing Label, Button, ProgressBar, Scale, List, Text, Combo and Table owners; bounded API coverage with separate native platform qualification.",
   "shared": [
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT Accessibility/common/org/eclipse/swt/accessibility/ACC.java",
@@ -11,7 +11,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT PI/common/org/eclipse/swt/internal/Library.java",
-      "sha256": "61c428c0b708af14a03ceaf9391d3a71230d11db86cd1f8fe9084a4ae5a52686"
+      "sha256": "daa14950153c8867ac5fa29086249a163489c425508c15484fdde6fe8d684d28"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/events/ArmEvent.java",
@@ -832,6 +832,12 @@
     },
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileListContractTest.java"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileGraphicsContractTest.java"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileGraphicsContractJUnitTest.java"
     }
   ]
 }

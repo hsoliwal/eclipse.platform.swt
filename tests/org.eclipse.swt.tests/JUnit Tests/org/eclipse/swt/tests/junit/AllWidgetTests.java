@@ -139,6 +139,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_Decorations.class, //
 		Test_org_eclipse_swt_widgets_Dialog.class, //
 		Test_org_eclipse_swt_widgets_Display_WithCrLf.class, //
+		Test_org_eclipse_swt_widgets_Display_PostKeyStateGtk.class, //
 		Test_org_eclipse_swt_widgets_DrawnDeltaRepaint.class, //
 		Test_org_eclipse_swt_widgets_DrawnHiddenViewport.class, //
 		Test_org_eclipse_swt_widgets_DrawnRenderThread.class, //

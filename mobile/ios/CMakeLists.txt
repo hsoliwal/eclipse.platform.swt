@@ -223,6 +223,19 @@ target_link_libraries(swt_ios PUBLIC "-framework UIKit" "-framework CoreGraphics
 add_library(swt_ios_bootstrap OBJECT "${CMAKE_CURRENT_LIST_DIR}/main.m")
 swt_ios_compile(swt_ios_bootstrap)
 
+if(swt_sdk_lower MATCHES "iphonesimulator")
+  # The harness includes this exact native implementation and calls the same
+  # renderer helpers as JNI. It does not provide or simulate a JVM.
+  add_executable(swt_ios_native_tests "${CMAKE_CURRENT_LIST_DIR}/tests/SWTUIKitTests.m")
+  swt_ios_compile(swt_ios_native_tests)
+  target_link_libraries(swt_ios_native_tests PRIVATE "-framework UIKit" "-framework CoreGraphics"
+    "-framework CoreText" "-framework QuartzCore" "-framework Foundation")
+  set_target_properties(swt_ios_native_tests PROPERTIES
+    MACOSX_BUNDLE NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/native-tests/$<CONFIG>"
+    XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO)
+endif()
+
 if(SWT_IOS_BUILD_APP)
   add_executable(SWTMobile MACOSX_BUNDLE $<TARGET_OBJECTS:swt_ios_bootstrap>)
   set_target_properties(SWTMobile PROPERTIES

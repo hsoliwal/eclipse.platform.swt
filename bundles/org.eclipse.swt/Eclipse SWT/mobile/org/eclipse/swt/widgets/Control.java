@@ -46,9 +46,12 @@ public abstract class Control extends Widget implements Drawable {
 	}
 	@Override void releaseParent() { if (parent != null) parent.removeChild(this); parent = null; }
 	@Override void releaseWidget() {
-		display.unregister(this);
-		try { if (image != null) image.internal_disposeWhenUnused(); }
-		finally { image = null; display.internal_platform().disposeControl(peer); peer = 0; }
+		try { display.clearFocus(this); }
+		finally {
+			display.unregister(this);
+			try { if (image != null) image.internal_disposeWhenUnused(); }
+			finally { image = null; display.internal_platform().disposeControl(peer); peer = 0; }
+		}
 	}
 	public Composite getParent() { checkWidget(); return parent; }
 	public Shell getShell() {
@@ -66,9 +69,13 @@ public abstract class Control extends Widget implements Drawable {
 		if (!moved && !resized) return;
 		bounds = new Rectangle(x, y, width, height);
 		if (nativeUpdate) display.internal_platform().setBounds(peer, x, y, width, height);
+		if (resized && clientBounds().isEmpty()) {
+			damage = null;
+			if (image != null) { image.internal_disposeWhenUnused(); image = null; }
+		}
 		if (moved) sendEvent(SWT.Move, new Event());
 		if (disposed) return;
-		if (resized) { sendEvent(SWT.Resize, new Event()); if (!disposed) { resized(); redraw(); } }
+		if (resized) { sendEvent(SWT.Resize, new Event()); if (!disposed) { resized(); if (!disposed) redraw(); } }
 	}
 	void nativeResize(int width, int height) { setBoundsInternal(bounds.x, bounds.y, width, height, false); }
 	void resized() { }
@@ -77,6 +84,10 @@ public abstract class Control extends Widget implements Drawable {
 	public void setSize(int width, int height) { setBounds(bounds.x, bounds.y, width, height); }
 	public void setSize(Point p) { if (p == null) SWT.error(SWT.ERROR_NULL_ARGUMENT); setSize(p.x, p.y); }
 	public int getBorderWidth() { checkWidget(); return (style & SWT.BORDER) == 0 ? 0 : 1; }
+	private Rectangle clientBounds() {
+		int trim = getBorderWidth() * 2;
+		return new Rectangle(0, 0, Math.max(0, bounds.width - trim), Math.max(0, bounds.height - trim));
+	}
 	public Point computeSize(int wHint, int hHint) { return computeSize(wHint, hHint, true); }
 	public Point computeSize(int wHint, int hHint, boolean changed) {
 		checkWidget(); int border = getBorderWidth() * 2;
@@ -90,13 +101,18 @@ public abstract class Control extends Widget implements Drawable {
 		checkWidget(); if (visible == value) return;
 		visible = value; display.internal_platform().setVisible(peer, value);
 		sendEvent(value ? SWT.Show : SWT.Hide, new Event());
-		if (value && !disposed) redrawAll();
+		if (!disposed) {
+			if (value) redrawAll();
+			else display.clearFocus(this);
+		}
 	}
 	public boolean getEnabled() { checkWidget(); return enabled; }
 	public boolean isEnabled() { checkWidget(); return enabled && (parent == null || parent.isEnabled()); }
 	public void setEnabled(boolean value) {
 		checkWidget(); if (enabled == value) return;
-		enabled = value; display.internal_platform().setEnabled(peer, value); redrawAll();
+		enabled = value; display.internal_platform().setEnabled(peer, value);
+		if (!value) display.clearFocus(this);
+		redrawAll();
 	}
 	public Color getForeground() { checkWidget(); return foreground != null ? foreground : parent != null ? parent.getForeground() : display.getSystemColor(SWT.COLOR_WIDGET_FOREGROUND); }
 	public Color getBackground() { checkWidget(); return background != null ? background : parent != null ? parent.getBackground() : display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND); }
@@ -120,14 +136,16 @@ public abstract class Control extends Widget implements Drawable {
 		if (!display.internal_platform().requestFocus(peer)) return false;
 		Control previous = display.focusControl; display.focusControl = this;
 		if (previous != null && previous != this && !previous.isDisposed()) previous.sendEvent(SWT.FocusOut, new Event());
-		if (!disposed && previous != this) sendEvent(SWT.FocusIn, new Event());
-		return !disposed;
+		if (!disposed && display.focusControl == this && previous != this) sendEvent(SWT.FocusIn, new Event());
+		return !disposed && display.focusControl == this;
 	}
 	public boolean isFocusControl() { checkWidget(); return display.focusControl == this; }
 	public Point toDisplay(int x, int y) {
 		checkWidget();
 		for (Control c = this; c != null; c = c.parent) {
-			x = Math.addExact(x, c.bounds.x); y = Math.addExact(y, c.bounds.y);
+			int border = c.getBorderWidth();
+			x = Math.addExact(Math.addExact(x, c.bounds.x), border);
+			y = Math.addExact(Math.addExact(y, c.bounds.y), border);
 			// Owned shells retain a logical parent but every OS shell peer is rooted
 			// at the native window host; its bounds are already display-relative.
 			if (c instanceof Shell) break;
@@ -146,7 +164,7 @@ public abstract class Control extends Widget implements Drawable {
 	public void redraw() { redraw(0, 0, bounds.width, bounds.height, false); }
 	public void redraw(int x, int y, int width, int height, boolean all) {
 		checkWidget(); if (width <= 0 || height <= 0) return;
-		Rectangle clipped = new Rectangle(0, 0, bounds.width, bounds.height).intersection(new Rectangle(x, y, width, height));
+		Rectangle clipped = clientBounds().intersection(new Rectangle(x, y, width, height));
 		if (clipped.isEmpty()) return;
 		damage = damage == null ? clipped : damage.union(clipped);
 		if (all && this instanceof Composite composite) for (Control child : composite.getChildren()) child.redrawAll();
@@ -163,20 +181,21 @@ public abstract class Control extends Widget implements Drawable {
 		else if (redrawDepth > 0 && --redrawDepth == 0) { if (damage == null) redraw(); else queuePaint(); }
 	}
 	private Image ensureImage() {
-		if (bounds.width <= 0 || bounds.height <= 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		Rectangle client = clientBounds();
+		if (client.isEmpty()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		if (image != null) {
 			Rectangle b = image.getBounds();
-			if (b.width == bounds.width && b.height == bounds.height) return image;
+			if (b.width == client.width && b.height == client.height) return image;
 		}
-		Image replacement = new Image(display, bounds.width, bounds.height);
+		Image replacement = new Image(display, client.width, client.height);
 		Image previous = image; image = replacement;
 		if (previous != null) previous.internal_disposeWhenUnused();
 		return image;
 	}
 	public void update() {
 		checkWidget();
-		if (paintDepth != 0 || damage == null || redrawDepth != 0 || !isVisible() || !display.active || bounds.width == 0 || bounds.height == 0) return;
-		Rectangle clip = damage;
+		if (paintDepth != 0 || damage == null || redrawDepth != 0 || !isVisible() || !display.active || clientBounds().isEmpty()) return;
+		Rectangle clip = damage.intersection(clientBounds());
 		GC gc = new GC(this); damage = null; paintDepth++;
 		try {
 			gc.setClipping(clip); gc.setBackground(getBackground()); gc.fillRectangle(clip);
@@ -194,16 +213,30 @@ public abstract class Control extends Widget implements Drawable {
 	}
 	private boolean printTree(GC gc, int x, int y) {
 		if (disposed || !isVisible() || bounds.width == 0 || bounds.height == 0) return false;
-		if (image == null) redraw(); update();
-		if (disposed || image == null) return false;
+		if (!clientBounds().isEmpty()) { if (image == null) redraw(); update(); }
+		if (disposed) return false;
+		int border = getBorderWidth();
+		Rectangle client = clientBounds();
 		Rectangle savedClip = gc.getClipping();
+		Color savedBackground = gc.getBackground();
 		try {
 			gc.setClipping(savedClip.intersection(new Rectangle(x, y, bounds.width, bounds.height)));
-			gc.drawImage(image, x, y);
-			if (this instanceof Composite composite) for (Control child : composite.getChildren()) {
-				child.printTree(gc, Math.addExact(x, child.bounds.x), Math.addExact(y, child.bounds.y));
+			if (border != 0) {
+				gc.setBackground(display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
+				gc.fillRectangle(x, y, bounds.width, 1);
+				if (bounds.height > 1) gc.fillRectangle(x, y + bounds.height - 1, bounds.width, 1);
+				if (bounds.height > 2) {
+					gc.fillRectangle(x, y + 1, 1, bounds.height - 2);
+					if (bounds.width > 1) gc.fillRectangle(x + bounds.width - 1, y + 1, 1, bounds.height - 2);
+				}
 			}
-		} finally { gc.setClipping(savedClip); }
+			int clientX = Math.addExact(x, border), clientY = Math.addExact(y, border);
+			gc.setClipping(gc.getClipping().intersection(new Rectangle(clientX, clientY, client.width, client.height)));
+			if (image != null) gc.drawImage(image, clientX, clientY);
+			if (!client.isEmpty() && this instanceof Composite composite) for (Control child : composite.getChildren()) {
+				child.printTree(gc, Math.addExact(clientX, child.bounds.x), Math.addExact(clientY, child.bounds.y));
+			}
+		} finally { gc.setBackground(savedBackground); gc.setClipping(savedClip); }
 		return true;
 	}
 	@Override public long internal_new_GC(GCData data) {

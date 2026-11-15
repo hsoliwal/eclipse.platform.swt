@@ -5,6 +5,7 @@ Bundle-SymbolicName: org.eclipse.swt; singleton:=true
 Bundle-Version: 3.138.0.qualifier
 Bundle-ManifestVersion: 2
 Bundle-Localization: plugin
+Import-Package: javax.management
 DynamicImport-Package: org.eclipse.swt.accessibility2
 Export-Package: 
  org.eclipse.swt,

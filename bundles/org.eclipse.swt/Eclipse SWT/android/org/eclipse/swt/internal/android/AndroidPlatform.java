@@ -263,6 +263,7 @@ public final class AndroidPlatform implements MobilePlatform {
 		ui(() -> {
 			PeerView view = controls.get(peer);
 			view.logicalX = x; view.logicalY = y; view.logicalWidth = width; view.logicalHeight = height;
+			view.releaseEmptyClientSnapshot();
 			int[] viewport = displayBounds();
 			view.fillViewport = view.kind == SHELL && x == 0 && y == 0 && width == viewport[2] && height == viewport[3];
 			view.setLayoutParams(view.layoutParams());
@@ -332,7 +333,19 @@ public final class AndroidPlatform implements MobilePlatform {
 		Bitmap copy = images.get(image).copy(Bitmap.Config.ARGB_8888, false);
 		if (copy == null) throw new OutOfMemoryError("Cannot snapshot SWT image");
 		try {
-			ui(() -> { PeerView view = controls.get(peer); Bitmap old = view.front; view.front = copy; view.invalidate(); if (old != null) old.recycle(); return null; });
+			ui(() -> {
+				PeerView view = controls.get(peer);
+				// Native resize can run before its queued SWT Resize is dispatched.
+				// Reject a late paint using both requested and actual native extents.
+				if (view.logicalWidth <= view.borderWidth() * 2 || view.logicalHeight <= view.borderWidth() * 2
+						|| view.getWidth() <= view.getPaddingLeft() + view.getPaddingRight()
+						|| view.getHeight() <= view.getPaddingTop() + view.getPaddingBottom()) {
+					view.releaseSnapshot(); copy.recycle(); return null;
+				}
+				Bitmap old = view.front; view.front = copy; view.invalidate();
+				if (old != null) old.recycle();
+				return null;
+			});
 		} catch (RuntimeException | Error failure) { copy.recycle(); throw failure; }
 	}
 	@Override public long createImage(int width, int height, int[] argb) {
@@ -433,6 +446,7 @@ public final class AndroidPlatform implements MobilePlatform {
 		int role, accessibleState;
 		boolean fillViewport;
 		Bitmap front;
+		final Paint borderPaint = new Paint();
 		int pointer = -1;
 		PeerView(int kind, long parent, int style) {
 			super(activity);
@@ -442,6 +456,9 @@ public final class AndroidPlatform implements MobilePlatform {
             setFocusable(canFocus);
             setFocusableInTouchMode(canFocus);
 			setClipChildren(true); setClipToPadding(true);
+			int border = physical(borderWidth());
+			setPadding(border, border, border, border);
+			borderPaint.setColor(0xff808080); // SWT.COLOR_WIDGET_NORMAL_SHADOW
 			setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
 			setVisibility(kind == SHELL ? View.INVISIBLE : View.VISIBLE);
 			if (kind == TEXT) initializeEditor();
@@ -534,6 +551,14 @@ public final class AndroidPlatform implements MobilePlatform {
 			}
 			return new ViewGroup.LayoutParams(physical(logicalWidth), physical(logicalHeight));
 		}
+		private int borderWidth() { return (style & SWT.BORDER) == 0 ? 0 : 1; }
+		private void releaseEmptyClientSnapshot() {
+			int border = borderWidth();
+			if (logicalWidth <= border * 2 || logicalHeight <= border * 2) releaseSnapshot();
+		}
+		private void releaseSnapshot() {
+			if (front != null) { front.recycle(); front = null; invalidate(); }
+		}
 		@Override protected void onMeasure(int width, int height) {
 			setMeasuredDimension(MeasureSpec.getSize(width), MeasureSpec.getSize(height));
 			for (int i = 0; i < getChildCount(); i++) {
@@ -542,25 +567,35 @@ public final class AndroidPlatform implements MobilePlatform {
 					peer.measure(MeasureSpec.makeMeasureSpec(physical(peer.logicalWidth), MeasureSpec.EXACTLY),
 							MeasureSpec.makeMeasureSpec(physical(peer.logicalHeight), MeasureSpec.EXACTLY));
 				} else {
-					child.measure(MeasureSpec.makeMeasureSpec(getMeasuredWidth(), MeasureSpec.EXACTLY),
-							MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY));
+					child.measure(MeasureSpec.makeMeasureSpec(Math.max(0, getMeasuredWidth() - getPaddingLeft() - getPaddingRight()), MeasureSpec.EXACTLY),
+							MeasureSpec.makeMeasureSpec(Math.max(0, getMeasuredHeight() - getPaddingTop() - getPaddingBottom()), MeasureSpec.EXACTLY));
 				}
 			}
 		}
 		@Override protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
 			for (int i = 0; i < getChildCount(); i++) {
 				View child = getChildAt(i);
-				int x = child instanceof PeerView peer ? physical(peer.logicalX) : 0;
-				int y = child instanceof PeerView peer ? physical(peer.logicalY) : 0;
+				int x = child instanceof PeerView peer ? physical(peer.logicalX + borderWidth()) : getPaddingLeft();
+				int y = child instanceof PeerView peer ? physical(peer.logicalY + borderWidth()) : getPaddingTop();
 				child.layout(x, y, x + child.getMeasuredWidth(), y + child.getMeasuredHeight());
 			}
 		}
 		@Override protected void onDraw(Canvas canvas) {
 			super.onDraw(canvas);
-			if (front != null && !front.isRecycled()) canvas.drawBitmap(front, null, new Rect(0, 0, getWidth(), getHeight()), null);
+			int width = getWidth(), height = getHeight(), border = getPaddingLeft();
+			if (border > 0 && width > 0 && height > 0) {
+				int top = Math.min(border, height), bottom = Math.max(top, height - border);
+				canvas.drawRect(0, 0, width, top, borderPaint);
+				canvas.drawRect(0, bottom, width, height, borderPaint);
+				canvas.drawRect(0, top, Math.min(border, width), bottom, borderPaint);
+				canvas.drawRect(Math.max(Math.min(border, width), width - border), top, width, bottom, borderPaint);
+			}
+			if (width > border * 2 && height > border * 2 && front != null && !front.isRecycled())
+				canvas.drawBitmap(front, null, new Rect(border, border, width - border, height - border), null);
 		}
 		@Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 			super.onSizeChanged(w, h, oldw, oldh);
+			if (w <= getPaddingLeft() + getPaddingRight() || h <= getPaddingTop() + getPaddingBottom()) releaseSnapshot();
 			EventSink receiver = sink;
 			if (receiver != null && id != 0) callback(() -> { receiver.resize(id, logical(w), logical(h)); receiver.paint(id); });
 		}
@@ -574,28 +609,32 @@ public final class AndroidPlatform implements MobilePlatform {
 			if (action == MotionEvent.ACTION_DOWN) { pointer = event.getPointerId(0); requestFocus(); }
 			int index = event.findPointerIndex(pointer);
 			if (index < 0) { if (action == MotionEvent.ACTION_CANCEL) pointer = -1; return true; }
-			int x = logical(Math.round(event.getX(index))), y = logical(Math.round(event.getY(index)));
+			int x = logical(Math.round(event.getX(index))) - borderWidth(), y = logical(Math.round(event.getY(index))) - borderWidth();
 			int mask = modifiers(event.getMetaState());
 			if (action != MotionEvent.ACTION_DOWN && pointer != -1) mask |= SWT.BUTTON1;
 			int time = (int) event.getEventTime();
 			if (action == MotionEvent.ACTION_DOWN) event(SWT.MouseDown, x, y, 1, 0, '\0', mask, 1, time);
 			else if (action == MotionEvent.ACTION_MOVE) event(SWT.MouseMove, x, y, 0, 0, '\0', mask, 0, time);
-			else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP && event.getPointerId(event.getActionIndex()) == pointer) { event(SWT.MouseUp, x, y, 1, 0, '\0', mask, 1, time); pointer = -1; performClick(); }
-			else if (action == MotionEvent.ACTION_CANCEL) { event(SWT.MouseExit, x, y, 0, 0, '\0', mask, 0, time); pointer = -1; }
+			else if (action == MotionEvent.ACTION_UP) { event(SWT.MouseUp, x, y, 1, 0, '\0', mask, 1, time); pointer = -1; performClick(); }
+			else if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_POINTER_UP && event.getPointerId(event.getActionIndex()) == pointer) {
+				// Losing the active contact while another remains cancels this
+				// primary-pointer gesture; it must not activate MouseUp listeners.
+				event(SWT.MouseExit, x, y, 0, 0, '\0', mask, 0, time); pointer = -1;
+			}
 			return true;
 		}
 		@Override public boolean performClick() { super.performClick(); return true; }
 		@Override public boolean onHoverEvent(MotionEvent event) {
 			if (id == 0 || !isEnabled()) return false;
 			int type = switch (event.getActionMasked()) { case MotionEvent.ACTION_HOVER_ENTER -> SWT.MouseEnter; case MotionEvent.ACTION_HOVER_EXIT -> SWT.MouseExit; default -> SWT.MouseMove; };
-			event(type, logical(Math.round(event.getX())), logical(Math.round(event.getY())), 0, 0, '\0', modifiers(event.getMetaState()), 0, (int) event.getEventTime());
+			event(type, logical(Math.round(event.getX())) - borderWidth(), logical(Math.round(event.getY())) - borderWidth(), 0, 0, '\0', modifiers(event.getMetaState()), 0, (int) event.getEventTime());
 			return true;
 		}
 		@Override public boolean onGenericMotionEvent(MotionEvent event) {
 			if (id == 0 || !isEnabled()) return false;
 			if (event.getActionMasked() != MotionEvent.ACTION_SCROLL) return super.onGenericMotionEvent(event);
 			int count = Math.round(event.getAxisValue(MotionEvent.AXIS_VSCROLL));
-			if (count != 0) event(SWT.MouseVerticalWheel, logical(Math.round(event.getX())), logical(Math.round(event.getY())), 0, 0, '\0', modifiers(event.getMetaState()), count, (int) event.getEventTime());
+			if (count != 0) event(SWT.MouseVerticalWheel, logical(Math.round(event.getX())) - borderWidth(), logical(Math.round(event.getY())) - borderWidth(), 0, 0, '\0', modifiers(event.getMetaState()), count, (int) event.getEventTime());
 			return true;
 		}
 		@Override public boolean onKeyDown(int code, KeyEvent event) { return key(SWT.KeyDown, code, event); }
@@ -610,10 +649,17 @@ public final class AndroidPlatform implements MobilePlatform {
 				case KeyEvent.KEYCODE_DEL -> SWT.BS; case KeyEvent.KEYCODE_FORWARD_DEL -> SWT.DEL;
 				case KeyEvent.KEYCODE_ESCAPE -> SWT.ESC; case KeyEvent.KEYCODE_MOVE_HOME -> SWT.HOME;
 				case KeyEvent.KEYCODE_MOVE_END -> SWT.END; case KeyEvent.KEYCODE_PAGE_UP -> SWT.PAGE_UP;
+				case KeyEvent.KEYCODE_SHIFT_LEFT, KeyEvent.KEYCODE_SHIFT_RIGHT -> SWT.SHIFT;
+				case KeyEvent.KEYCODE_CTRL_LEFT, KeyEvent.KEYCODE_CTRL_RIGHT -> SWT.CTRL;
+				case KeyEvent.KEYCODE_ALT_LEFT, KeyEvent.KEYCODE_ALT_RIGHT -> SWT.ALT;
+				case KeyEvent.KEYCODE_META_LEFT, KeyEvent.KEYCODE_META_RIGHT -> SWT.COMMAND;
 				case KeyEvent.KEYCODE_PAGE_DOWN -> SWT.PAGE_DOWN; default -> Character.toLowerCase(character);
 			};
 			if (code == KeyEvent.KEYCODE_BACK) { if (type == SWT.KeyUp) { EventSink receiver = sink; if (receiver != null) callback(() -> receiver.close(shellId())); } return true; }
-			event(type, 0, 0, 0, key, character <= Character.MAX_VALUE ? (char) character : '\0', modifiers(event.getMetaState()), event.getRepeatCount() + 1, (int) event.getEventTime());
+			int state = modifiers(event.getMetaState());
+			if (key == SWT.SHIFT || key == SWT.CTRL || key == SWT.ALT || key == SWT.COMMAND)
+				state = type == SWT.KeyDown ? state & ~key : state | key;
+			event(type, 0, 0, 0, key, character <= Character.MAX_VALUE ? (char) character : '\0', state, event.getRepeatCount() + 1, (int) event.getEventTime());
 			return true;
 		}
 		private long shellId() { PeerView view = this; while (view.kind != SHELL) view = controls.get(view.parent); return view.id; }
@@ -691,25 +737,35 @@ public final class AndroidPlatform implements MobilePlatform {
 		Matrix transform = new Matrix();
 		Rect clip;
 		final int save;
-		boolean closed;
+		boolean closed, antialias = true, textAntialias = true;
 		AndroidGraphics(Bitmap bitmap) { this.bitmap = bitmap; canvas = new Canvas(bitmap); save = canvas.save(); pen.setTextSize(12); }
 		private void check() { checkThread(); if (closed || bitmap.isRecycled()) throw new IllegalStateException("Disposed SWT drawing resource"); }
-		private void paint(boolean fill, boolean back) { check(); int color = back ? background : foreground; pen.setColor(color); pen.setAlpha(((color >>> 24) * alpha + 127) / 255); pen.setStyle(fill ? Paint.Style.FILL : Paint.Style.STROKE); pen.setStrokeWidth(lineWidth); }
+		private void paint(boolean fill, boolean back) { check(); int color = back ? background : foreground; pen.setColor(color); pen.setAlpha(((color >>> 24) * alpha + 127) / 255); pen.setStyle(fill ? Paint.Style.FILL : Paint.Style.STROKE); pen.setStrokeWidth(lineWidth); pen.setAntiAlias(antialias); }
 		@Override public void setForeground(int argb) { check(); foreground = argb; }
 		@Override public void setBackground(int argb) { check(); background = argb; }
 		@Override public void setAlpha(int value) { check(); if (value < 0 || value > 255) throw new IllegalArgumentException("alpha"); alpha = value; }
 		@Override public void setLineWidth(float width) { check(); if (!(width >= 0) || !Float.isFinite(width)) throw new IllegalArgumentException("line width"); lineWidth = width; }
-		@Override public void setAntialias(boolean enabled) { check(); pen.setAntiAlias(enabled); }
+		@Override public void setAntialias(boolean enabled) { check(); antialias = enabled; }
+		@Override public void setTextAntialias(boolean enabled) { check(); textAntialias = enabled; }
 		@Override public void setFont(String family, float size, int style) { check(); if (!(size > 0) || !Float.isFinite(size)) throw new IllegalArgumentException("font size"); pen.setTypeface(Typeface.create(family, (style & SWT.BOLD) != 0 ? ((style & SWT.ITALIC) != 0 ? Typeface.BOLD_ITALIC : Typeface.BOLD) : ((style & SWT.ITALIC) != 0 ? Typeface.ITALIC : Typeface.NORMAL))); pen.setTextSize(size); }
 		private void apply() { canvas.restoreToCount(save); canvas.save(); canvas.concat(transform); if (clip != null) canvas.clipRect(clip); }
 		@Override public void setTransform(float[] m) { check(); if (m == null || m.length != 6) throw new IllegalArgumentException("affine matrix"); for (float v : m) if (!Float.isFinite(v)) throw new IllegalArgumentException("nonfinite matrix"); transform.setValues(new float[] {m[0],m[2],m[4],m[1],m[3],m[5],0,0,1}); apply(); }
 		@Override public void setClipping(int x, int y, int w, int h) { check(); if (w < 0 || h < 0) throw new IllegalArgumentException("clip extent"); clip = new Rect(x,y,Math.addExact(x,w),Math.addExact(y,h)); apply(); }
 		@Override public void resetClipping() { check(); clip = null; apply(); }
+		@Override public int[] getClipping() { check(); Rect bounds = canvas.getClipBounds(); return new int[] {bounds.left,bounds.top,bounds.width(),bounds.height()}; }
 		@Override public void drawLine(int x1, int y1, int x2, int y2) { paint(false,false); canvas.drawLine(x1,y1,x2,y2,pen); }
 		@Override public void drawRectangle(int x, int y, int w, int h) { paint(false,false); canvas.drawRect(x,y,(float)x+w,(float)y+h,pen); }
 		@Override public void fillRectangle(int x, int y, int w, int h) { paint(true,true); canvas.drawRect(x,y,(float)x+w,(float)y+h,pen); }
 		@Override public void drawOval(int x, int y, int w, int h) { paint(false,false); canvas.drawOval(new RectF(x,y,(float)x+w,(float)y+h),pen); }
 		@Override public void fillOval(int x, int y, int w, int h) { paint(true,true); canvas.drawOval(new RectF(x,y,(float)x+w,(float)y+h),pen); }
+		@Override public void drawRoundRectangle(int x, int y, int w, int h, int aw, int ah, boolean fill) {
+			paint(fill,fill);
+			if (aw == 0 || ah == 0) canvas.drawRect(x,y,(float)x+w,(float)y+h,pen);
+			else canvas.drawRoundRect(x,y,(float)x+w,(float)y+h,aw/2f,ah/2f,pen);
+		}
+		@Override public void drawArc(int x, int y, int w, int h, int start, int sweep, boolean fill) {
+			paint(fill,fill); canvas.drawArc(x,y,(float)x+w,(float)y+h,-(float)start,-(float)sweep,fill,pen);
+		}
 		@Override public void drawPolygon(int[] points, boolean fill) { if (points == null || points.length < 4 || (points.length & 1) != 0) throw new IllegalArgumentException("polygon"); paint(fill,fill); android.graphics.Path path = new android.graphics.Path(); path.moveTo(points[0],points[1]); for (int i=2;i<points.length;i+=2) path.lineTo(points[i],points[i+1]); path.close(); canvas.drawPath(path,pen); }
 		private String[] lines(String text, int flags) {
 			Objects.requireNonNull(text,"text");
@@ -720,7 +776,7 @@ public final class AndroidPlatform implements MobilePlatform {
 		@Override public void drawText(String text, int x, int y, int flags) {
 			check();String[] lines=lines(text,flags);Paint.FontMetrics fm=pen.getFontMetrics();float height=fm.descent-fm.ascent+fm.leading;
 			if((flags&SWT.DRAW_TRANSPARENT)==0){int[] size=textExtent(text,flags);paint(true,true);canvas.drawRect(x,y,(float)x+size[0],(float)y+size[1],pen);}
-			paint(true,false);for(int i=0;i<lines.length;i++)canvas.drawText(lines[i],x,y-fm.ascent+i*height,pen);
+			paint(true,false);pen.setAntiAlias(textAntialias);for(int i=0;i<lines.length;i++)canvas.drawText(lines[i],x,y-fm.ascent+i*height,pen);
 		}
 		@Override public void drawImage(long image,int sx,int sy,int sw,int sh,int dx,int dy,int dw,int dh){paint(true,false);Bitmap source=images.get(image);if(sx<0||sy<0||sw<=0||sh<=0||dw<=0||dh<=0||(long)sx+sw>source.getWidth()||(long)sy+sh>source.getHeight())throw new IllegalArgumentException("image rectangle");pen.setAlpha(alpha);canvas.drawBitmap(source,new Rect(sx,sy,sx+sw,sy+sh),new Rect(dx,dy,Math.addExact(dx,dw),Math.addExact(dy,dh)),pen);}
 		@Override public int[] textExtent(String text,int flags){check();String[] rows=lines(text,flags);float width=0;for(String row:rows)width=Math.max(width,pen.measureText(row));Paint.FontMetrics m=pen.getFontMetrics();return new int[]{(int)Math.ceil(width),(int)Math.ceil(rows.length*(m.descent-m.ascent+m.leading))};}

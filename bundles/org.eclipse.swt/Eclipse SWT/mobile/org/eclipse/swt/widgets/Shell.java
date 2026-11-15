@@ -15,7 +15,14 @@ public class Shell extends Decorations {
 	public Shell(Display display, int style) { super(display == null ? Display.getDefault() : display, style); setBounds(this.display.getClientArea()); }
 	public Shell(Shell parent) { this(parent, SWT.DIALOG_TRIM); }
 	public Shell(Shell parent, int style) { super(parent, style); setBounds(display.getClientArea()); }
-	public void open() { checkWidget(); setVisible(true); layout(true, true); setFocus(); redrawAll(); }
+	public void open() {
+		checkWidget(); setVisible(true);
+		if (disposed) return;
+		layout(true, true);
+		if (disposed) return;
+		setFocus();
+		if (!disposed) redrawAll();
+	}
 	public void close() { checkWidget(); Event e = new Event(); sendEvent(SWT.Close, e); if (!disposed && e.doit) dispose(); }
 	public void addShellListener(ShellListener listener) { addTypedListener(listener, SWT.Close, SWT.Activate, SWT.Deactivate, SWT.Iconify, SWT.Deiconify); }
 	public void removeShellListener(ShellListener listener) { for (int type : new int[] {SWT.Close,SWT.Activate,SWT.Deactivate,SWT.Iconify,SWT.Deiconify}) removeTypedListener(type, listener); }

@@ -12,11 +12,12 @@ import org.eclipse.swt.internal.mobile.MobilePlatform;
 public final class GC extends Resource {
 	private Drawable drawable;
 	private GCData data;
-	private long handle;
+	/** Internal platform handle; not portable SWT application API. @noreference */
+	public long handle;
 	private MobilePlatform.Graphics graphics;
 	private Color foreground, background;
 	private Font font;
-	private int alpha = 255, antialias = SWT.DEFAULT, lineWidth = 1;
+	private int alpha = 255, antialias = SWT.DEFAULT, textAntialias = SWT.DEFAULT, lineWidth = 1;
 	private Rectangle clipping;
 	private float[] transform = {1, 0, 0, 1, 0, 0};
 	private boolean disposed, advanced = true;
@@ -39,6 +40,7 @@ public final class GC extends Resource {
 				graphics = device.internal_platform().graphics(handle);
 				graphics.setForeground(foreground.internal_argb()); graphics.setBackground(background.internal_argb());
 				graphics.setAlpha(alpha); graphics.setLineWidth(lineWidth); graphics.setAntialias(true);
+				graphics.setTextAntialias(true);
 				applyFont();
 			}
 			init();
@@ -78,16 +80,23 @@ public final class GC extends Resource {
 	public int getAdvanceWidth(char ch) { return stringExtent(String.valueOf(ch)).x; }
 	public int getCharWidth(char ch) { return getAdvanceWidth(ch); }
 	public int getAlpha() { check(); return alpha; }
-	public void setAlpha(int value) { check(); if (value < 0 || value > 255) SWT.error(SWT.ERROR_INVALID_ARGUMENT); drawing().setAlpha(value); alpha = value; }
+	public void setAlpha(int value) { check(); value &= 0xff; drawing().setAlpha(value); alpha = value; }
 	public int getAntialias() { check(); return antialias; }
 	public void setAntialias(int value) { check(); if (value != SWT.DEFAULT && value != SWT.ON && value != SWT.OFF) SWT.error(SWT.ERROR_INVALID_ARGUMENT); drawing().setAntialias(value != SWT.OFF); antialias = value; }
+	public int getTextAntialias() { check(); return textAntialias; }
+	public void setTextAntialias(int value) { check(); if (value != SWT.DEFAULT && value != SWT.ON && value != SWT.OFF) SWT.error(SWT.ERROR_INVALID_ARGUMENT); drawing().setTextAntialias(value != SWT.OFF); textAntialias = value; }
 	public int getLineWidth() { check(); return lineWidth; }
 	public void setLineWidth(int width) { check(); if (width < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT); drawing().setLineWidth(width); lineWidth = width; }
 	public boolean getAdvanced() { check(); return advanced; }
-	public void setAdvanced(boolean value) { check(); if (!value) { setAlpha(255); setAntialias(SWT.DEFAULT); setTransform(null); setClipping((Rectangle) null); } advanced = value; }
+	public void setAdvanced(boolean value) { check(); if (!value) { setAlpha(255); setAntialias(SWT.DEFAULT); setTextAntialias(SWT.DEFAULT); setTransform(null); setClipping((Rectangle) null); } advanced = value; }
 	public void getTransform(Transform target) { check(); if (target == null) SWT.error(SWT.ERROR_NULL_ARGUMENT); if (target.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT); target.setElements(transform[0],transform[1],transform[2],transform[3],transform[4],transform[5]); }
 	public void setTransform(Transform value) { check(); float[] next = {1,0,0,1,0,0}; if (value != null) { if (value.isDisposed() || value.getDevice() != device) SWT.error(SWT.ERROR_INVALID_ARGUMENT); value.getElements(next); } drawing().setTransform(next); transform = next; }
-	public Rectangle getClipping() { check(); Rectangle b = clipping == null ? data.screen ? device.getBounds() : data.image.getBounds() : clipping; return new Rectangle(b.x,b.y,b.width,b.height); }
+	public Rectangle getClipping() {
+		check();
+		if (data.screen) { Rectangle b = device.getBounds(); return new Rectangle(b.x,b.y,b.width,b.height); }
+		int[] b = drawing().getClipping();
+		return new Rectangle(b[0],b[1],b[2],b[3]);
+	}
 	public boolean isClipped() { check(); return clipping != null; }
 	public void setClipping(int x, int y, int width, int height) { setClipping(new Rectangle(x,y,width,height)); }
 	public void setClipping(Rectangle rectangle) {
@@ -108,6 +117,27 @@ public final class GC extends Resource {
 	public void fillRectangle(int x,int y,int width,int height) { Rectangle r=normalized(x,y,width,height); drawing().fillRectangle(r.x,r.y,r.width,r.height); }
 	public void drawOval(int x,int y,int width,int height) { Rectangle r=normalized(x,y,width,height); drawing().drawOval(r.x,r.y,r.width,r.height); }
 	public void fillOval(int x,int y,int width,int height) { Rectangle r=normalized(x,y,width,height); drawing().fillOval(r.x,r.y,r.width,r.height); }
+	public void drawRoundRectangle(int x,int y,int width,int height,int arcWidth,int arcHeight) { roundRectangle(x,y,width,height,arcWidth,arcHeight,false); }
+	public void fillRoundRectangle(int x,int y,int width,int height,int arcWidth,int arcHeight) { roundRectangle(x,y,width,height,arcWidth,arcHeight,true); }
+	private void roundRectangle(int x,int y,int width,int height,int arcWidth,int arcHeight,boolean fill) {
+		MobilePlatform.Graphics target = drawing();
+		Rectangle r = normalized(x,y,width,height);
+		int aw = (int)Math.min(r.width,Math.abs((long)arcWidth));
+		int ah = (int)Math.min(r.height,Math.abs((long)arcHeight));
+		target.drawRoundRectangle(r.x,r.y,r.width,r.height,aw,ah,fill);
+	}
+	public void drawArc(int x,int y,int width,int height,int startAngle,int arcAngle) { arc(x,y,width,height,startAngle,arcAngle,false); }
+	public void fillArc(int x,int y,int width,int height,int startAngle,int arcAngle) { arc(x,y,width,height,startAngle,arcAngle,true); }
+	private void arc(int x,int y,int width,int height,int startAngle,int arcAngle,boolean fill) {
+		MobilePlatform.Graphics target = drawing();
+		Rectangle r = normalized(x,y,width,height);
+		if (r.width == 0 || r.height == 0 || arcAngle == 0) return;
+		if (Math.abs((long)arcAngle) >= 360) {
+			if (fill) target.fillOval(r.x,r.y,r.width,r.height); else target.drawOval(r.x,r.y,r.width,r.height);
+		} else {
+			target.drawArc(r.x,r.y,r.width,r.height,startAngle % 360,arcAngle,fill);
+		}
+	}
 	public void drawPolygon(int[] points) { polygon(points,false); }
 	public void fillPolygon(int[] points) { polygon(points,true); }
 	private void polygon(int[] points,boolean fill) { check(); if(points==null) SWT.error(SWT.ERROR_NULL_ARGUMENT); if(points.length<4)return; drawing().drawPolygon(Arrays.copyOf(points,points.length&~1),fill); }

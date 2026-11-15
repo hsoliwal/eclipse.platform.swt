@@ -54,11 +54,12 @@ callbacks, so application data must be saved during normal operation.
 | Area | Current behavior |
 | --- | --- |
 | Native ownership | UIKit peers for admitted mobile controls; hierarchy, bounds, visibility, enablement and focus. Owned Shells attach to the window root in display coordinates; Shells matching the viewport follow its size changes. |
+| Client coordinates | Retained images represent client pixels. A native client container insets children/editors by the SWT border and clips them to the client. Pointer coordinates subtract the receiving control's border; empty client areas release native snapshots. |
 | Touch | One primary contact mapped to original SWT mouse events; cancellation sends MouseExit and does not activate a widget's MouseUp handler |
 | Hardware keyboard | Key down/up, modifiers and navigation key mapping; Event.character carries one UTF-16 code unit |
 | Lifecycle | Scene activation/deactivation and final host/session destruction enqueue shared SWT work |
-| Rendering | CoreGraphics lines, rectangles, ovals, polygons, clip/transform, alpha, image crop/scaling and CoreText text/font measurement |
-| Text rendering | UTF-16 shaping through CoreText; draw flags for delimiters, tabs, mnemonic underline and transparent background |
+| Rendering | CoreGraphics lines, rectangles, rounded rectangles, signed arcs, ovals, polygons, effective clip/transform, alpha, image crop/scaling and CoreText text/font measurement |
+| Text rendering | UTF-16 shaping through CoreText; independent shape/text antialias state; draw flags for delimiters, tabs, mnemonic underline and transparent background |
 | Text editing | The original SWT Text owner uses UITextField/UITextView peers, UTF-16 content and selection snapshots, Verify/Modify ordering for edits, and native clipboard transport. Native behavior still requires Apple simulator/device qualification. |
 | Accessibility transport | Native labels/traits, default activation, Scale increment/decrement and List scrolling callbacks through the original SWT owners; the general SWT Accessible API is not implemented by this transport alone |
 | Pixels | Straight ARGB Java ingress/readback with premultiplied native storage; immutable presentation snapshots |
@@ -74,7 +75,7 @@ never reported as visible-screen capture. Raster/text parity,
 rotation behavior, background/foreground recovery, VoiceOver, resource stress and
 original-widget interaction require the Apple simulator/device gate.
 
-## Compile the native library with Xcode
+## Compile with Xcode and run the native renderer tests
 
 Use a macOS host with a real Xcode iOS SDK, CMake 3.24 or newer, and a JDK 21.
 First build the mobile SWT Java artifact for `mobile.platform=ios` using the
@@ -93,12 +94,40 @@ dependency. CMake regenerates `org_eclipse_swt_internal_ios_OS.h` with `javac -h
 from the actual OS/adapter source and real mobile SWT classpath. Event, role and
 state constants therefore come from the original SWT/ACC declarations.
 
-The default build has two targets: `swt_ios` (the native platform library) and
+The native-library targets are `swt_ios` (the platform library) and
 `swt_ios_bootstrap` (the application entry-point object). Both use ARC and
-`-Wall -Wextra -Werror`. This is a useful macOS CI compilation gate without a JVM
-artifact: it checks real Apple APIs and real JNI declarations. The macOS JDK's
-JNI headers used for this compile-only gate do not establish an iOS runtime.
-No UIKit/CoreGraphics stub headers are accepted or generated.
+`-Wall -Wextra -Werror`. They check real Apple APIs and real JNI declarations.
+The macOS JDK's JNI headers do not establish an iOS JVM. No UIKit/CoreGraphics
+stub headers are accepted or generated.
+
+For `iphonesimulator`, the same command also builds and runs
+`swt_ios_native_tests` inside an available iOS simulator using `xcrun simctl
+spawn`. The harness includes the actual `SWTUIKit.m` implementation and invokes
+the same rendering helpers as its JNI entrypoints. Its assertions cover signed
+and full arcs, rounded outlines/fills, clip/transform restoration, actual CoreText
+pixels/metrics, independent text antialias, and left/right modifier translation
+with SWT pre-transition state masks. Native client geometry and border pixel
+assertions cover nested insets, child clipping, and empty-snapshot release.
+It neither creates a JavaVM nor runs an SWT
+widget application; its bitmap results are native renderer evidence, not visible
+screen captures.
+
+Set `SWT_IOS_TEST_DEVICE_UDID` to select an available iOS simulator. Otherwise the
+script chooses an available iPhone, preferring a booted device and a recent
+runtime. It shuts down only a simulator it booted itself. An absent runtime fails
+the test command; the script never substitutes an SDK stub or silently skips the
+gate. If the requested library architecture differs from the Mac's host
+architecture, the library is still compiled as requested and a separate harness
+is compiled for the host's actual simulator architecture. Successful execution
+prints `SWT_IOS_NATIVE_RENDER_PASS`; the complete renderer output is also written
+to `native-render-tests.log` in the selected build directory. `iphoneos` remains
+a compile gate until the separately verified application/runtime is supplied.
+
+The former experimental `SWTIOSAttach`/`SWTIOSDetach` embedding ABI is not aliased
+to this implementation. Current embedders use `SWTUIKitRegister`,
+`SWTUIKitSetRootView`, and `SWTUIKitHostTerminated` with the thread and lifetime
+rules above. Migration of an old embedder requires a separate native integration
+test; renderer tests alone do not establish that compatibility.
 
 ## Link an application only with a verified iOS runtime
 

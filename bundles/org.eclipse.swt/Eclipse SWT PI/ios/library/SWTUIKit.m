@@ -225,12 +225,76 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 	});
 }
 
+static jint swtSpecialKey(UIKeyboardHIDUsage usage) {
+	switch (usage) {
+		case UIKeyboardHIDUsageKeyboardUpArrow: return SWT(ARROW_UP);
+		case UIKeyboardHIDUsageKeyboardDownArrow: return SWT(ARROW_DOWN);
+		case UIKeyboardHIDUsageKeyboardLeftArrow: return SWT(ARROW_LEFT);
+		case UIKeyboardHIDUsageKeyboardRightArrow: return SWT(ARROW_RIGHT);
+		case UIKeyboardHIDUsageKeyboardPageUp: return SWT(PAGE_UP);
+		case UIKeyboardHIDUsageKeyboardPageDown: return SWT(PAGE_DOWN);
+		case UIKeyboardHIDUsageKeyboardHome: return SWT(HOME);
+		case UIKeyboardHIDUsageKeyboardEnd: return SWT(END);
+		case UIKeyboardHIDUsageKeyboardInsert: return SWT(INSERT);
+		case UIKeyboardHIDUsageKeyboardDeleteOrBackspace: return '\b';
+		case UIKeyboardHIDUsageKeyboardReturnOrEnter: return '\r';
+		case UIKeyboardHIDUsageKeyboardEscape: return 0x1b;
+		case UIKeyboardHIDUsageKeyboardTab: return '\t';
+		case UIKeyboardHIDUsageKeyboardDeleteForward: return 0x7f;
+		case UIKeyboardHIDUsageKeyboardLeftShift: case UIKeyboardHIDUsageKeyboardRightShift: return SWT(SHIFT);
+		case UIKeyboardHIDUsageKeyboardLeftControl: case UIKeyboardHIDUsageKeyboardRightControl: return SWT(CTRL);
+		case UIKeyboardHIDUsageKeyboardLeftAlt: case UIKeyboardHIDUsageKeyboardRightAlt: return SWT(ALT);
+		case UIKeyboardHIDUsageKeyboardLeftGUI: case UIKeyboardHIDUsageKeyboardRightGUI: return SWT(COMMAND);
+		default: return 0;
+	}
+}
+
+static jint swtKeyState(jint type, jint code, UIKeyModifierFlags modifiers) {
+	jint state = ((modifiers & UIKeyModifierShift) ? SWT(SHIFT) : 0)
+		| ((modifiers & UIKeyModifierControl) ? SWT(CTRL) : 0)
+		| ((modifiers & UIKeyModifierAlternate) ? SWT(ALT) : 0)
+		| ((modifiers & UIKeyModifierCommand) ? SWT(COMMAND) : 0);
+	if (code == SWT(SHIFT) || code == SWT(CTRL) || code == SWT(ALT) || code == SWT(COMMAND))
+		state = type == SWT(KEY_DOWN) ? state & ~code : state | code;
+	return state;
+}
+
+static CGFloat swtBorderWidth(jint style) { return (style & SWT(BORDER)) != 0 ? 1 : 0; }
+
+static CGRect swtClientBounds(CGRect bounds, jint style) {
+	CGFloat border = swtBorderWidth(style);
+	return CGRectMake(bounds.origin.x + border, bounds.origin.y + border,
+		MAX(0, bounds.size.width - border * 2), MAX(0, bounds.size.height - border * 2));
+}
+
+static CGPoint swtClientPoint(CGPoint point, jint style) {
+	CGFloat border = swtBorderWidth(style);
+	return CGPointMake(point.x - border, point.y - border);
+}
+
+static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
+	CGFloat border = swtBorderWidth(style), width = bounds.size.width, height = bounds.size.height;
+	if (border == 0 || width <= 0 || height <= 0) return;
+	CGFloat top = MIN(border, height), bottom = MAX(top, height - border);
+	CGFloat left = MIN(border, width), right = MAX(left, width - border);
+	CGContextSaveGState(context);
+	CGContextTranslateCTM(context, bounds.origin.x, bounds.origin.y);
+	CGContextSetShouldAntialias(context, NO);
+	CGContextSetRGBFillColor(context, 128 / 255.0, 128 / 255.0, 128 / 255.0, 1);
+	CGContextFillRect(context, CGRectMake(0, 0, width, top));
+	CGContextFillRect(context, CGRectMake(0, bottom, width, height - bottom));
+	CGContextFillRect(context, CGRectMake(0, top, left, bottom - top));
+	CGContextFillRect(context, CGRectMake(right, top, width - right, bottom - top));
+	CGContextRestoreGState(context);
+}
+
 @interface SWTUIKitView : UIView <UITextFieldDelegate, UITextViewDelegate>
 @property(nonatomic) jlong peer;
 @property(nonatomic) jlong owner;
 @property(nonatomic) jint kind;
 @property(nonatomic) jint style;
 @property(nonatomic) jint accessibilityRole;
+@property(nonatomic, strong) UIView *clientView;
 @property(nonatomic, strong) UIView *nativeEditor;
 @property(nonatomic) BOOL suppressTextCallbacks;
 @property(nonatomic) NSInteger textLimit;
@@ -250,6 +314,9 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 		self.multipleTouchEnabled = YES;
 		self.enabled = YES;
 		self.hidden = YES;
+		_clientView = [[UIView alloc] initWithFrame:self.bounds];
+		_clientView.clipsToBounds = YES;
+		[self addSubview:_clientView];
 	}
 	return self;
 }
@@ -274,7 +341,7 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 		_nativeEditor = editor;
 	}
 	_textLimit = INT_MAX;
-	[self addSubview:_nativeEditor];
+	[_clientView addSubview:_nativeEditor];
 }
 - (void)publishNativeText {
 	if (_disposed || _suppressTextCallbacks || _peer == 0 || _nativeEditor == nil || swtTextChanged == NULL) return;
@@ -345,6 +412,9 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 }
 - (void)dealloc { if (_snapshot != NULL) CGImageRelease(_snapshot); }
 - (void)setSnapshot:(CGImageRef)value {
+	/* Native resize may precede the queued Java Resize callback. A late paint
+	 * must not recreate retained storage for an empty native client. */
+	if (value != NULL && CGRectIsEmpty(swtClientBounds(self.bounds, _style))) value = NULL;
 	if (value != NULL) CGImageRetain(value);
 	if (_snapshot != NULL) CGImageRelease(_snapshot);
 	_snapshot = value;
@@ -352,18 +422,24 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 }
 - (void)drawRect:(CGRect)rect {
 	(void)rect;
-	if (_disposed || _snapshot == NULL) return;
+	if (_disposed) return;
 	CGContextRef gc = UIGraphicsGetCurrentContext();
+	swtDrawBorder(gc, self.bounds, _style);
+	CGRect client = swtClientBounds(self.bounds, _style);
+	if (_snapshot == NULL || CGRectIsEmpty(client)) return;
 	CGContextSaveGState(gc);
-	CGContextTranslateCTM(gc, 0, self.bounds.size.height);
+	CGContextTranslateCTM(gc, client.origin.x, client.origin.y + client.size.height);
 	CGContextScaleCTM(gc, 1, -1);
-	CGContextDrawImage(gc, self.bounds, _snapshot);
+	CGContextDrawImage(gc, CGRectMake(0, 0, client.size.width, client.size.height), _snapshot);
 	CGContextRestoreGState(gc);
 	/* Present must not schedule another SWT Paint event. */
 }
 - (void)layoutSubviews {
 	[super layoutSubviews];
-	if (_nativeEditor != nil) _nativeEditor.frame = self.bounds;
+	CGRect client = swtClientBounds(self.bounds, _style);
+	_clientView.frame = client;
+	if (_nativeEditor != nil) _nativeEditor.frame = _clientView.bounds;
+	if (CGRectIsEmpty(client)) self.snapshot = NULL;
 	if (_disposed || _peer == 0) return;
 	jlong peer = _peer;
 	CGSize size = self.bounds.size;
@@ -398,18 +474,18 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 	_primaryTouch = touches.anyObject;
 	if (_primaryTouch == nil) return;
 	[self becomeFirstResponder];
-	CGPoint point = [_primaryTouch locationInView:self];
+	CGPoint point = swtClientPoint([_primaryTouch locationInView:self], _style);
 	swtSendInput(_peer, SWT(MOUSE_ENTER), point, 0, 0, 0, 0, 0, event.timestamp);
 	swtSendInput(_peer, SWT(MOUSE_DOWN), point, 1, 0, 0, 0, (jint)_primaryTouch.tapCount, event.timestamp);
 }
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
 	if (!_disposed && _primaryTouch != nil && [touches containsObject:_primaryTouch]) {
-		swtSendInput(_peer, SWT(MOUSE_MOVE), [_primaryTouch locationInView:self], 0, 0, 0, SWT(BUTTON1), 0, event.timestamp);
+		swtSendInput(_peer, SWT(MOUSE_MOVE), swtClientPoint([_primaryTouch locationInView:self], _style), 0, 0, 0, SWT(BUTTON1), 0, event.timestamp);
 	}
 }
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
 	if (_disposed || _primaryTouch == nil || ![touches containsObject:_primaryTouch]) return;
-	CGPoint point = [_primaryTouch locationInView:self];
+	CGPoint point = swtClientPoint([_primaryTouch locationInView:self], _style);
 	jint count = (jint)_primaryTouch.tapCount;
 	_primaryTouch = nil;
 	swtSendInput(_peer, SWT(MOUSE_UP), point, 1, 0, 0, SWT(BUTTON1), count, event.timestamp);
@@ -417,7 +493,7 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 }
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
 	if (_disposed || _primaryTouch == nil || ![touches containsObject:_primaryTouch]) return;
-	CGPoint point = [_primaryTouch locationInView:self];
+	CGPoint point = swtClientPoint([_primaryTouch locationInView:self], _style);
 	_primaryTouch = nil;
 	/* A cancelled gesture must not activate an original widget's MouseUp handler. */
 	swtSendInput(_peer, SWT(MOUSE_EXIT), point, 0, 0, 0, 0, 0, event.timestamp);
@@ -428,29 +504,9 @@ static void swtSendInput(jlong peer, jint type, CGPoint point, jint button,
 		for (UIPress *press in presses) {
 			UIKey *key = press.key;
 			if (key == nil) continue;
-			UIKeyModifierFlags modifiers = key.modifierFlags;
-			jint state = ((modifiers & UIKeyModifierShift) ? SWT(SHIFT) : 0)
-				| ((modifiers & UIKeyModifierControl) ? SWT(CTRL) : 0)
-				| ((modifiers & UIKeyModifierAlternate) ? SWT(ALT) : 0)
-				| ((modifiers & UIKeyModifierCommand) ? SWT(COMMAND) : 0);
-			jint code = 0;
-			switch (key.keyCode) {
-				case UIKeyboardHIDUsageKeyboardUpArrow: code = SWT(ARROW_UP); break;
-				case UIKeyboardHIDUsageKeyboardDownArrow: code = SWT(ARROW_DOWN); break;
-				case UIKeyboardHIDUsageKeyboardLeftArrow: code = SWT(ARROW_LEFT); break;
-				case UIKeyboardHIDUsageKeyboardRightArrow: code = SWT(ARROW_RIGHT); break;
-				case UIKeyboardHIDUsageKeyboardPageUp: code = SWT(PAGE_UP); break;
-				case UIKeyboardHIDUsageKeyboardPageDown: code = SWT(PAGE_DOWN); break;
-				case UIKeyboardHIDUsageKeyboardHome: code = SWT(HOME); break;
-				case UIKeyboardHIDUsageKeyboardEnd: code = SWT(END); break;
-				case UIKeyboardHIDUsageKeyboardInsert: code = SWT(INSERT); break;
-				case UIKeyboardHIDUsageKeyboardDeleteOrBackspace: code = '\b'; break;
-				case UIKeyboardHIDUsageKeyboardReturnOrEnter: code = '\r'; break;
-				case UIKeyboardHIDUsageKeyboardEscape: code = 0x1b; break;
-				case UIKeyboardHIDUsageKeyboardTab: code = '\t'; break;
-				case UIKeyboardHIDUsageKeyboardDeleteForward: code = 0x7f; break;
-				default: if (key.charactersIgnoringModifiers.length != 0) code = [key.charactersIgnoringModifiers characterAtIndex:0]; break;
-			}
+			jint code = swtSpecialKey(key.keyCode);
+			if (code == 0 && key.charactersIgnoringModifiers.length != 0) code = [key.charactersIgnoringModifiers characterAtIndex:0];
+			jint state = swtKeyState(type, code, key.modifierFlags);
 			jchar character = key.characters.length == 0 ? 0 : [key.characters characterAtIndex:0];
 			swtSendInput(_peer, type, CGPointZero, 0, code, character, state, 1, event.timestamp);
 		}
@@ -664,7 +720,7 @@ JNIEXPORT jlong JNICALL JNI(createControl)(JNI_ARGS, jint kind, jlong parent, ji
 			}
 			/* An owned Shell is a window in display coordinates, not a clipped
 			 * child control in its owner's coordinate system. */
-			UIView *host = kind == SWT(SHELL) ? swtRoot : owner;
+			UIView *host = kind == SWT(SHELL) ? swtRoot : owner.clientView;
 			if (host == nil) [NSException raise:NSInternalInconsistencyException format:@"UIKit root is unavailable"];
 			SWTUIKitView *view = [[SWTUIKitView alloc] initWithFrame:CGRectZero];
 			view.kind = kind; view.owner = parent; view.style = style;
@@ -692,7 +748,7 @@ JNIEXPORT void JNICALL JNI(disposeControl)(JNI_ARGS, jlong peer) {
 		swtUI(env, ^{
 			SWTUIKitView *view = swtView(peer);
 			/* Widget/Composite disposes child owners first. Refuse an orphaning call. */
-			for (UIView *child in view.subviews) if ([child isKindOfClass:SWTUIKitView.class] && !((SWTUIKitView *)child).disposed) {
+			for (UIView *child in view.clientView.subviews) if ([child isKindOfClass:SWTUIKitView.class] && !((SWTUIKitView *)child).disposed) {
 				[NSException raise:NSInternalInconsistencyException format:@"Dispose SWT child peers before their parent"];
 			}
 			if (view.kind == SWT(SHELL)) for (uint32_t i = 0; i < swtViews.length; i++) {
@@ -717,6 +773,7 @@ JNIEXPORT void JNICALL JNI(setBounds)(JNI_ARGS, jlong peer, jint x, jint y, jint
 				&& width == (jint)floor(swtRoot.bounds.size.width) && height == (jint)floor(swtRoot.bounds.size.height);
 			view.autoresizingMask = fillViewport ? UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight : UIViewAutoresizingNone;
 			view.frame = CGRectMake(x, y, width, height);
+			if (CGRectIsEmpty(swtClientBounds(view.bounds, view.style))) view.snapshot = NULL;
 		});
 	}
 }
@@ -877,6 +934,7 @@ JNIEXPORT void JNICALL JNI(setAccessibility)(JNI_ARGS, jlong peer, jstring label
 @property(nonatomic) CGFloat alpha;
 @property(nonatomic) CGFloat lineWidth;
 @property(nonatomic) BOOL antialias;
+@property(nonatomic) BOOL textAntialias;
 @property(nonatomic) CGAffineTransform transform;
 @property(nonatomic) BOOL clipped;
 @property(nonatomic) CGRect clip;
@@ -1007,7 +1065,7 @@ JNIEXPORT jlong JNICALL JNI(createGraphics)(JNI_ARGS, jlong handle) {
 		if (image.activeGraphics != 0) { swtThrow(env, "java/lang/IllegalStateException", "Image already has an active GC"); return 0; }
 		SWTUIKitGraphics *gc = [SWTUIKitGraphics new];
 		gc.image = image; gc.foreground = 0xff000000; gc.background = 0xffffffff;
-		gc.alpha = 1; gc.lineWidth = 1; gc.antialias = YES; gc.transform = CGAffineTransformIdentity;
+		gc.alpha = 1; gc.lineWidth = 1; gc.antialias = YES; gc.textAntialias = YES; gc.transform = CGAffineTransformIdentity;
 		gc.font = CTFontCreateWithName(CFSTR("Helvetica"), 12, NULL);
 		if (gc.font == NULL) { swtThrow(env, "java/lang/OutOfMemoryError", "CoreText font"); return 0; }
 		SWTRegistryError error;
@@ -1054,6 +1112,11 @@ JNIEXPORT void JNICALL JNI(setLineWidth)(JNI_ARGS, jlong handle, jfloat width) {
 JNIEXPORT void JNICALL JNI(setAntialias)(JNI_ARGS, jlong handle, jboolean enabled) {
 	@autoreleasepool {
 		SWTUIKitGraphics *gc = swtGC(env, handle); if (gc != nil) gc.antialias = enabled;
+	}
+}
+JNIEXPORT void JNICALL JNI(setTextAntialias)(JNI_ARGS, jlong handle, jboolean enabled) {
+	@autoreleasepool {
+		SWTUIKitGraphics *gc = swtGC(env, handle); if (gc != nil) gc.textAntialias = enabled;
 	}
 }
 JNIEXPORT void JNICALL JNI(setFont)(JNI_ARGS, jlong handle, jstring family, jfloat size, jint style) {
@@ -1108,6 +1171,32 @@ static CGContextRef swtBegin(SWTUIKitGraphics *gc) {
 	return context;
 }
 
+static CGRect swtClipBounds(SWTUIKitGraphics *gc) {
+	CGContextRef context = swtBegin(gc);
+	CGRect bounds = CGContextGetClipBoundingBox(context);
+	CGContextRestoreGState(context);
+	return bounds;
+}
+
+JNIEXPORT jintArray JNICALL JNI(getClipping)(JNI_ARGS, jlong handle) {
+	@autoreleasepool {
+		SWTUIKitGraphics *gc = swtGC(env, handle); if (gc == nil) return NULL;
+		CGRect bounds = swtClipBounds(gc);
+		jint values[4] = {0, 0, 0, 0};
+		if (!CGRectIsNull(bounds) && !CGRectIsEmpty(bounds)) {
+			double x = floor(CGRectGetMinX(bounds)), y = floor(CGRectGetMinY(bounds));
+			double width = ceil(CGRectGetMaxX(bounds)) - x, height = ceil(CGRectGetMaxY(bounds)) - y;
+			if (!isfinite(x) || !isfinite(y) || !isfinite(width) || !isfinite(height)
+					|| x < INT_MIN || x > INT_MAX || y < INT_MIN || y > INT_MAX
+					|| width < 0 || width > INT_MAX || height < 0 || height > INT_MAX) {
+				swtThrow(env, "java/lang/IllegalArgumentException", "Clip bounds exceed SWT integer coordinates"); return NULL;
+			}
+			values[0] = (jint)x; values[1] = (jint)y; values[2] = (jint)width; values[3] = (jint)height;
+		}
+		return swtInts(env, values, 4);
+	}
+}
+
 JNIEXPORT void JNICALL JNI(drawLine)(JNI_ARGS, jlong handle, jint x1, jint y1, jint x2, jint y2) {
 	@autoreleasepool {
 		SWTUIKitGraphics *gc = swtGC(env, handle); if (gc == nil) return;
@@ -1128,6 +1217,60 @@ JNIEXPORT void JNICALL JNI(drawShape)(JNI_ARGS, jlong handle, jint kind, jboolea
 			if (fill) CGContextFillEllipseInRect(context, rect); else CGContextStrokeEllipseInRect(context, rect);
 		}
 		CGContextRestoreGState(context);
+	}
+}
+/* JNI and the real simulator harness call the same current renderer helpers. */
+static BOOL swtDrawRoundRectangle(SWTUIKitGraphics *gc, BOOL fill, CGRect bounds, CGFloat arcWidth, CGFloat arcHeight) {
+	CGRect rect = CGRectStandardize(bounds);
+	CGFloat rx = MIN(rect.size.width, fabs(arcWidth)) / 2;
+	CGFloat ry = MIN(rect.size.height, fabs(arcHeight)) / 2;
+	CGPathRef path = rx == 0 || ry == 0 ? CGPathCreateWithRect(rect, NULL)
+			: CGPathCreateWithRoundedRect(rect, rx, ry, NULL);
+	if (path == NULL) return NO;
+	CGContextRef context = swtBegin(gc);
+	CGContextBeginPath(context); CGContextAddPath(context, path);
+	if (fill) CGContextFillPath(context); else CGContextStrokePath(context);
+	CGContextRestoreGState(context); CGPathRelease(path);
+	return YES;
+}
+
+static BOOL swtDrawArc(SWTUIKitGraphics *gc, BOOL fill, CGRect bounds, jint startAngle, jint arcAngle) {
+	CGRect rect = CGRectStandardize(bounds);
+	if (rect.size.width == 0 || rect.size.height == 0 || arcAngle == 0) return YES;
+	if (fabs((double)arcAngle) >= 360) {
+		CGContextRef context = swtBegin(gc);
+		if (fill) CGContextFillEllipseInRect(context, rect); else CGContextStrokeEllipseInRect(context, rect);
+		CGContextRestoreGState(context); return YES;
+	}
+	CGMutablePathRef path = CGPathCreateMutable();
+	if (path == NULL) return NO;
+	CGFloat cx = CGRectGetMidX(rect), cy = CGRectGetMidY(rect);
+	CGAffineTransform ellipse = CGAffineTransformMake(rect.size.width / 2, 0, 0, rect.size.height / 2, cx, cy);
+	if (fill) CGPathMoveToPoint(path, NULL, cx, cy);
+	/* SWT uses counterclockwise positive angles in its y-down image space. */
+	CGFloat start = -fmod((double)startAngle, 360) * (CGFloat)M_PI / 180;
+	CGFloat end = start - (CGFloat)arcAngle * (CGFloat)M_PI / 180;
+	CGPathAddArc(path, &ellipse, 0, 0, 1, start, end, arcAngle > 0);
+	if (fill) CGPathCloseSubpath(path);
+	CGContextRef context = swtBegin(gc);
+	CGContextBeginPath(context); CGContextAddPath(context, path);
+	if (fill) CGContextFillPath(context); else CGContextStrokePath(context);
+	CGContextRestoreGState(context); CGPathRelease(path);
+	return YES;
+}
+
+JNIEXPORT void JNICALL JNI(drawRoundRectangle)(JNI_ARGS, jlong handle, jboolean fill, jint x, jint y, jint width, jint height, jint arcWidth, jint arcHeight) {
+	@autoreleasepool {
+		SWTUIKitGraphics *gc = swtGC(env, handle); if (gc == nil) return;
+		if (!swtDrawRoundRectangle(gc, fill, CGRectMake(x, y, width, height), arcWidth, arcHeight))
+			swtThrow(env, "java/lang/OutOfMemoryError", "Rounded rectangle path");
+	}
+}
+JNIEXPORT void JNICALL JNI(drawArc)(JNI_ARGS, jlong handle, jboolean fill, jint x, jint y, jint width, jint height, jint startAngle, jint arcAngle) {
+	@autoreleasepool {
+		SWTUIKitGraphics *gc = swtGC(env, handle); if (gc == nil) return;
+		if (!swtDrawArc(gc, fill, CGRectMake(x, y, width, height), startAngle, arcAngle))
+			swtThrow(env, "java/lang/OutOfMemoryError", "Arc path");
 	}
 }
 JNIEXPORT void JNICALL JNI(drawPolygon)(JNI_ARGS, jlong handle, jintArray points, jboolean fill) {
@@ -1153,7 +1296,7 @@ JNIEXPORT void JNICALL JNI(drawPolygon)(JNI_ARGS, jlong handle, jintArray points
 
 /* Shape with CoreText, preserving UTF-16. Mnemonics are rendering metadata;
  * tabs use actual space advances and delimiters do not split surrogate pairs. */
-static CGSize swtLayoutText(JNIEnv *env, SWTUIKitGraphics *gc, NSString *text, jint flags,
+static BOOL swtLayoutText(SWTUIKitGraphics *gc, NSString *text, jint flags, CGSize *extent,
 	void (^draw)(CTLineRef, CGFloat, CGFloat)) {
 	CGFloat ascent = ceil(CTFontGetAscent(gc.font));
 	CGFloat lineHeight = ascent + ceil(CTFontGetDescent(gc.font)) + ceil(CTFontGetLeading(gc.font));
@@ -1162,7 +1305,7 @@ static CGSize swtLayoutText(JNIEnv *env, SWTUIKitGraphics *gc, NSString *text, j
 		(__bridge NSString *)kCTForegroundColorFromContextAttributeName: @YES};
 	NSAttributedString *spaceString = [[NSAttributedString alloc] initWithString:@" " attributes:attributes];
 	CTLineRef space = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef)spaceString);
-	if (space == NULL) { swtThrow(env, "java/lang/OutOfMemoryError", "CoreText tab metrics"); return CGSizeZero; }
+	if (space == NULL) return NO;
 	CGFloat tabWidth = MAX(1.0, CTLineGetTypographicBounds(space, NULL, NULL, NULL) * 8);
 	CFRelease(space);
 	CGFloat x = 0, y = 0, maximum = 0;
@@ -1184,7 +1327,7 @@ static CGSize swtLayoutText(JNIEnv *env, SWTUIKitGraphics *gc, NSString *text, j
 				[run addAttribute:(__bridge NSString *)kCTUnderlineStyleAttributeName value:@(kCTUnderlineStyleSingle) range:NSMakeRange(index, count)];
 			}];
 			CTLineRef line = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef)run);
-			if (line == NULL) { swtThrow(env, "java/lang/OutOfMemoryError", "CoreText line"); return CGSizeZero; }
+			if (line == NULL) return NO;
 			CGFloat advance = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
 			if (draw != nil) draw(line, x, y + ascent);
 			CFRelease(line);
@@ -1205,35 +1348,42 @@ static CGSize swtLayoutText(JNIEnv *env, SWTUIKitGraphics *gc, NSString *text, j
 		if (mnemonic) { [underlines addIndex:segment.length]; mnemonic = NO; }
 		[segment appendString:[NSString stringWithCharacters:&ch length:1]];
 	}
-	return CGSizeMake(ceil(maximum), ceil(y + lineHeight));
+	*extent = CGSizeMake(ceil(maximum), ceil(y + lineHeight));
+	return YES;
+}
+
+static BOOL swtDrawText(SWTUIKitGraphics *gc, NSString *text, jint x, jint y, jint flags) {
+	CGContextRef context = swtBegin(gc);
+	CGSize extent;
+	if ((flags & SWT(DRAW_TRANSPARENT)) == 0) {
+		if (!swtLayoutText(gc, text, flags, &extent, nil)) { CGContextRestoreGState(context); return NO; }
+		CGContextFillRect(context, CGRectMake(x, y, extent.width, extent.height));
+	}
+	uint32_t fg = gc.foreground;
+	CGContextSetRGBFillColor(context, ((fg >> 16) & 255) / 255.0, ((fg >> 8) & 255) / 255.0, (fg & 255) / 255.0, (fg >> 24) / 255.0);
+	CGContextSetShouldAntialias(context, gc.textAntialias);
+	CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1, -1));
+	BOOL result = swtLayoutText(gc, text, flags, &extent, ^(CTLineRef line, CGFloat offsetX, CGFloat baseline) {
+		CGContextSetTextPosition(context, x + offsetX, y + baseline);
+		CTLineDraw(line, context);
+	});
+	CGContextRestoreGState(context);
+	return result;
 }
 
 JNIEXPORT void JNICALL JNI(drawText)(JNI_ARGS, jlong handle, jstring value, jint x, jint y, jint flags) {
 	@autoreleasepool {
 		SWTUIKitGraphics *gc = swtGC(env, handle); if (gc == nil) return;
 		NSString *text = swtString(env, value); if (text == nil) return;
-		CGContextRef context = swtBegin(gc);
-		if ((flags & SWT(DRAW_TRANSPARENT)) == 0) {
-			CGSize extent = swtLayoutText(env, gc, text, flags, nil);
-			if ((*env)->ExceptionCheck(env)) { CGContextRestoreGState(context); return; }
-			CGContextFillRect(context, CGRectMake(x, y, extent.width, extent.height));
-		}
-		uint32_t fg = gc.foreground;
-		CGContextSetRGBFillColor(context, ((fg >> 16) & 255) / 255.0, ((fg >> 8) & 255) / 255.0, (fg & 255) / 255.0, (fg >> 24) / 255.0);
-		CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1, -1));
-		swtLayoutText(env, gc, text, flags, ^(CTLineRef line, CGFloat offsetX, CGFloat baseline) {
-			CGContextSetTextPosition(context, x + offsetX, y + baseline);
-			CTLineDraw(line, context);
-		});
-		CGContextRestoreGState(context);
+		if (!swtDrawText(gc, text, x, y, flags)) swtThrow(env, "java/lang/OutOfMemoryError", "CoreText layout");
 	}
 }
 JNIEXPORT jintArray JNICALL JNI(textExtent)(JNI_ARGS, jlong handle, jstring value, jint flags) {
 	@autoreleasepool {
 		SWTUIKitGraphics *gc = swtGC(env, handle); if (gc == nil) return NULL;
 		NSString *text = swtString(env, value); if (text == nil) return NULL;
-		CGSize extent = swtLayoutText(env, gc, text, flags, nil);
-		if ((*env)->ExceptionCheck(env)) return NULL;
+		CGSize extent;
+		if (!swtLayoutText(gc, text, flags, &extent, nil)) { swtThrow(env, "java/lang/OutOfMemoryError", "CoreText layout"); return NULL; }
 		if (!isfinite(extent.width) || !isfinite(extent.height) || extent.width > INT_MAX || extent.height > INT_MAX) {
 			swtThrow(env, "java/lang/IllegalArgumentException", "Text extent exceeds SWT integer coordinates"); return NULL;
 		}
@@ -1247,8 +1397,10 @@ JNIEXPORT jintArray JNICALL JNI(fontMetrics)(JNI_ARGS, jlong handle) {
 		double ascent = ceil(CTFontGetAscent(gc.font));
 		double descent = ceil(CTFontGetDescent(gc.font));
 		double leading = ceil(CTFontGetLeading(gc.font));
-		CGSize alphabet = swtLayoutText(env, gc, @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 0, nil);
-		if ((*env)->ExceptionCheck(env)) return NULL;
+		CGSize alphabet;
+		if (!swtLayoutText(gc, @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 0, &alphabet, nil)) {
+			swtThrow(env, "java/lang/OutOfMemoryError", "CoreText layout"); return NULL;
+		}
 		double average = ceil(alphabet.width / 52), height = ascent + descent + leading;
 		if (!isfinite(ascent) || !isfinite(descent) || !isfinite(leading) || !isfinite(average)
 			|| ascent < 0 || descent < 0 || leading < 0 || average < 0
@@ -1311,11 +1463,15 @@ static JNINativeMethod swtMethods[] = {
 	{"setAlpha", "(JI)V", (void *)JNI(setAlpha)},
 	{"setLineWidth", "(JF)V", (void *)JNI(setLineWidth)},
 	{"setAntialias", "(JZ)V", (void *)JNI(setAntialias)},
+	{"setTextAntialias", "(JZ)V", (void *)JNI(setTextAntialias)},
 	{"setFont", "(JLjava/lang/String;FI)V", (void *)JNI(setFont)},
 	{"setTransform", "(J[F)V", (void *)JNI(setTransform)},
 	{"setClipping", "(JZIIII)V", (void *)JNI(setClipping)},
+	{"getClipping", "(J)[I", (void *)JNI(getClipping)},
 	{"drawLine", "(JIIII)V", (void *)JNI(drawLine)},
 	{"drawShape", "(JIZIIII)V", (void *)JNI(drawShape)},
+	{"drawRoundRectangle", "(JZIIIIII)V", (void *)JNI(drawRoundRectangle)},
+	{"drawArc", "(JZIIIIII)V", (void *)JNI(drawArc)},
 	{"drawPolygon", "(J[IZ)V", (void *)JNI(drawPolygon)},
 	{"drawText", "(JLjava/lang/String;III)V", (void *)JNI(drawText)},
 	{"drawImage", "(JJIIIIIIII)V", (void *)JNI(drawImage)},

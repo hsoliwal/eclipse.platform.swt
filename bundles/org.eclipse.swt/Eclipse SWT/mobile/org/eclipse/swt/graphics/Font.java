@@ -26,6 +26,17 @@ public final class Font extends Resource {
 		for (int i = 0; i < copy.length; i++) copy[i] = new FontData(descriptions[i]);
 		return copy;
 	}
+	/**
+	 * Returns the original mobile integer pixel height for this font's primary
+	 * descriptor. Native drawing continues to retain its fractional font size.
+	 *
+	 * @return the primary font height in pixels, with a minimum of one
+	 * @throws org.eclipse.swt.SWTException if this font has been disposed
+	 */
+	public int internalPixelSize() {
+		Device owner = getDevice();
+		return Math.max(1, Math.round(descriptions[0].getHeight() * owner.getDPI().y / 72f));
+	}
 	@Override void destroy() { disposed = true; }
 	@Override public boolean isDisposed() { return disposed || device == null || device.isDisposed(); }
 	@Override public boolean equals(Object value) { return this == value || value instanceof Font f && !isDisposed() && !f.isDisposed() && java.util.Arrays.equals(descriptions, f.descriptions); }
