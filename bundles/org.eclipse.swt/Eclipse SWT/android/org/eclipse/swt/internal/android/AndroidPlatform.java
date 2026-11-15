@@ -618,7 +618,7 @@ public final class AndroidPlatform implements MobilePlatform {
 			if ((kind == CANVAS && role != ACC.ROLE_SLIDER && role != ACC.ROLE_LIST)
 					|| role == ACC.ROLE_COMBOBOX)
 				info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK);
-			if (role == ACC.ROLE_SLIDER || role == ACC.ROLE_LIST) {
+			if (role == ACC.ROLE_SLIDER || role == ACC.ROLE_LIST || role == ACC.ROLE_TABLE) {
 				info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
 				info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
 			}
