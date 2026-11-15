@@ -35,5 +35,8 @@ public final class MobileCoreContractJUnitTest {
 	@Test void originalMobileNativeTextVerifyModifyAndUtf16() {
 		MobileCoreContractTest.testMobileOriginalTextContracts();
 	}
+	@Test void originalMobileComboTextListPopupAndSelection() {
+		MobileCoreContractTest.testMobileComboContracts();
+	}
 
 }
