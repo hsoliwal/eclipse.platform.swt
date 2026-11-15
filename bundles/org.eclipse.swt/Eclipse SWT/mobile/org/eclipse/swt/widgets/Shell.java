@@ -20,6 +20,8 @@ public class Shell extends Decorations {
 		if (disposed) return;
 		layout(true, true);
 		if (disposed) return;
+		setFocus();
+		if (!disposed) redrawAll();
 		setFocus(); redrawAll();
 	}
 	public void close() { checkWidget(); Event e = new Event(); sendEvent(SWT.Close, e); if (!disposed && e.doit) dispose(); }

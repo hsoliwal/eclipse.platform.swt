@@ -12,7 +12,7 @@ public final class FontData {
 	private String name;
 	private int height;
 	private int style;
-	private String locale;
+	private String locale = "";
 	public FontData() { this("sans-serif", 12, SWT.NORMAL); }
 	public FontData(String name, int height, int style) { setName(name); setHeight(height); setStyle(style); }
 	public FontData(FontData other) {
@@ -34,7 +34,7 @@ public final class FontData {
 	public void setName(String value) { if (value == null) SWT.error(SWT.ERROR_NULL_ARGUMENT); name = value; }
 	public void setHeight(int value) { if (value < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT); height = value; }
 	public void setStyle(int value) { style = value & (SWT.BOLD | SWT.ITALIC); }
-	public void setLocale(String value) { locale = value; }
+	public void setLocale(String value) { locale = value == null ? "" : value; }
 	@Override public boolean equals(Object value) { return value instanceof FontData f && name.equals(f.name) && height == f.height && style == f.style && Objects.equals(locale, f.locale); }
 	@Override public int hashCode() { return Objects.hash(name, height, style, locale); }
 	@Override public String toString() { return "1|" + name + "|" + height + "|" + style + "|MOBILE|1|"; }

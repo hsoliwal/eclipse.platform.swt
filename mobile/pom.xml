@@ -52,6 +52,7 @@
         <groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.4</version>
         <configuration>
           <skipTests>${skipTests}</skipTests><failIfNoTests>true</failIfNoTests><trimStackTrace>false</trimStackTrace>
+          <includes><include>**/Mobile*ContractJUnitTest.java</include></includes>
           <includes>
             <include>**/MobileCoreContractJUnitTest.java</include>
             <include>**/MobileLifecycleContractJUnitTest.java</include>

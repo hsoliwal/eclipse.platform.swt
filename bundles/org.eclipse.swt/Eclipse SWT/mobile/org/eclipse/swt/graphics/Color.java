@@ -38,6 +38,13 @@ public final class Color extends Resource {
 	public RGB getRGB() { return new RGB(getRed(), getGreen(), getBlue()); }
 	public RGBA getRGBA() { return new RGBA(getRed(), getGreen(), getBlue(), getAlpha()); }
 	public int internal_argb() { check(); return argb; }
+	/**
+	 * Retains the original mobile spelling of the packed color accessor.
+	 *
+	 * @return the packed alpha, red, green and blue components
+	 * @throws org.eclipse.swt.SWTException if this color has been disposed
+	 */
+	public int internalArgb() { return internal_argb(); }
 	@Override public Device getDevice() { check(); return device == null ? Device.getDevice() : device; }
 	@Override public boolean isDisposed() { return disposed; }
 	@Override public void dispose() { disposed = true; device = null; }

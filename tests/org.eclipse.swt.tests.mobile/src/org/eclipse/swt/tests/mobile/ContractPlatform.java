@@ -8,6 +8,7 @@ import java.awt.BasicStroke;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
@@ -78,7 +79,8 @@ final class ContractPlatform implements MobilePlatform {
 	@Override public Graphics graphics(long id){BufferedImage image=bitmap(id);openedGraphics++;return new TestGraphics(image);}
 	final class TestGraphics implements Graphics {
 		final Graphics2D g; int foreground=0xff000000,background=0xffffffff,alpha=255; boolean closed;
-		TestGraphics(BufferedImage image){g=image.createGraphics();}
+		final java.awt.Rectangle bounds;
+		TestGraphics(BufferedImage image){g=image.createGraphics();bounds=new java.awt.Rectangle(0,0,image.getWidth(),image.getHeight());}
 		void drawing(){check();if(closed)throw new AssertionError("Drawing after GC disposal");}
 		void color(boolean back){drawing();g.setColor(new java.awt.Color(back?background:foreground,true));g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER,alpha/255f));}
 		@Override public void setForeground(int color){drawing();foreground=color;}
@@ -86,15 +88,24 @@ final class ContractPlatform implements MobilePlatform {
 		@Override public void setAlpha(int value){drawing();alpha=value;}
 		@Override public void setLineWidth(float width){drawing();g.setStroke(new BasicStroke(width));}
 		@Override public void setAntialias(boolean enabled){drawing();g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,enabled?RenderingHints.VALUE_ANTIALIAS_ON:RenderingHints.VALUE_ANTIALIAS_OFF);}
+		@Override public void setTextAntialias(boolean enabled){drawing();g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,enabled?RenderingHints.VALUE_TEXT_ANTIALIAS_ON:RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);}
 		@Override public void setFont(String family,float size,int style){drawing();g.setFont(new java.awt.Font(family,((style&SWT.BOLD)!=0?java.awt.Font.BOLD:0)|((style&SWT.ITALIC)!=0?java.awt.Font.ITALIC:0),Math.max(1,Math.round(size))));}
 		@Override public void setTransform(float[] m){drawing();g.setTransform(new AffineTransform(m));}
 		@Override public void setClipping(int x,int y,int w,int h){drawing();g.setClip(x,y,w,h);}
 		@Override public void resetClipping(){drawing();g.setClip(null);}
+		@Override public int[] getClipping(){
+			drawing();Area area=new Area(bounds);
+			try{area.transform(g.getTransform().createInverse());}catch(java.awt.geom.NoninvertibleTransformException e){return new int[4];}
+			if(g.getClip()!=null)area.intersect(new Area(g.getClip()));
+			java.awt.Rectangle r=area.getBounds();return new int[]{r.x,r.y,r.width,r.height};
+		}
 		@Override public void drawLine(int x1,int y1,int x2,int y2){color(false);g.drawLine(x1,y1,x2,y2);}
 		@Override public void drawRectangle(int x,int y,int w,int h){color(false);g.drawRect(x,y,w,h);}
 		@Override public void fillRectangle(int x,int y,int w,int h){color(true);g.fillRect(x,y,w,h);}
 		@Override public void drawOval(int x,int y,int w,int h){color(false);g.drawOval(x,y,w,h);}
 		@Override public void fillOval(int x,int y,int w,int h){color(true);g.fillOval(x,y,w,h);}
+		@Override public void drawRoundRectangle(int x,int y,int w,int h,int aw,int ah,boolean fill){color(fill);if(fill)g.fillRoundRect(x,y,w,h,aw,ah);else g.drawRoundRect(x,y,w,h,aw,ah);}
+		@Override public void drawArc(int x,int y,int w,int h,int start,int sweep,boolean fill){color(fill);if(fill)g.fillArc(x,y,w,h,start,sweep);else g.drawArc(x,y,w,h,start,sweep);}
 		@Override public void drawPolygon(int[] points,boolean fill){color(fill);Path2D path=new Path2D.Float();path.moveTo(points[0],points[1]);for(int i=2;i<points.length;i+=2)path.lineTo(points[i],points[i+1]);path.closePath();if(fill)g.fill(path);else g.draw(path);}
 		private String[] lines(String text,int flags){return (flags&SWT.DRAW_DELIMITER)!=0?text.split("\n",-1):new String[]{text};}
 		@Override public void drawText(String text,int x,int y,int flags){int[] extent=textExtent(text,flags);if((flags&SWT.DRAW_TRANSPARENT)==0)fillRectangle(x,y,extent[0],extent[1]);color(false);java.awt.FontMetrics fm=g.getFontMetrics();int row=0;for(String line:lines(text,flags))g.drawString(line,x,y+fm.getAscent()+row++*fm.getHeight());}

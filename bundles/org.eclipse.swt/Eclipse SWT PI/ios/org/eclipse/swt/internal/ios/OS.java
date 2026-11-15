@@ -37,6 +37,7 @@ public final class OS {
 	public static final int ACTION_INCREMENT = MobilePlatform.ACTION_INCREMENT,
 		ACTION_DECREMENT = MobilePlatform.ACTION_DECREMENT;
 	public static final int NO_FOCUS = SWT.NO_FOCUS;
+	public static final int BORDER = SWT.BORDER;
 	public static final int TEXT = MobilePlatform.TEXT;
 	public static final int MULTI = SWT.MULTI, PASSWORD = SWT.PASSWORD;
 	public static final int DEFAULT_SELECTION = SWT.DefaultSelection;
@@ -78,12 +79,16 @@ public final class OS {
 	public static native void setAlpha(long graphics, int alpha);
 	public static native void setLineWidth(long graphics, float width);
 	public static native void setAntialias(long graphics, boolean enabled);
+	public static native void setTextAntialias(long graphics, boolean enabled);
 	public static native void setFont(long graphics, String family, float size, int style);
 	public static native void setTransform(long graphics, float[] matrix);
 	public static native void setClipping(long graphics, boolean enabled, int x, int y, int width, int height);
+	public static native int[] getClipping(long graphics);
 	public static native void drawLine(long graphics, int x1, int y1, int x2, int y2);
 	/** Kind 0 is a rectangle; kind 1 is an oval. */
 	public static native void drawShape(long graphics, int kind, boolean fill, int x, int y, int width, int height);
+	public static native void drawRoundRectangle(long graphics, boolean fill, int x, int y, int width, int height, int arcWidth, int arcHeight);
+	public static native void drawArc(long graphics, boolean fill, int x, int y, int width, int height, int startAngle, int arcAngle);
 	public static native void drawPolygon(long graphics, int[] points, boolean fill);
 	public static native void drawText(long graphics, String text, int x, int y, int flags);
 	public static native void drawImage(long graphics, long image, int sx, int sy, int sw, int sh,

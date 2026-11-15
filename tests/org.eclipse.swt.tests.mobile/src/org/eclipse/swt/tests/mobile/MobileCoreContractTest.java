@@ -34,6 +34,21 @@ public final class MobileCoreContractTest {
 		testThreadAndQueueContracts();
 		testGraphicsAndDisposalDuringPaint();
 		testDestructionAndBlockedSyncExec();
+		testDisposingParentRejectsNewChildren();
+		testDisposingDisplayRejectsNewOwners();
+		testShellOpenSurvivesListenerDisposal();
+		testLayoutCallbacksMayDisposeControls();
+		testAncestorStateReleasesFocus();
+		testDisableFocusOutMayDisposeOwners();
+		testFocusOutReentrancyPreservesOwner();
+		testFailingFocusOutStillReleasesControl();
+		testDisplayExecuteNullContract();
+		testDisplayDisposeExecNullContract();
+		testUnsupportedNativeEventPosting();
+		testMobilePublicResourceAliases();
+		testFontDataDefaultLocaleNormalization();
+		testBorderClientGeometryAndPainting();
+		testEmptyBorderClientReleasesImage();
 		testOwnedShellCoordinateMapping();
 		testMobileButtonLabelContracts();
 		testMobileProgressAndScaleContracts();
@@ -80,6 +95,25 @@ public final class MobileCoreContractTest {
 		} finally {display.dispose();MobileRuntime.uninstall(platform);}
 		require(platform.controls.isEmpty()&&platform.images.isEmpty(),"All original control peers and native images released");
 		require(platform.openedGraphics==platform.closedGraphics,"All native drawing contexts released");
+	}
+	static void testFontDataDefaultLocaleNormalization() {
+		FontData initial=new FontData("sans-serif",12,SWT.NORMAL);
+		FontData empty=new FontData("sans-serif",12,SWT.NORMAL);empty.setLocale("");
+		FontData reset=new FontData("sans-serif",12,SWT.NORMAL);reset.setLocale("en_US");reset.setLocale(null);
+		require(initial.getLocale().equals("")&&empty.getLocale().equals("")&&reset.getLocale().equals(""),"Default, empty and reset locales expose the same default selection");
+		require(initial.equals(empty)&&empty.equals(reset)&&reset.equals(initial),"Equivalent default locale requests compare equally");
+		require(initial.hashCode()==empty.hashCode()&&empty.hashCode()==reset.hashCode(),"Equivalent default locale requests have equal hashes");
+		java.util.HashSet<FontData> requests=new java.util.HashSet<>(List.of(initial,empty,reset));
+		require(requests.size()==1,"Default locale spelling cannot duplicate a font request in hashed collections");
+		FontData copied=new FontData(empty);
+		require(copied.equals(initial)&&copied.hashCode()==initial.hashCode(),"FontData copy preserves normalized default locale identity");
+		FontData serialized=new FontData(initial.toString());
+		require(serialized.equals(initial),"Default locale survives the current FontData string constructor");
+		FontData specific=new FontData(initial);specific.setLocale("en_US");
+		FontData specificCopy=new FontData(specific);
+		require(specificCopy.equals(specific)&&specificCopy.getLocale().equals("en_US"),"Existing nonempty locale values and copy behavior survive");
+		specificCopy.setLocale(null);
+		require(specificCopy.equals(initial)&&specific.getLocale().equals("en_US"),"Resetting a copied locale is independent of the original descriptor");
 	}
 	static void testThreadAndQueueContracts()throws Exception {
 		ContractPlatform platform=new ContractPlatform();MobileRuntime.install(platform);Display display=new Display();
@@ -136,6 +170,298 @@ public final class MobileCoreContractTest {
 		ContractPlatform finalPlatform=new ContractPlatform();MobileRuntime.install(finalPlatform);Display finalDisplay=new Display();
 		try {Shell shell=new Shell(finalDisplay);shell.addListener(SWT.Close,e->e.doit=false);finalPlatform.sink.terminate();finalDisplay.readAndDispatch();require(finalDisplay.isDisposed()&&shell.isDisposed(),"OS host termination bypasses vetoable Shell.Close");}finally{if(!finalDisplay.isDisposed())finalDisplay.dispose();MobileRuntime.uninstall(finalPlatform);}
 	}
+	static void testDisposingParentRejectsNewChildren() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			Shell shell = new Shell(display);
+			Composite parent = new Composite(shell, SWT.NONE);
+			Canvas child = new Canvas(parent, SWT.NONE);
+			AtomicReference<Canvas> escaped = new AtomicReference<>();
+			AtomicInteger remainingListeners = new AtomicInteger();
+			child.addDisposeListener(e -> escaped.set(new Canvas(parent, SWT.NONE)));
+			child.addDisposeListener(e -> remainingListeners.incrementAndGet());
+			expectSwt(SWT.ERROR_WIDGET_DISPOSED, parent::dispose);
+			require(escaped.get() == null, "A child Dispose listener cannot create a live child under its disposing parent");
+			require(parent.isDisposed() && child.isDisposed() && remainingListeners.get() == 1,
+					"Rejected child creation does not interrupt remaining listeners or subtree disposal");
+			require(shell.getChildren().length == 0 && platform.controls.size() == 1,
+					"Rejected child creation leaves only the owning Shell peer");
+		} finally { try { display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testDisposingDisplayRejectsNewOwners() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			Shell shell = new Shell(display);
+			AtomicReference<Canvas> escapedChild = new AtomicReference<>();
+			AtomicReference<Shell> escapedShell = new AtomicReference<>();
+			AtomicInteger remainingCallbacks = new AtomicInteger();
+			display.addListener(SWT.Dispose, e -> escapedChild.set(new Canvas(shell, SWT.NONE)));
+			display.disposeExec(() -> escapedShell.set(new Shell(display)));
+			display.disposeExec(remainingCallbacks::incrementAndGet);
+			expectSwt(SWT.ERROR_DEVICE_DISPOSED, display::dispose);
+			require(escapedChild.get() == null && escapedShell.get() == null,
+					"Display disposal rejects both parent-based and Display-based widget construction before creating peers");
+			require(display.isDisposed() && shell.isDisposed() && Display.getCurrent() == null,
+					"Rejected construction still releases the Display and its existing Shell");
+			require(remainingCallbacks.get() == 1 && platform.disconnects == 1 && platform.controls.isEmpty() && platform.images.isEmpty(),
+					"Later dispose callbacks and native disconnect run without retained owners");
+		} finally { try { if (!display.isDisposed()) display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testShellOpenSurvivesListenerDisposal() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			Shell shown = new Shell(display);
+			shown.addListener(SWT.Show, e -> shown.dispose());
+			shown.open();
+			require(shown.isDisposed(), "Shell.open returns normally when its Show listener disposes the Shell");
+			Shell focused = new Shell(display);
+			focused.addListener(SWT.FocusIn, e -> focused.dispose());
+			focused.open();
+			require(focused.isDisposed() && display.getFocusControl() == null,
+					"Shell.open returns normally when its FocusIn listener disposes the Shell");
+			require(platform.controls.isEmpty() && platform.images.isEmpty(), "Reentrant Shell opening leaves no native peers or images");
+		} finally { try { display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testLayoutCallbacksMayDisposeControls() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			Layout disposingLayout = new Layout() {
+				@Override protected Point computeSize(Composite composite, int wHint, int hHint, boolean flushCache) { return new Point(40, 40); }
+				@Override protected void layout(Composite composite, boolean flushCache) { composite.dispose(); }
+			};
+			Shell disposedOnOpen = new Shell(display);
+			disposedOnOpen.setLayout(disposingLayout);
+			disposedOnOpen.open();
+			require(disposedOnOpen.isDisposed(), "Shell.open tolerates its custom Layout disposing the Shell");
+			Shell shell = new Shell(display);
+			Composite disposedOnResize = new Composite(shell, SWT.NONE);
+			disposedOnResize.setLayout(disposingLayout);
+			disposedOnResize.setSize(40, 40);
+			require(disposedOnResize.isDisposed(), "A resize-triggered Layout can dispose its control without a later redraw");
+			Composite parent = new Composite(shell, SWT.NONE);
+			Composite first = new Composite(parent, SWT.NONE), removed = new Composite(parent, SWT.NONE);
+			AtomicInteger layouts = new AtomicInteger();
+			first.setLayout(new Layout() {
+				@Override protected Point computeSize(Composite composite, int wHint, int hHint, boolean flushCache) { return new Point(40, 40); }
+				@Override protected void layout(Composite composite, boolean flushCache) {
+					require(flushCache, "Recursive layout retains the requested changed flag");
+					layouts.incrementAndGet(); removed.dispose();
+				}
+			});
+			parent.setLayoutDeferred(true); parent.layout(true, true);
+			require(layouts.get() == 0, "Deferred layout does not enter child layouts");
+			parent.setLayoutDeferred(false);
+			require(layouts.get() == 1 && removed.isDisposed() && !first.isDisposed(),
+					"Recursive layout skips a disposed snapshot sibling and preserves live children");
+		} finally { try { display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testAncestorStateReleasesFocus() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			Shell shell = new Shell(display); Composite parent = new Composite(shell, SWT.NONE);
+			Canvas canvas = new Canvas(parent, SWT.NONE); long peer = platform.lastCreated;
+			parent.setBounds(0, 0, 80, 80); canvas.setBounds(0, 0, 40, 40); shell.open(); drain(display);
+			AtomicInteger focusOut = new AtomicInteger(); canvas.addListener(SWT.FocusOut, e -> focusOut.incrementAndGet());
+			require(canvas.setFocus(), "Visible enabled child accepts focus");
+			platform.sink.input(peer, SWT.FocusIn, 0, 0, 0, 0, '\0', 0, 0, 101);
+			parent.setEnabled(false);
+			require(display.getFocusControl() == null && focusOut.get() == 1, "Disabling an ancestor clears descendant focus exactly once");
+			platform.sink.input(peer, SWT.FocusOut, 0, 0, 0, 0, '\0', 0, 0, 102); drain(display);
+			require(display.getFocusControl() == null && focusOut.get() == 1, "Queued native focus acknowledgements cannot restore disabled focus");
+			parent.setEnabled(true); require(canvas.setFocus(), "Re-enabled child can regain focus");
+			platform.sink.input(peer, SWT.FocusIn, 0, 0, 0, 0, '\0', 0, 0, 103);
+			parent.setVisible(false);
+			require(display.getFocusControl() == null && focusOut.get() == 2, "Hiding an ancestor clears descendant focus exactly once");
+			drain(display);
+			require(display.getFocusControl() == null && focusOut.get() == 2, "Queued FocusIn cannot restore focus to a hidden descendant");
+			parent.setVisible(true); require(canvas.setFocus(), "Shown child can regain focus");
+			canvas.addListener(SWT.FocusOut, e -> canvas.dispose()); parent.setEnabled(false);
+			require(canvas.isDisposed() && display.getFocusControl() == null && !platform.controls.containsKey(peer),
+					"FocusOut may dispose the child while an ancestor is being disabled");
+		} finally { try { display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testFocusOutReentrancyPreservesOwner() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			Shell shell = new Shell(display); Canvas first = new Canvas(shell, SWT.NONE);
+			Canvas requested = new Canvas(shell, SWT.NONE), redirected = new Canvas(shell, SWT.NONE);
+			shell.open(); require(first.setFocus(), "Initial child receives focus");
+			AtomicInteger requestedFocusIn = new AtomicInteger(); requested.addListener(SWT.FocusIn, e -> requestedFocusIn.incrementAndGet());
+			first.addListener(SWT.FocusOut, e -> redirected.setFocus());
+			require(!requested.setFocus(), "An outer focus request reports failure when FocusOut redirects focus");
+			require(display.getFocusControl() == redirected && requestedFocusIn.get() == 0,
+					"A nested focus request retains its owner without a stale outer FocusIn");
+			Canvas disposedOnFocus = new Canvas(shell, SWT.NONE); long peer = platform.lastCreated;
+			disposedOnFocus.addListener(SWT.FocusIn, e -> disposedOnFocus.dispose());
+			require(!disposedOnFocus.setFocus() && disposedOnFocus.isDisposed() && display.getFocusControl() == null,
+					"FocusIn disposal clears focus and makes the request report failure");
+			require(!platform.controls.containsKey(peer), "FocusIn disposal releases the native peer");
+		} finally { try { display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testDisableFocusOutMayDisposeOwners() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			Shell shell = new Shell(display); shell.open(); drain(display);
+			for (boolean ancestor : new boolean[] {false, true}) {
+				Composite parent = new Composite(shell, SWT.BORDER); parent.setBounds(0, 0, 80, 80);
+				Canvas canvas = new Canvas(parent, SWT.BORDER); canvas.setBounds(0, 0, 40, 40); long peer = platform.lastCreated;
+				require(canvas.setFocus(), "Child receives focus before disabling its owner");
+				canvas.addListener(SWT.FocusOut, e -> { if (ancestor) parent.dispose(); else canvas.dispose(); });
+				if (ancestor) parent.setEnabled(false); else canvas.setEnabled(false);
+				require(canvas.isDisposed() && display.getFocusControl() == null && !platform.controls.containsKey(peer),
+						"Disabling may dispose the focused owner or its ancestor without a later redraw on a disposed widget");
+				if (!parent.isDisposed()) parent.dispose();
+			}
+		} finally { try { display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testFailingFocusOutStillReleasesControl() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			Shell shell = new Shell(display); Canvas canvas = new Canvas(shell, SWT.NONE); long peer = platform.lastCreated;
+			canvas.setSize(40, 40); shell.open(); drain(display); require(canvas.setFocus(), "Child receives focus before disposal");
+			IllegalArgumentException expected = new IllegalArgumentException("FocusOut listener failure");
+			canvas.addListener(SWT.FocusOut, e -> { throw expected; });
+			try { canvas.dispose(); throw new AssertionError("Focused disposal must deliver FocusOut"); }
+			catch (IllegalArgumentException actual) { require(actual == expected, "FocusOut failure is propagated unchanged"); }
+			require(canvas.isDisposed() && display.getFocusControl() == null && shell.getChildren().length == 0,
+					"A failing FocusOut listener does not retain the disposed child or focus");
+			require(!platform.controls.containsKey(peer) && platform.openedGraphics == platform.closedGraphics,
+					"A failing FocusOut listener does not retain native control or graphics owners");
+		} finally { try { display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testDisplayExecuteNullContract() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			try { display.execute(null); throw new AssertionError("Executor must reject a null command"); }
+			catch (NullPointerException expected) { require(true, "Display.execute uses the Executor null-command contract"); }
+		} finally { try { display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testDisplayDisposeExecNullContract() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			AtomicInteger calls = new AtomicInteger();
+			display.disposeExec(null); display.disposeExec(calls::incrementAndGet); display.dispose();
+			require(calls.get() == 1 && display.isDisposed(), "A null disposeExec is ignored without losing later disposal callbacks");
+		} finally { try { if (!display.isDisposed()) display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testUnsupportedNativeEventPosting() throws Exception {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			Shell shell = new Shell(display); Canvas canvas = new Canvas(shell, SWT.NONE);
+			canvas.setBounds(0, 0, 40, 40); shell.open(); canvas.setFocus(); drain(display);
+			AtomicInteger delivered = new AtomicInteger();
+			for (int type : new int[] {SWT.KeyDown, SWT.KeyUp, SWT.MouseDown, SWT.MouseUp, SWT.MouseMove, SWT.MouseWheel}) {
+				canvas.addListener(type, e -> delivered.incrementAndGet());
+				Event event = new Event(); event.type = type; event.x = 4; event.y = 5; event.keyCode = 'a'; event.character = 'a'; event.button = 1;
+				require(!display.post(event), "Mobile native input injection reports unsupported for event type " + type);
+				require(event.type == type && event.x == 4 && event.y == 5, "Refused native posting leaves the caller's event unchanged");
+			}
+			try { display.post(null); throw new AssertionError("post requires an Event"); }
+			catch (IllegalArgumentException expected) { }
+			AtomicReference<Throwable> failed = new AtomicReference<>(); CountDownLatch completed = new CountDownLatch(1);
+			Thread caller = new Thread(() -> {
+				try { Event event = new Event(); event.type = SWT.KeyDown; require(!display.post(event), "Native post refusal is callable from a worker thread"); }
+				catch (Throwable failure) { failed.set(failure); }
+				finally { completed.countDown(); }
+			}, "mobile post caller");
+			caller.start(); await(completed); caller.join(3000);
+			if (failed.get() != null) throw new AssertionError("Worker post failed", failed.get());
+			drain(display); require(delivered.get() == 0, "Unsupported native posting does not synthesize Java listener events");
+			display.dispose();
+			expectSwt(SWT.ERROR_DEVICE_DISPOSED, () -> display.post(new Event()));
+			expectSwt(SWT.ERROR_DEVICE_DISPOSED, () -> display.post(null));
+		} finally { try { if (!display.isDisposed()) display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testMobilePublicResourceAliases() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			Color color = new Color(display, 12, 34, 56, 78);
+			require(color.internalArgb() == 0x4e0c2238 && color.internalArgb() == color.internal_argb(),
+					"Existing public color spelling retains the exact RGBA value of the current owner");
+			color.dispose(); expectSwt(SWT.ERROR_GRAPHIC_DISPOSED, color::internalArgb);
+			Font font = new Font(display, "sans-serif", 12, SWT.NORMAL);
+			require(font.internalPixelSize() == 16, "Existing public font pixel accessor converts 12 points at 96 DPI to 16 pixels");
+			font.dispose(); expectSwt(SWT.ERROR_GRAPHIC_DISPOSED, font::internalPixelSize);
+			Font minimum = new Font(display, "sans-serif", 0, SWT.NORMAL);
+			try { require(minimum.internalPixelSize() == 1, "Existing public font pixel accessor retains its one-pixel minimum"); }
+			finally { minimum.dispose(); }
+		} finally { try { display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testBorderClientGeometryAndPainting() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			Shell shell = new Shell(display, SWT.NONE);
+			Composite parent = new Composite(shell, SWT.BORDER); parent.setBounds(10, 20, 100, 80); long parentPeer = platform.lastCreated;
+			Canvas child = new Canvas(parent, SWT.BORDER); child.setBounds(4, 5, 40, 30); long childPeer = platform.lastCreated;
+			require(parent.getClientArea().equals(new Rectangle(0, 0, 98, 78)), "Bordered parent retains its inset client extent");
+			require(child.toDisplay(0, 0).equals(new Point(16, 27)) && child.toControl(16, 27).equals(new Point(0, 0)),
+					"Nested bordered coordinates map from client origin and round-trip");
+			require(child.computeTrim(0, 0, 38, 28).equals(new Rectangle(-1, -1, 40, 30)), "Client extent and outer trim remain inverse");
+			parent.setBackground(display.getSystemColor(SWT.COLOR_BLUE)); child.setBackground(display.getSystemColor(SWT.COLOR_RED));
+			shell.open(); drain(display);
+			require(platform.controls.get(parentPeer).frame.length == 98 * 78 && platform.controls.get(childPeer).frame.length == 38 * 28,
+					"Native presentation receives client-sized images rather than outer bounds");
+			GC childGC = new GC(child);
+			try { require(childGC.getClipping().equals(new Rectangle(0, 0, 38, 28)), "Control GC starts at client origin with client clipping"); }
+			finally { childGC.dispose(); }
+			Image target = new Image(display, 100, 80); GC printer = new GC(target);
+			try {
+				require(parent.print(printer), "Bordered parent prints its own and child client images");
+				ImageData pixels = target.getImageData();
+				require(pixels.palette.getRGB(pixels.getPixel(0, 0)).equals(new RGB(128, 128, 128))
+						&& pixels.palette.getRGB(pixels.getPixel(99, 79)).equals(new RGB(128, 128, 128)),
+						"Printed border occupies the outer one-pixel bands");
+				require(pixels.palette.getRGB(pixels.getPixel(1, 1)).equals(new RGB(0, 0, 255)), "Parent client begins one pixel inside its border");
+				require(pixels.palette.getRGB(pixels.getPixel(5, 6)).equals(new RGB(128, 128, 128))
+						&& pixels.palette.getRGB(pixels.getPixel(6, 7)).equals(new RGB(255, 0, 0)),
+						"Printed child outer border and client pixels match toDisplay offsets");
+				child.setLocation(-20, -20); drain(display); parent.print(printer); pixels = target.getImageData();
+				require(pixels.palette.getRGB(pixels.getPixel(0, 0)).equals(new RGB(128, 128, 128)),
+						"A child outside the client area cannot paint over its parent's border");
+			} finally { printer.dispose(); target.dispose(); }
+			Shell owned = new Shell(shell, SWT.BORDER); owned.setBounds(100, 110, 150, 180);
+			Canvas ownedChild = new Canvas(owned, SWT.BORDER); ownedChild.setBounds(7, 9, 40, 40);
+			require(ownedChild.toDisplay(0, 0).equals(new Point(109, 121)), "Owned Shell client mapping stops at its native root while retaining its own border");
+		} finally { try { display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
+	static void testEmptyBorderClientReleasesImage() {
+		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
+		try {
+			Shell shell = new Shell(display, SWT.NONE); Canvas canvas = new Canvas(shell, SWT.BORDER); canvas.setSize(10, 10);
+			AtomicInteger paints = new AtomicInteger(); canvas.addPaintListener(e -> paints.incrementAndGet()); shell.open(); drain(display);
+			GC lease = new GC(canvas); int images = platform.images.size(), before = paints.get();
+			try {
+				canvas.setSize(2, 2); canvas.redraw(); drain(display);
+				require(paints.get() == before && platform.images.size() == images, "Empty client stops painting while the outstanding GC keeps its old image lease");
+			} finally { lease.dispose(); }
+			require(platform.images.size() == images - 1, "Empty client releases its retained image after the final GC lease");
+			try { GC invalid = new GC(canvas); invalid.dispose(); throw new AssertionError("Empty client must not allocate a drawing image"); }
+			catch (IllegalArgumentException expected) { }
+			Image target = new Image(display, 2, 2); GC printer = new GC(target);
+			try {
+				require(canvas.print(printer), "Positive outer bounds can print a border without an empty client GC");
+				ImageData pixels = target.getImageData();
+				for (int y = 0; y < 2; y++) for (int x = 0; x < 2; x++)
+					require(pixels.palette.getRGB(pixels.getPixel(x, y)).equals(new RGB(128, 128, 128)), "Tiny border fills its outer bounds without overlap leaks");
+			} finally { printer.dispose(); target.dispose(); }
+			canvas.setSize(3, 3); drain(display);
+			require(paints.get() == before + 1, "Growing to a one-pixel client resumes painting exactly once");
+		} finally { try { display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
+	}
+
 	static void testOwnedShellCoordinateMapping() {
 		ContractPlatform platform=new ContractPlatform();MobileRuntime.install(platform);Display display=new Display();
 		try {

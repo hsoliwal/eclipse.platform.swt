@@ -79,15 +79,22 @@ public interface MobilePlatform {
 		void setAlpha(int alpha);
 		void setLineWidth(float width);
 		void setAntialias(boolean enabled);
+		void setTextAntialias(boolean enabled);
 		void setFont(String family, float size, int style);
 		void setTransform(float[] matrix);
 		void setClipping(int x, int y, int width, int height);
 		void resetClipping();
+		/** Effective x, y, width, height in the current user coordinate system. */
+		int[] getClipping();
 		void drawLine(int x1, int y1, int x2, int y2);
 		void drawRectangle(int x, int y, int width, int height);
 		void fillRectangle(int x, int y, int width, int height);
 		void drawOval(int x, int y, int width, int height);
 		void fillOval(int x, int y, int width, int height);
+		void drawRoundRectangle(int x, int y, int width, int height,
+			int arcWidth, int arcHeight, boolean fill);
+		/** SWT angles: zero at the right, positive counterclockwise. */
+		void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle, boolean fill);
 		void drawPolygon(int[] points, boolean fill);
 		void drawText(String text, int x, int y, int flags);
 		void drawImage(long image, int srcX, int srcY, int srcWidth, int srcHeight,
