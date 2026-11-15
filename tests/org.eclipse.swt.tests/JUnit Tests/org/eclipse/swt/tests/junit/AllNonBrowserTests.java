@@ -37,7 +37,7 @@ public class AllNonBrowserTests {
 
 	// Combine the test annotations with the test classes in a wrapper annotation
 	// such that it can be reused for derived test suites
-	@Suite(failIfNoTests = false)
+	@Suite(failIfNoTests = true)
 	@SelectClasses({ //
 			// Basic tests
 			Test_org_eclipse_swt_SWT.class, //

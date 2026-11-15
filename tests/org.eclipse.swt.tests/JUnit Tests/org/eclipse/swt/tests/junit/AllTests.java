@@ -21,7 +21,7 @@ import org.junit.platform.suite.api.Suite;
 /**
  * Suite for running all SWT test cases.
  */
-@Suite(failIfNoTests = false)
+@Suite(failIfNoTests = true)
 @SelectClasses({
 	// Explicit registration: adding a test source is not the same as executing it.
 	Test_ItemBitSetDifferential.class,
