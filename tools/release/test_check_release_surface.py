@@ -80,6 +80,56 @@ class ReleaseSurfaceTest(unittest.TestCase):
         self.assertFalse(report["passed"])
         self.assertFalse(report["checks"]["Test_ItemBitSetDifferential_source_has_test"])
 
+    def test_noncode_suite_annotation_cannot_register_required_classes(self):
+        annotation = ("@SelectClasses({Test_ItemBitSetDifferential.class, "
+                      "Test_ItemBitSetMaximumPosition.class})")
+        for source in ("/* " + annotation + " */ class AllTests {}",
+                       'class AllTests { String note = "' + annotation + '"; }',
+                       'class AllTests { String note = """\n' + annotation + '\n"""; }'):
+            with self.subTest(source=source):
+                self.put(release.TEST_DIR / "AllTests.java", source)
+                report = release.audit(self.root)
+                self.assertFalse(report["passed"])
+                for name in release.REQUIRED:
+                    self.assertFalse(report["checks"][name + "_registered"])
+
+    def test_commented_class_literal_cannot_register_a_required_class(self):
+        self.put(release.TEST_DIR / "AllTests.java",
+                 "@SelectClasses({Test_ItemBitSetDifferential.class, "
+                 "/* Test_ItemBitSetMaximumPosition.class */})")
+        report = release.audit(self.root)
+        self.assertFalse(report["passed"])
+        self.assertFalse(report["checks"]["Test_ItemBitSetMaximumPosition_registered"])
+
+    def test_test_annotation_in_comment_string_or_text_block_is_not_a_test(self):
+        name = "Test_ItemBitSetDifferential"
+        for body in ('/* @Test void absent() {} */',
+                     'String note = "@Test";',
+                     'String note = """\n@Test\n""";',
+                     '@TestFactory void notAnOrdinaryTest() {}'):
+            with self.subTest(body=body):
+                self.put(release.TEST_DIR / (name + ".java"),
+                         "class " + name + " { " + body + " }")
+                report = release.audit(self.root)
+                self.assertFalse(report["passed"])
+                self.assertFalse(report["checks"][name + "_source_has_test"])
+
+    def test_class_declaration_in_comment_does_not_satisfy_test_source(self):
+        name = "Test_ItemBitSetDifferential"
+        self.put(release.TEST_DIR / (name + ".java"),
+                 "/* class " + name + " {} */ class Other { @Test void test() {} }")
+        report = release.audit(self.root)
+        self.assertFalse(report["checks"][name + "_source_has_test"])
+
+    def test_real_fully_qualified_junit_annotations_are_preserved(self):
+        self.put(release.TEST_DIR / "AllTests.java",
+                 "@org.junit.platform.suite.api.SelectClasses(value = {"
+                 "Test_ItemBitSetDifferential.class, Test_ItemBitSetMaximumPosition.class})")
+        for name in release.REQUIRED:
+            self.put(release.TEST_DIR / (name + ".java"),
+                     "class " + name + " { @org.junit.jupiter.api.Test void test() {} }")
+        self.assertTrue(release.audit(self.root)["passed"])
+
 
 if __name__ == "__main__":
     unittest.main()

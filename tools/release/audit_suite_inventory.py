@@ -16,19 +16,92 @@ import json
 import re
 from pathlib import Path
 
-SUITE_PATTERN = re.compile(r"@SelectClasses\s*\(\s*\{(?P<body>.*?)\}\s*\)", re.DOTALL)
-CLASS_PATTERN = re.compile(r"\b([A-Za-z_][A-Za-z_0-9]*)\.class\b")
+SUITE_PATTERN = re.compile(
+    r"@\s*(?:org\.junit\.platform\.suite\.api\.)?SelectClasses\s*\(\s*"
+    r"(?:value\s*=\s*)?(?P<body>\{[^{}]*\}|"
+    r"[A-Za-z_$][A-Za-z_0-9$]*(?:\s*\.\s*[A-Za-z_$][A-Za-z_0-9$]*)*"
+    r"\s*\.\s*class)\s*\)", re.DOTALL)
+CLASS_PATTERN = re.compile(r"\b([A-Za-z_$][A-Za-z_0-9$]*)\s*\.\s*class\b")
 TEST_DIR = Path("tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit")
 DEFAULT_BASELINE = Path("tools/release/unreferenced-suite-baseline.txt")
 
 
+def java_code(source: str) -> str:
+    """Mask comments, strings, characters and text blocks before source cues.
+
+    Java translates eligible Unicode escapes before recognizing comments and
+    literals. Preserve that ordering, including the even-backslash eligibility
+    rule, so escaped comment delimiters cannot forge active annotations. This
+    bounded lexical scan is not Java compilation or JUnit discovery.
+    """
+    translated = []
+    index = backslashes = 0
+    escaped = False
+    while index < len(source):
+        char = source[index]
+        if char == "\\" and (escaped or backslashes % 2 == 0):
+            end = index + 1
+            while end < len(source) and source[end] == "u":
+                end += 1
+            if end > index + 1:
+                digits = source[end:end + 4]
+                if not re.fullmatch(r"[0-9a-fA-F]{4}", digits):
+                    raise ValueError("invalid Java Unicode escape")
+                char = chr(int(digits, 16))
+                translated.append(char)
+                backslashes = backslashes + 1 if char == "\\" else 0
+                escaped = True
+                index = end + 4
+                continue
+        translated.append(char)
+        backslashes = backslashes + 1 if char == "\\" else 0
+        escaped = False
+        index += 1
+    source = "".join(translated)
+    masked = list(source)
+    index = 0
+    while index < len(source):
+        start = index
+        if source.startswith("//", index):
+            index += 2
+            while index < len(source) and source[index] not in "\r\n":
+                index += 1
+        elif source.startswith("/*", index):
+            end = source.find("*/", index + 2)
+            if end < 0:
+                raise ValueError("unterminated Java block comment")
+            index = end + 2
+        elif source[index] in "\"'":
+            delimiter = '"""' if source.startswith('"""', index) else source[index]
+            index += len(delimiter)
+            while index < len(source):
+                if source[index] == "\\":
+                    index += 2
+                elif source.startswith(delimiter, index):
+                    index += len(delimiter)
+                    break
+                elif source[index] in "\r\n" and len(delimiter) == 1:
+                    raise ValueError("newline in Java string or character literal")
+                else:
+                    index += 1
+            else:
+                raise ValueError("unterminated Java literal")
+        else:
+            index += 1
+            continue
+        for position in range(start, min(index, len(source))):
+            if masked[position] not in "\r\n":
+                masked[position] = " "
+    return "".join(masked)
+
+
+def selected_classes(source: str) -> list[str] | None:
+    match = SUITE_PATTERN.search(java_code(source))
+    return CLASS_PATTERN.findall(match.group("body")) if match else None
+
+
 def selections(source: str) -> list[str]:
-    match = SUITE_PATTERN.search(source)
-    if not match:
-        return []
-    without_blocks = re.sub(r"/\*.*?\*/", "", match.group("body"), flags=re.DOTALL)
-    without_comments = re.sub(r"//[^\n]*", "", without_blocks)
-    return CLASS_PATTERN.findall(without_comments)
+    return selected_classes(source) or []
 
 
 def fingerprint(root: Path, paths: set[Path]) -> str:
@@ -75,16 +148,16 @@ def audit(root: Path, baseline: Path = DEFAULT_BASELINE) -> dict:
             missing_references.add(suite)
             continue
         source = file.read_text(encoding="utf-8")
-        if not SUITE_PATTERN.search(source):
+        selected = selected_classes(source)
+        if selected is None:
             missing_references.add(suite)
             continue
-        selected = selections(source)
         suite_nodes[suite] = selected
         for name in selected:
             linked = directory / (name + ".java")
             if not linked.is_file():
                 missing_references.add(name)
-            elif SUITE_PATTERN.search(linked.read_text(encoding="utf-8")):
+            elif selected_classes(linked.read_text(encoding="utf-8")) is not None:
                 to_visit.append(name)
             else:
                 registered.add(name)
