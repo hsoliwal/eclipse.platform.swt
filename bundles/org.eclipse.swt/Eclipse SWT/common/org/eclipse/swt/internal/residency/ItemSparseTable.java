@@ -99,4 +99,20 @@ public final class ItemSparseTable {
 		size = i;
 		return dropped;
 	}
+
+	/** Drops keys in {@code [from, endExclusive)} without visiting absent keys. */
+	public int removeRange (int from, int endExclusive) {
+		if (from > endExclusive) throw new IllegalArgumentException ("invalid range");
+		int first = find (from);
+		if (first < 0) first = -first - 1;
+		int end = find (endExclusive);
+		if (end < 0) end = -end - 1;
+		int dropped = end - first;
+		if (dropped == 0) return 0;
+		System.arraycopy (keys, end, keys, first, size - end);
+		System.arraycopy (values, end, values, first, size - end);
+		Arrays.fill (values, size - dropped, size, null);
+		size -= dropped;
+		return dropped;
+	}
 }

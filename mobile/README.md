@@ -1,58 +1,4 @@
-# SWT Android / iOS native-host implementation (candidate)
-
-This directory adds a **real, compilable Java ownership/event-loop core** and
-platform-specific Android View and iOS UIKit host sources. It deliberately
-keeps the existing GTK/Win32/Cocoa source and public SWT contracts untouched.
-The new org.eclipse.swt.internal.mobile SPI is an implementation primitive,
-**not a parallel SWT API or a completed SWT platform fragment**.
-
-## Source ownership
-
-- bundles/org.eclipse.swt/Eclipse SWT/common/.../mobile/MobileWidgetRuntime.java:
-  owner-thread enforcement; stable array-indexed native handles; widget tree,
-  rollback, disposal, lifecycle fencing, native event delivery, async/sync dispatch.
-- mobile/android: Android View host and a native Activity smoke app.
-  Shell/Composite map to FrameLayout, Label/Button/Text to native controls,
-  and Canvas to a drawing view. Scroll/Table/Tree are **viewport containers only**;
-  their SWT model/selection/column/virtual semantics are not implemented here.
-  Touch, focus, click, text, IME, access-label, and scroll callbacks are forwarded.
-- mobile/ios: an iOS UIKit JNI bridge with UIView/UILabel/UIButton/UITextField,
-  UIScrollView viewport containers, accessibility labels, IME and main-queue posting.
-  A working Java/AOT iOS runtime must embed it and hand in a valid UIView pointer;
-  packaging and runtime startup are **not supplied** by this patch.
-- mobile/tests: fast Java 21 ownership/event/lifecycle regressions.
-
-## Verified / unverified
-
-Run bash mobile/test-core.sh on Java 21. This performs an executable Java-only
-compile and assertion test; it is not an Android/iOS compile or device test.
-For Android, with Android SDK 35 and Gradle 8.x available, run
-cd mobile/android && gradle assembleDebug and launch MobileActivity.
-For iOS, UIKit Objective-C (mobile/ios/native/SWTMobileUIKit.m) must be built
-against the target iOS SDK and a supported embedded Java/AOT runtime with JNI;
-no macOS/Xcode simulator or device qualification is claimed.
-
-## Promotion gates before SWT/Nebula can be called ported
-
-1. Produce Android and iOS **original org.eclipse.swt.widgets backends**, not
-   just these mobile host interfaces; retain public signatures and SWT semantics.
-2. Implement native graphics/GC and resources, Shell/Display event-loop,
-   layouts, dialogs, Text/IME/clipboard, DND, accessibility, Table/Tree/List
-   virtualization, touch/gestures and display scaling. Reuse Initiative 31
-   licensed painting donors only with exact provenance and contract proofs.
-3. Build native Android instrumentation and iOS simulator/device tests, plus
-   official SWT/JFace/Nebula differential tests and memory/disposal gates.
-4. Implement actual Nebula Grid/custom-widget integration against the mobile
-   SWT backend, not merely the mobile viewport projection in the Nebula fork.
-
-All desktop behavior stays unchanged. This is a source-delivered **first backend
-slice**, and the gates above are **open** rather than falsely reported as PASSED.
-
-Donor/reference notes: Eclipse SWT (EPL-2.0), Initiative 31 Skia
-(EPL-2.0, concepts only), Android SDK and Apple UIKit platform APIs; iOS Java
-AOT option MobiVM/RoboVM remains a toolchain candidate, not a bundled runtime.
-No third-party donor implementation body is copied in this change.
-# SWT initial Android/iOS platform source set
+# SWT Android and iOS preview
 
 This module builds an initial mobile implementation of SWT's own `Display`,
 `Widget`, `Control`, `Scrollable`, `Composite`, `Canvas`, `Decorations`, and `Shell`
@@ -71,6 +17,21 @@ display coordinates.
 The new module is independent of the existing desktop Maven/Tycho build. It does
 not make Android or iOS an already qualified target of the desktop reactor.
 
+## Current source owners
+
+| Area | Current owner |
+| --- | --- |
+| Shared widget, graphics and event-loop implementation | [`Eclipse SWT/mobile`](../bundles/org.eclipse.swt/Eclipse%20SWT/mobile/org/eclipse/swt/) |
+| Android Activity, View/Canvas and native Text editor | [`AndroidPlatform` and `SwtActivity`](../bundles/org.eclipse.swt/Eclipse%20SWT/android/org/eclipse/swt/internal/android/) |
+| iOS adapter | [`IOSPlatform`](../bundles/org.eclipse.swt/Eclipse%20SWT/ios/org/eclipse/swt/internal/ios/IOSPlatform.java) |
+| UIKit/CoreGraphics and JNI declarations | [`Eclipse SWT PI/ios`](../bundles/org.eclipse.swt/Eclipse%20SWT%20PI/ios/) |
+| Portable owner tests | [`org.eclipse.swt.tests.mobile`](../tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/) |
+| Original Nebula widget consumer | [RoundedCheckbox mobile application](https://github.com/hsoliwal/nebula/tree/master/widgets/roundedcheckbox/org.eclipse.nebula.widgets.roundedcheckbox.mobile) |
+
+The commands below build these accepted original SWT owners. The older host-only
+experiments retained elsewhere in this directory are described separately at the
+end of this page.
+
 ## Build prerequisites
 
 Use JDK 21, Maven 3.9 or later, and Python 3.10 or later. Python uses only its
@@ -80,8 +41,8 @@ No build command installs SDKs, signs a distribution, or installs an application
 on a device.
 
 The Android source lane requires an installed Android SDK platform 35. The
-example APK lane also requires Android build-tools 36.0.0. **The initial APK
-minimum is Android 15 / API 35.** This source selection retains common SWT uses
+example APK lane also requires Android build-tools 35.0.0 (the checked-in
+Android Gradle Plugin 8.13 default). **The initial APK minimum is Android 15 / API 35.** This source selection retains common SWT uses
 of runtime APIs unavailable on older Android releases, and no core-library
 desugaring is supplied. Java 21 source compilation and D8 language lowering do
 not establish general Java 21 standard-library availability on Android.
@@ -103,11 +64,11 @@ mvn -f /path/to/swt/mobile/pom.xml -Pcontracts \
 ```
 
 The `contracts` profile executes `MobileCoreContractJUnitTest` using JUnit 5 and
-Maven Surefire. Its five cases cover the unchanged RoundedCheckbox's Selection
-order/cancellation, rendering and disposal; SWT event/thread/timer contracts;
-graphics and reentrant Paint disposal; termination and blocked synchronous
-callers; and owned-Shell coordinate mapping. The original 44 assertions are
-retained, with three coordinate regression assertions added.
+Maven Surefire. It selects the original RoundedCheckbox's Selection, cancellation,
+painting and disposal checks; SWT event/thread/timer and graphics contracts;
+termination and blocked synchronous callers; owned-Shell geometry; and the
+Button/Label, ProgressBar/Scale, sparse virtual List, native Text and Combo
+owner contracts. The checked-in test sources define the current cases and assertions.
 
 Reports are written to `mobile/target/surefire-reports`. A missing, skipped, or
 failed report is not an executed test pass. The Java2D transport exists only in
@@ -143,8 +104,45 @@ selection clears its compiled-class directories so changing platform cannot
 retain obsolete native classes. `selected-sources.json` records the actual
 relative source paths and hashes used by that invocation.
 
-To build the original Nebula application with Android's real SDK tools, use
-Nebula's `mobile/pom.xml` and pass this SWT checkout as `-Dswt.checkout=...`.
+## Build the current Nebula Android application
+
+Use the Gradle application beside the original RoundedCheckbox widget in the
+Nebula checkout. The older `m3/mobile` delivery paths and a Nebula `mobile/pom.xml`
+are not the current application build. The consumer now uses the original SWT
+List, Text and Combo owners, so the initial SWT #369 backend alone is insufficient.
+Follow the exact SWT revision pinned by Nebula's
+[mobile acceptance workflow](https://github.com/hsoliwal/nebula/blob/master/.github/workflows/m3-nebula-mobile-original-list.yml)
+and the [consumer build guide](https://github.com/hsoliwal/nebula/blob/master/widgets/roundedcheckbox/org.eclipse.nebula.widgets.roundedcheckbox.mobile/android/README.md).
+
+After building the Android SWT JAR above, run from the Nebula checkout with
+Gradle 8.13+ and the Android SDK/build-tools installed:
+
+```sh
+gradle -p widgets/roundedcheckbox/org.eclipse.nebula.widgets.roundedcheckbox.mobile/android \
+  -PswtMobileJar=/absolute/path/to/swt/mobile/target/swt-mobile-android.jar \
+  :app:assembleDebug :app:assembleDebugAndroidTest
+```
+
+Run `:app:connectedDebugAndroidTest` with the same project and JAR arguments on
+an API-35-or-newer emulator or device for the native instrumentation lane. APK
+assembly and a declared workflow are separate from an executed native test.
+
+## Compile the iOS native bridge
+
+First build `swt-mobile-ios.jar` with `-Dmobile.platform=ios`. On macOS with a
+real Xcode iOS SDK, CMake 3.24+ and `JAVA_HOME` pointing to JDK 21, run from the
+SWT checkout:
+
+```sh
+bash mobile/ios/build.sh iphonesimulator arm64 \
+  /absolute/path/to/swt/mobile/target/swt-mobile-ios.jar
+```
+
+Use `x86_64` for an Intel simulator or `iphoneos arm64` for the device library.
+This compiles the native library and bootstrap; it does not supply an iOS JVM,
+link a deployable Java application, sign it, or execute simulator/device tests.
+The [iOS runtime inputs](ios/README.md#link-an-application-only-with-a-verified-ios-runtime)
+remain necessary for the application target.
 
 ## Button and Label original owner slice
 
@@ -157,28 +155,36 @@ radio sibling grouping and the existing platform accessibility role transport;
 Label has text, image, alignment, separator, wrap painting and no-focus semantics.
 Both preserve caller-owned Image lifetimes and the normal SWT disposal path.
 
-**Boundaries:** these are mobile Canvas-rendered controls, not wrappers around
-Android's `Button`/`TextView` or UIKit's `UIButton`/`UILabel`. Native text
-editing/IME, accessibility action parity, full mnemonic focus traversal,
-complex text layout, RTL, multi-touch and original desktop raster parity remain
-open. The qualified `-Pcontracts` lane includes a new Button/Label owner test,
-but a source commit alone does not prove a CI pass or native runtime parity.
+**Boundaries:** Button and Label paint through the mobile Canvas/Image/GC path.
+The separate original Text owner supplies the native editor integration described
+below. Full mnemonic focus traversal, complex text layout, RTL, multi-touch,
+accessibility parity and original desktop raster parity remain open. The
+`-Pcontracts` lane includes a Button/Label owner test; source presence does not
+establish an executed CI pass or native runtime parity.
 
 ## Implemented integration path and remaining scope
 
 The implemented path is a Shell/Composite/Canvas application, including the
 original Nebula RoundedCheckbox, standard SWT layouts and typed events,
 Image/GC raster drawing, text measurement/drawing, affine transforms, and
-resource/disposal ownership. `GC(Display).copyArea(...)` delegates to actual
-platform capture. `Control.print` is separately scoped offscreen composition and
-must not be presented as visible-screen evidence.
+resource/disposal ownership. On Android, `GC(Display).copyArea(...)` delegates to
+actual platform capture. iOS screen capture is currently unsupported and fails
+explicitly; use actual XCUI/device screenshots for that separate lane.
+`Control.print` is offscreen composition and is not visible-screen evidence.
 
 This is **not the complete SWT or Nebula widget catalogue**. Button and Label
 have bounded Canvas-rendered source implementations; ProgressBar and Scale now
 offer native-backed GC painting with original SWT range/selection methods.
-The original List API now has a segmented, sparse VIRTUAL item model,
-bitset selection, software viewport scrolling, on-demand SWT.SetData and
-native-backed Canvas paint/input on Android and iOS. It does **not** provide
+The original List API uses the existing common SWT `ItemSparseTable` for
+materialized text and reentrant SetData tracking, and `ViewportRuntime.Selection`
+for range/complement selection. High logical indices therefore do not require
+storage up to the highest row. The portable contract suite includes a separate
+64 MiB process for billion-row/high-index operations, plus structural/selection
+oracle and reentrant SetData checks. These are Java owner checks, not native
+memory or performance measurements.
+
+List retains software viewport scrolling, on-demand SWT.SetData and native-backed
+Canvas paint/input on Android and iOS. It does **not** provide
 native ScrollBar objects, full list-item accessibility semantics, platform
 gesture physics, RTL layout or drag-and-drop.
 The original Text widget now has Java-owned UTF-16 text, Verify/Modify event
@@ -192,7 +198,9 @@ or complete clipboard/DND integration.
 The original Combo now composes native-backed SWT Text, List, Button and
 an owned popup Shell, preserving the standard editable/READ_ONLY and SIMPLE/
 DROP_DOWN API surface, input/selection/Verify event ownership and system
-clipboard behavior. A separate Java 21 array atom has deterministic randomized
+clipboard behavior. Its [original keyboard handler (#390)](https://github.com/hsoliwal/eclipse.platform.swt/pull/390)
+moves selection on Up/Down, closes the dropdown on Escape, and ignores navigation
+when disabled or hidden. A separate Java 21 array atom has deterministic randomized
 insertion/deletion tests; complex native popup routing, bidi SegmentListener,
 complete child accessibility, and full keyboard/IME parity are not qualified.
 
@@ -225,3 +233,20 @@ The existing SWT licence is included in binary artifacts. Source selection is
 public product build wiring, not a transformation recipe or private execution
 harness. Canonical source-generation recipes and their promotion receipts remain
 in their established Synexia owner.
+
+## Historical host-only experiments
+
+The earlier [`MobileWidgetRuntime`](../bundles/org.eclipse.swt/Eclipse%20SWT/common/org/eclipse/swt/internal/mobile/MobileWidgetRuntime.java),
+[`mobile/android` host smoke application](android/),
+[`IosMobileHost`](ios/src/main/java/org/eclipse/swt/internal/mobile/ios/IosMobileHost.java)
+and [`SWTMobileUIKit.m`](ios/native/SWTMobileUIKit.m) remain in source history and
+this checkout. Their host SPI, viewport containers and smoke commands predate
+the original SWT platform source set above. They are not the Maven-built SWT
+artifact or the current Nebula application entrypoint.
+
+`bash mobile/test-core.sh` exercises the older host ownership/event/lifecycle
+core. Its result must remain separate from the original-widget `-Pcontracts`
+lane, Android instrumentation and Apple runtime gates. Historical reference
+notes included Eclipse SWT under EPL-2.0, Initiative 31 Skia concepts, Android
+and UIKit APIs, and MobiVM/RoboVM as an unselected toolchain option. They do not
+establish a bundled iOS runtime or full widget integration.

@@ -424,6 +424,9 @@ public final class AndroidPlatform implements MobilePlatform {
 		final int kind, style;
 		EditText editor;
 		boolean suppressNativeEdit;
+		int nativeTextChangeDepth;
+		String lastNativeTextSnapshot;
+		int lastNativeSelectionStart = -1, lastNativeSelectionEnd = -1;
 		int textLimit = Integer.MAX_VALUE;
 		final long parent;
 		int logicalX, logicalY, logicalWidth, logicalHeight;
@@ -444,7 +447,15 @@ public final class AndroidPlatform implements MobilePlatform {
 			if (kind == TEXT) initializeEditor();
 		}
 		private void initializeEditor() {
-			editor = new EditText(activity);
+			editor = new EditText(activity) {
+				@Override protected void onSelectionChanged(int start, int end) {
+					super.onSelectionChanged(start, end);
+					// TextView can call this during its superclass constructor. Text
+					// edits publish once from TextWatcher after the replacement ends.
+					if (PeerView.this.editor == this && nativeTextChangeDepth == 0)
+						publishNativeText();
+				}
+			};
 			boolean multiline = (style & SWT.MULTI) != 0;
 			int inputType = InputType.TYPE_CLASS_TEXT;
 			if (multiline) inputType |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
@@ -466,19 +477,35 @@ public final class AndroidPlatform implements MobilePlatform {
 				event(hasFocus ? SWT.FocusIn : SWT.FocusOut, 0, 0, 0, 0, '\0', 0, 0,
 						(int)SystemClock.uptimeMillis()));
 			editor.addTextChangedListener(new TextWatcher() {
-				@Override public void beforeTextChanged(CharSequence value, int start, int count, int after) {}
+				@Override public void beforeTextChanged(CharSequence value, int start, int count, int after) {
+					nativeTextChangeDepth++;
+				}
 				@Override public void onTextChanged(CharSequence value, int start, int before, int count) {}
 				@Override public void afterTextChanged(Editable changed) {
-					if (suppressNativeEdit || id == 0) return;
-					EventSink receiver = sink;
-					long current = id;
-					String copy = changed.toString();
-					int start = editor.getSelectionStart(), end = editor.getSelectionEnd();
-					if (receiver != null) callback(() -> receiver.textChanged(current, copy, start, end));
+					if (--nativeTextChangeDepth == 0) publishNativeText();
 				}
 			});
 			addView(editor, new ViewGroup.LayoutParams(
 					ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+		}
+		private void publishNativeText() {
+			if (editor == null || suppressNativeEdit || id == 0) return;
+			int anchor = editor.getSelectionStart(), caret = editor.getSelectionEnd();
+			if (anchor < 0 || caret < 0) return;
+			EventSink receiver = sink;
+			long current = id;
+			String copy = editor.getText().toString();
+			int start = Math.min(anchor, caret), end = Math.max(anchor, caret);
+			// Android delivers selection-span callbacks after afterTextChanged.
+			// Deduplicate the complete snapshot, retaining caret-only changes.
+			if (copy.equals(lastNativeTextSnapshot)
+					&& start == lastNativeSelectionStart && end == lastNativeSelectionEnd) return;
+			lastNativeTextSnapshot = copy;
+			lastNativeSelectionStart = start;
+			lastNativeSelectionEnd = end;
+			// Same-text snapshots update the original Text selection without
+			// Verify/Modify. Detached Activity peers have id zero and cannot echo.
+			if (receiver != null) callback(() -> receiver.textChanged(current, copy, start, end));
 		}
 		void configureEditor(String text, int start, int end,
 				boolean editable, int limit, String hint) {
@@ -495,6 +522,9 @@ public final class AndroidPlatform implements MobilePlatform {
 				editor.setHint(hint);
 				editor.setFocusable(editable);
 				editor.setFocusableInTouchMode(editable);
+				lastNativeTextSnapshot = editor.getText().toString();
+				lastNativeSelectionStart = Math.min(editor.getSelectionStart(), editor.getSelectionEnd());
+				lastNativeSelectionEnd = Math.max(editor.getSelectionStart(), editor.getSelectionEnd());
 			} finally { suppressNativeEdit = false; }
 		}
 		ViewGroup.LayoutParams layoutParams() {
