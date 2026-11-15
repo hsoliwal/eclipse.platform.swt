@@ -99,7 +99,7 @@ public class TableItem extends Item {
         if (column < 0) return;
         if (column == 0) text = value;
         else {
-            if (column > parent.getColumnCount()) return;
+            if (column >= parent.getColumnCount()) return;
             if (cellTexts == null || cellTexts.length <= column)
                 cellTexts = Arrays.copyOf(cellTexts == null ? new String[0] : cellTexts, column + 1);
             cellTexts[column] = value;
@@ -131,7 +131,7 @@ public class TableItem extends Item {
         checkWidget();
         if (value != null && (value.isDisposed() || value.getDevice() != display))
             SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-        if (column < 0 || column > parent.getColumnCount()) return;
+        if (column < 0 || (column > 0 && column >= parent.getColumnCount())) return;
         if (column == 0) image = value;
         else {
             if (cellImages == null || cellImages.length <= column)
