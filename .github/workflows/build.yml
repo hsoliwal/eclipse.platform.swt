@@ -78,6 +78,18 @@ jobs:
       with:
        fetch-depth: 0 # required for jgit timestamp provider to work
        lfs: false # lfs-pull is not necessary, the natives are re-build in each run
+    - name: Record the source revision tested by this platform
+      shell: bash
+      env:
+        EXPECTED_SOURCE_SHA: ${{ github.sha }}
+      run: |
+        set -euo pipefail
+        actual_sha=$(git rev-parse HEAD)
+        test "$actual_sha" = "$EXPECTED_SOURCE_SHA"
+        printf '%s\n' "$actual_sha" > "$RUNNER_TEMP/SWT_SOURCE_COMMIT"
+        git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/SWT_SOURCE_TREE"
+        echo "Tested source commit: $actual_sha" >> "$GITHUB_STEP_SUMMARY"
+        echo "For pull requests this is GitHub's tested integration commit." >> "$GITHUB_STEP_SUMMARY"
     - name: Install Linux requirements
       if: ${{ inputs.native == 'gtk.linux.x86_64'}}
       shell: bash
@@ -218,6 +230,8 @@ jobs:
         name: test-results-${{ inputs.native }}-${{ inputs.gtk }}-${{ inputs.gdk_backend }}-java${{ inputs.java }}
         if-no-files-found: warn
         path: |
+          ${{ runner.temp }}/SWT_SOURCE_COMMIT
+          ${{ runner.temp }}/SWT_SOURCE_TREE
           ${{ github.workspace }}/**/target/surefire-reports/*.xml
           ${{ github.workspace }}/**/target/surefire-reports/*.txt
           ${{ github.workspace }}/**/target/release-junit-coverage.json

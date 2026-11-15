@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EPL-2.0 -->
 # SWT fork release preparation: naming, documentation and coverage
 
-Status: **preparation / no release or binary compatibility claim** (2026-11-07).
+Status: **preparation / no release or binary compatibility claim** (2026-11-15).
 
 ## Product naming and public contracts
 
@@ -12,7 +12,8 @@ Java packages. Its public types remain `Display`, `Shell`, `Control`,
 Internal M3/residency names are implementation details, not replacement public
 Swing facades. Preserve Java, OSGi, PDE/API Tools, JNI/generated C and
 reflection/service contracts. The bundle manifest's `JavaSE-21` minimum is
-**not** the same as CI's current **JDK 25** build toolchain.
+checked by the **Java 21 and Java 25** desktop matrix. API Tools and Javadoc
+run on its Java 25 legs; Java 21 legs compile and execute the test suites.
 
 Do not change upstream package names, exported APIs, native entry points,
 generated JNI glue, licensing or native binaries in a naming-only PR.
@@ -32,6 +33,40 @@ The main [matrix](../.github/workflows/maven.yml), [reusable build](../.github/w
 [JNI and Javadoc checks](../.github/workflows/pr-checks.yml) and
 [JUnit publisher](../.github/workflows/junit.yml) are **separate checks**.
 A published JUnit summary is not line or branch instrumentation.
+
+## Release execution entrypoints
+
+The [release preflight](../.github/workflows/release-preflight.yml) runs on
+pull requests targeting `release/**`, pushes to those branches, and manual
+dispatch. Each invocation calls the existing [Maven matrix](../.github/workflows/maven.yml)
+with `release_qualification: true`. Release candidates therefore run the
+complete matrix even when only documentation or one backend changed:
+
+- Twelve desktop jobs: Java 21 and 25 for the three GTK configurations,
+  Windows x86_64, and Cocoa x86_64/aarch64.
+- Shared mobile owner JUnit contracts and Android SDK source compilation.
+- iOS Java/JNI source and UIKit simulator-SDK compilation on macOS.
+- Source naming checks, complete default-suite discovery, and the existing
+  Java 21 sparse-state contract. Manual dispatch also requires zero suite
+  omissions.
+
+Release and manually dispatched matrix builds set `strict_javadoc` on the
+Java 25 API-check legs. This supplies `-DfailOnJavadocErrors=true` to the
+existing Javadoc profile, overriding the SWT bundle's permissive default.
+The [pull-request checks](../.github/workflows/pr-checks.yml) also apply to
+`release/**` targets, including Javadoc consistency and JNI regeneration.
+
+Desktop test artifacts include the checked commit and tree alongside their
+Surefire reports. On a pull request, the default checkout and recorded
+`github.sha` identify GitHub's tested integration commit; after merging,
+qualify the final release commit again. The separate release-surface workflow
+below intentionally checks PR heads and labels its records accordingly.
+
+These entrypoints configure execution; successful current-commit hosted
+results are still required. Mobile compilation does not establish Android
+device execution, an embedded iOS Java runtime, or complete mobile widget
+coverage. Naming and test discovery do not establish native or instrumented
+coverage, and the workflow does not publish a release or create a tag.
 
 ## Coverage matrix and gates
 
@@ -229,7 +264,11 @@ does not qualify a later merge result: merge the current base additively and
 repeat qualification on the final release commit. The source records are
 review aids, not authenticated native-backend report receipts.
 
-### Current validation limits (2026-11-07)
+### Historical validation record (2026-11-07)
+
+The dated results below describe earlier source snapshots. They do not qualify
+the current checkout; regenerate reports through the entrypoints above and
+retain the new exact-source qualification in the canonical convergence work.
 
 A local clean Git merge of candidate head
 `4a7539049ea84d72fb545abdb648bcb4389aa93b` and release base
@@ -255,7 +294,7 @@ branch/path selection and validating it locally does not prove that GitHub
 registered or executed the workflow. Require actual successful hosted job
 records and artifacts for the final source before clearing this gate.
 
-## Coordination with current release-preparation PRs (2026-11-07)
+## Earlier release-preparation PRs (2026-11-07)
 
 This PR is the **source/report-intake foundation**, not a release bundle.
 Review and integrate the other candidate work additively instead of
