@@ -196,9 +196,18 @@ clipboard behavior. A separate Java 21 array atom has deterministic randomized
 insertion/deletion tests; complex native popup routing, bidi SegmentListener,
 complete child accessibility, and full keyboard/IME parity are not qualified.
 
-Table, Tree, menus, ToolBar, TabFolder, StyledText, Browser, printing,
-drag-and-drop, OpenGL and the remaining SWT/Nebula widget catalogue are not
-implemented by this source closure. Other Nebula widgets are not
+The original Table, TableItem and TableColumn APIs now have a native-backed
+Android/UIKit Canvas peer, Java-owned sparse row arrays, on-demand SWT.SetData,
+header/column text and images, selection interval masks, row styling,
+keyboard/touch selection and accessibility paging. A billion-row virtual Table
+requires storage proportional to the materialized viewport and selected
+interval count, not the full logical row count. The source is a bounded
+implementation: native ScrollBar objects, full per-cell accessibility,
+complete owner-draw/MeasureItem and table-specific DND/editor parity remain
+unqualified.
+Tree, menus, ToolBar, TabFolder, StyledText, Browser, printing, drag-and-drop,
+OpenGL and the remaining SWT/Nebula widget catalogue are not implemented by
+this source closure. Other Nebula widgets are not
 qualified merely because they derive from Canvas.
 
 Native scrollbars, RTL control layout, font enumeration/registration, nonempty
