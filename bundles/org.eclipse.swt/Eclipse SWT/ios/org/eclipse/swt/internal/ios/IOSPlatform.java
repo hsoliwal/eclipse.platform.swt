@@ -80,6 +80,7 @@ public final class IOSPlatform implements MobilePlatform {
 	}
 	@Override public int[] displayBounds() { check(); return OS.displayBounds(); }
 	@Override public int[] dpi() { check(); return OS.dpi(); }
+	@Override public int[] safeAreaInsets() { check(); return OS.safeAreaInsets(); }
 	@Override public long createControl(int kind, long parent, int style) { check(); return OS.createControl(kind, parent, style); }
 	@Override public void disposeControl(long peer) { checkThread(); OS.disposeControl(peer); }
 	@Override public void setBounds(long peer, int x, int y, int w, int h) { check(); OS.setBounds(peer, x, y, w, h); }
