@@ -17,6 +17,7 @@ package org.eclipse.swt.tests.junit;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -349,5 +350,120 @@ public class Test_VirtualListModel {
 		assertEquals("n" + (size / 2), model.call("getItem", 0));
 		model.call("setTopIndex", size);
 		assertEquals(size / 2 - 40, model.number("getTopIndex"));
+	}
+
+	@Test
+	public void hundredMillionLazyRowsUseOnlyMaterializedTextSlots() throws Exception {
+		Handle model = new Handle("VirtualListModel", (ToIntFunction<String>) String::length, true);
+		final int rows = 100_000_000;
+		model.call("setGeometry", 20, 100);
+		model.call("setItemCount", rows);
+		Field texts = model.target.getClass().getDeclaredField("items");
+		Field ids = model.target.getClass().getDeclaredField("itemRows");
+		texts.setAccessible(true);
+		ids.setAccessible(true);
+		assertTrue(((String[]) texts.get(model.target)).length < 64, "text lane must be sparse");
+		assertTrue(((int[]) ids.get(model.target)).length < 64, "ID lane must be sparse");
+		assertEquals(rows, model.number("getItemCount"));
+		assertNull(model.call("getItem", rows - 1));
+		model.call("setItem", rows - 1, "last");
+		model.call("setItem", 1, "first");
+		model.call("insert", 2, (Object) new String[] {"head", "mid"});
+		assertEquals("last", model.call("getItem", rows + 1));
+		assertEquals("mid", model.call("getItem", 3));
+		assertEquals(-1, model.number("indexOf", "missing", 0));
+		assertEquals(1, model.number("indexOf", "first", 0));
+		assertTrue(((String[]) texts.get(model.target)).length < 64);
+		model.call("remove", 3, rows - 1);
+		assertEquals(5, model.number("getItemCount"));
+		assertArrayEquals(new String[] {null, "first", "head", null, "last"},
+				(String[]) model.call("getItems"));
+		model.call("clear", 1);
+		assertNull(model.call("getItem", 1));
+		assertEquals(2, model.number("indexOf", "head", 0));
+		model.call("clearAll");
+		assertFalse((Boolean) model.call("isMaterialized", 4));
+		assertEquals(5, model.number("getItemCount"));
+		assertArrayEquals(new String[5], (String[]) model.call("getItems"));
+	}
+
+	@Test
+	public void lazyRandomSplicesAndClearsMatchDenseOracle() {
+		for (int seed = 1; seed <= 20; seed++) {
+			Handle model = new Handle("VirtualListModel", (ToIntFunction<String>) String::length, true);
+			List<String> expected = new ArrayList<>();
+			Random random = new Random(0x55e7a100L + seed);
+			for (int step = 0; step < 800; step++) {
+				int count = expected.size();
+				int op = random.nextInt(9);
+				switch (op) {
+					case 0 -> {
+						int pos = random.nextInt(count + 1);
+						String value = "v" + random.nextInt(40);
+						model.call("add", value, pos);
+						expected.add(pos, value);
+					}
+					case 1 -> {
+						int pos = random.nextInt(count + 1);
+						String[] values = {"q" + random.nextInt(20), "q" + random.nextInt(20)};
+						model.call("insert", pos, (Object) values);
+						expected.addAll(pos, Arrays.asList(values));
+					}
+					case 2 -> {
+						if (count > 0) {
+							int pos = random.nextInt(count);
+							String value = "v" + random.nextInt(40);
+							model.call("setItem", pos, value);
+							expected.set(pos, value);
+						}
+					}
+					case 3 -> {
+						if (count > 0) {
+							int pos = random.nextInt(count);
+							model.call("clear", pos);
+							expected.set(pos, null);
+						}
+					}
+					case 4 -> {
+						if (count > 0) {
+							int start = random.nextInt(count);
+							int end = start + random.nextInt(count - start);
+							model.call("remove", start, end);
+							expected.subList(start, end + 1).clear();
+						}
+					}
+					case 5 -> {
+						int next = random.nextInt(180);
+						model.call("setItemCount", next);
+						while (expected.size() > next) expected.remove(expected.size() - 1);
+						while (expected.size() < next) expected.add(null);
+					}
+					case 6 -> {
+						model.call("clearAll");
+						java.util.Collections.fill(expected, null);
+					}
+					case 7 -> {
+						model.call("removeAll");
+						expected.clear();
+					}
+					case 8 -> {
+						String[] values = new String[random.nextInt(20)];
+						for (int i = 0; i < values.length; i++) values[i] = "s" + random.nextInt(30);
+						model.call("setItems", (Object) values);
+						expected.clear();
+						expected.addAll(Arrays.asList(values));
+					}
+					default -> throw new AssertionError();
+				}
+				assertEquals(expected.size(), model.number("getItemCount"), "seed=" + seed + " step=" + step);
+				assertArrayEquals(expected.toArray(new String[0]), (String[]) model.call("getItems"),
+						"seed=" + seed + " step=" + step);
+				for (int j = 0; j < expected.size(); j++) {
+						assertEquals(expected.get(j), model.call("getItem", j));
+						assertEquals(expected.get(j) != null, model.call("isMaterialized", j));
+				}
+				assertEquals(expected.indexOf("v7"), model.number("indexOf", "v7", 0));
+			}
+		}
 	}
 }
