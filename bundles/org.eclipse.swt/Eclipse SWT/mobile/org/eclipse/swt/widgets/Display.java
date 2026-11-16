@@ -482,6 +482,12 @@ public class Display extends Device implements Executor {
 					c.sendEvent(SWT.KeyDown, key);
 					return;
 				}
+				if (c instanceof Link link && action == MobilePlatform.ACTION_ACTIVATE) {
+					// VoiceOver/TalkBack activates the original Link, not the
+					// centre of an arbitrary text span inside its native Canvas.
+					link.nativeActivate();
+					return;
+				}
 				if (action != MobilePlatform.ACTION_ACTIVATE)
 					throw new UnsupportedOperationException("Unsupported SWT accessibility action " + action);
 				Point size = c.getSize(); Event down = new Event(); down.x = size.x / 2; down.y = size.y / 2; down.button = 1; down.count = 1;
