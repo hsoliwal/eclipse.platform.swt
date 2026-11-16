@@ -107,6 +107,22 @@ import org.eclipse.swt.internal.cocoa.*;
  */
 public class Display extends Device implements Executor {
 
+	/**
+	 * Returns the SWT UI API capabilities currently available from this backend.
+	 * This does not probe device hardware or guarantee support by every widget.
+	 *
+	 * @return an immutable platform capability descriptor
+	 * @exception SWTException
+	 *                ERROR_DEVICE_DISPOSED - if the display is disposed
+	 *                ERROR_THREAD_INVALID_ACCESS - if called from another thread
+	 * @since 3.138
+	 */
+	public PlatformCapabilities getPlatformCapabilities () {
+		checkDevice ();
+		return PlatformCapabilities.of ("cocoa"); //$NON-NLS-1$
+	}
+
+
 	static byte[] types = {'*','\0'};
 	static int size = C.PTR_SIZEOF, align = C.PTR_SIZEOF == 4 ? 2 : 3;
 

@@ -40,6 +40,7 @@ import org.junit.platform.suite.api.Suite;
 	Test_VirtualTreeOrderStatistic.class,
 	Test_VirtualBitLanes.class,
 	Test_VirtualLongIntTable.class,
+	Test_PlatformCapabilities.class,
 	Test_VirtualNativeTableModel.class,
 	ViewportResourceRegressionTest.class,
 	AllNonBrowserTests.class,
