@@ -26,7 +26,7 @@ class TreeItemsHandler {
 			int heightPerLine = TreeItemRenderer.guessItemHeight(tree) + gridLineSize;
 
 			Rectangle ca = tree.getClientArea();
-			this.computedSize = new Point(ca.width, tree.getColumnCount() * heightPerLine);
+			this.computedSize = new Point(ca.width, itemExtent(this.itemsCountAtCalculation, heightPerLine));
 			return;
 		}
 
@@ -51,7 +51,13 @@ class TreeItemsHandler {
 			}
 		}
 
-		this.computedSize = new Point(width, heightPerLine * tree.getItemCount());
+		this.computedSize = new Point(width, itemExtent(this.itemsCountAtCalculation, heightPerLine));
+	}
+
+	/** Saturated int render geometry; the Tree's long logical row index stays separate. */
+	private static int itemExtent(int openedRows, int rowHeight) {
+		if (openedRows < 0 || rowHeight < 0) return openedRows * rowHeight;
+		return (int) Math.min(Integer.MAX_VALUE, (long) openedRows * rowHeight);
 	}
 
 	static int getGridSize(Tree tree) {
@@ -108,7 +114,7 @@ class TreeItemsHandler {
 
 	public Point getSize() {
 		if (computedSize == null
-				|| this.itemsCountAtCalculation != tree.getItemCount()) {
+				|| this.itemsCountAtCalculation != tree.getOpenedItemCount()) {
 			calculateItemsBounds();
 		}
 
