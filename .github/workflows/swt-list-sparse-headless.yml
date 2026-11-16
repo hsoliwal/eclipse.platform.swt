@@ -1,6 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
 name: SWT List sparse text source contracts (headless)
 on:
+  push:
+    branches: ['master']
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/VirtualListModel.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/VirtualListWidth.java'
+      - 'tests/headless-list-sparse/**'
+      - '.github/workflows/swt-list-sparse-headless.yml'
   pull_request:
     paths:
       - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/VirtualListModel.java'
