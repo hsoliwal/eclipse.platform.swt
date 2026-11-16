@@ -340,6 +340,35 @@ public class PrefetchTests {
 		}
 	}
 
+	/*
+	 * The announced rows follow a programmatic scroll at once. Nothing is dispatched between the call and the
+	 * check, so the answer cannot come from the cache hint of a paint: a table that is covered, hidden or slow
+	 * to paint announces the same rows.
+	 */
+	@Test
+	public void test_announcedRowsFollowAProgrammaticScrollBeforeAnyPaint () {
+		SeededWidgetScene scene = new SeededWidgetScene (display, SWT.NONE);
+		BitSet table = new BitSet ();
+		Prefetch.setWindow (scene.table, 2, 3);
+		Prefetch.addListener (scene.table, event -> replay (table, event));
+		try {
+			scene.table.setItemCount (200);
+			scene.drain ();
+			boolean window = ModeQuery.of (scene.table) == ModeQuery.VIEWPORT;
+			for (int top : new int [] {40, 3, 120, 199, 0, 77}) {
+				scene.table.setTopIndex (top);
+				assertEquals (expected (Residency.residentRange (scene.table), 200, window), table, "setTopIndex " + top);
+			}
+			scene.drain ();
+			for (int row : new int [] {150, 10, 199, 60}) {
+				scene.table.setSelection (row);
+				assertEquals (expected (Residency.residentRange (scene.table), 200, window), table, "setSelection " + row);
+			}
+		} finally {
+			scene.dispose ();
+		}
+	}
+
 	private static void replay (BitSet rows, Event event) {
 		if (event.detail == Prefetch.PREFETCH) rows.set (event.start, event.end + 1);
 		else rows.clear (event.start, event.end + 1);
