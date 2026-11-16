@@ -160,6 +160,75 @@ public class Test_ViewportSelectionEnumeration {
 		assertEquals (1, model.toArray () [0]);
 	}
 
+
+	@Test
+	void clippedViewportSelectionInBothRepresentations () {
+		Selection model = new Selection ();
+		model.setLogicalCount (24);
+		model.selectRange (2, 5);
+		model.selectRange (10, 15);
+		model.selectRange (18, 24);
+		int [] included = {4, 10, 11, 12, 13, 14, 18, 19};
+		assertEquals (included.length, model.selectedCount (4, 20));
+		assertArrayEquals (included, model.toArray (4, 20));
+		int [] output = new int [included.length + 2];
+		Arrays.fill (output, -7);
+		assertEquals (included.length, model.copySelectedIndices (4, 20, output, 1));
+		assertEquals (-7, output [0]);
+		assertEquals (-7, output [output.length - 1]);
+		assertArrayEquals (included, Arrays.copyOfRange (output, 1, output.length - 1));
+		model.invert ();
+		int [] excluded = {5, 6, 7, 8, 9, 15, 16, 17};
+		assertEquals (excluded.length, model.selectedCount (4, 20));
+		assertArrayEquals (excluded, model.toArray (4, 20));
+		assertArrayEquals (new int [0], model.toArray (20, 20));
+	}
+
+	@Test
+	@Timeout (60)
+	void nearMaximumLogicalCountOnlyCopiesSmallViewport () {
+		Selection model = new Selection ();
+		model.setLogicalCount (Integer.MAX_VALUE);
+		model.selectAll ();
+		model.deselectRange (0, Integer.MAX_VALUE - 10);
+		model.deselectRange (Integer.MAX_VALUE - 3, Integer.MAX_VALUE);
+		assertEquals (7, model.selectedCount (Integer.MAX_VALUE - 20, Integer.MAX_VALUE));
+		int [] clipped = model.toArray (Integer.MAX_VALUE - 20, Integer.MAX_VALUE);
+		assertEquals (7, clipped.length);
+		for (int i = 0; i < 7; i++) assertEquals (Integer.MAX_VALUE - 10 + i, clipped [i]);
+		int [] out = new int [10];
+		Arrays.fill (out, -123);
+		assertEquals (7, model.copySelectedIndices (
+				Integer.MAX_VALUE - 20, Integer.MAX_VALUE, out, 2));
+		assertEquals (-123, out [0]);
+		assertEquals (-123, out [1]);
+		assertEquals (-123, out [9]);
+		assertArrayEquals (clipped, Arrays.copyOfRange (out, 2, 9));
+		assertEquals (7, model.selectedCount ());
+		assertEquals (Integer.MAX_VALUE, model.logicalCount ());
+	}
+
+	@Test
+	void selectionSliceRefusalsDoNotModifyDestinationOrSource () {
+		Selection model = new Selection ();
+		model.setLogicalCount (10);
+		model.selectRange (2, 7);
+		int [] out = {-1, -1, -1, -1, -1};
+		assertThrows (IndexOutOfBoundsException.class, () ->
+				model.copySelectedIndices (0, 10, out, 1));
+		assertArrayEquals (new int [] {-1, -1, -1, -1, -1}, out);
+		assertThrows (IndexOutOfBoundsException.class, () ->
+				model.copySelectedIndices (0, 10, out, -1));
+		assertThrows (NullPointerException.class, () ->
+				model.copySelectedIndices (0, 10, null, 0));
+		assertThrows (IllegalArgumentException.class, () -> model.selectedCount (-1, 5));
+		assertThrows (IllegalArgumentException.class, () -> model.toArray (6, 3));
+		assertThrows (IllegalArgumentException.class, () ->
+				model.copySelectedIndices (0, 11, out, 0));
+		assertArrayEquals (new int [] {-1, -1, -1, -1, -1}, out);
+		assertArrayEquals (new int [] {2, 3, 4, 5, 6}, model.toArray ());
+	}
+
 	private static void verify (Selection model, List<Boolean> oracle) {
 		int [] expected = java.util.stream.IntStream.range (0, oracle.size ())
 				.filter (oracle::get).toArray ();
@@ -172,6 +241,18 @@ public class Test_ViewportSelectionEnumeration {
 		boolean complement = model.complementMode ();
 		int [] actual = model.toArray ();
 		assertArrayEquals (expected, actual);
+		// Existing dense oracle independently checks the new bounded viewport query.
+		int from = oracle.size () / 3, to = (oracle.size () * 2) / 3;
+		int [] window = java.util.stream.IntStream.range (from, to)
+				.filter (oracle::get).toArray ();
+		assertEquals (window.length, model.selectedCount (from, to));
+		assertArrayEquals (window, model.toArray (from, to));
+		int [] destination = new int [window.length + 2];
+		Arrays.fill (destination, -44);
+		assertEquals (window.length, model.copySelectedIndices (from, to, destination, 1));
+		assertEquals (-44, destination [0]);
+		assertEquals (-44, destination [destination.length - 1]);
+		assertArrayEquals (window, Arrays.copyOfRange (destination, 1, destination.length - 1));
 		assertNotSame (actual, model.toArray ());
 		if (actual.length > 0) actual [0] = -1;
 		assertArrayEquals (expected, model.toArray ());

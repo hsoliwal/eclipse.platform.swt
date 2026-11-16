@@ -311,6 +311,65 @@ public final class ViewportRuntime {
 			return Math.toIntExact (selected);
 		}
 
+		/**
+		 * Count selected rows only in a visible/model interval without enumerating
+		 * the complete selection. Range endpoints are half-open, including when
+		 * the logical model reaches Integer.MAX_VALUE.
+		 */
+		public int selectedCount (int fromInclusive, int toExclusive) {
+			checkRange (fromInclusive, toExclusive);
+			int represented = 0;
+			int first = firstEndingAtOrAfter (fromInclusive);
+			for (int i = first; i < rangeCount && starts [i] < toExclusive; i++) {
+				int left = Math.max (fromInclusive, starts [i]);
+				int right = Math.min (toExclusive, ends [i]);
+				represented += Math.max (0, right - left);
+			}
+			return allSelected ? toExclusive - fromInclusive - represented : represented;
+		}
+
+		/** Sorted selected row IDs within a half-open interval, as a fresh array. */
+		public int [] toArray (int fromInclusive, int toExclusive) {
+			int [] result = new int [selectedCount (fromInclusive, toExclusive)];
+			copySelectedIndices (fromInclusive, toExclusive, result, 0);
+			return result;
+		}
+
+		/**
+		 * Copies selected row IDs in a viewport to caller-owned primitive storage.
+		 * No temporary selection, per-row object or global selection array is made.
+		 * Insufficient capacity is rejected before touching any destination slot.
+		 *
+		 * @return the exact number of written row IDs
+		 */
+		public int copySelectedIndices (
+				int fromInclusive, int toExclusive, int [] destination, int destinationOffset) {
+			checkRange (fromInclusive, toExclusive);
+			Objects.requireNonNull (destination);
+			int needed = selectedCount (fromInclusive, toExclusive);
+			if (destinationOffset < 0 || destinationOffset > destination.length
+					|| needed > destination.length - destinationOffset) {
+				throw new IndexOutOfBoundsException ("viewport selection destination");
+			}
+			int at = destinationOffset;
+			int first = firstEndingAtOrAfter (fromInclusive);
+			if (!allSelected) {
+				for (int i = first; i < rangeCount && starts [i] < toExclusive; i++) {
+					at = appendRange (destination, at,
+							Math.max (fromInclusive, starts [i]),
+							Math.min (toExclusive, ends [i]));
+				}
+			} else {
+				int cursor = fromInclusive;
+				for (int i = first; i < rangeCount && starts [i] < toExclusive; i++) {
+					at = appendRange (destination, at, cursor, Math.min (toExclusive, starts [i]));
+					cursor = Math.max (cursor, Math.min (toExclusive, ends [i]));
+				}
+				appendRange (destination, at, cursor, toExclusive);
+			}
+			return needed;
+		}
+
 		public int [] toArray () {
 			int count = selectedCount ();
 			int [] result = new int [count];
