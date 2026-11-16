@@ -41,6 +41,9 @@ final class ContractPlatform implements MobilePlatform {
 	int connects, disconnects, openedGraphics, closedGraphics;
 	boolean reportFocusChanges, queueNativeFocusAcknowledgements, rejectFocusRequests;
 	long focusedPeer, nativeFocusAfterRequest;
+	/** Whether this transport moves pixels inside an image (Graphics.copyArea), and how often it did. */
+	boolean movePixels = true;
+	int pixelMoves;
 	final Map<Long, Peer> controls = new HashMap<>();
 	final Map<Long, BufferedImage> images = new HashMap<>();
 	static final class Peer {
@@ -129,6 +132,7 @@ final class ContractPlatform implements MobilePlatform {
 		@Override public void drawPolygon(int[] points,boolean fill){color(fill);Path2D path=new Path2D.Float();path.moveTo(points[0],points[1]);for(int i=2;i<points.length;i+=2)path.lineTo(points[i],points[i+1]);path.closePath();if(fill)g.fill(path);else g.draw(path);}
 		private String[] lines(String text,int flags){return (flags&SWT.DRAW_DELIMITER)!=0?text.split("\n",-1):new String[]{text};}
 		@Override public void drawText(String text,int x,int y,int flags){int[] extent=textExtent(text,flags);if((flags&SWT.DRAW_TRANSPARENT)==0)fillRectangle(x,y,extent[0],extent[1]);color(false);java.awt.FontMetrics fm=g.getFontMetrics();int row=0;for(String line:lines(text,flags))g.drawString(line,x,y+fm.getAscent()+row++*fm.getHeight());}
+		@Override public boolean copyArea(int x,int y,int w,int h,int dx,int dy){if(!movePixels)return false;g.copyArea(x,y,w,h,dx,dy);pixelMoves++;return true;}
 		@Override public void drawImage(long image,int sx,int sy,int sw,int sh,int dx,int dy,int dw,int dh){color(false);g.drawImage(bitmap(image),dx,dy,dx+dw,dy+dh,sx,sy,sx+sw,sy+sh,null);}
 		@Override public int[] textExtent(String text,int flags){drawing();java.awt.FontMetrics fm=g.getFontMetrics();int width=0;String[] lines=lines(text,flags);for(String line:lines)width=Math.max(width,fm.stringWidth(line));return new int[]{width,fm.getHeight()*lines.length};}
 		@Override public int[] fontMetrics(){drawing();java.awt.FontMetrics f=g.getFontMetrics();return new int[]{f.getAscent(),f.getDescent(),f.charWidth('n'),f.getLeading(),f.getHeight()};}

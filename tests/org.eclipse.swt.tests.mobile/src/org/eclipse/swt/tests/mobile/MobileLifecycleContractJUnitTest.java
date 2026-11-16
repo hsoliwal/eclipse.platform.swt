@@ -577,6 +577,56 @@ public final class MobileLifecycleContractJUnitTest {
 		assertEquals(beforePeers, platform.controls.size(), "the Group releases its peer and its child's");
 	}
 
+	@Test void canvasScrollMovesRetainedPixelsAndRepaintsOnlyTheUncoveredBand() {
+		Canvas canvas = new Canvas(shell, SWT.NONE);
+		long peer = platform.lastCreated;
+		canvas.setBounds(0, 0, 60, 100);
+		int[] offset = {0};
+		int[] colours = {SWT.COLOR_RED, SWT.COLOR_GREEN, SWT.COLOR_BLUE};
+		List<org.eclipse.swt.graphics.Rectangle> clips = new ArrayList<>();
+		/* one colour per 10-pixel model row, so a moved row is recognisable; only the clip is painted */
+		canvas.addListener(SWT.Paint, event -> {
+			clips.add(new org.eclipse.swt.graphics.Rectangle(event.x, event.y, event.width, event.height));
+			for (int y = event.y; y < event.y + event.height; y++) {
+				event.gc.setBackground(display.getSystemColor(colours[(y + offset[0]) / 10 % 3]));
+				event.gc.fillRectangle(0, y, 60, 1);
+			}
+		});
+		canvas.redraw();
+		canvas.update();
+		int[] before = platform.controls.get(peer).frame.clone();
+		assertEquals(60 * 100, before.length);
+		assertNotEquals(before[5], before[10 * 60 + 5], "neighbouring model rows differ");
+
+		clips.clear();
+		offset[0] = 10;
+		canvas.scroll(0, -10, 0, 0, 60, 100, false);
+		drain();
+		assertEquals(1, platform.pixelMoves, "the retained pixels moved inside the backing store");
+		assertEquals(List.of(new org.eclipse.swt.graphics.Rectangle(0, 90, 60, 10)), clips, "only the uncovered band is repainted");
+		int[] moved = platform.controls.get(peer).frame;
+		for (int y = 0; y < 90; y++) assertEquals(before[(y + 10) * 60 + 5], moved[y * 60 + 5], "row " + y + " shows what was 10 pixels below");
+		assertEquals(before[15 * 60 + 5], moved[95 * 60 + 5], "the band shows model row 10, which has the colour of model row 1");
+
+		/* a transport that cannot move pixels repaints the area instead: same picture, no delta */
+		platform.movePixels = false;
+		clips.clear();
+		offset[0] = 20;
+		canvas.scroll(0, -10, 0, 0, 60, 100, false);
+		drain();
+		assertEquals(1, platform.pixelMoves);
+		assertEquals(List.of(new org.eclipse.swt.graphics.Rectangle(0, 0, 60, 100)), clips, "without a pixel move the whole area is repainted");
+		int[] repainted = platform.controls.get(peer).frame;
+		for (int y = 0; y < 90; y++) assertEquals(moved[(y + 10) * 60 + 5], repainted[y * 60 + 5], "row " + y + " after the fallback");
+
+		/* a child that intersects the rectangle moves with it when asked */
+		platform.movePixels = true;
+		org.eclipse.swt.widgets.Label child = new org.eclipse.swt.widgets.Label(canvas, SWT.NONE);
+		child.setBounds(5, 40, 20, 10);
+		canvas.scroll(0, -10, 0, 0, 60, 100, true);
+		assertEquals(new org.eclipse.swt.graphics.Rectangle(5, 30, 20, 10), child.getBounds());
+		canvas.dispose();
+	}
 	@Test void staleNativePeerCannotActivateADisposedWidget() {
 		Canvas canvas = canvas(shell);
 		long peer = platform.lastCreated;
