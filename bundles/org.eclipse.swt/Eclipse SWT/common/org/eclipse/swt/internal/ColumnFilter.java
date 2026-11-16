@@ -290,6 +290,42 @@ public final class ColumnFilter extends RowViewBase {
 	}
 
 	/**
+	 * Suspends or resumes the criterion of a column (or of {@link #ALL_COLUMNS}). A suspended
+	 * criterion keeps its pattern or values, stays {@link #isActive(int) active}, and takes no
+	 * part in the filter until it is resumed. Resuming tests no row again: the rows the criterion
+	 * matches are kept up to date while it is suspended. Setting or clearing the criterion of the
+	 * column resumes it.
+	 *
+	 * @param column the column, or {@link #ALL_COLUMNS}
+	 * @param suspended <code>true</code> to suspend the criterion, <code>false</code> to resume it
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_INVALID_RANGE - if the column is not a column</li>
+	 * </ul>
+	 */
+	public void setSuspended (int column, boolean suspended) {
+		FilterCriterion current = criterion (column);
+		if (current.suspended == suspended) return;
+		if (worker != null) pending [column + 1] = current = current.copy ();
+		current.suspended = suspended;
+		changed (null);
+	}
+
+	/**
+	 * Returns whether the criterion of a column is suspended.
+	 *
+	 * @param column the column, or {@link #ALL_COLUMNS}
+	 * @return <code>true</code> when the criterion is suspended
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_INVALID_RANGE - if the column is not a column</li>
+	 * </ul>
+	 */
+	public boolean isSuspended (int column) {
+		return criterion (column).suspended;
+	}
+
+	/**
 	 * Returns the text criterion of a column, or <code>null</code> when it has none.
 	 *
 	 * @param column the column, or {@link #ALL_COLUMNS}

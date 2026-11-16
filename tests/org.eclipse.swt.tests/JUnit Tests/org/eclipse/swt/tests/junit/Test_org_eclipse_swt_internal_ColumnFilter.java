@@ -82,6 +82,58 @@ public class Test_org_eclipse_swt_internal_ColumnFilter {
 	}
 
 	@Test
+	public void test_suspendedCriterionKeepsItsPatternAndRejoinsWithoutTesting () {
+		int [] reads = new int [1];
+		ColumnFilter filter = new ColumnFilter (3, CELLS.length, (row, column) -> {
+			reads [0]++;
+			return CELLS [row][column];
+		});
+		filter.setText (1, "red", TextMatch.EXACT);
+		filter.setText (0, "c*", TextMatch.WILDCARD);
+		assertArrayEquals (new int [] {2}, rows (filter));
+		assertFalse (filter.isSuspended (0));
+
+		int before = reads [0];
+		filter.setSuspended (0, true);
+		assertArrayEquals (new int [] {0, 2}, rows (filter), "the other criterion still filters");
+		assertTrue (filter.isSuspended (0));
+		assertTrue (filter.isActive (0), "a suspended criterion keeps its specification");
+		assertEquals ("c*", filter.getMatch (0).pattern ());
+		filter.setSuspended (0, true);
+		filter.setSuspended (1, true);
+		assertArrayEquals (new int [] {0, 1, 2, 3, 4, 5}, rows (filter), "every row passes when all criteria are suspended");
+		filter.setSuspended (1, false);
+		filter.setSuspended (0, false);
+		assertArrayEquals (new int [] {2}, rows (filter));
+		assertEquals (before, reads [0], "suspending and resuming read no cell");
+
+		/* the rows a suspended criterion matches follow the source */
+		filter.setSuspended (0, true);
+		filter.setLogic (1, ColumnFilter.OR);
+		assertArrayEquals (new int [] {0, 2}, rows (filter));
+		filter.setSuspended (0, false);
+		assertArrayEquals (new int [] {0, 2}, rows (filter), "c* OR red");
+		filter.setText (1, "yellow", TextMatch.EXACT);
+		assertArrayEquals (new int [] {1, 2}, rows (filter), "c* OR yellow");
+
+		/* setting or clearing the criterion resumes it */
+		filter.setSuspended (0, true);
+		filter.setText (0, "d*", TextMatch.WILDCARD);
+		assertFalse (filter.isSuspended (0));
+		filter.setSuspended (0, true);
+		filter.clear (0);
+		assertFalse (filter.isSuspended (0));
+		assertFalse (filter.isActive (0));
+
+		filter.setText (new int [] {0, 1}, "e", TextMatch.CONTAINS);
+		filter.setSuspended (ColumnFilter.ALL_COLUMNS, true);
+		assertTrue (filter.isSuspended (ColumnFilter.ALL_COLUMNS));
+		assertArrayEquals (new int [] {1}, rows (filter), "only the column criterion (yellow) filters");
+		assertThrows (IllegalArgumentException.class, () -> filter.setSuspended (3, true));
+		assertThrows (IllegalArgumentException.class, () -> filter.isSuspended (-2));
+	}
+
+	@Test
 	public void test_multiColumnCriterionAndLogic () {
 		ColumnFilter filter = fruits ();
 		filter.setText (new int [] {0, 1}, "r", TextMatch.CONTAINS);
