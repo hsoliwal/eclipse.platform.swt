@@ -53,15 +53,17 @@ public class List extends Scrollable {
         });
         addListener(SWT.MouseMove, event -> {
             if (!pointerDown || !isEnabled() || !isVisible()) return;
-            int delta = event.y - pointerY;
+            long delta = (long)event.y - pointerY;
             pointerY = event.y;
             if (delta != 0) {
-                dragPixels += delta;
+                // A native pointer can cross the signed coordinate boundary.
+                long changed = (long)dragPixels + delta;
+                dragPixels = (int)Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, changed));
                 if (Math.abs((long) dragPixels) > 3) dragging = true;
                 if (dragging) {
                     int rows = dragPixels / getItemHeight();
                     if (rows != 0) {
-                        scrollBy(-rows);
+                        scrollBy(-(long)rows);
                         dragPixels -= rows * getItemHeight();
                     }
                 }
