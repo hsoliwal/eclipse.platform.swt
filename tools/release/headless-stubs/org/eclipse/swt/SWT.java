@@ -4,6 +4,7 @@
 package org.eclipse.swt;
 /** Test-only stand-in for a headless owner-source compile. Never ship in SWT JARs. */
 public final class SWT {
+    public static final int ERROR_NULL_ARGUMENT = 4;
     public static final int ERROR_INVALID_ARGUMENT = 5;
     public static final int ERROR_INVALID_RANGE = 6;
     private SWT() { }

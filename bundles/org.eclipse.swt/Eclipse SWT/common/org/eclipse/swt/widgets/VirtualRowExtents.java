@@ -33,7 +33,7 @@ import org.eclipse.swt.internal.PackedHeapGrowth;
  * backing. Sorted primitive row IDs and measured extents carry only measured rows;
  * the existing Fenwick algorithm indexes their signed deltas from the estimate.
  * With m measured rows and a clean prefix cache, offset and repeat measurement
- * are O(log m), row lookup is O(log squared m), and sequential first measurements
+ * are O(log m), row lookup is O(log m), and sequential first measurements
  * append in O(log m). A first
  * measurement inserted in the middle, deletion of measurements in the middle,
  * or an estimate change is O(m). Removing a measured suffix retains the prefix
@@ -210,18 +210,24 @@ final class VirtualRowExtents {
 		if (count == 0) return -1;
 		if (offset <= 0) return 0;
 		if (offset >= totalExtent ()) return count - 1;
-		// Upper bound of measured-row ends; zero-height runs remain half-open.
-		int low = 0, high = measured;
-		while (low < high) {
-			int mid = (low + high) >>> 1;
-			long end = ((long) rowIds [mid] + 1) * estimate + deltaPrefix (mid + 1);
-			if (end <= offset) low = mid + 1;
-			else high = mid;
+		int slot = 0;
+		long prefixDelta = 0;
+		// Measured-row ends are nondecreasing, including zero-height rows.
+		// Fenwick binary lifting maintains the prefix in O(log measured).
+		for (int bit = Integer.highestOneBit (measured); bit != 0; bit >>>= 1) {
+			if (bit > measured - slot) continue;
+			int next = slot + bit;
+			long nextDelta = prefixDelta + tree [next];
+			long end = ((long) rowIds [next - 1] + 1L) * estimate + nextDelta;
+			if (end <= offset) {
+				slot = next;
+				prefixDelta = nextDelta;
+			}
 		}
-		int first = low == 0 ? 0 : rowIds [low - 1] + 1;
-		long start = (long) first * estimate + deltaPrefix (low);
-		long inGap = first + (offset - start) / estimate;
-		int limit = low == measured ? count - 1 : rowIds [low];
+		int first = slot == 0 ? 0 : rowIds [slot - 1] + 1;
+		long begin = (long) first * estimate + prefixDelta;
+		long inGap = first + (offset - begin) / estimate;
+		int limit = slot == measured ? count - 1 : rowIds [slot];
 		return (int) Math.min (inGap, limit);
 	}
 
@@ -246,6 +252,32 @@ final class VirtualRowExtents {
 			long last = offset > Long.MAX_VALUE - tail ? Long.MAX_VALUE : offset + tail;
 			out [1] = rowAt (last) + 1;
 		}
+	}
+
+
+	/**
+	 * Optional asymmetric pixel prefetch window for variable-height rows.
+	 * Does not create, recycle, or evict native items. Existing three-argument
+	 * visibleRange retains its exact contract. A zero viewport has no demand.
+	 */
+	void visibleRange (long offset, int viewport,
+			int cacheBeforePixels, int cacheAfterPixels, int [] out) {
+		if (viewport < 0 || cacheBeforePixels < 0 || cacheAfterPixels < 0) {
+			throw new IllegalArgumentException ("negative viewport/cache extent");
+		}
+		if (count == 0) {
+			out [0] = out [1] = 0;
+			return;
+		}
+		if (viewport == 0) {
+			out [0] = out [1] = rowAt (offset);
+			return;
+		}
+		long firstPixel = offset < cacheBeforePixels ? 0 : offset - cacheBeforePixels;
+		long tail = viewport - 1L + cacheAfterPixels;
+		long lastPixel = offset > Long.MAX_VALUE - tail ? Long.MAX_VALUE : offset + tail;
+		out [0] = rowAt (firstPixel);
+		out [1] = rowAt (lastPixel) + 1;
 	}
 
 	/** Rows a viewport shows, as a range: empty without rows or with an empty viewport. */
