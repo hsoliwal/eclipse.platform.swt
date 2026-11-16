@@ -413,6 +413,35 @@ public void test_getItemCount() {
 }
 
 @Test
+public void test_setItemCount_preservesPrefixSelectionAndEmptyNewRows() {
+	list.setItems("kept-0", "kept-1", "kept-2");
+	list.setSelection(1);
+	list.setItemCount(257);
+	assertEquals(257, list.getItemCount());
+	assertEquals("kept-0", list.getItem(0));
+	assertEquals("kept-1", list.getItem(1));
+	assertEquals("kept-2", list.getItem(2));
+	assertEquals("", list.getItem(3));
+	assertEquals("", list.getItem(128));
+	assertEquals("", list.getItem(256));
+	assertEquals(1, list.getSelectionIndex());
+
+	// Appending again must preserve all existing text, not only initial rows.
+	list.setItem(200, "materialized-late");
+	list.setItemCount(513);
+	assertEquals(513, list.getItemCount());
+	assertEquals("materialized-late", list.getItem(200));
+	assertEquals("", list.getItem(512));
+	assertEquals(1, list.getSelectionIndex());
+
+	// Existing public remove path remains responsible for count reductions.
+	list.setItemCount(257);
+	assertEquals(257, list.getItemCount());
+	assertEquals("materialized-late", list.getItem(200));
+	assertEquals(1, list.getSelectionIndex());
+}
+
+@Test
 public void test_getItemHeight() {
 	if (SwtTestUtil.isGTK) {
 		//TODO Fix GTK failure.
