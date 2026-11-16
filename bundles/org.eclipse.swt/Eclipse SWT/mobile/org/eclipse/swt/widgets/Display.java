@@ -277,6 +277,22 @@ public class Display extends Device implements Executor {
 		}
 		putPeer(key, owner);
 	}
+	private void compactPeerIndex() {
+		// Grow at half occupancy and shrink only below one eighth.
+		// Rehash full generation-tagged native tokens without tombstones.
+		if (peerKeys.length <= 32 || ((long)peerCount) * 8 > peerKeys.length) return;
+		long[] oldKeys = peerKeys;
+		Control[] oldOwners = peerOwners;
+		int capacity = peerKeys.length >>> 1;
+		long[] nextKeys = new long[capacity];
+		Control[] nextOwners = new Control[capacity];
+		peerKeys = nextKeys;
+		peerOwners = nextOwners;
+		peerCount = 0;
+		for (int i = 0; i < oldKeys.length; i++) {
+			if (oldKeys[i] != 0) putPeer(oldKeys[i], oldOwners[i]);
+		}
+	}
 	private void unindexPeer(Control owner) {
 		long key = owner.peer;
 		if (key == 0 || peerKeys.length == 0) return;
@@ -296,6 +312,7 @@ public class Display extends Device implements Executor {
 					putPeer(movedKey, movedOwner);
 					next = (next + 1) & mask;
 				}
+				compactPeerIndex();
 				return;
 			}
 			slot = (slot + 1) & mask;
@@ -309,7 +326,16 @@ public class Display extends Device implements Executor {
 	void unregister(Control control) {
 		unindexPeer(control);
 		if (focusControl == control) focusControl = null;
-		for (int i = 0; i < controlCount; i++) if (controls[i] == control) { System.arraycopy(controls, i + 1, controls, i, --controlCount - i); controls[controlCount] = null; break; }
+		for (int i = 0; i < controlCount; i++) {
+			if (controls[i] != control) continue;
+			System.arraycopy(controls, i + 1, controls, i, --controlCount - i);
+			controls[controlCount] = null;
+			// A viewport may temporarily own many native Controls.
+			// Reclaim historical enumeration capacity when they are released.
+			if (controls.length > 16 && ((long)controlCount) * 4 <= controls.length)
+				controls = Arrays.copyOf(controls, Math.max(16, controls.length >>> 1));
+			break;
+		}
 	}
 	void clearFocus(Control control) {
 		control.clearedFocusGeneration = ++focusGeneration;
