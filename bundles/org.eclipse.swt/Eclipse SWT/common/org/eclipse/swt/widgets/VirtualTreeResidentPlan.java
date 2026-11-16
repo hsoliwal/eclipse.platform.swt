@@ -137,7 +137,6 @@ final class VirtualTreeResidentPlan {
 		}
 	}
 
-	/** Convenience form of {@link #plan(int, int[], int[], int[])} over a residency buffer. */
 	/**
 	 * The native-demand buffer already owns its tree coordinates. Reuse these
 	 * parent-owned scratch lanes rather than allocating three int arrays for
@@ -146,6 +145,7 @@ final class VirtualTreeResidentPlan {
 	 */
 	private int [] scratchParentIds, scratchChildIndices, scratchPhysicalParents;
 
+	/** Convenience form of {@link #plan(int, int[], int[], int[])} over a residency buffer. */
 	void plan (VirtualTreeVisibleProjection.Residency next) {
 		int count = next.size ();
 		if (scratchParentIds == null || count > scratchParentIds.length) {
