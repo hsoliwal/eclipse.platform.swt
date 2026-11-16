@@ -298,7 +298,7 @@ void createWidget() {
 
 @Override
 Font defaultFont () {
-	return Font.cocoa_new (display, defaultNSFont ());
+	return display.getDefaultFont (defaultNSFont ());
 }
 
 @Override

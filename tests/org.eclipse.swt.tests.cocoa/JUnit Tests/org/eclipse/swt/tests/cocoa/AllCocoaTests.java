@@ -22,7 +22,8 @@ import org.junit.platform.suite.api.Suite;
 	Test_cocoa_AccessibleTextRanges.class,
 	Test_cocoa_GLCanvas.class,
 	Test_cocoa_SystemMenu.class,
-	Test_cocoa_GCCopyArea.class
+	Test_cocoa_GCCopyArea.class,
+	Test_cocoa_DefaultFont.class
 })
 
 public class AllCocoaTests {
