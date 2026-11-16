@@ -394,6 +394,52 @@ public final class MobileLifecycleContractJUnitTest {
 			if (i % 3 != 0) assertSame(controls[i], display.findWidget(peers[i]));
 	}
 
+
+	@Test void mobileViewportChurnReleasesNativePeerIndexAndControlCapacity() throws Exception {
+		final int highWater = 768;
+		Canvas[] owners = new Canvas[highWater];
+		long[] tokens = new long[highWater];
+		platform.next = 0x1000_0001_0000_0100L;
+		for (int i = 0; i < highWater; i++) {
+			owners[i] = canvas(shell);
+			tokens[i] = platform.lastCreated;
+			assertSame(owners[i], display.findWidget(tokens[i]));
+		}
+		assertTrue(arrayLength("peerKeys") >= 1024, "peer index grows with live Controls");
+		assertTrue(arrayLength("controls") >= highWater, "original enumeration grows");
+		java.util.Random random = new java.util.Random(20261116L);
+		for (int i = highWater - 1; i > 0; i--) {
+			int other = random.nextInt(i + 1);
+			Canvas swap = owners[i];
+			owners[i] = owners[other];
+			owners[other] = swap;
+		}
+		for (Canvas owner : owners) owner.dispose();
+		assertEquals(1, platform.controls.size(), "the shell is the only surviving native peer");
+		assertEquals(16, arrayLength("controls"), "enumeration returns to minimum capacity");
+		assertEquals(32, arrayLength("peerKeys"), "native index returns to minimum capacity");
+		assertEquals(32, arrayLength("peerOwners"), "native owner indices remain paired");
+		assertArrayEquals(new Shell[] {shell}, display.getShells());
+		for (long token : tokens) {
+			assertNull(display.findWidget(token), "stale full peer token remains invalid");
+			platform.sink.input(token, SWT.MouseUp, 1, 2, 1, 0, '\0', 0, 1, 1);
+		}
+		Canvas replacement = canvas(shell);
+		long newToken = platform.lastCreated;
+		assertSame(replacement, display.findWidget(newToken), "new peer uses compacted index");
+		drain();
+		assertEquals(2, platform.controls.size(), "one new child native peer is retained");
+		replacement.dispose();
+		assertEquals(1, platform.controls.size(), "replacement native peer releases correctly");
+		assertEquals(32, arrayLength("peerKeys"), "minimum peer residency survives another release");
+	}
+
+	private int arrayLength(String fieldName) throws ReflectiveOperationException {
+		java.lang.reflect.Field field = Display.class.getDeclaredField(fieldName);
+		field.setAccessible(true);
+		return java.lang.reflect.Array.getLength(field.get(display));
+	}
+
 	@Test void recycledNativePeerSlotCannotReceiveStaleQueuedEvents() {
 		platform.next = 0x1000_0001_0000_0029L;
 		Canvas removed = canvas(shell);

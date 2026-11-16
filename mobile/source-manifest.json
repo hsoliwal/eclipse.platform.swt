@@ -719,7 +719,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java",
-      "sha256": "0b4e9eba6b6afc3f9791bfc174ae8e64ed2bda8ba0474fac5b5a34e059fdcbe0"
+      "sha256": "87fe6de14182af05cc48b69049811f3fa8541f0e87f2758ed82af06f48dfcd5d"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Label.java",
