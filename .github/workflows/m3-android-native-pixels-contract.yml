@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: EPL-2.0
+name: SWT Android native bitmap source contract
+on:
+  pull_request:
+    branches: [master, 'release/**']
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT PI/android/library/swt_pixels.c'
+      - 'tools/release/c/android/bitmap.h'
+      - 'tools/release/c/swt_android_pixels_contract.c'
+      - 'tools/release/run_headless_android_native_pixels_c.sh'
+      - '.github/workflows/m3-android-native-pixels-contract.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-jni-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v5.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de5a937a1dc73fbc1a67d7d1aa4bebc1082f3190 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify actual SWT Android JNI pixel source under ASan/UBSan
+        run: bash tools/release/run_headless_android_native_pixels_c.sh
+      - name: Preserve native owner SHA and sanitizer evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: android-swt-ndk-pixels-source-${{ github.sha }}
+          path: target/m3-android-ndk-pixels/
+          if-no-files-found: warn
+          retention-days: 90
