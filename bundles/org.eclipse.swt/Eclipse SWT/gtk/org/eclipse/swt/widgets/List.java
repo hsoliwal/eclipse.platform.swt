@@ -1757,8 +1757,22 @@ public void setItemCount (int count) {
 		remove (count, itemCount - 1);
 		return;
 	}
-	for (int i = itemCount; i < count; i++) {
-		add ("");
+	/*
+	 * Preserve the existing GtkListStore and its per-row inserted signals:
+	 * only eliminate repeated conversion and native GtkTreeIter allocation.
+	 * The GTK model still owns each logical row; this is not sparse storage.
+	 */
+	byte [] empty = Converter.wcsToMbcs ("", true);
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	if (iter == 0) error (SWT.ERROR_ITEM_NOT_ADDED);
+	try {
+		for (int i = itemCount; i < count; i++) {
+			checkWidget ();
+			GTK.gtk_list_store_append (modelHandle, iter);
+			GTK.gtk_list_store_set (modelHandle, iter, TEXT_COLUMN, empty, -1);
+		}
+	} finally {
+		OS.g_free (iter);
 	}
 }
 
