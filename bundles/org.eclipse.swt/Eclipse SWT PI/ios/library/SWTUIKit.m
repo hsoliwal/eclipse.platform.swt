@@ -689,6 +689,21 @@ JNIEXPORT void JNICALL JNI(disconnect)(JNI_ARGS) {
 	}
 }
 
+/* Safe area is queried on UIKit main, but the JNI owner is the SWT Display thread. */
+JNIEXPORT jintArray JNICALL JNI(safeAreaInsets)(JNI_ARGS) {
+	@autoreleasepool {
+		if (!swtOnDisplayThread(env)) return NULL;
+		__block UIEdgeInsets insets = UIEdgeInsetsZero;
+		if (!swtUI(env, ^{ insets = swtRoot.safeAreaInsets; })) return NULL;
+		/* Round outward, so fractional safe areas never expose an unsafe pixel. */
+		jint values[] = {
+			(jint)ceil(MAX(0.0, insets.left)), (jint)ceil(MAX(0.0, insets.top)),
+			(jint)ceil(MAX(0.0, insets.right)), (jint)ceil(MAX(0.0, insets.bottom))
+		};
+		return swtInts(env, values, 4);
+	}
+}
+
 JNIEXPORT jintArray JNICALL JNI(displayBounds)(JNI_ARGS) {
 	@autoreleasepool {
 		if (!swtOnDisplayThread(env)) return NULL;
