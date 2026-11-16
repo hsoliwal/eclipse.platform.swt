@@ -379,6 +379,31 @@ public void test_deselectII() {
 }
 
 @Test
+public void test_setItemCount_gtkBulkAppendKeepsNativeSelectionAndText() {
+	if (!SwtTestUtil.isGTK) return;
+	list.setItems("row-0", "row-1", "row-2");
+	list.setSelection(1);
+	list.setItemCount(2048);
+	assertEquals(2048, list.getItemCount());
+	assertEquals("row-0", list.getItem(0));
+	assertEquals("row-1", list.getItem(1));
+	assertEquals("row-2", list.getItem(2));
+	assertEquals("", list.getItem(3));
+	assertEquals("", list.getItem(1024));
+	assertEquals("", list.getItem(2047));
+	assertEquals(1, list.getSelectionIndex());
+	list.setItem(1024, "edited");
+	list.setItemCount(2050);
+	assertEquals("edited", list.getItem(1024));
+	assertEquals("", list.getItem(2049));
+	assertEquals(1, list.getSelectionIndex());
+	list.setItemCount(2048);
+	assertEquals(2048, list.getItemCount());
+	assertEquals("edited", list.getItem(1024));
+	assertEquals(1, list.getSelectionIndex());
+}
+
+@Test
 public void test_getFocusIndex() {
 	String[] items = { "item0", "item1", "item2"};
 	list.setItems(items);
