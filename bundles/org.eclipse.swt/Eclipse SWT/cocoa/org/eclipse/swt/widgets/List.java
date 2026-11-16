@@ -1412,7 +1412,15 @@ public void setItemCount (int count) {
 	 * the native view, while changing neither text nor selection.
 	 */
 	if (count > items.length) {
-		String [] nextItems = new String [count];
+		/*
+		 * Amortize repeated small count increases while bounding spare
+		 * references (at most 65,536 slots) on very large models.
+		 * All size arithmetic is widened before narrowing to an array size.
+		 */
+		long spare = Math.min (65_536L, Math.max (4L, ((long) items.length) >>> 2));
+		long proposed = Math.max ((long) count, (long) items.length + spare);
+		int capacity = (int) Math.min ((long) Integer.MAX_VALUE, proposed);
+		String [] nextItems = new String [capacity];
 		System.arraycopy (items, 0, nextItems, 0, oldCount);
 		items = nextItems;
 	}
