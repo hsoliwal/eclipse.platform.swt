@@ -934,10 +934,8 @@ void releaseParent () {
 			long hwndChild = OS.GetWindow (hwndParent, OS.GW_CHILD);
 			while (hwndChild != 0) {
 				if (hwndChild != handle) {
-					int bits = OS.GetWindowLong (hwndParent, OS.GWL_EXSTYLE);
-                    if ((bits & OS.WS_EX_TRANSPARENT) != 0) {
-                        return;
-                    }
+					int bits = OS.GetWindowLong (hwndChild, OS.GWL_EXSTYLE);
+					if ((bits & OS.WS_EX_TRANSPARENT) != 0) return;
 				}
 				hwndChild = OS.GetWindow (hwndChild, OS.GW_HWNDNEXT);
 			}
@@ -1531,21 +1529,26 @@ LRESULT WM_GETFONT (long wParam, long lParam) {
 	return new LRESULT (font != null ? SWTFontProvider.getFontHandle(font, nativeZoom) : defaultFont ());
 }
 
-@Override
-LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
-	LRESULT result = super.WM_LBUTTONDOWN (wParam, lParam);
-    if (result == LRESULT.ZERO) {
-        return result;
-    }
-
-	/* Set focus for a canvas with no children */
+/* Set focus for a canvas with no children */
+private void setFocusOnMouseDown () {
 	if ((state & CANVAS) != 0) {
 		if ((style & SWT.NO_FOCUS) == 0 && hooksKeys ()) {
-            if (OS.GetWindow(handle, OS.GW_CHILD) == 0) {
-                setFocus();
-            }
+			if (OS.GetWindow (handle, OS.GW_CHILD) == 0) setFocus ();
 		}
 	}
+}
+
+@Override
+LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
+	/* An early MouseDown must find the focus where it finds it without drag detection */
+	boolean focusFirst = (state & DRAG_DETECT) != 0 && hooks (SWT.DragDetect) && (hooks (SWT.MouseDown) || filters (SWT.MouseDown));
+	if (focusFirst) {
+		setFocusOnMouseDown ();
+		if (isDisposed ()) return LRESULT.ZERO;
+	}
+	LRESULT result = super.WM_LBUTTONDOWN (wParam, lParam);
+	if (result == LRESULT.ZERO) return result;
+	if (!focusFirst) setFocusOnMouseDown ();
 	return result;
 }
 
@@ -1873,7 +1876,7 @@ LRESULT WM_PRINTCLIENT (long wParam, long lParam) {
                 control = this;
             }
 			data.background = control.getBackgroundPixel ();
-			data.font = Font.win32_new(display, OS.SendMessage (handle, OS.WM_GETFONT, 0, 0));
+			data.font = SWTFontProvider.getFont(display, OS.SendMessage (handle, OS.WM_GETFONT, 0, 0), nativeZoom);
 			data.uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
 			GC gc = createNewGC(wParam, data);
 			Event event = new Event ();

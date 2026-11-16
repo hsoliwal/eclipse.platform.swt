@@ -215,6 +215,31 @@ public void test_replaceTextRangeWithVariableHeight() {
 }
 
 @Test
+public void test_replaceTextRangeRemovingTopLineWithVariableHeight() {
+	shell.setLayout(new FillLayout());
+	StyledText styledText = new StyledText(shell, SWT.BORDER | SWT.V_SCROLL | SWT.WRAP);
+	Text text = new Text(shell, SWT.BORDER);
+	try {
+		styledText.setText("\n".repeat(20) + "wrapped ".repeat(20));
+		shell.setSize(300, 5 * styledText.getLineHeight());
+		shell.open();
+
+		text.setFocus();
+		styledText.setTopIndex(styledText.getLineCount() - 1);
+		assertFalse(styledText.isFocusControl());
+		assertTrue(styledText.getTopIndex() > 0);
+		styledText.replaceTextRange(0, 2, "");
+		assertTrue(styledText.getTopIndex() > 0);
+		styledText.replaceTextRange(0, 18, "");
+		assertEquals(1, styledText.getLineCount());
+		assertEquals(0, styledText.getTopIndex());
+	} finally {
+		styledText.dispose();
+		text.dispose();
+	}
+}
+
+@Test
 public void test_addExtendedModifyListenerLorg_eclipse_swt_custom_ExtendedModifyListener() {
 	final String line = "Line1";
 	ExtendedModifyListener listener = event -> {
@@ -6211,6 +6236,7 @@ public void test_backspaceAndDelete() throws InterruptedException {
 	// the window so that org.eclipse.swt.widgets.Display.findFocusedWindow()
 	// returns non-zero
 	SwtTestUtil.processEvents();
+	SwtTestUtil.forceActiveForPost(shell);
 
 	Display display = Display.getDefault();
 

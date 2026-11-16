@@ -1064,10 +1064,8 @@ Color defaultBackground () {
 }
 
 Font defaultFont () {
-    if (display.smallFonts) {
-        return display.getSystemFont();
-    }
-	return Font.cocoa_new (display, defaultNSFont ());
+	if (display.smallFonts) return display.getSystemFont ();
+	return display.getDefaultFont (defaultNSFont ());
 }
 
 Color defaultForeground () {

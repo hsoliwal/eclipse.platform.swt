@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +47,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
@@ -507,6 +509,29 @@ private static double getBrightness(int pixel) {
 }
 
 /**
+ * Posts a press and release of the given key with Ctrl held down.
+ */
+public static void postCtrlKey(int key) {
+	Display display = Display.getCurrent();
+	Event event = new Event();
+	event.type = SWT.KeyDown;
+	event.keyCode = SWT.CONTROL;
+	assertTrue(display.post(event));
+	try {
+		Event keyEvent = new Event();
+		keyEvent.keyCode = key;
+		keyEvent.character = (char) key;
+		keyEvent.type = SWT.KeyDown;
+		assertTrue(display.post(keyEvent));
+		keyEvent.type = SWT.KeyUp;
+		assertTrue(display.post(keyEvent));
+	} finally {
+		event.type = SWT.KeyUp;
+		display.post(event);
+	}
+}
+
+/**
  * Dispatch all pending events (until {@link Display#readAndDispatch()} returned
  * <code>false</code>).
  */
@@ -650,6 +675,23 @@ public static void waitShellActivate(Runnable trigger, Shell shell) {
 	dumpShellState(System.out);
 	assertEquals(shell.getDisplay().getActiveShell(), shell, "Shell did not activate");
 	fail("SWT.Activate was not received but Shell is (incorrectly?) reported active");
+}
+
+/**
+ * Makes the open shell the active window, so that events sent with {@link Display#post} reach it.
+ * Outside GTK the calling test is skipped when the shell cannot be activated.
+ */
+public static void forceActiveForPost(Shell shell) throws InterruptedException {
+	Display display = shell.getDisplay();
+	shell.forceActive();
+	// Issue #726: on GTK getActiveShell() reports the wrong shell, so it cannot be waited for
+	if (isGTK) {
+		processEvents();
+		return;
+	}
+	processEvents(3000, () -> display.getActiveShell() == shell);
+	// Windows refuses the foreground to a process in the background, and posted keys would go to another window
+	assumeTrue(display.getActiveShell() == shell, "The test shell did not become the active window");
 }
 
 /**

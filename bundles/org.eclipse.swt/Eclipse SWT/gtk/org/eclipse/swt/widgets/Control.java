@@ -102,6 +102,8 @@ public abstract class Control extends Widget implements Drawable {
 	Point lastInput = new Point(0, 0);
 
 	LinkedList <Event> dragDetectionQueue;
+	/* Press position of a drag that X11 detects from motion events instead of blocking the press */
+	Point motionDragStart;
 	/* The first, delayed MouseDown of dragDetectionQueue was sent before a MouseDoubleClick */
 	private boolean dragDetectionMouseDownSent;
 
@@ -1829,8 +1831,8 @@ public Point toControl(int x, int y) {
 		origin_x[0] = origin.x;
 		origin_y[0] = origin.y;
 	} else {
-		long window = eventWindow();
-		GDK.gdk_window_get_origin(window, origin_x, origin_y);
+		GDK.gdk_window_get_origin(eventWindow(), origin_x, origin_y);
+		applyMonitorOrigin(origin_x, origin_y);
 	}
 
 	x -= origin_x[0];
@@ -1898,8 +1900,8 @@ public Point toDisplay(int x, int y) {
 		origin_x[0] = origin.x;
 		origin_y[0] = origin.y;
 	} else {
-		long window = eventWindow();
-		GDK.gdk_window_get_origin(window, origin_x, origin_y);
+		GDK.gdk_window_get_origin(eventWindow(), origin_x, origin_y);
+		applyMonitorOrigin(origin_x, origin_y);
 	}
 
     if ((style & SWT.MIRRORED) != 0) {
@@ -3029,6 +3031,19 @@ boolean dragDetect (int x, int y, boolean filter, boolean dragOnTimeout, boolean
 	}
 }
 
+boolean sendMotionDrag (long event, int x, int y) {
+	Point start = motionDragStart;
+	int [] eventState = new int [1];
+	GDK.gdk_event_get_state(event, eventState);
+	if ((eventState[0] & GDK.GDK_BUTTON1_MASK) == 0 || (state & DRAG_DETECT) == 0 || !wantDragDropDetection ()) {
+		motionDragStart = null;
+		return false;
+	}
+	if (!GTK3.gtk_drag_check_threshold (handle, start.x, start.y, x, y)) return false;
+	motionDragStart = null;
+	return sendDragEvent (1, eventState[0], start.x, start.y, false);
+}
+
 boolean filterKey (long event) {
 	long imHandle = imHandle ();
 	if (imHandle != 0) {
@@ -3753,6 +3768,7 @@ boolean wantDragDropDetection () {
 
 long gtk3_button_press_event (long widget, long event, boolean sendMouseDown) {
 	mouseDown = true;
+	motionDragStart = null;
 
 	double [] eventX = new double [1];
 	double [] eventY = new double [1];
@@ -4523,6 +4539,8 @@ long gtk3_motion_notify_event (long widget, long event) {
         return 0;
     }
 
+	if (motionDragStart != null && (sendMotionDrag (event, (int) eventX[0], (int) eventY[0]) || isDisposed ())) return 1;
+
 	// See comment in #dragDetect()
 	if ((dragDetectionQueue != null) && OS.isWayland()) {
 		boolean dragging = false;
@@ -4604,9 +4622,14 @@ long gtk3_popup_menu (long widget) {
     if (!hasFocus()) {
         return 0;
     }
-	int [] x = new int [1], y = new int [1];
-	display.getWindowPointerPosition (0, x, y, null);
-	return showMenu (x [0], y [0], SWT.MENU_KEYBOARD) ? 1 : 0;
+	// showMenu() adds this shell's monitor origin, but the pointer may be over another shell.
+	Point location = display.getCursorLocation ();
+	Point origin = monitorOrigin ();
+	if (origin != null) {
+		location.x -= origin.x;
+		location.y -= origin.y;
+	}
+	return showMenu (location.x, location.y, SWT.MENU_KEYBOARD) ? 1 : 0;
 }
 
 @Override
@@ -7107,6 +7130,12 @@ boolean showMenu (int x, int y) {
 }
 
 boolean showMenu (int x, int y, int detail) {
+	// GTK3 callers pass root coordinates, which on Wayland lack the monitor origin of display coordinates.
+	Point monitorOrigin = monitorOrigin ();
+	if (monitorOrigin != null) {
+		x += monitorOrigin.x;
+		y += monitorOrigin.y;
+	}
 	Event event = new Event ();
 	Rectangle eventRect = new Rectangle (x, y, 0, 0);
 	event.setBounds (eventRect);
@@ -7756,8 +7785,24 @@ Point getWindowOrigin () {
 
 	long window = eventWindow ();
 	GDK.gdk_window_get_origin (window, x, y);
+	applyMonitorOrigin (x, y);
 
 	return new Point (x [0], y [0]);
+}
+
+/** Returns the monitor origin that Wayland display coordinates are anchored to, or <code>null</code>. */
+Point monitorOrigin () {
+	if (GTK.GTK4 || !OS.isWayland ()) return null;
+	// The shell decides: a popup shares the anchor of its parent, other shells use their own monitor.
+	return getShell ().monitorOrigin ();
+}
+
+/** Shifts a window relative GTK position into display coordinates. */
+void applyMonitorOrigin (int [] x, int [] y) {
+	Point origin = monitorOrigin ();
+	if (origin == null) return;
+	x [0] += origin.x;
+	y [0] += origin.y;
 }
 
 /**
