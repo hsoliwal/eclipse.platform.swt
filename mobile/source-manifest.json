@@ -626,6 +626,10 @@
       "sha256": "5ff9c6590de829ed08995fc58faf1745b234f49a99323b1eeb47aa9a310cba2c"
     },
     {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/PlatformCapabilities.java",
+      "sha256": "c22e52f2edb55d89d5de833b0b76cd7931c7413ecbfe71c69e46ba5dabdd913c"
+    },
+    {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/StyleBits.java",
       "sha256": "ba736e84ce1d9b80f3999b130478fec06ab8c1ca24cebed206bbbef9ef0de568"
     },
