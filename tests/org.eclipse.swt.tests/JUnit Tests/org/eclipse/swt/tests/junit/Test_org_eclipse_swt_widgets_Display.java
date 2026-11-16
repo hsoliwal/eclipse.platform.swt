@@ -1696,4 +1696,153 @@ public void test_isSystemDarkTheme() {
 	System.out.println("org.eclipse.swt.widgets.Display.isSystemDarkTheme(): " + Display.isSystemDarkTheme());
 }
 
+
+@Test
+public void test_deferredEvents_fifoGrowthAndReferenceRelease() {
+	org.junit.jupiter.api.Assumptions.assumeTrue(SwtTestUtil.isGTK);
+	Display display = new Display();
+	try {
+		Shell shell = new Shell(display);
+		drainDeferred(display);
+		java.util.List<Integer> received = new java.util.ArrayList<>();
+		Event[][] lastStorage = new Event[1][];
+		shell.addListener(SWT.Selection, event -> {
+			received.add((Integer) event.data);
+			Event[] storage = deferredStorage(display);
+			for (Event retained : storage) assertTrue(retained != event, "dequeued event retained");
+			if (event.data.equals(2)) {
+				for (int i = 32; i < 80; i++) postDeferred(display, deferredEvent(display, shell, i));
+			}
+			lastStorage[0] = deferredStorage(display);
+		});
+		for (int i = 0; i < 32; i++) postDeferred(display, deferredEvent(display, shell, i));
+		assertTrue(drainDeferred(display));
+		assertEquals(java.util.stream.IntStream.range(0, 80).boxed().toList(), received);
+		assertNull(deferredStorage(display));
+		for (Event retained : lastStorage[0]) assertNull(retained);
+		assertFalse(drainDeferred(display));
+	} finally {
+		display.dispose();
+	}
+}
+
+@Test
+public void test_deferredEvents_recursiveDrainAndPostAfterReset() {
+	org.junit.jupiter.api.Assumptions.assumeTrue(SwtTestUtil.isGTK);
+	Display display = new Display();
+	try {
+		Shell shell = new Shell(display);
+		drainDeferred(display);
+		java.util.List<Integer> received = new java.util.ArrayList<>();
+		shell.addListener(SWT.Selection, event -> {
+			received.add((Integer) event.data);
+			if (event.data.equals(1)) {
+				assertTrue(drainDeferred(display));
+				assertNull(deferredStorage(display));
+				postDeferred(display, deferredEvent(display, shell, 4));
+			}
+		});
+		for (int i = 1; i <= 3; i++) postDeferred(display, deferredEvent(display, shell, i));
+		assertTrue(drainDeferred(display));
+		assertEquals(java.util.List.of(1, 2, 3, 4), received);
+		assertNull(deferredStorage(display));
+	} finally {
+		display.dispose();
+	}
+}
+
+@Test
+public void test_deferredEvents_disposedWidgetAndItemAreSkipped() {
+	org.junit.jupiter.api.Assumptions.assumeTrue(SwtTestUtil.isGTK);
+	Display display = new Display();
+	try {
+		Shell shell = new Shell(display);
+		Shell disposed = new Shell(display);
+		disposed.dispose();
+		drainDeferred(display);
+		shell.addListener(SWT.Selection, event -> fail("disposed item was delivered"));
+		Event noWidget = deferredEvent(display, shell, 1);
+		noWidget.widget = null;
+		Event disposedWidget = deferredEvent(display, disposed, 2);
+		Event disposedItem = deferredEvent(display, shell, 3);
+		disposedItem.item = disposed;
+		postDeferred(display, noWidget);
+		postDeferred(display, disposedWidget);
+		postDeferred(display, disposedItem);
+		postDeferred(display, null);
+		assertFalse(drainDeferred(display));
+		assertNull(deferredStorage(display));
+	} finally {
+		display.dispose();
+	}
+}
+
+@Test
+public void test_deferredEvents_callbackFailureRetainsRemainingEvents() {
+	org.junit.jupiter.api.Assumptions.assumeTrue(SwtTestUtil.isGTK);
+	Display display = new Display();
+	try {
+		Shell shell = new Shell(display);
+		drainDeferred(display);
+		RuntimeException failure = new IllegalStateException("deferred listener failure");
+		java.util.List<Integer> received = new java.util.ArrayList<>();
+		shell.addListener(SWT.Selection, event -> {
+			received.add((Integer) event.data);
+			if (event.data.equals(1)) throw failure;
+		});
+		postDeferred(display, deferredEvent(display, shell, 1));
+		postDeferred(display, deferredEvent(display, shell, 2));
+		assertSame(failure, assertThrows(RuntimeException.class, () -> drainDeferred(display)));
+		assertEquals(java.util.List.of(1), received);
+		assertNotNull(deferredStorage(display));
+		assertTrue(drainDeferred(display));
+		assertEquals(java.util.List.of(1, 2), received);
+		assertNull(deferredStorage(display));
+	} finally {
+		display.dispose();
+	}
+}
+
+private static Event deferredEvent(Display display, Shell shell, int value) {
+	Event event = new Event();
+	event.display = display;
+	event.widget = shell;
+	event.type = SWT.Selection;
+	event.data = value;
+	return event;
+}
+
+private static void postDeferred(Display display, Event event) {
+	invokeDeferred(display, "postEvent", new Class<?>[] {Event.class}, event);
+}
+
+private static boolean drainDeferred(Display display) {
+	return (Boolean) invokeDeferred(display, "runDeferredEvents", new Class<?>[0]);
+}
+
+private static Object invokeDeferred(Display display, String name, Class<?>[] parameterTypes, Object... arguments) {
+	try {
+		java.lang.reflect.Method method = Display.class.getDeclaredMethod(name, parameterTypes);
+		method.setAccessible(true);
+		return method.invoke(display, arguments);
+	} catch (java.lang.reflect.InvocationTargetException failure) {
+		Throwable cause = failure.getCause();
+		if (cause instanceof RuntimeException exception) throw exception;
+		if (cause instanceof Error error) throw error;
+		throw new AssertionError(cause);
+	} catch (ReflectiveOperationException failure) {
+		throw new AssertionError(failure);
+	}
+}
+
+private static Event[] deferredStorage(Display display) {
+	try {
+		java.lang.reflect.Field field = Display.class.getDeclaredField("eventQueue");
+		field.setAccessible(true);
+		return (Event[]) field.get(display);
+	} catch (ReflectiveOperationException failure) {
+		throw new AssertionError(failure);
+	}
+}
+
 }
