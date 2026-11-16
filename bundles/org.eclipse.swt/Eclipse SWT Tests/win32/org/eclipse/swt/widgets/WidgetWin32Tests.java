@@ -333,13 +333,20 @@ class WidgetWin32Tests {
 			new Button(shell, SWT.PUSH);
 		}
 		int scaledZoom = shell.nativeZoom * 2;
+		try {
+			// The layouts are counted as they happen. A shell that is not shown defers its
+			// layout until it is (the visibility gate), so the shell is shown first
+			shell.open();
 
-		layout.layoutCount = 0;
-		DPITestUtil.changeDPIZoomOnMonitorChange(shell, scaledZoom);
+			layout.layoutCount = 0;
+			DPITestUtil.changeDPIZoomOnMonitorChange(shell, scaledZoom);
 
-		// One layout is caused by resizing the shell for the new zoom, the other one
-		// concludes the zoom change after all controls have been adapted
-		assertEquals(2, layout.layoutCount, "The shell must be laid out once per zoom change, not once per control");
+			// One layout is caused by resizing the shell for the new zoom, the other one
+			// concludes the zoom change after all controls have been adapted
+			assertEquals(2, layout.layoutCount, "The shell must be laid out once per zoom change, not once per control");
+		} finally {
+			parentShell.dispose();
+		}
 	}
 
 	private static final class CountingLayout extends Layout {

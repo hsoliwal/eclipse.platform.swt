@@ -5777,10 +5777,17 @@ long windowProc (long hwnd, int msg, long wParam, long lParam) {
 		case OS.WM_NCPAINT:				result = WM_NCPAINT (wParam, lParam); break;
 		case OS.WM_NOTIFY:				result = WM_NOTIFY (wParam, lParam); break;
 		case OS.WM_PAINT:
-			if (EffectiveVisibility.ENABLED && hwnd == handle && EffectiveVisibility.deferPaintMessage (this)) {
+			//FLLDCIM: HPCPOP - a paint message that carries a device context is served, never gated
+			/*
+			* A WM_PAINT with a device context in wParam asks for the picture in that
+			* context. It is not a paint of the window: the visibility gate and the
+			* viewport planes answer with the window's own BeginPaint, which would draw
+			* nothing into the caller's context and validate a window nobody painted.
+			*/
+			if (wParam == 0 && EffectiveVisibility.ENABLED && hwnd == handle && EffectiveVisibility.deferPaintMessage (this)) {
 				return 0;
 			}
-			if (hwnd == handle && (display.batchViewports > 0 || display.damageHooks > 0) && paintPlanes (hwnd)) {
+			if (wParam == 0 && hwnd == handle && (display.batchViewports > 0 || display.damageHooks > 0) && paintPlanes (hwnd)) {
 				return 0;
 			}
 			result = WM_PAINT (wParam, lParam); break;

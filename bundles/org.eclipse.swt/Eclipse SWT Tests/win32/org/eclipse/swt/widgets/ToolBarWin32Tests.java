@@ -27,7 +27,9 @@ import org.junit.jupiter.api.extension.*;
  * Windows-specific tests for {@link ToolBar}'s image handling across monitor
  * zoom changes.
  */
-@ExtendWith(PlatformSpecificExecutionExtension.class)
+// Every test creates a display of its own. The reset disposes the one an earlier test class left on this
+// thread, without which these tests depend on the order the classes run in
+@ExtendWith({ PlatformSpecificExecutionExtension.class, ResetMonitorSpecificScalingExtension.class })
 class ToolBarWin32Tests {
 
 	private static final int TIMEOUT_MILLIS = 5000;
