@@ -185,8 +185,43 @@ static void testModifierKeys(void) {
 		"ordinary keys retain native modifier state");
 }
 
+
+static void testRegistryFreeHeap(void) {
+	SWTHandleRegistry registry = {.kind = 4};
+	SWTRegistryError failure = SWTRegistryOK;
+	jlong handles[128];
+	for (int i = 0; i < 128; i++) {
+		handles[i] = swtRegistryAdd(&registry, [NSObject new], &failure);
+		check(failure == SWTRegistryOK && handles[i] > 0, "registry retains native objects");
+	}
+	check(registry.capacity >= 128 && registry.freeCount == 0, "native registry grows parallel arrays");
+	swtRegistryRemove(&registry, handles[73]);
+	swtRegistryRemove(&registry, handles[7]);
+	swtRegistryRemove(&registry, handles[35]);
+	check(registry.freeCount == 3, "removed native handles return free slots");
+	check(swtRegistryGet(&registry, handles[7]) == nil, "disposed handle is invalid");
+	jlong first = swtRegistryAdd(&registry, [NSObject new], &failure);
+	jlong second = swtRegistryAdd(&registry, [NSObject new], &failure);
+	jlong third = swtRegistryAdd(&registry, [NSObject new], &failure);
+	check((first & SWT_SLOT_MASK) == 8 && (second & SWT_SLOT_MASK) == 36 &&
+		(third & SWT_SLOT_MASK) == 74, "native min heap keeps original lowest-slot reuse");
+	check(first != handles[7] && second != handles[35] && third != handles[73],
+		"recycled handle generation advances");
+	check(swtRegistryGet(&registry, handles[7]) == nil && swtRegistryGet(&registry, handles[35]) == nil,
+		"old generations cannot resolve reallocated native handles");
+	swtRegistryClear(&registry);
+	check(registry.freeCount == registry.length, "disconnect releases native registry occupants");
+	check(swtRegistryGet(&registry, first) == nil, "disconnect invalidates live handles");
+	jlong replacement = swtRegistryAdd(&registry, [NSObject new], &failure);
+	check((replacement & SWT_SLOT_MASK) == 1 && replacement != handles[0],
+		"reconnect uses lowest slot but a new generation");
+	swtRegistryClear(&registry);
+	free(registry.values); free(registry.generation); free(registry.freeHeap);
+}
+
 int main(void) {
 	@autoreleasepool {
+		testRegistryFreeHeap();
 		testModifierKeys();
 		testNativeClientGeometry();
 		testClipAndRoundRectangle();

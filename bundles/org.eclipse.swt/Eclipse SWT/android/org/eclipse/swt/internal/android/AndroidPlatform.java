@@ -829,14 +829,58 @@ public final class AndroidPlatform implements MobilePlatform {
 	private static final class Handles<T> {
 		private Object[] values = new Object[32];
 		private int[] generation = new int[32];
+		// Primitive min heap: preserve the first-vacant-slot policy without a linear scan.
+		private int[] free = new int[32];
+		private int freeCount;
 		private int length;
 		synchronized int size(){return length;}
 		@SuppressWarnings("unchecked") synchronized T at(int index){return (T)values[index];}
 		synchronized long handle(int index){return ((long)generation[index]<<32)|(index+1L);}
-		synchronized long add(T value){int index=0;while(index<length&&values[index]!=null)index++;if(index==values.length){values=Arrays.copyOf(values,Math.multiplyExact(values.length,2));generation=Arrays.copyOf(generation,values.length);}if(index==length)length++;if(generation[index]==Integer.MAX_VALUE)throw new IllegalStateException("Native handle generation exhausted");generation[index]++;values[index]=value;return handle(index);}
+		private void freePush(int index) {
+			int i = freeCount++;
+			while (i > 0) {
+				int parent = (i - 1) >>> 1;
+				if (free[parent] <= index) break;
+				free[i] = free[parent];
+				i = parent;
+			}
+			free[i] = index;
+		}
+		private void freePop() {
+			int last = free[--freeCount], i = 0;
+			while (2L * i + 1 < freeCount) {
+				int child = (i << 1) + 1;
+				if (child + 1 < freeCount && free[child + 1] < free[child]) child++;
+				if (last <= free[child]) break;
+				free[i] = free[child];
+				i = child;
+			}
+			if (freeCount != 0) free[i] = last;
+		}
+		synchronized long add(T value) {
+			int index = freeCount == 0 ? length : free[0];
+			if (index == values.length) {
+				int capacity = Math.multiplyExact(values.length, 2);
+				values = Arrays.copyOf(values, capacity);
+				generation = Arrays.copyOf(generation, capacity);
+				free = Arrays.copyOf(free, capacity);
+			}
+			if (generation[index] == Integer.MAX_VALUE)
+				throw new IllegalStateException("Native handle generation exhausted");
+			if (freeCount == 0) length++; else freePop();
+			generation[index]++;
+			values[index] = value;
+			return handle(index);
+		}
 		private int index(long handle){int index=(int)handle-1;if(index<0||index>=length||generation[index]!=(int)(handle>>>32)||values[index]==null)throw new IllegalStateException("Stale SWT native handle");return index;}
 		@SuppressWarnings("unchecked") synchronized T get(long handle){return (T)values[index(handle)];}
-		synchronized T remove(long handle){int index=index(handle);T value=get(handle);values[index]=null;return value;}
+		@SuppressWarnings("unchecked") synchronized T remove(long handle) {
+			int index = index(handle);
+			T value = (T)values[index];
+			values[index] = null;
+			freePush(index);
+			return value;
+		}
 		synchronized void replace(long handle,T value){values[index(handle)]=value;}
 	}
 }
