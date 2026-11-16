@@ -3,7 +3,7 @@
   "javaRelease": 21,
   "swtBaseCommit": "2d626848385bb14a991cc749dfa293db7e35e26c",
   "nebulaBaseCommit": "b105f8843e5046b4a0e4d84b4778302a7f7ad504",
-  "scope": "Mobile Display/Shell/Canvas and existing Label, Button, Link, ProgressBar, Scale, List, Text, Combo and Table owners; bounded API coverage with separate native platform qualification.",
+  "scope": "Mobile Display/Shell/Canvas and existing Label, Button, Group, Link, ProgressBar, Scale, List, Text, Combo and Table owners; bounded API coverage with separate native platform qualification.",
   "shared": [
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT Accessibility/common/org/eclipse/swt/accessibility/ACC.java",
@@ -712,7 +712,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java",
-      "sha256": "47acd26189bcda6bd5354b5035c1bd7fea3ddb8701a6ec0d978e3cd09defc155"
+      "sha256": "6903bd0d6fd44ce8638e7511a98a4bbcbffb683bf72b5ec88a9b716c86213c4e"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Decorations.java"
@@ -771,6 +771,10 @@
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/residency/ItemSparseTable.java",
       "sha256": "0ec8e9a29465e713fd979e860240fabcfa9e7b7c93adaf2a3c442844c0bae22b"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Group.java",
+      "sha256": "acdcecd85b4bc37c2a1805c22367aab3889e87956a6671f4fba6394dff16cd13"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Item.java",

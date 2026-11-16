@@ -523,6 +523,60 @@ public final class MobileLifecycleContractJUnitTest {
 		assertEquals(2, selected.size(), "stale native actions cannot activate a disposed Link");
 	}
 
+	@Test void initiative31GroupDrawsFrameAndTitleOnOneNativePeer() {
+		int beforePeers = platform.controls.size();
+		org.eclipse.swt.widgets.Group group = new org.eclipse.swt.widgets.Group(shell, SWT.NONE);
+		long peer = platform.lastCreated;
+		assertEquals(beforePeers + 1, platform.controls.size(), "one native peer per Group");
+		assertEquals(MobilePlatform.CANVAS, platform.controls.get(peer).kind, "a Group paints, so its peer is paintable");
+		group.setBounds(0, 0, 200, 120);
+		org.eclipse.swt.graphics.Rectangle bounds = new org.eclipse.swt.graphics.Rectangle(0, 0, 200, 120);
+		org.eclipse.swt.graphics.Rectangle untitled = group.getClientArea();
+		assertEquals(bounds, group.computeTrim(untitled.x, untitled.y, untitled.width, untitled.height),
+				"trim and client area are inverses without a title");
+
+		group.setText("Options");
+		assertEquals("Options", group.getText());
+		assertEquals("Options", platform.controls.get(peer).label, "the title is the accessible name");
+		assertEquals(org.eclipse.swt.accessibility.ACC.ROLE_GROUP, platform.controls.get(peer).role);
+		org.eclipse.swt.graphics.Rectangle client = group.getClientArea();
+		assertTrue(client.y > untitled.y && client.height < untitled.height, "a title takes room above the client area");
+		assertEquals(untitled.x, client.x, "a title does not move the client area sideways");
+		assertEquals(bounds, group.computeTrim(client.x, client.y, client.width, client.height),
+				"trim and client area are inverses with a title");
+
+		int titleWidth;
+		org.eclipse.swt.graphics.Image sample = new org.eclipse.swt.graphics.Image(display, 1, 1);
+		try {
+			GC gc = new GC(sample);
+			try {
+				gc.setFont(group.getFont());
+				titleWidth = gc.textExtent("Options").x;
+			} finally { gc.dispose(); }
+		} finally { sample.dispose(); }
+		assertTrue(group.computeSize(SWT.DEFAULT, SWT.DEFAULT).x >= titleWidth + 16, "the preferred width holds the title");
+		assertEquals(77, group.computeSize(77, SWT.DEFAULT).x - group.computeTrim(0, 0, 0, 0).width,
+				"a width hint is the client width");
+
+		org.eclipse.swt.widgets.Label child = new org.eclipse.swt.widgets.Label(group, SWT.NONE);
+		child.setBounds(client.x, client.y, client.width, client.height);
+		assertEquals(beforePeers + 2, platform.controls.size(), "frame and title add no native peers; only the child does");
+		group.redraw();
+		group.update();
+		int[] frame = platform.controls.get(peer).frame;
+		assertNotNull(frame, "the Group paints through its native peer");
+		assertEquals(200 * 120, frame.length);
+		int row = 60 * 200;
+		assertNotEquals(frame[row + 100], frame[row + 2], "the frame line is drawn at the frame inset");
+		assertEquals(frame[row + 100], frame[row], "nothing is drawn outside the frame");
+
+		group.setEnabled(false);
+		assertEquals(org.eclipse.swt.accessibility.ACC.STATE_DISABLED, platform.controls.get(peer).state);
+		assertThrows(IllegalArgumentException.class, () -> group.setText(null));
+		group.dispose();
+		assertEquals(beforePeers, platform.controls.size(), "the Group releases its peer and its child's");
+	}
+
 	@Test void staleNativePeerCannotActivateADisposedWidget() {
 		Canvas canvas = canvas(shell);
 		long peer = platform.lastCreated;
