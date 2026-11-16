@@ -20,6 +20,7 @@ import org.eclipse.swt.internal.mobile.MobileRuntime;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
@@ -461,6 +462,55 @@ public final class MobileLifecycleContractJUnitTest {
 		drain();
 		assertEquals(0, removedCalls.get());
 		assertEquals(1, replacementCalls.get());
+	}
+
+
+	@Test void initiative31LinkUsesOriginalNativePeerAndHyperlinkSelection() {
+		var donorParts = org.eclipse.swt.widgets.LinkParser.parse(
+				"See <a href=\"urn:docs\">docs</a> and <a>help</a>");
+		assertEquals(4, donorParts.size(), "the unchanged Initiative31 parser recognizes two links");
+		assertEquals("urn:docs", donorParts.get(1).linkData());
+		assertEquals("", donorParts.get(3).linkData());
+
+		int beforePeers = platform.controls.size();
+		org.eclipse.swt.widgets.Link link = new org.eclipse.swt.widgets.Link(shell, SWT.LEFT);
+		assertEquals(beforePeers + 1, platform.controls.size(), "one native Canvas per original Link");
+		link.setBounds(0, 0, 300, 52);
+		link.setText("See <a href=\"urn:docs\">docs</a> and <a>help</a>");
+		assertEquals("See <a href=\"urn:docs\">docs</a> and <a>help</a>", link.getText());
+		assertEquals(SWT.LEFT, link.getAlignment());
+		assertNotNull(link.getLinkForeground());
+		List<String> selected = new ArrayList<>();
+		link.addListener(SWT.Selection, event -> selected.add(event.text));
+		drain();
+
+		int textWidth;
+		org.eclipse.swt.graphics.Image sample = new org.eclipse.swt.graphics.Image(display, 1, 1);
+		try {
+			GC gc = new GC(sample);
+			try {
+				gc.setFont(link.getFont());
+				textWidth = gc.textExtent("See ").x;
+			} finally { gc.dispose(); }
+		} finally { sample.dispose(); }
+		Event down = new Event();
+		down.button = 1; down.x = link.getLeftMargin() + textWidth + 1; down.y = link.getTopMargin() + 2;
+		link.notifyListeners(SWT.MouseDown, down);
+		Event up = new Event();
+		up.button = 1; up.x = down.x; up.y = down.y;
+		link.notifyListeners(SWT.MouseUp, up);
+		assertEquals(List.of("urn:docs"), selected, "original SWT.Selection carries href");
+		long peer = platform.lastCreated;
+		platform.sink.accessibility(peer, MobilePlatform.ACTION_ACTIVATE);
+		drain();
+		assertEquals(List.of("urn:docs", "urn:docs"), selected,
+				"TalkBack/VoiceOver action activates once through original SWT Display");
+		assertEquals(beforePeers + 1, platform.controls.size(), "rendering links creates no native child peers");
+		link.dispose();
+		assertEquals(beforePeers, platform.controls.size(), "native peer releases with original Link");
+		platform.sink.accessibility(peer, MobilePlatform.ACTION_ACTIVATE);
+		drain();
+		assertEquals(2, selected.size(), "stale native actions cannot activate a disposed Link");
 	}
 
 	@Test void staleNativePeerCannotActivateADisposedWidget() {
