@@ -41,6 +41,13 @@ public interface MobilePlatform {
 	default void checkFailure() {}
 	int[] displayBounds();
 	int[] dpi();
+	/**
+	 * Safe-area insets from the OS root, in SWT logical pixels: left, top, right,
+	 * bottom. They exclude the software keyboard and are not a request to resize
+	 * SWT controls. Native hosts update this snapshot after orientation or system
+	 * UI changes. Existing transports remain binary-compatible and report zero.
+	 */
+	default int[] safeAreaInsets() { return new int[4]; }
 	long createControl(int kind, long parent, int style);
 	void disposeControl(long peer);
 	void setBounds(long peer, int x, int y, int width, int height);
