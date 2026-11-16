@@ -159,7 +159,9 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - name: Select Android platform SDK
-        run: sdkmanager 'platforms;android-35'
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
+        with:
+          packages: 'platforms;android-35'
       - name: Compile Android binding with the actual SDK
         run: mvn -B --no-transfer-progress -f mobile/pom.xml -Dmobile.platform=android -Dandroid.sdk="$ANDROID_HOME" clean verify
 
