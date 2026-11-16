@@ -50,6 +50,9 @@ public final class MobileCoreContractJUnitTest {
 	@Test void nullDisposeCallbackIsIgnored() {
 		MobileCoreContractTest.testDisplayDisposeExecNullContract();
 	}
+	@Test void nativeSafeAreaSnapshotsAndThreadOwnership() throws Exception {
+		MobileCoreContractTest.testNativeSafeAreaSnapshotContracts();
+	}
 	@Test void nativePostingRefusesUnsupportedInjectionWithoutSyntheticEvents() throws Exception {
 		MobileCoreContractTest.testUnsupportedNativeEventPosting();
 	}

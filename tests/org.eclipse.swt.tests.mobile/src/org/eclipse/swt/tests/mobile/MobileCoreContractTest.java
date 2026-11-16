@@ -45,6 +45,7 @@ public final class MobileCoreContractTest {
 		testDisplayExecuteNullContract();
 		testDisplayDisposeExecNullContract();
 		testUnsupportedNativeEventPosting();
+		testNativeSafeAreaSnapshotContracts();
 		testMobilePublicResourceAliases();
 		testFontDataDefaultLocaleNormalization();
 		testBorderClientGeometryAndPainting();
@@ -58,6 +59,56 @@ public final class MobileCoreContractTest {
 		testMobileOriginalTableContracts();
 		System.out.println("PASS: "+assertions+" SWT/Nebula owner-contract assertions. Native device qualification is separate.");
 	}
+	static void testNativeSafeAreaSnapshotContracts() throws Exception {
+		ContractPlatform platform = new ContractPlatform();
+		MobileRuntime.install(platform);
+		Display display = new Display();
+		try {
+			require(Arrays.equals(display.getSafeAreaInsets(), new int[4]),
+					"Unconfigured native host reports zero safe-area insets");
+			platform.safeInsets = new int[] {3, 24, 5, 17};
+			int[] first = display.getSafeAreaInsets();
+			require(Arrays.equals(first, platform.safeInsets),
+					"Mobile Display reports left/top/right/bottom in SWT logical coordinates");
+			first[0] = 200;
+			require(display.getSafeAreaInsets()[0] == 3,
+					"Caller mutation cannot change native safe-area state");
+			platform.safeInsets = new int[] {0, 40, 0, 0};
+			require(Arrays.equals(display.getSafeAreaInsets(), platform.safeInsets),
+					"Safe-area query observes subsequent native orientation/system UI updates");
+			AtomicReference<Throwable> wrongThread = new AtomicReference<>();
+			Thread caller = new Thread(() -> {
+				try { display.getSafeAreaInsets(); }
+				catch (Throwable problem) { wrongThread.set(problem); }
+			}, "safe-area-non-swt-thread");
+			caller.start();
+			caller.join(3000);
+			require(!caller.isAlive(), "Safe-area query on wrong thread returns promptly");
+			require(wrongThread.get() instanceof SWTException error
+					&& error.code == SWT.ERROR_THREAD_INVALID_ACCESS,
+					"Safe-area query preserves SWT Display thread ownership");
+			platform.safeInsets = null;
+			try {
+				display.getSafeAreaInsets();
+				throw new AssertionError("Null native safe-area must fail explicitly");
+			} catch (IllegalStateException expected) { /* Invalid platform transport */ }
+			platform.safeInsets = new int[] {1, 2, 3};
+			try {
+				display.getSafeAreaInsets();
+				throw new AssertionError("Wrong native safe-area length must fail explicitly");
+			} catch (IllegalStateException expected) { /* Invalid platform transport */ }
+			platform.safeInsets = new int[] {1, -2, 3, 4};
+			try {
+				display.getSafeAreaInsets();
+				throw new AssertionError("Negative native safe-area must fail explicitly");
+			} catch (IllegalStateException expected) { /* Invalid platform transport */ }
+		} finally {
+			display.dispose();
+			MobileRuntime.uninstall(platform);
+		}
+		expectSwt(SWT.ERROR_DEVICE_DISPOSED, display::getSafeAreaInsets);
+	}
+
 	static void testOriginalWidgetAndPainting()throws Exception {
 		ContractPlatform platform=new ContractPlatform();MobileRuntime.install(platform);Display display=new Display();
 		try {

@@ -63,7 +63,7 @@ callbacks, so application data must be saved during normal operation.
 | Text editing | The original SWT Text owner uses UITextField/UITextView peers, UTF-16 content and selection snapshots, Verify/Modify ordering for edits, and native clipboard transport. Native behavior still requires Apple simulator/device qualification. |
 | Accessibility transport | Native labels/traits, default activation, Scale increment/decrement and List scrolling callbacks through the original SWT owners; the general SWT Accessible API is not implemented by this transport alone |
 | Pixels | Straight ARGB Java ingress/readback with premultiplied native storage; immutable presentation snapshots |
-| Metrics | Logical points, with nominal 72-point DPI; physical panel DPI and Retina-resolution backing-store adaptation are not claimed |
+| Metrics | Logical points, with nominal 72-point DPI; native `Display.getSafeAreaInsets()` reads the current UIKit root safe area on main, without changing Shell bounds or viewport behavior. Physical panel DPI and Retina-resolution backing-store adaptation are not claimed |
 | Screen capture | `GC(Display).copyArea` fails explicitly through `captureScreen`; use an actual XCUI screenshot for device-visible evidence |
 
 Complex IME marked-text composition, a complete Accessible implementation,

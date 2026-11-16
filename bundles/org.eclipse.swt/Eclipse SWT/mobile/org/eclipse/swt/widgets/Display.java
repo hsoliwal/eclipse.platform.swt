@@ -250,6 +250,29 @@ public class Display extends Device implements Executor {
 	public Shell[] getShells() { checkThread(); return Arrays.stream(controls, 0, controlCount).filter(Shell.class::isInstance).map(Shell.class::cast).toArray(Shell[]::new); }
 	public Shell getActiveShell() { checkThread(); if (focusControl != null) return focusControl.getShell(); Shell[] shells = getShells(); for (int i = shells.length - 1; i >= 0; i--) if (shells[i].isVisible()) return shells[i]; return null; }
 	public Control getFocusControl() { checkThread(); return focusControl; }
+	/**
+	 * Returns the current native root safe-area insets, as four SWT logical
+	 * coordinates in the order left, top, right, bottom. A new array is returned
+	 * on every call. It excludes the software keyboard and does not resize any
+	 * control or create an item facade.
+	 * <p>
+	 * Android's existing display client area already excludes the insets applied
+	 * to its root view; clients must not subtract these values a second time.
+	 * UIKit hosts may extend their content under the unsafe area and can use
+	 * this information when arranging their own contents.
+	 * </p>
+	 *
+	 * @return an independent four-element native safe-area snapshot
+	 */
+	public int[] getSafeAreaInsets() {
+		checkThread();
+		int[] insets = platform.safeAreaInsets();
+		if (insets == null || insets.length != 4)
+			throw new IllegalStateException("Native safe area must contain four insets");
+		for (int inset : insets) if (inset < 0)
+			throw new IllegalStateException("Native safe area contains a negative inset");
+		return insets.clone();
+	}
 	public boolean getTouchEnabled() { checkThread(); return false; }
 	public Monitor getPrimaryMonitor() { checkThread(); Monitor m = new Monitor(); m.handle = 1; m.setBounds(getBounds()); m.setClientArea(getClientArea()); return m; }
 	public Monitor[] getMonitors() { return new Monitor[] {getPrimaryMonitor()}; }

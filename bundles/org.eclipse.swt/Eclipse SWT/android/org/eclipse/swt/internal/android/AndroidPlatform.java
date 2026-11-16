@@ -221,6 +221,23 @@ public final class AndroidPlatform implements MobilePlatform {
 		});
 	}
 	@Override public int[] dpi() { return new int[] {96, 96}; }
+	@Override public int[] safeAreaInsets() {
+		checkThread();
+		return ui(() -> {
+			// API 35: distinguish the safe area from IME/soft-keyboard insets.
+			// The existing host may additionally pad its root for the IME;
+			// the native safe-area API must not report that as a display cutout.
+			android.view.WindowInsets window = root.getRootWindowInsets();
+			if (window == null) return new int[4];
+			android.graphics.Insets safe = window.getInsets(
+				android.view.WindowInsets.Type.systemBars()
+						| android.view.WindowInsets.Type.displayCutout());
+			return new int[] {
+				logical(safe.left), logical(safe.top),
+				logical(safe.right), logical(safe.bottom)
+			};
+		});
+	}
 	@Override public long createControl(int kind, long parent, int style) {
 		checkThread();
 		if (kind != SHELL && kind != COMPOSITE && kind != CANVAS && kind != TEXT) throw new UnsupportedOperationException("Unsupported SWT mobile control kind: " + kind);
