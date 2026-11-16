@@ -80,6 +80,12 @@ public class Test_VirtualRowExtents {
 			call("visibleRange", new Class<?>[] {long.class, int.class, int[].class}, o, v, out);
 			return out;
 		}
+		int[] cached(long o, int v, int before, int after) {
+			int[] out = new int[2];
+			call("visibleRange", new Class<?>[] {long.class,int.class,int.class,int.class,int[].class},
+					o, v, before, after, out);
+			return out;
+		}
 		long scrollFor(int r, int align, long cur, int v) {
 			return (Long) call("scrollOffsetFor", new Class<?>[] {int.class, int.class, long.class, int.class}, r, align, cur, v);
 		}
@@ -530,4 +536,64 @@ public class Test_VirtualRowExtents {
 			}
 		}
 	}
+	@Test
+	public void asymmetricCacheExtentPreservesExistingVisibleContract() {
+		Extents x = new Extents(10);
+		x.reset(10);
+		x.setExtent(2, 40);
+		x.setExtent(5, 0);
+		assertArrayEquals(new int[] {2, 4}, x.visible(58, 12));
+		assertArrayEquals(new int[] {2, 4}, x.cached(58, 12, 0, 0));
+		assertArrayEquals(new int[] {2, 9}, x.cached(58, 12, 30, 35));
+		assertArrayEquals(new int[] {2, 2}, x.cached(58, 0, 100, 100));
+	}
+
+	@Test
+	public void cacheExtentSaturatesExtremePixelsAndRejectsInvalidSizes() {
+		Extents x = new Extents(10);
+		x.reset(10);
+		assertArrayEquals(new int[] {9, 10}, x.cached(Long.MAX_VALUE,
+				Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE));
+		assertArrayEquals(new int[] {0, 1}, x.cached(Long.MIN_VALUE,
+				Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE));
+		assertArrayEquals(new int[] {9, 9}, x.cached(Long.MAX_VALUE, 0, 10, 10));
+		assertThrows(IllegalArgumentException.class, () -> x.cached(0, -1, 0, 0));
+		assertThrows(IllegalArgumentException.class, () -> x.cached(0, 1, -1, 0));
+		assertThrows(IllegalArgumentException.class, () -> x.cached(0, 1, 0, -1));
+		assertEquals(100, x.total());
+		x.reset(0);
+		assertArrayEquals(new int[] {0, 0}, x.cached(Long.MAX_VALUE, 10, 10, 10));
+	}
+
+	@Test
+	public void measuredZeroHeightRunsKeepHalfOpenPixelLookup() {
+		int[] height = new int[2048];
+		Arrays.fill(height, 7);
+		Extents x = new Extents(7);
+		x.reset(height.length);
+		for (int row = 0; row < height.length; row += 7) {
+			height[row] = row % 35 == 0 ? 0 : row % 27 + 1;
+			x.setExtent(row, height[row]);
+		}
+		long[] prefix = new long[height.length + 1];
+		for (int row = 0; row < height.length; row++) prefix[row + 1] = prefix[row] + height[row];
+		Random random = new Random(20261116L);
+		for (int q = 0; q < 12000; q++) {
+			long pixel = random.nextInt((int)prefix[height.length] + 9) - 4L;
+			int expected;
+			if (pixel <= 0) expected = 0;
+			else if (pixel >= prefix[height.length]) expected = height.length - 1;
+			else {
+				int low = 0, high = height.length;
+				while (low < high) {
+					int mid = (low + high) >>> 1;
+					if (prefix[mid + 1] <= pixel) low = mid + 1;
+					else high = mid;
+				}
+				expected = low;
+			}
+			assertEquals(expected, x.rowAt(pixel));
+		}
+	}
+
 }
