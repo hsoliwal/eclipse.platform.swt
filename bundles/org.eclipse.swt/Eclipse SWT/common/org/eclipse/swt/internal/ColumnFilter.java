@@ -395,6 +395,69 @@ public final class ColumnFilter extends RowViewBase {
 		return RowMask.rank (kept, rank, RowChecks.range (sourceRow, sourceSize ()));
 	}
 
+	/**
+	 * Returns the criteria as a text that {@link #restoreState(String)} reads back: for every column
+	 * and for {@link #ALL_COLUMNS}, its text pattern and mode or its value list, its logic and
+	 * whether it is suspended. The text can be kept in a preference or a memento. A criterion on
+	 * value ids reads its ids from the application and is recorded without them.
+	 *
+	 * @return the state
+	 *
+	 * @see #restoreState(String)
+	 */
+	public String saveState () {
+		return FilterState.save (pending);
+	}
+
+	/**
+	 * Sets the criteria from a text that {@link #saveState()} returned for a filter with the same
+	 * number of columns. All criteria change together. A criterion that the state describes as it
+	 * already is is not tested again. A criterion on value ids stays, with the logic and the
+	 * suspension of the state, when the state has one on that column; a column the state has such
+	 * a criterion for, and this filter does not, ends without a criterion.
+	 * <p>
+	 * A text that is not such a state is rejected and the filter stays as it is.
+	 * </p>
+	 *
+	 * @param state the state
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_NULL_ARGUMENT - if the state is null</li>
+	 *    <li>ERROR_INVALID_ARGUMENT - if the text is not a state of a filter with this number of columns, or it has a text or value list criterion and the filter has no cell text</li>
+	 * </ul>
+	 *
+	 * @see #saveState()
+	 */
+	public void restoreState (String state) {
+		char [] kinds = new char [criteria.length];
+		FilterCriterion [] read = FilterState.parse (RowChecks.nonNull (state), getColumnCount (), text != null, kinds);
+		int n = sourceSize ();
+		boolean any = false;
+		for (int i = 0; i < read.length; i++) {
+			FilterCriterion from = read [i], current = pending [i];
+			boolean keep = kinds [i] == FilterState.IDS ? current.valueId != null || !current.isActive () : from.sameAs (current);
+			if (keep && current.logic == from.logic && current.suspended == from.suspended) continue;
+			any = true;
+			if (keep) {
+				/* as setLogic does: the specification and the mask stay */
+				if (worker != null) pending [i] = current = current.copy ();
+			} else {
+				current = edit (i);
+				current.match = from.match;
+				current.columns = from.columns;
+				current.values = from.values;
+				if (worker == null) {
+					current.mask = RowMask.ensure (current.mask, n);
+					current.known = null;
+					if (current.isActive ()) current.defer (n);
+				}
+			}
+			current.logic = from.logic;
+			current.suspended = from.suspended;
+		}
+		if (any) changed (null);
+	}
+
 	private FilterCriterion criterion (int column) {
 		return pending [RowChecks.range (column + 1, criteria.length)];
 	}
