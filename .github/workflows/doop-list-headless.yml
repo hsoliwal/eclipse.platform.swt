@@ -1,0 +1,101 @@
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+name: SWT DOOP List text model contracts (headless)
+
+on:
+  pull_request:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/VirtualListModel.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/VirtualListWidth.java'
+      - 'tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_VirtualListModel.java'
+      - '.github/workflows/doop-list-headless.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/VirtualListModel.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/VirtualListWidth.java'
+      - 'tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_VirtualListModel.java'
+      - '.github/workflows/doop-list-headless.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  java21-model-contract:
+    if: github.repository == 'hsoliwal/eclipse.platform.swt'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile actual common SWT model sources with isolated SWT.error shim
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/doop-list"
+          common='bundles/org.eclipse.swt/Eclipse SWT/common'
+          mkdir -p "$work/src/org/eclipse/swt" "$work/classes"
+          cat > "$work/src/org/eclipse/swt/SWT.java" <<'JAVA'
+          package org.eclipse.swt;
+          /** Qualification-only error bridge; not included in the SWT product. */
+          public final class SWT {
+              public static final int ERROR_NULL_ARGUMENT = 4;
+              public static final int ERROR_INVALID_ARGUMENT = 5;
+              public static final int ERROR_INVALID_RANGE = 6;
+              private SWT() {}
+              public static void error(int code) {
+                  throw new IllegalArgumentException("SWT error: " + code);
+              }
+          }
+          JAVA
+          javac --release 21 -Xlint:all -Werror -d "$work/classes" \
+            "$work/src/org/eclipse/swt/SWT.java" \
+            "$common/org/eclipse/swt/internal/ItemRange.java" \
+            "$common/org/eclipse/swt/internal/ViewportRuntime.java" \
+            "$common/org/eclipse/swt/widgets/VirtualBitLanes.java" \
+            "$common/org/eclipse/swt/widgets/VirtualSelectionModel.java" \
+            "$common/org/eclipse/swt/widgets/VirtualScrollMetrics.java" \
+            "$common/org/eclipse/swt/widgets/VirtualViewportPlanner.java" \
+            "$common/org/eclipse/swt/widgets/VirtualListWidth.java" \
+            "$common/org/eclipse/swt/widgets/VirtualListModel.java"
+      - name: Compile and execute exact JUnit model regression class
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/doop-list"
+          junit="$work/junit-platform-console-standalone-1.12.2.jar"
+          curl --fail --location --silent --show-error --retry 3 --retry-delay 2 \
+            'https://repo.maven.apache.org/maven2/org/junit/platform/junit-platform-console-standalone/1.12.2/junit-platform-console-standalone-1.12.2.jar' \
+            --output "$junit"
+          javac --release 21 -Xlint:all -Werror -cp "$work/classes:$junit" -d "$work/classes" \
+            'tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_VirtualListModel.java'
+          mkdir -p "$work/reports"
+          java -Xmx256m -jar "$junit" execute --class-path "$work/classes" \
+            --select-class org.eclipse.swt.tests.junit.Test_VirtualListModel \
+            --fail-if-no-tests --reports-dir "$work/reports" --details tree
+          python3 - "$work/reports" <<'PY'
+          from pathlib import Path
+          import sys
+          import xml.etree.ElementTree as ET
+          reports=list(Path(sys.argv[1]).glob('TEST-*.xml'))
+          assert reports, 'no executed JUnit XML report'
+          cases=[]
+          for p in reports:
+              root=ET.parse(p).getroot()
+              assert all(int(root.attrib.get(k,'0')) == 0 for k in ('failures','errors','skipped')), p
+              cases += [e.attrib.get('name') for e in root.iter('testcase')]
+          for method in ('hundredMillionLazyRowsUseOnlyMaterializedTextSlots',
+                         'lazyRandomSplicesAndClearsMatchDenseOracle'):
+              assert method in cases, f'unexecuted DOOP regression: {method}'
+          print(f'SWT_DOOP_LIST_ACTUAL_TESTS_PASS={len(cases)}')
+          PY
+      - name: Publish exact headless JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swt-doop-list-headless-junit
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/doop-list/reports/TEST-*.xml
