@@ -34,6 +34,12 @@ final class FilterCriterion {
 	long [] allowed;
 	long [] mask = {};
 
+	/*
+	 * short circuit: null when the mask holds the result for every row; otherwise bit = the row was tested and its
+	 * mask bit is its result. A row that was not tested has a clear mask bit and is tested when a fold first needs it.
+	 */
+	long [] known;
+
 	/* a suspended criterion keeps its specification and its mask and is left out of the fold until it is resumed */
 	boolean suspended;
 
@@ -72,6 +78,43 @@ final class FilterCriterion {
 	/* evaluates the rows [start, end) into the mask */
 	void evaluate (int start, int end, CellText text) {
 		for (int row = start; row < end; row++) RowMask.set (mask, row, test (row, text));
+		if (known != null) {
+			for (int row = start; row < end; row++) RowMask.set (known, row, true);
+		}
+	}
+
+	/* forgets every result: a row is tested when a fold first needs it */
+	void defer (int n) {
+		int words = RowMask.words (n);
+		if (mask.length >= words) Arrays.fill (mask, 0L); else mask = new long [words];
+		known = new long [mask.length];
+	}
+
+	/* tests the rows of word w that are in need and were not tested yet */
+	void ensure (int w, long need, CellText text) {
+		long todo = need & ~known [w];
+		if (todo == 0) return;
+		long passing = 0;
+		for (long x = todo; x != 0; x &= x - 1) {
+			int bit = Long.numberOfTrailingZeros (x);
+			if (test (w << 6 | bit, text)) passing |= 1L << bit;
+		}
+		mask [w] |= passing;
+		known [w] |= todo;
+	}
+
+	/* tests every row that was not tested yet: the mask then holds the result for every row */
+	void complete (int n, CellText text) {
+		if (known == null) return;
+		if (isActive ()) {
+			for (int w = 0, words = RowMask.words (n); w < words; w++) ensure (w, valid (w, n), text);
+		}
+		known = null;
+	}
+
+	/* the bits of word w that are rows of a source of n rows */
+	static long valid (int w, int n) {
+		return w == RowMask.words (n) - 1 && (n & 63) != 0 ? (1L << n) - 1 : -1L;
 	}
 
 	/* whether this criterion keeps a subset of the rows previous keeps (same columns, a narrowing text match) */
@@ -99,6 +142,7 @@ final class FilterCriterion {
 		copy.valueId = valueId;
 		copy.allowed = allowed;
 		copy.mask = mask;
+		copy.known = known;
 		copy.suspended = suspended;
 		return copy;
 	}
@@ -119,7 +163,55 @@ final class FilterCriterion {
 		else if ((n & 63) != 0) result [words - 1] &= (1L << n) - 1;
 	}
 
-	/* the fold for one row */
+	/*
+	 * The same fold with a short circuit: a criterion is tested only on the rows whose result still depends on it.
+	 * After a false operand the AND criteria that follow are not tested for that row, after a true operand the OR
+	 * criteria are not. Criteria joined by the same logic commute, so within such a run the criteria that hold a
+	 * result for every row go first and decide rows for the others without a test. The result is the fold above;
+	 * only the cells that are read differ.
+	 */
+	static void fold (FilterCriterion [] criteria, long [] result, int n, CellText text) {
+		FilterCriterion [] order = new FilterCriterion [criteria.length];
+		int count = 0;
+		for (FilterCriterion criterion : criteria) {
+			if (criterion.applies ()) order [count++] = criterion;
+		}
+		if (count == 0) {
+			RowMask.fill (result, n);
+			return;
+		}
+		/* the logic that joins each criterion to the fold before it; the first one joins the run that follows it */
+		boolean [] and = new boolean [count], full = new boolean [count];
+		for (int i = 1; i < count; i++) and [i] = order [i].logic == ColumnFilter.AND;
+		and [0] = count == 1 || and [1];
+		for (int from = 0, to; from < count; from = to) {
+			for (to = from + 1; to < count && and [to] == and [from]; to++) { /* a run of one logic */ }
+			for (int at = from, i = from; i < to; i++) {
+				if (order [i].known != null) continue;
+				FilterCriterion settled = order [i];
+				System.arraycopy (order, at, order, at + 1, i - at);
+				order [at++] = settled;
+			}
+		}
+		Arrays.fill (full, true);
+		for (int w = 0, words = RowMask.words (n); w < words; w++) {
+			long valid = valid (w, n), fold = and [0] ? valid : 0;
+			for (int i = 0; i < count; i++) {
+				FilterCriterion criterion = order [i];
+				if (criterion.known != null) {
+					criterion.ensure (w, (and [i] ? fold : ~fold) & valid, text);
+					full [i] &= (criterion.known [w] & valid) == valid;
+				}
+				fold = and [i] ? fold & criterion.mask [w] : fold | criterion.mask [w];
+			}
+			result [w] = fold & valid;
+		}
+		for (int i = 0; i < count; i++) {
+			if (full [i]) order [i].known = null;
+		}
+	}
+
+	/* the fold for one row (its criteria were tested for that row) */
 	static boolean passes (FilterCriterion [] criteria, int row) {
 		boolean result = true, first = true;
 		for (FilterCriterion criterion : criteria) {

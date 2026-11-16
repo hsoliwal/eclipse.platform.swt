@@ -37,7 +37,10 @@ import org.eclipse.swt.widgets.*;
  * </p>
  * <p>
  * Every criterion keeps a bit mask over the source rows; combining is a word-wide fold, so
- * changing one criterion re-tests one column. Cell texts come from an {@link CellText}; widget
+ * changing one criterion re-tests one column. A changed criterion is tested only on the rows whose
+ * result still depends on it (short circuit): not on a row that an AND criterion already rejects,
+ * nor on one that an OR criterion already accepts. The remaining rows are tested when a later
+ * change makes them matter. Cell texts come from an {@link CellText}; widget
  * items are never read. In tree mode ({@link #setParents(IntUnaryOperator)}) every ancestor of a
  * passing row is shown too, so that the row stays reachable.
  * </p>
@@ -418,7 +421,9 @@ public final class ColumnFilter extends RowViewBase {
 		if (criterion != null) {
 			int n = sourceSize ();
 			criterion.mask = RowMask.ensure (criterion.mask, n);
-			if (criterion.isActive ()) criterion.evaluate (0, n, text);
+			criterion.known = null;
+			/* its rows are tested by the fold, where the result depends on them */
+			if (criterion.isActive ()) criterion.defer (n);
 		}
 		recompute (null);
 	}
@@ -438,7 +443,15 @@ public final class ColumnFilter extends RowViewBase {
 			case RowChange.INSERTED: shift (in.start, in.count, true); evaluate (in.start, in.start + in.count); break;
 			case RowChange.REMOVED: shift (in.start, in.count, false); break;
 			case RowChange.UPDATED: for (int i = 0; i < in.rowCount; i++) evaluate (in.rows [i], in.rows [i] + 1); break;
-			default: for (FilterCriterion criterion : criteria) criterion.mask = new long [RowMask.words (n)]; evaluate (0, n); break;
+			default:
+				for (FilterCriterion criterion : criteria) {
+					criterion.mask = new long [RowMask.words (n)];
+					criterion.known = null;
+					if (worker == null && criterion.isActive ()) criterion.defer (n);
+				}
+				/* the worker reads the masks as complete */
+				if (worker != null) evaluate (0, n);
+				break;
 		}
 		recompute (in);
 	}
@@ -641,7 +654,10 @@ public final class ColumnFilter extends RowViewBase {
 
 	private void shift (int start, int count, boolean insert) {
 		int n = sourceSize (), old = insert ? n - count : n + count;
-		for (FilterCriterion criterion : criteria) criterion.mask = shift (criterion.mask, old, n, start, count, insert);
+		for (FilterCriterion criterion : criteria) {
+			criterion.mask = shift (criterion.mask, old, n, start, count, insert);
+			if (criterion.known != null) criterion.known = shift (criterion.known, old, n, start, count, insert);
+		}
 		previous = shift (previous, old, n, start, count, insert);
 	}
 
@@ -655,7 +671,7 @@ public final class ColumnFilter extends RowViewBase {
 	private void recompute (RowChange in) {
 		int n = sourceSize (), words = RowMask.words (n);
 		matched = RowMask.ensure (matched, n);
-		FilterCriterion.fold (criteria, matched, n);
+		FilterCriterion.fold (criteria, matched, n, text);
 		kept = RowMask.ensure (kept, n);
 		System.arraycopy (matched, 0, kept, 0, words);
 		if (parentOf != null) {
@@ -700,6 +716,8 @@ public final class ColumnFilter extends RowViewBase {
 			return;
 		}
 		if (worker == null) {
+			/* the worker reads the masks as complete */
+			for (FilterCriterion criterion : criteria) criterion.complete (sourceSize (), text);
 			worker = new FilterWorker (this, display);
 			worker.hold (held ());
 			pending = criteria.clone ();

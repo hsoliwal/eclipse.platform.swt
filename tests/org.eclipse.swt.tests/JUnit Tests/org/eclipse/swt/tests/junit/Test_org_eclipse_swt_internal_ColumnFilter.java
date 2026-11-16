@@ -329,6 +329,154 @@ public class Test_org_eclipse_swt_internal_ColumnFilter {
 		assertEquals (List.of ("2:2:1..3", "3::1..2", "1::0..2", "6:3:2..2"), log);
 	}
 
+	/* 6,400 rows: column 0 has 64 groups of 100 rows, column 1 the row number, column 2 "even" or "odd" */
+	static String shortCircuitCell (int row, int column) {
+		return column == 0 ? "g" + row % 64 : column == 1 ? "row" + row : row % 2 == 0 ? "even" : "odd";
+	}
+
+	static int [] reference (ColumnFilter filter, CellText text, int n) {
+		return java.util.stream.IntStream.range (0, n).filter (row -> suspendable (filter, text, row)).toArray ();
+	}
+
+	/*
+	 * Short circuit: a changed criterion is tested only on the rows whose result still depends on it. The cell
+	 * reads are counted per column; the rows shown always equal the plain fold of every criterion over every row.
+	 */
+	@Test
+	public void test_criteriaAreTestedOnlyWhereTheResultDependsOnThem () {
+		int n = 6400;
+		int [] reads = new int [3];
+		CellText counting = (row, column) -> {
+			reads [column]++;
+			return shortCircuitCell (row, column);
+		};
+		CellText plain = Test_org_eclipse_swt_internal_ColumnFilter::shortCircuitCell;
+
+		/* AND, the selective criterion on the left: the next one is tested on the rows it kept */
+		ColumnFilter filter = new ColumnFilter (3, n, counting);
+		filter.setText (0, "g7", TextMatch.EXACT);
+		assertEquals (n, reads [0], "the only criterion is tested on every row");
+		assertEquals (100, filter.size ());
+		filter.setText (1, "row1", TextMatch.STARTS_WITH);
+		assertEquals (100, reads [1], "column 1 is tested on the rows column 0 kept");
+		assertArrayEquals (reference (filter, plain, n), rows (filter));
+
+		/* the rows that were not tested are tested when they start to matter, and only those */
+		Arrays.fill (reads, 0);
+		filter.clear (0);
+		assertEquals (n - 100, reads [1], "the other rows of column 1");
+		assertEquals (0, reads [0]);
+		assertArrayEquals (reference (filter, plain, n), rows (filter));
+
+		/* AND, the selective criterion on the right: it still decides first, because it is known for every row */
+		filter = new ColumnFilter (3, n, counting);
+		filter.setText (1, "row12", TextMatch.STARTS_WITH);
+		int kept = filter.size ();
+		assertTrue (kept > 0 && kept < 200, "rows starting with row12: " + kept);
+		Arrays.fill (reads, 0);
+		filter.setText (0, "g7", TextMatch.EXACT);
+		assertEquals (kept, reads [0], "column 0 is tested on the rows column 1 kept");
+		assertEquals (0, reads [1]);
+		assertArrayEquals (reference (filter, plain, n), rows (filter));
+
+		/* typing on narrows the rows that were tested and passed; no other row is read */
+		Arrays.fill (reads, 0);
+		int passing = filter.size ();
+		filter.setText (0, "g7", TextMatch.STARTS_WITH);
+		filter.setText (0, "g70", TextMatch.STARTS_WITH);
+		assertTrue (reads [0] <= kept + passing, "narrowing read " + reads [0] + " cells of column 0");
+		assertArrayEquals (reference (filter, plain, n), rows (filter));
+
+		/* OR: a criterion is not tested on a row that another one already accepts */
+		filter = new ColumnFilter (3, n, counting);
+		filter.setText (2, "even", TextMatch.EXACT);
+		filter.setLogic (2, ColumnFilter.OR);
+		Arrays.fill (reads, 0);
+		filter.setText (1, "row1", TextMatch.STARTS_WITH);
+		assertEquals (n / 2, reads [1], "column 1 is tested on the odd rows");
+		assertEquals (0, reads [2]);
+		assertArrayEquals (reference (filter, plain, n), rows (filter));
+
+		/* a mixed chain: (column 0 AND column 1) OR column 2 */
+		filter.setText (0, "g7", TextMatch.EXACT);
+		assertArrayEquals (reference (filter, plain, n), rows (filter));
+		filter.setLogic (1, ColumnFilter.AND);
+		assertArrayEquals (reference (filter, plain, n), rows (filter));
+		filter.setSuspended (2, true);
+		assertArrayEquals (reference (filter, plain, n), rows (filter));
+		filter.setSuspended (2, false);
+		assertArrayEquals (reference (filter, plain, n), rows (filter));
+	}
+
+	/*
+	 * Rows that were never tested stay correct through source edits: inserted and updated rows are tested, the
+	 * untested rows move with their neighbours, and a later criterion change tests them with their current text.
+	 */
+	@Test
+	public void test_untestedRowsFollowSourceEdits () {
+		Random random = new Random (17);
+		for (int round = 0; round < 40; round++) {
+			List<String []> cells = new ArrayList<> ();
+			for (int row = 0; row < 150 + random.nextInt (80); row++) cells.add (randomCells (random));
+			CellText text = (row, column) -> cells.get (row) [column];
+			ColumnFilter filter = new ColumnFilter (3, cells.size (), text);
+			for (int step = 0; step < 60; step++) {
+				switch (random.nextInt (9)) {
+					case 0: filter.setText (random.nextInt (3), "" + (char) ('a' + random.nextInt (3)), TextMatch.CONTAINS); break;
+					case 1: filter.setText (random.nextInt (3), "" + (char) ('a' + random.nextInt (3)), TextMatch.STARTS_WITH | (random.nextBoolean () ? TextMatch.NEGATE : 0)); break;
+					case 2: filter.setLogic (random.nextInt (3), random.nextInt (2)); break;
+					case 3: filter.clear (random.nextInt (3)); break;
+					case 4: filter.setSuspended (random.nextInt (3), random.nextBoolean ()); break;
+					case 5: {
+						int start = random.nextInt (cells.size () + 1), count = 1 + random.nextInt (70);
+						for (int i = 0; i < count; i++) cells.add (start, randomCells (random));
+						filter.rowsInserted (start, count);
+						break;
+					}
+					case 6: {
+						if (cells.isEmpty ()) break;
+						int start = random.nextInt (cells.size ()), count = 1 + random.nextInt (Math.min (70, cells.size () - start));
+						for (int i = 0; i < count; i++) cells.remove (start);
+						filter.rowsRemoved (start, count);
+						break;
+					}
+					case 7: {
+						if (cells.isEmpty ()) break;
+						int row = random.nextInt (cells.size ());
+						cells.set (row, randomCells (random));
+						filter.rowsChanged (row);
+						break;
+					}
+					default: {
+						filter.setText (new int [] {0, 2}, "" + (char) ('a' + random.nextInt (3)), TextMatch.CONTAINS);
+						filter.setLogic (ColumnFilter.ALL_COLUMNS, random.nextInt (2));
+						break;
+					}
+				}
+				int n = cells.size ();
+				int [] expected = java.util.stream.IntStream.range (0, n).filter (row -> suspendable (filter, text, row)).toArray ();
+				assertArrayEquals (expected, rows (filter), "round " + round + " step " + step);
+			}
+		}
+	}
+
+	static String [] randomCells (Random random) {
+		String [] cells = new String [3];
+		for (int c = 0; c < 3; c++) cells [c] = "" + (char) ('a' + random.nextInt (4)) + (char) ('a' + random.nextInt (4));
+		return cells;
+	}
+
+	/* the plain fold, leaving suspended criteria out */
+	static boolean suspendable (ColumnFilter filter, CellText text, int row) {
+		Boolean result = null;
+		for (int column = -1; column < filter.getColumnCount (); column++) {
+			if (!filter.isActive (column) || filter.isSuspended (column)) continue;
+			boolean value = test (filter, text, column, row);
+			result = result == null ? value : filter.getLogic (column) == ColumnFilter.AND ? result && value : result || value;
+		}
+		return result == null || result;
+	}
+
 	@Test
 	public void test_incrementalEditsEqualAReference () {
 		Random random = new Random (31);
