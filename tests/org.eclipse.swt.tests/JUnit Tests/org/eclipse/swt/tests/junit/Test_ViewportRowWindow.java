@@ -182,6 +182,92 @@ public class Test_ViewportRowWindow {
 		assertEquals(false, invoke(planner, "isPaintCandidate", 5_000_048));
 	}
 
+
+	@Test
+	public void directionalOverscanUsesSeparateBudgetsAndLegacyReset () {
+		RowWindow window = new RowWindow();
+		window.setLogicalCount(1000);
+		window.setViewport(500, 40);
+		long before = window.generation();
+		window.setDirectionalOverscanRows(2, 18);
+		assertEquals(before + 1, window.generation());
+		assertEquals(18, window.overscanRows());
+		assertEquals(2, window.overscanBeforeRows());
+		assertEquals(18, window.overscanAfterRows());
+		assertEquals(498, window.paintStart());
+		assertEquals(558, window.paintEndExclusive());
+		assertEquals(60, window.paintCount());
+		window.setDirectionalOverscanRows(2, 18);
+		assertEquals(before + 1, window.generation(), "same settings are a no-op");
+		assertThrows(IllegalArgumentException.class, () -> window.setDirectionalOverscanRows(-1, 2));
+		assertThrows(IllegalArgumentException.class, () -> window.setDirectionalOverscanRows(2, -1));
+		assertEquals(before + 1, window.generation(), "invalid updates preserve state");
+		window.setOverscanRows(8);
+		assertEquals(492, window.paintStart());
+		assertEquals(548, window.paintEndExclusive());
+		assertEquals(8, window.overscanBeforeRows());
+		assertEquals(8, window.overscanAfterRows());
+	}
+
+	@Test
+	public void directionalOverscanCollapsesAndPreservesLogicalAnchor () {
+		RowWindow window = new RowWindow();
+		window.setLogicalCount(Long.MAX_VALUE);
+		window.setViewport(Long.MAX_VALUE - 60, 32);
+		window.setDirectionalOverscanRows(8, 100);
+		assertEquals(Long.MAX_VALUE - 68, window.paintStart());
+		assertEquals(Long.MAX_VALUE, window.paintEndExclusive());
+		window.setViewport(Long.MAX_VALUE - 60, 0);
+		assertEmpty(window);
+		window.setViewport(500, 20);
+		window.setDirectionalOverscanRows(1, 30);
+		window.insert(0, 5);
+		assertEquals(504, window.paintStart());
+		assertEquals(555, window.paintEndExclusive());
+		window.remove(0, 5);
+		assertEquals(499, window.paintStart());
+		assertEquals(550, window.paintEndExclusive());
+	}
+
+	@Test
+	public void directionalOverscanMatchesIndependentClippedOracle () {
+		Random random = new Random(0x20261116L);
+		for (int sample = 0; sample < 12000; sample++) {
+			long count = sample % 7 == 0 ? Long.MAX_VALUE : 1L + random.nextInt(10_000_000);
+			long first = sample % 5 == 0 ? count - 1 : random.nextLong(count);
+			int rows = random.nextInt(101);
+			int before = random.nextInt(200), after = random.nextInt(200);
+			RowWindow window = new RowWindow();
+			window.setLogicalCount(count);
+			window.setViewport(first, rows);
+			window.setDirectionalOverscanRows(before, after);
+			long actualFirst = Math.min(first, count - 1);
+			int visible = (int)Math.min((long)rows, count - actualFirst);
+			BigInteger lo = BigInteger.valueOf(actualFirst).subtract(BigInteger.valueOf(before))
+					.max(BigInteger.ZERO);
+			BigInteger hi = BigInteger.valueOf(actualFirst).add(BigInteger.valueOf(visible))
+					.add(BigInteger.valueOf(after)).min(BigInteger.valueOf(count));
+			if (visible == 0) lo = hi = BigInteger.valueOf(actualFirst);
+			assertEquals(lo.longValueExact(), window.paintStart(), "start sample=" + sample);
+			assertEquals(hi.longValueExact(), window.paintEndExclusive(), "end sample=" + sample);
+			assertEquals(hi.subtract(lo).intValueExact(), window.paintCount(), "count sample=" + sample);
+		}
+	}
+
+	@Test
+	public void flatPlannerAcceptsDirectionalCacheWithoutChangingItsWidgetModel () throws Exception {
+		Object planner = planner();
+		invoke(planner, "setUniformGeometry", 10_000, 20, 800, 500);
+		invoke(planner, "setDirectionalOverscanRows", 2, 24);
+		assertEquals(498, invoke(planner, "paintStart"));
+		assertEquals(564, invoke(planner, "paintEndExclusive"));
+		assertEquals(2, invoke(planner, "overscanBeforeRows"));
+		assertEquals(24, invoke(planner, "overscanAfterRows"));
+		invoke(planner, "setOverscanRows", 8);
+		assertEquals(492, invoke(planner, "paintStart"));
+		assertEquals(548, invoke(planner, "paintEndExclusive"));
+	}
+
 	private static void verifyNonemptyWindow(long count, long requestedFirst, int requestedVisible, int overscan) {
 		RowWindow window = new RowWindow();
 		window.setLogicalCount(count);

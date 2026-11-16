@@ -74,6 +74,8 @@ public final class ViewportRuntime {
 		// Capacity survives clipping at the logical tail or an empty model.
 		private int viewportRows;
 		private int overscanRows = DEFAULT_OVERSCAN_ROWS;
+		private int overscanBeforeRows = DEFAULT_OVERSCAN_ROWS;
+		private int overscanAfterRows = DEFAULT_OVERSCAN_ROWS;
 		private long generation;
 
 		public long logicalCount () {
@@ -138,26 +140,57 @@ public final class ViewportRuntime {
 			return visibleCount;
 		}
 
+		/**
+		 * Restores symmetric prefetch on both sides. The legacy setter and getter
+		 * retain their original behavior unless directional prefetch is used.
+		 */
 		public void setOverscanRows (int rows) {
 			if (rows < 0) throw new IllegalArgumentException ("negative overscan");
-			if (rows == overscanRows) return;
-			overscanRows = rows;
+			if (rows == overscanRows && rows == overscanBeforeRows
+					&& rows == overscanAfterRows) return;
+			overscanRows = overscanBeforeRows = overscanAfterRows = rows;
 			generation++;
 		}
 
+		/** Largest side of the prefetch budget; equals the legacy symmetric value by default. */
 		public int overscanRows () {
 			return overscanRows;
 		}
 
+		/**
+		 * Optional directional prefetch. Equivalent to the symmetric legacy
+		 * overscan only when both values match. Does not create native items.
+		 * Both budgets are bounded by the logical model during projection;
+		 * an empty viewport retains its anchor and admits no paint demand.
+		 */
+		public void setDirectionalOverscanRows (int beforeRows, int afterRows) {
+			if (beforeRows < 0 || afterRows < 0) {
+				throw new IllegalArgumentException ("negative overscan");
+			}
+			if (beforeRows == overscanBeforeRows && afterRows == overscanAfterRows) return;
+			overscanBeforeRows = beforeRows;
+			overscanAfterRows = afterRows;
+			overscanRows = Math.max (beforeRows, afterRows);
+			generation++;
+		}
+
+		public int overscanBeforeRows () {
+			return overscanBeforeRows;
+		}
+
+		public int overscanAfterRows () {
+			return overscanAfterRows;
+		}
+
 		public long paintStart () {
 			if (visibleCount == 0) return firstVisible;
-			return Math.max (0L, firstVisible - overscanRows);
+			return Math.max (0L, firstVisible - overscanBeforeRows);
 		}
 
 		public long paintEndExclusive () {
 			if (visibleCount == 0) return firstVisible;
 			long visibleEnd = saturatedAdd (firstVisible, visibleCount);
-			return Math.min (logicalCount, saturatedAdd (visibleEnd, overscanRows));
+			return Math.min (logicalCount, saturatedAdd (visibleEnd, overscanAfterRows));
 		}
 
 		public int paintCount () {
