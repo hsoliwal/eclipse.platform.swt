@@ -111,6 +111,22 @@ import org.eclipse.swt.internal.win32.version.*;
 public class Display extends Device implements Executor {
 
 	/**
+	 * Returns the SWT UI API capabilities currently available from this backend.
+	 * This does not probe device hardware or guarantee support by every widget.
+	 *
+	 * @return an immutable platform capability descriptor
+	 * @exception SWTException
+	 *                ERROR_DEVICE_DISPOSED - if the display is disposed
+	 *                ERROR_THREAD_INVALID_ACCESS - if called from another thread
+	 * @since 3.138
+	 */
+	public PlatformCapabilities getPlatformCapabilities () {
+		checkDevice ();
+		return PlatformCapabilities.of ("win32"); //$NON-NLS-1$
+	}
+
+
+	/**
 	 * the handle to the OS message queue
 	 * (Warning: This field is platform dependent)
 	 * <p>
