@@ -358,4 +358,48 @@ public class Test_VirtualBitLanes {
 		field.setAccessible (true);
 		return field.getInt (null);
 	}
+
+	@Test
+	public void test_retainedCapacityShrinkRegrowUsesLogicalBits () throws Exception {
+		Object value = lanes (2);
+		call (value, "setLength", 10_000_000);
+		call (value, "set", 0, 9_999_999, true);
+		call (value, "set", 1, 7_000_000, true);
+		Field field = value.getClass ().getDeclaredField ("lanes");
+		field.setAccessible (true);
+		int [][] arrays = (int [][]) field.get (value);
+		int [] first = arrays [0], second = arrays [1];
+		assertTrue (first.length >= 312_500);
+		call (value, "setLength", 17);
+		assertSame (first, arrays [0], "shrinking retains backing identity");
+		assertSame (second, arrays [1]);
+		assertEquals (0, (int) call (value, "count", 0));
+		assertEquals (-1, (int) call (value, "nextSet", 0, 0));
+		assertEquals (-1, (int) call (value, "nextSet", 1, 0));
+		call (value, "set", 0, 16, true);
+		assertEquals (1, (int) call (value, "count", 0));
+		assertEquals (16, (int) call (value, "nextSet", 0, -5));
+		assertEquals (-1, (int) call (value, "nextSet", 0, 17));
+		call (value, "setLength", 10_000_000);
+		assertEquals (1, (int) call (value, "count", 0));
+		assertEquals (-1, (int) call (value, "nextSet", 0, 17));
+	}
+
+	@Test
+	public void test_retainedWordBoundaryAndEmptyLanes () throws Exception {
+		for (int n : new int [] {0, 1, 31, 32, 33, 63, 64, 65, 127, 128, 129}) {
+			Object value = lanes (1);
+			call (value, "setLength", 2048);
+			call (value, "setRange", 0, 0, 2048, true);
+			call (value, "setLength", n);
+			assertEquals (n, (int) call (value, "count", 0));
+			assertEquals (n == 0 ? -1 : n - 1, (int) call (value, "nextSet", 0, Math.max (0, n - 1)));
+			assertEquals (-1, (int) call (value, "nextSet", 0, n));
+			assertEquals (n, (int) call (value, "nextClear", 0, 0));
+			call (value, "setRange", 0, 0, n, false);
+			assertEquals (0, (int) call (value, "count", 0));
+			assertEquals (-1, (int) call (value, "nextSet", 0, 0));
+		}
+	}
+
 }
