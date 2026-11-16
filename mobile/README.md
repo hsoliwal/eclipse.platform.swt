@@ -197,6 +197,33 @@ substitute for real Android edge-to-edge/IME instrumentation or iOS
 rotation/VoiceOver/simulator tests. The JNI header is regenerated from the
 current `OS.java` declaration by the iOS build, not edited manually.
 
+## Build the Android native library (NDK)
+
+`AndroidPixels` moves retained pixels (a scroll of a Canvas) through one native call when
+`libswtpixels.so` is in the application, and through its Java lane when the library is not there.
+Build the library for every ABI with an installed Android NDK, CMake 3.22 or later and Ninja:
+
+```bash
+python mobile/android/build_native.py --ndk /path/to/android-ndk --output /path/to/out
+```
+
+The script configures
+[`CMakeLists.txt`](../bundles/org.eclipse.swt/Eclipse%20SWT%20PI/android/library/CMakeLists.txt)
+with the NDK's toolchain file for `arm64-v8a`, `armeabi-v7a`, `x86_64` and `x86` (API 26, the
+`minSdk` of `mobile/android`; `--abi` and `--api` select others), builds with warnings as errors,
+and reads each library back with the NDK's `llvm-readelf`: every JNI function of the C sources
+is exported, the library needs `libjnigraphics.so`, and the 64-bit libraries have load segments
+aligned to 16 KB pages. It writes `out/jniLibs/<abi>/libswtpixels.so` and
+`out/native-build.tsv` (one row per ABI with size and SHA-256) and exits with 1 if a build or a
+check fails. It installs nothing and writes nothing outside the output folder.
+
+`out/jniLibs` has the layout of an application's `src/main/jniLibs`: copy it there and the Android
+Gradle Plugin packages the libraries. An application can instead point
+`android.externalNativeBuild.cmake.path` at the CMake file. Neither Gradle route was run here.
+
+This was run on Windows with NDK r30 (30.0.16248370): four ABIs built and passed the checks. The
+library was not loaded on a device or an emulator.
+
 ## Implemented integration path and remaining scope
 
 The implemented path is a Shell/Composite/Canvas application, including the
