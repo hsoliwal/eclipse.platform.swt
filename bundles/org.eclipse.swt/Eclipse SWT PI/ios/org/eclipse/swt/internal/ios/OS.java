@@ -56,6 +56,8 @@ public final class OS {
 	public static native void checkFailure();
 	public static native int[] displayBounds();
 	public static native int[] dpi();
+	/** UIKit root-view safe-area insets, left/top/right/bottom in logical points. */
+	public static native int[] safeAreaInsets();
 	public static native long createControl(int kind, long parent, int style);
 	public static native void disposeControl(long peer);
 	public static native void setBounds(long peer, int x, int y, int width, int height);
