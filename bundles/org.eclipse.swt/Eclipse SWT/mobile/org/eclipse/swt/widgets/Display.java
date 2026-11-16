@@ -19,6 +19,22 @@ import org.eclipse.swt.internal.mobile.MobilePlatform;
  * listener or synchronously wait for the application thread.
  */
 public class Display extends Device implements Executor {
+
+	/**
+	 * Returns the SWT UI API capabilities currently available from this backend.
+	 * This does not probe device hardware or guarantee support by every widget.
+	 *
+	 * @return an immutable platform capability descriptor
+	 * @exception SWTException
+	 *                ERROR_DEVICE_DISPOSED - if the display is disposed
+	 *                ERROR_THREAD_INVALID_ACCESS - if called from another thread
+	 * @since 3.138
+	 */
+	public PlatformCapabilities getPlatformCapabilities () {
+		checkDevice ();
+		return PlatformCapabilities.of (platform.name ());
+	}
+
 	private static final ThreadLocal<Display> CURRENT = new ThreadLocal<>();
 	private static Display defaultDisplay;
 	private static String appName = "SWT", appVersion = "";
