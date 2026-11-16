@@ -34,8 +34,16 @@ final class FilterCriterion {
 	long [] allowed;
 	long [] mask = {};
 
+	/* a suspended criterion keeps its specification and its mask and is left out of the fold until it is resumed */
+	boolean suspended;
+
 	boolean isActive () {
 		return match != null || values != null || valueId != null;
+	}
+
+	/* whether the criterion takes part in the filter: it has a specification and is not suspended */
+	boolean applies () {
+		return !suspended && isActive ();
 	}
 
 	void clear () {
@@ -44,6 +52,7 @@ final class FilterCriterion {
 		valueId = null;
 		allowed = null;
 		columns = new int [0];
+		suspended = false;
 	}
 
 	boolean test (int row, CellText text) {
@@ -90,6 +99,7 @@ final class FilterCriterion {
 		copy.valueId = valueId;
 		copy.allowed = allowed;
 		copy.mask = mask;
+		copy.suspended = suspended;
 		return copy;
 	}
 
@@ -98,7 +108,7 @@ final class FilterCriterion {
 		int words = RowMask.words (n);
 		boolean first = true;
 		for (FilterCriterion criterion : criteria) {
-			if (!criterion.isActive ()) continue;
+			if (!criterion.applies ()) continue;
 			long [] mask = criterion.mask;
 			for (int w = 0; w < words; w++) {
 				result [w] = first ? mask [w] : criterion.logic == ColumnFilter.AND ? result [w] & mask [w] : result [w] | mask [w];
@@ -113,7 +123,7 @@ final class FilterCriterion {
 	static boolean passes (FilterCriterion [] criteria, int row) {
 		boolean result = true, first = true;
 		for (FilterCriterion criterion : criteria) {
-			if (!criterion.isActive ()) continue;
+			if (!criterion.applies ()) continue;
 			boolean bit = RowMask.get (criterion.mask, row);
 			result = first ? bit : criterion.logic == ColumnFilter.AND ? result && bit : result || bit;
 			first = false;
