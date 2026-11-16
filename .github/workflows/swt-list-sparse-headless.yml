@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+name: SWT List sparse text source contracts (headless)
+on:
+  pull_request:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/VirtualListModel.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/VirtualListWidth.java'
+      - 'tests/headless-list-sparse/**'
+      - '.github/workflows/swt-list-sparse-headless.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-contracts:
+    if: github.repository == 'hsoliwal/eclipse.platform.swt'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: ['17', '21']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.jdk }}
+      - name: Compile actual production text and width owners, run sparse oracle
+        run: bash tests/headless-list-sparse/verify.sh
