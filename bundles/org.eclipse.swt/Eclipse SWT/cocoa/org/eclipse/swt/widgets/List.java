@@ -1397,17 +1397,29 @@ public void setItem (int index, String string) {
 public void setItemCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
-	int itemCount = getItemCount ();
-	if (count == itemCount) {
+	int oldCount = itemCount;
+	if (count == oldCount) {
 		return;
 	}
-	if (count < itemCount) {
-		remove (count, itemCount - 1);
+	if (count < oldCount) {
+		remove (count, oldCount - 1);
 		return;
 	}
-	for (int i = itemCount; i < count; i++) {
-		add ("");
+	/*
+	 * The original NSTableView is the row and viewport owner. Append empty
+	 * model rows in one array growth and one native row-count notification;
+	 * calling add("") for each row repeatedly reallocates and retessellates
+	 * the native view, while changing neither text nor selection.
+	 */
+	if (count > items.length) {
+		String [] nextItems = new String [count];
+		System.arraycopy (items, 0, nextItems, 0, oldCount);
+		items = nextItems;
 	}
+	java.util.Arrays.fill (items, oldCount, count, "");
+	itemCount = count;
+	updateRowCount ();
+	setScrollWidth ("");
 }
 
 /**
