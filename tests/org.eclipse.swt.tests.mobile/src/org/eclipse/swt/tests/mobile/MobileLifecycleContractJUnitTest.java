@@ -362,6 +362,61 @@ public final class MobileLifecycleContractJUnitTest {
 		control.notifyListeners(SWT.MouseUp, up);
 	}
 
+
+	@Test void indexedNativePeersPreserveOriginalDispatchAndDisposal() {
+		platform.next = 0x1000_0001_0000_0001L;
+		final int size = 384;
+		Canvas[] controls = new Canvas[size];
+		long[] peers = new long[size];
+		int[] notifications = new int[size];
+		for (int i = 0; i < size; i++) {
+			Canvas current = canvas(shell);
+			int at = i;
+			current.addListener(SWT.MouseUp, event -> notifications[at]++);
+			controls[i] = current;
+			peers[i] = platform.lastCreated;
+			assertSame(current, display.findWidget(peers[i]), "Native token preserves original widget identity");
+		}
+		assertNull(display.findWidget(0));
+		assertNull(display.findWidget(-1));
+		for (long peer : peers)
+			platform.sink.input(peer, SWT.MouseUp, 3, 4, 1, 0, '\0', 0, 1, 7);
+		drain();
+		for (int calls : notifications) assertEquals(1, calls);
+		for (int i = 0; i < size; i += 3) {
+			controls[i].dispose();
+			assertNull(display.findWidget(peers[i]), "Disposed peer must not resolve");
+			platform.sink.input(peers[i], SWT.MouseUp, 3, 4, 1, 0, '\0', 0, 1, 8);
+		}
+		drain();
+		for (int calls : notifications) assertEquals(1, calls);
+		for (int i = 0; i < size; i++)
+			if (i % 3 != 0) assertSame(controls[i], display.findWidget(peers[i]));
+	}
+
+	@Test void recycledNativePeerSlotCannotReceiveStaleQueuedEvents() {
+		platform.next = 0x1000_0001_0000_0029L;
+		Canvas removed = canvas(shell);
+		long oldPeer = platform.lastCreated;
+		AtomicInteger removedCalls = new AtomicInteger();
+		removed.addListener(SWT.MouseUp, event -> removedCalls.incrementAndGet());
+		platform.sink.input(oldPeer, SWT.MouseUp, 1, 2, 1, 0, '\0', 0, 1, 1);
+		removed.dispose();
+		platform.next = oldPeer + (1L << 32);
+		Canvas replacement = canvas(shell);
+		long newPeer = platform.lastCreated;
+		assertEquals(oldPeer & 0xffff_ffffL, newPeer & 0xffff_ffffL);
+		AtomicInteger replacementCalls = new AtomicInteger();
+		replacement.addListener(SWT.MouseUp, event -> replacementCalls.incrementAndGet());
+		assertNull(display.findWidget(oldPeer));
+		assertSame(replacement, display.findWidget(newPeer));
+		platform.sink.input(oldPeer, SWT.MouseUp, 1, 2, 1, 0, '\0', 0, 1, 2);
+		platform.sink.input(newPeer, SWT.MouseUp, 1, 2, 1, 0, '\0', 0, 1, 3);
+		drain();
+		assertEquals(0, removedCalls.get());
+		assertEquals(1, replacementCalls.get());
+	}
+
 	@Test void staleNativePeerCannotActivateADisposedWidget() {
 		Canvas canvas = canvas(shell);
 		long peer = platform.lastCreated;
