@@ -89,7 +89,8 @@ final class VirtualBitLanes {
 		int [] words = lanes [lane];
 		if (words == null) return 0;
 		int count = 0;
-		for (int word : words) count += Integer.bitCount (word);
+		int logicalWords = Math.min (words.length, wordsFor (length));
+		for (int word = 0; word < logicalWords; word++) count += Integer.bitCount (words [word]);
 		return count;
 	}
 
@@ -153,14 +154,15 @@ final class VirtualBitLanes {
 		if (words == null || from >= length) return -1;
 		if (from < 0) from = 0;
 		int word = from >>> 5;
-		if (word >= words.length) return -1;
+		int logicalWords = Math.min (words.length, wordsFor (length));
+		if (word >= logicalWords) return -1;
 		int bits = words [word] & (-1 << (from & 31));
 		while (true) {
 			if (bits != 0) {
 				int index = (word << 5) + Integer.numberOfTrailingZeros (bits);
 				return index < length ? index : -1;
 			}
-			if (++word >= words.length) return -1;
+			if (++word >= logicalWords) return -1;
 			bits = words [word];
 		}
 	}
