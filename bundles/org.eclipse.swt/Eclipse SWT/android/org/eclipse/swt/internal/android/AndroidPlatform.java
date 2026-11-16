@@ -830,6 +830,7 @@ public final class AndroidPlatform implements MobilePlatform {
 			if((flags&SWT.DRAW_TRANSPARENT)==0){int[] size=textExtent(text,flags);paint(true,true);canvas.drawRect(x,y,(float)x+size[0],(float)y+size[1],pen);}
 			paint(true,false);pen.setAntiAlias(textAntialias);for(int i=0;i<lines.length;i++)canvas.drawText(lines[i],x,y-fm.ascent+i*height,pen);
 		}
+		@Override public boolean copyArea(int x,int y,int w,int h,int dx,int dy){check();AndroidPixels.move(bitmap,x,y,w,h,dx,dy);return true;}
 		@Override public void drawImage(long image,int sx,int sy,int sw,int sh,int dx,int dy,int dw,int dh){paint(true,false);Bitmap source=images.get(image);if(sx<0||sy<0||sw<=0||sh<=0||dw<=0||dh<=0||(long)sx+sw>source.getWidth()||(long)sy+sh>source.getHeight())throw new IllegalArgumentException("image rectangle");pen.setAlpha(alpha);canvas.drawBitmap(source,new Rect(sx,sy,sx+sw,sy+sh),new Rect(dx,dy,Math.addExact(dx,dw),Math.addExact(dy,dh)),pen);}
 		@Override public int[] textExtent(String text,int flags){check();String[] rows=lines(text,flags);float width=0;for(String row:rows)width=Math.max(width,pen.measureText(row));Paint.FontMetrics m=pen.getFontMetrics();return new int[]{(int)Math.ceil(width),(int)Math.ceil(rows.length*(m.descent-m.ascent+m.leading))};}
 		@Override public int[] fontMetrics(){check();Paint.FontMetrics m=pen.getFontMetrics();return new int[]{(int)Math.ceil(-m.ascent),(int)Math.ceil(m.descent),Math.round(pen.measureText("n")),(int)Math.ceil(m.leading),(int)Math.ceil(m.descent-m.ascent+m.leading)};}
