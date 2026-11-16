@@ -59,9 +59,10 @@ public class Table extends Composite {
         });
         addListener(SWT.MouseMove, event -> {
             if (!pointerDown || !isEnabled() || !isVisible()) return;
-            int delta = event.y - pointerY;
+            long delta = (long)event.y - pointerY;
             pointerY = event.y;
             if (delta == 0) return;
+            // Compute the coordinate difference before narrowing to the pixel accumulator.
             long changed = (long)dragPixels + delta;
             dragPixels = (int)Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, changed));
             if (Math.abs((long)dragPixels) > 3) dragged = true;

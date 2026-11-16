@@ -314,6 +314,54 @@ public final class MobileLifecycleContractJUnitTest {
 		assertEquals(before + 1, paints.get());
 	}
 
+	@Test void originalAndroidAndIosVirtualListDragDoesNotWrapSignedCoordinates() {
+		final int logicalRows = 1_000_000_000;
+		org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List(shell, SWT.VIRTUAL | SWT.MULTI);
+		list.setBounds(0, 0, 120, 120);
+		list.setItemCount(logicalRows);
+		int nativePeerCount = platform.controls.size();
+
+		pointerDrag(list, Integer.MAX_VALUE, Integer.MIN_VALUE);
+		assertTrue(list.getTopIndex() > 0, "Upward drag must scroll forward even across int wrap");
+		assertTrue(list.getTopIndex() < logicalRows);
+		assertEquals(0, list.getSelectionCount());
+		assertEquals(nativePeerCount, platform.controls.size(), "The original List owns one native peer");
+		pointerDrag(list, Integer.MIN_VALUE, Integer.MAX_VALUE);
+		assertTrue(list.getTopIndex() <= 1, "Reverse drag returns to the first row within quantization");
+		assertEquals(0, list.getSelectionCount());
+	}
+
+	@Test void originalAndroidAndIosVirtualTableDragDoesNotWrapSignedCoordinates() {
+		final int logicalRows = 1_000_000_000;
+		org.eclipse.swt.widgets.Table table = new org.eclipse.swt.widgets.Table(shell, SWT.VIRTUAL | SWT.MULTI);
+		table.setBounds(0, 0, 120, 120);
+		table.setItemCount(logicalRows);
+		int nativePeerCount = platform.controls.size();
+
+		pointerDrag(table, Integer.MAX_VALUE, Integer.MIN_VALUE);
+		assertTrue(table.getTopIndex() > 0, "Upward drag must scroll forward even across int wrap");
+		assertTrue(table.getTopIndex() < logicalRows);
+		assertEquals(0, table.getSelectionCount());
+		assertEquals(nativePeerCount, platform.controls.size(), "The original Table owns one native peer");
+		pointerDrag(table, Integer.MIN_VALUE, Integer.MAX_VALUE);
+		assertTrue(table.getTopIndex() <= 1, "Reverse drag returns to the first row within quantization");
+		assertEquals(0, table.getSelectionCount());
+	}
+
+	private static void pointerDrag(org.eclipse.swt.widgets.Control control, int fromY, int toY) {
+		org.eclipse.swt.widgets.Event down = new org.eclipse.swt.widgets.Event();
+		down.button = 1;
+		down.y = fromY;
+		control.notifyListeners(SWT.MouseDown, down);
+		org.eclipse.swt.widgets.Event move = new org.eclipse.swt.widgets.Event();
+		move.y = toY;
+		control.notifyListeners(SWT.MouseMove, move);
+		org.eclipse.swt.widgets.Event up = new org.eclipse.swt.widgets.Event();
+		up.button = 1;
+		up.y = toY;
+		control.notifyListeners(SWT.MouseUp, up);
+	}
+
 	@Test void staleNativePeerCannotActivateADisposedWidget() {
 		Canvas canvas = canvas(shell);
 		long peer = platform.lastCreated;
