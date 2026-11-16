@@ -137,19 +137,36 @@ final class VirtualTreeResidentPlan {
 		}
 	}
 
+	/**
+	 * The native-demand buffer already owns its tree coordinates. Reuse these
+	 * parent-owned scratch lanes rather than allocating three int arrays for
+	 * every paint/scroll reconciliation. They are retained across commit/clear,
+	 * never exposed to the SWT user or used as native item identities.
+	 */
+	private int [] scratchParentIds, scratchChildIndices, scratchPhysicalParents;
+
 	/** Convenience form of {@link #plan(int, int[], int[], int[])} over a residency buffer. */
 	void plan (VirtualTreeVisibleProjection.Residency next) {
 		int count = next.size ();
-		int [] parentIds = new int [count], childIndices = new int [count], physicalParents = new int [count];
-		for (int entry = 0; entry < count; entry++) {
-			parentIds [entry] = next.parentId (entry);
-			childIndices [entry] = next.childIndex (entry);
-			physicalParents [entry] = next.physicalParent (entry);
+		if (scratchParentIds == null || count > scratchParentIds.length) {
+			int nextCapacity = capacity (scratchParentIds == null ? 0 : scratchParentIds.length, count);
+			// Stage all three allocations before publishing the replacement lanes.
+			int [] parents = new int [nextCapacity];
+			int [] children = new int [nextCapacity];
+			int [] physical = new int [nextCapacity];
+			scratchParentIds = parents;
+			scratchChildIndices = children;
+			scratchPhysicalParents = physical;
 		}
-		plan (count, parentIds, childIndices, physicalParents);
-		lastParentIds = parentIds;
-		lastChildIndices = childIndices;
-		lastPhysicalParents = physicalParents;
+		for (int entry = 0; entry < count; entry++) {
+			scratchParentIds [entry] = next.parentId (entry);
+			scratchChildIndices [entry] = next.childIndex (entry);
+			scratchPhysicalParents [entry] = next.physicalParent (entry);
+		}
+		plan (count, scratchParentIds, scratchChildIndices, scratchPhysicalParents);
+		lastParentIds = scratchParentIds;
+		lastChildIndices = scratchChildIndices;
+		lastPhysicalParents = scratchPhysicalParents;
 	}
 
 	private int [] lastParentIds, lastChildIndices, lastPhysicalParents;

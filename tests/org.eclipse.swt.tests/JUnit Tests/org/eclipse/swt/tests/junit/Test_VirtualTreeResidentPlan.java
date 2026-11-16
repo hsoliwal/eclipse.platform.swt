@@ -301,6 +301,76 @@ public class Test_VirtualTreeResidentPlan {
 		}
 	}
 
+
+	/** Reusing one caller-owned Residency may not allocate three int arrays per scroll. */
+	@Test
+	public void residencyShortcutKeepsScratchLanesAndNativeHandlesAcrossScroll () throws Exception {
+		Object topology = VirtualTreeReflection.topology ();
+		VirtualTreeReflection.call (topology, "setChildCount", ROOT, 96);
+		Object projection = VirtualTreeReflection.projection (topology);
+		Object residency = VirtualTreeReflection.residency ();
+		Class<?> residencyType = residency.getClass ();
+		Class<?> [] windowType = {long.class, int.class, residencyType};
+		Class<?> [] residencyPlanType = {residencyType};
+		Class<?> [] handlesType = {long [].class};
+
+		VirtualTreeReflection.callTyped (projection, "residencyWindow",
+				windowType, 0L, 32, residency);
+		call ("plan", residencyPlanType, residency);
+		int [] originalParents = scratchLane ("scratchParentIds");
+		int [] originalChildren = scratchLane ("scratchChildIndices");
+		int [] originalPhysical = scratchLane ("scratchPhysicalParents");
+		assertTrue (originalParents.length >= 32);
+		long [] handles = new long [32];
+		for (int i = 0; i < handles.length; i++) handles [i] = i + 1L;
+		call ("commit", handlesType, (Object) handles);
+
+		for (int slide = 1; slide <= 12; slide++) {
+			VirtualTreeReflection.callTyped (projection, "residencyWindow",
+					windowType, (long)slide, 32, residency);
+			call ("plan", residencyPlanType, residency);
+			assertSame (originalParents, scratchLane ("scratchParentIds"));
+			assertSame (originalChildren, scratchLane ("scratchChildIndices"));
+			assertSame (originalPhysical, scratchLane ("scratchPhysicalParents"));
+			long [] next = new long [32];
+			for (int i = 0; i < next.length; i++) {
+				long reused = (Long) call ("plannedHandle", new Class<?> [] {int.class}, i);
+				if (i < 31) assertEquals (handles [i + 1], reused,
+							"overlapping native row must retain its handle");
+				next [i] = reused == 0 ? (long)slide * 1000 + i + 100 : reused;
+			}
+			call ("commit", handlesType, (Object)next);
+			handles = next;
+		}
+
+		VirtualTreeReflection.callTyped (projection, "residencyWindow",
+				windowType, 0L, 80, residency);
+		call ("plan", residencyPlanType, residency);
+		int [] enlarged = scratchLane ("scratchParentIds");
+		assertNotSame (originalParents, enlarged);
+		assertTrue (enlarged.length >= 80);
+		long [] largeHandles = new long [80];
+		for (int i = 0; i < largeHandles.length; i++) {
+			long reused = (Long)call ("plannedHandle", new Class<?> [] {int.class}, i);
+			largeHandles [i] = reused == 0 ? 9000L + i : reused;
+		}
+		call ("commit", handlesType, (Object)largeHandles);
+		call ("clear", new Class<?> [0]);
+		VirtualTreeReflection.callTyped (projection, "residencyWindow",
+				windowType, 24L, 16, residency);
+		call ("plan", residencyPlanType, residency);
+		assertSame (enlarged, scratchLane ("scratchParentIds"),
+				"clear does not release parent-owned capacity");
+		assertTrue (scratchLane ("scratchChildIndices").length >= 80);
+		assertTrue (scratchLane ("scratchPhysicalParents").length >= 80);
+	}
+
+	private int [] scratchLane (String field) throws Exception {
+		Field slot = plan.getClass ().getDeclaredField (field);
+		slot.setAccessible (true);
+		return (int [])slot.get (plan);
+	}
+
 	static void buildForest (Random random, int parentId, int depth, List<int []> out, int [] nextId) {
 		int children = depth == 0 ? 60 : depth > 3 ? 0 : random.nextInt (6);
 		for (int i = 0; i < children; i++) {

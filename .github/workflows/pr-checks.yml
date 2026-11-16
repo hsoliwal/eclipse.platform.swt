@@ -93,6 +93,8 @@ jobs:
         run: bash tools/release/run_headless_directional_overscan_java21.sh
       - name: Java 21 viewport selection copy on actual SWT source
         run: bash tools/release/run_headless_selection_window_java21.sh
+      - name: Java 21 actual tree resident scratch and identity contract
+        run: bash tools/release/run_headless_tree_scratch_java21.sh
       - name: Java 21 native-free donor row geometry contract
         run: bash tools/release/run_headless_donor_row_geometry_java21.sh
       - name: Preserve exact-source release-preflight evidence
@@ -107,6 +109,7 @@ jobs:
             target/m3-swt-bit-lane-prefix/
             target/m3-directional-overscan-java21/
             target/m3-swt-selection-window/
+            target/m3-tree-residency-scratch/
             target/m3-swt-donor-row-geometry/
           if-no-files-found: warn
           retention-days: 90
