@@ -112,7 +112,7 @@ public final class IOSPlatform implements MobilePlatform {
 	@Override public long createImage(int w, int h, int[] argb) { check(); return OS.createImage(w, h, argb); }
 	@Override public void disposeImage(long image) { checkThread(); OS.disposeImage(image); }
 	@Override public int[] imagePixels(long image) { check(); return OS.imagePixels(image); }
-	@Override public Graphics graphics(long image) { check(); return new CoreGraphics(OS.createGraphics(image)); }
+	@Override public Graphics graphics(long image) { check(); return new CoreGraphics(OS.createGraphics(image), image); }
 	@Override public int[] captureScreen(int x, int y, int width, int height) {
 		check();
 		throw new UnsupportedOperationException("iOS has no synchronous visible-screen capture in this backend; use an XCUI device screenshot");
@@ -120,7 +120,8 @@ public final class IOSPlatform implements MobilePlatform {
 
 	private final class CoreGraphics implements Graphics {
 		private long handle;
-		CoreGraphics(long handle) { this.handle = handle; }
+		private final long image;
+		CoreGraphics(long handle, long image) { this.handle = handle; this.image = image; }
 		private long live() {
 			check();
 			if (handle == 0) throw new IllegalStateException("GC is disposed");
@@ -147,6 +148,15 @@ public final class IOSPlatform implements MobilePlatform {
 		@Override public void drawPolygon(int[] points, boolean fill) { OS.drawPolygon(live(), Objects.requireNonNull(points, "points"), fill); }
 		@Override public void drawText(String text, int x, int y, int flags) { OS.drawText(live(), Objects.requireNonNull(text, "text"), x, y, flags); }
 		@Override public void drawImage(long image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh) { OS.drawImage(live(), image, sx, sy, sw, sh, dx, dy, dw, dh); }
+		/*
+		 * The image draws its own snapshot back at the offset. CoreGraphics takes the snapshot copy-on-write, so
+		 * overlapping source and destination are safe and no pixel is changed behind its back. Exact for the
+		 * opaque pixels of a control's retained frame, which is what this moves.
+		 */
+		@Override public boolean copyArea(int x, int y, int width, int height, int dx, int dy) {
+			OS.drawImage(live(), image, x, y, width, height, x + dx, y + dy, width, height);
+			return true;
+		}
 		@Override public int[] textExtent(String text, int flags) { return OS.textExtent(live(), Objects.requireNonNull(text, "text"), flags); }
 		@Override public int[] fontMetrics() { return OS.fontMetrics(live()); }
 		@Override public void close() {

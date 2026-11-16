@@ -211,8 +211,11 @@ public abstract class Control extends Widget implements Drawable {
 		if (image == null || image.isDisposed() || damage != null || paintDepth != 0 || !isVisible()) return false;
 		Rectangle frame = image.getBounds(), client = clientBounds();
 		if (frame.width != client.width || frame.height != client.height) return false;
+		/* only the part whose destination is inside the frame moves: a transport never sees a rectangle outside its image */
+		Rectangle movable = source.intersection(new Rectangle(client.x - dx, client.y - dy, client.width, client.height));
+		if (movable.isEmpty()) return false;
 		try (MobilePlatform.Graphics graphics = display.internal_platform().graphics(image.internal_handle())) {
-			return graphics.copyArea(source.x, source.y, source.width, source.height, dx, dy);
+			return graphics.copyArea(movable.x, movable.y, movable.width, movable.height, dx, dy);
 		}
 	}
 	void redrawAll() { if (disposed) return; redraw(0, 0, bounds.width, bounds.height, true); }
