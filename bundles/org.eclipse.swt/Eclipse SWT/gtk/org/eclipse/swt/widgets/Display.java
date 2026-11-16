@@ -117,6 +117,22 @@ import org.eclipse.swt.internal.gtk4.*;
  */
 public class Display extends Device implements Executor {
 
+	/**
+	 * Returns the SWT UI API capabilities currently available from this backend.
+	 * This does not probe device hardware or guarantee support by every widget.
+	 *
+	 * @return an immutable platform capability descriptor
+	 * @exception SWTException
+	 *                ERROR_DEVICE_DISPOSED - if the display is disposed
+	 *                ERROR_THREAD_INVALID_ACCESS - if called from another thread
+	 * @since 3.138
+	 */
+	public PlatformCapabilities getPlatformCapabilities () {
+		checkDevice ();
+		return PlatformCapabilities.of ("gtk"); //$NON-NLS-1$
+	}
+
+
 	private static final int SLOT_IN_USE = -2;
 	private static final int LAST_TABLE_INDEX = -1;
 
