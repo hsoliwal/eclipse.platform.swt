@@ -141,6 +141,9 @@ class ZoomChangeExceptionHandlingWin32Tests {
 		shell.setLayout(layout);
 		createFailingButton(shell);
 		Button subsequentChild = new Button(shell, SWT.PUSH);
+		// The layouts are counted as they happen. A shell that is not shown defers its
+		// layout until it is (the visibility gate), so the shell is shown first
+		shell.open();
 		layout.layoutCount = 0;
 
 		DPITestUtil.changeDPIZoomOnMonitorChange(shell, newZoom);
@@ -158,6 +161,9 @@ class ZoomChangeExceptionHandlingWin32Tests {
 		CountingLayout layout = new CountingLayout();
 		shell.setLayout(layout);
 		createFailingButton(shell);
+		// The layouts are counted as they happen. A shell that is not shown defers its
+		// layout until it is (the visibility gate), so the shell is shown first
+		shell.open();
 		layout.layoutCount = 0;
 
 		DPITestUtil.changeDPIZoom(shell, newZoom);
