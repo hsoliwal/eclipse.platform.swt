@@ -414,6 +414,27 @@ public void test_getFocusIndex() {
 }
 
 @Test
+public void test_setItemCount_cocoaRepeatedSmallGrowthRetainsTextAndSelection() {
+	if (!SwtTestUtil.isCocoa) return;
+	list.setItems("a", "b", "c");
+	list.setSelection(1);
+	for (int targetCount = 4; targetCount <= 160; targetCount++) {
+		list.setItemCount(targetCount);
+		assertEquals(targetCount, list.getItemCount());
+		assertEquals("b", list.getItem(1));
+	}
+	assertEquals("", list.getItem(159));
+	list.setItem(157, "late-edit");
+	list.setItemCount(165);
+	assertEquals("late-edit", list.getItem(157));
+	assertEquals("", list.getItem(164));
+	assertEquals(1, list.getSelectionIndex());
+	list.setItemCount(159);
+	assertEquals("late-edit", list.getItem(157));
+	assertEquals(1, list.getSelectionIndex());
+}
+
+@Test
 public void test_getItemCount() {
 	String[] items = { "item0", "item1", "item2", "item3" };
 
