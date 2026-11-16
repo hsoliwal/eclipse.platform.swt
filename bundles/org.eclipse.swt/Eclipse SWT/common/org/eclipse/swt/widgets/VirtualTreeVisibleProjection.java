@@ -49,6 +49,13 @@ final class VirtualTreeVisibleProjection {
 		private long [] pathVisibleRows = new long [0];
 		private int size, paintCount, rootCount, firstRoot = -1, lastRoot = -1;
 		private long firstPaintRow, sourceGeneration = -1;
+		// Derived physical-child directory: root at group 0, parent entry p at p+1.
+		// These arrays are viewport-bounded and rebuilt lazily after mutation.
+		private int [] physicalGroupStarts = new int [0], physicalChildEntries = new int [0];
+		private int physicalDirectorySize = -1;
+		// Existing primitive long->int tables; lazy construction avoids per-row objects.
+		private VirtualLongIntTable entryByMaterializedId, entryByCoordinate;
+		private int lookupIndexSize = -1;
 
 		boolean isHint (int entry) { requireEntry (entry); return materializedIds [entry] == -2; }
 
@@ -56,6 +63,7 @@ final class VirtualTreeVisibleProjection {
 			requireEntry (entry);
 			if (id < 0 || isHint (entry)) throw new IllegalArgumentException ("facade binding");
 			materializedIds [entry] = id;
+			lookupIndexSize = -1; // SWT facade identity changed; the index is derived.
 		}
 
 		/** One non-paint child gives GTK a real expander without advertising N. */
@@ -90,28 +98,27 @@ final class VirtualTreeVisibleProjection {
 			return paintEntries [offset];
 		}
 
+		/** First matching materialized ID in the current native window, not a new identity authority. */
 		int entryForMaterializedId (int id) {
-			if (id < 0) return -1;
-			for (int entry = 0; entry < size; entry++) {
-				if (materializedIds [entry] == id) return entry;
-			}
-			return -1;
+			if (id < 0 || size == 0) return -1;
+			ensureEntryIndexes ();
+			return entryByMaterializedId.get (id);
 		}
 
+		/** First matching logical coordinate, including cold and hint rows. */
 		int entryForCoordinate (int parentId, int childIndex) {
-			for (int entry = 0; entry < size; entry++) {
-				if (parentIds [entry] == parentId && childIndices [entry] == childIndex) return entry;
-			}
-			return -1;
+			if (size == 0) return -1;
+			ensureEntryIndexes ();
+			return entryByCoordinate.get (coordinateKey (parentId, childIndex));
 		}
 
+		/** A dense physical child: O(1) after one O(window-size) directory build. */
 		int physicalChild (int parentEntry, int index) {
 			if (parentEntry != -1) requireEntry (parentEntry);
 			int count = parentEntry == -1 ? rootCount : childCounts [parentEntry];
 			if (index < 0 || index >= count) return -1;
-			int entry = parentEntry == -1 ? firstRoot : firstChildren [parentEntry];
-			for (int i = 0; i < index; i++) entry = nextSiblings [entry];
-			return entry;
+			ensurePhysicalDirectory ();
+			return physicalChildEntries [physicalGroupStarts [parentEntry + 1] + index];
 		}
 
 		int entryAtPhysicalPath (int [] path, int length) {
@@ -154,11 +161,71 @@ final class VirtualTreeVisibleProjection {
 			return snapshot;
 		}
 
+
+		/** The authoritative physicalParents/physicalIndices lanes never change meaning. */
+		private void ensurePhysicalDirectory () {
+			if (physicalDirectorySize == size) return;
+			int offsetsNeeded = Math.addExact (size, 1);
+			if (physicalGroupStarts.length < offsetsNeeded || physicalChildEntries.length < size) {
+				// Stage both replacement arrays before publishing either reference.
+				int [] nextStarts = Arrays.copyOf (physicalGroupStarts,
+						capacity (physicalGroupStarts.length, offsetsNeeded));
+				int [] nextEntries = Arrays.copyOf (physicalChildEntries,
+						capacity (physicalChildEntries.length, size));
+				physicalGroupStarts = nextStarts;
+				physicalChildEntries = nextEntries;
+			}
+			physicalGroupStarts [0] = 0;
+			int next = rootCount;
+			for (int parent = 0; parent < size; parent++) {
+				physicalGroupStarts [parent + 1] = next;
+				next += childCounts [parent];
+			}
+			if (next != size) throw new IllegalStateException ("physical child cardinality");
+			for (int entry = 0; entry < size; entry++) {
+				int slot = physicalGroupStarts [physicalParents [entry] + 1]
+						+ physicalIndices [entry];
+				physicalChildEntries [slot] = entry;
+			}
+			physicalDirectorySize = size;
+		}
+
+		/**
+		 * Builds both original-ID and coordinate lookup views together. Source
+		 * lanes remain authoritative; duplicate values retain first-match behavior.
+		 */
+		private void ensureEntryIndexes () {
+			if (lookupIndexSize == size) return;
+			if (entryByMaterializedId == null) {
+				entryByMaterializedId = new VirtualLongIntTable ();
+				entryByCoordinate = new VirtualLongIntTable ();
+			} else {
+				entryByMaterializedId.clear ();
+				entryByCoordinate.clear ();
+			}
+			for (int entry = 0; entry < size; entry++) {
+				int id = materializedIds [entry];
+				if (id >= 0 && entryByMaterializedId.get (id) < 0) {
+					entryByMaterializedId.put (id, entry);
+				}
+				long coordinate = coordinateKey (parentIds [entry], childIndices [entry]);
+				if (entryByCoordinate.get (coordinate) < 0) {
+					entryByCoordinate.put (coordinate, entry);
+				}
+			}
+			lookupIndexSize = size;
+		}
+
+		private static long coordinateKey (int parentId, int childIndex) {
+			return ((long)parentId << 32) | (childIndex & 0xFFFFFFFFL);
+		}
+
 		private void reset (long firstRow) {
 			size = paintCount = rootCount = 0;
 			firstRoot = lastRoot = -1;
 			firstPaintRow = firstRow;
 			sourceGeneration = -1;
+			physicalDirectorySize = lookupIndexSize = -1;
 		}
 
 		private void appendPaintRow (VirtualTreeVisibleProjection projection,
@@ -202,6 +269,7 @@ final class VirtualTreeVisibleProjection {
 				int depth, int parentEntry, long visibleRow) {
 			ensureCapacity (Math.incrementExact (size));
 			int entry = size++;
+			physicalDirectorySize = lookupIndexSize = -1;
 			parentIds [entry] = parentId;
 			childIndices [entry] = childIndex;
 			materializedIds [entry] = id;

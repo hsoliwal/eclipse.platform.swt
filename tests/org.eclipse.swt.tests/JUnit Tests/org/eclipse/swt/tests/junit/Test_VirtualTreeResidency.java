@@ -221,6 +221,98 @@ public class Test_VirtualTreeResidency {
 		assertEquals (20L, call (residency, "firstPaintRow"));
 	}
 
+
+	@Test
+	public void indexedPhysicalChildrenMatchAllExistingPreorderCoordinates () {
+		Object residency = window ();
+		int size = i (call (residency, "size"));
+		for (int entry = 0; entry < size; entry++) {
+			int parent = i (call (residency, "physicalParent", entry));
+			int sibling = i (call (residency, "physicalIndex", entry));
+			assertEquals (entry, call (residency, "physicalChild", parent, sibling));
+			assertEquals (entry, call (residency, "entryForCoordinate",
+					call (residency, "parentId", entry), call (residency, "childIndex", entry)));
+			int id = i (call (residency, "materializedId", entry));
+			if (id >= 0) assertEquals (entry, call (residency, "entryForMaterializedId", id));
+		}
+		int [] directory = (int []) field (residency, "physicalChildEntries");
+		int [] groups = (int []) field (residency, "physicalGroupStarts");
+		assertTrue (directory.length >= size);
+		assertTrue (groups.length >= size + 1);
+		assertEquals (0, groups [0]);
+		for (int i = 0; i < 300; i++) {
+			assertEquals (7, call (residency, "physicalChild", ROOT, 2));
+			assertSame (directory, field (residency, "physicalChildEntries"));
+			assertSame (groups, field (residency, "physicalGroupStarts"));
+		}
+	}
+
+	@Test
+	public void derivedIndexesInvalidateForFacadeRebindHintsAndReusedWindow () {
+		Object residency = window ();
+		assertEquals (3, call (residency, "entryForMaterializedId", 3));
+		assertEquals (5, call (residency, "entryForCoordinate", 0, 2));
+		Object originalIndex = field (residency, "entryByMaterializedId");
+		call (residency, "bindFacade", 2, 42);
+		assertEquals (2, call (residency, "entryForMaterializedId", 42));
+		assertSame (originalIndex, field (residency, "entryByMaterializedId"));
+		call (residency, "bindFacade", 2, 43);
+		assertEquals (-1, call (residency, "entryForMaterializedId", 42));
+		assertEquals (2, call (residency, "entryForMaterializedId", 43));
+		call (residency, "bindFacade", 2, 0);
+		assertEquals (0, call (residency, "entryForMaterializedId", 0),
+				"duplicate IDs keep first-match semantics");
+		Object currentProjection = projection (topology);
+		callTyped (currentProjection, "residencyWindow",
+				new Class<?> [] {long.class, int.class, residency.getClass ()},
+				0L, 2, residency);
+		assertEquals (-1, call (residency, "entryForMaterializedId", 3));
+		assertEquals (-1, call (residency, "entryForCoordinate", ROOT, 2));
+		assertEquals (1, call (residency, "physicalChild", ROOT, 1));
+		assertEquals (-1, call (residency, "physicalChild", ROOT, 2));
+		callTyped (currentProjection, "residencyWindow",
+				new Class<?> [] {long.class, int.class, residency.getClass ()},
+				0L, 0, residency);
+		assertEquals (-1, call (residency, "entryForCoordinate", ROOT, 1));
+		assertEquals (-1, call (residency, "physicalChild", ROOT, 0));
+
+		Object withHints = window ();
+		assertEquals (-1, call (withHints, "entryForCoordinate", 2, 0));
+		assertEquals (7, call (withHints, "physicalChild", ROOT, 2));
+		callTyped (withHints, "addExpanderHints",
+				new Class<?> [] {type ("VirtualTreeTopology")}, topology);
+		assertEquals (8, call (withHints, "entryForCoordinate", 2, 0));
+		assertTrue (z (call (withHints, "isHint", 8)));
+		assertEquals (8, call (withHints, "physicalChild", 5, 0));
+		assertEquals (-1, call (withHints, "entryForMaterializedId", -2));
+	}
+
+	@Test
+	public void wideRootViewportBuildsBoundedReusablePhysicalDirectory () {
+		Object topology = topology ();
+		call (topology, "setChildCount", ROOT, 8000);
+		Object view = projection (topology);
+		Object residency = residencyWindow (view, 0, 8000);
+		assertEquals (8000, call (residency, "size"));
+		assertEquals (7999, call (residency, "physicalChild", ROOT, 7999));
+		int [] dir = (int []) field (residency, "physicalChildEntries");
+		assertTrue (dir.length >= 8000 && dir.length <= 16000);
+		for (int i = 0; i < 3000; i++) {
+			int child = (i * 73) % 8000;
+			assertEquals (child, call (residency, "physicalChild", ROOT, child));
+			assertEquals (child, call (residency, "entryForCoordinate", ROOT, child));
+		}
+		assertSame (dir, field (residency, "physicalChildEntries"));
+		callTyped (view, "residencyWindow",
+				new Class<?> [] {long.class, int.class, residency.getClass ()},
+				4000L, 100, residency);
+		assertEquals (99, call (residency, "physicalChild", ROOT, 99));
+		assertEquals (99, call (residency, "entryForCoordinate", ROOT, 4099));
+		assertEquals (-1, call (residency, "entryForCoordinate", ROOT, 0));
+		assertSame (dir, field (residency, "physicalChildEntries"),
+				"smaller window retains prior physical directory capacity");
+	}
+
 	/* the ancestor closure of the first paint row must walk to the root; a wrong depth is an inconsistency */
 	@Test
 	public void inconsistentDirectAppendsAreRejected () {
