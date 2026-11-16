@@ -14,6 +14,8 @@
 package org.eclipse.swt.widgets;
 
 
+import java.util.*;
+
 import org.eclipse.swt.*;
 import org.eclipse.swt.accessibility.*;
 import org.eclipse.swt.graphics.*;
@@ -1076,17 +1078,23 @@ void reflectScrolledClipView (long id, long sel, long aClipView) {
 @Override
 void releaseChildren (boolean destroy) {
 	try (ExceptionStash exceptions = new ExceptionStash ()) {
-		for (Control child : _getChildren ()) {
-            if (child == null || child.isDisposed()) {
-                continue;
-            }
+		// children created by dispose listeners while releasing must be released too
+		Set<Control> handled = new HashSet<> ();
+		boolean found;
+		do {
+			found = false;
+			for (Control child : _getChildren ()) {
+				if (child == null || child.isDisposed () || !handled.add (child))
+					continue;
 
-			try {
-				child.release (false);
-			} catch (Error | RuntimeException ex) {
-				exceptions.stash (ex);
+				found = true;
+				try {
+					child.release (false);
+				} catch (Error | RuntimeException ex) {
+					exceptions.stash (ex);
+				}
 			}
-		}
+		} while (found);
 		super.releaseChildren (destroy);
 	}
 }
