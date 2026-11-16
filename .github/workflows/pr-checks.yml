@@ -89,6 +89,8 @@ jobs:
         run: bash tools/release/run_headless_java21.sh
       - name: Java 21 actual-owner bit-lane logical-prefix contract
         run: bash tools/release/run_headless_virtual_bit_lanes_java21.sh
+      - name: Java 21 actual-source directional overscan contract
+        run: bash tools/release/run_headless_directional_overscan_java21.sh
       - name: Java 21 native-free donor row geometry contract
         run: bash tools/release/run_headless_donor_row_geometry_java21.sh
       - name: Preserve exact-source release-preflight evidence
@@ -101,6 +103,7 @@ jobs:
             target/swt-default-suite-inventory.json
             target/m3-swt-headless/
             target/m3-swt-bit-lane-prefix/
+            target/m3-directional-overscan-java21/
             target/m3-swt-donor-row-geometry/
           if-no-files-found: warn
           retention-days: 90

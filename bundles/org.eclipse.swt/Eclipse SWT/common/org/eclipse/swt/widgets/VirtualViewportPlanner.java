@@ -108,8 +108,21 @@ final class VirtualViewportPlanner {
 		mutateWindow (() -> window.setOverscanRows (rows));
 	}
 
+	/** Direction-specific row cache; original SWT widgets remain the only lifecycle owners. */
+	void setDirectionalOverscanRows (int beforeRows, int afterRows) {
+		mutateWindow (() -> window.setDirectionalOverscanRows (beforeRows, afterRows));
+	}
+
 	int overscanRows () {
 		return window.overscanRows ();
+	}
+
+	int overscanBeforeRows () {
+		return window.overscanBeforeRows ();
+	}
+
+	int overscanAfterRows () {
+		return window.overscanAfterRows ();
 	}
 
 	int paintStart () {
