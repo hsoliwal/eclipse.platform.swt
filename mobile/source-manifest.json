@@ -681,7 +681,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobileComboArrayOps.java",
-      "sha256": "a04dd0629f9e6191d25eff9b68572ad16f86ea0ffefa5bafab09c6a0dc98322f"
+      "sha256": "3652a520c3c7d406cb4a1b34fde7698fb662d9ca6e8884cdb7007a75657f97da"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobilePlatform.java"
@@ -697,33 +697,33 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Button.java",
-      "sha256": "70d6f45a7ac54d3b997bd3b271e41ade7d9e9c6e9bbaf43e1936467d265c03cd"
+      "sha256": "16889d1077fd46d283572120eb8d6ece205a2741c5c317f32ece84ff0d9f2ac9"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Canvas.java"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Combo.java",
-      "sha256": "b6f5a40c26c66fe52f2631ad7538a1af8bc171d3692e1c1d998649c91b64d52b"
+      "sha256": "a659a910771809431ae3abe5c68372a67146bbc6d1317c2df52d7ef1e19dad91"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Composite.java",
-      "sha256": "fb7a892b74be57959af406b628493adf463f249d5e81b61f969c396dcc12a7f1"
+      "sha256": "dcfd25c0f9b75391fbb0566430fc757b01bb2efa974d6f89e0fd1cf1b228df0c"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java",
-      "sha256": "f7fa9313b5fbf54455d1e350efe809c1292a4f87894a9548316f6ac750ea5504"
+      "sha256": "47acd26189bcda6bd5354b5035c1bd7fea3ddb8701a6ec0d978e3cd09defc155"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Decorations.java"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java",
-      "sha256": "b18533fc69de37a1a4d7e82b812441465026e9d34077e5685563f74606506b4c"
+      "sha256": "35a812af2322b52df9be97f5a5aaca5e0398840f3378ceaa3c98499d42c29468"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Label.java",
-      "sha256": "03ee6f742f5670fb63a9f48c357117ef6d4d2a5e391dafd7e40fd66af0bcd27f"
+      "sha256": "5da3f107ec06c7de13cfc10579a1fa732e4b10f5844a99e25aa103b0601a1b12"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Link.java",
@@ -735,34 +735,34 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/List.java",
-      "sha256": "45abf69a4b8a284a8dadb0571b1b7ae56acf70ddba96851600e5e4627a1ef168"
+      "sha256": "7c1f89bdf13f2c7d68bf8943d128c1fd786648d9598d6a2ce5d5c064e0e42f9f"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/ProgressBar.java",
-      "sha256": "af794e0400afd4edf09e1aadbf420c2306e590063c7c8ed1dd19a169700846be"
+      "sha256": "e38cbbd35bfd4a20363c3cc3495906c231524c04994aef5d9215b7a63bbee467"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Scale.java",
-      "sha256": "055cf2078f52391b414bfd189662f336144d381969e9f1a6f31a3d780b31d997"
+      "sha256": "5ef89718226e31e189dfdd0c2150702936430fd59b9e021691c60dae466e244f"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Text.java",
-      "sha256": "803c1f0a9629fc29e0bb48f9147264694ca1a5fb2a51f90ff3d495143c852df9"
+      "sha256": "0f7b4fad01d9c573789225a10c74d73b0e5ffaffd164105505656eb1017ecff9"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Scrollable.java"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Shell.java",
-      "sha256": "9a1fb0c745933acd45c82eeac6df21f8aa7dd9c8de11b452770136668ce38ae7"
+      "sha256": "40404333a346a7c1d4b3d82aa3daf4803812f5ecccd3b0876df5b18e95d91a0d"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Widget.java",
-      "sha256": "b8f0370afc38a0174e914147fb371efd5a7bdb56924eda0f917ab8b278c6deaa"
+      "sha256": "be49fbf1c68b51f5c01074c8c96ae4a3202e522ca2c1b3e719698557b6ef4116"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/ViewportRuntime.java",
-      "sha256": "3a1eec24bf7fe02b3947ca9f167af08d7b472f76a43fe740a1804ca02f6c2d46"
+      "sha256": "c5ee2c3bbc4cc5a4fc1d4a3ec7a3721fcedb506b0d931c7bcbd6ed204b7b344b"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/PackedHeapGrowth.java",
@@ -774,23 +774,23 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Item.java",
-      "sha256": "95a6258eac2e3303714c6f0ff56418b60823839f791b97355256390c8030e604"
+      "sha256": "76bf3cc7eb6db3588c80eaf2e54f44ee516100cda241604a2780d52c51119dc4"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Table.java",
-      "sha256": "faeec32cc889b224ac3891ec1e45ea2dc4ed5698d49f8f7d19612c2e7bdfd569"
+      "sha256": "e3a53e0afaaa735fe6209def9dd7880616b9f2053f8061bb31af3bc14782aec0"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/TableItem.java",
-      "sha256": "03641b1773f6bcf47b21d110b6b86f63b715bf6cf2d2d8fa239f35c28fcfffe7"
+      "sha256": "07082fb24089f2730d73d9ea3228eef17923620467471d05791a07326b2d495a"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/TableColumn.java",
-      "sha256": "f1f685602e23f68e93b2148541a500110ee374f2f148e244ac181c2884d3e64b"
+      "sha256": "662e037846e678765527954e26175f30ab044dba110e6ef5f8ba7542f0209713"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobileTableSelection.java",
-      "sha256": "cb82f63c997a89f9a63b3c030a5717ee1cc56d64dc64e346775247f66a0af486"
+      "sha256": "d8220d94863a6fdfcffd0ee767e2433bb5dce254392c80240fa0ab3ce0ab1f6e"
     }
   ],
   "platforms": {
