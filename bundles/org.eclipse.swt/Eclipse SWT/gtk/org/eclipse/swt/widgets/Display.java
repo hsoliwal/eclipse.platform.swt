@@ -142,6 +142,7 @@ public class Display extends Device implements Executor {
 	Widget [] gdkEventWidgets;
 	int [] dispatchEvents;
 	Event [] eventQueue;
+	int eventQueueHead, eventQueueSize;
 	long fds;
 	int allocated_nfds;
 	volatile boolean wake;
@@ -4850,21 +4851,26 @@ void postEvent (Event event) {
     */
     if (eventQueue == null) {
         eventQueue = new Event [4];
+        eventQueueHead = eventQueueSize = 0;
     }
-	int index = 0;
 	int length = eventQueue.length;
-	while (index < length) {
-        if (eventQueue [index] == null) {
-            break;
-        }
-		index++;
-	}
-	if (index == length) {
-		Event [] newQueue = new Event [length + 4];
-		System.arraycopy (eventQueue, 0, newQueue, 0, length);
+	if (eventQueueSize == length) {
+		int newLength = length < Integer.MAX_VALUE / 2 ? length * 2 : Integer.MAX_VALUE;
+		if (newLength == length) throw new OutOfMemoryError ();
+		Event [] newQueue = new Event [newLength];
+		int first = length - eventQueueHead;
+		System.arraycopy (eventQueue, eventQueueHead, newQueue, 0, first);
+		System.arraycopy (eventQueue, 0, newQueue, first, eventQueueHead);
 		eventQueue = newQueue;
+		eventQueueHead = 0;
+		length = newLength;
 	}
-	eventQueue [index] = event;
+	if (event != null) {
+		int remaining = length - eventQueueHead;
+		int index = eventQueueSize < remaining ? eventQueueHead + eventQueueSize : eventQueueSize - remaining;
+		eventQueue [index] = event;
+		eventQueueSize++;
+	}
 }
 
 void putGdkEvents () {
@@ -5561,16 +5567,13 @@ boolean runDeferredEvents () {
 	* called in the Display's thread so it must
 	* be re-enterant but need not be synchronized.
 	*/
-	while (eventQueue != null) {
+	while (eventQueue != null && eventQueueSize != 0) {
 
 		/* Take an event off the queue */
-		Event event = eventQueue [0];
-        if (event == null) {
-            break;
-        }
-		int length = eventQueue.length;
-		System.arraycopy (eventQueue, 1, eventQueue, 0, --length);
-		eventQueue [length] = null;
+		Event event = eventQueue [eventQueueHead];
+		eventQueue [eventQueueHead] = null;
+		if (++eventQueueHead == eventQueue.length) eventQueueHead = 0;
+		eventQueueSize--;
 
 		/* Run the event */
 		Widget widget = event.widget;
@@ -5591,6 +5594,7 @@ boolean runDeferredEvents () {
 
 	/* Clear the queue */
 	eventQueue = null;
+	eventQueueHead = eventQueueSize = 0;
 	return run;
 }
 
