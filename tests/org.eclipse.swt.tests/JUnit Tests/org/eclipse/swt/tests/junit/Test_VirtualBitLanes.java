@@ -371,8 +371,8 @@ public class Test_VirtualBitLanes {
 		int [] first = arrays [0], second = arrays [1];
 		assertTrue (first.length >= 312_500);
 		call (value, "setLength", 17);
-		assertSame (first, arrays [0], "shrinking retains backing identity");
-		assertSame (second, arrays [1]);
+		org.junit.jupiter.api.Assertions.assertSame (first, arrays [0], "shrinking retains backing identity");
+		org.junit.jupiter.api.Assertions.assertSame (second, arrays [1]);
 		assertEquals (0, (int) call (value, "count", 0));
 		assertEquals (-1, (int) call (value, "nextSet", 0, 0));
 		assertEquals (-1, (int) call (value, "nextSet", 1, 0));
