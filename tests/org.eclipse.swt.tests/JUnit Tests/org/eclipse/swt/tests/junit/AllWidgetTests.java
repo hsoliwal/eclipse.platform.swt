@@ -25,8 +25,10 @@ import org.junit.platform.suite.api.Suite;
 @SelectClasses({ //
 		// Enhanced M3 API contracts; recorded differentials have a separate oracle run.
 		Test_org_eclipse_swt_internal_Collation.class, //
+		Test_org_eclipse_swt_internal_ColumnArrangement.class, //
 		Test_org_eclipse_swt_internal_ColumnFilter.class, //
 		Test_org_eclipse_swt_internal_ColumnSort.class, //
+		Test_org_eclipse_swt_internal_ColumnSummary.class, //
 		Test_EmptinessChanged.class, //
 		Test_M3FilterAsync.class, //
 		Test_org_eclipse_swt_internal_ItemRange.class, //
