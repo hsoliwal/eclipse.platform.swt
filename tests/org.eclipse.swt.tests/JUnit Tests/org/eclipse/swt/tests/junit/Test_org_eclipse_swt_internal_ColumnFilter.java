@@ -329,6 +329,153 @@ public class Test_org_eclipse_swt_internal_ColumnFilter {
 		assertEquals (List.of ("2:2:1..3", "3::1..2", "1::0..2", "6:3:2..2"), log);
 	}
 
+	/* a filter of four columns over random rows with some criteria, logic changes and suspensions */
+	static ColumnFilter randomFilter (CellText text, int n, Random random) {
+		ColumnFilter filter = new ColumnFilter (4, n, text);
+		for (int i = random.nextInt (7); i > 0; i--) criterion (filter, random);
+		for (int column = -1; column < 4; column++) {
+			if (filter.isActive (column) && random.nextInt (4) == 0) filter.setSuspended (column, true);
+		}
+		return filter;
+	}
+
+	@Test
+	public void test_savedStateRestoresTheSameFilter () {
+		Random random = new Random (5);
+		for (int round = 0; round < 80; round++) {
+			int n = 40 + random.nextInt (300);
+			Test_org_eclipse_swt_internal_ColumnSort.Rows rows = new Test_org_eclipse_swt_internal_ColumnSort.Rows (n, round, 7);
+			CellText text = text (rows);
+			ColumnFilter filter = randomFilter (text, n, random);
+			String state = filter.saveState ();
+
+			/* into a filter with other criteria: everything is replaced */
+			ColumnFilter restored = randomFilter (text, n, random);
+			restored.restoreState (state);
+			assertEquals (state, restored.saveState (), "round " + round);
+			assertArrayEquals (rows (filter), rows (restored), "round " + round);
+			for (int column = -1; column < 4; column++) {
+				assertEquals (filter.isActive (column), restored.isActive (column));
+				assertEquals (filter.getLogic (column), restored.getLogic (column));
+				assertEquals (filter.isSuspended (column), restored.isSuspended (column));
+			}
+			Test_org_eclipse_swt_internal_ColumnSort.assertInverse (restored);
+
+			/* the restored filter follows source edits like the original */
+			if (n > 3) {
+				rows.texts.set (2, "t1x");
+				rows.ints.set (2, 1);
+				filter.rowsChanged (2);
+				restored.rowsChanged (2);
+				assertArrayEquals (rows (filter), rows (restored), "round " + round + " after an edit");
+			}
+		}
+	}
+
+	@Test
+	public void test_restoringTheStateAFilterHasReadsNoCell () {
+		int [] reads = new int [1];
+		ColumnFilter filter = new ColumnFilter (3, CELLS.length, (row, column) -> {
+			reads [0]++;
+			return CELLS [row][column];
+		});
+		filter.setText (1, "red", TextMatch.EXACT);
+		filter.setValues (0, "apple", "cherry", "fig");
+		filter.setText (new int [] {0, 2}, "e", TextMatch.CONTAINS);
+		filter.setLogic (1, ColumnFilter.OR);
+		int [] before = rows (filter);
+		String state = filter.saveState ();
+		int [] events = new int [1];
+		filter.addListener (change -> events [0]++);
+		reads [0] = 0;
+		filter.restoreState (state);
+		assertEquals (0, reads [0], "nothing changed: no cell is read");
+		assertEquals (0, events [0], "nothing changed: no event");
+		assertArrayEquals (before, rows (filter));
+
+		/* only the logic differs: no criterion is tested again (a cell whose test was deferred may be read now) */
+		String or = state.replace ("\n0 0 0 V", "\n0 1 0 V");
+		assertNotEquals (state, or);
+		filter.restoreState (or);
+		assertTrue (reads [0] < CELLS.length, "a logic change tests no criterion again: " + reads [0] + " cells read");
+		assertEquals (ColumnFilter.OR, filter.getLogic (0));
+		assertEquals (or, filter.saveState ());
+	}
+
+	@Test
+	public void test_stateKeepsAnyPatternText () {
+		String [] patterns = {"a b", "3:x", "line\nbreak", " lead", "trail ", "ä中😀", "a,b*", ":", "0"};
+		for (String pattern : patterns) {
+			ColumnFilter filter = fruits ();
+			filter.setText (0, pattern, TextMatch.CONTAINS | TextMatch.IGNORE_CASE);
+			filter.setValues (1, pattern, "", "x y");
+			ColumnFilter restored = fruits ();
+			restored.restoreState (filter.saveState ());
+			assertEquals (pattern, restored.getMatch (0).pattern ());
+			assertEquals (TextMatch.CONTAINS | TextMatch.IGNORE_CASE, restored.getMatch (0).mode ());
+			assertEquals (filter.saveState (), restored.saveState ());
+		}
+	}
+
+	@Test
+	public void test_restoreStateRejectsWhatItCannotRead () {
+		ColumnFilter filter = fruits ();
+		filter.setText (1, "red", TextMatch.EXACT);
+		filter.setText (new int [] {0, 1}, "e", TextMatch.CONTAINS);
+		filter.setValues (2, "1", "3");
+		String state = filter.saveState ();
+		int [] before = rows (filter);
+		String [] bad = {
+			"", "x", "ColumnFilter/2 3\n", "ColumnFilter/1 4\n" + state.substring (state.indexOf ('\n') + 1),
+			state.substring (0, state.length () - 1), state + "x", state + state,
+			state.replace ("\n1 0 0 T", "\n1 2 0 T"), state.replace ("\n1 0 0 T", "\n1 0 7 T"), state.replace ("\n1 0 0 T", "\n1 0 0 Q"),
+			state.replace ("3:red", "9:red"), state.replace ("3:red", "-1:red"), state.replace ("3:red", "red"),
+			state.replace ("\n1 0 0 T 2 1 1 ", "\n1 0 0 T 2 1 2 "), state.replace ("\n1 0 0 T 2 1 1 ", "\n1 0 0 T 2 1 9 "),
+			state.replace ("\n1 0 0 T 2 ", "\n1 0 0 T 99 "), state.replace ("\n2 0 0 V 2 ", "\n2 0 0 V 3 "),
+			state.replace ("\n0 0 0 N", "\n5 0 0 N"), state.replace ("\n", "\r\n"),
+			"ColumnFilter/1 3\n-1 0 0 N\n0 0 0 T 4 1 0 1:(\n1 0 0 N\n2 0 0 N\n",
+		};
+		for (String text : bad) {
+			assertThrows (IllegalArgumentException.class, () -> filter.restoreState (text), text);
+			assertEquals (state, filter.saveState (), "a rejected state changes nothing");
+			assertArrayEquals (before, rows (filter));
+		}
+		assertThrows (IllegalArgumentException.class, () -> filter.restoreState (null));
+		/* a filter without cell text cannot take text criteria */
+		ColumnFilter idsOnly = new ColumnFilter (3, CELLS.length, null);
+		assertThrows (IllegalArgumentException.class, () -> idsOnly.restoreState (state));
+		idsOnly.restoreState (fruits ().saveState ());
+	}
+
+	@Test
+	public void test_stateLeavesACriterionOnValueIdsInPlace () {
+		ColumnFilter filter = fruits ();
+		filter.setValues (2, row -> row % 3, 1);
+		filter.setText (0, "a", TextMatch.CONTAINS);
+		filter.setLogic (2, ColumnFilter.OR);
+		String state = filter.saveState ();
+		assertTrue (state.contains ("\n2 1 0 I\n"), state);
+
+		ColumnFilter other = fruits ();
+		other.setValues (2, row -> row % 2, 0);
+		other.setSuspended (2, true);
+		other.setText (1, "red", TextMatch.EXACT);
+		other.restoreState (state);
+		assertTrue (other.isActive (2), "the criterion on value ids stays");
+		assertFalse (other.isSuspended (2));
+		assertEquals (ColumnFilter.OR, other.getLogic (2));
+		assertFalse (other.isActive (1));
+		/* a* OR even rows: apple, banana, cherry (row 2), date, elder (row 4) */
+		assertArrayEquals (new int [] {0, 1, 2, 3, 4}, rows (other));
+
+		/* without such a criterion the column has none after the restore */
+		ColumnFilter plain = fruits ();
+		plain.setText (2, "5", TextMatch.EXACT);
+		plain.restoreState (state);
+		assertFalse (plain.isActive (2));
+		assertArrayEquals (new int [] {0, 1, 3}, rows (plain));
+	}
+
 	/* 6,400 rows: column 0 has 64 groups of 100 rows, column 1 the row number, column 2 "even" or "odd" */
 	static String shortCircuitCell (int row, int column) {
 		return column == 0 ? "g" + row % 64 : column == 1 ? "row" + row : row % 2 == 0 ? "even" : "odd";

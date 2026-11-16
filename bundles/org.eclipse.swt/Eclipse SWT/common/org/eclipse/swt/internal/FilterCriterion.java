@@ -132,6 +132,17 @@ final class FilterCriterion {
 		}
 	}
 
+	/* whether both describe the same test: the same text match on the same columns, the same value list, or none */
+	boolean sameAs (FilterCriterion other) {
+		if (valueId != null || other.valueId != null) return false;
+		if (match != null) {
+			return other.match != null && match.mode () == other.match.mode () && match.pattern ().equals (other.match.pattern ())
+					&& Arrays.equals (columns, other.columns);
+		}
+		if (values != null) return values.equals (other.values);
+		return other.match == null && other.values == null;
+	}
+
 	/* the same criterion with a new identity (spec and mask shared): a pending edit of an asynchronous filter */
 	FilterCriterion copy () {
 		FilterCriterion copy = new FilterCriterion ();
