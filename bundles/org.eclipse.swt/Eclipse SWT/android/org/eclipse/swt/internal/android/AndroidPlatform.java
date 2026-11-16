@@ -715,6 +715,7 @@ public final class AndroidPlatform implements MobilePlatform {
 				case ACC.ROLE_RADIOBUTTON -> "android.widget.RadioButton";
 				case ACC.ROLE_PUSHBUTTON -> "android.widget.Button";
 				case ACC.ROLE_LABEL -> "android.widget.TextView";
+				case ACC.ROLE_LINK -> "android.widget.TextView";
 				case ACC.ROLE_TEXT -> "android.widget.EditText";
 				case ACC.ROLE_PROGRESSBAR -> "android.widget.ProgressBar";
 				case ACC.ROLE_SLIDER -> "android.widget.SeekBar";
