@@ -57,21 +57,47 @@ final class AndroidPixels {
 	private static native boolean moveNative(Bitmap bitmap, int x, int y, int width, int height, int dx, int dy);
 
 	/*
-	 * Rows are read into the lane and written at the offset, a band of rows per step. A band is read whole
-	 * before it is written, and bands go bottom-up when the pixels move down and top-down otherwise, so no
-	 * row is overwritten before it is read.
+	 * Tile wide rectangles as well as tall ones so no step ever crosses more than LANE_PIXELS through
+	 * the Java/Bitmap boundary. Vertical bands follow memmove order for dy; horizontal tiles go
+	 * right-to-left when dx > 0, otherwise left-to-right. This preserves overlapping copies even
+	 * for a rectangle wider than the reusable pixel lane, without allocating a width-sized array.
 	 */
 	static void moveByLane(Bitmap bitmap, int x, int y, int width, int height, int dx, int dy) {
-		int rows = Math.max(1, LANE_PIXELS / width);
-		if (lane.length < rows * width) lane = new int[rows * width];
+		if (width <= 0 || height <= 0 || dx == 0 && dy == 0) return;
+		int columns = Math.min(width, LANE_PIXELS);
+		int rows = Math.max(1, LANE_PIXELS / columns);
+		int required = rows * columns; // <= LANE_PIXELS even when width is enormous
+		if (lane.length < required) lane = new int[required];
 		if (dy > 0) {
-			for (int bottom = y + height; bottom > y; bottom -= rows) {
-				int top = Math.max(y, bottom - rows);
-				step(bitmap, x, top, width, bottom - top, dx, dy);
+			for (int bottom = y + height; bottom > y;) {
+				int count = Math.min(rows, bottom - y);
+				int top = bottom - count;
+				copyBand(bitmap, x, top, width, count, dx, dy, columns);
+				bottom = top;
 			}
 		} else {
-			for (int top = y; top < y + height; top += rows) {
-				step(bitmap, x, top, width, Math.min(rows, y + height - top), dx, dy);
+			for (int top = y, end = y + height; top < end;) {
+				int count = Math.min(rows, end - top);
+				copyBand(bitmap, x, top, width, count, dx, dy, columns);
+				top += count;
+			}
+		}
+	}
+
+	private static void copyBand(Bitmap bitmap, int x, int top, int width, int count,
+			int dx, int dy, int columns) {
+		if (dx > 0) {
+			for (int right = width; right > 0;) {
+				int segment = Math.min(columns, right);
+				int left = right - segment;
+				step(bitmap, x + left, top, segment, count, dx, dy);
+				right = left;
+			}
+		} else {
+			for (int left = 0; left < width;) {
+				int segment = Math.min(columns, width - left);
+				step(bitmap, x + left, top, segment, count, dx, dy);
+				left += segment;
 			}
 		}
 	}

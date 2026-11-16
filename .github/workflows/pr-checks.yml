@@ -97,6 +97,8 @@ jobs:
         run: bash tools/release/run_headless_tree_scratch_java21.sh
       - name: Java 21 actual Tree residency physical/Qt index contract
         run: bash tools/release/run_headless_tree_residency_index_java21.sh
+      - name: Java 21 Android pixel move bounded-lane actual-source contract
+        run: bash tools/release/run_headless_android_pixel_lane_java21.sh
       - name: Java 21 native-free donor row geometry contract
         run: bash tools/release/run_headless_donor_row_geometry_java21.sh
       - name: Preserve exact-source release-preflight evidence
@@ -113,6 +115,7 @@ jobs:
             target/m3-swt-selection-window/
             target/m3-tree-residency-scratch/
             target/m3-swt-tree-physical-index/
+            target/m3-swt-android-pixel-lane/
             target/m3-swt-donor-row-geometry/
           if-no-files-found: warn
           retention-days: 90
