@@ -24,6 +24,8 @@ import org.eclipse.swt.internal.mobile.MobilePlatform;
 final class ContractPlatform implements MobilePlatform {
 	EventSink sink;
 	Thread owner;
+	/** Deliberately reused to verify Display returns defensive snapshots. */
+	int[] safeInsets = new int[4];
 	String clipboard = "";
 	long next = 1, lastCreated;
 	int connects, disconnects, openedGraphics, closedGraphics;
@@ -46,6 +48,7 @@ final class ContractPlatform implements MobilePlatform {
 	@Override public void disconnect(){check();if(!controls.isEmpty()||!images.isEmpty())throw new AssertionError("Leaked native owners: "+controls.size()+" controls, "+images.size()+" images");sink=null;disconnects++;}
 	@Override public int[] displayBounds(){check();return new int[]{0,0,400,600};}
 	@Override public int[] dpi(){check();return new int[]{96,96};}
+	@Override public int[] safeAreaInsets(){check();return safeInsets;}
 	@Override public long createControl(int kind,long parent,int style){check();if(parent!=0)peer(parent);Peer p=new Peer();p.parent=parent;p.kind=kind;long id=next++;controls.put(id,p);lastCreated=id;return id;}
 	@Override public void disposeControl(long id){peer(id);if(controls.values().stream().anyMatch(p->p.parent==id))throw new AssertionError("Parent destroyed before children");controls.remove(id);}
 	@Override public void setBounds(long id,int x,int y,int w,int h){Peer p=peer(id);p.x=x;p.y=y;p.width=w;p.height=h;}
