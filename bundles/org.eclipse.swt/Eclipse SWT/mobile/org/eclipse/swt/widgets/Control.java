@@ -189,6 +189,32 @@ public abstract class Control extends Widget implements Drawable {
 		if (all && this instanceof Composite composite) for (Control child : composite.getChildren()) child.redrawAll();
 		queuePaint();
 	}
+	/*
+	 * Canvas.scroll: retained pixels move inside the backing store and only what the move uncovered is
+	 * damaged. Without a retained frame, with unpainted damage, or on a transport that cannot move pixels,
+	 * the source and the destination are damaged instead.
+	 */
+	void scrollArea(int destX, int destY, int x, int y, int width, int height) {
+		Rectangle source = clientBounds().intersection(new Rectangle(x, y, width, height));
+		int dx = destX - x, dy = destY - y;
+		if (source.isEmpty() || dx == 0 && dy == 0) return;
+		if (!moveRetained(source, dx, dy)) {
+			redraw(source.x, source.y, source.width, source.height, false);
+			redraw(source.x + dx, source.y + dy, source.width, source.height, false);
+			return;
+		}
+		/* the source minus the destination: at most one band per axis */
+		if (dy != 0) redraw(source.x, dy > 0 ? source.y : source.y + source.height + dy, source.width, Math.min(Math.abs(dy), source.height), false);
+		if (dx != 0) redraw(dx > 0 ? source.x : source.x + source.width + dx, source.y, Math.min(Math.abs(dx), source.width), source.height, false);
+	}
+	private boolean moveRetained(Rectangle source, int dx, int dy) {
+		if (image == null || image.isDisposed() || damage != null || paintDepth != 0 || !isVisible()) return false;
+		Rectangle frame = image.getBounds(), client = clientBounds();
+		if (frame.width != client.width || frame.height != client.height) return false;
+		try (MobilePlatform.Graphics graphics = display.internal_platform().graphics(image.internal_handle())) {
+			return graphics.copyArea(source.x, source.y, source.width, source.height, dx, dy);
+		}
+	}
 	void redrawAll() { if (disposed) return; redraw(0, 0, bounds.width, bounds.height, true); }
 	private void queuePaint() {
 		if (paintQueued || redrawDepth != 0 || !isVisible() || !display.active) return;

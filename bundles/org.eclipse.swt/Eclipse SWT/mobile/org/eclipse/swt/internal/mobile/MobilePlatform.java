@@ -128,6 +128,12 @@ public interface MobilePlatform {
 		int[] textExtent(String text, int flags);
 		/** ascent, descent, average character width, leading, height. */
 		int[] fontMetrics();
+		/**
+		 * Moves the pixels of a rectangle of this image by (dx, dy); source and destination may overlap.
+		 * Answers false when this transport cannot move pixels: the caller repaints the area instead. A
+		 * native transport does this with one memory move on the image's own pixels.
+		 */
+		default boolean copyArea(int x, int y, int width, int height, int dx, int dy) { return false; }
 		@Override void close();
 	}
 }

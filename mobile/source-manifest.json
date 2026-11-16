@@ -712,7 +712,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java",
-      "sha256": "6903bd0d6fd44ce8638e7511a98a4bbcbffb683bf72b5ec88a9b716c86213c4e"
+      "sha256": "e70a4c396e329fa2f26a2fb04b64c71a2f56d69a7451378ec8721c7521902cd5"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Decorations.java"
