@@ -5323,6 +5323,18 @@ void m3StructureChanged () {
 	VisibilityObserver.changed (this);
 }
 
+/*
+ * The top row moved without a structural change (setTopIndex, or a row scrolled into view). The prefetch
+ * window and the visibility observer follow at once, as the List's do, and no longer wait for the cache
+ * hint of the next paint: a table that is covered, hidden or slow to paint would announce stale rows.
+ * Listeners run here and may dispose the table, so callers call this last.
+ */
+void rowWindowMoved () {
+	if (viewport == null) return;
+	Prefetch.windowChanged (this);
+	VisibilityObserver.changed (this);
+}
+
 void setCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
@@ -6015,6 +6027,7 @@ public void setTopIndex (int index) {
 	//FLLDCIM: TOP - a dirty viewport of a ListView that is not visible scrolls by the hidden LVM_SCROLL rule (official matrix, TableViewport.scrollHidden)
 	if (viewport != null && viewport.scrollHidden (index)) {
 		updateVirtualViewport ();
+		rowWindowMoved ();
 		return;
 	}
 
@@ -6055,6 +6068,7 @@ public void setTopIndex (int index) {
 			OS.SendMessage (handle, OS.LVM_ENSUREVISIBLE, index, 1);
 		}
 		updateVirtualViewport ();
+		rowWindowMoved ();
 		return;
 	}
 
@@ -6067,6 +6081,7 @@ public void setTopIndex (int index) {
 	int dy = (index - topIndex) * (rect.bottom - rect.top);
 	OS.SendMessage (handle, OS.LVM_SCROLL, 0, dy);
 	updateVirtualViewport ();
+	rowWindowMoved ();
 }
 
 /**
@@ -6213,6 +6228,7 @@ void showItem (int index) {
 			OS.SendMessage (handle, OS.LVM_ENSUREVISIBLE, index, 0);
 		}
 	}
+	rowWindowMoved ();
 }
 
 /**
