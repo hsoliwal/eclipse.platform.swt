@@ -626,6 +626,10 @@
       "sha256": "5ff9c6590de829ed08995fc58faf1745b234f49a99323b1eeb47aa9a310cba2c"
     },
     {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/PlatformCapabilities.java",
+      "sha256": "c22e52f2edb55d89d5de833b0b76cd7931c7413ecbfe71c69e46ba5dabdd913c"
+    },
+    {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/StyleBits.java",
       "sha256": "ba736e84ce1d9b80f3999b130478fec06ab8c1ca24cebed206bbbef9ef0de568"
     },
@@ -715,7 +719,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java",
-      "sha256": "3b7848e0ca8c2ad6d682738a427467d9053ee52e9b079496dc5313cfddbde6d2"
+      "sha256": "0b4e9eba6b6afc3f9791bfc174ae8e64ed2bda8ba0474fac5b5a34e059fdcbe0"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Label.java",

@@ -50,6 +50,11 @@ public class Display extends Device implements Executor {
 	private boolean dispatchTimerNext = true;
 	private Control[] controls = new Control[16];
 	private int controlCount;
+	// Parent-owned index of full generation-tagged native peer IDs.
+	// The existing controls[] retains enumeration/disposal order.
+	private long[] peerKeys = new long[32];
+	private Control[] peerOwners = new Control[32];
+	private int peerCount;
 	private Runnable[] disposal = new Runnable[0];
 	private EventTable filters, listeners;
 	private Consumer<RuntimeException> runtimeHandler = exception -> { throw exception; };
@@ -215,7 +220,7 @@ public class Display extends Device implements Executor {
 			}
 			try { super.dispose(); } catch (RuntimeException | Error e) { failures.stash(e); }
 			try { platform.disconnect(); } catch (RuntimeException | Error e) { failures.stash(e); }
-			finally { disposed = true; controls = new Control[0]; controlCount = 0; CURRENT.remove(); synchronized (Display.class) { if (defaultDisplay == this) defaultDisplay = null; } }
+			finally { disposed = true; controls = new Control[0]; controlCount = 0; peerKeys = new long[0]; peerOwners = new Control[0]; peerCount = 0; CURRENT.remove(); synchronized (Display.class) { if (defaultDisplay == this) defaultDisplay = null; } }
 		}
 	}
 	public void close() { checkThread(); Event e = new Event(); sendEvent(SWT.Close, e); if (e.doit) dispose(); }
@@ -239,11 +244,70 @@ public class Display extends Device implements Executor {
 		}
 	}
 
+	private static int peerHash(long key) {
+		int hash = (int)(key ^ (key >>> 32));
+		hash ^= hash >>> 16;
+		hash *= 0x7feb352d;
+		hash ^= hash >>> 15;
+		return hash;
+	}
+	// Open addressing on parallel arrays; no native peer Entry objects.
+	private void putPeer(long key, Control value) {
+		int mask = peerKeys.length - 1, slot = peerHash(key) & mask;
+		while (peerKeys[slot] != 0) {
+			if (peerKeys[slot] == key) throw new IllegalStateException("Duplicate SWT native peer");
+			slot = (slot + 1) & mask;
+		}
+		peerKeys[slot] = key;
+		peerOwners[slot] = value;
+		peerCount++;
+	}
+	private void indexPeer(Control owner) {
+		long key = owner.peer;
+		if (key == 0) throw new IllegalStateException("Missing SWT native peer");
+		if (((long)peerCount + 1) * 2 >= peerKeys.length) {
+			long[] oldKeys = peerKeys;
+			Control[] oldOwners = peerOwners;
+			long[] nextKeys = new long[Math.multiplyExact(oldKeys.length, 2)];
+			Control[] nextOwners = new Control[nextKeys.length];
+			peerKeys = nextKeys;
+			peerOwners = nextOwners;
+			peerCount = 0;
+			for (int i = 0; i < oldKeys.length; i++) if (oldKeys[i] != 0) putPeer(oldKeys[i], oldOwners[i]);
+		}
+		putPeer(key, owner);
+	}
+	private void unindexPeer(Control owner) {
+		long key = owner.peer;
+		if (key == 0 || peerKeys.length == 0) return;
+		int mask = peerKeys.length - 1, slot = peerHash(key) & mask;
+		while (peerKeys[slot] != 0) {
+			if (peerKeys[slot] == key && peerOwners[slot] == owner) {
+				peerKeys[slot] = 0;
+				peerOwners[slot] = null;
+				peerCount--;
+				int next = (slot + 1) & mask;
+				while (peerKeys[next] != 0) {
+					long movedKey = peerKeys[next];
+					Control movedOwner = peerOwners[next];
+					peerKeys[next] = 0;
+					peerOwners[next] = null;
+					peerCount--;
+					putPeer(movedKey, movedOwner);
+					next = (next + 1) & mask;
+				}
+				return;
+			}
+			slot = (slot + 1) & mask;
+		}
+	}
 	void register(Control control) {
 		if (controlCount == controls.length) controls = Arrays.copyOf(controls, controlCount + 16);
+		indexPeer(control);
 		controls[controlCount++] = control;
 	}
 	void unregister(Control control) {
+		unindexPeer(control);
 		if (focusControl == control) focusControl = null;
 		for (int i = 0; i < controlCount; i++) if (controls[i] == control) { System.arraycopy(controls, i + 1, controls, i, --controlCount - i); controls[controlCount] = null; break; }
 	}
@@ -261,7 +325,18 @@ public class Display extends Device implements Executor {
 	void commitFocusRequest(long generation) {
 		committedFocusGeneration = Math.max(committedFocusGeneration, generation);
 	}
-	Control control(long peer) { for (int i = 0; i < controlCount; i++) if (!controls[i].isDisposed() && controls[i].peer == peer) return controls[i]; return null; }
+	Control control(long peer) {
+		if (peer == 0 || peerKeys.length == 0) return null;
+		int mask = peerKeys.length - 1, slot = peerHash(peer) & mask;
+		while (peerKeys[slot] != 0) {
+			if (peerKeys[slot] == peer) {
+				Control owner = peerOwners[slot];
+				return owner != null && !owner.isDisposed() && owner.peer == peer ? owner : null;
+			}
+			slot = (slot + 1) & mask;
+		}
+		return null;
+	}
 	public Widget findWidget(long peer) { checkThread(); return control(peer); }
 	public Shell[] getShells() { checkThread(); return Arrays.stream(controls, 0, controlCount).filter(Shell.class::isInstance).map(Shell.class::cast).toArray(Shell[]::new); }
 	public Shell getActiveShell() { checkThread(); if (focusControl != null) return focusControl.getShell(); Shell[] shells = getShells(); for (int i = shells.length - 1; i >= 0; i--) if (shells[i].isVisible()) return shells[i]; return null; }
