@@ -33,7 +33,8 @@
 typedef struct {
 	id __strong *values;
 	uint32_t *generation;
-	uint32_t length, capacity;
+	uint32_t *freeHeap;
+	uint32_t length, capacity, freeCount;
 	uint8_t kind;
 } SWTHandleRegistry;
 
@@ -54,42 +55,78 @@ static id swtRegistryGet(SWTHandleRegistry *registry, jlong handle) {
 	return index == UINT32_MAX ? nil : registry->values[index];
 }
 
+/* A parent-owned primitive min heap retains the first vacant handle slot.
+ * Image, GC and UIView ownership remain unchanged; no entry objects are added. */
+static void swtRegistryFreePush(SWTHandleRegistry *registry, uint32_t index) {
+	uint32_t i = registry->freeCount++;
+	while (i > 0) {
+		uint32_t parent = (i - 1) >> 1;
+		if (registry->freeHeap[parent] <= index) break;
+		registry->freeHeap[i] = registry->freeHeap[parent];
+		i = parent;
+	}
+	registry->freeHeap[i] = index;
+}
+
+static void swtRegistryFreePop(SWTHandleRegistry *registry) {
+	uint32_t last = registry->freeHeap[--registry->freeCount], i = 0;
+	while ((uint64_t)i * 2 + 1 < registry->freeCount) {
+		uint32_t child = (i << 1) + 1;
+		if (child + 1 < registry->freeCount &&
+			registry->freeHeap[child + 1] < registry->freeHeap[child]) child++;
+		if (last <= registry->freeHeap[child]) break;
+		registry->freeHeap[i] = registry->freeHeap[child];
+		i = child;
+	}
+	if (registry->freeCount != 0) registry->freeHeap[i] = last;
+}
+
 static jlong swtRegistryAdd(SWTHandleRegistry *registry, id value, SWTRegistryError *error) {
 	*error = SWTRegistryOK;
 	if (value == nil) { *error = SWTRegistryMemory; return 0; }
-	uint32_t index = 0;
-	while (index < registry->length && registry->values[index] != nil) index++;
+	uint32_t index = registry->freeCount == 0 ? registry->length : registry->freeHeap[0];
 	if (index == registry->capacity) {
 		if (registry->capacity == SWT_SLOT_MASK) { *error = SWTRegistryCapacity; return 0; }
 		uint32_t capacity = registry->capacity == 0 ? 32 : (uint32_t)MIN((uint64_t)registry->capacity * 2, (uint64_t)SWT_SLOT_MASK);
 		id __strong *values = (id __strong *)calloc(capacity, sizeof(id));
 		uint32_t *generation = calloc(capacity, sizeof(uint32_t));
-		if (values == NULL || generation == NULL) {
-			free(values); free(generation); *error = SWTRegistryMemory; return 0;
+		uint32_t *freeHeap = calloc(capacity, sizeof(uint32_t));
+		if (values == NULL || generation == NULL || freeHeap == NULL) {
+			free(values); free(generation); free(freeHeap); *error = SWTRegistryMemory; return 0;
 		}
 		for (uint32_t i = 0; i < registry->length; i++) {
 			values[i] = registry->values[i];
 			registry->values[i] = nil;
 			generation[i] = registry->generation[i];
 		}
-		free(registry->values); free(registry->generation);
-		registry->values = values; registry->generation = generation; registry->capacity = capacity;
+		if (registry->freeCount != 0)
+			memcpy(freeHeap, registry->freeHeap, registry->freeCount * sizeof(uint32_t));
+		free(registry->values); free(registry->generation); free(registry->freeHeap);
+		registry->values = values; registry->generation = generation; registry->freeHeap = freeHeap;
+		registry->capacity = capacity;
 	}
 	if (registry->generation[index] == UINT32_MAX) { *error = SWTRegistryGeneration; return 0; }
+	if (registry->freeCount == 0) registry->length++; else swtRegistryFreePop(registry);
 	registry->generation[index]++;
 	registry->values[index] = value;
-	if (index == registry->length) registry->length++;
 	uint64_t token = ((uint64_t)registry->kind << 60) | ((uint64_t)registry->generation[index] << 28) | (index + UINT64_C(1));
 	return (jlong)token;
 }
 
 static void swtRegistryRemove(SWTHandleRegistry *registry, jlong handle) {
 	uint32_t index = swtRegistryIndex(registry, handle);
-	if (index != UINT32_MAX) registry->values[index] = nil;
+	if (index != UINT32_MAX) {
+		registry->values[index] = nil;
+		swtRegistryFreePush(registry, index);
+	}
 }
 
 static void swtRegistryClear(SWTHandleRegistry *registry) {
-	for (uint32_t i = 0; i < registry->length; i++) registry->values[i] = nil;
+	for (uint32_t i = 0; i < registry->length; i++) {
+		registry->values[i] = nil;
+		registry->freeHeap[i] = i;
+	}
+	registry->freeCount = registry->length;
 }
 
 static JavaVM *swtVM;
