@@ -712,18 +712,26 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java",
-      "sha256": "9c408f331401de0e07cd59b071f9dd528c27fdec20c71f98da9f34b10ac3b9fc"
+      "sha256": "f7fa9313b5fbf54455d1e350efe809c1292a4f87894a9548316f6ac750ea5504"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Decorations.java"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java",
-      "sha256": "87fe6de14182af05cc48b69049811f3fa8541f0e87f2758ed82af06f48dfcd5d"
+      "sha256": "b18533fc69de37a1a4d7e82b812441465026e9d34077e5685563f74606506b4c"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Label.java",
       "sha256": "03ee6f742f5670fb63a9f48c357117ef6d4d2a5e391dafd7e40fd66af0bcd27f"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Link.java",
+      "sha256": "973c50c3ba6650694dff7e15209d1df8ac294e21260e8bfa8c1b7844726e890f"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/LinkParser.java",
+      "sha256": "f4fbe9b15e694a9bcb38a3ea96c941f0b47811d02c477a6beb23d69017467146"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/List.java",
