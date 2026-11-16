@@ -36,7 +36,9 @@ import java.util.function.*;
  * {@link #clear(int)} or {@link #clearAll()}; a widget fills them on demand
  * (for example from an {@code SWT.SetData} callback) through
  * {@link #setItem(int, String)}. Unmaterialized slots measure as the empty
- * string. One {@code String} reference per item is the only per-item object.</p>
+ * string. Lazy text is kept in sorted primitive row IDs and parallel String
+ * references, never a logical-count-sized array. Eager text remains dense.
+ * Explicit {@link #getItems()} still materializes the caller-owned full list.</p>
  */
 final class VirtualListModel {
 	/**
@@ -49,6 +51,9 @@ final class VirtualListModel {
 	private final VirtualListWidth width;
 	private final boolean lazy;
 	private String [] items = new String [0];
+	/** Lazy mode only: sorted logical IDs for the occupied prefix of items[]. */
+	private int [] itemRows = new int [0];
+	private int materialized;
 	private int count;
     // One parent-owned counter, not one epoch per row. Materializing SetData text
     // does not advance this: structural edits and clear/reset invalidate prefetch.
@@ -78,16 +83,21 @@ final class VirtualListModel {
 	/** Item text; {@code null} for an unmaterialized slot in lazy mode. */
 	String getItem (int index) {
 		checkIndex (index);
-		return items [index];
+		if (!lazy) return items [index];
+		int slot = Arrays.binarySearch (itemRows, 0, materialized, index);
+		return slot >= 0 ? items [slot] : null;
 	}
 
 	boolean isMaterialized (int index) {
 		checkIndex (index);
-		return items [index] != null;
+		return lazy ? Arrays.binarySearch (itemRows, 0, materialized, index) >= 0 : items [index] != null;
 	}
 
 	String [] getItems () {
-		return Arrays.copyOf (items, count);
+		if (!lazy) return Arrays.copyOf (items, count);
+		String [] full = new String [count];
+		for (int slot = 0; slot < materialized; slot++) full [itemRows [slot]] = items [slot];
+		return full;
 	}
 
 	void add (String string) {
@@ -97,16 +107,25 @@ final class VirtualListModel {
 	void add (String string, int index) {
 		if (string == null) throw new IllegalArgumentException ("null item");
 		if (index < 0 || index > count) throw new IllegalArgumentException ("invalid index");
-        modifiedStructure();
-		ensureCapacity (Math.addExact (count, 1));
+		int next = Math.addExact (count, 1);
+		if (lazy) ensureSparseCapacity (Math.addExact (materialized, 1));
+		else ensureCapacity (next);
+		modifiedStructure ();
 		if (lazy) {
 			width.insertUnmeasured (index, 1);
+			int at = sparseLowerBound (index);
+			System.arraycopy (items, at, items, at + 1, materialized - at);
+			System.arraycopy (itemRows, at, itemRows, at + 1, materialized - at);
+			for (int i = at + 1; i <= materialized; i++) itemRows [i]++;
+			itemRows [at] = index;
+			items [at] = string;
+			materialized++;
 		} else {
 			width.insert (index, string);
+			System.arraycopy (items, index, items, index + 1, count - index);
+			items [index] = string;
 		}
-		System.arraycopy (items, index, items, index + 1, count - index);
-		items [index] = string;
-		count++;
+		count = next;
 		planner.insert (index, 1);
 		relayout ();
 	}
@@ -117,19 +136,28 @@ final class VirtualListModel {
 		if (index < 0 || index > count) throw new IllegalArgumentException ("invalid index");
 		int added = strings.length;
 		if (added == 0) return;
-		for (String string : strings) {
-			if (string == null) throw new IllegalArgumentException ("null item");
-		}
+		for (String string : strings) if (string == null) throw new IllegalArgumentException ("null item");
+		int next = Math.addExact (count, added);
+		if (lazy) ensureSparseCapacity (Math.addExact (materialized, added));
+		else ensureCapacity (next);
 		modifiedStructure ();
-		ensureCapacity (Math.addExact (count, added));
 		if (lazy) {
 			width.insertUnmeasured (index, added);
+			int at = sparseLowerBound (index);
+			System.arraycopy (items, at, items, at + added, materialized - at);
+			System.arraycopy (itemRows, at, itemRows, at + added, materialized - at);
+			for (int i = at + added; i < materialized + added; i++) itemRows [i] += added;
+			for (int i = 0; i < added; i++) {
+				itemRows [at + i] = index + i;
+				items [at + i] = strings [i];
+			}
+			materialized += added;
 		} else {
 			for (int i = 0; i < added; i++) width.insert (index + i, strings [i]);
+			System.arraycopy (items, index, items, index + added, count - index);
+			System.arraycopy (strings, 0, items, index, added);
 		}
-		System.arraycopy (items, index, items, index + added, count - index);
-		System.arraycopy (strings, 0, items, index, added);
-		count += added;
+		count = next;
 		planner.insert (index, added);
 		relayout ();
 	}
@@ -138,26 +166,38 @@ final class VirtualListModel {
 		checkIndex (index);
 		if (string == null) throw new IllegalArgumentException ("null item");
 		if (lazy) {
+			int at = Arrays.binarySearch (itemRows, 0, materialized, index);
+			if (at < 0) ensureSparseCapacity (Math.addExact (materialized, 1));
 			width.setUnmeasured (index);
+			if (at >= 0) {
+				items [at] = string;
+			} else {
+				at = -at - 1;
+				System.arraycopy (items, at, items, at + 1, materialized - at);
+				System.arraycopy (itemRows, at, itemRows, at + 1, materialized - at);
+				itemRows [at] = index;
+				items [at] = string;
+				materialized++;
+			}
 		} else {
 			width.set (index, string);
+			items [index] = string;
 		}
-		items [index] = string;
 	}
 
 	void setItems (String [] newItems) {
 		if (newItems == null) throw new IllegalArgumentException ("null items");
-		for (String string : newItems) {
-			if (string == null) throw new IllegalArgumentException ("null item");
-		}
-        modifiedStructure();
-		if (lazy) {
-			width.setAllUnmeasured (newItems.length);
-		} else {
-			width.setAll (newItems);
-		}
+		for (String string : newItems) if (string == null) throw new IllegalArgumentException ("null item");
+		modifiedStructure ();
+		if (lazy) width.setAllUnmeasured (newItems.length);
+		else width.setAll (newItems);
 		items = Arrays.copyOf (newItems, newItems.length);
 		count = items.length;
+		if (lazy) {
+			itemRows = new int [count];
+			for (int i = 0; i < count; i++) itemRows [i] = i;
+			materialized = count;
+		}
 		planner.selection ().clear ();
 		planner.setLogicalCount (count);
 		setTopIndex (0);
@@ -176,9 +216,7 @@ final class VirtualListModel {
 		}
 		int added = newCount - count;
 		if (added == 0) return;
-        modifiedStructure();
-		ensureCapacity (newCount);
-		Arrays.fill (items, count, newCount, null);
+		modifiedStructure ();
 		width.insertUnmeasured (count, added);
 		int start = count;
 		count = newCount;
@@ -190,16 +228,24 @@ final class VirtualListModel {
 	void clear (int index) {
 		checkIndex (index);
 		if (!lazy) throw new IllegalStateException ("not lazy");
-        modifiedStructure();
-		items [index] = null;
+		modifiedStructure ();
 		width.setUnmeasured (index);
+		int at = Arrays.binarySearch (itemRows, 0, materialized, index);
+		if (at < 0) return;
+		int after = materialized - at - 1;
+		System.arraycopy (items, at + 1, items, at, after);
+		System.arraycopy (itemRows, at + 1, itemRows, at, after);
+		items [--materialized] = null;
+		itemRows [materialized] = 0;
 	}
 
 	/** Lazy mode: forgets the text of every slot. */
 	void clearAll () {
 		if (!lazy) throw new IllegalStateException ("not lazy");
-        if (count != 0) modifiedStructure();
-		Arrays.fill (items, 0, count, null);
+		if (count != 0) modifiedStructure ();
+		items = new String [0];
+		itemRows = new int [0];
+		materialized = 0;
 		width.setAllUnmeasured (count);
 	}
 
@@ -208,10 +254,23 @@ final class VirtualListModel {
 		if (start > end) return;
 		if (start < 0 || end >= count) throw new IllegalArgumentException ("invalid range");
 		int removed = end - start + 1;
-        modifiedStructure();
+		modifiedStructure ();
 		width.remove (start, removed);
-		System.arraycopy (items, end + 1, items, start, count - end - 1);
-		Arrays.fill (items, count - removed, count, null);
+		if (lazy) {
+			int left = sparseLowerBound (start);
+			int right = sparseLowerBound (end + 1);
+			int retained = materialized - right;
+			System.arraycopy (items, right, items, left, retained);
+			System.arraycopy (itemRows, right, itemRows, left, retained);
+			int next = materialized - (right - left);
+			Arrays.fill (items, next, materialized, null);
+			Arrays.fill (itemRows, next, materialized, 0);
+			for (int i = left; i < next; i++) itemRows [i] -= removed;
+			materialized = next;
+		} else {
+			System.arraycopy (items, end + 1, items, start, count - end - 1);
+			Arrays.fill (items, count - removed, count, null);
+		}
 		count -= removed;
 		planner.remove (start, removed);
 		relayout ();
@@ -222,9 +281,11 @@ final class VirtualListModel {
 	}
 
 	void removeAll () {
-        if (count != 0) modifiedStructure();
+		if (count != 0) modifiedStructure ();
 		width.clear ();
 		items = new String [0];
+		itemRows = new int [0];
+		materialized = 0;
 		count = 0;
 		planner.selection ().clear ();
 		planner.setLogicalCount (0);
@@ -235,8 +296,14 @@ final class VirtualListModel {
 	int indexOf (String string, int start) {
 		if (string == null) throw new IllegalArgumentException ("null item");
 		if (start < 0 || start >= count) return -1;
-		for (int i = start; i < count; i++) {
-			if (string.equals (items [i])) return i;
+		if (lazy) {
+			for (int i = sparseLowerBound (start); i < materialized; i++) {
+				if (string.equals (items [i])) return itemRows [i];
+			}
+		} else {
+			for (int i = start; i < count; i++) {
+				if (string.equals (items [i])) return i;
+			}
 		}
 		return -1;
 	}
@@ -341,7 +408,13 @@ final class VirtualListModel {
 	}
 
 	private String measureText (int index) {
-		String string = items [index];
+		String string;
+		if (lazy) {
+			int at = Arrays.binarySearch (itemRows, 0, materialized, index);
+			string = at >= 0 ? items [at] : null;
+		} else {
+			string = items [index];
+		}
 		return string == null ? "" : string;
 	}
 
@@ -355,6 +428,19 @@ final class VirtualListModel {
 
 	private void checkIndex (int index) {
 		if (!inRange (index)) throw new IllegalArgumentException ("invalid index");
+	}
+
+	/** Lower bound in the occupied primitive row-ID lane, never in the logical count. */
+	private int sparseLowerBound (int row) {
+		int at = Arrays.binarySearch (itemRows, 0, materialized, row);
+		return at < 0 ? -at - 1 : at;
+	}
+
+	private void ensureSparseCapacity (int needed) {
+		if (needed <= items.length) return;
+		int capacity = Math.max (needed, growth.applyAsInt (items.length, needed));
+		items = Arrays.copyOf (items, capacity);
+		itemRows = Arrays.copyOf (itemRows, capacity);
 	}
 
 	private void ensureCapacity (int needed) {
