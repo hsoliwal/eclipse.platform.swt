@@ -38,11 +38,18 @@ JNIEXPORT jboolean JNICALL Java_org_eclipse_swt_internal_android_AndroidPixels_m
 
 	if (AndroidBitmap_getInfo(env, bitmap, &info) != ANDROID_BITMAP_RESULT_SUCCESS) return JNI_FALSE;
 	if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) return JNI_FALSE;
+	/* Defensive format invariant: each RGBA pixel must fit its advertised stride. */
+	if ((uint64_t)info.stride < (uint64_t)info.width * 4u) return JNI_FALSE;
 	if (width <= 0 || height <= 0 || x < 0 || y < 0) return JNI_FALSE;
 	if ((int64_t)x + width > (int64_t)info.width || (int64_t)y + height > (int64_t)info.height) return JNI_FALSE;
 	if (targetX < 0 || targetY < 0) return JNI_FALSE;
 	if (targetX + width > (int64_t)info.width || targetY + height > (int64_t)info.height) return JNI_FALSE;
-	if (AndroidBitmap_lockPixels(env, bitmap, &pixels) != ANDROID_BITMAP_RESULT_SUCCESS || pixels == NULL) return JNI_FALSE;
+	if (AndroidBitmap_lockPixels(env, bitmap, &pixels) != ANDROID_BITMAP_RESULT_SUCCESS) return JNI_FALSE;
+	if (pixels == NULL) {
+		/* A successful lock must be balanced even if the pointer is unusable. */
+		AndroidBitmap_unlockPixels(env, bitmap);
+		return JNI_FALSE;
+	}
 
 	bytes = (size_t)width * 4u;
 	if (dy > 0) {
