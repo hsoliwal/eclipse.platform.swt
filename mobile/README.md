@@ -168,6 +168,35 @@ accessibility parity and original desktop raster parity remain open. The
 `-Pcontracts` lane includes a Button/Label owner test; source presence does not
 establish an executed CI pass or native runtime parity.
 
+## Native safe-area API (Android and iOS)
+
+The additive `Display.getSafeAreaInsets()` API reports the current native root
+safe-area as four SWT logical coordinates: `[left, top, right, bottom]`.
+It is confined to the owning SWT Display thread and returns an independent
+array on each call. It performs no widget allocation or automatic relayout.
+Existing `getBounds()`, `getClientArea()`, Shell and viewport behaviors remain
+unchanged.
+
+On Android API 35, the binding reads the root window's
+`WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout()`, excluding
+IME/soft-keyboard insets. The Android host already applies window padding to
+its native root, so clients must not subtract the safe area again from the
+existing Android `Display.getClientArea()`. The host may apply separate IME
+padding while the keyboard is shown.
+
+On iOS, the binding reads `UIView.safeAreaInsets` on UIKit's main thread via
+the original JNI owner and returns logical points. It uses the original SWT
+Display-thread entrance and never calls application listeners on UIKit main.
+The returned insets can be used by application layouts that choose to remain
+outside notches, bars and rounded corners; they do not move existing Shells.
+Before the root is installed or visible, an OS may report zero insets.
+
+The shared Java owner contract checks snapshots, rotation-like updates, caller
+mutation, thread ownership, disposal and invalid host responses. It is not a
+substitute for real Android edge-to-edge/IME instrumentation or iOS
+rotation/VoiceOver/simulator tests. The JNI header is regenerated from the
+current `OS.java` declaration by the iOS build, not edited manually.
+
 ## Implemented integration path and remaining scope
 
 The implemented path is a Shell/Composite/Canvas application, including the
