@@ -3,7 +3,7 @@
   "javaRelease": 21,
   "swtBaseCommit": "2d626848385bb14a991cc749dfa293db7e35e26c",
   "nebulaBaseCommit": "b105f8843e5046b4a0e4d84b4778302a7f7ad504",
-  "scope": "Mobile Display/Shell/Canvas and existing Label, Button, ProgressBar, Scale, List, Text, Combo and Table owners; bounded API coverage with separate native platform qualification.",
+  "scope": "Mobile Display/Shell/Canvas and existing Label, Button, Link, ProgressBar, Scale, List, Text, Combo and Table owners; bounded API coverage with separate native platform qualification.",
   "shared": [
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT Accessibility/common/org/eclipse/swt/accessibility/ACC.java",
