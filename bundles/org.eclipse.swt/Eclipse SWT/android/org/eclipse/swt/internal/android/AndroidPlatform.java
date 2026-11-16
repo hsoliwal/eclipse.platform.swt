@@ -221,6 +221,16 @@ public final class AndroidPlatform implements MobilePlatform {
 		});
 	}
 	@Override public int[] dpi() { return new int[] {96, 96}; }
+	@Override public int[] safeAreaInsets() {
+		checkThread();
+		// The dedicated root applies these OS insets as native padding.
+		// Report exactly that padding: do not infer an additional inset from
+		// displayBounds(), which already excludes it on Android.
+		return ui(() -> new int[] {
+			logical(root.getPaddingLeft()), logical(root.getPaddingTop()),
+			logical(root.getPaddingRight()), logical(root.getPaddingBottom())
+		});
+	}
 	@Override public long createControl(int kind, long parent, int style) {
 		checkThread();
 		if (kind != SHELL && kind != COMPOSITE && kind != CANVAS && kind != TEXT) throw new UnsupportedOperationException("Unsupported SWT mobile control kind: " + kind);
