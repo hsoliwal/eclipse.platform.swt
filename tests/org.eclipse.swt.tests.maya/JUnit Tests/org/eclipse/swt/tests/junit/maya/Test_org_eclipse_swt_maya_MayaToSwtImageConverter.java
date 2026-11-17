@@ -47,6 +47,28 @@ public class Test_org_eclipse_swt_maya_MayaToSwtImageConverter {
 		}
 	}
 
+	/*
+	 * The image data reads back the colours it was made from through its own palette, for both byte orders and a width
+	 * whose rows are not a multiple of 4 bytes; a copy of it is valid (an SWT Image is made from a copy).
+	 */
+	@Test
+	public void testPaletteDecodesTheColoursAndOddWidthsCopy() {
+		for (ColorType type : new ColorType[] { ColorType.RGBA_8888, ColorType.BGRA_8888 }) {
+			try (Surface surface = Surface.makeRaster(new ImageInfo(3, 2, type, ColorAlphaType.PREMUL))) {
+				surface.getCanvas().clear(0xFF2F1B37);
+				final Image mayaImage = surface.makeImageSnapshot();
+				final ImageData data = RasterToSwtImageConverter.convertMayaImageToImageData(mayaImage);
+				final ImageData copy = (ImageData) data.clone();
+				for (int y = 0; y < 2; y++) {
+					for (int x = 0; x < 3; x++) {
+						final org.eclipse.swt.graphics.RGB rgb = copy.palette.getRGB(copy.getPixel(x, y));
+						assertEquals(new org.eclipse.swt.graphics.RGB(0x2F, 0x1B, 0x37), rgb, type + " pixel " + x + "," + y);
+					}
+				}
+			}
+		}
+	}
+
 	@Test
 	public void testConvertAlphaHandling() {
 		// Create a 1x1 Skija image with alpha

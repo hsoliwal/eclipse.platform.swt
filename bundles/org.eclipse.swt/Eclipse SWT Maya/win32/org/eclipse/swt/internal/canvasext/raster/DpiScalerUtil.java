@@ -43,7 +43,8 @@ public class DpiScalerUtil implements IDpiScaler {
 	 * arithmetic with rounding for precise results (e.g. for nativeZoom=125).
 	 */
 	private int scaleUp(int value) {
-		return (value * getNativeZoom() + 50) / 100;
+		/* floorDiv: '/' truncates toward zero, which moved every negative coordinate (above or left of the canvas) one pixel */
+		return Math.floorDiv(value * getNativeZoom() + 50, 100);
 	}
 
 	/**
@@ -51,7 +52,7 @@ public class DpiScalerUtil implements IDpiScaler {
 	 * arithmetic with rounding for precise results (e.g. for nativeZoom=125).
 	 */
 	private int scaleDown(int value) {
-		return (value * 100 + getNativeZoom() / 2) / getNativeZoom();
+		return Math.floorDiv(value * 100 + getNativeZoom() / 2, getNativeZoom());
 	}
 
 	public int getZoomedFontSize(int fontSize) {
