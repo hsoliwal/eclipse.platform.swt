@@ -39,20 +39,28 @@ final class ModeQuery {
 	public static final int ORIGINAL = 1;
 	/** Drawn by SWT with a GC. */
 	public static final int CUSTOM = 2;
-	/** Drawn by SWT through the Skia renderer. */
-	public static final int SKIA = 3;
+	/** Drawn by SWT through the Maya renderer. */
+	public static final int MAYA = 3;
 
 	/**
-	 * The former name of {@link #SKIA} (same value).
+	 * The former name of {@link #MAYA} (same value).
 	 *
-	 * @deprecated use {@link #SKIA}
+	 * @deprecated use {@link #MAYA}
 	 */
 	@Deprecated
-	public static final int M3 = SKIA;
+	public static final int SKIA = MAYA;
+
+	/**
+	 * An older name of {@link #MAYA} (same value).
+	 *
+	 * @deprecated use {@link #MAYA}
+	 */
+	@Deprecated
+	public static final int M3 = MAYA;
 	/** Drawn by SWT on the graphics hardware. */
 	public static final int GPU = 4;
 
-	private static final String [] NAMES = {"viewport", "original", "custom", "skia", "gpu"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+	private static final String [] NAMES = {"viewport", "original", "custom", "maya", "gpu"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 
 	/* Widget classes with a viewport; Tree also has the three drawn modes. */
 	private static final Set<String> VIEWPORT_WIDGETS = Set.of ("Tree", "Table", "List", "Combo", "CoolBar", "ExpandBar", "Composite"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
@@ -62,7 +70,7 @@ final class ModeQuery {
 
 	/**
 	 * Returns the mode the widget runs in: one of {@link #VIEWPORT}, {@link #ORIGINAL},
-	 * {@link #CUSTOM}, {@link #SKIA} and {@link #GPU}.
+	 * {@link #CUSTOM}, {@link #MAYA} and {@link #GPU}.
 	 *
 	 * @param widget the widget
 	 * @return the mode code
@@ -105,7 +113,7 @@ final class ModeQuery {
 
 	/* Modes a widget class implements besides ORIGINAL (the same table the widgets' gates use). */
 	private static WidgetMode [] supported (Widget widget, String gate) {
-		if (widget instanceof Tree) return new WidgetMode [] {WidgetMode.VIEWPORT, WidgetMode.CUSTOM, WidgetMode.SKIA, WidgetMode.GPU};
+		if (widget instanceof Tree) return new WidgetMode [] {WidgetMode.VIEWPORT, WidgetMode.CUSTOM, WidgetMode.MAYA, WidgetMode.GPU};
 		if (VIEWPORT_WIDGETS.contains (gate)) return new WidgetMode [] {WidgetMode.VIEWPORT};
 		return new WidgetMode [0];
 	}

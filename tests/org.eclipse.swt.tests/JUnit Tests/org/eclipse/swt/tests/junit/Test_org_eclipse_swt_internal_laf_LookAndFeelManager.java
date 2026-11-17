@@ -161,7 +161,7 @@ public class Test_org_eclipse_swt_internal_laf_LookAndFeelManager {
 		assertEquals ("test-m3-a", LookAndFeelManager.getLookAndFeel (), "a failed switch keeps the selection");
 		assertSame (LookAndFeelManager.defaults ("test-m3-a"), LookAndFeelManager.getDefaults (), "cached on a display thread");
 		assertEquals ("native", LookAndFeelManager.of ("Tree", WidgetMode.VIEWPORT).name ());
-		assertEquals ("test-m3-a", LookAndFeelManager.of ("Tree", WidgetMode.SKIA).name ());
+		assertEquals ("test-m3-a", LookAndFeelManager.of ("Tree", WidgetMode.MAYA).name ());
 	}
 
 	@Test

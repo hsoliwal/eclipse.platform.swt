@@ -16,7 +16,7 @@ package org.eclipse.swt.graphics;
 
 /**
  * Whether the pixels of an image may have changed, for drawing backends that keep a converted copy of an image (the
- * Skia GC). The pixels of an image change only while a GC draws into it.
+ * Maya GC). The pixels of an image change only while a GC draws into it.
  * <p>
  * <b>IMPORTANT:</b> This class is <em>not</em> part of the public API for SWT. It is marked public only so that it can be
  * shared within the packages provided by SWT. It is not available on all platforms, and should never be called from

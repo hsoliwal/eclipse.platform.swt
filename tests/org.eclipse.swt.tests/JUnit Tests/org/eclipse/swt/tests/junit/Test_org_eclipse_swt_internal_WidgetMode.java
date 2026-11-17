@@ -96,8 +96,9 @@ public class Test_org_eclipse_swt_internal_WidgetMode {
 			assertEquals (mode, WidgetMode.of (WIDGET, WidgetMode.values ()), mode.name ());
 		}
 		assertEquals (5, WidgetMode.values ().length);
-		assertEquals (WidgetMode.SKIA, WidgetMode.valueOf ("SKIA"));
-		assertEquals (WidgetMode.SKIA, WidgetMode.parse ("m3"), "the former name still names it");
+		assertEquals (WidgetMode.MAYA, WidgetMode.valueOf ("MAYA"));
+		assertEquals (WidgetMode.MAYA, WidgetMode.parse ("skia"), "a former name still names it");
+		assertEquals (WidgetMode.MAYA, WidgetMode.parse ("m3"), "a former name still names it");
 	}
 
 	@Test
@@ -137,7 +138,7 @@ public class Test_org_eclipse_swt_internal_WidgetMode {
 		System.setProperty (WidgetMode.PROPERTY, "gpu");
 		assertEquals (WidgetMode.VIEWPORT, WidgetMode.of (WIDGET, WidgetMode.VIEWPORT, WidgetMode.CUSTOM));
 		assertEquals (WidgetMode.ORIGINAL, WidgetMode.of (WIDGET), "a widget without a viewport falls back to the original");
-		assertEquals (WidgetMode.ORIGINAL, WidgetMode.of (WIDGET, WidgetMode.SKIA));
+		assertEquals (WidgetMode.ORIGINAL, WidgetMode.of (WIDGET, WidgetMode.MAYA));
 		System.setProperty (WidgetMode.PROPERTY, "original");
 		assertEquals (WidgetMode.ORIGINAL, WidgetMode.of (WIDGET), "the original mode is always implied");
 	}
@@ -146,12 +147,12 @@ public class Test_org_eclipse_swt_internal_WidgetMode {
 	public void theChosenModeIsLoggedAtDebugLevel () throws InterruptedException {
 		logger.setLevel (Level.FINE);
 		System.setProperty (SPECIFIC, "m3");
-		assertEquals (WidgetMode.SKIA, WidgetMode.of (WIDGET, WidgetMode.VIEWPORT, WidgetMode.SKIA));
+		assertEquals (WidgetMode.MAYA, WidgetMode.of (WIDGET, WidgetMode.VIEWPORT, WidgetMode.MAYA));
 		LogRecord chosen = nextRecord ();
 		assertEquals (Level.FINE, chosen.getLevel ());
 		assertEquals (LOGGER, chosen.getLoggerName ());
-		assertEquals (WIDGET + ": mode SKIA", chosen.getMessage ());
+		assertEquals (WIDGET + ": mode MAYA", chosen.getMessage ());
 		assertEquals (WidgetMode.VIEWPORT, WidgetMode.of (WIDGET, WidgetMode.VIEWPORT));
-		assertEquals (WIDGET + ": mode VIEWPORT (requested SKIA)", nextRecord ().getMessage ());
+		assertEquals (WIDGET + ": mode VIEWPORT (requested MAYA)", nextRecord ().getMessage ());
 	}
 }

@@ -46,7 +46,7 @@ public final class RetainedPlanes {
 	public static final int ALL_PLANES = RETAINED | OVERLAY;
 
 	/** Mode bits read from {@code -Dswt.gpu}. */
-	public static final int MODE_OFF = 0, MODE_RETAINED = 1, MODE_SKIA = 2;
+	public static final int MODE_OFF = 0, MODE_RETAINED = 1, MODE_MAYA = 2;
 
 	/** Platform implementation; null means stock behaviour. */
 	public interface Hook {
@@ -89,7 +89,7 @@ public final class RetainedPlanes {
 		for (String part : value.split ("[,+]")) {
 			switch (part.trim ()) {
 				case "gdi", "retained" -> mode |= MODE_RETAINED;
-				case "skia", "m3" -> mode |= MODE_RETAINED | MODE_SKIA;
+				case "maya", "skia", "m3" -> mode |= MODE_RETAINED | MODE_MAYA;
 				default -> { }
 			}
 		}

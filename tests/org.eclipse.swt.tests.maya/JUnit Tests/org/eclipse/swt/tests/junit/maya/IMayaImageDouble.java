@@ -1,0 +1,68 @@
+package org.eclipse.swt.tests.junit.maya;
+
+import org.eclipse.swt.internal.canvasext.raster.IRasterImage;
+
+import java.util.Objects;
+
+public class IMayaImageDouble implements IRasterImage {
+
+	public boolean closed = false;
+	public int height;
+	public int width;
+
+	public String name;
+
+	@Override
+	public boolean isClosed() {
+		return closed;
+	}
+
+	@Override
+	public int getHeight() {
+		return height;
+	}
+
+	@Override
+	public int getWidth() {
+		return width;
+	}
+
+	@Override
+	public org.eclipse.swt.internal.maya.Shader makeShader(org.eclipse.swt.internal.maya.FilterTileMode repeat) {
+		return null;
+	}
+
+	@Override
+	public org.eclipse.swt.internal.maya.Image getMayaImage() {
+		return null;
+	}
+
+	@Override
+	public void close() {
+		closed = true;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(closed, height, name, width);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		IMayaImageDouble other = (IMayaImageDouble) obj;
+		return closed == other.closed && height == other.height && Objects.equals(name, other.name)
+				&& width == other.width;
+	}
+
+	@Override
+	public String toString() {
+		return "IMayaImageDouble [closed=" + closed + ", height=" + height + ", width=" + width + ", name=" + name + "]";
+	}
+
+}

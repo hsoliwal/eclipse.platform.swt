@@ -183,7 +183,7 @@ abstract class DrawnPlane {
 
 	/** True for the drawn modes. */
 	static boolean drawn (WidgetMode mode) {
-		return mode == WidgetMode.CUSTOM || mode == WidgetMode.SKIA || mode == WidgetMode.GPU;
+		return mode == WidgetMode.CUSTOM || mode == WidgetMode.MAYA || mode == WidgetMode.GPU;
 	}
 
 	/** True for the messages this plane paints: the behaviour plane's paint and print-client. */
