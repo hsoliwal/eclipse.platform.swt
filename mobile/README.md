@@ -224,6 +224,30 @@ Gradle Plugin packages the libraries. An application can instead point
 This was run on Windows with NDK r30 (30.0.16248370): four ABIs built and passed the checks. The
 library was not loaded on a device or an emulator.
 
+### maya
+
+`--skia-android <dir>` also builds maya, SWT's graphics library (`Eclipse SWT Maya`), for the 64-bit ABIs.
+`<dir>` holds the extracted JetBrains skia-pack `m116-47d3027-1` Android releases as `<dir>/arm64` and
+`<dir>/x64`. skia-pack has no 32-bit Android release, so `armeabi-v7a` and `x86` have no maya.
+
+```bash
+python mobile/android/build_native.py --ndk /path/to/android-ndk --output /path/to/out --skia-android /path/to/skia-pack
+```
+
+The script runs
+[`build_maya.py`](../bundles/org.eclipse.swt/Eclipse%20SWT%20Maya/native/build_maya.py)
+`--target android-arm64|android-x64` and writes `out/jniLibs/<abi>/libmaya.so`. It checks that library the same way
+(every function of `maya.def` exported, `libjnigraphics.so` needed, 16 KB pages) and adds an `<abi> maya` row to
+`native-build.tsv`.
+
+Run on Windows with NDK r30 for `x86_64` and `arm64-v8a`, both passed:
+- x86_64: 16,960,616 bytes;
+- arm64-v8a: 16,180,768 bytes.
+Each build gave the same bytes as an earlier build.
+
+The x86_64 library has run on the API 35 emulator: ART loaded it and M3Canvas drew through it (com.synexia
+`docs/M3-SCALE/runs/20261117-maya-android/`). The mobile Display does not draw through maya yet.
+
 ## Implemented integration path and remaining scope
 
 The implemented path is a Shell/Composite/Canvas application, including the
