@@ -482,6 +482,16 @@ public class Display extends Device implements Executor {
 					list.accessibilityScroll(action == MobilePlatform.ACTION_INCREMENT);
 					return;
 				}
+				if (c instanceof Sash && (action == MobilePlatform.ACTION_INCREMENT
+						|| action == MobilePlatform.ACTION_DECREMENT)) {
+					// The Sash's keyboard owner moves it by one step across its axis and sends SWT.Selection.
+					boolean horizontal = (c.getStyle() & SWT.HORIZONTAL) != 0;
+					Event key = new Event();
+					key.keyCode = action == MobilePlatform.ACTION_INCREMENT
+							? (horizontal ? SWT.ARROW_DOWN : SWT.ARROW_RIGHT) : (horizontal ? SWT.ARROW_UP : SWT.ARROW_LEFT);
+					c.sendEvent(SWT.KeyDown, key);
+					return;
+				}
 				if (c instanceof Scale && (action == MobilePlatform.ACTION_INCREMENT
 						|| action == MobilePlatform.ACTION_DECREMENT)) {
 					// The original Scale's keyboard owner applies its exact increment,

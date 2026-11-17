@@ -3,7 +3,7 @@
   "javaRelease": 21,
   "swtBaseCommit": "2d626848385bb14a991cc749dfa293db7e35e26c",
   "nebulaBaseCommit": "b105f8843e5046b4a0e4d84b4778302a7f7ad504",
-  "scope": "Mobile Display/Shell/Canvas and existing Label, Button, Group, Link, ProgressBar, Scale, List, Text, Combo and Table owners; bounded API coverage with separate native platform qualification.",
+  "scope": "Mobile Display/Shell/Canvas and existing Label, Button, Group, Link, ProgressBar, Scale, Sash, List, Text, Combo and Table owners; bounded API coverage with separate native platform qualification.",
   "shared": [
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT Accessibility/common/org/eclipse/swt/accessibility/ACC.java",
@@ -712,14 +712,14 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java",
-      "sha256": "0a0e0a6238e5cbb6795ab5ad8202288b7cef6e17fdf39382c6445cc1e0a27769"
+      "sha256": "933dc134be526486aa0fc672092da1b1b25da827c302993cd089b923a49220f8"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Decorations.java"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Display.java",
-      "sha256": "35a812af2322b52df9be97f5a5aaca5e0398840f3378ceaa3c98499d42c29468"
+      "sha256": "89381c5ffe3185a5fd4880115db86233f0b4578927ce2d0ffdd4051c692a2ea7"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Label.java",
@@ -744,6 +744,10 @@
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Scale.java",
       "sha256": "5ef89718226e31e189dfdd0c2150702936430fd59b9e021691c60dae466e244f"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Sash.java",
+      "sha256": "6433a59d77f6f476bf4ba1a5aeab053625526aba2982b49d8be270edc347a96a"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Text.java",
@@ -822,7 +826,7 @@
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/SWTMessages.properties",
       "target": "org/eclipse/swt/internal/SWTMessages.properties",
-      "sha256": "d2ef28c126a1f9bbefd76c821b1e2e6e8fa714df03306c7a54ad59cd60df80a1"
+      "sha256": "5f840ffb368a42f2465c4b458043fc452b73e71ae8bf0fd73a18dd3a561b4ded"
     },
     {
       "path": "LICENSE",
