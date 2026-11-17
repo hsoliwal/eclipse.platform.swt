@@ -51,10 +51,13 @@ public class RasterToSwtImageConverter {
 					convertedData[target + 2] = (blue);
 				}
 			}
-			final ImageData d = new ImageData(bm.getWidth(), bm.getHeight(), 24, getPaletteData(colType));
-			d.data = convertedData;
+			/*
+			 * the bytes are written red, green, blue whatever the source order (getPixelOrder), so the palette is RGB;
+			 * the rows are packed (width * 3 bytes): a scanline pad of 1 says so, so the data stays valid when copied
+			 */
+			final ImageData d = new ImageData(bm.getWidth(), bm.getHeight(), 24, new PaletteData(0xFF0000, 0xFF00, 0xFF),
+					1, convertedData);
 			d.alphaData = alphas;
-			d.bytesPerLine = d.width * 3;
 			return d;
 		}
 	}

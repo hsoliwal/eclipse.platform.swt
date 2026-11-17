@@ -1304,6 +1304,8 @@ public class RasterExternalGC implements IExternalGC {
 		GC nativeGC = null;
 		try {
 			i = new Image(device, rectangle.width, rectangle.height);
+			/* the layout draws over the pixels already under it (a background, a selection), not over a white box */
+			copyUnder(i, xInPoints - rectangle.x, yInPoints - rectangle.y);
 			nativeGC = new GC(i);
 
 			textLayout.draw(nativeGC, 0, 0, selectionStart, selectionEnd, selectionForeground, selectionBackground,
@@ -1320,6 +1322,42 @@ public class RasterExternalGC implements IExternalGC {
 			}
 		}
 
+	}
+
+	/*
+	 * The surface's pixels under an image placed at (x, y) in points, copied into the image. The snapshot is the part of
+	 * the area on the surface: it is placed where that part starts, so an area above or left of the surface stays
+	 * aligned; pixels off the surface keep the image's own, and an area wholly off the surface copies nothing.
+	 */
+	private void copyUnder(Image image, int x, int y) {
+		final int width, height;
+		try (final IRasterImage size = SwtToRasterImageConverter.convertSWTImageToMayaImage(image,
+				getScaler().getNativeZoom(), resources)) {
+			width = size.getWidth();
+			height = size.getHeight();
+		}
+		/* the origin scales to pixels; the size is the image's, already in pixels */
+		final var wanted = org.eclipse.swt.internal.maya.types.IRect.makeXYWH(getScaler().autoScaleUp(x),
+				getScaler().autoScaleUp(y), width, height);
+		if (wanted.getRight() <= 0 || wanted.getBottom() <= 0 || wanted.getLeft() >= surface.getWidth()
+				|| wanted.getTop() >= surface.getHeight()) {
+			return;
+		}
+		try (final IRasterImage under = surface.makeImageSnapshot(wanted)) {
+			try (final IRasterSurface copy = surface.makeSurface(width, height)) {
+				copy.getCanvas().drawImage(under, Math.max(0, -wanted.getLeft()), Math.max(0, -wanted.getTop()));
+				try (final IRasterImage snapshot = copy.makeImageSnapshot()) {
+					final Image pixels = new Image(device, RasterToSwtImageConverter.convertMayaImageToImageData(snapshot));
+					final GC gc = new GC(image);
+					try {
+						gc.drawImage(pixels, 0, 0);
+					} finally {
+						gc.dispose();
+						pixels.dispose();
+					}
+				}
+			}
+		}
 	}
 
 	IRasterResources getMayaResources() {
