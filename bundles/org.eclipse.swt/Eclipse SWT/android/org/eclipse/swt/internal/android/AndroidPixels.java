@@ -15,6 +15,7 @@
 package org.eclipse.swt.internal.android;
 
 import android.graphics.Bitmap;
+import dalvik.annotation.optimization.FastNative;
 
 /**
  * Moves a rectangle of pixels inside one bitmap; source and destination may overlap.
@@ -53,7 +54,13 @@ final class AndroidPixels {
 		moveByLane(bitmap, x, y, width, height, dx, dy);
 	}
 
-	/** One native call; false when the bitmap is not 32 bits per pixel or cannot be locked. */
+	/**
+	 * One native call; false when the bitmap is not 32 bits per pixel or cannot be locked. <code>@FastNative</code>
+	 * (Android 8.0 and later): ART enters the call without the full thread-state transition of plain JNI; the C
+	 * signature is unchanged. The call locks the bitmap, moves rows with memmove and returns: it never blocks.
+	 * <code>@CriticalNative</code> does not apply, the bitmap is an object.
+	 */
+	@FastNative
 	private static native boolean moveNative(Bitmap bitmap, int x, int y, int width, int height, int dx, int dy);
 
 	/*
