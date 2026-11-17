@@ -1,3 +1,4 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune).
 package io.github.humbleui.skija;
 
 import org.jetbrains.annotations.*;
@@ -17,34 +18,4 @@ public enum PathFillMode {
 
     @ApiStatus.Internal public static final PathFillMode[] _values = values();
 
-    /**
-     * Returns if FillType describes area outside Path geometry. The inverse fill area
-     * extends indefinitely.
-     *
-     * @return  true if FillType is {@link #INVERSE_WINDING} or {@link #INVERSE_EVEN_ODD}
-     */
-    public boolean isInverse() {
-        return this == INVERSE_WINDING || this == INVERSE_EVEN_ODD;
-    }
-
-    /**
-     * Returns the inverse fill type. The inverse of FillType describes the area
-     * unmodified by the original FillType.
-     *
-     * @return  inverse FillType
-     */
-    public PathFillMode inverse() {
-        switch (this) {
-            case WINDING:
-                return INVERSE_WINDING;
-            case EVEN_ODD:
-                return INVERSE_EVEN_ODD;
-            case INVERSE_WINDING:
-                return WINDING;
-            case INVERSE_EVEN_ODD:
-                return EVEN_ODD;
-            default:
-                throw new RuntimeException("Unreachable");
-        }
-    }
 }

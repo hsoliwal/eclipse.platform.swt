@@ -1,3 +1,4 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune).
 package io.github.humbleui.skija;
 
 import io.github.humbleui.skija.impl.*;
@@ -13,18 +14,6 @@ public class EncoderPNG {
     @Nullable
     public static Data encode(@NotNull Image image) {
         return encode(null, image, EncodePNGOptions.DEFAULT);
-    }
-
-    /**
-     * Encode the provided image and return the resulting bytes.
-     *
-     * @param image  image to encode
-     * @param opts   may be used to control the encoding behavior
-     * @return       nullptr if the pixels could not be read or encoding otherwise fails.
-     */
-    @Nullable
-    public static Data encode(@NotNull Image image, @NotNull EncodePNGOptions opts) {
-        return encode(null, image, opts);
     }
 
     /**

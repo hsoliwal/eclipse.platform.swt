@@ -1,3 +1,4 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune).
 package io.github.humbleui.skija;
 
 import org.jetbrains.annotations.*;
@@ -88,9 +89,8 @@ public enum ColorType {
      */
     RGBA_F32,     
 
-
     // The following 6 colortypes are just for reading from - not for rendering to
-    
+
     /**
      * Pixel with a uint8_t for red and green
      */
@@ -163,179 +163,6 @@ public enum ColorType {
         throw new RuntimeException("Unreachable");
     }
 
-    public int getShiftPerPixel() {
-        switch (this) {
-            case UNKNOWN:            return 0;
-            case ALPHA_8:            return 0;
-            case RGB_565:            return 1;
-            case ARGB_4444:          return 1;
-            case RGBA_8888:          return 2;
-            case RGB_888X:           return 2;
-            case BGRA_8888:          return 2;
-            case RGBA_1010102:       return 2;
-            case RGB_101010X:        return 2;
-            case BGRA_1010102:       return 2;
-            case BGR_101010X:        return 2;
-            case GRAY_8:             return 0;
-            case RGBA_F16NORM:       return 3;
-            case RGBA_F16:           return 3;
-            case RGBA_F32:           return 4;
-            case R8G8_UNORM:         return 1;
-            case A16_UNORM:          return 1;
-            case R16G16_UNORM:       return 2;
-            case A16_FLOAT:          return 1;
-            case R16G16_FLOAT:       return 2;
-            case R16G16B16A16_UNORM: return 3;
-        }
-        throw new RuntimeException("Unreachable");
-    }
-
-    /**
-     * Returns true if ColorType always decodes alpha to 1.0, making the pixel
-     * fully opaque. If true, ColorType does not reserve bits to encode alpha.
-     *
-     * @return  true if alpha is always set to 1.0
-     */
-    public boolean isAlwaysOpaque() {
-        Stats.onNativeCall();
-        return _nIsAlwaysOpaque(ordinal());
-    }
-
-    /**
-     * <p>Returns a valid ColorAlphaType for colorType. If there is more than one valid canonical
-     * ColorAlphaType, set to alphaType, if valid.</p>
-     *
-     * <p>Returns null only if alphaType is {@link ColorAlphaType#UNKNOWN}, color type is not
-     * {@link #UNKNOWN}, and ColorType is not always opaque.</p>
-     *
-     * @return  ColorAlphaType if can be associated with colorType
-     */
-    @Nullable
-    public ColorAlphaType validateAlphaType(ColorAlphaType alphaType) {
-        switch (this) {
-            case UNKNOWN:
-                alphaType = ColorAlphaType.UNKNOWN;
-                break;
-            case ALPHA_8:         // fall-through
-            case A16_UNORM:       // fall-through
-            case A16_FLOAT:
-                if (ColorAlphaType.UNPREMUL == alphaType)
-                    alphaType = ColorAlphaType.PREMUL;
-                // fall-through
-            case ARGB_4444:
-            case RGBA_8888:
-            case BGRA_8888:
-            case RGBA_1010102:
-            case BGRA_1010102:
-            case RGBA_F16NORM:
-            case RGBA_F16:
-            case RGBA_F32:
-            case R16G16B16A16_UNORM:
-                if (ColorAlphaType.UNKNOWN == alphaType)
-                    return null;
-                break;
-            case GRAY_8:
-            case R8G8_UNORM:
-            case R16G16_UNORM:
-            case R16G16_FLOAT:
-            case RGB_565:
-            case RGB_888X:
-            case RGB_101010X:
-            case BGR_101010X:
-                alphaType = ColorAlphaType.OPAQUE;
-                break;
-        }
-        return alphaType;
-    }
-
-    public long computeOffset(int x, int y, long rowBytes) {
-        if (this == UNKNOWN)
-            return 0;
-        return y * rowBytes + (x << getShiftPerPixel());
-    }
-
-    public float getR(byte color) {
-        switch (this) {
-            case GRAY_8:
-                return Byte.toUnsignedInt(color) / 255f;
-            default:
-                throw new IllegalArgumentException("getR(byte) is not supported on ColorType." + this);
-        }
-    }
-
-    public float getR(short color) {
-        switch (this) {
-            case RGB_565:
-                return ((color >> 11) & 0b11111) / 31f;
-            case ARGB_4444:
-                return ((color >> 8) & 0xF) / 15f;
-            default:
-                throw new IllegalArgumentException("getR(short) is not supported on ColorType." + this);
-        }
-    }
-
-    public float getR(int color) {
-        switch (this) {
-            case RGBA_8888:
-                return ((color >> 24) & 0xFF) / 255f;
-            case RGB_888X:
-                return ((color >> 24) & 0xFF) / 255f;
-            case BGRA_8888:
-                return ((color >> 8) & 0xFF) / 255f;
-            case RGBA_1010102:
-                return ((color >> 22) & 0b1111111111) / 1023f;
-            case RGB_101010X:
-                return ((color >> 22) & 0b1111111111) / 1023f;
-            case BGRA_1010102:
-                return ((color >> 2) & 0b1111111111) / 1023f;
-            case BGR_101010X:
-                return ((color >> 2) & 0b1111111111) / 1023f;
-            default:
-                throw new IllegalArgumentException("getR(int) is not supported on ColorType." + this);
-        }
-    }
-
-    public float getG(byte color) {
-        switch (this) {
-            case GRAY_8:
-                return Byte.toUnsignedInt(color) / 255f;
-            default:
-                throw new IllegalArgumentException("getG(byte) is not supported on ColorType." + this);
-        }
-    }
-
-    public float getG(short color) {
-        switch (this) {
-            case RGB_565:
-                return ((color >> 5) & 0b111111) / 63f;
-            case ARGB_4444:
-                return ((color >> 4) & 0xF) / 15f;
-            default:
-                throw new IllegalArgumentException("getG(short) is not supported on ColorType." + this);
-        }
-    }
-
-    public float getG(int color) {
-        switch (this) {
-            case RGBA_8888:
-                return ((color >> 16) & 0xFF)  / 255f;
-            case RGB_888X:
-                return ((color >> 16) & 0xFF) / 255f;
-            case BGRA_8888:
-                return ((color >> 16) & 0xFF) / 255f;
-            case RGBA_1010102:
-                return ((color >> 12) & 0b1111111111) / 1023f;
-            case RGB_101010X:
-                return ((color >> 12) & 0b1111111111) / 1023f;
-            case BGRA_1010102:
-                return ((color >> 12) & 0b1111111111) / 1023f;
-            case BGR_101010X:
-                return ((color >> 12) & 0b1111111111) / 1023f;
-            default:
-                throw new IllegalArgumentException("getG(int) is not supported on ColorType." + this);
-        }
-    }
-
     public float getB(byte color) {
         switch (this) {
             case GRAY_8:
@@ -377,38 +204,4 @@ public enum ColorType {
         }
     }
 
-    public float getA(byte color) {
-        switch (this) {
-            case ALPHA_8:
-                return Byte.toUnsignedInt(color) / 255f;
-            default:
-                throw new IllegalArgumentException("getA(byte) is not supported on ColorType." + this);
-        }
-    }
-
-    public float getA(short color) {
-        switch (this) {
-            case ARGB_4444:
-                return ((color >> 12) & 0xF) / 15f;
-            default:
-                throw new IllegalArgumentException("getA(short) is not supported on ColorType." + this);
-        }
-    }
-
-    public float getA(int color) {
-        switch (this) {
-            case RGBA_8888:
-                return (color & 0xFF) / 255f;
-            case BGRA_8888:
-                return (color & 0xFF) / 255f;
-            case RGBA_1010102:
-                return (color & 0b11) / 3f;
-            case BGRA_1010102:
-                return (color & 0b11) / 3f;
-            default:
-                throw new IllegalArgumentException("getA(int) is not supported on ColorType." + this);
-        }
-    }
-
-    @ApiStatus.Internal public static native boolean _nIsAlwaysOpaque(int value);
 }
