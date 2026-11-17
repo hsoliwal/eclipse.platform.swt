@@ -1004,10 +1004,27 @@ public final class MobileCoreContractTest {
 				if (entry.getValue().role == org.eclipse.swt.accessibility.ACC.ROLE_COMBOBOX
 						&& entry.getKey() > comboPeer) comboPeer = entry.getKey();
 			require(comboPeer > 0, "Native Android/UIKit Combo publishes its original accessibility role");
+			boolean focusReported = platform.reportFocusChanges;
+			platform.reportFocusChanges = true;
 			platform.sink.accessibility(comboPeer, MobilePlatform.ACTION_ACTIVATE);
 			drain(display);
 			require(dropdown.getListVisible(),
 					"Native accessibility activate opens original owned Combo popup");
+			// A device sends a hardware key to the focused native view, and the open popup's List holds focus.
+			long popupListPeer = platform.focusedPeer;
+			require(popupListPeer != 0 && popupListPeer != comboPeer,
+					"Opening the Combo popup gives native focus to its List");
+			int selectedBeforeEscape = dropdown.getSelectionIndex();
+			platform.sink.input(popupListPeer, SWT.KeyDown, 0, 0, 0, SWT.ESC, '\u001b', 0, 1, 3);
+			drain(display);
+			require(!dropdown.getListVisible() && dropdown.getSelectionIndex() == selectedBeforeEscape,
+					"Escape typed in the focused native popup List closes it without selecting");
+			require(platform.focusedPeer != popupListPeer && platform.focusedPeer != 0,
+					"Closing the popup with Escape returns native focus to the Combo");
+			platform.reportFocusChanges = focusReported;
+			platform.sink.accessibility(comboPeer, MobilePlatform.ACTION_ACTIVATE);
+			drain(display);
+			require(dropdown.getListVisible(), "Native accessibility activate reopens the Combo popup");
 			Event escape = new Event();
 			escape.keyCode = SWT.ESC;
 			dropdown.notifyListeners(SWT.KeyDown, escape);
