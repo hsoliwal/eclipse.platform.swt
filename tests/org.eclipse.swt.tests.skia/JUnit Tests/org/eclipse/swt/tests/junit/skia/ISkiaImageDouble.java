@@ -28,12 +28,12 @@ public class ISkiaImageDouble implements IRasterImage {
 	}
 
 	@Override
-	public io.github.humbleui.skija.Shader makeShader(io.github.humbleui.skija.FilterTileMode repeat) {
+	public org.eclipse.swt.internal.maya.Shader makeShader(org.eclipse.swt.internal.maya.FilterTileMode repeat) {
 		return null;
 	}
 
 	@Override
-	public io.github.humbleui.skija.Image getSkiaImage() {
+	public org.eclipse.swt.internal.maya.Image getSkiaImage() {
 		return null;
 	}
 

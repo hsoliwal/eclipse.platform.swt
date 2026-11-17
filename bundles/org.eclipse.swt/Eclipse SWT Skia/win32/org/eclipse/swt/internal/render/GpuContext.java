@@ -18,7 +18,7 @@ package org.eclipse.swt.internal.render;
 import org.eclipse.swt.internal.opengl.win32.*;
 import org.eclipse.swt.internal.win32.*;
 
-import io.github.humbleui.skija.*;
+import org.eclipse.swt.internal.maya.*;
 
 /**
  * The graphics hardware of the <code>gpu</code> drawn planes on win32, Java only: one OpenGL context per UI thread

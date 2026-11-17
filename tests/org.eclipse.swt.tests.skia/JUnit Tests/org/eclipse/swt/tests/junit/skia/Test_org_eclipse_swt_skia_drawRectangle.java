@@ -9,8 +9,8 @@ import org.eclipse.swt.internal.canvasext.raster.IRasterResources;
 import org.eclipse.swt.internal.canvasext.raster.RasterExternalGC;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.BlendMode;
-import io.github.humbleui.types.Rect;
+import org.eclipse.swt.internal.maya.BlendMode;
+import org.eclipse.swt.internal.maya.types.Rect;
 
 public class Test_org_eclipse_swt_skia_drawRectangle {
 

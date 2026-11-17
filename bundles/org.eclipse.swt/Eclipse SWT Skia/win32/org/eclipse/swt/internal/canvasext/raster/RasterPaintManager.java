@@ -19,12 +19,12 @@ import java.util.function.Consumer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Pattern;
 
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.PaintMode;
-import io.github.humbleui.skija.PaintStrokeCap;
-import io.github.humbleui.skija.PaintStrokeJoin;
-import io.github.humbleui.skija.PathEffect;
-import io.github.humbleui.skija.Shader;
+import org.eclipse.swt.internal.maya.Paint;
+import org.eclipse.swt.internal.maya.PaintMode;
+import org.eclipse.swt.internal.maya.PaintStrokeCap;
+import org.eclipse.swt.internal.maya.PaintStrokeJoin;
+import org.eclipse.swt.internal.maya.PathEffect;
+import org.eclipse.swt.internal.maya.Shader;
 
 public class RasterPaintManager {
 
@@ -88,7 +88,7 @@ public class RasterPaintManager {
 		}
 		final boolean xor = gc.getXORMode();
 		if (strokeXor == null || xor != strokeXor) {
-			stroke.setBlendMode((strokeXor = xor) ? io.github.humbleui.skija.BlendMode.DIFFERENCE : io.github.humbleui.skija.BlendMode.SRC_OVER);
+			stroke.setBlendMode((strokeXor = xor) ? org.eclipse.swt.internal.maya.BlendMode.DIFFERENCE : org.eclipse.swt.internal.maya.BlendMode.SRC_OVER);
 		}
 		if (scaledLineWidth != strokeWidth) {
 			stroke.setStrokeWidth(strokeWidth = scaledLineWidth);
@@ -188,7 +188,7 @@ public class RasterPaintManager {
 		}
 		final boolean xor = gc.getXORMode();
 		if (fillXor == null || xor != fillXor) {
-			fill.setBlendMode((fillXor = xor) ? io.github.humbleui.skija.BlendMode.DIFFERENCE : io.github.humbleui.skija.BlendMode.SRC_OVER);
+			fill.setBlendMode((fillXor = xor) ? org.eclipse.swt.internal.maya.BlendMode.DIFFERENCE : org.eclipse.swt.internal.maya.BlendMode.SRC_OVER);
 		}
 		try (final Paint paint = fill.makeClone()) {
 			if (gc.getBackgroundPattern() != null && !gc.getBackgroundPattern().isDisposed()) {
@@ -236,7 +236,7 @@ public class RasterPaintManager {
 		if (props.getImage() == null) {
 			final int col1 = RasterColorConverter.convertSWTColorToSkiaColor(props.getColor1(), props.getAlpha1());
 			final int col2 = RasterColorConverter.convertSWTColorToSkiaColor(props.getColor2(), props.getAlpha2());
-			final var gs = new io.github.humbleui.skija.GradientStyle(io.github.humbleui.skija.FilterTileMode.REPEAT,
+			final var gs = new org.eclipse.swt.internal.maya.GradientStyle(org.eclipse.swt.internal.maya.FilterTileMode.REPEAT,
 					true, null);
 			return Shader.makeLinearGradient(sc.autoScaleUp(props.getBaseX1()), sc.autoScaleUp(props.getBaseY1()),
 					sc.autoScaleUp(props.getBaseX2()), sc.autoScaleUp(props.getBaseY2()), new int[] { col1, col2 },
@@ -244,7 +244,7 @@ public class RasterPaintManager {
 		}
 		try (final var image = SwtToRasterImageConverter.convertSWTImageToSkiaImage(props.getImage(),
 				gc.getScaler().getNativeZoom(), gc.getSkiaResources())) {
-			return image.makeShader(io.github.humbleui.skija.FilterTileMode.REPEAT);
+			return image.makeShader(org.eclipse.swt.internal.maya.FilterTileMode.REPEAT);
 		}
 	}
 }

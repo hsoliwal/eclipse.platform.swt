@@ -15,7 +15,7 @@ public class SkiaResourcesDouble implements IRasterResources {
 	public Color background;
 	public Color foreground;
 	public Font font;
-	public io.github.humbleui.skija.Font skiaFont;
+	public org.eclipse.swt.internal.maya.Font skiaFont;
 	public Image cachedImage;
 	public IRasterImage cachedSkiaImage;
 	public IRasterImage cachedTextImage;
@@ -58,7 +58,7 @@ public class SkiaResourcesDouble implements IRasterResources {
 	}
 
 	@Override
-	public io.github.humbleui.skija.Font getSkiaFont() {
+	public org.eclipse.swt.internal.maya.Font getSkiaFont() {
 		return skiaFont;
 	}
 

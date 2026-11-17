@@ -16,8 +16,8 @@ package org.eclipse.swt.internal.canvasext.raster;
 
 import org.eclipse.swt.internal.win32.OS;
 
-import io.github.humbleui.skija.PixelGeometry;
-import io.github.humbleui.skija.SurfaceProps;
+import org.eclipse.swt.internal.maya.PixelGeometry;
+import org.eclipse.swt.internal.maya.SurfaceProps;
 
 /**
  * The system's text smoothing for the Skia surfaces, so that drawn text is smoothed as native text is: LCD (ClearType)

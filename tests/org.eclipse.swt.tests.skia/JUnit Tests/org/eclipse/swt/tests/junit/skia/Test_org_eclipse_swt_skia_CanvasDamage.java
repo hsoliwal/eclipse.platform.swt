@@ -21,8 +21,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.internal.render.CanvasDamage;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.Bitmap;
-import io.github.humbleui.skija.Canvas;
+import org.eclipse.swt.internal.maya.Bitmap;
+import org.eclipse.swt.internal.maya.Canvas;
 
 /**
  * Headless (no Display): the damage atom of the M3 canvas handler (GC seam, leaf 5; pattern M3-CANVAS-DAMAGE v1). The

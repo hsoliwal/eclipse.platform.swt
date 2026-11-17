@@ -25,12 +25,12 @@ import org.eclipse.swt.internal.canvasext.raster.RasterPlaneCanvasExtension;
 import org.eclipse.swt.internal.win32.*;
 import org.eclipse.swt.widgets.Control;
 
-import io.github.humbleui.skija.*;
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.FontMetrics;
-import io.github.humbleui.skija.Image;
-import io.github.humbleui.skija.Path;
-import io.github.humbleui.types.Rect;
+import org.eclipse.swt.internal.maya.*;
+import org.eclipse.swt.internal.maya.Font;
+import org.eclipse.swt.internal.maya.FontMetrics;
+import org.eclipse.swt.internal.maya.Image;
+import org.eclipse.swt.internal.maya.Path;
+import org.eclipse.swt.internal.maya.types.Rect;
 
 /**
  * The <code>m3</code> backend on win32, the M3 renderer: it draws through the Skija library (Apache-2.0) on the CPU,
@@ -87,7 +87,7 @@ public final class RasterRowCanvas implements BufferCanvas {
 
 		Bitmap (Image image) {
 			this.image = image;
-			ptr = io.github.humbleui.skija.impl.Native.getPtr (image);
+			ptr = org.eclipse.swt.internal.maya.impl.Native.getPtr (image);
 			width = image.getWidth ();
 			height = image.getHeight ();
 		}
@@ -110,7 +110,7 @@ public final class RasterRowCanvas implements BufferCanvas {
 		LineEntry (TextLine line) {
 			this.line = line;
 			blob = line.getTextBlob ();
-			blobPtr = blob == null ? 0 : io.github.humbleui.skija.impl.Native.getPtr (blob);
+			blobPtr = blob == null ? 0 : org.eclipse.swt.internal.maya.impl.Native.getPtr (blob);
 			width = line.getWidth ();
 		}
 
@@ -128,9 +128,9 @@ public final class RasterRowCanvas implements BufferCanvas {
 	private final Paint textPaint = new Paint ().setAntiAlias (true);
 	private final Paint focusPaint = new Paint ().setMode (PaintMode.STROKE).setStrokeWidth (1).setColor (0xFF000000)
 		.setPathEffect (PathEffect.makeDash (new float [] {1, 1}, 0));
-	private final long paintPtr = io.github.humbleui.skija.impl.Native.getPtr (paint);
-	private final long textPaintPtr = io.github.humbleui.skija.impl.Native.getPtr (textPaint);
-	private final long focusPaintPtr = io.github.humbleui.skija.impl.Native.getPtr (focusPaint);
+	private final long paintPtr = org.eclipse.swt.internal.maya.impl.Native.getPtr (paint);
+	private final long textPaintPtr = org.eclipse.swt.internal.maya.impl.Native.getPtr (textPaint);
+	private final long focusPaintPtr = org.eclipse.swt.internal.maya.impl.Native.getPtr (focusPaint);
 	private Surface surface;
 	private Canvas canvas;
 	private long canvasPtr;
@@ -225,7 +225,7 @@ public final class RasterRowCanvas implements BufferCanvas {
 			surface = Surface.makeRasterDirect (info, bits, width * 4L, FontSmoothing.surfaceProps ());
 		}
 		canvas = surface.getCanvas ();
-		canvasPtr = io.github.humbleui.skija.impl.Native.getPtr (canvas);
+		canvasPtr = org.eclipse.swt.internal.maya.impl.Native.getPtr (canvas);
 	}
 
 	@Override

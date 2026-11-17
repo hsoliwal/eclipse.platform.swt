@@ -14,8 +14,8 @@
 
 package org.eclipse.swt.internal.canvasext.raster;
 
-import io.github.humbleui.skija.Surface;
-import io.github.humbleui.types.IRect;
+import org.eclipse.swt.internal.maya.Surface;
+import org.eclipse.swt.internal.maya.types.IRect;
 
 /**
  * Adapter to wrap Skija's Surface as IRasterSurface.

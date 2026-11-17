@@ -30,9 +30,9 @@ import org.eclipse.swt.internal.canvasext.raster.RasterExternalGC;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.Bitmap;
-import io.github.humbleui.skija.Canvas;
-import io.github.humbleui.skija.Paint;
+import org.eclipse.swt.internal.maya.Bitmap;
+import org.eclipse.swt.internal.maya.Canvas;
+import org.eclipse.swt.internal.maya.Paint;
 
 /**
  * Headless: the stroke state of the M3 GC (GC seam, leaf 5; pattern M3-GC-STROKE v1). The donor stored the dash offset and

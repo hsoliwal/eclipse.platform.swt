@@ -12,11 +12,11 @@ import org.eclipse.swt.internal.canvasext.raster.RasterToSwtImageConverter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.ColorAlphaType;
-import io.github.humbleui.skija.ColorType;
-import io.github.humbleui.skija.Image;
-import io.github.humbleui.skija.ImageInfo;
-import io.github.humbleui.skija.Surface;
+import org.eclipse.swt.internal.maya.ColorAlphaType;
+import org.eclipse.swt.internal.maya.ColorType;
+import org.eclipse.swt.internal.maya.Image;
+import org.eclipse.swt.internal.maya.ImageInfo;
+import org.eclipse.swt.internal.maya.Surface;
 
 public class Test_org_eclipse_swt_skia_M3ToSwtImageConverter {
 

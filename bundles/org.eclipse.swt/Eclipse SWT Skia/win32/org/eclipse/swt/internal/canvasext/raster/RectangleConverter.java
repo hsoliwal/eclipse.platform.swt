@@ -16,8 +16,8 @@ package org.eclipse.swt.internal.canvasext.raster;
 
 import org.eclipse.swt.graphics.Rectangle;
 
-import io.github.humbleui.types.RRect;
-import io.github.humbleui.types.Rect;
+import org.eclipse.swt.internal.maya.types.RRect;
+import org.eclipse.swt.internal.maya.types.Rect;
 
 public class RectangleConverter {
 

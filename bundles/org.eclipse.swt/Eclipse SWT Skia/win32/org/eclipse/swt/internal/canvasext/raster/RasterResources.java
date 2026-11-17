@@ -26,12 +26,12 @@ import org.eclipse.swt.internal.canvasext.IDpiScaler;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
-import io.github.humbleui.skija.FontEdging;
-import io.github.humbleui.skija.FontHinting;
-import io.github.humbleui.skija.FontMgr;
-import io.github.humbleui.skija.FontSlant;
-import io.github.humbleui.skija.FontStyle;
-import io.github.humbleui.skija.Typeface;
+import org.eclipse.swt.internal.maya.FontEdging;
+import org.eclipse.swt.internal.maya.FontHinting;
+import org.eclipse.swt.internal.maya.FontMgr;
+import org.eclipse.swt.internal.maya.FontSlant;
+import org.eclipse.swt.internal.maya.FontStyle;
+import org.eclipse.swt.internal.maya.Typeface;
 
 public class RasterResources implements IRasterResources {
 	public static boolean USE_TEXT_IMAGE_CACHE = true;
@@ -77,12 +77,12 @@ public class RasterResources implements IRasterResources {
 	private Color foreground;
 	private final Control canvas;
 	private Font swtFont;
-	private io.github.humbleui.skija.Font skiaFont;
+	private org.eclipse.swt.internal.maya.Font skiaFont;
 
 	// cache access only from UI thread, so no need for concurrent map
 	private final Map<String, String> fontNameMapping = new HashMap<>();
 	private final Set<String> unknownFonts = new HashSet<>();
-	private final Map<FontProperties, io.github.humbleui.skija.Font> fontCache = new HashMap<>();
+	private final Map<FontProperties, org.eclipse.swt.internal.maya.Font> fontCache = new HashMap<>();
 	private final LruImageCache<ImageTextKey> textImageCache = new LruImageCache<>(TEXT_IMAGE_CACHE_MAX);
 	private final Map<SplitsTextCache, String[]> cachedTextSplits = new HashMap<>();
 
@@ -152,7 +152,7 @@ public class RasterResources implements IRasterResources {
 
 	}
 
-	private io.github.humbleui.skija.Font getSkiaFont(org.eclipse.swt.graphics.Font font) {
+	private org.eclipse.swt.internal.maya.Font getSkiaFont(org.eclipse.swt.graphics.Font font) {
 		final FontProperties props = FontProperties.getFontProperties(font);
 		var cachedFont = fontCache.get(props);
 		if (cachedFont != null && cachedFont.isClosed()) {
@@ -160,7 +160,7 @@ public class RasterResources implements IRasterResources {
 			cachedFont = null;
 		}
 
-		io.github.humbleui.skija.Font f = null;
+		org.eclipse.swt.internal.maya.Font f = null;
 
 		if (cachedFont == null) {
 			f = createSkiaFont(props);
@@ -171,7 +171,7 @@ public class RasterResources implements IRasterResources {
 		return fontCache.get(props);
 	}
 
-	private io.github.humbleui.skija.Font createSkiaFont(FontProperties props) {
+	private org.eclipse.swt.internal.maya.Font createSkiaFont(FontProperties props) {
 
 		FontSlant slant = FontSlant.UPRIGHT;
 		if (props.lfItalic != 0) {
@@ -179,14 +179,14 @@ public class RasterResources implements IRasterResources {
 		}
 
 		final FontStyle style = new FontStyle(props.lfWeight, 5, slant);
-		io.github.humbleui.skija.Font skiaFont = new io.github.humbleui.skija.Font(extractTypeface(props, style));
+		org.eclipse.swt.internal.maya.Font skiaFont = new org.eclipse.swt.internal.maya.Font(extractTypeface(props, style));
 
 		final var rect = skiaFont.measureText("T"); //$NON-NLS-1$
 		final var textHeight = rect.getHeight();
 		if (textHeight == 0.0) {
 
 			props.name = Display.getDefault().getSystemFont().getFontData()[0].getName();
-			skiaFont = new io.github.humbleui.skija.Font(extractTypeface(props, style));
+			skiaFont = new org.eclipse.swt.internal.maya.Font(extractTypeface(props, style));
 		}
 
 		if (props.lfWidth != 0) {
@@ -295,7 +295,7 @@ public class RasterResources implements IRasterResources {
 	}
 
 	@Override
-	public io.github.humbleui.skija.Font getSkiaFont() {
+	public org.eclipse.swt.internal.maya.Font getSkiaFont() {
 		if (skiaFont == null) {
 			setFont(null);
 		}

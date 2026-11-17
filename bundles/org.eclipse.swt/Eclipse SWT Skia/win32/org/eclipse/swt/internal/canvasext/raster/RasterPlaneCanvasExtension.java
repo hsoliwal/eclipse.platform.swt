@@ -19,7 +19,7 @@ import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.render.*;
 import org.eclipse.swt.widgets.*;
 
-import io.github.humbleui.skija.Surface;
+import org.eclipse.swt.internal.maya.Surface;
 
 /**
  * The M3 renderer's side of the GC seam: hands {@link RasterExternalGC} the surface a drawn plane already owns.

@@ -17,8 +17,8 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.graphics.RGB;
 
-import io.github.humbleui.skija.Bitmap;
-import io.github.humbleui.skija.ColorType;
+import org.eclipse.swt.internal.maya.Bitmap;
+import org.eclipse.swt.internal.maya.ColorType;
 
 public class RasterToSwtImageConverter {
 
@@ -29,7 +29,7 @@ public class RasterToSwtImageConverter {
 
 	}
 
-	public static ImageData convertSkiaImageToImageData(io.github.humbleui.skija.Image image) {
+	public static ImageData convertSkiaImageToImageData(org.eclipse.swt.internal.maya.Image image) {
 		try (final Bitmap bm = Bitmap.makeFromImage(image)) {
 			final var colType = bm.getColorType();
 			final byte[] alphas = new byte[bm.getHeight() * bm.getWidth()];

@@ -28,12 +28,12 @@ import org.eclipse.swt.internal.win32.*;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 
-import io.github.humbleui.skija.ColorAlphaType;
-import io.github.humbleui.skija.ColorType;
-import io.github.humbleui.skija.ImageInfo;
-import io.github.humbleui.skija.Pixmap;
-import io.github.humbleui.skija.Surface;
-import io.github.humbleui.skija.SurfaceOrigin;
+import org.eclipse.swt.internal.maya.ColorAlphaType;
+import org.eclipse.swt.internal.maya.ColorType;
+import org.eclipse.swt.internal.maya.ImageInfo;
+import org.eclipse.swt.internal.maya.Pixmap;
+import org.eclipse.swt.internal.maya.Surface;
+import org.eclipse.swt.internal.maya.SurfaceOrigin;
 
 /**
  * The M3 renderer behind a <code>Canvas</code> created with {@link SWT#SKIA} (GC seam, leaf 4): the canvas's
@@ -178,7 +178,7 @@ public final class RasterCanvasHandler implements IExternalCanvasHandler {
 
 	/* one Paint event, clipped to its pass (CanvasDamage.clip): the background first unless the canvas retains its pixels */
 	private void pass (Consumer<Event> send, int pass, int passes) {
-		io.github.humbleui.skija.Canvas canvas = surface.getCanvas ();
+		org.eclipse.swt.internal.maya.Canvas canvas = surface.getCanvas ();
 		canvas.save ();
 		damage.clip (canvas, pass, passes);
 		if (!retains ()) canvas.clear (RasterColorConverter.convertSWTColorToSkiaColor (control.getBackground ()));

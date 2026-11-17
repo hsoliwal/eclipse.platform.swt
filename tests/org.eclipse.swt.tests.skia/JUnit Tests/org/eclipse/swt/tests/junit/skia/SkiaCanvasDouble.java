@@ -5,15 +5,15 @@ import java.util.List;
 
 import org.eclipse.swt.internal.canvasext.raster.IRasterCanvas;
 import org.eclipse.swt.internal.canvasext.raster.IRasterImage;
-import io.github.humbleui.skija.ClipMode;
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.Matrix33;
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.Path;
-import io.github.humbleui.skija.Region;
-import io.github.humbleui.skija.SamplingMode;
-import io.github.humbleui.types.RRect;
-import io.github.humbleui.types.Rect;
+import org.eclipse.swt.internal.maya.ClipMode;
+import org.eclipse.swt.internal.maya.Font;
+import org.eclipse.swt.internal.maya.Matrix33;
+import org.eclipse.swt.internal.maya.Paint;
+import org.eclipse.swt.internal.maya.Path;
+import org.eclipse.swt.internal.maya.Region;
+import org.eclipse.swt.internal.maya.SamplingMode;
+import org.eclipse.swt.internal.maya.types.RRect;
+import org.eclipse.swt.internal.maya.types.Rect;
 
 public class SkiaCanvasDouble implements IRasterCanvas {
 

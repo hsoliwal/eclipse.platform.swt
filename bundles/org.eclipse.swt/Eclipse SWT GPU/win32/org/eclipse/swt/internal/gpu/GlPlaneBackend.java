@@ -21,7 +21,7 @@ package org.eclipse.swt.internal.gpu;
 import org.eclipse.swt.internal.opengl.win32.*;
 import org.eclipse.swt.internal.win32.*;
 
-import io.github.humbleui.skija.*;
+import org.eclipse.swt.internal.maya.*;
 
 /**
  * Skija (Skia GL) backend for retained planes on win32.

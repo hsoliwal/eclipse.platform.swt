@@ -6,7 +6,7 @@ package `org.eclipse.swt.tests.junit.skia` and the 33 sources are unchanged.
 
 ## Why a module of their own
 
-The render tree uses the Skija 0.116.3 binding (`io.github.humbleui.skija`, `io.github.humbleui.types`), which is not an
+The render tree uses the Skija 0.116.3 binding (`org.eclipse.swt.internal.maya`, `org.eclipse.swt.internal.maya.types`), which is not an
 OSGi bundle of the target platform, and no bundle of the reactor compiles the render tree: the win32 fragment's
 `build.properties` does not list it, and `bundles/org.eclipse.swt.skia` compiles three GPU sources only. Inside
 `org.eclipse.swt.tests` (Tycho, ECJ) the m3gc types could not resolve, which stopped that bundle in the Eclipse SDK

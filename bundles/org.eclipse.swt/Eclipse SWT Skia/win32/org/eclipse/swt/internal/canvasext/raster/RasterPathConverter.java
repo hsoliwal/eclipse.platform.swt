@@ -17,11 +17,11 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Path;
 import org.eclipse.swt.graphics.PathData;
 
-import io.github.humbleui.skija.PathFillMode;
+import org.eclipse.swt.internal.maya.PathFillMode;
 
 public class RasterPathConverter {
 
-	public static io.github.humbleui.skija.Path convertSWTPathToSkiaPath(Path swtPath, DpiScalerUtil sc) {
+	public static org.eclipse.swt.internal.maya.Path convertSWTPathToSkiaPath(Path swtPath, DpiScalerUtil sc) {
 
 		if (swtPath == null || swtPath.isDisposed()) {
 			return null;
@@ -29,7 +29,7 @@ public class RasterPathConverter {
 		final PathData data = swtPath.getPathData();
 
 		{
-			final io.github.humbleui.skija.Path skiaPathBuilder = new io.github.humbleui.skija.Path(); // Skija 0.116.3: Path is its own builder; the caller owns the returned path
+			final org.eclipse.swt.internal.maya.Path skiaPathBuilder = new org.eclipse.swt.internal.maya.Path(); // Skija 0.116.3: Path is its own builder; the caller owns the returned path
 
 			final float[] pts = data.points;
 			final byte[] types = data.types;
@@ -63,10 +63,10 @@ public class RasterPathConverter {
 
 	}
 
-	public static io.github.humbleui.skija.Path createPath(int[] pointArray,int fillRule , DpiScalerUtil sc) {
+	public static org.eclipse.swt.internal.maya.Path createPath(int[] pointArray,int fillRule , DpiScalerUtil sc) {
 		// Create Skija path for the polygon
 		{ // Skija 0.116.3: Path is its own builder; the caller owns the returned path
-			io.github.humbleui.skija.Path pathBuilder = new io.github.humbleui.skija.Path(); // Move
+			org.eclipse.swt.internal.maya.Path pathBuilder = new org.eclipse.swt.internal.maya.Path(); // Move
 			// to
 			// first
 			// point

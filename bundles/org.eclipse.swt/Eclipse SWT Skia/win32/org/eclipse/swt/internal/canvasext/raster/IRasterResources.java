@@ -20,7 +20,7 @@ public interface IRasterResources {
 	org.eclipse.swt.graphics.Color getForeground();
 	org.eclipse.swt.graphics.Color getBackground();
 	void setFont(org.eclipse.swt.graphics.Font font);
-	io.github.humbleui.skija.Font getSkiaFont();
+	org.eclipse.swt.internal.maya.Font getSkiaFont();
 	org.eclipse.swt.internal.canvasext.IDpiScaler getScaler();
 	org.eclipse.swt.graphics.Font getFont();
 	org.eclipse.swt.graphics.FontData getFontData();

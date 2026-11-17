@@ -14,9 +14,9 @@
 
 package org.eclipse.swt.internal.canvasext.raster;
 
-import io.github.humbleui.skija.FilterTileMode;
-import io.github.humbleui.skija.Image;
-import io.github.humbleui.skija.Shader;
+import org.eclipse.swt.internal.maya.FilterTileMode;
+import org.eclipse.swt.internal.maya.Image;
+import org.eclipse.swt.internal.maya.Shader;
 
 public class RasterImageAdapter implements IRasterImage {
 

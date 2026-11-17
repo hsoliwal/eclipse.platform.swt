@@ -16,7 +16,7 @@ package org.eclipse.swt.internal.canvasext.raster;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Transform;
 
-import io.github.humbleui.skija.Matrix33;
+import org.eclipse.swt.internal.maya.Matrix33;
 
 public class RasterTransformConverter {
 

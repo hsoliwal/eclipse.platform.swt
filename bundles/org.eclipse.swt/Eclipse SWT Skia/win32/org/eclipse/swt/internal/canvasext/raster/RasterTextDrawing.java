@@ -17,12 +17,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.internal.canvasext.FontProperties;
 
-import io.github.humbleui.skija.BlendMode;
-import io.github.humbleui.skija.FontEdging;
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.PaintMode;
-import io.github.humbleui.skija.PaintStrokeCap;
-import io.github.humbleui.types.Rect;
+import org.eclipse.swt.internal.maya.BlendMode;
+import org.eclipse.swt.internal.maya.FontEdging;
+import org.eclipse.swt.internal.maya.Paint;
+import org.eclipse.swt.internal.maya.PaintMode;
+import org.eclipse.swt.internal.maya.PaintStrokeCap;
+import org.eclipse.swt.internal.maya.types.Rect;
 
 public class RasterTextDrawing {
 	// only for debug purpose use text drawing without cache.

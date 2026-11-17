@@ -1,0 +1,75 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune); package moved to org.eclipse.swt.internal.maya.
+package org.eclipse.swt.internal.maya.shaper;
+
+import org.jetbrains.annotations.*;
+import org.eclipse.swt.internal.maya.*;
+import org.eclipse.swt.internal.maya.impl.*;
+import org.eclipse.swt.internal.maya.types.*;
+
+public class TextBlobBuilderRunHandler<T> extends Managed implements RunHandler {
+    static { Library.staticLoad(); }
+
+    @ApiStatus.Internal
+    public final ManagedString _text;
+
+    @ApiStatus.Internal
+    public TextBlobBuilderRunHandler(ManagedString text, boolean manageText, float offsetX, float offsetY) {
+        super(_nMake(Native.getPtr(text), offsetX, offsetY), _FinalizerHolder.PTR);
+        _text = manageText ? text : null;
+        ReferenceUtil.reachabilityFence(text);
+    }
+
+    public TextBlobBuilderRunHandler(String text) {
+        this(new ManagedString(text), true, 0, 0);
+    }
+
+    public TextBlobBuilderRunHandler(String text, Point offset) {
+        this(new ManagedString(text), true, offset._x, offset._y);
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        if (_text != null)
+            _text.close();
+    }
+
+    @Override
+    public void beginLine() {
+        throw new UnsupportedOperationException("beginLine");
+    }
+
+    @Override
+    public void runInfo(RunInfo info) {
+        throw new UnsupportedOperationException("runInfo");
+    }
+
+    @Override
+    public void commitRunInfo() {
+        throw new UnsupportedOperationException("commitRunInfo");
+    }
+
+    @Override
+    public Point runOffset(RunInfo info) {
+        throw new UnsupportedOperationException("runOffset");
+    }
+
+    @Override
+    public void commitRun(RunInfo info, short[] glyphs, Point[] positions, int[] clusters) {
+        throw new UnsupportedOperationException("commitRun");
+    }
+
+    @Override
+    public void commitLine() {
+        throw new UnsupportedOperationException("commitLine");
+    }
+
+    @ApiStatus.Internal
+    public static class _FinalizerHolder {
+        public static final long PTR = _nGetFinalizer();
+    }
+
+    @ApiStatus.Internal public static native long _nGetFinalizer();
+    @ApiStatus.Internal public static native long _nMake(long textPtr, float offsetX, float offsetY);
+
+}

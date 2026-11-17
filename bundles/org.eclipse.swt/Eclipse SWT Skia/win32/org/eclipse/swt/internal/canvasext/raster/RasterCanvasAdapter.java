@@ -14,15 +14,15 @@
 
 package org.eclipse.swt.internal.canvasext.raster;
 
-import io.github.humbleui.skija.Canvas;
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.Matrix33;
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.Path;
-import io.github.humbleui.skija.Region;
-import io.github.humbleui.skija.SamplingMode;
-import io.github.humbleui.types.RRect;
-import io.github.humbleui.types.Rect;
+import org.eclipse.swt.internal.maya.Canvas;
+import org.eclipse.swt.internal.maya.Font;
+import org.eclipse.swt.internal.maya.Matrix33;
+import org.eclipse.swt.internal.maya.Paint;
+import org.eclipse.swt.internal.maya.Path;
+import org.eclipse.swt.internal.maya.Region;
+import org.eclipse.swt.internal.maya.SamplingMode;
+import org.eclipse.swt.internal.maya.types.RRect;
+import org.eclipse.swt.internal.maya.types.Rect;
 
 /**
  * Adapter to wrap Skija's Canvas as IRasterCanvas. (Stub for now, can be extended
@@ -117,7 +117,7 @@ class RasterCanvasAdapter implements IRasterCanvas {
 	}
 
 	@Override
-	public void clipPath(io.github.humbleui.skija.Path path, io.github.humbleui.skija.ClipMode mode,
+	public void clipPath(org.eclipse.swt.internal.maya.Path path, org.eclipse.swt.internal.maya.ClipMode mode,
 			boolean doAntiAlias) {
 		delegate.clipPath(path, mode, doAntiAlias);
 	}

@@ -14,7 +14,7 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.gpu;
 
-import io.github.humbleui.skija.*;
+import org.eclipse.swt.internal.maya.*;
 
 /**
  * Replays a packed {@link OpStream} on a Skia canvas pointer with GDI pixel
