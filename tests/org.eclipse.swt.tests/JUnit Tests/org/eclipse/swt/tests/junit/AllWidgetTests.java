@@ -28,6 +28,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_internal_ColumnArrangement.class, //
 		Test_org_eclipse_swt_internal_ColumnChooser.class, //
 		Test_org_eclipse_swt_internal_ColumnFilter.class, //
+		Test_org_eclipse_swt_internal_ColumnGroups.class, //
 		Test_org_eclipse_swt_internal_ColumnSort.class, //
 		Test_org_eclipse_swt_internal_ColumnSummary.class, //
 		Test_org_eclipse_swt_internal_ColumnValues.class, //
