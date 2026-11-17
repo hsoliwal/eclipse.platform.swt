@@ -13,6 +13,7 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.canvasext.raster;
 
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 import org.eclipse.swt.SWT;
@@ -35,46 +36,99 @@ public class RasterPaintManager {
 
 	private final RasterExternalGC gc;
 
+	// M3 (efficiency): one stroke and one fill paint per GC, kept for the life of the GC object (a GC is reused after
+	// dispose; Skija's cleaner frees the paints with it). A property is set on a base paint only when the GC's value
+	// differs from the one the paint holds, and each draw gets a clone (one native copy) that its operation may change,
+	// instead of a new paint, about ten native setters and a new dash effect per draw.
+	private final Paint stroke = new Paint().setMode(PaintMode.STROKE);
+	private final Paint fill = new Paint().setMode(PaintMode.FILL);
+	private int strokeColor, fillColor, strokeCap = -1, strokeJoin = -1;
+	private float strokeWidth = -1, strokeMiter = DEFAULT_MITER;
+	private Boolean strokeAntiAlias, fillAntiAlias, strokeXor, fillXor;
+	private boolean colorsKnown;
+	/* the dash effect on the stroke paint and the inputs it was made from */
+	private PathEffect dash;
+	private int dashStyle = Integer.MIN_VALUE;
+	private float[] dashSource;
+	private float dashWidth = Float.NaN, dashUnit = Float.NaN, dashPhase = Float.NaN;
+
+	/** Skia's miter limit of a new paint. */
+	static final float DEFAULT_MITER = 4f;
+
 	public RasterPaintManager(RasterExternalGC gc) {
 		this.gc = gc;
 	}
 
 	public void performDraw(Consumer<Paint> operations) {
-		try (final Paint paint = new Paint()) {
-			paint.setAlpha(gc.getAlpha());
-			paint.setColor(RasterColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha()));
-			paint.setAntiAlias(gc.getAntialias() != SWT.OFF);
-			if (gc.getXORMode()) {
-				paint.setBlendMode(io.github.humbleui.skija.BlendMode.DIFFERENCE);
-			} else {
-				paint.setBlendMode(io.github.humbleui.skija.BlendMode.SRC_OVER);
-			}
-			final var scaledLineWidth = gc.getScaler().autoScaleUp(gc.getLineWidth() * 1F);
-			paint.setMode(PaintMode.STROKE);
-			paint.setStrokeWidth(scaledLineWidth);
-			paint.setStrokeCap(getM3LineCap(gc.getLineCap()));
-			paint.setStrokeJoin(getM3LineJoin(gc.getLineJoin()));
-			// M3 (GC seam, leaf 5): the miter limit of the line attributes, once set (RasterExternalGC.isMiterLimitSet)
-			if (gc.isMiterLimitSet()) {
-				paint.setStrokeMiter(gc.getMiterLimit());
-			}
-
-			try (var pathEffect = createPathEffect(scaledLineWidth, gc.getScaler())) {
-
-				paint.setPathEffect(pathEffect);
-
-				if (gc.getForegroundPattern() != null && !gc.getForegroundPattern().isDisposed()) {
-					try (var shader = convertSWTPatternToM3Shader(gc.getForegroundPattern())) {
-						if (shader != null) {
-							paint.setShader(shader);
-						}
-						operations.accept(paint);
+		final var scaledLineWidth = gc.getScaler().autoScaleUp(gc.getLineWidth() * 1F);
+		syncStroke(scaledLineWidth);
+		try (final Paint paint = stroke.makeClone()) {
+			if (gc.getForegroundPattern() != null && !gc.getForegroundPattern().isDisposed()) {
+				try (var shader = convertSWTPatternToM3Shader(gc.getForegroundPattern())) {
+					if (shader != null) {
+						paint.setShader(shader);
 					}
-				} else {
 					operations.accept(paint);
 				}
+			} else {
+				operations.accept(paint);
 			}
 		}
+	}
+
+	/* the GC's line attributes onto the stroke paint, each only when it changed */
+	private void syncStroke(float scaledLineWidth) {
+		final int color = RasterColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha());
+		if (!colorsKnown || color != strokeColor) {
+			stroke.setColor(strokeColor = color);
+		}
+		final boolean antiAlias = gc.getAntialias() != SWT.OFF;
+		if (strokeAntiAlias == null || antiAlias != strokeAntiAlias) {
+			stroke.setAntiAlias(strokeAntiAlias = antiAlias);
+		}
+		final boolean xor = gc.getXORMode();
+		if (strokeXor == null || xor != strokeXor) {
+			stroke.setBlendMode((strokeXor = xor) ? io.github.humbleui.skija.BlendMode.DIFFERENCE : io.github.humbleui.skija.BlendMode.SRC_OVER);
+		}
+		if (scaledLineWidth != strokeWidth) {
+			stroke.setStrokeWidth(strokeWidth = scaledLineWidth);
+		}
+		if (gc.getLineCap() != strokeCap) {
+			stroke.setStrokeCap(getM3LineCap(strokeCap = gc.getLineCap()));
+		}
+		if (gc.getLineJoin() != strokeJoin) {
+			stroke.setStrokeJoin(getM3LineJoin(strokeJoin = gc.getLineJoin()));
+		}
+		// M3 (GC seam, leaf 5): the miter limit of the line attributes, once set (RasterExternalGC.isMiterLimitSet)
+		final float miter = gc.isMiterLimitSet() ? gc.getMiterLimit() : DEFAULT_MITER;
+		if (miter != strokeMiter) {
+			stroke.setStrokeMiter(strokeMiter = miter);
+		}
+		syncDash(scaledLineWidth);
+		colorsKnown = true;
+	}
+
+	/* a new dash effect only when the line style, the dashes, the width, the zoom or the phase changed */
+	private void syncDash(float scaledLineWidth) {
+		final int style = gc.getLineStyle();
+		final float[] source = style == SWT.LINE_CUSTOM ? gc.getLineDashes() : null;
+		final float unit = gc.getScaler().autoScaleUp(1);
+		final float phase = gc.getDashPhase();
+		if (style == dashStyle && Arrays.equals(source, dashSource) && Float.compare(scaledLineWidth, dashWidth) == 0
+				&& Float.compare(unit, dashUnit) == 0 && Float.compare(phase, dashPhase) == 0) {
+			return;
+		}
+		final PathEffect made = createPathEffect(scaledLineWidth, gc.getScaler());
+		stroke.setPathEffect(made);
+		if (dash != null) {
+			dash.close();
+		}
+		dash = made;
+		dashStyle = style;
+		dashSource = source == null ? null : source.clone();
+		dashWidth = scaledLineWidth;
+		dashUnit = unit;
+		dashPhase = phase;
 	}
 
 	private PathEffect createPathEffect(float scaledLineWidth, DpiScalerUtil scaler) {
@@ -124,15 +178,19 @@ public class RasterPaintManager {
 	}
 
 	public void performDrawFilled(Consumer<Paint> operations) {
-		try (final Paint paint = new Paint()) {
-			paint.setMode(PaintMode.FILL);
-			paint.setColor(RasterColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha()));
-			paint.setAntiAlias(gc.getAntialias() != SWT.OFF);
-			if (gc.getXORMode()) {
-				paint.setBlendMode(io.github.humbleui.skija.BlendMode.DIFFERENCE);
-			} else {
-				paint.setBlendMode(io.github.humbleui.skija.BlendMode.SRC_OVER);
-			}
+		final int color = RasterColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha());
+		if (fillAntiAlias == null || color != fillColor) {
+			fill.setColor(fillColor = color);
+		}
+		final boolean antiAlias = gc.getAntialias() != SWT.OFF;
+		if (fillAntiAlias == null || antiAlias != fillAntiAlias) {
+			fill.setAntiAlias(fillAntiAlias = antiAlias);
+		}
+		final boolean xor = gc.getXORMode();
+		if (fillXor == null || xor != fillXor) {
+			fill.setBlendMode((fillXor = xor) ? io.github.humbleui.skija.BlendMode.DIFFERENCE : io.github.humbleui.skija.BlendMode.SRC_OVER);
+		}
+		try (final Paint paint = fill.makeClone()) {
 			if (gc.getBackgroundPattern() != null && !gc.getBackgroundPattern().isDisposed()) {
 				try (Shader shader = convertSWTPatternToM3Shader(gc.getBackgroundPattern())) {
 					if (shader != null) {
