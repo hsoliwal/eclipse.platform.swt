@@ -1,3 +1,5 @@
+// Changed for SWT (Apache-2.0 section 4b): AttachCurrentThread takes JNIEnv** in Android's jni.h and void** in
+// the JDK's; MAYA_ENV_OUT passes the type each one declares.
 #include <array>
 #include <cstring>
 #include "interop.hh"
@@ -9,6 +11,12 @@
 #include "shaper/interop.hh"
 #include "src/base/SkUTF.h"
 #include "paragraph/interop.hh"
+
+#ifdef __ANDROID__
+#define MAYA_ENV_OUT(env) (env)
+#else
+#define MAYA_ENV_OUT(env) ((void **) (env))
+#endif
 
 namespace java {
     namespace io {
@@ -434,7 +442,7 @@ namespace skija {
 
         bool onFilter(jobject obj, SkPaint& paint) {
             JNIEnv *env;
-            _vm->AttachCurrentThread((void **) &env, NULL);
+            _vm->AttachCurrentThread(MAYA_ENV_OUT(&env), NULL);
             jboolean result = env->CallBooleanMethod(obj, onFilterId, reinterpret_cast<jlong>(&paint));
             _vm->DetachCurrentThread();
             return result;
@@ -446,7 +454,7 @@ namespace skija {
 
         void detach(jobject obj) {
             JNIEnv *env;
-            _vm->AttachCurrentThread((void **) &env, NULL);
+            _vm->AttachCurrentThread(MAYA_ENV_OUT(&env), NULL);
             env->DeleteGlobalRef(obj);
             _vm->DetachCurrentThread();
         }
