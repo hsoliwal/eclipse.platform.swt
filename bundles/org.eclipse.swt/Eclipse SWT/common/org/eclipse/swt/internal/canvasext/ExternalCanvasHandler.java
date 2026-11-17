@@ -122,7 +122,7 @@ public class ExternalCanvasHandler {
 		loadFactory();
 
 		// M3 (GC seam, leaf 5): the factory decides (IExternalCanvasFactory.accepts); its default is the I31 rule this method
-		// had (SWT.SKIA, never a StyledText); the Skia factory accepts every Canvas subclass of an m3 or gpu mode
+		// had (SWT.MAYA, never a StyledText); the Maya factory accepts every Canvas subclass of an m3 or gpu mode
 		if (externalFactory != null && externalFactory.accepts(canvas, style))
 			return true;
 

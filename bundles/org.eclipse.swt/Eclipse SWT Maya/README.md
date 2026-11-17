@@ -1,12 +1,17 @@
 # maya
 
-maya is the graphics library under SWT's Skia backend (`Eclipse SWT Skia`, `Eclipse SWT GPU`, fragment
-`org.eclipse.swt.skia`). It is made of two parts:
+maya is SWT's own graphics library and the backend SWT draws through when a widget's mode is `maya` (formerly
+`skia` and `m3`; `SWT.MAYA` for a canvas). This folder holds all of it:
 
-- `common/`: the Java side, packages `org.eclipse.swt.internal.maya` and `org.eclipse.swt.internal.maya.types`;
-- `native/`: the JNI side, `maya.dll`, built by `native/build_maya.py` (see `native/README.md`).
+- `common/`: the Java side of the library, packages `org.eclipse.swt.internal.maya` and
+  `org.eclipse.swt.internal.maya.types`;
+- `native/`: the JNI side, `maya.dll`, built by `native/build_maya.py` (see `native/README.md`);
+- `win32/`: the backend, which provides the GC, the canvases and the drawn rows on top of the library
+  (`org.eclipse.swt.internal.canvasext.raster`, `org.eclipse.swt.internal.render`).
 
-Both started as HumbleUI Skija 0.116.3. They have been cut down to what SWT uses and renamed, so maya is SWT's own
+The fragment `org.eclipse.swt.maya` ships the library. `Eclipse SWT GPU` holds the graphics-hardware planes.
+
+`common/` and `native/` started as HumbleUI Skija 0.116.3. They have been cut down to what SWT uses and renamed, so maya is SWT's own
 library and no Skija jar is used.
 
 ## Origin and licence
@@ -57,7 +62,7 @@ is. `maya.library.path` names a folder holding `maya.dll`; `maya.loadFromLibrary
 
 The 138 classes SWT needs and nothing more:
 
-- the 57 classes the Skia GC's compiled code reaches, together with the Skija classes those depend on (measured with
+- the 57 classes the Maya GC's compiled code reaches, together with the Skija classes those depend on (measured with
   `skija_closure.py`, com.synexia `docs/M3-SCALE/runs/20261117-skija-absorb/`);
 - the classes their sources name, so that they compile;
 - the 41 classes the native library looks up by name when it loads.
@@ -68,7 +73,7 @@ Each of the 138 files starts with a line `// Changed for SWT (Apache-2.0 section
 
 - all 138: package moved to `org.eclipse.swt.internal.maya`;
 - 64: the methods SWT does not reach were removed (942 methods). A method was kept if any of these held:
-  - SWT's code or the Skia backend tests reach it (com.synexia `docs/M3-SCALE/runs/20261117-skija-absorb/tools/skija_reach.py`,
+  - SWT's code or the Maya backend tests reach it (com.synexia `docs/M3-SCALE/runs/20261117-skija-absorb/tools/skija_reach.py`,
     which also follows class initialisation, library callbacks and JDK callbacks);
   - it is a constructor, abstract or an override;
   - a kept method calls it (`skija_prune_fixpoint.py` with `SkijaPrune.java`).

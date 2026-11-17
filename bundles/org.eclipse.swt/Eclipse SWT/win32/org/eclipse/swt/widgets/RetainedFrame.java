@@ -49,7 +49,7 @@ final class RetainedFrame implements TileGrid.Listener {
 	static final int HAS_OVERLAY = 1, CONTENT_GDI = 2, OVERLAY_GDI = 4;
 	static final int MAX_TILES = Integer.getInteger ("swt.gpu.tiles", 256);
 	static final int CELL = TileGrid.SIZE, ATLAS_COLUMNS = 8;
-	static final int FILL_MASK = PaintKeys.mask (PaintKeys.KIND_FILL, 0, 0, 0, -1, 0, 0, PaintKeys.BACKEND_SKIA);
+	static final int FILL_MASK = PaintKeys.mask (PaintKeys.KIND_FILL, 0, 0, 0, -1, 0, 0, PaintKeys.BACKEND_MAYA);
 	static final int RECORD_BACKOFF_FRAMES = 32;
 	static final long TRIM_NANOS = Long.getLong ("swt.gpu.trimMillis", 30_000L) * 1_000_000L;
 	static final boolean DEBUG_OPS = Boolean.getBoolean ("swt.gpu.debugOps");
@@ -302,7 +302,7 @@ final class RetainedFrame implements TileGrid.Listener {
 			contentValid = 0;
 		}
 		if (clipRgn == 0) clipRgn = OS.CreateRectRgn (0, 0, 0, 0);
-		if (gpu == null && (RetainedPlanes.MODE & RetainedPlanes.MODE_SKIA) != 0 && (flags & CONTENT_GDI) == 0) gpu = createTarget ();
+		if (gpu == null && (RetainedPlanes.MODE & RetainedPlanes.MODE_MAYA) != 0 && (flags & CONTENT_GDI) == 0) gpu = createTarget ();
 		if (gpu != null) {
 			int state;
 			try {

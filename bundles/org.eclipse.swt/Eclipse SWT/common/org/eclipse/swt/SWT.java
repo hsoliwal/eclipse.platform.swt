@@ -2657,11 +2657,12 @@ public class SWT {
 	public static final int WEBKIT = 1 << 16;
 
 	/**
-	 * Style constant specifying that a <code>Canvas</code> is drawn through the Skia renderer
+	 * Style constant specifying that a <code>Canvas</code> is drawn through the Maya renderer
 	 * (value is 1&lt;&lt;23): its <code>PaintListener</code>s receive a <code>GCExtension</code>
-	 * over the M3 back buffer of that canvas. Honoured only when the Canvas startup mode
-	 * (<code>swt.widget.mode.Canvas</code>, else <code>swt.widget.mode</code>) is <code>m3</code>
-	 * or <code>gpu</code>; otherwise the canvas paints as it always did.
+	 * over the back buffer of that canvas. Honoured only when the Canvas startup mode
+	 * (<code>swt.widget.mode.Canvas</code>, else <code>swt.widget.mode</code>) is <code>maya</code>
+	 * (or its former names <code>skia</code> and <code>m3</code>) or <code>gpu</code>; otherwise the
+	 * canvas paints as it always did.
 	 * <p><b>Used By:</b></p>
 	 * <ul>
 	 * <li><code>Canvas</code></li>
@@ -2669,16 +2670,25 @@ public class SWT {
 	 *
 	 * @noreference This API is experimental and may change or be removed in future releases.
 	 */
-	public static final int SKIA = 1 << 23;
+	public static final int MAYA = 1 << 23;
 
 	/**
-	 * The former name of {@link #SKIA} (same value).
+	 * The former name of {@link #MAYA} (same value).
 	 *
-	 * @deprecated use {@link #SKIA}
+	 * @deprecated use {@link #MAYA}
 	 * @noreference This API is experimental and may change or be removed in future releases.
 	 */
 	@Deprecated
-	public static final int M3 = SKIA;
+	public static final int SKIA = MAYA;
+
+	/**
+	 * An older name of {@link #MAYA} (same value).
+	 *
+	 * @deprecated use {@link #MAYA}
+	 * @noreference This API is experimental and may change or be removed in future releases.
+	 */
+	@Deprecated
+	public static final int M3 = MAYA;
 
 	/**
 	 * Style constant specifying that a Browser should use Edge (WebView2)

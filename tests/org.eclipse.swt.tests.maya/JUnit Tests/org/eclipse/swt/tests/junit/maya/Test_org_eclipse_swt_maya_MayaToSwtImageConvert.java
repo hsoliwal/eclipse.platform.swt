@@ -1,0 +1,47 @@
+package org.eclipse.swt.tests.junit.maya;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.internal.canvasext.raster.RasterToSwtImageConverter;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import org.eclipse.swt.internal.maya.ColorAlphaType;
+import org.eclipse.swt.internal.maya.ColorType;
+import org.eclipse.swt.internal.maya.Image;
+import org.eclipse.swt.internal.maya.ImageInfo;
+import org.eclipse.swt.internal.maya.Surface;
+
+class Test_org_eclipse_swt_maya_MayaToSwtImageConvert {
+
+	@BeforeAll
+	static void checkPlatform() {
+	    assumeTrue(SupportedTestPlatforms.isSupported(), "Test skipped: Platform not supported");
+	}
+	
+	@Test
+	public void testConvertSimpleRGBAImage() {
+		// Create a 2x2 Skija image with RGBA_8888
+		try (Surface surface = Surface.makeRaster(new ImageInfo(2, 2, ColorType.RGBA_8888, ColorAlphaType.PREMUL))) {
+			surface.getCanvas().clear(0xFF0000FF); // Blue
+			final Image mayaImage = surface.makeImageSnapshot();
+			final ImageData data = RasterToSwtImageConverter.convertMayaImageToImageData(mayaImage);
+			assertNotNull(data);
+			assertEquals(2, data.width);
+			assertEquals(2, data.height);
+			// Check if the data is blue (0,0,255)
+			final int r = data.data[0] & 0xFF;
+			final int g = data.data[1] & 0xFF;
+			final int b = data.data[2] & 0xFF;
+			// Print actual values for debugging
+			System.out.printf("Pixel (0,0): R=%d G=%d B=%d\n", r, g, b);
+			assertEquals(0, r, "Red channel should be 0");
+			assertEquals(0, g, "Green channel should be 0");
+			assertEquals(255, b, "Blue channel should be 255");
+		}
+	}
+
+}

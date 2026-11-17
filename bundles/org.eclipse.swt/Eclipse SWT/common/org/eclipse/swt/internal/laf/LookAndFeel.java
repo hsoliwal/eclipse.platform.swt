@@ -89,7 +89,7 @@ public final class LookAndFeel {
 
 	/** True for the modes in which SWT draws the widget itself: <code>custom</code>, <code>m3</code>, <code>gpu</code>. */
 	public static boolean drawn (WidgetMode mode) {
-		return mode == WidgetMode.CUSTOM || mode == WidgetMode.SKIA || mode == WidgetMode.GPU;
+		return mode == WidgetMode.CUSTOM || mode == WidgetMode.MAYA || mode == WidgetMode.GPU;
 	}
 
 	/**

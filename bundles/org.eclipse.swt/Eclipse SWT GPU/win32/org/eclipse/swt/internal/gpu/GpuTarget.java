@@ -29,7 +29,7 @@ import org.eclipse.swt.internal.maya.types.*;
 final class GpuTarget implements PlaneBackend.Target {
 	static final int TILE = TileGrid.SIZE;
 	static final int INTERSECT = ClipMode.INTERSECT.ordinal (), SRC = BlendMode.SRC.ordinal ();
-	static final int TEXT_MASK = PaintKeys.mask (PaintKeys.KIND_TEXT, 0, 0, 0, -1, 0, 0, PaintKeys.BACKEND_SKIA);
+	static final int TEXT_MASK = PaintKeys.mask (PaintKeys.KIND_TEXT, 0, 0, 0, -1, 0, 0, PaintKeys.BACKEND_MAYA);
 
 	final GlPlaneBackend backend;
 	final Surface [] tiles;

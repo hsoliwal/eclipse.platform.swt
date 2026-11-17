@@ -27,12 +27,12 @@ public interface IExternalCanvasFactory {
 	/**
 	 * M3 (GC seam, leaf 5): whether this factory handles a canvas being constructed (its runtime class is known, the
 	 * subclass constructor has not run yet). The default is the Initiative 31 rule the seam was adopted with: the canvas
-	 * was created with {@link SWT#SKIA} and is not a <code>StyledText</code>. The M3 factory decides by the widget mode of
+	 * was created with {@link SWT#MAYA} and is not a <code>StyledText</code>. The M3 factory decides by the widget mode of
 	 * the canvas's class instead, so every <code>Canvas</code> subclass is drawn through it in the <code>m3</code> and
 	 * <code>gpu</code> modes.
 	 */
 	default boolean accepts(Canvas canvas, int style) {
-		return (style & SWT.SKIA) != 0 && !(canvas instanceof StyledText);
+		return (style & SWT.MAYA) != 0 && !(canvas instanceof StyledText);
 	}
 
 	/**

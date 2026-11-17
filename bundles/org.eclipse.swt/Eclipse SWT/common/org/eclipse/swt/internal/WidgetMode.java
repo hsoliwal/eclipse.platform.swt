@@ -25,7 +25,7 @@ import java.util.stream.*;
  * on screen; the widget mediates the rest and keeps the native look and behaviour.</li>
  * <li>{@link #ORIGINAL}: the native SWT implementation, unchanged.</li>
  * <li>{@link #CUSTOM}: the widget is drawn by SWT itself with {@link org.eclipse.swt.graphics.GC}.</li>
- * <li>{@link #SKIA}: the widget is drawn by SWT itself through the Skia renderer.</li>
+ * <li>{@link #MAYA}: the widget is drawn by SWT itself through the Maya renderer.</li>
  * <li>{@link #GPU}: the widget is drawn by SWT itself on the graphics hardware (Direct2D on Windows,
  * OpenGL elsewhere).</li>
  * </ul>
@@ -45,8 +45,8 @@ public enum WidgetMode {
 	ORIGINAL,
 	/** Drawn by SWT with a GC. */
 	CUSTOM,
-	/** Drawn by SWT through the Skia renderer. */
-	SKIA,
+	/** Drawn by SWT through the Maya renderer. */
+	MAYA,
 	/** Drawn by SWT on the graphics hardware (Direct2D on Windows, OpenGL elsewhere). */
 	GPU;
 
@@ -92,7 +92,7 @@ public enum WidgetMode {
 
 	/**
 	 * Whether any startup property, global or per widget, asks for one of the modes (GC seam, leaf 5: the Display registers
-	 * the Skia canvas factory when one does, so <code>swt.widget.mode.StyledText=skia</code> alone reaches it).
+	 * the Maya canvas factory when one does, so <code>swt.widget.mode.StyledText=maya</code> alone reaches it).
 	 */
 	public static boolean anyRequested (WidgetMode... modes) {
 		List<WidgetMode> wanted = Arrays.asList (modes);
@@ -103,8 +103,8 @@ public enum WidgetMode {
 	}
 
 	/**
-	 * The mode a startup property value names, ignoring case. <code>m3</code> is the former name of
-	 * {@link #SKIA} and still names it.
+	 * The mode a startup property value names, ignoring case. <code>skia</code> and <code>m3</code> are former
+	 * names of {@link #MAYA} and still name it.
 	 *
 	 * @param value the value
 	 * @return the mode
@@ -116,7 +116,7 @@ public enum WidgetMode {
 
 	private static String canonical (String value) {
 		String name = value.trim ().toUpperCase (Locale.ROOT);
-		return "M3".equals (name) ? "SKIA" : name; //$NON-NLS-1$ //$NON-NLS-2$
+		return "SKIA".equals (name) || "M3".equals (name) ? "MAYA" : name; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	/** The mode the startup properties ask for, before any fallback. */

@@ -191,7 +191,7 @@ public class Test_org_eclipse_swt_internal_render_Win32Backends {
 		 */
 		String m3 = m3Loadable () ? "RasterRowCanvas" : "GcRowCanvas";
 		assertEquals ("GcRowCanvas", RowBackends.create (org.eclipse.swt.internal.WidgetMode.CUSTOM, "Tree", 0, TREEVIEW, () -> 100, hdc -> null).getClass ().getSimpleName ());
-		assertEquals (m3, RowBackends.create (org.eclipse.swt.internal.WidgetMode.SKIA, "Tree", 0, TREEVIEW, () -> 100, hdc -> null).getClass ().getSimpleName ());
+		assertEquals (m3, RowBackends.create (org.eclipse.swt.internal.WidgetMode.MAYA, "Tree", 0, TREEVIEW, () -> 100, hdc -> null).getClass ().getSimpleName ());
 		assertEquals (m3, RowBackends.create (org.eclipse.swt.internal.WidgetMode.GPU, "Tree", 0, TREEVIEW, () -> 100, hdc -> null).getClass ().getSimpleName ());
 	}
 
