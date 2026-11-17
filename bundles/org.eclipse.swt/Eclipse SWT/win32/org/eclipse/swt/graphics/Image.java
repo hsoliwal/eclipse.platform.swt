@@ -113,6 +113,9 @@ public final class Image extends Resource implements Drawable {
 	 */
 	GC memGC;
 
+	/* counts the GCs created on and disposed of this image: the pixels can change only in between (ImageContent) */
+	int contentChanges;
+
 	/**
 	 * AbstractImageProvider to avail right ImageProvider (ImageDataProvider or ImageFileNameProvider)
 	 */
@@ -2029,6 +2032,7 @@ private DestroyableImageHandle init(ImageData i, int zoom) {
  */
 @Override
 public long internal_new_GC (GCData data) {
+	contentChanges++;
 	return this.imageProvider.configureGCData(data);
 }
 
@@ -2102,6 +2106,7 @@ private void checkImageTypeForValidCustomDrawing(int zoom) {
 @Override
 public void internal_dispose_GC (long hDC, GCData data) {
 	OS.DeleteDC(hDC);
+	contentChanges++;
 }
 
 /**

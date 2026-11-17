@@ -17,6 +17,7 @@ import org.junit.platform.suite.api.Suite;
 		org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawPolyline.class, //
 		org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawRectangle.class, //
 		org.eclipse.swt.tests.junit.m3gc.Test_org_eclipse_swt_m3gc_drawRoundRectangle.class, //
+		Test_org_eclipse_swt_m3gc_drawImageCache.class, //
 		Test_org_eclipse_swt_m3gc_drawString.class, //
 		Test_org_eclipse_swt_m3gc_drawText.class, //
 		Test_org_eclipse_swt_m3gc_drawText_NoCache.class, //

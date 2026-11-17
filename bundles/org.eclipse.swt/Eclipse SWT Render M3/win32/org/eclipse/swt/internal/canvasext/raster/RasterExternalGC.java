@@ -17,6 +17,8 @@ package org.eclipse.swt.internal.canvasext.raster;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Arrays;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -29,6 +31,7 @@ import org.eclipse.swt.graphics.FontMetricsExtension;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.GCData;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageContent;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.LineAttributes;
 import org.eclipse.swt.graphics.Path;
@@ -98,6 +101,14 @@ public class RasterExternalGC implements IExternalGC {
 
 	private final int initialSaveCount;
 	private final RasterPaintManager paintManager;
+	// M3 (efficiency): the Skia copy of each image drawn since the GC was made or disposed, by zoom and content changes
+	// (ImageContent), so an image drawn many times in one paint (the icon of every row) is copied from its bitmap once.
+	// A copy is never kept while a GC draws into the image; the copies are closed at dispose and above the limit.
+	private final Map<Image, CachedImage> images = new IdentityHashMap<>();
+	static final int IMAGE_CACHE_LIMIT = 64;
+
+	private record CachedImage(int zoom, int changes, IRasterImage raster) {
+	}
 	private final DpiScalerUtil dpiScalerUtil;
 
 	public RasterExternalGC(IRasterCanvasExtension exst, int style) {
@@ -115,9 +126,35 @@ public class RasterExternalGC implements IExternalGC {
 
 	}
 
+	/* the kept Skia copy of an image at a zoom, made now if needed; null while a GC draws into the image */
+	private IRasterImage cachedImage(Image image, int zoom) {
+		if (ImageContent.isDrawnInto(image)) {
+			return null;
+		}
+		final int changes = ImageContent.changes(image);
+		final CachedImage kept = images.get(image);
+		if (kept != null && kept.zoom() == zoom && kept.changes() == changes) {
+			return kept.raster();
+		}
+		if (kept != null) {
+			images.remove(image).raster().close();
+		} else if (images.size() >= IMAGE_CACHE_LIMIT) {
+			closeImages();
+		}
+		final IRasterImage raster = SwtToRasterImageConverter.convertSWTImageToM3Image(image, zoom, resources);
+		images.put(image, new CachedImage(zoom, changes, raster));
+		return raster;
+	}
+
+	private void closeImages() {
+		images.values().forEach(kept -> kept.raster().close());
+		images.clear();
+	}
+
 	@Override
 	public void dispose() {
 
+		closeImages();
 		resources.resetBaseColors();
 		// Restore all canvas state changes made during the lifetime of this GC,
 		// including any clipping or transform layers pushed after construction
@@ -204,14 +241,21 @@ public class RasterExternalGC implements IExternalGC {
 		paintManager.performDraw(paint -> {
 			paint.setAlpha(alpha);
 			paint.setAntiAlias(true);
-			canvas.drawImageRect(
-					SwtToRasterImageConverter.convertSWTImageToM3Image(image, getScaler().autoScaleUp(100 * fac),
-							resources),
-					RectangleConverter.createScaledRectangle(getScaler(), srcX * fac, srcY * fac, srcWidth * fac,
-							srcHeight * fac),
-					RectangleConverter.createScaledRectangle(getScaler(), destX, destY, destWidth, destHeight),
-					this.interpolationMode, paint, false);
-
+			final int zoom = getScaler().autoScaleUp(100 * fac);
+			final IRasterImage cached = cachedImage(image, zoom);
+			final IRasterImage raster = cached != null ? cached
+					: SwtToRasterImageConverter.convertSWTImageToM3Image(image, zoom, resources);
+			try {
+				canvas.drawImageRect(raster,
+						RectangleConverter.createScaledRectangle(getScaler(), srcX * fac, srcY * fac, srcWidth * fac,
+								srcHeight * fac),
+						RectangleConverter.createScaledRectangle(getScaler(), destX, destY, destWidth, destHeight),
+						this.interpolationMode, paint, false);
+			} finally {
+				if (cached == null) {
+					raster.close();
+				}
+			}
 		});
 
 	}
