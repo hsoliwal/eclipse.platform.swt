@@ -29,7 +29,7 @@ import org.eclipse.swt.internal.win32.*;
  */
 final class TableDrawnPlane extends DrawnPlane {
 	/** The Table's startup mode, read once: a drawn plane exists only for <code>custom</code>, <code>m3</code> and <code>gpu</code>. */
-	static final WidgetMode MODE = WidgetMode.of ("Table", WidgetMode.VIEWPORT, WidgetMode.CUSTOM, WidgetMode.M3, WidgetMode.GPU);
+	static final WidgetMode MODE = WidgetMode.of ("Table", WidgetMode.VIEWPORT, WidgetMode.CUSTOM, WidgetMode.SKIA, WidgetMode.GPU);
 	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.widgets.Table");
 
 	final Table table;

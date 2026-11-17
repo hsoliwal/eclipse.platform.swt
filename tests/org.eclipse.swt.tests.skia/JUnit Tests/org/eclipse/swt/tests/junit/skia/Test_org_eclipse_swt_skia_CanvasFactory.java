@@ -29,12 +29,12 @@ import org.eclipse.swt.widgets.Event;
 import org.junit.jupiter.api.Test;
 
 /**
- * Headless (no Display): the activation decision of the M3 canvas factory (GC seam, leaf 4; leaf 5 contract). A plain
+ * Headless (no Display): the activation decision of the Skia canvas factory (GC seam, leaf 4; leaf 5 contract). A plain
  * canvas gets a handler when the widget mode of <code>Canvas</code> is <code>m3</code> or <code>gpu</code>, with or
- * without <code>SWT.M3</code> (leaf 4 required the bit: L5-02); the selector and the handler makers are stubbed, so the
+ * without <code>SWT.SKIA</code> (leaf 4 required the bit: L5-02); the selector and the handler makers are stubbed, so the
  * mode maps to a handler or null. The per-class matrix is Test_org_eclipse_swt_skia_CanvasCoverage.
  */
-public class Test_org_eclipse_swt_skia_M3CanvasFactory {
+public class Test_org_eclipse_swt_skia_CanvasFactory {
 	/** A handler double: which maker answered is the outcome. */
 	static final class HandlerDouble implements IExternalCanvasHandler {
 		final String backend;
@@ -68,32 +68,32 @@ public class Test_org_eclipse_swt_skia_M3CanvasFactory {
 	}
 
 	static WidgetMode shipped() {
-		return WidgetMode.of(RasterCanvasFactory.WIDGET, WidgetMode.M3, WidgetMode.GPU);
+		return WidgetMode.of(RasterCanvasFactory.WIDGET, WidgetMode.SKIA, WidgetMode.GPU);
 	}
 
 	@Test
 	public void testBackendNeedsADrawnModeNotTheStyleBit() {
 		for (WidgetMode mode : WidgetMode.values()) {
-			WidgetMode expected = mode == WidgetMode.M3 || mode == WidgetMode.GPU ? mode : null;
-			// leaf 5 (L5-02): a plain canvas no longer needs SWT.M3 in a drawn mode; leaf 4 asserted null here
-			assertEquals(expected, RasterCanvasFactory.backend(mode, SWT.NONE), mode + " without SWT.M3");
-			assertEquals(expected, RasterCanvasFactory.backend(mode, SWT.BORDER | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED), mode + " without SWT.M3");
-			assertEquals(expected, RasterCanvasFactory.backend(mode, SWT.M3), mode + " with SWT.M3");
-			assertEquals(expected, RasterCanvasFactory.backend(mode, SWT.M3 | SWT.BORDER | SWT.NO_BACKGROUND), mode + " with SWT.M3 and other bits");
+			WidgetMode expected = mode == WidgetMode.SKIA || mode == WidgetMode.GPU ? mode : null;
+			// leaf 5 (L5-02): a plain canvas no longer needs SWT.SKIA in a drawn mode; leaf 4 asserted null here
+			assertEquals(expected, RasterCanvasFactory.backend(mode, SWT.NONE), mode + " without SWT.SKIA");
+			assertEquals(expected, RasterCanvasFactory.backend(mode, SWT.BORDER | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED), mode + " without SWT.SKIA");
+			assertEquals(expected, RasterCanvasFactory.backend(mode, SWT.SKIA), mode + " with SWT.SKIA");
+			assertEquals(expected, RasterCanvasFactory.backend(mode, SWT.SKIA | SWT.BORDER | SWT.NO_BACKGROUND), mode + " with SWT.SKIA and other bits");
 		}
 	}
 
 	@Test
 	public void testCreateAnswersTheSelectedHandlerOrNull() {
-		assertSame(RASTER, factory(WidgetMode.M3).create(null, SWT.M3));
-		assertSame(GPU, factory(WidgetMode.GPU).create(null, SWT.M3));
-		assertSame(RASTER, factory(WidgetMode.M3).create(null, SWT.M3 | SWT.BORDER));
+		assertSame(RASTER, factory(WidgetMode.SKIA).create(null, SWT.SKIA));
+		assertSame(GPU, factory(WidgetMode.GPU).create(null, SWT.SKIA));
+		assertSame(RASTER, factory(WidgetMode.SKIA).create(null, SWT.SKIA | SWT.BORDER));
 		// leaf 5 (L5-02): without the style bit too; leaf 4 asserted null for these two
-		assertSame(RASTER, factory(WidgetMode.M3).create(null, SWT.NONE), "m3 mode without the style bit");
+		assertSame(RASTER, factory(WidgetMode.SKIA).create(null, SWT.NONE), "m3 mode without the style bit");
 		assertSame(GPU, factory(WidgetMode.GPU).create(null, SWT.BORDER), "gpu mode without the style bit");
-		assertNull(factory(WidgetMode.VIEWPORT).create(null, SWT.M3), "viewport mode");
-		assertNull(factory(WidgetMode.ORIGINAL).create(null, SWT.M3), "original mode");
-		assertNull(factory(WidgetMode.CUSTOM).create(null, SWT.M3), "custom mode (a GC, no M3 surface)");
+		assertNull(factory(WidgetMode.VIEWPORT).create(null, SWT.SKIA), "viewport mode");
+		assertNull(factory(WidgetMode.ORIGINAL).create(null, SWT.SKIA), "original mode");
+		assertNull(factory(WidgetMode.CUSTOM).create(null, SWT.SKIA), "custom mode (a GC, no M3 surface)");
 	}
 
 	@Test
@@ -101,7 +101,7 @@ public class Test_org_eclipse_swt_skia_M3CanvasFactory {
 		assumeTrue(System.getProperty(WidgetMode.PROPERTY) == null, "the test JVM sets no global mode");
 		assumeTrue(System.getProperty(WidgetMode.PROPERTY + "." + RasterCanvasFactory.WIDGET) == null, "the test JVM sets no Canvas mode");
 		assertEquals(WidgetMode.ORIGINAL, shipped(), "Canvas has no viewport: the fallback is the stock path");
-		assertNull(RasterCanvasFactory.backend(shipped(), SWT.M3), "default off even with the style bit");
+		assertNull(RasterCanvasFactory.backend(shipped(), SWT.SKIA), "default off even with the style bit");
 		assertNull(RasterCanvasFactory.backend(shipped(), SWT.NONE), "default off without it");
 	}
 
@@ -111,13 +111,13 @@ public class Test_org_eclipse_swt_skia_M3CanvasFactory {
 		String previous = System.getProperty(key);
 		try {
 			System.setProperty(key, "m3");
-			assertEquals(WidgetMode.M3, shipped());
-			assertEquals(WidgetMode.M3, RasterCanvasFactory.backend(shipped(), SWT.M3));
+			assertEquals(WidgetMode.SKIA, shipped());
+			assertEquals(WidgetMode.SKIA, RasterCanvasFactory.backend(shipped(), SWT.SKIA));
 			System.setProperty(key, "gpu");
-			assertEquals(WidgetMode.GPU, RasterCanvasFactory.backend(shipped(), SWT.M3));
+			assertEquals(WidgetMode.GPU, RasterCanvasFactory.backend(shipped(), SWT.SKIA));
 			System.setProperty(key, "custom");
 			assertEquals(WidgetMode.ORIGINAL, shipped(), "a mode the canvas does not implement falls back to the stock path");
-			assertNull(RasterCanvasFactory.backend(shipped(), SWT.M3));
+			assertNull(RasterCanvasFactory.backend(shipped(), SWT.SKIA));
 		} finally {
 			// no property leaks into the next test class (PRE_EXISTING.tsv P04 is exactly that leak)
 			if (previous == null) {
@@ -130,6 +130,6 @@ public class Test_org_eclipse_swt_skia_M3CanvasFactory {
 
 	@Test
 	public void testStyleBitIsTheOneTheSeamChecks() {
-		assertEquals(1 << 23, SWT.M3, "I31's canvas style bit, our constant (brief rule 14)");
+		assertEquals(1 << 23, SWT.SKIA, "I31's canvas style bit, our constant (brief rule 14)");
 	}
 }

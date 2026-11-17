@@ -36,7 +36,7 @@ import io.github.humbleui.skija.Surface;
 import io.github.humbleui.skija.SurfaceOrigin;
 
 /**
- * The M3 renderer behind a <code>Canvas</code> created with {@link SWT#M3} (GC seam, leaf 4): the canvas's
+ * The M3 renderer behind a <code>Canvas</code> created with {@link SWT#SKIA} (GC seam, leaf 4): the canvas's
  * <code>WM_PAINT</code> through {@link IExternalCanvasHandler}, painting the damage into a retained {@link BackBuffer}
  * of the canvas through a <code>GCExtension</code> over {@link RasterExternalGC}, then presenting it. The surface is
  * exactly the drawn planes' (<code>RasterRowCanvas.target</code>): <code>Surface.makeRasterDirect</code> over the DIB
@@ -62,7 +62,7 @@ import io.github.humbleui.skija.SurfaceOrigin;
  * <p>
  * Leaf 7 (pattern COMPOSITE_PAINT_HOOK v1): a <code>Composite</code> that paints itself (CTabFolder, CBanner, ViewForm, an
  * application's or Nebula's composite with a Paint listener) gets this handler too, made at its first painted
- * <code>WM_PAINT</code> (<code>Composite.paintThroughM3</code>). Its child controls stay native windows: the paint runs between
+ * <code>WM_PAINT</code> (<code>Composite.paintThroughSkia</code>). Its child controls stay native windows: the paint runs between
  * <code>BeginPaint</code> and <code>EndPaint</code> with <code>WS_CLIPCHILDREN</code>, so the present, clipped by the paint
  * device context, never covers a child (CHILD_CLIP v1); the back buffer under a child holds the composite's own pixels.
  * </p>

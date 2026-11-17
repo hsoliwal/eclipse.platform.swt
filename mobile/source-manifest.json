@@ -595,7 +595,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWT.java",
-      "sha256": "6be60bc57f7d2cb45a8efebe0c3e302790c1ca348a8116078510bf30846843b3"
+      "sha256": "8a26a61f88312794b4d40513299b78b08e5d416541e6638f809ef7bd2cc0f888"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWTError.java",

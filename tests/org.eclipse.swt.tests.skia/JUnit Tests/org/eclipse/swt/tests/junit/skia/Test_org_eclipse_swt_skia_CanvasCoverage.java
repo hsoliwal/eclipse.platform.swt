@@ -45,9 +45,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Headless (no Display): the leaf-5 activation matrix of the M3 canvas factory, mode x Canvas subclass x style (pattern
+ * Headless (no Display): the leaf-5 activation matrix of the Skia canvas factory, mode x Canvas subclass x style (pattern
  * M3-CANVAS-ACTIVATION v2). In the <code>m3</code> and <code>gpu</code> modes every Canvas subclass of the fork (and an
- * application's) gets the M3 handler with or without <code>SWT.M3</code>; a GLCanvas or an <code>SWT.EMBEDDED</code> host
+ * application's) gets the M3 handler with or without <code>SWT.SKIA</code>; a GLCanvas or an <code>SWT.EMBEDDED</code> host
  * only with the bit; a Decorations (Shell) never; the other modes never. The class decides through the existing selector
  * (<code>swt.widget.mode.&lt;SimpleName&gt;</code>, most derived first, up to Canvas, then the global property). Classes
  * only: no widget is constructed.
@@ -69,14 +69,14 @@ public class Test_org_eclipse_swt_skia_CanvasCoverage {
 
 	static final List<Class<?>> COVERED = List.of(Canvas.class, StyledText.class, CLabel.class, TableCursor.class,
 			TreeCursor.class, AnimatedProgress.class, Java2DCanvas.class, AppCanvas.class, AppText.class);
-	static final int[] STYLES = { SWT.NONE, SWT.M3, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED, SWT.M3 | SWT.BORDER,
+	static final int[] STYLES = { SWT.NONE, SWT.SKIA, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED, SWT.SKIA | SWT.BORDER,
 			SWT.NO_MERGE_PAINTS | SWT.NO_REDRAW_RESIZE };
 
 	/* the properties a test changed, with their previous values (restored after each test: the P04 lesson) */
 	private final Map<String, String> saved = new HashMap<>();
 
 	static WidgetMode drawn(WidgetMode mode) {
-		return mode == WidgetMode.M3 || mode == WidgetMode.GPU ? mode : null;
+		return mode == WidgetMode.SKIA || mode == WidgetMode.GPU ? mode : null;
 	}
 
 	static String key(String widget) {
@@ -130,11 +130,11 @@ public class Test_org_eclipse_swt_skia_CanvasCoverage {
 	@Test
 	public void testForeignCanvasesNeedTheStyleBit() {
 		for (WidgetMode mode : WidgetMode.values()) {
-			assertNull(RasterCanvasFactory.backend(mode, GLCanvas.class, SWT.NONE), mode + " GLCanvas without SWT.M3");
-			assertNull(RasterCanvasFactory.backend(mode, Canvas.class, SWT.EMBEDDED), mode + " embedded host without SWT.M3");
+			assertNull(RasterCanvasFactory.backend(mode, GLCanvas.class, SWT.NONE), mode + " GLCanvas without SWT.SKIA");
+			assertNull(RasterCanvasFactory.backend(mode, Canvas.class, SWT.EMBEDDED), mode + " embedded host without SWT.SKIA");
 			assertNull(RasterCanvasFactory.backend(mode, AppCanvas.class, SWT.EMBEDDED | SWT.NO_BACKGROUND), mode + " embedded subclass");
-			assertEquals(drawn(mode), RasterCanvasFactory.backend(mode, GLCanvas.class, SWT.M3), mode + " GLCanvas with SWT.M3");
-			assertEquals(drawn(mode), RasterCanvasFactory.backend(mode, Canvas.class, SWT.EMBEDDED | SWT.M3), mode + " embedded with SWT.M3");
+			assertEquals(drawn(mode), RasterCanvasFactory.backend(mode, GLCanvas.class, SWT.SKIA), mode + " GLCanvas with SWT.SKIA");
+			assertEquals(drawn(mode), RasterCanvasFactory.backend(mode, Canvas.class, SWT.EMBEDDED | SWT.SKIA), mode + " embedded with SWT.SKIA");
 		}
 		assertTrue(RasterCanvasFactory.foreign(GLCanvas.class, SWT.NONE));
 		assertFalse(RasterCanvasFactory.foreign(StyledText.class, SWT.NO_BACKGROUND));
@@ -155,36 +155,36 @@ public class Test_org_eclipse_swt_skia_CanvasCoverage {
 		List<Class<?>> asked = new ArrayList<>();
 		RasterCanvasFactory m3 = new RasterCanvasFactory(type -> {
 			asked.add(type);
-			return WidgetMode.M3;
-		}, c -> Test_org_eclipse_swt_skia_M3CanvasFactory.RASTER, c -> Test_org_eclipse_swt_skia_M3CanvasFactory.GPU);
+			return WidgetMode.SKIA;
+		}, c -> Test_org_eclipse_swt_skia_CanvasFactory.RASTER, c -> Test_org_eclipse_swt_skia_CanvasFactory.GPU);
 		assertTrue(m3.accepts(null, SWT.NONE), "a plain canvas in m3 without the bit");
-		assertSame(Test_org_eclipse_swt_skia_M3CanvasFactory.RASTER, m3.create(null, SWT.NONE));
+		assertSame(Test_org_eclipse_swt_skia_CanvasFactory.RASTER, m3.create(null, SWT.NONE));
 		assertFalse(m3.accepts(null, SWT.EMBEDDED), "an embedded host without the bit");
 		assertEquals(List.of(Canvas.class, Canvas.class, Canvas.class), asked, "the selector sees the canvas class");
 		RasterCanvasFactory off = new RasterCanvasFactory((Class<?> type) -> WidgetMode.ORIGINAL,
-				c -> Test_org_eclipse_swt_skia_M3CanvasFactory.RASTER, c -> Test_org_eclipse_swt_skia_M3CanvasFactory.GPU);
-		assertFalse(off.accepts(null, SWT.M3), "original mode, even with the bit");
-		assertNull(off.create(null, SWT.M3));
+				c -> Test_org_eclipse_swt_skia_CanvasFactory.RASTER, c -> Test_org_eclipse_swt_skia_CanvasFactory.GPU);
+		assertFalse(off.accepts(null, SWT.SKIA), "original mode, even with the bit");
+		assertNull(off.create(null, SWT.SKIA));
 	}
 
 	@Test
 	public void testPerClassPropertyDecides() {
 		assumeTrue(noModeProperty(), "the test JVM sets no widget mode");
 		set("StyledText", "m3");
-		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(StyledText.class));
-		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(AppText.class), "a subclass inherits its superclass's property");
+		assertEquals(WidgetMode.SKIA, RasterCanvasFactory.mode(StyledText.class));
+		assertEquals(WidgetMode.SKIA, RasterCanvasFactory.mode(AppText.class), "a subclass inherits its superclass's property");
 		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(CLabel.class), "no property: the stock path");
 		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(Canvas.class));
 		set("Canvas", "gpu");
 		assertEquals(WidgetMode.GPU, RasterCanvasFactory.mode(CLabel.class), "the Canvas property reaches every subclass");
 		assertEquals(WidgetMode.GPU, RasterCanvasFactory.mode(AppCanvas.class));
-		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(StyledText.class), "the most derived property wins");
+		assertEquals(WidgetMode.SKIA, RasterCanvasFactory.mode(StyledText.class), "the most derived property wins");
 		set("Canvas", null);
 		set(null, "m3");
 		set("StyledText", "original");
 		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(StyledText.class), "a class opts out of a global m3");
 		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(AppText.class));
-		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(CLabel.class), "the global property for the others");
+		assertEquals(WidgetMode.SKIA, RasterCanvasFactory.mode(CLabel.class), "the global property for the others");
 		set("AppCanvas", "custom");
 		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(AppCanvas.class), "an unsupported mode falls back (Canvas has no viewport)");
 	}
@@ -195,27 +195,27 @@ public class Test_org_eclipse_swt_skia_CanvasCoverage {
 		Object anonymous = new Object() {
 		};
 		set("Object", "m3");
-		assertEquals(WidgetMode.M3, WidgetMode.of(anonymous.getClass(), Object.class, WidgetMode.M3), "the empty simple name is skipped");
+		assertEquals(WidgetMode.SKIA, WidgetMode.of(anonymous.getClass(), Object.class, WidgetMode.SKIA), "the empty simple name is skipped");
 	}
 
 	@Test
 	public void testAnyRequestedSeesGlobalAndPerWidgetKeys() {
 		assumeTrue(noModeProperty(), "the test JVM sets no widget mode");
-		assertFalse(WidgetMode.anyRequested(WidgetMode.M3, WidgetMode.GPU), "no property: the Display registers nothing");
+		assertFalse(WidgetMode.anyRequested(WidgetMode.SKIA, WidgetMode.GPU), "no property: the Display registers nothing");
 		set(null, "custom");
-		assertFalse(WidgetMode.anyRequested(WidgetMode.M3, WidgetMode.GPU), "custom is not drawn through M3");
+		assertFalse(WidgetMode.anyRequested(WidgetMode.SKIA, WidgetMode.GPU), "custom is not drawn through M3");
 		set("StyledText", " M3 ");
-		assertTrue(WidgetMode.anyRequested(WidgetMode.M3, WidgetMode.GPU), "a per-widget key alone, trimmed, any case");
+		assertTrue(WidgetMode.anyRequested(WidgetMode.SKIA, WidgetMode.GPU), "a per-widget key alone, trimmed, any case");
 		set("StyledText", null);
 		set("Tree", "gpu");
-		assertTrue(WidgetMode.anyRequested(WidgetMode.M3, WidgetMode.GPU));
+		assertTrue(WidgetMode.anyRequested(WidgetMode.SKIA, WidgetMode.GPU));
 	}
 
 	@Test
 	public void testDefaultAcceptIsTheInitiative31Rule() {
 		IExternalCanvasFactory foreign = c -> null;
-		assertTrue(foreign.accepts(null, SWT.M3), "the style bit");
-		assertTrue(foreign.accepts(null, SWT.M3 | SWT.BORDER));
+		assertTrue(foreign.accepts(null, SWT.SKIA), "the style bit");
+		assertTrue(foreign.accepts(null, SWT.SKIA | SWT.BORDER));
 		assertFalse(foreign.accepts(null, SWT.NONE), "no bit: a foreign factory keeps the stock path");
 		assertFalse(foreign.accepts(null, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED));
 	}

@@ -21,7 +21,7 @@ import org.eclipse.swt.internal.*;
 
 /**
  * Chooses the backend of a drawn plane on win32 from the widget's mode: <code>custom</code> draws with the GC,
- * <code>m3</code> through the M3 renderer on the CPU, <code>gpu</code> through the M3 renderer on the graphics hardware
+ * <code>m3</code> through the Skia renderer on the CPU, <code>gpu</code> through the Skia renderer on the graphics hardware
  * (OpenGL). A backend that cannot start falls back (<code>gpu</code> to <code>m3</code> to <code>custom</code>) and says so in
  * the log. New code is Java only (user decision 2026-10-17): no native code of its own.
  */
@@ -30,10 +30,10 @@ public final class RowBackends {
 	/** The M3 backend, compiled from the Eclipse SWT Skia source folder against the Skija library jars. */
 	static final String M3_CANVAS = "org.eclipse.swt.internal.render.RasterRowCanvas";
 	/**
-	 * The M3 backend of <code>SWT.M3</code> canvases (GC seam, leaf 4), compiled from the same folder; the Display registers it
+	 * The M3 backend of <code>SWT.SKIA</code> canvases (GC seam, leaf 4), compiled from the same folder; the Display registers it
 	 * by name with <code>ExternalCanvasHandler</code> when the Canvas mode is <code>m3</code> or <code>gpu</code>.
 	 */
-	public static final String M3_CANVAS_FACTORY = "org.eclipse.swt.internal.canvasext.raster.RasterCanvasFactory";
+	public static final String SKIA_CANVAS_FACTORY = "org.eclipse.swt.internal.canvasext.raster.RasterCanvasFactory";
 
 	private RowBackends () {
 	}
@@ -53,7 +53,7 @@ public final class RowBackends {
 			BufferCanvas gpu = m3 ("gpu", widget, hwnd, itemThemeClass, zoom);
 			if (gpu != null) return gpu;
 		}
-		if (mode == WidgetMode.GPU || mode == WidgetMode.M3) {
+		if (mode == WidgetMode.GPU || mode == WidgetMode.SKIA) {
 			BufferCanvas m3 = m3 (null, widget, hwnd, itemThemeClass, zoom);
 			if (m3 != null) return m3;
 		}
@@ -75,7 +75,7 @@ public final class RowBackends {
 			if (canvas == null) LOG.info (() -> widget + ": no OpenGL context for the gpu backend; trying m3");
 			return canvas;
 		} catch (ReflectiveOperationException | LinkageError e) {
-			LOG.info (() -> widget + ": the " + (factory == null ? "m3" : factory) + " backend cannot start (" + e + "); falling back");
+			LOG.info (() -> widget + ": the " + (factory == null ? "skia" : factory) + " backend cannot start (" + e + "); falling back");
 			return null;
 		}
 	}

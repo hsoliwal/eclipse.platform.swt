@@ -141,7 +141,7 @@ public class Test_ViewportDifferentialHarness {
 	public void theReferenceOfThisSwtIsItsRequestedMode () {
 		String reference = ViewportDifferential.reference ("Composite");
 		assertTrue (reference.equals ("official") || reference.equals ("viewport") || reference.equals ("original")
-			|| reference.equals ("custom") || reference.equals ("m3") || reference.equals ("gpu"), reference);
+			|| reference.equals ("custom") || reference.equals ("skia") || reference.equals ("m3") || reference.equals ("gpu"), reference);
 		assertEquals (reference.equals ("official") || reference.equals ("original"), ViewportDifferential.isReference ("Composite"));
 	}
 

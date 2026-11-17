@@ -1610,8 +1610,8 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 		return super.WM_PAINT (wParam, lParam);
 	}
 
-	/* M3 (GC seam, leaf 7): a composite that paints itself, through the M3 renderer in the m3/gpu modes (paintThroughM3) */
-	LRESULT m3 = paintThroughM3 (wParam, lParam);
+	/* M3 (GC seam, leaf 7): a composite that paints itself, through the Skia renderer in the m3/gpu modes (paintThroughSkia) */
+	LRESULT m3 = paintThroughSkia (wParam, lParam);
 	if (m3 != null) return m3;
 
 	/* Set the clipping bits */
@@ -1842,7 +1842,7 @@ boolean m3Stock;
  * viewport-plane composite and a declined one take the stock path. Child windows stay native: the handler paints between
  * BeginPaint and EndPaint with WS_CLIPCHILDREN, as the stock path does, so its present never covers them. Null: the stock path.
  */
-LRESULT paintThroughM3 (long wParam, long lParam) {
+LRESULT paintThroughSkia (long wParam, long lParam) {
 	if (m3Stock || !(hooks (SWT.Paint) || filters (SWT.Paint)) || (retainedBits & GPU_RETAINED) != 0 || plane != null) return null;
 	if (m3Handler == null) {
 		m3Handler = org.eclipse.swt.internal.canvasext.ExternalCanvasHandler.createCompositeHandler (this);

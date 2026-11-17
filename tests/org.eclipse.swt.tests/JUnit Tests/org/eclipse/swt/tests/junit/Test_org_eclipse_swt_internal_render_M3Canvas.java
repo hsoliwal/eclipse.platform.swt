@@ -143,7 +143,7 @@ public class Test_org_eclipse_swt_internal_render_M3Canvas {
 
 	@Test
 	public void backendSelectionPrefersTheM3Backend () {
-		BufferCanvas m3 = RowBackends.create (WidgetMode.M3, "Tree", 0, TREEVIEW, () -> 100, hdc -> null);
+		BufferCanvas m3 = RowBackends.create (WidgetMode.SKIA, "Tree", 0, TREEVIEW, () -> 100, hdc -> null);
 		try {
 			assertEquals ("RasterRowCanvas", m3.getClass ().getSimpleName ());
 		} finally {

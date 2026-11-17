@@ -27,12 +27,12 @@ import org.eclipse.swt.widgets.Decorations;
  * Provides a factory for creating M3 canvas extensions. This factory is used by
  * org.eclipse.swt.internal.canvasext.ExternalCanvasHandler (the win32 Display registers it by name when the Canvas
  * startup mode is m3 or gpu; the ServiceLoader path stays for a bundle that ships a META-INF/services entry) to create
- * canvas extensions when the {@link SWT#M3} style is specified.
+ * canvas extensions when the {@link SWT#SKIA} style is specified.
  * <p>
  * M3 (GC seam, leaf 5; pattern M3-CANVAS-ACTIVATION v2, v1 was leaf 4's mode x style bit): the decision is the widget
  * mode of the canvas's class, {@link #backend(WidgetMode, Class, int)}. In the <code>m3</code> (raster,
  * {@link RasterCanvasHandler#raster}) and <code>gpu</code> ({@link RasterCanvasHandler#gpu}) modes every <code>Canvas</code>
- * subclass gets a handler, with or without <code>SWT.M3</code> (StyledText, CLabel, the table and tree cursors, Nebula's
+ * subclass gets a handler, with or without <code>SWT.SKIA</code> (StyledText, CLabel, the table and tree cursors, Nebula's
  * canvases); a class may choose its own mode (<code>swt.widget.mode.StyledText</code>, then a superclass's property up to
  * <code>swt.widget.mode.Canvas</code>, then <code>swt.widget.mode</code>). A canvas whose pixels are not its paint
  * listeners' (a <code>GLCanvas</code>, an <code>SWT.EMBEDDED</code> host) needs the bit, a <code>Decorations</code>
@@ -75,20 +75,20 @@ public class RasterCanvasFactory implements IExternalCanvasFactory {
 	 */
 	public static WidgetMode mode(Class<?> type) {
 		Class<?> root = Canvas.class.isAssignableFrom(type) ? Canvas.class : Composite.class;
-		return WidgetMode.of(type, root, WidgetMode.M3, WidgetMode.GPU);
+		return WidgetMode.of(type, root, WidgetMode.SKIA, WidgetMode.GPU);
 	}
 
 	/**
 	 * The backend a mode, a canvas class and a style select: {@link WidgetMode#GPU}, {@link WidgetMode#M3} (raster) or null
-	 * for the stock path. A mode that is not drawn through the M3 renderer is null (default off); a <code>Decorations</code>
-	 * never; a canvas whose pixels come from elsewhere ({@link #foreign}) only with <code>SWT.M3</code>; every other class
+	 * for the stock path. A mode that is not drawn through the Skia renderer is null (default off); a <code>Decorations</code>
+	 * never; a canvas whose pixels come from elsewhere ({@link #foreign}) only with <code>SWT.SKIA</code>; every other class
 	 * with or without the bit.
 	 */
 	public static WidgetMode backend(WidgetMode mode, Class<?> type, int style) {
-		if (mode != WidgetMode.M3 && mode != WidgetMode.GPU || Decorations.class.isAssignableFrom(type)) {
+		if (mode != WidgetMode.SKIA && mode != WidgetMode.GPU || Decorations.class.isAssignableFrom(type)) {
 			return null;
 		}
-		return foreign(type, style) && (style & SWT.M3) == 0 ? null : mode;
+		return foreign(type, style) && (style & SWT.SKIA) == 0 ? null : mode;
 	}
 
 	/** {@link #backend(WidgetMode, Class, int)} of a plain <code>Canvas</code>. */
@@ -109,7 +109,7 @@ public class RasterCanvasFactory implements IExternalCanvasFactory {
 	 * planes' rule of <code>Composite.createHandle</code>).
 	 */
 	public static WidgetMode compositeBackend(WidgetMode mode, Class<?> type, int style) {
-		if (mode != WidgetMode.M3 && mode != WidgetMode.GPU || Canvas.class.isAssignableFrom(type)) {
+		if (mode != WidgetMode.SKIA && mode != WidgetMode.GPU || Canvas.class.isAssignableFrom(type)) {
 			return null;
 		}
 		return foreignComposite(type, style) || (style & (SWT.TRANSPARENT | SWT.RIGHT_TO_LEFT)) != 0 ? null : mode;

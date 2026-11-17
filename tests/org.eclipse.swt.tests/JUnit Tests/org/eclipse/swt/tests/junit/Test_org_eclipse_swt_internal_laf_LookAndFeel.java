@@ -244,7 +244,7 @@ public class Test_org_eclipse_swt_internal_laf_LookAndFeel {
 		properties.put ("swt.widget.theme.Tree", "initiative31");
 		assertEquals ("initiative31", LookAndFeel.requested ("Tree", properties::get), "the widget property wins");
 		assertTrue (LookAndFeel.drawn (WidgetMode.CUSTOM));
-		assertTrue (LookAndFeel.drawn (WidgetMode.M3));
+		assertTrue (LookAndFeel.drawn (WidgetMode.SKIA));
 		assertTrue (LookAndFeel.drawn (WidgetMode.GPU));
 		assertFalse (LookAndFeel.drawn (WidgetMode.VIEWPORT));
 		assertFalse (LookAndFeel.drawn (WidgetMode.ORIGINAL));

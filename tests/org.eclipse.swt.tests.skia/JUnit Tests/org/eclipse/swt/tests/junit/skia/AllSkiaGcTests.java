@@ -23,7 +23,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_skia_drawText.class, //
 		Test_org_eclipse_swt_skia_drawText_NoCache.class, //
 		Test_org_eclipse_swt_skia_DrawnCustomDraw.class, //
-		Test_org_eclipse_swt_skia_M3CanvasFactory.class, //
+		Test_org_eclipse_swt_skia_CanvasFactory.class, //
 		Test_org_eclipse_swt_skia_CanvasCoverage.class, //
 		Test_org_eclipse_swt_skia_CanvasDamage.class, //
 		Test_org_eclipse_swt_skia_StrokeState.class, //

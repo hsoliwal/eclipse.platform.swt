@@ -3095,14 +3095,14 @@ public long internal_new_GC (GCData data) {
 }
 
 /*
- * M3 (GC seam, leaf 4): registers the M3 canvas factory (loaded by name, as RowBackends loads the planes' backend) with
+ * M3 (GC seam, leaf 4): registers the Skia canvas factory (loaded by name, as RowBackends loads the planes' backend) with
  * ExternalCanvasHandler when a startup property asks for m3 or gpu. Leaf 5: any such property, global or per widget
- * (swt.widget.mode.StyledText=m3 alone reaches StyledText); the factory then decides per canvas class
+ * (swt.widget.mode.StyledText=skia alone reaches StyledText); the factory then decides per canvas class
  * (RasterCanvasFactory.accepts). With no mode set nothing is registered and every canvas paints as it always did.
  */
 void registerM3Canvas () {
-	if (WidgetMode.anyRequested (WidgetMode.M3, WidgetMode.GPU)) {
-		org.eclipse.swt.internal.canvasext.ExternalCanvasHandler.registerFactory (org.eclipse.swt.internal.render.RowBackends.M3_CANVAS_FACTORY);
+	if (WidgetMode.anyRequested (WidgetMode.SKIA, WidgetMode.GPU)) {
+		org.eclipse.swt.internal.canvasext.ExternalCanvasHandler.registerFactory (org.eclipse.swt.internal.render.RowBackends.SKIA_CANVAS_FACTORY);
 	}
 }
 
@@ -3129,7 +3129,7 @@ protected void init () {
 	super.init ();
 	DPIUtil.setDeviceZoom (getDeviceZoom ());
 
-	/* M3 (GC seam, leaf 4): the M3 backend of SWT.M3 canvases, only when the Canvas startup mode is m3 or gpu (default off) */
+	/* M3 (GC seam, leaf 4): the M3 backend of SWT.SKIA canvases, only when the Canvas startup mode is m3 or gpu (default off) */
 	registerM3Canvas ();
 
 	/* Set the application user model ID, if APP_NAME is non Default */
@@ -4234,7 +4234,7 @@ protected void release () {
 	}
 }
 
-/* Retained planes GPU backend (-Dswt.gpu=m3): 0 untried, 1 ready, 2 unavailable */
+/* Retained planes GPU backend (-Dswt.gpu=skia): 0 untried, 1 ready, 2 unavailable */
 PlaneBackend gpuBackend;
 int gpuBackendState;
 
