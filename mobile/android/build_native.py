@@ -24,6 +24,12 @@ Output: <output>/jniLibs/<abi>/libswtpixels.so (the layout an Android applicatio
 <output>/native-build.tsv, one row per ABI. The exit code is 1 if a build or a check fails. Nothing is installed
 and nothing outside <output> is written. Needs CMake 3.22 or later and Ninja on the PATH (or --cmake / --ninja).
 Without --ndk the environment variables ANDROID_NDK_HOME and ANDROID_NDK_ROOT are read.
+
+With --skia-android <dir> (a folder holding the extracted JetBrains skia-pack m116-47d3027-1 Android releases as
+<dir>/arm64 and <dir>/x64), it also builds maya, SWT's graphics library, for the 64-bit ABIs: Eclipse SWT
+Maya/native/build_maya.py --target android-arm64|android-x64 writes <output>/jniLibs/<abi>/libmaya.so, checked the
+same way (every function of maya.def exported, libjnigraphics.so needed, 16 KB pages) in a "<abi> maya" row. skia-pack
+has no 32-bit Android release, so the 32-bit ABIs have no maya.
 """
 import argparse
 import hashlib
@@ -36,6 +42,8 @@ import sys
 
 ABIS = ("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
 WIDE = {"arm64-v8a", "x86_64"}
+# maya's Android targets and the skia-pack folder of each 64-bit ABI
+MAYA = {"arm64-v8a": ("android-arm64", "arm64"), "x86_64": ("android-x64", "x64")}
 JNI = re.compile(r"JNICALL\s+(Java_\w+)\s*\(")
 PAGE_16K = 0x4000
 
@@ -71,6 +79,24 @@ def check(readelf, library, expected, abi, log):
     return failed
 
 
+def build_maya(args, ndk, output, abi, readelf, log):
+    """libmaya.so of one 64-bit ABI into <output>/jniLibs/<abi>; returns its native-build.tsv row"""
+    target, folder = MAYA[abi]
+    native = pathlib.Path(args.swt).resolve() / "bundles" / "org.eclipse.swt" / "Eclipse SWT Maya" / "native"
+    expected = {line.strip() for line in (native / "maya.def").read_text().splitlines() if line.strip().startswith("Java_")}
+    work, library = output / "build" / ("maya-" + abi), output / "jniLibs" / abi / "libmaya.so"
+    done = run([sys.executable, "-I", str(native / "build_maya.py"), "--target", target, "--ndk", str(ndk),
+                "--skia", str(pathlib.Path(args.skia_android).resolve() / folder), "--out", str(work)], log)
+    if done.returncode != 0 or not (work / "libmaya.so").is_file():
+        return (abi + " maya", "FAIL", "0", "", str(len(expected)), "build failed (see native-build.log)")
+    library.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(work / "libmaya.so", library)
+    failed = check(readelf, str(library), expected, abi, log)
+    data = library.read_bytes()
+    return (abi + " maya", "FAIL" if failed else "PASS", str(len(data)), hashlib.sha256(data).hexdigest(),
+            str(len(expected)), "; ".join(failed))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--ndk", default=os.environ.get("ANDROID_NDK_HOME") or os.environ.get("ANDROID_NDK_ROOT"))
@@ -80,6 +106,7 @@ def main():
     parser.add_argument("--swt", default=str(pathlib.Path(__file__).resolve().parents[2]), help="the SWT checkout")
     parser.add_argument("--cmake", default="cmake")
     parser.add_argument("--ninja", default=shutil.which("ninja"))
+    parser.add_argument("--skia-android", help="extracted skia-pack Android releases (<dir>/arm64, <dir>/x64): also build maya")
     args = parser.parse_args()
     if not args.ndk:
         sys.exit("no NDK: pass --ndk or set ANDROID_NDK_HOME")
@@ -124,6 +151,11 @@ def main():
             state = "FAIL" if failed else "PASS"
             rows.append((abi, state, str(size), digest, str(len(expected)), "; ".join(failed)))
             print(f"{state} {abi} {size} bytes" + ("" if not failed else " : " + "; ".join(failed)))
+            if args.skia_android and abi in MAYA:
+                row = build_maya(args, ndk, output, abi, readelf, log)
+                failures += row[1] != "PASS"
+                rows.append(row)
+                print(f"{row[1]} {row[0]} {row[2]} bytes" + ("" if not row[5] else " : " + row[5]))
     with open(output / "native-build.tsv", "w", encoding="utf-8", newline="\n") as table:
         table.write(f"# ndk {revision} api {args.api} sources {source.as_posix()}\n")
         table.write("abi\tstate\tbytes\tsha256\tjni_functions\tfailed_checks\n")
