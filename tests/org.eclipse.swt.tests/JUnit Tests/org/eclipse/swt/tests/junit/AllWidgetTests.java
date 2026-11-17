@@ -30,6 +30,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_internal_ColumnFilter.class, //
 		Test_org_eclipse_swt_internal_ColumnSort.class, //
 		Test_org_eclipse_swt_internal_ColumnSummary.class, //
+		Test_org_eclipse_swt_internal_ColumnValues.class, //
 		Test_org_eclipse_swt_internal_FooterRow.class, //
 		Test_EmptinessChanged.class, //
 		Test_M3FilterAsync.class, //

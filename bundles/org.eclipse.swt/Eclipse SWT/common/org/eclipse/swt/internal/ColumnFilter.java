@@ -366,6 +366,34 @@ public final class ColumnFilter extends RowViewBase {
 	}
 
 	/**
+	 * Returns whether a source row passes every criterion but the one of a column (before the
+	 * tree ancestor rule): the rows a value list for that column chooses from, so that the list
+	 * also offers the values its own criterion hides. The criteria are tested on the row itself;
+	 * nothing is cached and the view does not change.
+	 *
+	 * @param sourceRow the source row
+	 * @param column the column whose criterion is left out, or {@link #ALL_COLUMNS}
+	 * @return whether it passes the other criteria
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_INVALID_RANGE - if the row is not a source row, or the column is neither a column nor ALL_COLUMNS</li>
+	 * </ul>
+	 */
+	public boolean matchesExcept (int sourceRow, int column) {
+		RowChecks.range (column + 1, criteria.length);
+		RowChecks.range (sourceRow, sourceSize ());
+		boolean result = true, first = true;
+		for (int i = 0; i < criteria.length; i++) {
+			FilterCriterion criterion = criteria [i];
+			if (i == column + 1 || !criterion.applies ()) continue;
+			boolean bit = criterion.test (sourceRow, text);
+			result = first ? bit : criterion.logic == AND ? result && bit : result || bit;
+			first = false;
+		}
+		return result;
+	}
+
+	/**
 	 * Turns tree mode on: every ancestor of a passing row is shown. The parent of a root is -1.
 	 * <code>null</code> turns tree mode off.
 	 *
