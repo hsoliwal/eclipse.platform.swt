@@ -8,6 +8,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding><maven.compiler.release>21</maven.compiler.release>
     <m3.gpu.sourceDirectory>${project.basedir}/../org.eclipse.swt/Eclipse SWT GPU M3/win32</m3.gpu.sourceDirectory>
+    <!-- the Skija Java classes SWT needs, absorbed under their upstream packages (Eclipse SWT Skija/README.md) -->
+    <m3.gpu.skijaDirectory>${project.basedir}/../org.eclipse.swt/Eclipse SWT Skija/common</m3.gpu.skijaDirectory>
     <m3.gpu.buildDirectory>${project.basedir}/target</m3.gpu.buildDirectory>
     <m3.gpu.finalName>${project.artifactId}-${project.version}</m3.gpu.finalName>
     <m3.gpu.manifest>${project.basedir}/META-INF/MANIFEST.MF</m3.gpu.manifest>
@@ -18,22 +20,18 @@
       <activation><property><name>!m3.gpu.provisioned</name></property></activation>
       <dependencies>
         <dependency><groupId>org.eclipse.platform</groupId><artifactId>org.eclipse.swt.win32.win32.x86_64</artifactId><version>3.138.0-SNAPSHOT</version><scope>provided</scope></dependency>
-        <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-shared</artifactId><version>0.116.3</version></dependency>
         <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-windows-x64</artifactId><version>0.116.3</version><scope>runtime</scope></dependency>
-        <dependency><groupId>io.github.humbleui</groupId><artifactId>types</artifactId><version>0.1.1</version></dependency>
         <dependency><groupId>org.jetbrains</groupId><artifactId>annotations</artifactId><version>24.1.0</version><scope>provided</scope></dependency>
       </dependencies>
     </profile>
     <profile><id>m3-gpu-provisioned-proof</id>
       <activation><property><name>m3.gpu.provisioned</name></property></activation>
       <dependencies>
-        <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-shared</artifactId><version>0.116.3</version><scope>system</scope><systemPath>${m3.gpu.shared.jar}</systemPath></dependency>
         <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-windows-x64</artifactId><version>0.116.3</version><scope>system</scope><systemPath>${m3.gpu.windows.jar}</systemPath></dependency>
-        <dependency><groupId>io.github.humbleui</groupId><artifactId>types</artifactId><version>0.1.1</version><scope>system</scope><systemPath>${m3.gpu.types.jar}</systemPath></dependency>
         <dependency><groupId>org.jetbrains</groupId><artifactId>annotations</artifactId><version>24.1.0</version><scope>system</scope><systemPath>${m3.gpu.annotations.jar}</systemPath></dependency>
       </dependencies>
       <build><plugins><plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId>
-        <configuration><compilerArgs combine.children="append"><arg>-classpath</arg><arg>${m3.gpu.swt.classpath}${path.separator}${m3.gpu.shared.jar}${path.separator}${m3.gpu.types.jar}${path.separator}${m3.gpu.annotations.jar}</arg></compilerArgs></configuration>
+        <configuration><compilerArgs combine.children="append"><arg>-classpath</arg><arg>${m3.gpu.swt.classpath}${path.separator}${project.build.outputDirectory}${path.separator}${m3.gpu.annotations.jar}</arg></compilerArgs></configuration>
       </plugin></plugins></build>
     </profile>
   </profiles>
@@ -47,15 +45,27 @@
         <configuration><release>21</release><proc>none</proc><compilerArgs><arg>-Xlint:all</arg><arg>-Werror</arg></compilerArgs>
           <includes><include>org/eclipse/swt/internal/gpu/OpStreamReplay.java</include><include>org/eclipse/swt/internal/gpu/GlPlaneBackend.java</include><include>org/eclipse/swt/internal/gpu/GpuTarget.java</include></includes>
         </configuration>
+        <executions>
+          <!-- the absorbed Skija classes first, without the GPU sources' lint gate (third-party code); the GPU sources then
+               compile against them in default-compile -->
+          <execution><id>compile-skija</id><phase>process-sources</phase><goals><goal>compile</goal></goals>
+            <configuration>
+              <compileSourceRoots combine.self="override"><compileSourceRoot>${m3.gpu.skijaDirectory}</compileSourceRoot></compileSourceRoots>
+              <includes combine.self="override"><include>io/github/humbleui/**/*.java</include></includes>
+              <compilerArgs combine.self="override"><arg>-nowarn</arg></compilerArgs>
+              <showWarnings>false</showWarnings>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-dependency-plugin</artifactId><version>3.8.1</version>
         <executions><execution><id>embed-pinned-skija-runtime</id><phase>prepare-package</phase><goals><goal>copy-dependencies</goal></goals>
-          <configuration><includeArtifactIds>skija-shared,skija-windows-x64,types</includeArtifactIds><excludeTransitive>true</excludeTransitive><outputDirectory>${project.build.outputDirectory}/lib</outputDirectory></configuration>
+          <configuration><includeArtifactIds>skija-windows-x64</includeArtifactIds><excludeTransitive>true</excludeTransitive><outputDirectory>${project.build.outputDirectory}/lib</outputDirectory></configuration>
         </execution></executions>
       </plugin>
       <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version>
         <configuration><archive><manifestFile>${m3.gpu.manifest}</manifestFile></archive>
-          <includes><include>org/eclipse/swt/internal/gpu/**</include><include>lib/*.jar</include><include>META-INF/**</include></includes>
+          <includes><include>org/eclipse/swt/internal/gpu/**</include><include>io/github/humbleui/**</include><include>lib/*.jar</include><include>META-INF/**</include></includes>
         </configuration>
       </plugin>
     </plugins>
