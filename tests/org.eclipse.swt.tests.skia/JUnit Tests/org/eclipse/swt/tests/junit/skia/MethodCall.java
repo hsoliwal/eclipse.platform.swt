@@ -3,8 +3,8 @@ package org.eclipse.swt.tests.junit.skia;
 import java.util.Arrays;
 import java.util.Objects;
 
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.Paint;
+import org.eclipse.swt.internal.maya.Font;
+import org.eclipse.swt.internal.maya.Paint;
 
 public class MethodCall {
 

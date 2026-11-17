@@ -8,8 +8,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding><maven.compiler.release>21</maven.compiler.release>
     <skia.sourceDirectory>${project.basedir}/../org.eclipse.swt/Eclipse SWT GPU/win32</skia.sourceDirectory>
-    <!-- the Skija Java classes SWT needs, absorbed under their upstream packages (Eclipse SWT Skija/README.md) -->
-    <skia.skijaDirectory>${project.basedir}/../org.eclipse.swt/Eclipse SWT Skija/common</skia.skijaDirectory>
+    <!-- the Skija Java classes SWT needs, absorbed under their upstream packages (Eclipse SWT Maya/README.md) -->
+    <skia.mayaDirectory>${project.basedir}/../org.eclipse.swt/Eclipse SWT Maya/common</skia.mayaDirectory>
     <skia.buildDirectory>${project.basedir}/target</skia.buildDirectory>
     <skia.finalName>${project.artifactId}-${project.version}</skia.finalName>
     <skia.manifest>${project.basedir}/META-INF/MANIFEST.MF</skia.manifest>
@@ -20,14 +20,12 @@
       <activation><property><name>!skia.provisioned</name></property></activation>
       <dependencies>
         <dependency><groupId>org.eclipse.platform</groupId><artifactId>org.eclipse.swt.win32.win32.x86_64</artifactId><version>3.138.0-SNAPSHOT</version><scope>provided</scope></dependency>
-        <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-windows-x64</artifactId><version>0.116.3</version><scope>runtime</scope></dependency>
         <dependency><groupId>org.jetbrains</groupId><artifactId>annotations</artifactId><version>24.1.0</version><scope>provided</scope></dependency>
       </dependencies>
     </profile>
     <profile><id>skia-provisioned-proof</id>
       <activation><property><name>skia.provisioned</name></property></activation>
       <dependencies>
-        <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-windows-x64</artifactId><version>0.116.3</version><scope>system</scope><systemPath>${skia.windows.jar}</systemPath></dependency>
         <dependency><groupId>org.jetbrains</groupId><artifactId>annotations</artifactId><version>24.1.0</version><scope>system</scope><systemPath>${skia.annotations.jar}</systemPath></dependency>
       </dependencies>
       <build><plugins><plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId>
@@ -37,7 +35,9 @@
   </profiles>
   <build>
     <directory>${skia.buildDirectory}</directory><finalName>${skia.finalName}</finalName><sourceDirectory>${skia.sourceDirectory}</sourceDirectory>
-    <resources><resource><directory>${skia.swtRoot}</directory><targetPath>META-INF</targetPath>
+    <!-- maya.dll, its version and the ICU data it loads, built by Eclipse SWT Maya/native/build_maya.py -->
+    <resources><resource><directory>${project.basedir}/native</directory></resource>
+      <resource><directory>${skia.swtRoot}</directory><targetPath>META-INF</targetPath>
       <includes><include>LICENSE</include><include>NOTICE</include><include>docs/licenses/swt-gpu-retained-planes-NOTICE.txt</include><include>docs/licenses/swt-gpu-skija-*.txt</include></includes>
     </resource></resources>
     <plugins>
@@ -46,26 +46,21 @@
           <includes><include>org/eclipse/swt/internal/gpu/OpStreamReplay.java</include><include>org/eclipse/swt/internal/gpu/GlPlaneBackend.java</include><include>org/eclipse/swt/internal/gpu/GpuTarget.java</include></includes>
         </configuration>
         <executions>
-          <!-- the absorbed Skija classes first, without the GPU sources' lint gate (third-party code); the GPU sources then
+          <!-- maya's Java classes first, without the GPU sources' lint gate (third-party code); the GPU sources then
                compile against them in default-compile -->
-          <execution><id>compile-skija</id><phase>process-sources</phase><goals><goal>compile</goal></goals>
+          <execution><id>compile-maya</id><phase>process-sources</phase><goals><goal>compile</goal></goals>
             <configuration>
-              <compileSourceRoots combine.self="override"><compileSourceRoot>${skia.skijaDirectory}</compileSourceRoot></compileSourceRoots>
-              <includes combine.self="override"><include>io/github/humbleui/**/*.java</include></includes>
+              <compileSourceRoots combine.self="override"><compileSourceRoot>${skia.mayaDirectory}</compileSourceRoot></compileSourceRoots>
+              <includes combine.self="override"><include>org/eclipse/swt/internal/maya/**/*.java</include></includes>
               <compilerArgs combine.self="override"><arg>-nowarn</arg></compilerArgs>
               <showWarnings>false</showWarnings>
             </configuration>
           </execution>
         </executions>
       </plugin>
-      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-dependency-plugin</artifactId><version>3.8.1</version>
-        <executions><execution><id>embed-pinned-skija-runtime</id><phase>prepare-package</phase><goals><goal>copy-dependencies</goal></goals>
-          <configuration><includeArtifactIds>skija-windows-x64</includeArtifactIds><excludeTransitive>true</excludeTransitive><outputDirectory>${project.build.outputDirectory}/lib</outputDirectory></configuration>
-        </execution></executions>
-      </plugin>
       <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version>
         <configuration><archive><manifestFile>${skia.manifest}</manifestFile></archive>
-          <includes><include>org/eclipse/swt/internal/gpu/**</include><include>io/github/humbleui/**</include><include>lib/*.jar</include><include>META-INF/**</include></includes>
+          <includes><include>org/eclipse/swt/internal/gpu/**</include><include>org/eclipse/swt/internal/maya/**</include><include>META-INF/**</include></includes>
         </configuration>
       </plugin>
     </plugins>

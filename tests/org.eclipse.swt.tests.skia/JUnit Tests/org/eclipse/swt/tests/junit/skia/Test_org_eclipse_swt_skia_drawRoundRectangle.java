@@ -10,7 +10,7 @@ import org.eclipse.swt.internal.canvasext.raster.RasterExternalGC;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.BlendMode;
+import org.eclipse.swt.internal.maya.BlendMode;
 
 public class Test_org_eclipse_swt_skia_drawRoundRectangle {
 	@BeforeAll
@@ -59,7 +59,7 @@ public class Test_org_eclipse_swt_skia_drawRoundRectangle {
 		epd.maskFilter = null;
 
 		assertEquals(MethodCall.get("surface-canvas", "drawRRect",
-				new io.github.humbleui.types.RRect(10.5f, 20.5f, 40.5f, 60.5f, new float[] { 5.0f, 5.0f }), epd),
+				new org.eclipse.swt.internal.maya.types.RRect(10.5f, 20.5f, 40.5f, 60.5f, new float[] { 5.0f, 5.0f }), epd),
 				calls.get(0));
 
 		surface.close();
@@ -110,7 +110,7 @@ public class Test_org_eclipse_swt_skia_drawRoundRectangle {
 		// Rect: left=15.0, top=30.0, right=15+45.0=60.0, bottom=30+60.0=90.0
 		// Radii: rx=10*1.5=15, ry=10*1.5=15, scaled down to RRect radii = 7.5
 		assertEquals(MethodCall.get("surface-canvas", "drawRRect",
-				new io.github.humbleui.types.RRect(15.0f, 30.0f, 60.0f, 90.0f, new float[] { 7.5f, 7.5f }), epd),
+				new org.eclipse.swt.internal.maya.types.RRect(15.0f, 30.0f, 60.0f, 90.0f, new float[] { 7.5f, 7.5f }), epd),
 				calls.get(0));
 
 		surface.close();
@@ -161,7 +161,7 @@ public class Test_org_eclipse_swt_skia_drawRoundRectangle {
 		// Rect: left=20.0, top=40.0, right=20+60.0=80.0, bottom=40+80.0=120.0
 		// Radii: rx=10*2.0=20, ry=10*2.0=20, scaled down to RRect radii = 10.0
 		assertEquals(MethodCall.get("surface-canvas", "drawRRect",
-				new io.github.humbleui.types.RRect(20.0f, 40.0f, 80.0f, 120.0f, new float[] { 10.0f, 10.0f }), epd),
+				new org.eclipse.swt.internal.maya.types.RRect(20.0f, 40.0f, 80.0f, 120.0f, new float[] { 10.0f, 10.0f }), epd),
 				calls.get(0));
 
 		surface.close();

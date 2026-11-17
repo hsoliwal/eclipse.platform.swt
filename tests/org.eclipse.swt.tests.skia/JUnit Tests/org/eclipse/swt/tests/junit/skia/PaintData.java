@@ -2,13 +2,13 @@ package org.eclipse.swt.tests.junit.skia;
 
 import java.util.Objects;
 
-import io.github.humbleui.skija.BlendMode;
-import io.github.humbleui.skija.ColorFilter;
-import io.github.humbleui.skija.ImageFilter;
-import io.github.humbleui.skija.MaskFilter;
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.PathEffect;
-import io.github.humbleui.skija.Shader;
+import org.eclipse.swt.internal.maya.BlendMode;
+import org.eclipse.swt.internal.maya.ColorFilter;
+import org.eclipse.swt.internal.maya.ImageFilter;
+import org.eclipse.swt.internal.maya.MaskFilter;
+import org.eclipse.swt.internal.maya.Paint;
+import org.eclipse.swt.internal.maya.PathEffect;
+import org.eclipse.swt.internal.maya.Shader;
 
 public class PaintData {
 

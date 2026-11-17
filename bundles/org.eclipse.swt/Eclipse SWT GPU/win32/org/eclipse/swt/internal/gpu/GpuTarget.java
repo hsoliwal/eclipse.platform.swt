@@ -14,8 +14,8 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.gpu;
 
-import io.github.humbleui.skija.*;
-import io.github.humbleui.types.*;
+import org.eclipse.swt.internal.maya.*;
+import org.eclipse.swt.internal.maya.types.*;
 
 /**
  * Per-widget GPU target in the remote-framebuffer model: a content render
@@ -111,7 +111,7 @@ final class GpuTarget implements PlaneBackend.Target {
 		/* RFB CopyRect within one surface: snapshot the source block, then an integer-offset SRC blit */
 		try (Image block = frame.makeImageSnapshot (IRect.makeXYWH (srcX, srcY, w, h))) {
 			if (block == null) return false;
-			io.github.humbleui.skija.Canvas canvas = frame.getCanvas ();
+			org.eclipse.swt.internal.maya.Canvas canvas = frame.getCanvas ();
 			int save = Canvas._nSave (canvas._ptr);
 			Canvas._nClipRect (canvas._ptr, dstX, dstY, dstX + w, dstY + h, INTERSECT, false);
 			canvas.drawImage (block, dstX, dstY, backend.srcPaint);

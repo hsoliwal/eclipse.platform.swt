@@ -10,7 +10,7 @@ import org.eclipse.swt.internal.canvasext.raster.RasterExternalGC;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.BlendMode;
+import org.eclipse.swt.internal.maya.BlendMode;
 
 public class Test_org_eclipse_swt_skia_drawPolyline {
 	@BeforeAll

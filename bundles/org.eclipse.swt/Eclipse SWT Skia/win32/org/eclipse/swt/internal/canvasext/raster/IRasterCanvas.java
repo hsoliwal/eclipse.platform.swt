@@ -14,14 +14,14 @@
 
 package org.eclipse.swt.internal.canvasext.raster;
 
-import io.github.humbleui.skija.ClipMode;
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.Matrix33;
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.Path;
-import io.github.humbleui.skija.Region;
-import io.github.humbleui.types.RRect;
-import io.github.humbleui.types.Rect;
+import org.eclipse.swt.internal.maya.ClipMode;
+import org.eclipse.swt.internal.maya.Font;
+import org.eclipse.swt.internal.maya.Matrix33;
+import org.eclipse.swt.internal.maya.Paint;
+import org.eclipse.swt.internal.maya.Path;
+import org.eclipse.swt.internal.maya.Region;
+import org.eclipse.swt.internal.maya.types.RRect;
+import org.eclipse.swt.internal.maya.types.Rect;
 
 /**
  * Abstraction for Skija's Canvas, for future decoupling.
@@ -37,7 +37,7 @@ public interface IRasterCanvas {
 	void drawPolygon(float[] points, Paint paint);
 	void drawRRect(RRect rrect, Paint paint);
 	void drawImage(IRasterImage image, int x, int y);
-	void drawImageRect(IRasterImage image, Rect src, Rect dst, io.github.humbleui.skija.SamplingMode sampling, Paint paint, boolean strict);
+	void drawImageRect(IRasterImage image, Rect src, Rect dst, org.eclipse.swt.internal.maya.SamplingMode sampling, Paint paint, boolean strict);
 	void setMatrix(Matrix33 matrix);
 	void save();
 	void clipRect(Rect rect);

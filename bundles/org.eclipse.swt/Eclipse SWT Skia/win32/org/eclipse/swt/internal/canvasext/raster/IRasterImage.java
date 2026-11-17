@@ -14,8 +14,8 @@
 
 package org.eclipse.swt.internal.canvasext.raster;
 
-import io.github.humbleui.skija.FilterTileMode;
-import io.github.humbleui.skija.Shader;
+import org.eclipse.swt.internal.maya.FilterTileMode;
+import org.eclipse.swt.internal.maya.Shader;
 
 public interface IRasterImage extends AutoCloseable {
 
@@ -27,7 +27,7 @@ public interface IRasterImage extends AutoCloseable {
 
 	Shader makeShader(FilterTileMode repeat);
 
-	io.github.humbleui.skija.Image getSkiaImage();
+	org.eclipse.swt.internal.maya.Image getSkiaImage();
 
 	@Override
 	void close();

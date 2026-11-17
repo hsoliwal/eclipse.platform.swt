@@ -43,21 +43,21 @@ import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.internal.canvasext.IExternalGC;
 
-import io.github.humbleui.skija.ClipMode;
-import io.github.humbleui.skija.EncoderPNG;
-import io.github.humbleui.skija.FilterMipmap;
-import io.github.humbleui.skija.FilterMode;
-import io.github.humbleui.skija.FilterTileMode;
-import io.github.humbleui.skija.GradientStyle;
-import io.github.humbleui.skija.Matrix33;
-import io.github.humbleui.skija.MipmapMode;
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.PaintMode;
-import io.github.humbleui.skija.PathEffect;
-import io.github.humbleui.skija.PathFillMode;
-import io.github.humbleui.skija.SamplingMode;
-import io.github.humbleui.skija.Shader;
-import io.github.humbleui.types.Rect;
+import org.eclipse.swt.internal.maya.ClipMode;
+import org.eclipse.swt.internal.maya.EncoderPNG;
+import org.eclipse.swt.internal.maya.FilterMipmap;
+import org.eclipse.swt.internal.maya.FilterMode;
+import org.eclipse.swt.internal.maya.FilterTileMode;
+import org.eclipse.swt.internal.maya.GradientStyle;
+import org.eclipse.swt.internal.maya.Matrix33;
+import org.eclipse.swt.internal.maya.MipmapMode;
+import org.eclipse.swt.internal.maya.Paint;
+import org.eclipse.swt.internal.maya.PaintMode;
+import org.eclipse.swt.internal.maya.PathEffect;
+import org.eclipse.swt.internal.maya.PathFillMode;
+import org.eclipse.swt.internal.maya.SamplingMode;
+import org.eclipse.swt.internal.maya.Shader;
+import org.eclipse.swt.internal.maya.types.Rect;
 
 public class RasterExternalGC implements IExternalGC {
 
@@ -270,7 +270,7 @@ public class RasterExternalGC implements IExternalGC {
 	 * @param str
 	 * @param image
 	 */
-	static void writeFile(String str, io.github.humbleui.skija.Image image) {
+	static void writeFile(String str, org.eclipse.swt.internal.maya.Image image) {
 		final byte[] imageBytes = EncoderPNG.encode(image).getBytes();
 
 		final File f = new File(str);
@@ -322,7 +322,7 @@ public class RasterExternalGC implements IExternalGC {
 		executeTextDraw(text, flags, x, y);
 	}
 
-	private io.github.humbleui.skija.Font getSkiaFont() {
+	private org.eclipse.swt.internal.maya.Font getSkiaFont() {
 		return this.resources.getSkiaFont();
 	}
 
@@ -371,7 +371,7 @@ public class RasterExternalGC implements IExternalGC {
 	@Override
 	public void drawPath(Path path) {
 		paintManager.performDraw(paint -> {
-			try (io.github.humbleui.skija.Path skiaPath = RasterPathConverter.convertSWTPathToSkiaPath(path,
+			try (org.eclipse.swt.internal.maya.Path skiaPath = RasterPathConverter.convertSWTPathToSkiaPath(path,
 					getScaler())) {
 				if (skiaPath == null) {
 					return;
@@ -425,7 +425,7 @@ public class RasterExternalGC implements IExternalGC {
 
 		paintManager.performDraw(paint -> {
 			// Create Skija path for the polygon
-			try (io.github.humbleui.skija.Path pathBuilder = new io.github.humbleui.skija.Path()) {
+			try (org.eclipse.swt.internal.maya.Path pathBuilder = new org.eclipse.swt.internal.maya.Path()) {
 				// Move to first point
 				pathBuilder.moveTo(getScaler().autoScaleUp(pointArray[0]), getScaler().autoScaleUp(pointArray[1]));
 				// Add lines to subsequent points
@@ -587,7 +587,7 @@ public class RasterExternalGC implements IExternalGC {
 	@Override
 	public void fillPath(Path path) {
 		paintManager.performDrawFilled(paint -> {
-			try (io.github.humbleui.skija.Path skiaPath = RasterPathConverter.convertSWTPathToSkiaPath(path,
+			try (org.eclipse.swt.internal.maya.Path skiaPath = RasterPathConverter.convertSWTPathToSkiaPath(path,
 					getScaler())) {
 				if (skiaPath == null) {
 					return;
@@ -976,7 +976,7 @@ public class RasterExternalGC implements IExternalGC {
 		if (path.isDisposed()) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
-		try (final io.github.humbleui.skija.Path skiaPath = RasterPathConverter.convertSWTPathToSkiaPath(path,
+		try (final org.eclipse.swt.internal.maya.Path skiaPath = RasterPathConverter.convertSWTPathToSkiaPath(path,
 				getScaler())) {
 			if (skiaPath == null) {
 				return;

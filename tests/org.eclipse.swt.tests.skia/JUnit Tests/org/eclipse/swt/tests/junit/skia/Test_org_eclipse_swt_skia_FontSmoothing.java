@@ -24,7 +24,7 @@ import org.eclipse.swt.internal.canvasext.raster.FontSmoothing;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.PixelGeometry;
+import org.eclipse.swt.internal.maya.PixelGeometry;
 
 /** The Skia surfaces' text smoothing follows the system's: ClearType in the screen's subpixel order, else grayscale. */
 public class Test_org_eclipse_swt_skia_FontSmoothing {

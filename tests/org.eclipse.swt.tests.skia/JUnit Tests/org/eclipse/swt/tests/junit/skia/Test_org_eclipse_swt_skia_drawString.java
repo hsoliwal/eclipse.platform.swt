@@ -10,11 +10,11 @@ import org.eclipse.swt.internal.canvasext.raster.RasterExternalGC;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.BlendMode;
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.FontMgr;
-import io.github.humbleui.skija.FontStyle;
-import io.github.humbleui.types.Rect;
+import org.eclipse.swt.internal.maya.BlendMode;
+import org.eclipse.swt.internal.maya.Font;
+import org.eclipse.swt.internal.maya.FontMgr;
+import org.eclipse.swt.internal.maya.FontStyle;
+import org.eclipse.swt.internal.maya.types.Rect;
 
 public class Test_org_eclipse_swt_skia_drawString {
 	@BeforeAll

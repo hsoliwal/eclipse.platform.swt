@@ -18,9 +18,9 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
 
-import io.github.humbleui.skija.ColorAlphaType;
-import io.github.humbleui.skija.ColorType;
-import io.github.humbleui.skija.ImageInfo;
+import org.eclipse.swt.internal.maya.ColorAlphaType;
+import org.eclipse.swt.internal.maya.ColorType;
+import org.eclipse.swt.internal.maya.ImageInfo;
 
 public class SwtToRasterImageConverter {
 	public static IRasterImage convertSWTImageToSkiaImage(Image swtImage, int zoom, IRasterResources resources) {
@@ -43,7 +43,7 @@ public class SwtToRasterImageConverter {
 		}
 		final ImageInfo imageInfo = new ImageInfo(width, height, colType, ColorAlphaType.UNPREMUL);
 		return new RasterImageAdapter(
-				io.github.humbleui.skija.Image.makeRasterFromBytes(imageInfo, imageData.data, imageData.width * 4));
+				org.eclipse.swt.internal.maya.Image.makeRasterFromBytes(imageInfo, imageData.data, imageData.width * 4));
 	}
 
 	/*
@@ -72,7 +72,7 @@ public class SwtToRasterImageConverter {
 			pixels[i + 3] = (byte) a;
 		}
 		final ImageInfo info = new ImageInfo(width, height, ColorType.BGRA_8888, opaque ? ColorAlphaType.OPAQUE : ColorAlphaType.PREMUL);
-		return new RasterImageAdapter(io.github.humbleui.skija.Image.makeRasterFromBytes(info, pixels, width * 4));
+		return new RasterImageAdapter(org.eclipse.swt.internal.maya.Image.makeRasterFromBytes(info, pixels, width * 4));
 	}
 
 	/* c * a / 255, rounded as Skia rounds (SkMulDiv255Round) */

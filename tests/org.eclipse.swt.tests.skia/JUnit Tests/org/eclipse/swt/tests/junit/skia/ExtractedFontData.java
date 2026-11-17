@@ -2,7 +2,7 @@ package org.eclipse.swt.tests.junit.skia;
 
 import java.util.Objects;
 
-import io.github.humbleui.skija.Font;
+import org.eclipse.swt.internal.maya.Font;
 
 public class ExtractedFontData {
 

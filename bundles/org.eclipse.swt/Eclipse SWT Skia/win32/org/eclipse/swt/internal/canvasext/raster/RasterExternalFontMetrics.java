@@ -16,10 +16,10 @@ import org.eclipse.swt.internal.canvasext.IExternalFontMetrics;
 
 public class RasterExternalFontMetrics implements IExternalFontMetrics {
 
-	private final io.github.humbleui.skija.FontMetrics m;
+	private final org.eclipse.swt.internal.maya.FontMetrics m;
 	private final DpiScalerUtil sc;
 
-	RasterExternalFontMetrics(io.github.humbleui.skija.FontMetrics metrics, DpiScalerUtil dpiScaler) {
+	RasterExternalFontMetrics(org.eclipse.swt.internal.maya.FontMetrics metrics, DpiScalerUtil dpiScaler) {
 		this.sc = dpiScaler;
 		this.m = metrics;
 	}

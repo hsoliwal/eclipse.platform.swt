@@ -33,7 +33,7 @@ import org.eclipse.swt.internal.render.DrawnCustomDraw;
 import org.eclipse.swt.widgets.Event;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.types.Rect;
+import org.eclipse.swt.internal.maya.types.Rect;
 
 /**
  * Headless (no Display): the owner-draw protocol of the drawn planes (GC seam, leaf 3) over a <code>GCExtension</code> on

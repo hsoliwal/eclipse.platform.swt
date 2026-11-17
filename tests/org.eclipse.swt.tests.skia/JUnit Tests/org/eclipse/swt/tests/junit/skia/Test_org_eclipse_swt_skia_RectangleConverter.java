@@ -10,8 +10,8 @@ import org.eclipse.swt.internal.canvasext.raster.DpiScalerUtil;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.types.RRect;
-import io.github.humbleui.types.Rect;
+import org.eclipse.swt.internal.maya.types.RRect;
+import org.eclipse.swt.internal.maya.types.Rect;
 
 public class Test_org_eclipse_swt_skia_RectangleConverter {
 

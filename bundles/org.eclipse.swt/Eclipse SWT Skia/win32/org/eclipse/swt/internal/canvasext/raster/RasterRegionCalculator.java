@@ -19,20 +19,20 @@ import org.eclipse.swt.graphics.RegionLog;
 import org.eclipse.swt.graphics.RegionLog.OpType;
 import org.eclipse.swt.graphics.RegionLog.Operation;
 
-import io.github.humbleui.types.IRect;
+import org.eclipse.swt.internal.maya.types.IRect;
 
 public class RasterRegionCalculator implements AutoCloseable {
 
-	private final static HashMap<OpType, io.github.humbleui.skija.Region.Op> operationMapping = new HashMap<OpType, io.github.humbleui.skija.Region.Op>();
+	private final static HashMap<OpType, org.eclipse.swt.internal.maya.Region.Op> operationMapping = new HashMap<OpType, org.eclipse.swt.internal.maya.Region.Op>();
 
 	static {
-		operationMapping.put(OpType.ADD, io.github.humbleui.skija.Region.Op.UNION);
-		operationMapping.put(OpType.SUBTRACT, io.github.humbleui.skija.Region.Op.DIFFERENCE);
-		operationMapping.put(OpType.INTERSECT, io.github.humbleui.skija.Region.Op.INTERSECT);
+		operationMapping.put(OpType.ADD, org.eclipse.swt.internal.maya.Region.Op.UNION);
+		operationMapping.put(OpType.SUBTRACT, org.eclipse.swt.internal.maya.Region.Op.DIFFERENCE);
+		operationMapping.put(OpType.INTERSECT, org.eclipse.swt.internal.maya.Region.Op.INTERSECT);
 	}
 
 	private final org.eclipse.swt.graphics.Region region;
-	private io.github.humbleui.skija.Region calculatedRegion;
+	private org.eclipse.swt.internal.maya.Region calculatedRegion;
 	private final IRasterCanvasExtension skiaExtension;
 
 	public RasterRegionCalculator(org.eclipse.swt.graphics.Region r, IRasterCanvasExtension skiaExtension) {
@@ -40,7 +40,7 @@ public class RasterRegionCalculator implements AutoCloseable {
 		this.skiaExtension = skiaExtension;
 	}
 
-	io.github.humbleui.skija.Region getSkiaRegion() {
+	org.eclipse.swt.internal.maya.Region getSkiaRegion() {
 
 		// just all operations for the region creation will be executed to get the skia
 		// region.
@@ -49,7 +49,7 @@ public class RasterRegionCalculator implements AutoCloseable {
 			return calculatedRegion;
 		}
 
-		final io.github.humbleui.skija.Region reg = new io.github.humbleui.skija.Region();
+		final org.eclipse.swt.internal.maya.Region reg = new org.eclipse.swt.internal.maya.Region();
 		final var log = RegionLog.getLog(region);
 		for (final var o : log.getOperations()) {
 			apply(o, reg);
@@ -68,8 +68,8 @@ public class RasterRegionCalculator implements AutoCloseable {
 		}
 	}
 
-	private void apply(Operation o, io.github.humbleui.skija.Region reg) {
-		final io.github.humbleui.skija.Region.Op skiaOperation = operationMapping.get(o.type());
+	private void apply(Operation o, org.eclipse.swt.internal.maya.Region reg) {
+		final org.eclipse.swt.internal.maya.Region.Op skiaOperation = operationMapping.get(o.type());
 		if (skiaOperation != null) {
 			executeOperation(skiaOperation, o.executionObject(), reg);
 			return;
@@ -86,7 +86,7 @@ public class RasterRegionCalculator implements AutoCloseable {
 
 	}
 
-	private void executeOperation(io.github.humbleui.skija.Region.Op skiaOperation, Object ob, io.github.humbleui.skija.Region reg) {
+	private void executeOperation(org.eclipse.swt.internal.maya.Region.Op skiaOperation, Object ob, org.eclipse.swt.internal.maya.Region reg) {
 		if (ob instanceof final int[] polygon) {
 			final var tempReg = createPolygonSkiaRegion(polygon);
 			reg.op(tempReg, skiaOperation);
@@ -103,7 +103,7 @@ public class RasterRegionCalculator implements AutoCloseable {
 	/**
 	 * Creates a Skija region from an SWT rectangle by converting it to a polygon.
 	 */
-	private io.github.humbleui.skija.Region createRectRegion(Rectangle rec) {
+	private org.eclipse.swt.internal.maya.Region createRectRegion(Rectangle rec) {
 		final var rect = new IRect(rec.x, rec.y, rec.x + rec.width, rec.y + rec.height);
 
 		return createPolygonSkiaRegion(new int[] { rect.getLeft(), rect.getTop(), rect.getRight(), rect.getTop(),
@@ -111,13 +111,13 @@ public class RasterRegionCalculator implements AutoCloseable {
 
 	}
 
-	private io.github.humbleui.skija.Region createPolygonSkiaRegion(int[] polygon) {
+	private org.eclipse.swt.internal.maya.Region createPolygonSkiaRegion(int[] polygon) {
 
-		final io.github.humbleui.skija.Region r = new io.github.humbleui.skija.Region();
+		final org.eclipse.swt.internal.maya.Region r = new org.eclipse.swt.internal.maya.Region();
 
 		final var scaler = new DpiScalerUtil(skiaExtension.getScaler());
 
-		try (final var pathBuilder = new io.github.humbleui.skija.Path()) {
+		try (final var pathBuilder = new org.eclipse.swt.internal.maya.Path()) {
 			pathBuilder.addPoly(scaler.autoScaleUp(toFloat(polygon)), true);
 
 			final Point maxV = getMax(scaler.autoScaleUp(polygon));

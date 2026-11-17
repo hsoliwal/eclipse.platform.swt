@@ -6,7 +6,7 @@ import java.util.List;
 import org.eclipse.swt.internal.canvasext.raster.IRasterCanvas;
 import org.eclipse.swt.internal.canvasext.raster.IRasterImage;
 import org.eclipse.swt.internal.canvasext.raster.IRasterSurface;
-import io.github.humbleui.types.IRect;
+import org.eclipse.swt.internal.maya.types.IRect;
 
 public class SkiaSurfaceDouble implements IRasterSurface {
 

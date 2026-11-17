@@ -37,8 +37,8 @@ import org.eclipse.swt.widgets.Display;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.Bitmap;
-import io.github.humbleui.skija.ColorType;
+import org.eclipse.swt.internal.maya.Bitmap;
+import org.eclipse.swt.internal.maya.ColorType;
 
 /** The raster GC's copies of SWT images: one per image while it does not change, in the surfaces' pixel format. */
 public class Test_org_eclipse_swt_skia_drawImageCache {

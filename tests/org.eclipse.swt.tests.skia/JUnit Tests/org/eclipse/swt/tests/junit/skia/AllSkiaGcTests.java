@@ -4,7 +4,8 @@ import org.junit.platform.suite.api.SelectClasses;
 import org.junit.platform.suite.api.Suite;
 
 @Suite
-@SelectClasses({ Test_org_eclipse_swt_skia_RectangleConverter.class, //
+@SelectClasses({ Test_org_eclipse_swt_skia_MayaLibrary.class, //
+		Test_org_eclipse_swt_skia_RectangleConverter.class, //
 		Test_org_eclipse_swt_skia_RGBAEncoder.class, //
 		Test_org_eclipse_swt_skia_M3ToSwtImageConvert.class, //
 		Test_org_eclipse_swt_skia_M3ToSwtImageConverter.class, //

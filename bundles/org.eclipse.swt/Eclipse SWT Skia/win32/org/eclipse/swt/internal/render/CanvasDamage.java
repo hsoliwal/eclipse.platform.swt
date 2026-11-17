@@ -19,10 +19,10 @@ import java.util.stream.*;
 
 import org.eclipse.swt.*;
 
-import io.github.humbleui.skija.Canvas;
-import io.github.humbleui.skija.Region;
-import io.github.humbleui.types.IRect;
-import io.github.humbleui.types.Rect;
+import org.eclipse.swt.internal.maya.Canvas;
+import org.eclipse.swt.internal.maya.Region;
+import org.eclipse.swt.internal.maya.types.IRect;
+import org.eclipse.swt.internal.maya.types.Rect;
 
 /**
  * The damage of one <code>WM_PAINT</code> of an M3 canvas (GC seam, leaf 5; pattern M3-CANVAS-DAMAGE v1): the update

@@ -14,7 +14,7 @@
 
 package org.eclipse.swt.internal.canvasext.raster;
 
-import io.github.humbleui.types.IRect;
+import org.eclipse.swt.internal.maya.types.IRect;
 
 /**
  * Interface to abstract Skija's Surface for SWT integration.
