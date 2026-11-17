@@ -33,7 +33,43 @@ final class OpStreamReplay {
 		return (mask & ~3) | PaintKeys.KIND_FILL;
 	}
 
+	/*
+	 * Frames replay in one native call (M3Canvas); -Dswt.m3canvas=false replays command by command in Java, the
+	 * reference M3Canvas is tested against.
+	 */
+	static final boolean M3_CANVAS = !"false".equals (System.getProperty ("swt.m3canvas")); //$NON-NLS-1$ //$NON-NLS-2$
+
 	static void run (GlPlaneBackend backend, long canvas, OpStream ops) {
+		if (M3_CANVAS) runFrame (backend, canvas, ops);
+		else runPerCommand (backend, canvas, ops);
+	}
+
+	/**
+	 * One native call for the whole stream. The text blobs come from the backend's caches first, in stream order;
+	 * blobs those lookups evict close after the call.
+	 *
+	 * @return the number of commands drawn
+	 */
+	static int runFrame (GlPlaneBackend backend, long canvas, OpStream ops) {
+		int [] a = ops.ops ();
+		int n = ops.size (), count = 0;
+		long [] blobs = backend.frameBlobs;
+		backend.beginFrame ();
+		try {
+			for (int i = 0; i < n;) {
+				int header = a [i], op = OpStream.opOf (header) & ~OpStream.OPEN, o = i + 1;
+				i = o + OpStream.lengthOf (header);
+				if (op != OpStream.DRAW_TEXT && op != OpStream.GLYPH_RUN) continue;
+				if (count == blobs.length) blobs = backend.frameBlobs = java.util.Arrays.copyOf (blobs, 2 * count);
+				blobs [count++] = op == OpStream.GLYPH_RUN ? backend.glyphRun (a, o) : backend.blob ((String) ops.ref (a [o]), a [o + 1], a [o + 2], a [o + 3]);
+			}
+			return M3Canvas._nReplay (canvas, a, n, blobs, count, TEXT_MASK);
+		} finally {
+			backend.endFrame ();
+		}
+	}
+
+	static void runPerCommand (GlPlaneBackend backend, long canvas, OpStream ops) {
 		int [] a = ops.ops ();
 		int n = ops.size (), clipSave = -1, transformAt = -1;
 		for (int i = 0; i < n;) {

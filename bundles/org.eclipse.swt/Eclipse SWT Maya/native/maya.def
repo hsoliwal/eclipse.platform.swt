@@ -234,3 +234,4 @@ EXPORTS
     Java_org_eclipse_swt_internal_maya_shaper_Shaper__1nShapeLine
     Java_org_eclipse_swt_internal_maya_skottie_Logger__1nInit
     Java_org_eclipse_swt_internal_maya_skottie_Logger__1nMake
+    Java_org_eclipse_swt_internal_maya_M3Canvas__1nReplay
