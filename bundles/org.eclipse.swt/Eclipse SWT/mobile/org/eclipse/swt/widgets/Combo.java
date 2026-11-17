@@ -174,7 +174,18 @@ public class Combo extends Composite {
         popup = new Shell(getShell(), SWT.NO_TRIM | SWT.ON_TOP);
         list = new List(popup, SWT.SINGLE | SWT.V_SCROLL);
         attachList(list);
+        list.addListener(SWT.KeyDown, this::popupKeyboardInput);
         refreshList();
+    }
+    /**
+     * A key typed while the popup List has focus. A device delivers hardware keys to the focused native view, and
+     * opening the popup gives its List focus, so Escape arrives here rather than at the Combo: it closes the popup
+     * without selecting and gives focus back to the Combo.
+     */
+    private void popupKeyboardInput(Event event) {
+        if (event.keyCode != SWT.ESC || isDisposed() || !getListVisible()) return;
+        setListVisible(false);
+        setFocus();
     }
     private void positionPopup() {
         if (popup == null || popup.isDisposed()) return;

@@ -704,7 +704,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Combo.java",
-      "sha256": "a659a910771809431ae3abe5c68372a67146bbc6d1317c2df52d7ef1e19dad91"
+      "sha256": "390f9fd1ade527ef78bb7250e4b3a67de240a2a0a9f8132d16714ce5e3ad36cd"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Composite.java",
