@@ -1,3 +1,4 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune).
 package io.github.humbleui.skija;
 
 import org.jetbrains.annotations.*;
@@ -65,14 +66,7 @@ public class TextLine extends Managed {
         }
     }
 
-    public float getLeading() {
-        Stats.onNativeCall();
-        try {
-            return _nGetLeading(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+    
 
     public float getWidth() {
         Stats.onNativeCall();
@@ -103,52 +97,13 @@ public class TextLine extends Managed {
         }
     }
 
-    public short[] getGlyphs() {
-        Stats.onNativeCall();
-        try {
-            return _nGetGlyphs(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }    
+        
 
-    /**
-     * @return  [x0, y0, x1, y1, ...]
-     */
-    public float[] getPositions() {
-        Stats.onNativeCall();
-        try {
-            return _nGetPositions(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    /**
-     * @param x  coordinate in px
-     * @return   UTF-16 offset of glyph
-     */
-    public int getOffsetAtCoord(float x) {
-        try {
-            Stats.onNativeCall();
-            return _nGetOffsetAtCoord(_ptr, x);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    /**
-     * @param x  coordinate in px
-     * @return   UTF-16 offset of glyph strictly left of coord
-     */
-    public int getLeftOffsetAtCoord(float x) {
-        try {
-            Stats.onNativeCall();
-            return _nGetLeftOffsetAtCoord(_ptr, x);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+
+
+
 
     /**
      * @param offset  UTF-16 character offset
@@ -163,57 +118,25 @@ public class TextLine extends Managed {
         }
     }
 
-    /**
-     * <p>Returns the number of intervals that intersect bounds.
-     * bounds describes a pair of lines parallel to the text advance.
-     * The return array size is a multiple of two, and is at most twice the number of glyphs in
-     * the the blob.</p>
-     *
-     * @param lowerBound lower line parallel to the advance
-     * @param upperBound upper line parallel to the advance
-     * @return           intersections; may be null
-     */
-    @Nullable
-    public float[] getIntercepts(float lowerBound, float upperBound) {
-        return getIntercepts(lowerBound, upperBound, null);
-    }
 
-    /**
-     * <p>Returns the number of intervals that intersect bounds.
-     * bounds describes a pair of lines parallel to the text advance.
-     * The return array size is a multiple of two, and is at most twice the number of glyphs in
-     * the the blob.</p>
-     *
-     * @param lowerBound lower line parallel to the advance
-     * @param upperBound upper line parallel to the advance
-     * @param paint      specifies stroking, PathEffect that affects the result; may be null
-     * @return           intersections; may be null
-     */
-    @Nullable
-    public float[] getIntercepts(float lowerBound, float upperBound, @Nullable Paint paint) {
-        try (TextBlob blob = getTextBlob()) {
-            return blob == null ? null : blob.getIntercepts(lowerBound, upperBound, paint);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-            ReferenceUtil.reachabilityFence(paint);
-        }
-    }
+
+
 
     @ApiStatus.Internal public static native long  _nGetFinalizer();
     @ApiStatus.Internal public static native float _nGetAscent(long ptr);
     @ApiStatus.Internal public static native float _nGetCapHeight(long ptr);
     @ApiStatus.Internal public static native float _nGetXHeight(long ptr);
     @ApiStatus.Internal public static native float _nGetDescent(long ptr);
-    @ApiStatus.Internal public static native float _nGetLeading(long ptr);
+    
     @ApiStatus.Internal public static native float _nGetWidth(long ptr);
     @ApiStatus.Internal public static native float _nGetHeight(long ptr);
     @ApiStatus.Internal public static native long  _nGetTextBlob(long ptr);
-    @ApiStatus.Internal public static native short[] _nGetGlyphs(long ptr);
-    @ApiStatus.Internal public static native float[] _nGetPositions(long ptr);
-    @ApiStatus.Internal public static native float[] _nGetRunPositions(long ptr);
-    @ApiStatus.Internal public static native float[] _nGetBreakPositions(long ptr);
-    @ApiStatus.Internal public static native int[]   _nGetBreakOffsets(long ptr);
-    @ApiStatus.Internal public static native int   _nGetOffsetAtCoord(long ptr, float x);
-    @ApiStatus.Internal public static native int   _nGetLeftOffsetAtCoord(long ptr, float x);
+    
+    
+    
+    
+    
+    
+    
     @ApiStatus.Internal public static native float _nGetCoordAtOffset(long ptr, int offset);
 }

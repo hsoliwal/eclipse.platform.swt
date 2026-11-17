@@ -1,3 +1,4 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune).
 package io.github.humbleui.skija.impl;
 
 import java.time.*;
@@ -30,45 +31,31 @@ public class Log {
             throw new IllegalArgumentException("Unknown log level: " + property);
     }
 
-    public static void trace(String s) {
-        _log(1, "[TRACE]", s);
-    }
+    
 
     public static void debug(String s) {
         _log(2, "[DEBUG]", s);
     }
 
-    public static void info(String s) {
-        _log(3, "[INFO ]", s);
-    }
+    
 
     public static void warn(String s) {
         _log(4, "[WARN ]", s);
     }
 
-    public static void error(String s) {
-        _log(5, "[ERROR]", s);
-    }
+    
 
     public static void trace(Supplier<String> s) {
         _log(1, "[TRACE]", s);
     }
 
-    public static void debug(Supplier<String> s) {
-        _log(2, "[DEBUG]", s);
-    }
+    
 
-    public static void info(Supplier<String> s) {
-        _log(3, "[INFO ]", s);
-    }
+    
 
-    public static void warn(Supplier<String> s) {
-        _log(4, "[WARN ]", s);
-    }
+    
 
-    public static void error(Supplier<String> s) {
-        _log(5, "[ERROR]", s);
-    }
+    
 
     public static String _time() {
         return ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT);

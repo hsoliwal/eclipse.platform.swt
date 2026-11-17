@@ -1,3 +1,4 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune).
 package io.github.humbleui.skija;
 
 import org.jetbrains.annotations.*;
@@ -17,75 +18,36 @@ public class PathEffect extends RefCnt {
         @ApiStatus.Internal public static final Style[] _values = values();
     }
 
-    public PathEffect makeSum(PathEffect second) {
-        try {
-            Stats.onNativeCall();
-            return new PathEffect(_nMakeSum(_ptr, Native.getPtr(second)));
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-            ReferenceUtil.reachabilityFence(second);
-        }
-    }
     
-    public PathEffect makeCompose(PathEffect inner) {
-        try {
-            Stats.onNativeCall();
-            return new PathEffect(_nMakeCompose(_ptr, Native.getPtr(inner)));
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-            ReferenceUtil.reachabilityFence(inner);
-        }
-    }
     
-    public static PathEffect makePath1D(Path path, float advance, float phase, Style style) {
-        try {
-            Stats.onNativeCall();
-            return new PathEffect(_nMakePath1D(Native.getPtr(path), advance, phase, style.ordinal()));
-        } finally {
-            ReferenceUtil.reachabilityFence(path);
-        }
-    }
+    
+    
+    
 
-    public static PathEffect makePath2D(Matrix33 matrix, Path path) {
-        try {
-            Stats.onNativeCall();
-            return new PathEffect(_nMakePath2D(matrix.getMat(), Native.getPtr(path)));
-        } finally {
-            ReferenceUtil.reachabilityFence(path);
-        }
-    }
+    
 
-    public static PathEffect makeLine2D(float width, Matrix33 matrix) {
-        Stats.onNativeCall();
-        return new PathEffect(_nMakeLine2D(width, matrix.getMat()));
-    }
+    
 
-    public static PathEffect makeCorner(float radius) {
-        Stats.onNativeCall();
-        return new PathEffect(_nMakeCorner(radius));
-    }
+    
 
     public static PathEffect makeDash(float[] intervals, float phase) {
         Stats.onNativeCall();
         return new PathEffect(_nMakeDash(intervals, phase));
     }
 
-    public static PathEffect makeDiscrete(float segLength, float dev, int seed) {
-        Stats.onNativeCall();
-        return new PathEffect(_nMakeDiscrete(segLength, dev, seed));
-    }
+    
 
     @ApiStatus.Internal
     public PathEffect(long ptr) {
         super(ptr);
     }
 
-    public static native long _nMakeSum(long firstPtr, long secondPtr);
-    public static native long _nMakeCompose(long outerPtr, long innerPtr);
-    public static native long _nMakePath1D(long pathPtr, float advance, float phase, int style);
-    public static native long _nMakePath2D(float[] matrix, long pathPtr);
-    public static native long _nMakeLine2D(float width, float[] matrix);
-    public static native long _nMakeCorner(float radius);
+    
+    
+    
+    
+    
+    
     public static native long _nMakeDash(float[] intervals, float phase);
-    public static native long _nMakeDiscrete(float segLength, float dev, int seed);
+    
 }

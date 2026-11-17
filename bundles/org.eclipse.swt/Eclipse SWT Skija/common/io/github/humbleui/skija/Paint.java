@@ -1,3 +1,4 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune).
 package io.github.humbleui.skija;
 
 import org.jetbrains.annotations.*;
@@ -59,18 +60,7 @@ public class Paint extends Managed {
         }
     }
 
-    /**
-     * Sets all Paint contents to their initial values. This is equivalent to replacing
-     * Paint with the result of Paint().
-     *
-     * @see <a href="https://fiddle.skia.org/c/@Paint_reset">https://fiddle.skia.org/c/@Paint_reset</a>
-     */
-    @NotNull @Contract("-> this")
-    public Paint reset() {
-        Stats.onNativeCall();
-        _nReset(_ptr);
-        return this;
-    }
+
 
     /** 
      * Returns true if pixels on the active edges of Path may be drawn with partial transparency.
@@ -110,18 +100,7 @@ public class Paint extends Managed {
         }
     }
 
-    /**
-     * Requests, but does not require, to distribute color error.
-     * 
-     * @param value  setting for ditering
-     * @return       this
-     */
-    @NotNull @Contract("_ -> this")
-    public Paint setDither(boolean value) {
-        Stats.onNativeCall();
-        _nSetDither(_ptr, value);
-        return this;
-    }
+
 
     /**
      * @return  whether the geometry is filled, stroked, or filled and stroked.
@@ -150,16 +129,7 @@ public class Paint extends Managed {
         return this;
     }
 
-    /**
-     * Set paint's mode to STROKE if true, or FILL if false.
-     * 
-     * @param value  stroke or fill
-     * @return       this
-     */
-    @NotNull @Contract("_ -> this")
-    public Paint setStroke(boolean value) {
-        return setMode(value ? PaintMode.STROKE : PaintMode.FILL);
-    }
+
 
     /** 
      * Retrieves alpha and RGB, unpremultiplied, packed into 32 bits.
@@ -290,23 +260,7 @@ public class Paint extends Managed {
         return setAlphaf(a / 255f);
     }
 
-    /**
-     * Sets color used when drawing solid fills. The color components range from 0 to 255.
-     * The color is unpremultiplied; alpha sets the transparency independent of RGB.
-     *
-     * @param a  amount of alpha, from fully transparent (0) to fully opaque (255)
-     * @param r  amount of red, from no red (0) to full red (255)
-     * @param g  amount of green, from no green (0) to full green (255)
-     * @param b  amount of blue, from no blue (0) to full blue (255)
-     *
-     * @see <a href="https://fiddle.skia.org/c/@Paint_setARGB">https://fiddle.skia.org/c/@Paint_setARGB</a>
-     */
-    @NotNull @Contract("_, _, _, _ -> this")
-    public Paint setARGB(int a, int r, int g, int b) {
-        Stats.onNativeCall();
-        _nSetColor4f(_ptr, r / 255f, g / 255f, b / 255f, a / 255f, 0);
-        return this;
-    }
+
 
     /** 
      * Returns the thickness of the pen used by Paint to outline the shape.
@@ -428,40 +382,9 @@ public class Paint extends Managed {
         return this;
     }
 
-    /** 
-     * Returns the filled equivalent of the stroked path.
-     *
-     * @param src       Path read to create a filled version
-     * @return          resulting Path
-     */
-    @NotNull @Contract("!null -> new; null -> fail")
-    public Path getFillPath(@NotNull Path src) {
-        return getFillPath(src, null, 1);
-    }
 
-    /** 
-     * Returns the filled equivalent of the stroked path.
-     *
-     * @param src       Path read to create a filled version
-     * @param cull      Optional limit passed to PathEffect
-     * @param resScale  if &gt; 1, increase precision, else if (0 &lt; resScale &lt; 1) reduce precision
-     *                  to favor speed and size
-     * @return          resulting Path
-     */
-    @NotNull @Contract("!null, _, _ -> new; null, _, _ -> fail")
-    public Path getFillPath(@NotNull Path src, @Nullable Rect cull, float resScale) {
-        try {
-            assert src != null : "Paint::getFillPath expected src != null";
-            Stats.onNativeCall();
-            if (cull == null)
-                return new Path(_nGetFillPath(_ptr, Native.getPtr(src), resScale));
-            else
-                return new Path(_nGetFillPathCull(_ptr, Native.getPtr(src), cull._left, cull._top, cull._right, cull._bottom, resScale));
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-            ReferenceUtil.reachabilityFence(src);
-        }
-    }
+
+
 
     /**
      * @return  {@link Shader} or null
@@ -510,22 +433,7 @@ public class Paint extends Managed {
         }
     }
 
-    /**
-     * @param colorFilter {@link ColorFilter} to apply to subsequent draw
-     *
-     * @see <a href="https://fiddle.skia.org/c/@Blend_Mode_Methods">https://fiddle.skia.org/c/@Blend_Mode_Methods</a>
-     * @see <a href="https://fiddle.skia.org/c/@Paint_setColorFilter">https://fiddle.skia.org/c/@Paint_setColorFilter</a>
-     */
-    @NotNull @Contract("_ -> this")
-    public Paint setColorFilter(@Nullable ColorFilter colorFilter) {
-        try {
-            Stats.onNativeCall();
-            _nSetColorFilter(_ptr, Native.getPtr(colorFilter));
-            return this;
-        } finally {
-            ReferenceUtil.reachabilityFence(colorFilter);
-        }
-    }
+
 
     /**
      * Returns BlendMode. By default, returns {@link BlendMode#SRC_OVER}.
@@ -542,12 +450,7 @@ public class Paint extends Managed {
         }
     }
 
-    /**
-     * @return  true if BlendMode is BlendMode.SRC_OVER, the default.
-     */
-    public boolean isSrcOver() {
-        return getBlendMode() == BlendMode.SRC_OVER;
-    }
+
 
     /**
      * Sets SkBlendMode to mode. Does not check for valid input.
@@ -610,23 +513,7 @@ public class Paint extends Managed {
         }
     }
 
-    /**
-     * @param maskFilter  modifies clipping mask generated from drawn geometry
-     * @return            this
-     *
-     * @see  <a href="https://fiddle.skia.org/c/@Paint_setMaskFilter">https://fiddle.skia.org/c/@Paint_setMaskFilter</a>
-     * @see  <a href="https://fiddle.skia.org/c/@Typeface_Methods">https://fiddle.skia.org/c/@Typeface_Methods</a>
-     */
-    @NotNull @Contract("_ -> this")
-    public Paint setMaskFilter(@Nullable MaskFilter maskFilter) {
-        try {
-            Stats.onNativeCall();
-            _nSetMaskFilter(_ptr, Native.getPtr(maskFilter));
-            return this;
-        } finally {
-            ReferenceUtil.reachabilityFence(maskFilter);
-        }
-    }
+
 
     /**
      * @return  {@link ImageFilter} or null
@@ -643,52 +530,19 @@ public class Paint extends Managed {
         }
     }
 
-    /**
-     * @param imageFilter  how SkImage is sampled when transformed
-     *
-     * @see <a href="https://fiddle.skia.org/c/@Draw_Looper_Methods">https://fiddle.skia.org/c/@Draw_Looper_Methods</a>
-     * @see <a href="https://fiddle.skia.org/c/@Paint_setImageFilter">https://fiddle.skia.org/c/@Paint_setImageFilter</a>
-     */
-    @NotNull @Contract("_ -> this")
-    public Paint setImageFilter(@Nullable ImageFilter imageFilter) {
-        try {
-            Stats.onNativeCall();
-            _nSetImageFilter(_ptr, Native.getPtr(imageFilter));
-            return this;
-        } finally {
-            ReferenceUtil.reachabilityFence(imageFilter);
-        }
-    }
 
-    /**
-     * <p>Returns true if Paint prevents all drawing;
-     * otherwise, the Paint may or may not allow drawing.</p>
-     *
-     * <p>Returns true if, for example, BlendMode combined with alpha computes a
-     * new alpha of zero.</p>
-     *
-     * @return  true if Paint prevents all drawing
-     *
-     * @see <a href="https://fiddle.skia.org/c/@Paint_nothingToDraw">https://fiddle.skia.org/c/@Paint_nothingToDraw</a>
-     */
-    public boolean hasNothingToDraw() {
-        try {
-            Stats.onNativeCall();
-            return _nHasNothingToDraw(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+
+
 
     public static native long  _nGetFinalizer();
     public static native long  _nMake();
     public static native long  _nMakeClone(long ptr);
     public static native boolean _nEquals(long ptr, long otherPtr);
-    public static native void _nReset(long ptr);
+    
     public static native boolean _nIsAntiAlias(long ptr);
     public static native void  _nSetAntiAlias(long ptr, boolean value);
     public static native boolean _nIsDither(long ptr);
-    public static native void  _nSetDither(long ptr, boolean value);
+    
     public static native int   _nGetMode(long ptr);
     public static native void  _nSetMode(long ptr, int value);
     public static native int   _nGetColor(long ptr);
@@ -703,20 +557,20 @@ public class Paint extends Managed {
     public static native void  _nSetStrokeCap(long ptr, int value);
     public static native int   _nGetStrokeJoin(long ptr);
     public static native void  _nSetStrokeJoin(long ptr, int value);
-    public static native long  _nGetFillPath(long ptr, long path, float resScale);
-    public static native long  _nGetFillPathCull(long ptr, long path, float left, float top, float right, float bottom, float resScale);
+    
+    
     public static native long  _nGetShader(long ptr);
     public static native void  _nSetShader(long ptr, long shaderPtr);
     public static native long  _nGetColorFilter(long ptr);
-    public static native void  _nSetColorFilter(long ptr, long colorFilterPtr);
+    
     public static native int   _nGetBlendMode(long ptr);
     public static native void  _nSetBlendMode(long ptr, int mode);
     public static native long  _nGetPathEffect(long ptr);
     public static native void  _nSetPathEffect(long ptr, long pathEffectPtr);
     public static native long  _nGetMaskFilter(long ptr);
-    public static native void  _nSetMaskFilter(long ptr, long filterPtr);
+    
     public static native long  _nGetImageFilter(long ptr);
-    public static native void  _nSetImageFilter(long ptr, long filterPtr);
-    public static native boolean _nHasNothingToDraw(long ptr);
+    
+    
 }
 

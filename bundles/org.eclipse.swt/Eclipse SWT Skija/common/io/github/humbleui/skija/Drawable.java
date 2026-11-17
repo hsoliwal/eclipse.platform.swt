@@ -1,3 +1,4 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune).
 package io.github.humbleui.skija;
 
 import java.io.*;
@@ -61,31 +62,9 @@ public abstract class Drawable extends RefCnt {
         }
     }
 
-    @ApiStatus.NonExtendable
-    public Picture makePictureSnapshot() {
-        try {
-            Stats.onNativeCall();
-            return new Picture(_nMakePictureSnapshot(_ptr));
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+    
 
-    /**
-     * <p>Return a unique value for this instance. If two calls to this return the same value,
-     * it is presumed that calling the draw() method will render the same thing as well.</p>
-     *
-     * <p>Subclasses that change their state should call notifyDrawingChanged() to ensure that
-     * a new value will be returned the next time it is called.</p>
-     */
-    public int getGenerationId() {
-        try {
-            Stats.onNativeCall();
-            return _nGetGenerationId(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+
 
     /**
      * Return the (conservative) bounds of what the drawable will draw. If the drawable can
@@ -99,18 +78,7 @@ public abstract class Drawable extends RefCnt {
         return _bounds;
     }
 
-    /**
-     * Calling this invalidates the previous generation ID, and causes a new one to be computed
-     * the next time getGenerationId() is called. Typically this is called by the object itself,
-     * in response to its internal state changing.
-     */
-    @ApiStatus.NonExtendable
-    public Drawable notifyDrawingChanged() {
-        Stats.onNativeCall();
-        _nNotifyDrawingChanged(_ptr);
-        _bounds = null;
-        return this;
-    }
+
 
     @ApiStatus.OverrideOnly
     public abstract void onDraw(Canvas canvas);
@@ -126,9 +94,9 @@ public abstract class Drawable extends RefCnt {
     @ApiStatus.Internal public static native long _nMake();
     @ApiStatus.Internal public        native void _nInit(long ptr);
     @ApiStatus.Internal public static native void _nDraw(long ptr, long canvasPtr, float[] matrix);
-    @ApiStatus.Internal public static native long _nMakePictureSnapshot(long ptr);
-    @ApiStatus.Internal public static native int  _nGetGenerationId(long ptr);
-    @ApiStatus.Internal public static native void _nNotifyDrawingChanged(long ptr);
+    
+    
+    
 }
 
 

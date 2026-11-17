@@ -1,3 +1,4 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune).
 package io.github.humbleui.skija;
 
 import java.nio.*;
@@ -15,13 +16,7 @@ public class Image extends RefCnt implements IHasImageInfo {
         super(ptr);
     }
 
-    /**
-     * @deprecated - use {@link #makeRasterFromBytes(ImageInfo, byte[], long)}
-     */
-    @Deprecated
-    public static Image makeRaster(ImageInfo imageInfo, byte[] bytes, long rowBytes) {
-        return makeRasterFromBytes(imageInfo, bytes, rowBytes);
-    }
+
 
     /**
      * <p>Creates Image from pixels.</p>
@@ -60,129 +55,21 @@ public class Image extends RefCnt implements IHasImageInfo {
         }
     }
 
-    /**
-     * @deprecated - use {@link #makeRasterFromData(ImageInfo, Data, long)}
-     */
-    @Deprecated
-    public static Image makeRaster(ImageInfo imageInfo, Data data, long rowBytes) {
-        return makeRasterFromData(imageInfo, data, rowBytes);
-    }
 
-    /**
-     * <p>Creates Image from pixels.</p>
-     *
-     * <p>Image is returned if pixels are valid. Valid Pixmap parameters include:</p>
-     * <ul>
-     * <li>dimensions are greater than zero;</li>
-     * <li>each dimension fits in 29 bits;</li>
-     * <li>ColorType and AlphaType are valid, and ColorType is not ColorType.UNKNOWN;</li>
-     * <li>row bytes are large enough to hold one row of pixels;</li>
-     * <li>pixel address is not null.</li>
-     * </ul>
-     *
-     * @param imageInfo  ImageInfo
-     * @param data       pixels array
-     * @param rowBytes   how many bytes in a row
-     * @return           Image
-     */
-    public static Image makeRasterFromData(ImageInfo imageInfo, Data data, long rowBytes) {
-        try {
-            Stats.onNativeCall();
-            long ptr = _nMakeRasterFromData(imageInfo._width,
-                                            imageInfo._height,
-                                            imageInfo._colorInfo._colorType.ordinal(),
-                                            imageInfo._colorInfo._alphaType.ordinal(),
-                                            Native.getPtr(imageInfo._colorInfo._colorSpace),
-                                            Native.getPtr(data),
-                                            rowBytes);
-            if (ptr == 0)
-                throw new RuntimeException("Failed to makeRaster " + imageInfo + " " + data + " " + rowBytes);
-            return new Image(ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(imageInfo._colorInfo._colorSpace);
-            ReferenceUtil.reachabilityFence(data);
-        }
-    }
 
-    /**
-     * @deprecated - use {@link #makeRasterFromBitmap(Bitmap)}
-     */
-    @Deprecated
-    public static Image makeFromBitmap(@NotNull Bitmap bitmap) {
-        return makeRasterFromBitmap(bitmap);
-    }
 
-    /**
-     * <p>Creates Image from bitmap, sharing or copying bitmap pixels. If the bitmap
-     * is marked immutable, and its pixel memory is shareable, it may be shared
-     * instead of copied.</p>
-     *
-     * <p>Image is returned if bitmap is valid. Valid Bitmap parameters include:</p>
-     * <ul>
-     * <li>dimensions are greater than zero;</li>
-     * <li>each dimension fits in 29 bits;</li>
-     * <li>ColorType and AlphaType are valid, and ColorType is not ColorType.UNKNOWN;</li>
-     * <li>row bytes are large enough to hold one row of pixels;</li>
-     * <li>pixel address is not nullptr.</li>
-     * </ul>
-     *
-     * @param bitmap  ImageInfo, row bytes, and pixels
-     * @return        created Image
-     *
-     * @see <a href="https://fiddle.skia.org/c/@Image_MakeFromBitmap">https://fiddle.skia.org/c/@Image_MakeFromBitmap</a>
-     */
-    @NotNull @Contract("_ -> new")
-    public static Image makeRasterFromBitmap(@NotNull Bitmap bitmap) {
-        try {
-            assert bitmap != null : "Can’t makeFromBitmap with bitmap == null";
-            Stats.onNativeCall();
-            long ptr = _nMakeRasterFromBitmap(Native.getPtr(bitmap));
-            if (ptr == 0)
-                throw new RuntimeException("Failed to Image::makeFromBitmap " + bitmap);
-            return new Image(ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(bitmap);
-        }
-    }
 
-    /**
-     * @deprecated - use {@link #makeRasterFromPixmap(Pixmap)}
-     */
-    @Deprecated
-    public static Image makeFromPixmap(@NotNull Pixmap pixmap) {
-        return makeRasterFromPixmap(pixmap);
-    }
 
-    @NotNull @Contract("_ -> new")
-    public static Image makeRasterFromPixmap(@NotNull Pixmap pixmap) {
-        try {
-            assert pixmap != null : "Can’t makeFromPixmap with pixmap == null";
-            Stats.onNativeCall();
-            long ptr = _nMakeRasterFromPixmap(Native.getPtr(pixmap));
-            if (ptr == 0)
-                throw new RuntimeException("Failed to Image::makeFromRaster " + pixmap);
-            return new Image(ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(pixmap);
-        }
-    }
 
-    /**
-     * @deprecated - use {@link #makeDeferredFromEncodedBytes(byte[])}
-     */
-    @Deprecated
-    public static Image makeFromEncoded(byte[] bytes) {
-        return makeDeferredFromEncodedBytes(bytes);
-    }
 
-    @NotNull @Contract("_ -> new")
-    public static Image makeDeferredFromEncodedBytes(byte[] bytes) {
-        Stats.onNativeCall();
-        long ptr = _nMakeDeferredFromEncodedBytes(bytes);
-        if (ptr == 0)
-            throw new IllegalArgumentException("Failed to Image::makeFromEncoded");
-        return new Image(ptr);
-    }
+
+
+
+    
+
+
+
+    
 
     /**
      * Returns a ImageInfo describing the width, height, color type, alpha type, and color space
@@ -207,65 +94,24 @@ public class Image extends RefCnt implements IHasImageInfo {
         }
     }
 
-    /**
-     * @deprecated - use {@link EncoderPNG#encode(Image)}, {@link EncoderJPEG#encode(Image)} or {@link EncoderWEBP#encode(Image)}
-     */
-    @Deprecated
-    public Data encodeToData() {
-        return encodeToData(EncodedImageFormat.PNG, 100);
-    }
 
-    /**
-     * @deprecated - use {@link EncoderPNG#encode(Image)}, {@link EncoderJPEG#encode(Image)} or {@link EncoderWEBP#encode(Image)}
-     */
-    @Deprecated
-    public Data encodeToData(EncodedImageFormat format) {
-        return encodeToData(format, 100);
-    }
 
-    /**
-     * @deprecated - use {@link EncoderPNG#encode(Image, EncodePNGOptions)}, {@link EncoderJPEG#encode(Image, EncodeJPEGOptions)} or {@link EncoderWEBP#encode(Image, EncodeWEBPOptions)}
-     */
-    @Deprecated
-    public Data encodeToData(EncodedImageFormat format, int quality) {
-        switch(format) {
-        case PNG:
-            return EncoderPNG.encode(this);
-        case JPEG:
-            return EncoderJPEG.encode(this, EncodeJPEGOptions.DEFAULT.withQuality(quality));
-        case WEBP:
-            return EncoderWEBP.encode(this, EncodeWEBPOptions.DEFAULT.withQuality(quality));
-        default:
-            throw new IllegalArgumentException("Format " + format + " is not supported");
-        }
-    }
 
-    @NotNull
-    public Shader makeShader() {
-        return makeShader(FilterTileMode.CLAMP, FilterTileMode.CLAMP, SamplingMode.DEFAULT, null);
-    }
 
-    @NotNull
-    public Shader makeShader(@Nullable Matrix33 localMatrix) {
-        return makeShader(FilterTileMode.CLAMP, FilterTileMode.CLAMP, SamplingMode.DEFAULT, localMatrix);
-    }
+
+
+    
+
+    
 
     @NotNull
     public Shader makeShader(@NotNull FilterTileMode tm) {
         return makeShader(tm, tm, SamplingMode.DEFAULT, null);
     }
 
-    @NotNull
-    public Shader makeShader(@NotNull FilterTileMode tmx, @NotNull FilterTileMode tmy) {
-        return makeShader(tmx, tmy, SamplingMode.DEFAULT, null);
-    }
+    
 
-    @NotNull
-    public Shader makeShader(@NotNull FilterTileMode tmx,
-                             @NotNull FilterTileMode tmy,
-                             @Nullable Matrix33 localMatrix) {
-        return makeShader(tmx, tmy, SamplingMode.DEFAULT, localMatrix);
-    }
+    
 
     @NotNull
     public Shader makeShader(@NotNull FilterTileMode tmx,
@@ -283,33 +129,9 @@ public class Image extends RefCnt implements IHasImageInfo {
         }
     }
 
-    /**
-     * If pixel address is available, return ByteBuffer wrapping it.
-     * If pixel address is not available, return null.
-     *
-     * @return  ByteBuffer with direct access to pixels, or null
-     *
-     * @see <a href="https://fiddle.skia.org/c/@Image_peekPixels">https://fiddle.skia.org/c/@Image_peekPixels</a>
-     */
-    @Nullable
-    public ByteBuffer peekPixels() {
-        try {
-            Stats.onNativeCall();
-            return _nPeekPixels(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    public boolean peekPixels(Pixmap pixmap) {
-        try {
-            Stats.onNativeCall();
-            return _nPeekPixelsToPixmap(_ptr, Native.getPtr(pixmap));
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-            ReferenceUtil.reachabilityFence(pixmap);
-        }
-    }
+
+    
 
     public boolean readPixels(@NotNull Bitmap dst) {
         return readPixels(null, dst, 0, 0, false);
@@ -372,26 +194,18 @@ public class Image extends RefCnt implements IHasImageInfo {
         }
     }
 
-    public boolean scalePixels(@NotNull Pixmap dst, SamplingMode samplingMode, boolean cache) {
-        try {
-            assert dst != null : "Can’t scalePixels with dst == null";
-            return _nScalePixels(_ptr, Native.getPtr(dst), samplingMode._pack(), cache);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-            ReferenceUtil.reachabilityFence(dst);
-        }
-    }
+    
 
     @ApiStatus.Internal public static native long _nMakeRasterFromBytes(int width, int height, int colorType, int alphaType, long colorSpacePtr, byte[] pixels, long rowBytes);
-    @ApiStatus.Internal public static native long _nMakeRasterFromData(int width, int height, int colorType, int alphaType, long colorSpacePtr, long dataPtr, long rowBytes);
-    @ApiStatus.Internal public static native long _nMakeRasterFromBitmap(long bitmapPtr);
-    @ApiStatus.Internal public static native long _nMakeRasterFromPixmap(long pixmapPtr);
-    @ApiStatus.Internal public static native long _nMakeDeferredFromEncodedBytes(byte[] bytes);
+    
+    
+    
+    
     @ApiStatus.Internal public static native ImageInfo _nGetImageInfo(long ptr);
     @ApiStatus.Internal public static native long    _nMakeShader(long ptr, int tmx, int tmy, long samplingMode, float[] localMatrix);
-    @ApiStatus.Internal public static native ByteBuffer _nPeekPixels(long ptr);
-    @ApiStatus.Internal public static native boolean _nPeekPixelsToPixmap(long ptr, long pixmapPtr);
-    @ApiStatus.Internal public static native boolean _nScalePixels(long ptr, long pixmapPtr, long samplingOptions, boolean cache);
+    
+    
+    
     @ApiStatus.Internal public static native boolean _nReadPixelsBitmap(long ptr, long contextPtr, long bitmapPtr, int srcX, int srcY, boolean cache);
     @ApiStatus.Internal public static native boolean _nReadPixelsPixmap(long ptr, long pixmapPtr, int srcX, int srcY, boolean cache);
 }

@@ -1,3 +1,4 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune).
 package io.github.humbleui.skija;
 
 import java.nio.ByteBuffer;
@@ -47,63 +48,19 @@ public class Data extends Managed {
         }
     }
 
-    public static Data makeFromBytes(byte[] bytes) {
-        return makeFromBytes(bytes, 0, bytes.length);
-    }
+    
 
-    public static Data makeFromBytes(byte[] bytes, long offset, long length) {
-        Stats.onNativeCall();
-        return new Data(_nMakeFromBytes(bytes, offset, length));
-    }
+    
 
-    /**
-     *  Create a new dataref the file with the specified path.
-     *  If the file cannot be opened, this returns null.
-     */
-    public static Data makeFromFileName(String path) {
-        Stats.onNativeCall();
-        return new Data(_nMakeFromFileName(path));
-    }
 
-    /**
-     *  Create a new dataref using a subset of the data in the specified
-     *  src dataref.
-     */
-    public Data makeSubset(long offset, long length) {
-        try {
-            Stats.onNativeCall();
-            return new Data(_nMakeSubset(_ptr, offset, length));
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    public Data makeCopy() {
-        try {
-            Stats.onNativeCall();
-            return new Data(_nMakeSubset(_ptr, 0, getSize()));
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    public ByteBuffer toByteBuffer() {
-        try {
-            Stats.onNativeCall();
-            return _nToByteBuffer(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    /**
-     *  Returns a new empty dataref (or a reference to a shared empty dataref).
-     *  New or shared, the caller must see that {@link #close()} is eventually called.
-     */
-    public static Data makeEmpty() {
-        Stats.onNativeCall();
-        return new Data(_nMakeEmpty());
-    }
+    
+
+    
+
+
 
     @ApiStatus.Internal
     public Data(long ptr) {
@@ -119,9 +76,9 @@ public class Data extends Managed {
     public static native long    _nSize(long ptr);
     public static native byte[]  _nBytes(long ptr, long offset, long length);
     public static native boolean _nEquals(long ptr, long otherPtr);
-    public static native ByteBuffer _nToByteBuffer(long ptr);
-    public static native long    _nMakeFromBytes(byte[] bytes, long offset, long length);
-    public static native long    _nMakeFromFileName(String path);
-    public static native long    _nMakeSubset(long ptr, long offset, long length);
-    public static native long    _nMakeEmpty();
+    
+    
+    
+    
+    
 }

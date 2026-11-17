@@ -27,11 +27,16 @@ The 138 classes SWT needs and nothing more:
 
 ## Changes
 
-35 files carry a first line `// Changed for SWT (Apache-2.0 section 4b): ...` naming the change:
+78 files carry a first line `// Changed for SWT (Apache-2.0 section 4b): ...` naming the change:
 
+- 64: the methods SWT does not reach removed (942 methods). A method stays when SWT's code or the m3gc tests reach it
+  (com.synexia `docs/M3-SCALE/runs/20261117-skija-absorb/tools/skija_reach.py`, which also follows class
+  initialisation, library callbacks and JDK callbacks), when it is a constructor, abstract or an override, or when a
+  kept method calls it (`skija_prune_fixpoint.py` with `SkijaPrune.java`). The 97 m3gc tests link the same 77 native
+  methods before and after;
 - 33: unused `import lombok...;` lines removed (the published sources are already delomboked);
 - `impl/Library`: `lombok.Lombok.sneakyThrow` replaced by a private helper that rethrows the same exception;
 - `impl/ResourceFinder`: the Java 9 version, its `@SneakyThrows` written out the same way;
 - `impl/Cleanable`, `impl/ReferenceUtil`: the Java 9 versions.
 
-The other 103 files are unchanged.
+The other 60 files are unchanged.

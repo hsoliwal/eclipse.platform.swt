@@ -1,3 +1,4 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune).
 package io.github.humbleui.skija;
 
 import java.util.function.*;
@@ -92,86 +93,17 @@ public class Font extends Managed {
         return new Font(_nMakeClone(ptr));
     }
 
-    /**
-     * If true, instructs the font manager to always hint glyphs.
-     * Returned value is only meaningful if platform uses FreeType as the font manager.
-     *
-     * @return  true if all glyphs are hinted
-    */
-    public boolean isAutoHintingForced() {
-        try {
-            Stats.onNativeCall();
-            return _nIsAutoHintingForced(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    /**
-     * @return  true if font engine may return glyphs from font bitmaps instead of from outlines
-     */
-    public boolean areBitmapsEmbedded() {
-        try {
-            Stats.onNativeCall();
-            return _nAreBitmapsEmbedded(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    /**
-     * @return  true if glyphs may be drawn at sub-pixel offsets
-     */
-    public boolean isSubpixel() {
-        try {
-            Stats.onNativeCall();
-            return _nIsSubpixel(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    /**
-     * @return  true if font and glyph metrics are requested to be linearly scalable
-     */
-    public boolean areMetricsLinear() {
-        try {
-            Stats.onNativeCall();
-            return _nAreMetricsLinear(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    /**
-     * Returns true if bold is approximated by increasing the stroke width when creating glyph
-     * bitmaps from outlines.
-     *
-     * @return  true if bold is approximated through stroke width
-     */
-    public boolean isEmboldened() {
-        try {
-            Stats.onNativeCall();
-            return _nIsEmboldened(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    /**
-     * Returns true if baselines will be snapped to pixel positions when the current transformation
-     * matrix is axis aligned.
-     *
-     * @return  true if baselines may be snapped to pixels
-     */
-    public boolean isBaselineSnapped() {
-        try {
-            Stats.onNativeCall();
-            return _nIsBaselineSnapped(_ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+
+
+
+
+
+
 
     /**
      * Sets whether to always hint glyphs. If forceAutoHinting is set, instructs the font manager to always hint glyphs. Only affects platforms that use FreeType as the font manager.
@@ -186,18 +118,7 @@ public class Font extends Managed {
         return this;
     }
 
-    /**
-     * Requests, but does not require, to use bitmaps in fonts instead of outlines.
-     *
-     * @param value  setting to use bitmaps in fonts
-     * @return       this
-     */
-    public Font setBitmapsEmbedded(boolean value) {
-        _resetMetrics();
-        Stats.onNativeCall();
-        _nSetBitmapsEmbedded(_ptr, value);
-        return this;
-    }
+
 
     /**
      * Requests, but does not require, that glyphs respect sub-pixel positioning.
@@ -212,34 +133,9 @@ public class Font extends Managed {
         return this;
     }
 
-    /**
-     * Requests, but does not require, linearly scalable font and glyph metrics.
-     *
-     * For outline fonts 'true' means font and glyph metrics should ignore hinting and rounding.
-     * Note that some bitmap formats may not be able to scale linearly and will ignore this flag.
-     *
-     * @param value  setting for linearly scalable font and glyph metrics.
-     * @return       this
-     */
-    public Font setMetricsLinear(boolean value) {
-        _resetMetrics();
-        Stats.onNativeCall();
-        _nSetMetricsLinear(_ptr, value);
-        return this;
-    }
 
-    /**
-     * Increases stroke width when creating glyph bitmaps to approximate a bold typeface.
-     *
-     * @param value  setting for bold approximation
-     * @return       this
-     */
-    public Font setEmboldened(boolean value) {
-        _resetMetrics();
-        Stats.onNativeCall();
-        _nSetEmboldened(_ptr, value);
-        return this;
-    }
+
+
 
     /**
      * Requests that baselines be snapped to pixels when the current transformation matrix is axis
@@ -278,17 +174,7 @@ public class Font extends Managed {
         return this;
     }
 
-    /**
-     * @return  level of glyph outline adjustment
-     */
-    public FontHinting getHinting() {
-        try {
-            Stats.onNativeCall();
-            return FontHinting._values[_nGetHinting(_ptr)];
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+
 
     /**
      * Sets level of glyph outline adjustment. Does not check for valid values of hintingLevel.
@@ -300,12 +186,7 @@ public class Font extends Managed {
         return this;
     }
 
-    /**
-     * Returns a font with the same attributes of this font, but with the specified size.
-     */
-    public Font makeWithSize(float size) {
-        return new Font(getTypeface(), size, getScaleX(), getSkewX());
-    }
+
 
     /**
      * @return {@link Typeface} if set, or null
@@ -321,18 +202,7 @@ public class Font extends Managed {
         }
     }
 
-    /**
-     * @return {@link Typeface} if set, or the default typeface.
-     */
-    @NotNull
-    public Typeface getTypefaceOrDefault() {
-        try {
-            Stats.onNativeCall();
-            return new Typeface(_nGetTypefaceOrDefault(_ptr));
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+
 
     /**
      * @return  text size in points
@@ -370,19 +240,7 @@ public class Font extends Managed {
         }
     }
 
-    /**
-     * Sets Typeface to typeface. Pass null to use the default typeface.
-     */
-    public Font setTypeface(@Nullable Typeface typeface) {
-        try {
-            _resetMetrics();
-            Stats.onNativeCall();
-            _nSetTypeface(_ptr, Native.getPtr(typeface));
-            return this;
-        } finally {
-            ReferenceUtil.reachabilityFence(typeface);
-        }
-    }
+
 
     /**
      * Sets text size in points. Has no effect if value is not greater than or equal to zero.
@@ -404,15 +262,7 @@ public class Font extends Managed {
         return this;
     }
 
-    /**
-     * Sets text skew on x-axis. Default value is 0.
-     */
-    public Font setSkewX(float value) {
-        _resetMetrics();
-        Stats.onNativeCall();
-        _nSetSkewX(_ptr, value);
-        return this;
-    }
+
 
     /**
      *  Converts text into glyph indices.
@@ -437,29 +287,9 @@ public class Font extends Managed {
         }
     }
 
-    /**
-     * @return  the glyph that corresponds to the specified unicode code-point (in UTF32 encoding). If the unichar is not supported, returns 0
-     */
-    public short getUTF32Glyph(int unichar) {
-        try {
-            Stats.onNativeCall();
-            return _nGetUTF32Glyph(_ptr, unichar);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    /**
-     * @return  number of glyphs represented by text
-     */
-    public int getStringGlyphsCount(String s) {
-        try {
-            Stats.onNativeCall();
-            return _nGetStringGlyphsCount(_ptr, s);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+
+
 
     /**
      * @return  the bounding box of text
@@ -497,17 +327,7 @@ public class Font extends Managed {
         }
     }
 
-    /**
-     * Retrieves the advances for each glyph
-     */
-    public float[] getWidths(short[] glyphs) {
-        try {
-            Stats.onNativeCall();
-            return _nGetWidths(_ptr, glyphs);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+
 
     /**
      * Retrieves the bounds for each glyph
@@ -529,80 +349,17 @@ public class Font extends Managed {
         }
     }
 
-    /**
-     * Retrieves the positions for each glyph.
-     */
-    public Point[] getPositions(short[] glyphs) {
-        try {
-            Stats.onNativeCall();
-            return _nGetPositions(_ptr, glyphs, 0, 0);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }    
+    
 
-    /**
-     * Retrieves the positions for each glyph, beginning at the specified origin.
-     */
-    public Point[] getPositions(short[] glyphs, Point offset) {
-        try {
-            Stats.onNativeCall();
-            return _nGetPositions(_ptr, glyphs, offset._x, offset._y);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    /**
-     * Retrieves the x-positions for each glyph.
-     */
-    public float[] getXPositions(short[] glyphs) {
-        try {
-            Stats.onNativeCall();
-            return _nGetXPositions(_ptr, glyphs, 0);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }    
 
-    /**
-     * Retrieves the x-positions for each glyph, beginning at the specified origin.
-     */
-    public float[] getXPositions(short[] glyphs, float offset) {
-        try {
-            Stats.onNativeCall();
-            return _nGetXPositions(_ptr, glyphs, offset);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+    
 
-    /**
-     * If the glyph has an outline, returns it. The glyph outline may be empty.
-     * Degenerate contours in the glyph outline will be skipped. If glyph is described by a bitmap, returns null.
-     */
-    @Nullable
-    public Path getPath(short glyph) {
-        try {
-            Stats.onNativeCall();
-            long ptr = _nGetPath(_ptr, glyph);
-            return ptr == 0 ? null : new Path(ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
 
-    /**
-     * Return glyph outlines, some of which might be null.
-     */
-    public Path[] getPaths(short[] glyphs) {
-        try {
-            Stats.onNativeCall();
-            return _nGetPaths(_ptr, glyphs);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+
+
+
+
 
     /**
      * Returns FontMetrics associated with Typeface. Results are scaled by text size but does not take into account
@@ -621,21 +378,7 @@ public class Font extends Managed {
         }
     }
 
-    /**
-     * Returns the recommended spacing between lines: the sum of metrics descent, ascent, and leading.
-     * Result is scaled by text size but does not take into account dimensions required by stroking and SkPathEffect.
-     */
-    public float getSpacing() {
-        try {
-            if (_spacing == null) {
-                Stats.onNativeCall();
-                _spacing = _nGetSpacing(_ptr);
-            }
-            return _spacing;
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+
 
     @ApiStatus.Internal
     public static class _FinalizerHolder {
@@ -649,43 +392,43 @@ public class Font extends Managed {
     @ApiStatus.Internal public static native long    _nMakeTypefaceSizeScaleSkew(long typefacePtr, float size, float scaleX, float skewX);
     @ApiStatus.Internal public static native long    _nMakeClone(long ptr);
     @ApiStatus.Internal public static native boolean _nEquals(long ptr, long otherPtr);
-    @ApiStatus.Internal public static native boolean _nIsAutoHintingForced(long ptr);
-    @ApiStatus.Internal public static native boolean _nAreBitmapsEmbedded(long ptr);
-    @ApiStatus.Internal public static native boolean _nIsSubpixel(long ptr);
-    @ApiStatus.Internal public static native boolean _nAreMetricsLinear(long ptr);
-    @ApiStatus.Internal public static native boolean _nIsEmboldened(long ptr);
-    @ApiStatus.Internal public static native boolean _nIsBaselineSnapped(long ptr);
+    
+    
+    
+    
+    
+    
     @ApiStatus.Internal public static native void    _nSetAutoHintingForced(long ptr, boolean value);
-    @ApiStatus.Internal public static native void    _nSetBitmapsEmbedded(long ptr, boolean value);
+    
     @ApiStatus.Internal public static native void    _nSetSubpixel(long ptr, boolean value);
-    @ApiStatus.Internal public static native void    _nSetMetricsLinear(long ptr, boolean value);
-    @ApiStatus.Internal public static native void    _nSetEmboldened(long ptr, boolean value);
+    
+    
     @ApiStatus.Internal public static native void    _nSetBaselineSnapped(long ptr, boolean value);
     @ApiStatus.Internal public static native int     _nGetEdging(long ptr);
     @ApiStatus.Internal public static native void    _nSetEdging(long ptr, int value);
-    @ApiStatus.Internal public static native int     _nGetHinting(long ptr);
+    
     @ApiStatus.Internal public static native void    _nSetHinting(long ptr, int value);
     @ApiStatus.Internal public static native long    _nGetTypeface(long ptr);
-    @ApiStatus.Internal public static native long    _nGetTypefaceOrDefault(long ptr);
+    
     @ApiStatus.Internal public static native float   _nGetSize(long ptr);
     @ApiStatus.Internal public static native float   _nGetScaleX(long ptr);
     @ApiStatus.Internal public static native float   _nGetSkewX(long ptr);
-    @ApiStatus.Internal public static native void    _nSetTypeface(long ptr, long typefacePtr);
+    
     @ApiStatus.Internal public static native void    _nSetSize(long ptr, float value);
     @ApiStatus.Internal public static native void    _nSetScaleX(long ptr, float value);
-    @ApiStatus.Internal public static native void    _nSetSkewX(long ptr, float value);
-    @ApiStatus.Internal public static native short[] _nGetStringGlyphs(long ptr, String str);
-    @ApiStatus.Internal public static native short   _nGetUTF32Glyph(long ptr, int uni);
+    
+    
+    
     @ApiStatus.Internal public static native short[] _nGetUTF32Glyphs(long ptr, int[] uni);
-    @ApiStatus.Internal public static native int     _nGetStringGlyphsCount(long ptr, String str);
+    
     @ApiStatus.Internal public static native Rect    _nMeasureText(long ptr, String str, long paintPtr);
     @ApiStatus.Internal public static native float   _nMeasureTextWidth(long ptr, String str, long paintPtr); 
-    @ApiStatus.Internal public static native float[] _nGetWidths(long ptr, short[] glyphs);
+    
     @ApiStatus.Internal public static native Rect[]  _nGetBounds(long ptr, short[] glyphs, long paintPtr);
-    @ApiStatus.Internal public static native Point[] _nGetPositions(long ptr, short[] glyphs, float x, float y);
-    @ApiStatus.Internal public static native float[] _nGetXPositions(long ptr, short[] glyphs, float x);
-    @ApiStatus.Internal public static native long    _nGetPath(long ptr, short glyph);
-    @ApiStatus.Internal public static native Path[]  _nGetPaths(long ptr, short[] glyphs);
+    
+    
+    
+    
     @ApiStatus.Internal public static native FontMetrics _nGetMetrics(long ptr);
-    @ApiStatus.Internal public static native float   _nGetSpacing(long ptr);
+    
 }

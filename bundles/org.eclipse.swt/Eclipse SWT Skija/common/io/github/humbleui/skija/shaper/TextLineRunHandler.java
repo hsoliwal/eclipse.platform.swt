@@ -1,3 +1,4 @@
+// Changed for SWT (Apache-2.0 section 4b): methods SWT does not reach removed (skija_reach.py, SkijaPrune).
 package io.github.humbleui.skija.shaper;
 
 import org.jetbrains.annotations.*;
@@ -59,16 +60,7 @@ public class TextLineRunHandler<T> extends Managed implements RunHandler {
         throw new UnsupportedOperationException("TextLineRunHandler::commitLine");
     }
 
-    @Nullable
-    public TextLine makeLine() {
-        try {
-            Stats.onNativeCall();
-            long ptr = _nMakeLine(_ptr);
-            return 0 == ptr ? null : new TextLine(ptr);
-        } finally {
-            ReferenceUtil.reachabilityFence(this);
-        }
-    }
+    
 
     @ApiStatus.Internal
     public static class _FinalizerHolder {
@@ -77,5 +69,5 @@ public class TextLineRunHandler<T> extends Managed implements RunHandler {
 
     @ApiStatus.Internal public static native long _nGetFinalizer();
     @ApiStatus.Internal public static native long _nMake(long textPtr);
-    @ApiStatus.Internal public static native long _nMakeLine(long ptr);
+    
 }
