@@ -422,7 +422,7 @@ public class ItemSelectionTests {
 		assertEquals ("viewport", ModeQuery.name (ModeQuery.VIEWPORT));
 		assertEquals ("original", ModeQuery.name (ModeQuery.ORIGINAL));
 		assertEquals ("custom", ModeQuery.name (ModeQuery.CUSTOM));
-		assertEquals ("m3", ModeQuery.name (ModeQuery.M3));
+		assertEquals ("skia", ModeQuery.name (ModeQuery.SKIA));
 		assertEquals ("gpu", ModeQuery.name (ModeQuery.GPU));
 		assertThrows (IllegalArgumentException.class, () -> ModeQuery.name (5));
 		assertThrows (IllegalArgumentException.class, () -> ModeQuery.name (-1));
@@ -457,7 +457,7 @@ public class ItemSelectionTests {
 		if (name.equals ("original")) return ModeQuery.ORIGINAL;
 		if (!drawn) return ModeQuery.VIEWPORT;
 		if (name.equals ("custom")) return ModeQuery.CUSTOM;
-		if (name.equals ("m3")) return ModeQuery.M3;
+		if (name.equals ("skia") || name.equals ("m3")) return ModeQuery.SKIA;
 		if (name.equals ("gpu")) return ModeQuery.GPU;
 		return ModeQuery.VIEWPORT;
 	}

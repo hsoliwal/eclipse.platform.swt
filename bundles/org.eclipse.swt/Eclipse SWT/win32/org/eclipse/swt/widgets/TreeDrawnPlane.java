@@ -28,7 +28,7 @@ import org.eclipse.swt.internal.win32.*;
  */
 final class TreeDrawnPlane extends DrawnPlane {
 	/** The Tree's startup mode, read once: a drawn plane exists only for <code>custom</code>, <code>m3</code> and <code>gpu</code>. */
-	static final WidgetMode MODE = WidgetMode.of ("Tree", WidgetMode.VIEWPORT, WidgetMode.CUSTOM, WidgetMode.M3, WidgetMode.GPU);
+	static final WidgetMode MODE = WidgetMode.of ("Tree", WidgetMode.VIEWPORT, WidgetMode.CUSTOM, WidgetMode.SKIA, WidgetMode.GPU);
 	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.widgets.Tree");
 	private static final int TVM_GETINDENT = 0x1106, I_CHILDRENCALLBACK = -1;
 

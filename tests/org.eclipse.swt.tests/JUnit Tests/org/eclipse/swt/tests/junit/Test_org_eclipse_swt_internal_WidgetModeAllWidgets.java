@@ -99,7 +99,8 @@ public class Test_org_eclipse_swt_internal_WidgetModeAllWidgets {
 			assertEquals (mode, WidgetMode.of (WIDGET, WidgetMode.values ()), mode.name ());
 		}
 		assertEquals (5, WidgetMode.values ().length);
-		assertEquals (WidgetMode.M3, WidgetMode.valueOf ("M3"));
+		assertEquals (WidgetMode.SKIA, WidgetMode.valueOf ("SKIA"));
+		assertEquals (WidgetMode.SKIA, WidgetMode.parse ("m3"), "the former name still names it");
 	}
 
 	@Test
@@ -139,7 +140,7 @@ public class Test_org_eclipse_swt_internal_WidgetModeAllWidgets {
 		System.setProperty (WidgetMode.PROPERTY, "gpu");
 		assertEquals (WidgetMode.VIEWPORT, WidgetMode.of (WIDGET, WidgetMode.VIEWPORT, WidgetMode.CUSTOM));
 		assertEquals (WidgetMode.ORIGINAL, WidgetMode.of (WIDGET), "a widget without a viewport falls back to the original");
-		assertEquals (WidgetMode.ORIGINAL, WidgetMode.of (WIDGET, WidgetMode.M3));
+		assertEquals (WidgetMode.ORIGINAL, WidgetMode.of (WIDGET, WidgetMode.SKIA));
 		System.setProperty (WidgetMode.PROPERTY, "original");
 		assertEquals (WidgetMode.ORIGINAL, WidgetMode.of (WIDGET), "the original mode is always implied");
 	}
@@ -148,18 +149,18 @@ public class Test_org_eclipse_swt_internal_WidgetModeAllWidgets {
 	public void theChosenModeIsLoggedAtDebugLevel () throws InterruptedException {
 		logger.setLevel (Level.FINE);
 		System.setProperty (SPECIFIC, "m3");
-		assertEquals (WidgetMode.M3, WidgetMode.of (WIDGET, WidgetMode.VIEWPORT, WidgetMode.M3));
+		assertEquals (WidgetMode.SKIA, WidgetMode.of (WIDGET, WidgetMode.VIEWPORT, WidgetMode.SKIA));
 		LogRecord chosen = nextRecord ();
 		assertEquals (Level.FINE, chosen.getLevel ());
 		assertEquals (LOGGER, chosen.getLoggerName ());
-		assertEquals (WIDGET + ": mode M3", chosen.getMessage ());
+		assertEquals (WIDGET + ": mode SKIA", chosen.getMessage ());
 		assertEquals (WidgetMode.VIEWPORT, WidgetMode.of (WIDGET, WidgetMode.VIEWPORT));
-		assertEquals (WIDGET + ": mode VIEWPORT (requested M3)", nextRecord ().getMessage ());
+		assertEquals (WIDGET + ": mode VIEWPORT (requested SKIA)", nextRecord ().getMessage ());
 	}
 
 	@Test
 	public void theModesInOrderAndNoSkija () {
-		assertEquals (List.of ("VIEWPORT", "ORIGINAL", "CUSTOM", "M3", "GPU"), Arrays.stream (WidgetMode.values ()).map (Enum::name).toList ());
+		assertEquals (List.of ("VIEWPORT", "ORIGINAL", "CUSTOM", "SKIA", "GPU"), Arrays.stream (WidgetMode.values ()).map (Enum::name).toList ());
 		assertThrows (IllegalArgumentException.class, () -> WidgetMode.valueOf ("SKIJA"), "the drawn mode is m3 (brief rule 14)");
 	}
 

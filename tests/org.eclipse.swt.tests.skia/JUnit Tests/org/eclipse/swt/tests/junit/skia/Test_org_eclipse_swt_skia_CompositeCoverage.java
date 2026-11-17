@@ -50,7 +50,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Headless (no Display): the leaf-7 decision of the M3 factory for a composite that paints itself (pattern
+ * Headless (no Display): the leaf-7 decision of the Skia factory for a composite that paints itself (pattern
  * COMPOSITE_PAINT_HOOK v1). In the <code>m3</code> and <code>gpu</code> modes every composite class of the fork, an
  * application's and Nebula's gets the M3 handler (the composite asks once, at its first painted <code>WM_PAINT</code>; a
  * pure container never asks: CONTAINER_OPT_OUT, probed on a Display); a Canvas is never decided here (its constructor hook
@@ -71,13 +71,13 @@ public class Test_org_eclipse_swt_skia_CompositeCoverage {
 	static final List<Class<?>> CANVASES = List.of(Canvas.class, StyledText.class, CLabel.class, GLCanvas.class,
 			Decorations.class, Shell.class);
 	static final int[] STYLES = { SWT.NONE, SWT.BORDER, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED, SWT.CLOSE | SWT.FLAT,
-			SWT.NO_MERGE_PAINTS | SWT.NO_REDRAW_RESIZE, SWT.M3 };
+			SWT.NO_MERGE_PAINTS | SWT.NO_REDRAW_RESIZE, SWT.SKIA };
 
 	/* the properties a test changed, with their previous values (restored after each test: the P04 lesson, L5-37) */
 	private final Map<String, String> saved = new HashMap<>();
 
 	static WidgetMode drawn(WidgetMode mode) {
-		return mode == WidgetMode.M3 || mode == WidgetMode.GPU ? mode : null;
+		return mode == WidgetMode.SKIA || mode == WidgetMode.GPU ? mode : null;
 	}
 
 	void set(String widget, String value) {
@@ -151,17 +151,17 @@ public class Test_org_eclipse_swt_skia_CompositeCoverage {
 		RasterCanvasFactory gpu = new RasterCanvasFactory(type -> {
 			asked.add(type);
 			return WidgetMode.GPU;
-		}, c -> Test_org_eclipse_swt_skia_M3CanvasFactory.RASTER, c -> Test_org_eclipse_swt_skia_M3CanvasFactory.GPU);
+		}, c -> Test_org_eclipse_swt_skia_CanvasFactory.RASTER, c -> Test_org_eclipse_swt_skia_CanvasFactory.GPU);
 		assertTrue(gpu.acceptsComposite(null, SWT.NONE), "a plain composite in gpu");
-		assertSame(Test_org_eclipse_swt_skia_M3CanvasFactory.GPU, gpu.createComposite(null, SWT.BORDER));
+		assertSame(Test_org_eclipse_swt_skia_CanvasFactory.GPU, gpu.createComposite(null, SWT.BORDER));
 		assertFalse(gpu.acceptsComposite(null, SWT.EMBEDDED), "an embedded host");
 		assertNull(gpu.createComposite(null, SWT.TRANSPARENT), "a transparent composite");
 		assertEquals(List.of(Composite.class, Composite.class, Composite.class, Composite.class), asked,
 				"the selector sees the composite class");
-		assertSame(Test_org_eclipse_swt_skia_M3CanvasFactory.GPU, gpu.create(null, SWT.NONE), "the canvas path is unchanged");
+		assertSame(Test_org_eclipse_swt_skia_CanvasFactory.GPU, gpu.create(null, SWT.NONE), "the canvas path is unchanged");
 		assertEquals(Canvas.class, asked.get(4), "and still asks for the canvas class");
 		RasterCanvasFactory off = new RasterCanvasFactory((Class<?> type) -> WidgetMode.VIEWPORT,
-				c -> Test_org_eclipse_swt_skia_M3CanvasFactory.RASTER, c -> Test_org_eclipse_swt_skia_M3CanvasFactory.GPU);
+				c -> Test_org_eclipse_swt_skia_CanvasFactory.RASTER, c -> Test_org_eclipse_swt_skia_CanvasFactory.GPU);
 		assertFalse(off.acceptsComposite(null, SWT.NONE), "viewport mode");
 		assertNull(off.createComposite(null, SWT.NONE));
 	}
@@ -170,24 +170,24 @@ public class Test_org_eclipse_swt_skia_CompositeCoverage {
 	public void testPerClassPropertyDecidesForComposites() {
 		assumeTrue(Test_org_eclipse_swt_skia_CanvasCoverage.noModeProperty(), "the test JVM sets no widget mode");
 		set("CTabFolder", "m3");
-		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(CTabFolder.class));
+		assertEquals(WidgetMode.SKIA, RasterCanvasFactory.mode(CTabFolder.class));
 		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(CBanner.class), "no property: the stock path");
 		set("Composite", "gpu");
 		assertEquals(WidgetMode.GPU, RasterCanvasFactory.mode(CBanner.class), "the Composite property reaches every composite");
 		assertEquals(WidgetMode.GPU, RasterCanvasFactory.mode(AppComposite.class));
-		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(CTabFolder.class), "the most derived property wins");
+		assertEquals(WidgetMode.SKIA, RasterCanvasFactory.mode(CTabFolder.class), "the most derived property wins");
 		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(Canvas.class), "the Composite property stops at Canvas");
 		assertEquals(WidgetMode.ORIGINAL, RasterCanvasFactory.mode(StyledText.class));
 		set("Canvas", "m3");
 		assertEquals(WidgetMode.GPU, RasterCanvasFactory.mode(ViewForm.class), "the Canvas property does not reach composites");
-		assertEquals(WidgetMode.M3, RasterCanvasFactory.mode(CLabel.class));
+		assertEquals(WidgetMode.SKIA, RasterCanvasFactory.mode(CLabel.class));
 	}
 
 	@Test
 	public void testDefaultCompositeAcceptIsOff() {
 		IExternalCanvasFactory foreign = c -> null;
 		assertFalse(foreign.acceptsComposite(null, SWT.NONE), "a foreign factory handles canvases only");
-		assertFalse(foreign.acceptsComposite(null, SWT.M3), "even with the style bit");
+		assertFalse(foreign.acceptsComposite(null, SWT.SKIA), "even with the style bit");
 		assertNull(foreign.createCompositeExtension(null));
 	}
 }
