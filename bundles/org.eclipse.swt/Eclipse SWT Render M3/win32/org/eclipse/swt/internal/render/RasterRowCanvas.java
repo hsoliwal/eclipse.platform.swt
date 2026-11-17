@@ -19,6 +19,7 @@ import java.util.function.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.canvasext.raster.FontSmoothing;
 import org.eclipse.swt.internal.canvasext.raster.RasterExternalGC;
 import org.eclipse.swt.internal.canvasext.raster.RasterPlaneCanvasExtension;
 import org.eclipse.swt.internal.win32.*;
@@ -130,7 +131,6 @@ public final class RasterRowCanvas implements BufferCanvas {
 	private final long paintPtr = io.github.humbleui.skija.impl.Native.getPtr (paint);
 	private final long textPaintPtr = io.github.humbleui.skija.impl.Native.getPtr (textPaint);
 	private final long focusPaintPtr = io.github.humbleui.skija.impl.Native.getPtr (focusPaint);
-	private final SurfaceProps props = new SurfaceProps (false, PixelGeometry.RGB_H);
 	private Surface surface;
 	private Canvas canvas;
 	private long canvasPtr;
@@ -219,9 +219,10 @@ public final class RasterRowCanvas implements BufferCanvas {
 		ImageInfo info = new ImageInfo (width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
 		if (gpu != null) {
 			gpu.makeCurrent ();
-			surface = Surface.makeRenderTarget (gpu.context, false, info, 0, SurfaceOrigin.TOP_LEFT, props);
+			/* text smoothing as the system's (ClearType subpixel order, or grayscale), read when a surface is made */
+			surface = Surface.makeRenderTarget (gpu.context, false, info, 0, SurfaceOrigin.TOP_LEFT, FontSmoothing.surfaceProps ());
 		} else {
-			surface = Surface.makeRasterDirect (info, bits, width * 4L, props);
+			surface = Surface.makeRasterDirect (info, bits, width * 4L, FontSmoothing.surfaceProps ());
 		}
 		canvas = surface.getCanvas ();
 		canvasPtr = io.github.humbleui.skija.impl.Native.getPtr (canvas);
