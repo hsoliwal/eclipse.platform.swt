@@ -66,8 +66,32 @@ public final class GlPlaneBackend implements PlaneBackend {
 		paints [slot].close ();
 		paints [slot] = null;
 	};
+	/*
+	 * M3Canvas (OpStreamReplay.runFrame): the text blobs of a frame are looked up before the one native call
+	 * draws them, so a blob that a later lookup of the same frame evicts closes after the frame, not at once.
+	 */
+	boolean inFrame;
+	final java.util.ArrayList<org.eclipse.swt.internal.maya.impl.Managed> closeAfterFrame = new java.util.ArrayList<> ();
+	/* the frame's blob pointers in stream order, reused */
+	long [] frameBlobs = new long [256];
+
+	void retire (org.eclipse.swt.internal.maya.impl.Managed object) {
+		if (inFrame) closeAfterFrame.add (object);
+		else object.close ();
+	}
+
+	void beginFrame () {
+		inFrame = true;
+	}
+
+	void endFrame () {
+		inFrame = false;
+		for (int i = 0, n = closeAfterFrame.size (); i < n; i++) closeAfterFrame.get (i).close ();
+		closeAfterFrame.clear ();
+	}
+
 	final RetainedSlots.Evictor blobEvictor = (slot, key) -> {
-		if (blobs [slot] != null) blobs [slot].close ();
+		if (blobs [slot] != null) retire (blobs [slot]);
 		blobs [slot] = null;
 		blobText [slot] = null;
 		blobStart [slot] = blobLength [slot] = blobFont [slot] = 0;
@@ -213,7 +237,7 @@ public final class GlPlaneBackend implements PlaneBackend {
 	final TextBlob [] runBlobs = new TextBlob [BLOBS];
 	final int [][] runKeys = new int [BLOBS][];
 	final RetainedSlots.Evictor runEvictor = (slot, key) -> {
-		if (runBlobs [slot] != null) runBlobs [slot].close ();
+		if (runBlobs [slot] != null) retire (runBlobs [slot]);
 		runBlobs [slot] = null;
 		runKeys [slot] = null;
 	};
@@ -278,6 +302,7 @@ public final class GlPlaneBackend implements PlaneBackend {
 
 	@Override
 	public void dispose () {
+		endFrame ();
 		for (int s = blobSlots.first (); s >= 0; s = blobSlots.next (s)) if (blobs [s] != null) blobs [s].close ();
 		for (int s = runSlots.first (); s >= 0; s = runSlots.next (s)) if (runBlobs [s] != null) runBlobs [s].close ();
 		for (int s = paintSlots.first (); s >= 0; s = paintSlots.next (s)) paints [s].close ();

@@ -5,6 +5,7 @@ import org.junit.platform.suite.api.Suite;
 
 @Suite
 @SelectClasses({ Test_org_eclipse_swt_maya_MayaLibrary.class, //
+		org.eclipse.swt.internal.gpu.Test_org_eclipse_swt_maya_M3Canvas.class, //
 		Test_org_eclipse_swt_maya_RectangleConverter.class, //
 		Test_org_eclipse_swt_maya_RGBAEncoder.class, //
 		Test_org_eclipse_swt_maya_MayaToSwtImageConvert.class, //

@@ -40,3 +40,4 @@ shaper/interop.cc
 skottie/Logger.cc
 skottie/interop.cc
 svg/interop.cc
+swt/M3Canvas.cc

@@ -10,14 +10,15 @@ the prebuilt Skia release Skija 0.116.3 was made with, linked to export exactly 
 --jdk    the JDK whose include folder has jni.h (default: JAVA_HOME)
 --vcvars vcvars64.bat of a Visual Studio C++ toolchain (default: the first found under Program Files)
 Each source folder compiles into its own object folder (five sources are named interop.cc); /Brepro makes the
-build reproducible (the same inputs give the same bytes). Prints BUILD-OK or the
-failing step; logs are in <out>.
+build reproducible (the same inputs give the same bytes); the object folders start empty, so no object of an
+earlier build is linked. Prints BUILD-OK or the failing step; logs are in <out>.
 """
 import argparse
 import collections
 import hashlib
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
 import urllib.request
@@ -86,6 +87,8 @@ def main():
     includes = [skia / p for p in SKIA_INCLUDES] + [HERE / "cc", jdk / "include", jdk / "include" / "win32"]
     flags = ("cl /nologo /c /Brepro /MT /O2 /EHsc /std:c++17 /W0 " + " ".join("/D" + d for d in DEFINES) + " "
              + " ".join('/I"%s"' % i for i in includes))
+    # objects of an earlier build would be linked too (the link takes obj\<folder>\*.obj): start empty
+    shutil.rmtree(out / "obj", ignore_errors=True)
     lines = ["@echo off", 'call "%s" >nul' % vcvars, 'cd /d "%s"' % out, "type nul > cl.log"]
     for g, files in sorted(groups.items()):
         (out / "obj" / g).mkdir(parents=True, exist_ok=True)

@@ -24,6 +24,8 @@
     <mayatest.renderSources>${project.basedir}/../../bundles/org.eclipse.swt/Eclipse SWT Maya/win32</mayatest.renderSources>
     <!-- maya's Java side (org.eclipse.swt.internal.maya); its native library comes from the fragment's native folder -->
     <mayatest.javaSources>${project.basedir}/../../bundles/org.eclipse.swt/Eclipse SWT Maya/common</mayatest.javaSources>
+    <!-- the retained planes' GPU sources: Test_org_eclipse_swt_maya_M3Canvas replays OpStreams through them -->
+    <mayatest.gpuSources>${project.basedir}/../../bundles/org.eclipse.swt/Eclipse SWT GPU/win32</mayatest.gpuSources>
     <mayatest.swt.version>3.138.0-SNAPSHOT</mayatest.swt.version>
     <mayatest.jupiter.version>5.14.4</mayatest.jupiter.version>
     <mayatest.platform.version>1.14.4</mayatest.platform.version>
@@ -53,7 +55,7 @@
     <plugins>
       <plugin><groupId>org.codehaus.mojo</groupId><artifactId>build-helper-maven-plugin</artifactId><version>3.6.2</version>
         <executions><execution><id>add-maya-render-tree</id><phase>generate-test-sources</phase><goals><goal>add-test-source</goal></goals>
-          <configuration><sources><source>${mayatest.renderSources}</source><source>${mayatest.javaSources}</source></sources></configuration>
+          <configuration><sources><source>${mayatest.renderSources}</source><source>${mayatest.javaSources}</source><source>${mayatest.gpuSources}</source></sources></configuration>
         </execution></executions>
       </plugin>
       <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.1</version>
