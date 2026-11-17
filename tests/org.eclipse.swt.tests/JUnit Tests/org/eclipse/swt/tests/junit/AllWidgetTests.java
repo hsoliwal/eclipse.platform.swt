@@ -41,6 +41,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_internal_TextMatch.class, //
 		Test_org_eclipse_swt_internal_TextSegments.class, //
 		Test_org_eclipse_swt_internal_TokenMatch.class, //
+		Test_org_eclipse_swt_internal_ValueListPanel.class, //
 		// Existing widget contracts
 		Test_VirtualTreeCoordinateVisibility.class, //
 		Test_org_eclipse_swt_custom_BidiSegmentListener.class, //

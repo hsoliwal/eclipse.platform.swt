@@ -27,7 +27,9 @@ import org.eclipse.swt.widgets.*;
  * A right click on a column header (<code>SWT.MenuDetect</code> over the header) opens a small
  * tool window under the column with the column's filter: an enablement choice, the match type
  * (wildcard, regular expression, contains, starts with, equals, and their negations), the pattern,
- * and tools for the default pattern, pasting the clipboard and closing. Edits apply to the
+ * and tools for the default pattern, pasting the clipboard and closing. With
+ * {@link #setValueList(boolean)} the popup also lists the column's values to check
+ * ({@link ValueListPanel}), applied when the popup closes. Edits apply to the
  * {@link ColumnFilter} after a short delay; Return applies at once and closes, Escape closes. The
  * popup also closes when the control is clicked, when the window moves, or when it is deactivated.
  * Columns with an active criterion show a filter mark in their header.
@@ -45,6 +47,8 @@ public final class FilterPopup {
 	private final RowView.Listener marks = change -> marks ();
 	private Shell shell;
 	private FilterEditPanel panel;
+	private ValueListPanel values;
+	private boolean valueList;
 	private int column = -1;
 
 	private FilterPopup (Composite control, ColumnFilter filter) {
@@ -118,8 +122,14 @@ public final class FilterPopup {
 		close ();
 		this.column = column;
 		shell = new Shell (control.getShell (), SWT.ON_TOP | SWT.TOOL);
-		shell.setLayout (new FillLayout ());
-		panel = new FilterEditPanel (shell, filter, column, Columns.column (control, column).getText (), this::close, this::marks);
+		boolean withValues = valueList && filter.cellText () != null;
+		shell.setLayout (withValues ? new GridLayout () : new FillLayout ());
+		panel = new FilterEditPanel (shell, filter, column, Columns.column (control, column).getText (), this::close, this::applied);
+		if (withValues) {
+			panel.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
+			values = new ValueListPanel (shell, filter, column);
+			values.setLayoutData (new GridData (SWT.FILL, SWT.FILL, true, true));
+		}
 		shell.addListener (SWT.Deactivate, listener);
 		shell.pack ();
 		shell.setLocation (location (shell.getSize ()));
@@ -136,15 +146,55 @@ public final class FilterPopup {
 		return location;
 	}
 
-	/** Closes the popup if it is open; edits not yet applied are applied first. */
+	/* the pattern was applied: the value list shows its effect unless the user changed checks */
+	private void applied () {
+		marks ();
+		if (values != null && !values.isDisposed () && !values.isModified ()) values.refresh ();
+	}
+
+	/**
+	 * Closes the popup if it is open; edits not yet applied are applied first, the pattern before
+	 * the checks of the value list.
+	 */
 	public void close () {
 		if (shell == null) return;
 		Shell closing = shell;
+		ValueListPanel list = values;
 		shell = null;
 		column = -1;
+		values = null;
 		panel.apply ();
 		panel = null;
+		if (list != null) list.apply ();
 		closing.dispose ();
+	}
+
+	/**
+	 * Sets whether the popup lists the column's values to check under the pattern, from the next
+	 * time it opens. A filter without cell text has no value list.
+	 *
+	 * @param valueList <code>true</code> to list the values
+	 */
+	public void setValueList (boolean valueList) {
+		this.valueList = valueList;
+	}
+
+	/**
+	 * Returns whether the popup lists the column's values.
+	 *
+	 * @return <code>true</code> if it lists them
+	 */
+	public boolean getValueList () {
+		return valueList;
+	}
+
+	/**
+	 * Returns the value list while the popup is open with one, or <code>null</code>.
+	 *
+	 * @return the value list, or <code>null</code>
+	 */
+	public ValueListPanel getValueListPanel () {
+		return values;
 	}
 
 	/**
