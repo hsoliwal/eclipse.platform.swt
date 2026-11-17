@@ -31,11 +31,9 @@ import org.eclipse.swt.widgets.Event;
 import io.github.humbleui.skija.ColorAlphaType;
 import io.github.humbleui.skija.ColorType;
 import io.github.humbleui.skija.ImageInfo;
-import io.github.humbleui.skija.PixelGeometry;
 import io.github.humbleui.skija.Pixmap;
 import io.github.humbleui.skija.Surface;
 import io.github.humbleui.skija.SurfaceOrigin;
-import io.github.humbleui.skija.SurfaceProps;
 
 /**
  * The M3 renderer behind a <code>Canvas</code> created with {@link SWT#M3} (GC seam, leaf 4): the canvas's
@@ -72,7 +70,7 @@ import io.github.humbleui.skija.SurfaceProps;
 public final class RasterCanvasHandler implements IExternalCanvasHandler {
 	/** The data key under which a handled canvas carries its handler (<code>Canvas.getData</code>). */
 	public static final String DATA_KEY = "org.eclipse.swt.internal.render.RasterCanvasHandler"; //$NON-NLS-1$
-	private static final SurfaceProps PROPS = new SurfaceProps (false, PixelGeometry.RGB_H);
+	/* text smoothing as the system's (ClearType subpixel order, or grayscale), read when a surface is made */
 
 	private final Composite control;
 	private final GpuContext gpu;
@@ -219,13 +217,13 @@ public final class RasterCanvasHandler implements IExternalCanvasHandler {
 		width = buffer.width;
 		height = buffer.height;
 		ImageInfo info = new ImageInfo (width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
-		surface = gpu == null ? Surface.makeRasterDirect (info, bits, width * 4L, PROPS) : gpuTarget (info);
+		surface = gpu == null ? Surface.makeRasterDirect (info, bits, width * 4L, FontSmoothing.surfaceProps ()) : gpuTarget (info);
 	}
 
 	/* a render target on the thread's GL context that starts from the buffer's pixels, so retained pixels survive a growth */
 	private Surface gpuTarget (ImageInfo info) {
 		gpu.makeCurrent ();
-		Surface target = Surface.makeRenderTarget (gpu.context, false, info, 0, SurfaceOrigin.TOP_LEFT, PROPS);
+		Surface target = Surface.makeRenderTarget (gpu.context, false, info, 0, SurfaceOrigin.TOP_LEFT, FontSmoothing.surfaceProps ());
 		try (Pixmap pixels = Pixmap.make (info, bits, width * 4)) {
 			target.writePixels (pixels, 0, 0);
 		}
