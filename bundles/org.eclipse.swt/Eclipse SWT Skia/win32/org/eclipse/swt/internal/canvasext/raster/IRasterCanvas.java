@@ -1,0 +1,49 @@
+/*******************************************************************************
+ * Copyright (c) 2025 SAP SE and others.
+ *
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ * Contributors:
+ *     SAP SE and others - initial API and implementation
+ *     Hitesh Soliwal (Synexia) - adoption into this fork, 2026
+ *******************************************************************************/
+
+package org.eclipse.swt.internal.canvasext.raster;
+
+import io.github.humbleui.skija.ClipMode;
+import io.github.humbleui.skija.Font;
+import io.github.humbleui.skija.Matrix33;
+import io.github.humbleui.skija.Paint;
+import io.github.humbleui.skija.Path;
+import io.github.humbleui.skija.Region;
+import io.github.humbleui.types.RRect;
+import io.github.humbleui.types.Rect;
+
+/**
+ * Abstraction for Skija's Canvas, for future decoupling.
+ */
+public interface IRasterCanvas {
+	int getSaveCount();
+	void restoreToCount(int saveCount);
+	void drawLine(float x0, float y0, float x1, float y1, Paint paint);
+	void drawArc(int left, int top, int right, int bottom, int startAngle, int sweepAngle, boolean useCenter, Paint paint);
+	void drawRect(Rect rect, Paint paint);
+	void drawOval(Rect rect, Paint paint);
+	void drawPath(Path path, Paint paint);
+	void drawPolygon(float[] points, Paint paint);
+	void drawRRect(RRect rrect, Paint paint);
+	void drawImage(IRasterImage image, int x, int y);
+	void drawImageRect(IRasterImage image, Rect src, Rect dst, io.github.humbleui.skija.SamplingMode sampling, Paint paint, boolean strict);
+	void setMatrix(Matrix33 matrix);
+	void save();
+	void clipRect(Rect rect);
+	void clear(int color);
+	void restore();
+	void clipPath(Path skiaPath, ClipMode intersect, boolean b);
+	void drawString(String text, int x, int i, Font f, Paint fgp);
+	void clipRegion(Region skiaRegion);
+}

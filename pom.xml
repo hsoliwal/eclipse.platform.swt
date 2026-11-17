@@ -51,9 +51,9 @@
     defined that is combined with this one. -->
   <profiles>
     <profile>
-      <id>m3-gpu-retained-backend</id>
-      <activation><property><name>m3.gpu.retainedBackend</name><value>true</value></property></activation>
-      <modules><module>bundles/org.eclipse.swt.gpu.m3</module></modules>
+      <id>skia-retained-backend</id>
+      <activation><property><name>skia.retainedBackend</name><value>true</value></property></activation>
+      <modules><module>bundles/org.eclipse.swt.skia</module></modules>
     </profile>
     <profile>
       <id>build-individual-bundles</id>
@@ -517,7 +517,7 @@ Test report summaries (first 20 reports, first 12 lines each) and the build log 
     <module>examples/org.eclipse.swt.examples.ole.win32</module>
     <module>examples/org.eclipse.swt.examples.views</module>
     <module>tests/org.eclipse.swt.tests</module>
-    <module>tests/org.eclipse.swt.tests.m3gc</module>
+    <module>tests/org.eclipse.swt.tests.skia</module>
     <module>features/org.eclipse.swt.tools.feature</module>
   </modules>
 </project>
