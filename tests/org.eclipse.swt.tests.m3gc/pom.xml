@@ -22,9 +22,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
     <m3gc.renderSources>${project.basedir}/../../bundles/org.eclipse.swt/Eclipse SWT Render M3/win32</m3gc.renderSources>
+    <!-- the Skija Java classes SWT needs, absorbed under their upstream packages; only the native jar stays a dependency -->
+    <m3gc.skijaSources>${project.basedir}/../../bundles/org.eclipse.swt/Eclipse SWT Skija/common</m3gc.skijaSources>
     <m3gc.swt.version>3.138.0-SNAPSHOT</m3gc.swt.version>
     <m3gc.skija.version>0.116.3</m3gc.skija.version>
-    <m3gc.types.version>0.1.1</m3gc.types.version>
     <m3gc.jupiter.version>5.14.4</m3gc.jupiter.version>
     <m3gc.platform.version>1.14.4</m3gc.platform.version>
     <skipNativeTests>true</skipNativeTests>
@@ -40,9 +41,7 @@
   </profiles>
   <dependencies>
     <dependency><groupId>org.eclipse.platform</groupId><artifactId>org.eclipse.swt.win32.win32.x86_64</artifactId><version>${m3gc.swt.version}</version><scope>test</scope></dependency>
-    <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-shared</artifactId><version>${m3gc.skija.version}</version><scope>test</scope></dependency>
     <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-windows-x64</artifactId><version>${m3gc.skija.version}</version><scope>test</scope></dependency>
-    <dependency><groupId>io.github.humbleui</groupId><artifactId>types</artifactId><version>${m3gc.types.version}</version><scope>test</scope></dependency>
     <dependency><groupId>org.jetbrains</groupId><artifactId>annotations</artifactId><version>24.1.0</version><scope>test</scope></dependency>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter-api</artifactId><version>${m3gc.jupiter.version}</version><scope>test</scope></dependency>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter-engine</artifactId><version>${m3gc.jupiter.version}</version><scope>test</scope></dependency>
@@ -54,7 +53,7 @@
     <plugins>
       <plugin><groupId>org.codehaus.mojo</groupId><artifactId>build-helper-maven-plugin</artifactId><version>3.6.2</version>
         <executions><execution><id>add-m3-render-tree</id><phase>generate-test-sources</phase><goals><goal>add-test-source</goal></goals>
-          <configuration><sources><source>${m3gc.renderSources}</source></sources></configuration>
+          <configuration><sources><source>${m3gc.renderSources}</source><source>${m3gc.skijaSources}</source></sources></configuration>
         </execution></executions>
       </plugin>
       <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.1</version>
