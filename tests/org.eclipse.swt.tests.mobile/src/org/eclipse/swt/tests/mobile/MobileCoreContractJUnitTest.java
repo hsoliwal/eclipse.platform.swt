@@ -87,6 +87,9 @@ public final class MobileCoreContractJUnitTest {
 	@Test void originalMobileProgressAndScalePaintingAndSelection() {
 		MobileCoreContractTest.testMobileProgressAndScaleContracts();
 	}
+	@Test void originalMobileSashDragKeyboardAndAccessibility() {
+		MobileCoreContractTest.testMobileSashContracts();
+	}
 	@Test void originalMobileListInputAndSparseVirtualRows() {
 		MobileCoreContractTest.testMobileListContracts();
 	}

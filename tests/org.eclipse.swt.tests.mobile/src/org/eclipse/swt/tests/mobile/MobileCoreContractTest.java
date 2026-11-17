@@ -63,6 +63,7 @@ public final class MobileCoreContractTest {
 		testOwnedShellCoordinateMapping();
 		testMobileButtonLabelContracts();
 		testMobileProgressAndScaleContracts();
+		testMobileSashContracts();
 		testMobileListContracts();
 		testMobileOriginalTextContracts();
 		testMobileComboContracts();
@@ -613,6 +614,101 @@ public final class MobileCoreContractTest {
 				"Mobile Label/Button paint resources and peers fully released");
 	}
 
+
+	/** SWT owner-level contracts for the Android/iOS-backed Sash: the desktop event contract on one native peer. */
+	static void testMobileSashContracts() {
+		ContractPlatform platform = new ContractPlatform();
+		MobileRuntime.install(platform);
+		Display display = new Display();
+		try {
+			Shell shell = new Shell(display);
+			shell.setSize(300, 200);
+			Sash sash = new Sash(shell, SWT.VERTICAL);
+			long peer = platform.lastCreated;
+			sash.setBounds(50, 0, 3, 100);
+			require(platform.controls.get(peer).kind == MobilePlatform.CANVAS,
+					"Mobile Sash uses an interactive original SWT Canvas peer");
+			require(platform.controls.get(peer).role == org.eclipse.swt.accessibility.ACC.ROLE_SLIDER,
+					"Sash publishes an adjustable role to Android/UIKit");
+			ArrayList<String> events = new ArrayList<>();
+			int[] veto = {Integer.MAX_VALUE};
+			sash.addListener(SWT.Selection, e -> {
+				events.add(e.detail + "@" + e.x);
+				if (e.x > veto[0]) e.doit = false;
+				if (e.detail == 0 && e.doit) sash.setBounds(e.x, e.y, e.width, e.height);
+			});
+			shell.open();
+			drain(display);
+			platform.sink.input(peer, SWT.MouseDown, 1, 10, 1, 0, '\0', 0, 1, 10);
+			platform.sink.input(peer, SWT.MouseMove, 21, 10, 0, 0, '\0', SWT.BUTTON1, 1, 11);
+			platform.sink.input(peer, SWT.MouseUp, 21, 10, 1, 0, '\0', 0, 1, 12);
+			drain(display);
+			require(events.equals(java.util.List.of(SWT.DRAG + "@50", SWT.DRAG + "@70", "0@70")),
+					"Press and move send SWT.DRAG at the position the sash would take, release the final Selection: " + events);
+			require(sash.getBounds().x == 70, "The listener moved the sash; the sash does not move itself");
+			events.clear();
+			veto[0] = 80;
+			platform.sink.input(peer, SWT.MouseDown, 1, 10, 1, 0, '\0', 0, 1, 20);
+			platform.sink.input(peer, SWT.MouseMove, 6, 10, 0, 0, '\0', SWT.BUTTON1, 1, 21);
+			platform.sink.input(peer, SWT.MouseMove, 21, 10, 0, 0, '\0', SWT.BUTTON1, 1, 22);
+			platform.sink.input(peer, SWT.MouseUp, 21, 10, 1, 0, '\0', 0, 1, 23);
+			drain(display);
+			require(events.equals(java.util.List.of(SWT.DRAG + "@70", SWT.DRAG + "@75", SWT.DRAG + "@90", "0@75")),
+					"A refused position is not kept: the release goes to the last accepted one: " + events);
+			require(sash.getBounds().x == 75, "The release placed the sash at the last accepted position");
+			Sash smooth = new Sash(shell, SWT.HORIZONTAL | SWT.SMOOTH);
+			long smoothPeer = platform.lastCreated;
+			smooth.setBounds(0, 120, 200, 3);
+			ArrayList<String> smoothEvents = new ArrayList<>();
+			smooth.addListener(SWT.Selection, e -> {
+				smoothEvents.add(e.detail + "@" + e.y);
+				smooth.setBounds(e.x, e.y, e.width, e.height);
+			});
+			drain(display);
+			platform.sink.input(smoothPeer, SWT.MouseDown, 10, 1, 1, 0, '\0', 0, 1, 30);
+			platform.sink.input(smoothPeer, SWT.MouseMove, 10, 11, 0, 0, '\0', SWT.BUTTON1, 1, 31);
+			platform.sink.input(smoothPeer, SWT.MouseUp, 10, 11, 1, 0, '\0', 0, 1, 32);
+			drain(display);
+			require(smoothEvents.equals(java.util.List.of("0@120", "0@130", "0@130")),
+					"SWT.SMOOTH sends plain Selection events while dragging: " + smoothEvents);
+			events.clear();
+			veto[0] = Integer.MAX_VALUE;
+			Event across = new Event();
+			across.keyCode = SWT.ARROW_RIGHT;
+			sash.notifyListeners(SWT.KeyDown, across);
+			Event fine = new Event();
+			fine.keyCode = SWT.ARROW_LEFT;
+			fine.stateMask = SWT.CTRL;
+			sash.notifyListeners(SWT.KeyDown, fine);
+			Event along = new Event();
+			along.keyCode = SWT.ARROW_UP;
+			sash.notifyListeners(SWT.KeyDown, along);
+			require(events.equals(java.util.List.of("0@84", "0@83")),
+					"Arrows across the sash step 9, 1 with Ctrl; arrows along it do nothing: " + events);
+			platform.sink.accessibility(peer, MobilePlatform.ACTION_INCREMENT);
+			drain(display);
+			require(sash.getBounds().x == 92, "Native accessibility increment moves the sash one step through its Selection owner");
+			sash.setEnabled(false);
+			events.clear();
+			platform.sink.input(peer, SWT.MouseDown, 1, 10, 1, 0, '\0', 0, 1, 40);
+			drain(display);
+			require(events.isEmpty(), "A disabled sash sends nothing");
+			sash.setEnabled(true);
+			sash.addListener(SWT.Selection, e -> {
+				if (e.detail == SWT.DRAG && e.x > 100) sash.dispose();
+			});
+			platform.sink.input(peer, SWT.MouseDown, 1, 10, 1, 0, '\0', 0, 1, 50);
+			platform.sink.input(peer, SWT.MouseMove, 30, 10, 0, 0, '\0', SWT.BUTTON1, 1, 51);
+			platform.sink.input(peer, SWT.MouseUp, 30, 10, 1, 0, '\0', 0, 1, 52);
+			drain(display);
+			require(sash.isDisposed(), "A listener may dispose the sash during a drag; the stale native callbacks are ignored");
+		} finally {
+			display.dispose();
+			MobileRuntime.uninstall(platform);
+		}
+		require(platform.controls.isEmpty() && platform.images.isEmpty(), "Sashes release all native peers and images");
+		require(platform.openedGraphics == platform.closedGraphics, "Sashes close every native graphics context");
+	}
 
 	/** SWT owner-level contracts for Android/iOS-backed ProgressBar and Scale. */
 	static void testMobileProgressAndScaleContracts() {
