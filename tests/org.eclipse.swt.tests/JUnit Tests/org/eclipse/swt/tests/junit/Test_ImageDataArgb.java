@@ -113,6 +113,31 @@ public class Test_ImageDataArgb {
 		}
 	}
 
+
+	@Test
+	public void packedDirtySpansEqualFullRowAndPixelOracles() {
+		for (ImageData data : images()) {
+			ImageDataArgb rows = new ImageDataArgb(data);
+			int[] packed = new int[W + 3], full = new int[W];
+			for (int y = 0; y < H; y++) {
+				rows.premultipliedRow(y, full, 0);
+				for (int x = 0; x < W; x += 3) {
+					int n = Math.min(7, W - x);
+					rows.premultipliedSpan(y, x, n, packed, 2);
+					for (int k = 0; k < n; k++) {
+						assertEquals(full[x + k], packed[2 + k]);
+						assertEquals(reference(data, x + k, y), packed[2 + k]);
+					}
+				}
+			}
+			rows.premultipliedSpan(0, W, 0, packed, 2);
+			assertThrows(IllegalArgumentException.class,
+					() -> rows.premultipliedSpan(0, W, 1, packed, 2));
+			assertThrows(IllegalArgumentException.class,
+					() -> rows.premultipliedSpan(0, 0, W, new int[W - 1], 0));
+		}
+	}
+
 	@Test
 	public void anIndexedPixelOutsideThePaletteIsRefused() {
 		ImageDataArgb rows = new ImageDataArgb(images()[4]);

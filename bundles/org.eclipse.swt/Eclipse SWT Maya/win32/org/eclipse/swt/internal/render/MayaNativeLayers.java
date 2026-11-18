@@ -45,6 +45,11 @@ public final class MayaNativeLayers implements NativeLayers {
 	}
 
 	@Override
+	public int uploadDirty(long layer, int[] packedArgb, int[] regions, int count) {
+		return MayaComposition.uploadDirty(layer, packedArgb, regions, count);
+	}
+
+	@Override
 	public int apply(long composition, long[] layers, float[] props, int count) {
 		if (PACKED_FRAME && packetSupport >= 0 && count >= 64 && count <= MayaFramePacket.MAX_LAYERS) {
 			try {

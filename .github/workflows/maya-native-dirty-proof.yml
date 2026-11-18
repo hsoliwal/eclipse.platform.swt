@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+name: Maya native dirty upload - Linux JNI ABI proof
+on:
+  pull_request:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/**'
+      - '.github/workflows/maya-native-dirty-proof.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  portable-maya-jni:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile real non-Windows Maya JNI branch and run exact Java 21 ABI probe
+        run: bash 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/tests/run_dirty_proof.sh'

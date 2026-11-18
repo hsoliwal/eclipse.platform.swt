@@ -42,6 +42,18 @@ public final class MayaComposition {
 	/** Replaces the layer's pixels (width * height premultiplied ARGB ints); 0 or a failure code. */
 	public static native int _nUpload(long layer, int[] pixels);
 
+	/** Batched dirty image regions in layer-local coordinates, optional Maya JNI ABI. */
+	public static native int _nUploadDirty(long layer, int[] packedArgb, int[] regions, int count);
+
+	/** Old Maya binaries use the existing full-image upload, not partial pixels. */
+	public static int uploadDirty(long layer, int[] packedArgb, int[] regions, int count) {
+		try {
+			return _nUploadDirty(layer, packedArgb, regions, count);
+		} catch (UnsatisfiedLinkError olderMayaBinary) {
+			return -1;
+		}
+	}
+
 	/**
 	 * One frame: {@code count} layers in Z order, bottom to top, with {@link #PROPS} floats each in {@code props}
 	 * (x, y, opacity, visible); layers not listed are not shown. One commit. Returns 0 or a failure code.
