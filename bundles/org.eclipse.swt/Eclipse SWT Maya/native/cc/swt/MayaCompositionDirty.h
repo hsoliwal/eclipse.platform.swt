@@ -54,7 +54,9 @@ inline bool validPackedDirtyFrame(int width, int height, int pixels,
         const int *r = rects + static_cast<std::size_t>(i) * 4;
         if (r[0] < 0 || r[1] < 0 || r[2] <= 0 || r[3] <= 0 ||
                 r[0] >= width || r[1] >= height ||
-                r[2] > width - r[0] || r[3] > height - r[1]) return false;
+                r[2] > width - r[0] || r[3] > height - r[1] ||
+                static_cast<std::uint64_t>(r[2]) * sizeof(std::uint32_t) >
+                    std::numeric_limits<std::uint32_t>::max()) return false;
         consumed += static_cast<std::uint64_t>(r[2]) * r[3];
         if (consumed > static_cast<std::uint64_t>(pixels)) return false;
     }
