@@ -3308,26 +3308,36 @@ public void setBorderRelief (int relief) {
     checkWidget();
     if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     if (relief == nativeBorderRelief) return;
+    long context = GTK.gtk_widget_get_style_context (handle);
+    if (context == 0) SWT.error(SWT.ERROR_NO_HANDLES);
     if (nativeBorderProvider == 0 && relief != SWT.DEFAULT) {
-        long context = GTK.gtk_widget_get_style_context(handle);
-        nativeBorderProvider = GTK.gtk_css_provider_new();
-        GTK.gtk_style_context_add_provider(context, nativeBorderProvider,
-                GTK.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-        // The style context owns the reference until its widget is destroyed.
-        OS.g_object_unref(nativeBorderProvider);
+        long candidate = GTK.gtk_css_provider_new ();
+        if (candidate == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        // Explicit Control relief must outrank GTK4 Group's constructor
+        // shadow and must not overwrite SWT's foreground/background CSS.
+        GTK.gtk_style_context_add_provider (context, candidate,
+                GTK.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 1);
+        // GtkStyleContext holds the reference until its native owner dies.
+        OS.g_object_unref (candidate);
+        nativeBorderProvider = candidate;
     }
-    String declaration = NativeBorderRelief.gtkDeclaration(relief);
     if (nativeBorderProvider != 0) {
-        byte[] css = Converter.wcsToMbcs(declaration.isEmpty() ? "" : "* { " + declaration + " }", true);
+        String declaration = NativeBorderRelief.gtkDeclaration (relief);
+        String css = "";
+        if (!declaration.isEmpty()) {
+            String nodeName = display.gtk_widget_class_get_css_name (handle);
+            css = nodeName + " { " + declaration + " }";
+        }
+        byte[] bytes = Converter.wcsToMbcs (css, true);
         if (GTK.GTK4) {
-            GTK4.gtk_css_provider_load_from_data(nativeBorderProvider, css, -1);
+            GTK4.gtk_css_provider_load_from_data (nativeBorderProvider, bytes, -1);
         } else {
-            GTK3.gtk_css_provider_load_from_data(nativeBorderProvider, css, -1, null);
+            GTK3.gtk_css_provider_load_from_data (nativeBorderProvider, bytes, -1, null);
         }
     }
     nativeBorderRelief = relief;
-    GTK.gtk_widget_queue_resize(handle);
-    GTK.gtk_widget_queue_draw(handle);
+    GTK.gtk_widget_queue_resize (handle);
+    GTK.gtk_widget_queue_draw (handle);
 }
 
 /**
@@ -3345,8 +3355,16 @@ public int getBorderWidth () {
 }
 
 int getBorderWidthInPixels () {
-	checkWidget();
-	return nativeBorderRelief == SWT.SHADOW_NONE || nativeBorderRelief == SWT.DEFAULT ? 0 : 2;
+    checkWidget();
+    // The default preserves SWT's historical getter. A selected relief
+    // reads the real themed border rather than assuming a fixed CSS width.
+    if (nativeBorderRelief == SWT.DEFAULT || nativeBorderRelief == SWT.SHADOW_NONE) return 0;
+    long context = GTK.gtk_widget_get_style_context (handle);
+    if (context == 0) return 0;
+    GtkBorder insets = new GtkBorder ();
+    gtk_style_context_get_border (context, GTK.gtk_widget_get_state_flags (handle), insets);
+    // A public scalar width cannot express asymmetric native CSS insets.
+    return Math.max(Math.max(insets.left, insets.right), Math.max(insets.top, insets.bottom));
 }
 
 int getClientWidth () {

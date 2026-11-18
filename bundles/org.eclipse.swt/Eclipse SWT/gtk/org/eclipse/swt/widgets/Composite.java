@@ -157,32 +157,35 @@ public Composite (Composite parent, int style) {
 }
 
 /**
- * Returns the native bevel style, or SWT.NONE if none has been selected.
- * Native bevel installation is not yet implemented on this backend.
+ * Returns the selected native Control relief through the existing
+ * Composite bevel vocabulary. SWT.DEFAULT and SHADOW_NONE read as SWT.NONE.
  *
- * @return SWT.NONE
+ * @return SWT.NONE or the requested SWT.SHADOW_* relief
  */
 public int getBevelBorder () {
-	checkWidget ();
-	return SWT.NONE;
+    int relief = getBorderRelief ();
+    return relief == SWT.DEFAULT || relief == SWT.SHADOW_NONE ? SWT.NONE : relief;
 }
 
 /**
- * Requests an explicitly selected native bevel. This backend does not yet
- * provide a suitable native non-client bevel for arbitrary Composite/Canvas.
- * Passing SWT.NONE or SWT.SHADOW_NONE leaves the original border unchanged.
+ * Requests an explicitly selected native bevel on this Composite's
+ * existing GtkWidget. SWT.NONE or SHADOW_NONE restores default decoration.
  *
  * @param border an SWT shadow style or SWT.NONE
  * @exception SWTException ERROR_NOT_IMPLEMENTED for a supported bevel style
  */
 public void setBevelBorder (int border) {
-	checkWidget ();
-	if (border == SWT.NONE || border == SWT.SHADOW_NONE) return;
-	if (border != SWT.SHADOW_IN && border != SWT.SHADOW_OUT
-			&& border != SWT.SHADOW_ETCHED_IN && border != SWT.SHADOW_ETCHED_OUT) {
-		error (SWT.ERROR_INVALID_ARGUMENT);
-	}
-	error (SWT.ERROR_NOT_IMPLEMENTED);
+    checkWidget ();
+    if (border == SWT.NONE || border == SWT.SHADOW_NONE) {
+        setBorderRelief (SWT.DEFAULT);
+        return;
+    }
+    if (border != SWT.SHADOW_IN && border != SWT.SHADOW_OUT
+            && border != SWT.SHADOW_ETCHED_IN && border != SWT.SHADOW_ETCHED_OUT) {
+        error (SWT.ERROR_INVALID_ARGUMENT);
+    }
+    // The Control's existing GtkWidget is the only native border owner.
+    setBorderRelief (border);
 }
 
 static int checkStyle (int style) {
