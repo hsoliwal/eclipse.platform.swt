@@ -115,3 +115,15 @@ reproducible full build and native test qualification before the fragment is upd
   - running the arm64 library on a device (only the x86_64 library has run, on the emulator).
 - M3Canvas on graphics hardware: it is measured on raster surfaces only (`Test_org_eclipse_swt_maya_M3Canvas`; 1.6x
   faster than command-by-command replay at 2,000 and more commands per frame, equal within noise for small frames).
+
+## Typed native Maya handles
+
+The Windows DirectComposition backend no longer returns raw `Layer*` or
+`Composition*` C++ addresses to Java; it uses a typed, never-reused positive
+`jlong` token resolved by the process-lifetime UI-thread registry. This
+prevents stale Java layer/composition handles from becoming valid through
+native allocator address reuse. The original Maya JNI descriptors, native
+window handle input, composition GPU ownership, packet header, and native
+frame semantics stay unchanged. See `MayaNativeHandleRegistry.h` and its
+portable ASan/UBSan test; full Win32 Maya screenshot/disposal tests must pass
+before updating a packaged binary.
