@@ -14,6 +14,11 @@ on:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaDeviceHealth.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionTelemetry.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaSurfaceBudget.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaSurfaceBudgetTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaSurfaceBudgetJniStub.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/java/org/eclipse/swt/internal/maya/MayaSurfaceBudgetJniSmoke.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/win32/org/eclipse/swt/internal/render/MayaNativeLayers.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionTelemetryTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaTelemetryJniStub.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/java/org/eclipse/swt/internal/maya/MayaTelemetryJniSmoke.java'
@@ -44,6 +49,11 @@ on:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaDeviceHealth.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionTelemetry.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaSurfaceBudget.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaSurfaceBudgetTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaSurfaceBudgetJniStub.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/java/org/eclipse/swt/internal/maya/MayaSurfaceBudgetJniSmoke.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/win32/org/eclipse/swt/internal/render/MayaNativeLayers.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionTelemetryTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaTelemetryJniStub.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/java/org/eclipse/swt/internal/maya/MayaTelemetryJniSmoke.java'
@@ -145,6 +155,41 @@ jobs:
             java -Xcheck:jni -cp /tmp/maya-telemetry-classes \
                 org.eclipse.swt.internal.maya.MayaTelemetryJniSmoke \
                 "/tmp/libmaya-legacy-${compiler}.so" legacy
+          done
+      - name: Opt-in native BGRA surface budget and checked-JNI ABI
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          mkdir -p /tmp/maya-budget-classes
+          javac --release 21 -Xlint:all -Werror -d /tmp/maya-budget-classes \
+              'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java' \
+              'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/NativeLayers.java' \
+              'bundles/org.eclipse.swt/Eclipse SWT Maya/win32/org/eclipse/swt/internal/render/MayaNativeLayers.java' \
+              "$root/tests/java/org/eclipse/swt/internal/maya/impl/Library.java" \
+              "$root/tests/java/org/eclipse/swt/widgets/Control.java" \
+              "$root/tests/java/org/eclipse/swt/internal/maya/MayaSurfaceBudgetJniSmoke.java"
+          for compiler in g++ clang++; do
+            "$compiler" -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+                -fsanitize=address,undefined -fno-omit-frame-pointer -I"$root" \
+                "$root/tests/MayaSurfaceBudgetTest.cc" -o "/tmp/maya-budget-${compiler}"
+            ASAN_OPTIONS=detect_leaks=1 "/tmp/maya-budget-${compiler}"
+            "$compiler" -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -fPIC -shared \
+                -I"$root" -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+                "$root/tests/MayaSurfaceBudgetJniStub.cc" -o "/tmp/libmaya-budget-${compiler}.so"
+            java -Xcheck:jni -Dswt.maya.surfaceBudgetBytes=40 \
+                -cp /tmp/maya-budget-classes \
+                org.eclipse.swt.internal.maya.MayaSurfaceBudgetJniSmoke \
+                "/tmp/libmaya-budget-${compiler}.so"
+            "$compiler" -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -fPIC -shared \
+                -DSWT_MAYA_SURFACE_BUDGET_LEGACY \
+                -I"$root" -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+                "$root/tests/MayaSurfaceBudgetJniStub.cc" \
+                -o "/tmp/libmaya-budget-legacy-${compiler}.so"
+            java -Xcheck:jni -Dswt.maya.surfaceBudgetBytes=40 \
+                -cp /tmp/maya-budget-classes \
+                org.eclipse.swt.internal.maya.MayaSurfaceBudgetJniSmoke \
+                "/tmp/libmaya-budget-legacy-${compiler}.so" legacy
           done
       - name: C++17 affine scene admission, legacy reset state and JNI bounds
         shell: bash

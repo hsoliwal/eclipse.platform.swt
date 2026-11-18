@@ -138,3 +138,27 @@ device reset handling, surface Commit and CPU-owned backing store remain
 authoritative. The same portable C++17 scratch class and tests passed
 **302,509** assertions with Clang ASan/UBSan and GCC strict warnings.
 Native Win32 builds and CPU/GPU/RSS/latency benchmarks remain unqualified.
+
+## Planned GPU residency — native quota first, not automatic eviction
+
+The optional per-composition Maya surface budget is an *admission policy*,
+not a physical GPU-memory cache. It tracks nominal uncompressed
+`width × height × 4` bytes for native BGRA layers, guards aggregate
+admission before `IDCompositionDevice::CreateSurface`, and releases
+reservation counts as native layers are retired. It does not change
+native/painted Z ordering, original SWT widget semantics, the packed
+frame protocol, or the per-Display graphics owner.
+
+For SWT's Maya backend the startup property
+`-Dswt.maya.surfaceBudgetBytes=<positive-decimal-bytes>` opts into
+a bounded **logical** budget. An unsupported old Maya DLL or malformed
+limit fails safely to software painting. There are two additive native
+JNI symbols and a six-slot read-only snapshot; the existing 16-slot
+composition telemetry remains unchanged.
+
+A future surface resident cache must separately qualify COM reference
+lifetime, D3D11 device-loss/recreation, native child-window Z constraints,
+virtual-surface trim, GPU memory measurement and replay across layered
+viewports. Microsoft documents ordinary and virtual surfaces differently.
+See [MAYA_SURFACE_BUDGET.md](MAYA_SURFACE_BUDGET.md) for exact boundaries
+and the native release acceptance matrix.

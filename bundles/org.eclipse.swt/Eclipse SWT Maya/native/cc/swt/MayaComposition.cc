@@ -22,6 +22,7 @@
 #include "MayaCompositionChecks.h"
 #include "MayaCompositionDelta.h"
 #include "MayaCompositionTelemetry.h"
+#include "MayaSurfaceBudget.h"
 #include "MayaCompositionDirty.h"
 #include "MayaDeviceHealth.h"
 #include "MayaFrameDirect.h"
@@ -66,6 +67,7 @@ struct Layer {
     IDCompositionEffectGroup *effect = nullptr;
     int width = 0, height = 0;
     bool initialized = false;
+    std::uint64_t accountedSurfaceBytes = 0; // logical BGRA bytes, not GPU residency
 };
 
 struct Composition {
@@ -80,6 +82,7 @@ struct Composition {
     swt_maya::CompositionFrameDelta<Layer> frameDelta;
     bool pendingSurfaceCommit = false;
     swt_maya::CompositionTelemetry telemetry;
+    swt_maya::SurfaceBudget surfaceBudget; // zero cap means opt-out
     // Native copies of the active JNI prefix of a legacy _nApply frame, reused across ordinary UI-thread
     // frames so a warm frame allocates nothing. A nested _nApply must not replace an outer frame's prefix.
     std::vector<jlong> frameOrder;
@@ -117,6 +120,12 @@ HRESULT checkNativeDevice(Composition *composition) noexcept {
 
 void destroy(Layer *layer) {
     if (layer->token != 0 && layer->owner) layer->owner->telemetry.retiredLayer();
+    // Each layer owns one logical reservation; return it even if a COM or
+    // registry operation failed before this layer received a native handle.
+    if (layer->owner && layer->accountedSurfaceBytes) {
+        layer->owner->surfaceBudget.release(layer->accountedSurfaceBytes);
+        layer->accountedSurfaceBytes = 0;
+    }
     liveLayers.retire(static_cast<std::uint64_t>(layer->token), layer);
     release(layer->effect);
     release(layer->surface);
@@ -185,6 +194,12 @@ extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaCompos
     layer->owner = c;
     layer->width = width;
     layer->height = height;
+    std::uint64_t reservedBytes = 0;
+    if (!c->surfaceBudget.reserve(width, height, reservedBytes)) {
+        destroy(layer); // rejected before any COM surface/visual allocation
+        return 0;
+    }
+    layer->accountedSurfaceBytes = reservedBytes;
     bool ok = SUCCEEDED(c->device->CreateSurface(width, height, DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_ALPHA_MODE_PREMULTIPLIED,
                       &layer->surface))
            && SUCCEEDED(c->device->CreateVisual(&layer->visual))
@@ -623,6 +638,34 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
     return SUCCEEDED(waited) ? checkNativeDevice(c) : waited;
 }
 
+// Optional per-composition logical BGRA quota. Zero disables enforcement
+// without disabling byte accounting. Reductions below live reservations
+// are rejected; existing COM visuals are never automatically evicted.
+extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nSetSurfaceBudget
+  (JNIEnv *, jclass, jlong composition, jlong maximumBytes) {
+    Composition *c = getComposition(composition);
+    if (!c) return E_POINTER;
+    if (maximumBytes < 0 || !c->surfaceBudget.setLimit(
+            static_cast<std::uint64_t>(maximumBytes))) return E_INVALIDARG;
+    return S_OK;
+}
+
+// Explicit six-field snapshot of logical BGRA image reservations. It is not
+// a measurement of resident GPU memory, pitch or driver allocation overhead.
+extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nReadSurfaceBudget
+  (JNIEnv *env, jclass, jlong composition, jlongArray output) {
+    Composition *c = getComposition(composition);
+    if (!c || !output) return E_POINTER;
+    if (env->GetArrayLength(output) < static_cast<jsize>(swt_maya::SurfaceBudget::FIELD_COUNT))
+        return E_INVALIDARG;
+    const auto snapshot = c->surfaceBudget.snapshot();
+    std::array<jlong, swt_maya::SurfaceBudget::FIELD_COUNT> values{};
+    for (std::size_t i = 0; i < snapshot.size(); ++i)
+        values[i] = static_cast<jlong>(snapshot[i]);
+    env->SetLongArrayRegion(output, 0, static_cast<jsize>(values.size()), values.data());
+    return env->ExceptionCheck() ? E_FAIL : S_OK;
+}
+
 // A read-only explicitly requested snapshot. No widget or GPU call, no new
 // native object graph and no JNI polling on normal frame submissions.
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nReadMetrics
@@ -672,6 +715,10 @@ extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nWaitForCommit
   (JNIEnv *, jclass, jlong) { return -1; }
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nReadMetrics
+  (JNIEnv *, jclass, jlong, jlongArray) { return -1; }
+extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nSetSurfaceBudget
+  (JNIEnv *, jclass, jlong, jlong) { return -1; }
+extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nReadSurfaceBudget
   (JNIEnv *, jclass, jlong, jlongArray) { return -1; }
 extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nDispose
   (JNIEnv *, jclass, jlong) {}
