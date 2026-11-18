@@ -74,6 +74,74 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testFilteredHitSearchUsesFrontmostAcceptedLayerWithoutChangingOrder() {
+        Layer bottom = viewport.addPaintLayer("bottom", 0, 0, 100, 100, (gc, ctx) -> { });
+        Layer middle = viewport.addPaintLayer("middle", 0, 0, 100, 100, (gc, ctx) -> { });
+        Layer top = viewport.addPaintLayer("top", 0, 0, 100, 100, (gc, ctx) -> { });
+        List<Layer> visited = new ArrayList<>();
+        assertSame(top, viewport.hitTest(10, 10));
+        assertSame(middle, viewport.hitTest(10, 10, candidate -> {
+            visited.add(candidate);
+            return candidate != top;
+        }));
+        assertEquals(List.of(top, middle), visited, "frontmost first; stop at first accepted");
+        assertSame(top, viewport.hitTest(10, 10), "filter must not mutate normal hit priority");
+        assertNull(viewport.hitTest(10, 10, candidate -> false));
+        assertSame(bottom, viewport.hitTest(10, 10, candidate -> candidate == bottom));
+        assertThrows(IllegalArgumentException.class, () -> viewport.hitTest(10, 10, null));
+
+        top.setHitTester((candidate, x, y) -> false);
+        visited.clear();
+        assertSame(middle, viewport.hitTest(10, 10, candidate -> {
+            visited.add(candidate);
+            return true;
+        }));
+        assertEquals(List.of(middle), visited, "non-hittable front layers never reach the predicate");
+        assertNull(viewport.hitTest(500, 500, candidate -> {
+            fail("outside client area must not invoke accept");
+            return true;
+        }));
+    }
+
+    @Test
+    public void testFilteredHitSearchPreservesReentrantCandidateSnapshot() {
+        Layer bottom = viewport.addPaintLayer("bottom", 0, 0, 200, 200, (gc, ctx) -> { });
+        Layer top = viewport.addPaintLayer("top", 0, 0, 200, 200, (gc, ctx) -> { });
+        int[] calls = {0};
+        assertSame(bottom, viewport.hitTest(10, 10, candidate -> {
+            if (candidate == top) {
+                calls[0]++;
+                assertSame(top, viewport.hitTest(10, 10), "nested unfiltered query sees same scene");
+                top.setVisible(false);
+            }
+            return true;
+        }));
+        assertEquals(1, calls[0]);
+        assertSame(bottom, viewport.hitTest(10, 10));
+    }
+
+    @Test
+    public void testGroupChildExclusionSearchAndMutationRevalidation() {
+        LayeredViewport.LayerGroup group = viewport.addLayerGroup("diagram", 0, 0, 100, 100);
+        LayeredViewport.LayerGroup.Child bottom = group.addPaintChild("shape", 0, 0, 60, 60, (gc, ctx) -> { });
+        LayeredViewport.LayerGroup.Child top = group.addPaintChild("dragged", 0, 0, 60, 60, (gc, ctx) -> { });
+        assertSame(top, group.hitTestChild(10, 10));
+        assertSame(bottom, group.hitTestChild(10, 10, candidate -> candidate != top));
+        assertNull(group.hitTestChild(10, 10, candidate -> false));
+        assertThrows(IllegalArgumentException.class, () -> group.hitTestChild(10, 10, null));
+        assertSame(bottom, group.hitTestChild(10, 10, candidate -> {
+            if (candidate == top) top.setLocked(true);
+            return true;
+        }));
+        assertSame(bottom, group.hitTestChild(10, 10));
+        top.setLocked(false);
+        assertNull(group.hitTestChild(10, 10, candidate -> {
+            if (candidate == top) group.getLayer().setWorldBounds(200, 200, 100, 100);
+            return true;
+        }), "a moved parent must not yield stale hits from its former position");
+    }
+
+    @Test
     public void testSnapshotAndRemovedIdentity() {
         Layer first = viewport.addPaintLayer("first", 0, 0, 20, 20, (gc, ctx) -> { });
         Layer second = viewport.addPaintLayer("second", 0, 0, 20, 20, (gc, ctx) -> { });
