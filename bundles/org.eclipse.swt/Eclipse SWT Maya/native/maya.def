@@ -244,4 +244,5 @@ EXPORTS
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nApplyPacked
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nRemoveLayer
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nWaitForCommit
+    Java_org_eclipse_swt_internal_maya_MayaComposition__1nReadMetrics
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nDispose
