@@ -1190,12 +1190,16 @@ public void test_NoExceptionsThrownInFillLayout () {
 
 @Test
 public void test_borderStyleDelegatesToSingleReliefOwner() {
-    Control nativeControl = new org.eclipse.swt.widgets.Composite(shell, SWT.BORDER);
+    org.eclipse.swt.widgets.Composite nativeControl =
+            new org.eclipse.swt.widgets.Composite(shell, SWT.BORDER);
     try {
         assertEquals(SWT.DEFAULT, nativeControl.getBorderStyle());
         assertEquals(nativeControl.getBorderRelief(), nativeControl.getBorderStyle());
+        assertEquals(SWT.NONE, nativeControl.getBevelBorder());
         assertThrows(IllegalArgumentException.class,
                 () -> nativeControl.setBorderStyle(SWT.BORDER));
+        assertThrows(IllegalArgumentException.class,
+                () -> nativeControl.setBorderStyle(SWT.NONE));
         assertEquals(SWT.DEFAULT, nativeControl.getBorderStyle());
 
         if ("cocoa".equals(SWT.getPlatform())) {
@@ -1205,10 +1209,17 @@ public void test_borderStyleDelegatesToSingleReliefOwner() {
         } else {
             nativeControl.setBorderStyle(SWT.SHADOW_IN);
             assertEquals(SWT.SHADOW_IN, nativeControl.getBorderRelief());
-            nativeControl.setBorderRelief(SWT.SHADOW_OUT);
+            assertEquals(SWT.SHADOW_IN, nativeControl.getBevelBorder());
+            nativeControl.setBevelBorder(SWT.SHADOW_OUT);
             assertEquals(SWT.SHADOW_OUT, nativeControl.getBorderStyle());
-            nativeControl.setBorderStyle(SWT.DEFAULT);
+            nativeControl.setBorderRelief(SWT.SHADOW_ETCHED_IN);
+            assertEquals(SWT.SHADOW_ETCHED_IN, nativeControl.getBorderStyle());
+            nativeControl.setBorderStyle(SWT.SHADOW_NONE);
+            assertEquals(SWT.SHADOW_NONE, nativeControl.getBorderRelief());
+            assertEquals(SWT.NONE, nativeControl.getBevelBorder());
+            nativeControl.setBevelBorder(SWT.NONE);
             assertEquals(SWT.DEFAULT, nativeControl.getBorderRelief());
+            assertEquals(SWT.DEFAULT, nativeControl.getBorderStyle());
         }
     } finally {
         nativeControl.dispose();
