@@ -135,6 +135,17 @@ public class Test_org_eclipse_swt_maya_NativeLayers {
 	}
 
 	@Test
+	public void newlyAddedImageCanBecomeNativeBeforeTheNextPaint() {
+		shell.open();
+		pump(250);
+		// The first paint published an empty stack. The append marks the order dirty.
+		Layer added = viewport.addImageLayer("new layer", red, 20, 20);
+		assertTrue(added.setNative(true), "native activation must publish the freshly appended layer");
+		pump(300);
+		assertEquals(RED, screen(25, 25));
+	}
+
+	@Test
 	public void aZoomPaintsTheLayerAgainAndAPanMovesIt() {
 		Layer layer = viewport.addImageLayer("red", red, 20, 20);
 		shell.open();

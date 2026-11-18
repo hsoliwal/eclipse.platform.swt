@@ -78,6 +78,11 @@ struct Composition {
     swt_maya::CompositionFrameDelta<Layer> frameDelta;
     bool pendingSurfaceCommit = false;
     swt_maya::CompositionTelemetry telemetry;
+    // Native copies of the active JNI prefix of a legacy _nApply frame, reused across ordinary UI-thread
+    // frames so a warm frame allocates nothing. A nested _nApply must not replace an outer frame's prefix.
+    std::vector<jlong> frameOrder;
+    std::vector<jfloat> frameProperties;
+    int activeApplyDepth = 0;
 };
 Composition *getComposition(jlong handle) {
     return liveCompositions.get(static_cast<std::uint64_t>(handle));
@@ -452,7 +457,8 @@ jint applyNativeFrame(Composition *c, const View &view) noexcept {
 } // namespace
 
 // Original seven-symbol JNI contract remains untouched. JNI array regions
-// are copied before entering DirectComposition, as on current master.
+// are copied before entering DirectComposition, into per-composition scratch
+// that is reused across frames (a nested call copies into its own locals).
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nApply
   (JNIEnv *env, jclass, jlong composition, jlongArray layers, jfloatArray props, jint count) {
     Composition *c = getComposition(composition);
@@ -460,12 +466,23 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
     if (!swt_maya::validFrameArrays(count, env->GetArrayLength(layers), env->GetArrayLength(props)))
         return E_INVALIDARG;
     try {
-        std::vector<jlong> order(static_cast<std::size_t>(count));
-        std::vector<jfloat> properties(static_cast<std::size_t>(count) * 4);
+        // Only the counted prefix is copied; spare capacity in either array never reaches a frame.
+        std::vector<jlong> nestedOrder;
+        std::vector<jfloat> nestedProperties;
+        const bool nested = c->activeApplyDepth != 0;
+        std::vector<jlong> &order = nested ? nestedOrder : c->frameOrder;
+        std::vector<jfloat> &properties = nested ? nestedProperties : c->frameProperties;
+        order.resize(static_cast<std::size_t>(count));
+        properties.resize(static_cast<std::size_t>(count) * 4);
         if (count) env->GetLongArrayRegion(layers, 0, count, order.data());
         if (env->ExceptionCheck()) return E_FAIL;
         if (count) env->GetFloatArrayRegion(props, 0, count * 4, properties.data());
         if (env->ExceptionCheck()) return E_FAIL;
+        struct ApplyDepth {
+            Composition *composition;
+            explicit ApplyDepth(Composition *owner) noexcept : composition(owner) { ++composition->activeApplyDepth; }
+            ~ApplyDepth() { --composition->activeApplyDepth; }
+        } depth{c};
         return applyNativeFrame(c, swt_maya_frame::LegacyView<jlong, jfloat>{
                 order.data(), properties.data(), static_cast<std::size_t>(count)});
     } catch (const std::bad_alloc &) {
