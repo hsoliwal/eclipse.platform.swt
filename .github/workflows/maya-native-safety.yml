@@ -1,0 +1,43 @@
+name: Maya native safety (portable)
+
+on:
+  pull_request:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
+      - '.github/workflows/maya-native-safety.yml'
+  push:
+    branches: [ master ]
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
+      - '.github/workflows/maya-native-safety.yml'
+
+jobs:
+  portable-native-guards:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: C++17 native checks with sanitizers
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            "$root/tests/MayaCompositionChecksTest.cc" -o /tmp/maya-checks
+          /tmp/maya-checks
+      - name: Compile non-Windows JNI stub exports
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          g++ -std=c++17 -O2 -Wall -Wextra -Werror -fPIC \
+            -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+            -shared "$root/MayaComposition.cc" -o /tmp/libmaya-composition-stubs.so
