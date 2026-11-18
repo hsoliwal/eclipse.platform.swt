@@ -283,13 +283,13 @@ public class NativeImageLoader {
 		boolean has_alpha = imgData.alphaData != null && alpha_supported;
 		int width = imgData.width;
 		int height = imgData.height;
-		// original n_channels. Native implementation will only be used in case of 3 or 4
-		int n_channels = imgData.bytesPerLine / width;
+		// Pixel channels exclude the padding at the end of each scanline.
+		int n_channels = imgData.depth / 8;
 
 		// Native implementation only supports a subset of possible image configurations.
 		// Redirect the not supported variants to the Java implementation.
 		// See also https://bugs.eclipse.org/bugs/show_bug.cgi?id=558043
-		if (!imgData.palette.isDirect || n_channels < 3 || n_channels > 4) {
+		if (!imgData.palette.isDirect || (imgData.depth != 24 && imgData.depth != 32)) {
 			FileFormat.save(stream, format, imageLoader);
 			return;
 		}
@@ -325,7 +325,8 @@ public class NativeImageLoader {
 
 		int alpha_offset = n_channels == 4 ? 1 : 0;
 		if (alpha_supported) {
-			for (int y = 0, offset = 0, new_offset = 0, alphaIndex = 0; y < height; y++) {
+			for (int y = 0, new_offset = 0, alphaIndex = 0; y < height; y++) {
+				int offset = y * imgData.bytesPerLine;
 				for (int x = 0; x < width; x++, offset += n_channels, new_offset += bytes_per_pixel) {
 					byte a = has_alpha ? imgData.alphaData[alphaIndex++] : (byte) 255;
 					byte r = imgData.data[offset + alpha_offset + or];
@@ -340,7 +341,8 @@ public class NativeImageLoader {
 				}
 			}
 		} else {
-			for (int y = 0, offset = 0, new_offset = 0; y < height; y++) {
+			for (int y = 0, new_offset = 0; y < height; y++) {
+				int offset = y * imgData.bytesPerLine;
 				for (int x = 0; x < width; x++, offset += n_channels, new_offset += bytes_per_pixel) {
 					byte r = imgData.data[offset + alpha_offset + or];
 					byte g = imgData.data[offset + alpha_offset + og];

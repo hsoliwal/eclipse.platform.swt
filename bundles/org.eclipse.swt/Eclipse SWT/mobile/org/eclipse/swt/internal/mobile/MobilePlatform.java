@@ -14,6 +14,8 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.mobile;
 
+import org.eclipse.swt.SWT;
+
 /**
  * OS binding owned by the mobile SWT platform source set. SWT widget state stays
  * in the original Widget/Control/Display owners. Native callbacks enqueue work
@@ -63,6 +65,13 @@ public interface MobilePlatform {
 	void setBounds(long peer, int x, int y, int width, int height);
 	void setVisible(long peer, boolean visible);
 	void setEnabled(long peer, boolean enabled);
+	/**
+	 * Opt-in native edge relief. Default retains older MobilePlatform providers' ABI.
+	 * Implementors must update native client trim before accepting a new value.
+	 */
+	default void setBorderRelief(long peer, int relief) {
+		if (relief != SWT.DEFAULT) throw new UnsupportedOperationException("Native border relief unavailable on this mobile transport");
+	}
 	void setTitle(long peer, String title);
 	/** Real system clipboard text, read only on the SWT Display thread. */
 	default String getClipboardText() {

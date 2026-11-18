@@ -98,6 +98,7 @@ public class AllNonBrowserTests {
 			Test_ItemResidencyCountAdmission.class, //
 			Test_ItemResidencyLanes.class, //
 			Test_ItemResidencyPrint.class, //
+			Test_ImageDataArgb.class, //
 			Test_ViewportAffineBounds.class, //
 			Test_ViewportDamageScaledEndpoints.class, //
 			Test_ViewportDifferentialHarness.class, //

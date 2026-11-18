@@ -80,6 +80,9 @@ public abstract class Control extends Widget implements Drawable {
 	Accessible accessible;
 	boolean inCacheDisplayInRect;
 	boolean touchEnabled;
+	private int nativeBorderRelief = SWT.DEFAULT;
+	/* Native NSScrollView bezel trim, in Cocoa points. */
+	private double nativeBorderInsetX, nativeBorderInsetY;
 
 	final static int CLIPPING = 1 << 10;
 	final static int VISIBLE_REGION = 1 << 12;
@@ -1303,6 +1306,55 @@ boolean drawsBackground() {
 }
 
 @Override
+void drawRect (long id, long sel, NSRect rect) {
+	super.drawRect(id, sel, rect);
+	if (isDisposed() || nativeBorderRelief == SWT.DEFAULT || !isDrawing()) return;
+	if (!(this instanceof Scrollable scrollable) || scrollable.scrollView == null
+			|| id != scrollable.scrollView.id) return;
+	NSGraphicsContext context = NSGraphicsContext.currentContext();
+	if (context == null) return;
+	NSScrollView frame = scrollable.scrollView;
+	NSRect bounds = frame.bounds();
+	if (bounds.width <= 0 || bounds.height <= 0) return;
+	/* The existing native bezel keeps ownership of layout and input. Replace
+	 * only its painted bands after AppKit has painted the same native peer. */
+	context.saveGraphicsState();
+	try {
+		setClipRegion(frame);
+		context.setShouldAntialias(false);
+		boolean inset = nativeBorderRelief == SWT.SHADOW_IN || nativeBorderRelief == SWT.SHADOW_ETCHED_IN;
+		int rings = nativeBorderRelief == SWT.SHADOW_ETCHED_IN || nativeBorderRelief == SWT.SHADOW_ETCHED_OUT ? 2 : 1;
+		double insetX = Math.min(nativeBorderInsetX, bounds.width / 2);
+		double insetY = Math.min(nativeBorderInsetY, bounds.height / 2);
+		boolean flipped = frame.isFlipped();
+		NSColor highlight = NSColor.controlHighlightColor(), shadow = NSColor.controlShadowColor();
+		for (int ring = 0; ring < rings; ring++) {
+			double x = bounds.x + ring * insetX / rings, y = bounds.y + ring * insetY / rings;
+			double width = bounds.width - 2 * ring * insetX / rings;
+			double height = bounds.height - 2 * ring * insetY / rings;
+			double horizontal = insetX / rings, vertical = insetY / rings;
+			NSRect edge = new NSRect();
+			(inset ? shadow : highlight).setFill();
+			fillNativeReliefBand(edge, x, flipped ? y : y + height - vertical, width, vertical);
+			fillNativeReliefBand(edge, x, y + vertical, horizontal, height - 2 * vertical);
+			(inset ? highlight : shadow).setFill();
+			fillNativeReliefBand(edge, x, flipped ? y + height - vertical : y, width, vertical);
+			fillNativeReliefBand(edge, x + width - horizontal, y + vertical, horizontal, height - 2 * vertical);
+			inset = !inset;
+		}
+	} finally {
+		context.restoreGraphicsState();
+	}
+}
+
+private static void fillNativeReliefBand(NSRect edge, double x, double y, double width, double height) {
+	if (width <= 0 || height <= 0) return;
+	edge.x = x; edge.y = y; edge.width = width; edge.height = height;
+	NSBezierPath.fillRect(edge);
+}
+
+
+@Override
 void drawWidget (long id, NSGraphicsContext context, NSRect rect) {
     if (id != paintView().id) {
         return;
@@ -1718,6 +1770,72 @@ public Image getBackgroundImage () {
     }
 	return control.backgroundImage;
 }
+
+/**
+ * Returns the requested native border relief; SWT.DEFAULT indicates that the
+ * original platform decoration has not been overridden.
+ */
+public int getBorderRelief () {
+    checkWidget();
+    return nativeBorderRelief;
+}
+
+/**
+ * Draws two-tone native AppKit relief only over an existing NSScrollView bezel.
+ * Border width, client area, events, input and accessibility remain native.
+ * All unsupported Cocoa controls fail closed before changing their state.
+ */
+public void setBorderRelief (int relief) {
+    checkWidget();
+    if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (relief == nativeBorderRelief) return;
+    if (relief == SWT.SHADOW_NONE) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+    if (relief == SWT.DEFAULT) {
+        nativeBorderRelief = SWT.DEFAULT;
+        if (this instanceof Scrollable scrollable && scrollable.scrollView != null) {
+            scrollable.scrollView.setNeedsDisplay(true);
+        }
+        return;
+    }
+    if (!hasBorder() || !(this instanceof Scrollable scrollable)) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+    NSScrollView frame = scrollable.scrollView;
+    if (frame == null || frame.borderType() != OS.NSBezelBorder) {
+        SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+    }
+    NSSize content = new NSSize();
+    content.width = content.height = 100;
+    NSSize outer = NSScrollView.frameSizeForContentSize(content, false, false, OS.NSBezelBorder);
+    double insetX = (outer.width - content.width) / 2;
+    double insetY = (outer.height - content.height) / 2;
+    if (insetX <= 0 || insetY <= 0 || (NativeBorderRelief.isEtched(relief)
+            && (insetX < 2 || insetY < 2))) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+    nativeBorderInsetX = insetX;
+    nativeBorderInsetY = insetY;
+    nativeBorderRelief = relief;
+    frame.setNeedsDisplay(true);
+}
+
+/**
+ * Returns the same native border appearance as {@link #getBorderRelief()}.
+ * This is an API alias, not a separate border state or renderer.
+ *
+ * @return the existing native relief, or SWT.DEFAULT when unmodified
+ */
+public int getBorderStyle () {
+	return getBorderRelief ();
+}
+
+/**
+ * Selects the native border appearance through {@link #setBorderRelief(int)}.
+ * It preserves the receiver's original widget handle and native ownership,
+ * including platform-specific failure behavior and constructor style bits.
+ *
+ * @param style a relief value supported by setBorderRelief
+ */
+public void setBorderStyle (int style) {
+	setBorderRelief (style);
+}
+
 
 /**
  * Returns the receiver's border width in points.

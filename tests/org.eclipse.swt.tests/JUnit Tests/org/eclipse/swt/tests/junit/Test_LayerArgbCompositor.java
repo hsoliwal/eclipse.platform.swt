@@ -86,6 +86,50 @@ public class Test_LayerArgbCompositor {
 						2, 255, null));
 	}
 
+	@Test
+	public void overlappingSourceAndDestinationInEitherDirectionMatchSnapshots() {
+		Random random = new Random(0xA11A51A5L);
+		for (Mode mode : Mode.values()) {
+			for (int opacity : new int[] { 0, 1, 57, 128, 255 }) {
+				for (int[] offsets : new int[][] { {0, 7}, {7, 0}, {3, 3}, {0, 35} }) {
+					int[] input = new int[72];
+					for (int i = 0; i < input.length; i++) input[i] = premulColor(random);
+					int[] expected = input.clone(), actual = input.clone();
+					int sourceAt = offsets[0], destinationAt = offsets[1], count = 30;
+					int[] snapshot = Arrays.copyOfRange(expected, sourceAt, sourceAt + count);
+					LayerArgbCompositor.composite(expected, destinationAt, snapshot, 0, count, opacity, mode);
+					LayerArgbCompositor.composite(actual, destinationAt, actual, sourceAt, count, opacity, mode);
+					assertArrayEquals(expected, actual, mode + " at opacity " + opacity + " offsets "
+							+ sourceAt + " -> " + destinationAt);
+				}
+			}
+		}
+	}
+
+	@Test
+	public void optionalNativeBulkModesMatchJavaChunks() {
+		// This always tests the Java result. With -Dswt.layerblend.native=true and a matched library,
+		// the 16,384-pixel call also exercises JNI for every supported mode.
+		Random random = new Random(0xB1E0D2026L);
+		int length = 16_384;
+		int[] source = new int[length], destination = new int[length];
+		for (int i = 0; i < length; i++) {
+			source[i] = premulColor(random);
+			destination[i] = premulColor(random);
+		}
+		for (Mode mode : Mode.values()) {
+			for (int opacity : new int[] { 1, 57, 128, 255 }) {
+				int[] expected = destination.clone(), actual = destination.clone();
+				for (int at = 0; at < length; at += 257) {
+					int count = Math.min(257, length - at); // always below JNI threshold
+					LayerArgbCompositor.composite(expected, at, source, at, count, opacity, mode);
+				}
+				LayerArgbCompositor.composite(actual, 0, source, 0, length, opacity, mode);
+				assertArrayEquals(expected, actual, "bulk/chunk parity for " + mode + " opacity " + opacity);
+			}
+		}
+	}
+
 	/* one channel: a source channel with alpha (straight, 0 to 255) over an opaque backdrop channel, by the kernel */
 	private static int channel(Mode mode, int backdrop, int source, int alpha) {
 		int[] dst = { 0xFF000000 | backdrop };

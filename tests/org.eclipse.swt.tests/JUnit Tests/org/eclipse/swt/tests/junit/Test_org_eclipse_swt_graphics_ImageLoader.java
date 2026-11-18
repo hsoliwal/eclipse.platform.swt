@@ -267,6 +267,65 @@ public void test_loadOnePixelWideRgbPng_bug3545() throws IOException {
 	}
 }
 
+
+/** PNG preserves every pixel and alpha value regardless of source scanline padding. */
+@Test
+public void test_savePngPaddedScanlines_roundTrip() {
+	assertPaddedScanlinesRoundTrip(SWT.IMAGE_PNG, false);
+	assertPaddedScanlinesRoundTrip(SWT.IMAGE_PNG, true);
+}
+
+/** BMP also exercises the packed RGB destination path without an alpha channel. */
+@Test
+public void test_saveBmpPaddedScanlines_roundTrip() {
+	assertPaddedScanlinesRoundTrip(SWT.IMAGE_BMP, false);
+}
+
+private static void assertPaddedScanlinesRoundTrip(int format, boolean alpha) {
+	int height = 7;
+	int[] colors = { 0xFF0000, 0x00FF00, 0x0000FF, 0x00FFFF, 0xFF00FF, 0xFFFF00, 0x000000, 0xFFFFFF };
+	PaletteData palette = new PaletteData(0xFF0000, 0xFF00, 0xFF);
+	for (int width : new int[] { 1, 2, 3, 16, 30, 31, 32 }) {
+		for (int depth : new int[] { 24, 32 }) {
+			for (int padding : new int[] { 1, 4, 8, 16 }) {
+				int stride = ((width * (depth / 8) + padding - 1) / padding) * padding;
+				byte[] pixels = new byte[stride * height];
+				Arrays.fill(pixels, (byte) 0xA5); // make accidentally encoded padding distinguishable from pixels
+				ImageData source = new ImageData(width, height, depth, palette, padding, pixels);
+				for (int y = 0; y < height; y++) {
+					for (int x = 0; x < width; x++) {
+						source.setPixel(x, y, colors[(x + 3 * y + y / 2) % colors.length]);
+						if (alpha) source.setAlpha(x, y, 32 + (x * 29 + y * 53) % 224);
+					}
+				}
+				byte[] beforePixels = source.data.clone();
+				byte[] beforeAlpha = alpha ? source.alphaData.clone() : null;
+				String context = "format=" + format + ", width=" + width + ", depth=" + depth
+						+ ", padding=" + padding + ", alpha=" + alpha;
+				ByteArrayOutputStream output = new ByteArrayOutputStream();
+				ImageLoader saver = new ImageLoader();
+				saver.data = new ImageData[] { source };
+				saver.save(output, format);
+				assertTrue(output.size() > 0, context);
+				assertArrayEquals(beforePixels, source.data, "Saving changed the source pixels: " + context);
+				if (alpha) assertArrayEquals(beforeAlpha, source.alphaData, "Saving changed the source alpha: " + context);
+				ImageData[] restored = new ImageLoader().load(new ByteArrayInputStream(output.toByteArray()));
+				assertEquals(1, restored.length, context);
+				assertEquals(width, restored[0].width, context);
+				assertEquals(height, restored[0].height, context);
+				for (int y = 0; y < height; y++) {
+					for (int x = 0; x < width; x++) {
+						String pixel = context + ", x=" + x + ", y=" + y;
+						RGB expected = palette.getRGB(colors[(x + 3 * y + y / 2) % colors.length]);
+						assertEquals(expected, restored[0].palette.getRGB(restored[0].getPixel(x, y)), pixel);
+						assertEquals(alpha ? 32 + (x * 29 + y * 53) % 224 : 255, restored[0].getAlpha(x, y), pixel);
+					}
+				}
+			}
+		}
+	}
+}
+
 /* custom */
 boolean loaderListenerCalled;
 }
