@@ -158,7 +158,10 @@ jobs:
           mkdir -p /tmp/maya-budget-classes
           javac --release 21 -Xlint:all -Werror -d /tmp/maya-budget-classes \
               'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java' \
+              'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/NativeLayers.java' \
+              'bundles/org.eclipse.swt/Eclipse SWT Maya/win32/org/eclipse/swt/internal/render/MayaNativeLayers.java' \
               "$root/tests/java/org/eclipse/swt/internal/maya/impl/Library.java" \
+              "$root/tests/java/org/eclipse/swt/widgets/Control.java" \
               "$root/tests/java/org/eclipse/swt/internal/maya/MayaSurfaceBudgetJniSmoke.java"
           for compiler in g++ clang++; do
             "$compiler" -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
@@ -168,7 +171,8 @@ jobs:
             "$compiler" -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -fPIC -shared \
                 -I"$root" -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
                 "$root/tests/MayaSurfaceBudgetJniStub.cc" -o "/tmp/libmaya-budget-${compiler}.so"
-            java -Xcheck:jni -cp /tmp/maya-budget-classes \
+            java -Xcheck:jni -Dswt.maya.surfaceBudgetBytes=40 \
+                -cp /tmp/maya-budget-classes \
                 org.eclipse.swt.internal.maya.MayaSurfaceBudgetJniSmoke \
                 "/tmp/libmaya-budget-${compiler}.so"
             "$compiler" -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -fPIC -shared \
@@ -176,7 +180,8 @@ jobs:
                 -I"$root" -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
                 "$root/tests/MayaSurfaceBudgetJniStub.cc" \
                 -o "/tmp/libmaya-budget-legacy-${compiler}.so"
-            java -Xcheck:jni -cp /tmp/maya-budget-classes \
+            java -Xcheck:jni -Dswt.maya.surfaceBudgetBytes=40 \
+                -cp /tmp/maya-budget-classes \
                 org.eclipse.swt.internal.maya.MayaSurfaceBudgetJniSmoke \
                 "/tmp/libmaya-budget-legacy-${compiler}.so" legacy
           done
