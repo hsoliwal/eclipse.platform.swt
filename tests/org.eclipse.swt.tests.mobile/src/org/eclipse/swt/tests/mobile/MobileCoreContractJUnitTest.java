@@ -16,6 +16,7 @@ package org.eclipse.swt.tests.mobile;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTError;
+import org.eclipse.swt.internal.mobile.MobileRuntime;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -25,22 +26,28 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Executed Surefire/JUnit5 entrypoints; these tests do not qualify a mobile OS. */
 public final class MobileCoreContractJUnitTest {
 	@Test void explicitBevelApiDoesNotAliasMobileConstructorStyles() {
-		Display display = new Display();
+		ContractPlatform platform = new ContractPlatform();
+		MobileRuntime.install(platform);
 		try {
-			Shell shell = new Shell(display);
-			Composite composite = new Composite(shell, SWT.SHADOW_ETCHED_IN);
-			assertEquals(SWT.NONE, composite.getBevelBorder());
-			composite.setBevelBorder(SWT.NONE);
-			composite.setBevelBorder(SWT.SHADOW_NONE);
-			assertEquals(SWT.NONE, composite.getBevelBorder());
-			assertThrows(IllegalArgumentException.class,
-					() -> composite.setBevelBorder(SWT.SHADOW_IN | SWT.SHADOW_OUT));
-			SWTError unsupported = assertThrows(SWTError.class,
-					() -> composite.setBevelBorder(SWT.SHADOW_IN));
-			assertEquals(SWT.ERROR_NOT_IMPLEMENTED, unsupported.code);
-			assertEquals(SWT.NONE, composite.getBevelBorder());
+			Display display = new Display();
+			try {
+				Shell shell = new Shell(display);
+				Composite composite = new Composite(shell, SWT.SHADOW_ETCHED_IN);
+				assertEquals(SWT.NONE, composite.getBevelBorder());
+				composite.setBevelBorder(SWT.NONE);
+				composite.setBevelBorder(SWT.SHADOW_NONE);
+				assertEquals(SWT.NONE, composite.getBevelBorder());
+				assertThrows(IllegalArgumentException.class,
+						() -> composite.setBevelBorder(SWT.SHADOW_IN | SWT.SHADOW_OUT));
+				SWTError unsupported = assertThrows(SWTError.class,
+						() -> composite.setBevelBorder(SWT.SHADOW_IN));
+				assertEquals(SWT.ERROR_NOT_IMPLEMENTED, unsupported.code);
+				assertEquals(SWT.NONE, composite.getBevelBorder());
+			} finally {
+				display.dispose();
+			}
 		} finally {
-			display.dispose();
+			MobileRuntime.uninstall(platform);
 		}
 	}
 

@@ -10,6 +10,7 @@
 package org.eclipse.swt.custom;
 
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.function.Predicate;
 
 import org.eclipse.swt.SWT;
@@ -25,6 +26,7 @@ import org.eclipse.swt.internal.ViewportDamageRegion;
 import org.eclipse.swt.internal.ViewportGcProxy;
 import org.eclipse.swt.internal.ViewportRuntime;
 import org.eclipse.swt.internal.render.ImageDataArgb;
+import org.eclipse.swt.internal.render.NativeDirtyRegions;
 import org.eclipse.swt.internal.render.LayerArgbCompositor;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
@@ -51,9 +53,9 @@ import org.eclipse.swt.widgets.Event;
  * <p>Opacity is Photoshop's layer opacity: an image layer is drawn once with
  * its alpha, and a painter layer below 255 is painted onto a copy of the
  * composite beneath it which is then blended once, so the layer's own shapes
- * do not darken each other where they overlap. Non-normal blend modes,
- * arbitrary masks and native child-control composition are deliberately
- * outside this API.</p>
+ * do not darken each other where they overlap. Image layers also support the
+ * separable blend modes below. Arbitrary masks and native child-control
+ * composition are outside this API.</p>
  *
  * <p>Control layers bring real widgets into the layered world: a native
  * child control (a Text, a Button, any Nebula widget) placed at world bounds,
@@ -73,7 +75,37 @@ public final class LayeredViewport extends Canvas {
     /** Half-open scene rectangle, whose far edge must fit in a signed long. */
     public record WorldBounds(long x, long y, long width, long height) { }
 
-    /** Snapshot for painting one visible layer. The clip uses widget pixels. */
+    /**
+     * Immutable coordinate projection captured from a layer. Fixed axes use widget pixels;
+     * the other axes retain the viewport zoom and effective pinned or sticky origin.
+     * Capturing once before a painter changes the scene preserves its original transform.
+     */
+    public record Projection(long originX, long originY, double scaleX, double scaleY) {
+        public Projection {
+            if (!Double.isFinite(scaleX) || !Double.isFinite(scaleY)
+                    || scaleX < MIN_ZOOM || scaleX > MAX_ZOOM || scaleY < MIN_ZOOM || scaleY > MAX_ZOOM) {
+                throw new IllegalArgumentException("scales must be within the viewport zoom range");
+            }
+        }
+
+        public double projectX(long x) { return device(x, originX, scaleX); }
+        public double projectY(long y) { return device(y, originY, scaleY); }
+
+        public Point toScreen(long x, long y) {
+            return new Point(saturatedPixel(projectX(x)), saturatedPixel(projectY(y)));
+        }
+
+        public WorldPoint toWorld(int x, int y) {
+            return new WorldPoint(saturatedAdd(originX, floorLong(x / scaleX)),
+                    saturatedAdd(originY, floorLong(y / scaleY)));
+        }
+    }
+
+    /**
+     * Snapshot for painting one visible layer. The clip uses widget pixels.
+     * For mixed fixed axes, capture {@code layer().getProjection()} at painter entry.
+     * The original five record components retain their uniform-zoom contract.
+     */
     public record PaintContext(Layer layer, Rectangle clip, long originX,
             long originY, double zoom) { }
 
@@ -123,10 +155,36 @@ public final class LayeredViewport extends Canvas {
         boolean contains(LayerGroup.Child child, long localX, long localY);
     }
 
+    /** Immutable group-local to widget projection, including independently fixed axes. */
+    public record GroupProjection(double groupPixelX, double groupPixelY, double scaleX, double scaleY) {
+        public GroupProjection {
+            if (!Double.isFinite(groupPixelX) || !Double.isFinite(groupPixelY)
+                    || !Double.isFinite(scaleX) || !Double.isFinite(scaleY)
+                    || scaleX < MIN_ZOOM || scaleX > MAX_ZOOM || scaleY < MIN_ZOOM || scaleY > MAX_ZOOM) {
+                throw new IllegalArgumentException("finite offsets and scales within the viewport zoom range required");
+            }
+        }
+
+        public double projectX(long localX) { return groupPixelX + localX * scaleX; }
+        public double projectY(long localY) { return groupPixelY + localY * scaleY; }
+
+        public Point toScreen(long localX, long localY) {
+            return new Point(saturatedPixel(projectX(localX)), saturatedPixel(projectY(localY)));
+        }
+
+        public WorldPoint toLocal(int deviceX, int deviceY) {
+            return new WorldPoint(floorLong((deviceX - groupPixelX) / scaleX),
+                    floorLong((deviceY - groupPixelY) / scaleY));
+        }
+    }
+
     /**
      * Painting coordinates for a group child. Children use group-local
      * world units; a pinned or sticky root is projected consistently with
      * the parent layer. The callback may only use the borrowed GC in scope.
+     * The original five components and {@link #toScreen(long, long)} keep
+     * their uniform-zoom contract. For independently fixed axes, capture
+     * {@code child().getProjection()} during the callback.
      */
     public record GroupPaintContext(LayerGroup.Child child, Rectangle clip,
             double groupPixelX, double groupPixelY, double zoom) {
@@ -174,6 +232,7 @@ public final class LayeredViewport extends Canvas {
         private Child[] hitCandidates = new Child[16];
         private int activeGroupPaints;
         private int activeChildHits;
+        private GroupProjection activeProjection;
 
         /** Stable group-local handle; bounds are relative to the root. */
         public final class Child {
@@ -224,6 +283,12 @@ public final class LayeredViewport extends Canvas {
             public WorldBounds getLocalBounds() {
                 checked();
                 return new WorldBounds(x, y, right - x, bottom - y);
+            }
+
+            /** Captures the group-local transform; a painter receives its active frame's snapshot. */
+            public GroupProjection getProjection() {
+                checked();
+                return LayerGroup.this.getProjection();
             }
 
             public void setLocalBounds(long localX, long localY, long width, long height) {
@@ -328,6 +393,22 @@ public final class LayeredViewport extends Canvas {
         public Layer getLayer() {
             checked();
             return root;
+        }
+
+        /**
+         * Returns an immutable group-local projection. During child painting this
+         * is the active frame's captured transform, even if a callback changes the
+         * root. Otherwise it captures the current root transform.
+         */
+        public GroupProjection getProjection() {
+            checked();
+            return activeProjection != null ? activeProjection : captureProjection();
+        }
+
+        private GroupProjection captureProjection() {
+            double scaleX = layerScaleX(root), scaleY = layerScaleY(root);
+            return new GroupProjection(device(root.x, layerOriginX(root), scaleX),
+                    device(root.y, layerOriginY(root), scaleY), scaleX, scaleY);
         }
 
         public Child addPaintChild(String name, long localX, long localY,
@@ -487,8 +568,9 @@ public final class LayeredViewport extends Canvas {
 
         private void paint(GC gc, PaintContext context) {
             Child[] frame = orderSnapshot();
-            double baseX = device(root.x, context.originX());
-            double baseY = device(root.y, context.originY());
+            GroupProjection projection = captureProjection();
+            double baseX = projection.groupPixelX(), baseY = projection.groupPixelY();
+            double scaleX = projection.scaleX(), scaleY = projection.scaleY();
             Rectangle damage = context.clip();
             int selected;
             Child[] candidates;
@@ -500,31 +582,32 @@ public final class LayeredViewport extends Canvas {
                 // The existing primitive spatial index is reused in group-local
                 // coordinates. The padding keeps fractional zoom conservative.
                 ensureChildIndex();
-                double scale = context.zoom();
-                long x0 = saturatedAdd(floorLong((damage.x - baseX) / scale), -1);
-                long y0 = saturatedAdd(floorLong((damage.y - baseY) / scale), -1);
-                long x1 = saturatedAdd(ceilLong(((double) damage.x + damage.width - baseX) / scale), 1);
-                long y1 = saturatedAdd(ceilLong(((double) damage.y + damage.height - baseY) / scale), 1);
+                long x0 = saturatedAdd(floorLong((damage.x - baseX) / scaleX), -1);
+                long y0 = saturatedAdd(floorLong((damage.y - baseY) / scaleY), -1);
+                long x1 = saturatedAdd(ceilLong(((double) damage.x + damage.width - baseX) / scaleX), 1);
+                long y1 = saturatedAdd(ceilLong(((double) damage.y + damage.height - baseY) / scaleY), 1);
                 selected = spatialIndex.query(x0, y0, x1, y1);
                 candidates = activeGroupPaints == 0 ? growPaintCandidates(selected) : new Child[selected];
                 for (int i = 0; i < selected; i++) candidates[i] = frame[spatialIndex.resultAt(i)];
             }
+            GroupProjection previousProjection = activeProjection;
+            activeProjection = projection;
             activeGroupPaints++;
             try {
                 for (int i = 0; i < selected; i++) {
                     if (isDisposed() || gc.isDisposed()) return;
                     Child child = candidates[i];
                     if (child.removed || !child.visible) continue;
-                    Rectangle tile = clipChild(child, baseX, baseY, damage, context.zoom());
+                    Rectangle tile = clipChild(child, projection, damage);
                     if (tile == null) continue;
                     try (ViewportGcProxy state = ViewportGcProxy.wrap(gc)) {
                         state.clip(tile);
                         if (child.image != null) {
                             if (!child.image.isDisposed()) {
-                                double left = baseX + child.x * context.zoom();
-                                double top = baseY + child.y * context.zoom();
-                                double right = baseX + child.right * context.zoom();
-                                double bottom = baseY + child.bottom * context.zoom();
+                                double left = projection.projectX(child.x);
+                                double top = projection.projectY(child.y);
+                                double right = projection.projectX(child.right);
+                                double bottom = projection.projectY(child.bottom);
                                 paintImage(gc, child.image, left, top, right, bottom, tile);
                             }
                         } else if (child.painter != null) {
@@ -536,6 +619,7 @@ public final class LayeredViewport extends Canvas {
             } finally {
                 Arrays.fill(candidates, 0, selected, null);
                 activeGroupPaints--;
+                activeProjection = previousProjection;
             }
         }
 
@@ -559,14 +643,13 @@ public final class LayeredViewport extends Canvas {
             orderDirty = false;
         }
 
-        private Rectangle clipChild(Child child, double baseX, double baseY,
-                Rectangle damage, double scale) {
+        private Rectangle clipChild(Child child, GroupProjection projection, Rectangle damage) {
             // Child bounds are group-local. Root clipping is already imposed
             // by the parent compositor; clip the child again, in device pixels.
-            double left = baseX + child.x * scale;
-            double top = baseY + child.y * scale;
-            double right = baseX + child.right * scale;
-            double bottom = baseY + child.bottom * scale;
+            double left = projection.projectX(child.x);
+            double top = projection.projectY(child.y);
+            double right = projection.projectX(child.right);
+            double bottom = projection.projectY(child.bottom);
             int x0 = (int) Math.max((double) damage.x, Math.floor(left));
             int y0 = (int) Math.max((double) damage.y, Math.floor(top));
             int x1 = (int) Math.min((double) damage.x + damage.width, Math.ceil(right));
@@ -596,6 +679,7 @@ public final class LayeredViewport extends Canvas {
      */
     public final class Layer {
         private final long id;
+        private int zIndex = -1;
         private String name;
         private long x, y, right, bottom;
         private int opacity = 255;
@@ -623,6 +707,8 @@ public final class LayeredViewport extends Canvas {
         private WorldBounds worldClip;
         /* SWT.HORIZONTAL and/or SWT.VERTICAL: the axes on which the layer is measured from the view's origin */
         private int pinned;
+        /* fixed axes ignore both pan and zoom; pinned axes ignore pan but retain zoom */
+        private int fixed;
         /* the axis (SWT.HORIZONTAL or SWT.VERTICAL) the layer sticks on, or 0; its inset from the view's leading
            edge and the world coordinate its trailing edge does not pass */
         private int sticky;
@@ -725,6 +811,49 @@ public final class LayeredViewport extends Canvas {
             syncNative();
         }
 
+        /** Captures the current per-axis transform without retaining mutable viewport state. */
+        public Projection getProjection() {
+            checked();
+            return new Projection(layerOriginX(this), layerOriginY(this), layerScaleX(this), layerScaleY(this));
+        }
+
+        /** Whether both axes use widget pixels, independent of pan and zoom. */
+        public boolean isFixed() {
+            checked();
+            return fixed == (SWT.HORIZONTAL | SWT.VERTICAL);
+        }
+
+        /** Fixes both axes in widget pixels, or restores their pinned/sticky/world projection. */
+        public void setFixed(boolean value) {
+            checked();
+            setFixedAxes(value ? SWT.HORIZONTAL | SWT.VERTICAL : SWT.NONE);
+        }
+
+        public boolean isFixedX() { checked(); return (fixed & SWT.HORIZONTAL) != 0; }
+        public boolean isFixedY() { checked(); return (fixed & SWT.VERTICAL) != 0; }
+
+        /** Fixes the horizontal axis in widget pixels while retaining the vertical projection. */
+        public void setFixedX(boolean value) {
+            checked();
+            setFixedAxes(value ? fixed | SWT.HORIZONTAL : fixed & ~SWT.HORIZONTAL);
+        }
+
+        /** Fixes the vertical axis in widget pixels while retaining the horizontal projection. */
+        public void setFixedY(boolean value) {
+            checked();
+            setFixedAxes(value ? fixed | SWT.VERTICAL : fixed & ~SWT.VERTICAL);
+        }
+
+        private void setFixedAxes(int axes) {
+            if (fixed == axes) return;
+            invalidate(this);
+            fixed = axes;
+            spatialDirty = true;
+            invalidate(this);
+            placeControl(this);
+            syncNative();
+        }
+
         /** The axis this layer is sticky on ({@link SWT#HORIZONTAL} or {@link SWT#VERTICAL}), or {@link SWT#NONE}. */
         public int getSticky() {
             checked();
@@ -809,7 +938,11 @@ public final class LayeredViewport extends Canvas {
             if (retained == value) return;
             retained = value;
             retainedCount += value ? 1 : -1;
+            retainedZ.set(indexOf(this), value);
             releaseComposite();
+            // A running refresh keeps its selected image alive, but a changed
+            // retention boundary must receive a subsequent complete composition.
+            if (activeBackingPaints != 0) invalidate(this);
         }
 
         /**
@@ -865,6 +998,62 @@ public final class LayeredViewport extends Canvas {
             redraw();
         }
 
+
+        /**
+         * Submits several image-local dirty rectangles as a single JNI call.
+         * All rectangles and the aggregate packed payload are checked on the
+         * CPU before converting any pixels. Regions can overlap; later patches
+         * cover earlier ones. The existing software/full-image path remains
+         * the fallback when a native backend or its optional export is absent.
+         * No new SWT controls or native handles are created for individual
+         * rectangles. An empty array is a no-op.
+         *
+         * @param dirtyRegions changed rectangles in borrowed image pixel coordinates
+         */
+        public void redrawRegions(Rectangle... dirtyRegions) {
+            checked();
+            if (dirtyRegions == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            if (image == null || image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            int count = dirtyRegions.length;
+            if (count == 0) return;
+            if (count > NativeDirtyRegions.MAX_RECTS) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            int[] regions = new int[count * 4];
+            for (int i = 0; i < count; i++) {
+                Rectangle region = dirtyRegions[i];
+                if (region == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+                int at = i * 4;
+                regions[at] = region.x;
+                regions[at + 1] = region.y;
+                regions[at + 2] = region.width;
+                regions[at + 3] = region.height;
+            }
+            Rectangle size = image.getBounds();
+            int pixels;
+            try {
+                pixels = NativeDirtyRegions.packedPixelCount(size.width, size.height, regions, count);
+            } catch (IllegalArgumentException invalid) {
+                SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+                return;
+            }
+            blendSource = null;
+            if (nativeLayer != 0 && nativeBackend != null) {
+                ImageDataArgb rows = new ImageDataArgb(image.getImageData());
+                int[] packed = new int[pixels];
+                int offset = 0;
+                for (int i = 0; i < count; i++) {
+                    int at = i * 4;
+                    int x = regions[at], y = regions[at + 1];
+                    int width = regions[at + 2], height = regions[at + 3];
+                    for (int row = 0; row < height; row++) {
+                        rows.premultipliedSpan(y + row, x, width, packed, offset);
+                        offset += width;
+                    }
+                }
+                if (nativeBackend.uploadDirty(nativeLayer, packed, regions, count) == 0 && applyNative()) return;
+            }
+            redraw();
+        }
+
         private void releaseComposite() {
             if (composite != null) retireComposite(composite);
             composite = null;
@@ -876,13 +1065,16 @@ public final class LayeredViewport extends Canvas {
          * through the optional maya backend): its pan, opacity, visibility and Z order then change without
          * repainting anything, and it shows above every painted layer, like a control layer. It is native only
          * while its image is drawn one to one (zoom 1, world size the image's size, no world clip, 100% device
-         * zoom) and a backend exists; otherwise, and when that stops being true, it is painted as before.
+         * zoom; fixed axes may remain one to one at another viewport zoom) and a backend exists; otherwise, and when that stops being true, it is painted as before.
          *
          * @return whether the layer is native now
          */
         public boolean setNative(boolean value) {
             checked();
-            nativeRequested = value;
+            if (nativeRequested != value) {
+                nativeRequested = value;
+                nativeRequestCount += value ? 1 : -1;
+            }
             syncNative();
             return nativeLayer != 0;
         }
@@ -992,6 +1184,10 @@ public final class LayeredViewport extends Canvas {
                 System.arraycopy(stack, zIndex, stack, zIndex + 1, previous - zIndex);
             }
             stack[zIndex] = this;
+            reindex(Math.min(previous, zIndex), Math.max(previous, zIndex) + 1);
+            // A retained image includes the whole prefix, not just this layer's
+            // bounds. Crossing a disjoint layer changes that prefix elsewhere.
+            if (retained) releaseComposite();
             publishOrder();
             invalidate(this);
             orderControls();
@@ -1006,7 +1202,11 @@ public final class LayeredViewport extends Canvas {
             int index = indexOf(this);
             System.arraycopy(stack, index + 1, stack, index, count - index - 1);
             stack[--count] = null;
+            reindex(index, count);
+            retainedZ.clear(count);
+            zIndex = -1;
             removed = true;
+            if (nativeRequested) nativeRequestCount--;
             if (retained) retainedCount--;
             releaseComposite();
             dropNative(this);
@@ -1091,6 +1291,7 @@ public final class LayeredViewport extends Canvas {
     private Image[] retiredComposites = new Image[4];
     private int retiredCompositeCount;
     private int retainedCount;
+    private final BitSet retainedZ = new BitSet();
     private int pointerListenerCount;
     private int capturedButtons;
     private Layer capturedLayer;
@@ -1106,13 +1307,19 @@ public final class LayeredViewport extends Canvas {
     // borrow independent arrays rather than corrupt an active outer scan.
     private int[] staleWork = new int[64];
     private int staleDepth;
+    // Main and retained stores move sequentially on the SWT UI thread.
+    // Share one growable primitive rectangle lane across those stores.
+    private int[] movedWork = new int[64];
 
     public LayeredViewport(Composite parent, int style) {
         super(parent, style | SWT.DOUBLE_BUFFERED);
         viewportRuntime.initializeOrigin(0, 0);
         dirty = new ViewportDamageRegion();
         addPaintListener(event -> paintLayers(event.gc));
-        addListener(SWT.Resize, event -> placeControls());
+        addListener(SWT.Resize, event -> {
+            placeControls();
+            if (!isDisposed()) syncNative();
+        });
         addListener(SWT.MouseDown, this::dispatchPointer);
         addListener(SWT.MouseUp, this::dispatchPointer);
         addListener(SWT.MouseMove, this::dispatchPointer);
@@ -1123,9 +1330,10 @@ public final class LayeredViewport extends Canvas {
         addListener(SWT.MouseExit, event -> clearPointerCapture());
         addListener(SWT.FocusOut, event -> clearPointerCapture());
         addListener(SWT.Dispose, event -> {
-            if (composition != 0) nativeBackend.dispose(composition);
+            long disposedComposition = composition;
             composition = 0;
             for (int i = 0; i < count; i++) stack[i].nativeLayer = 0;
+            if (disposedComposition != 0) nativeBackend.dispose(disposedComposition);
             // A painter may dispose the widget while one of these images has a
             // selected GC. The active paint closes that GC before the images.
             if (activeBackingPaints == 0) disposeBackingImages();
@@ -1142,7 +1350,11 @@ public final class LayeredViewport extends Canvas {
                 stack[i].worldClip = null;
                 stack[i] = null;
             }
-            count = retainedCount = 0;
+            count = retainedCount = nativeRequestCount = 0;
+            retainedZ.clear();
+            nativeHandles = new long[0];
+            nativeProperties = new float[0];
+            nativeSyncPending = false;
             pointerListenerCount = 0;
             clearPointerCapture();
             paintOrder = new Layer[0];
@@ -1207,6 +1419,7 @@ public final class LayeredViewport extends Canvas {
         if (nextId == Long.MAX_VALUE) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
         if (count == stack.length) stack = Arrays.copyOf(stack, count * 2);
         Layer layer = new Layer(nextId++, name, x, y, width, height, image, painter);
+        layer.zIndex = count;
         stack[count++] = layer;
         publishOrder();
         invalidate(layer);
@@ -1512,6 +1725,15 @@ public final class LayeredViewport extends Canvas {
         return staleWork;
     }
 
+    private int[] growMovedWork(int required) {
+        if (movedWork.length < required) {
+            int capacity = (int) Math.min(Integer.MAX_VALUE,
+                    Math.max((long) required, movedWork.length + (long) Math.max(64, movedWork.length >>> 1)));
+            movedWork = Arrays.copyOf(movedWork, capacity);
+        }
+        return movedWork;
+    }
+
     /*
      * the store's pixels inside {@code damage}: the retained composites are brought up to date there, bottom to
      * top, each from the one below it; the store then starts from the topmost one (or the background) and only
@@ -1708,7 +1930,7 @@ public final class LayeredViewport extends Canvas {
 
     /* whether a pan moves the layer in world space: it is pinned or sticky */
     private static boolean viewRelative(Layer layer) {
-        return layer.pinned != 0 || layer.sticky != 0;
+        return layer.fixed != 0 || layer.pinned != 0 || layer.sticky != 0;
     }
 
     /* the origin a layer is projected from on each axis */
@@ -1725,20 +1947,23 @@ public final class LayeredViewport extends Canvas {
      * pinned; where it is sticky and stuck, the view's less how far the layer has been carried past its own place
      */
     private static long layerOrigin(Layer layer, int axis, long origin) {
-        if ((layer.pinned & axis) != 0) return 0;
+        if (((layer.fixed | layer.pinned) & axis) != 0) return 0;
         if (layer.sticky != axis) return origin;
         long start = axis == SWT.HORIZONTAL ? layer.x : layer.y, end = axis == SWT.HORIZONTAL ? layer.right : layer.bottom;
         long stuck = Math.min(saturatedAdd(origin, layer.stickyInset), saturatedAdd(layer.stickyLimit, start - end));
-        return stuck > start ? saturatedAdd(origin, start - stuck) : origin;
+        return stuck > start ? saturatedAddSubtract(origin, start, stuck) : origin;
     }
+
+    private double layerScaleX(Layer layer) { return (layer.fixed & SWT.HORIZONTAL) != 0 ? 1 : zoom; }
+    private double layerScaleY(Layer layer) { return (layer.fixed & SWT.VERTICAL) != 0 ? 1 : zoom; }
 
     /* a device point's world coordinates as a layer sees them */
     private long layerX(Layer layer, int deviceX) {
-        return saturatedAdd(layerOriginX(layer), floorLong(deviceX / zoom));
+        return saturatedAdd(layerOriginX(layer), floorLong(deviceX / layerScaleX(layer)));
     }
 
     private long layerY(Layer layer, int deviceY) {
-        return saturatedAdd(layerOriginY(layer), floorLong(deviceY / zoom));
+        return saturatedAdd(layerOriginY(layer), floorLong(deviceY / layerScaleY(layer)));
     }
 
     private static long ceilLong(double value) {
@@ -1786,8 +2011,8 @@ public final class LayeredViewport extends Canvas {
         if (layer.blendSource == null) layer.blendSource = layer.image.getImageData();
         ImageData source = layer.blendSource;
         long ox = layerOriginX(layer), oy = layerOriginY(layer);
-        double left = device(layer.x, ox), top = device(layer.y, oy);
-        double width = device(layer.right, ox) - left, height = device(layer.bottom, oy) - top;
+        double left = device(layer.x, ox, layerScaleX(layer)), top = device(layer.y, oy, layerScaleY(layer));
+        double width = device(layer.right, ox, layerScaleX(layer)) - left, height = device(layer.bottom, oy, layerScaleY(layer)) - top;
         if (!(width > 0) || !(height > 0) || source.width == 0 || source.height == 0) return;
         Image under = new Image(getDisplay(), tile.width, tile.height);
         try {
@@ -1837,8 +2062,8 @@ public final class LayeredViewport extends Canvas {
 
     private void paintImage(GC gc, Layer layer, Rectangle tile) {
         long ox = layerOriginX(layer), oy = layerOriginY(layer);
-        paintImage(gc, layer.image, device(layer.x, ox), device(layer.y, oy),
-                device(layer.right, ox), device(layer.bottom, oy), tile);
+        paintImage(gc, layer.image, device(layer.x, ox, layerScaleX(layer)), device(layer.y, oy, layerScaleY(layer)),
+                device(layer.right, ox, layerScaleX(layer)), device(layer.bottom, oy, layerScaleY(layer)), tile);
     }
 
     /** Shared full-source mapping and clipped-source fallback for groups and ordinary layers. */
@@ -1885,19 +2110,19 @@ public final class LayeredViewport extends Canvas {
     }
 
     private Rectangle projectedClip(Layer layer, long ox, long oy, Rectangle damage) {
-        Rectangle visible = projectedClip(layer.x, layer.y, layer.right, layer.bottom, ox, oy, damage);
+        Rectangle visible = projectedClip(layer.x, layer.y, layer.right, layer.bottom, ox, oy, layerScaleX(layer), layerScaleY(layer), damage);
         if (visible == null || layer.worldClip == null) return visible;
         WorldBounds clip = layer.worldClip;
         return projectedClip(clip.x(), clip.y(), clip.x() + clip.width(),
-                clip.y() + clip.height(), ox, oy, visible);
+                clip.y() + clip.height(), ox, oy, layerScaleX(layer), layerScaleY(layer), visible);
     }
 
     private Rectangle projectedClip(long worldX, long worldY, long worldRight,
-            long worldBottom, long ox, long oy, Rectangle damage) {
-        double left = device(worldX, ox);
-        double top = device(worldY, oy);
-        double right = device(worldRight, ox);
-        double bottom = device(worldBottom, oy);
+            long worldBottom, long ox, long oy, double scaleX, double scaleY, Rectangle damage) {
+        double left = device(worldX, ox, scaleX);
+        double top = device(worldY, oy, scaleY);
+        double right = device(worldRight, ox, scaleX);
+        double bottom = device(worldBottom, oy, scaleY);
         int x0 = (int) Math.max((double) damage.x, Math.floor(left));
         int y0 = (int) Math.max((double) damage.y, Math.floor(top));
         int x1 = (int) Math.min((double) damage.x + damage.width, Math.ceil(right));
@@ -1914,7 +2139,7 @@ public final class LayeredViewport extends Canvas {
         batchDepth++;
     }
 
-    /** Flush the bounded device-pixel damage region when the outer batch ends. */
+    /** Flush device-pixel damage and the pending native property frame when the outer batch ends. */
     public void endUpdate() {
         checkWidget();
         if (batchDepth == 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
@@ -1930,6 +2155,7 @@ public final class LayeredViewport extends Canvas {
         }
         pendingDamage.clear();
         fullDamage = false;
+        if (nativeSyncPending) applyNative();
     }
 
     private void invalidate(Layer layer) {
@@ -1963,9 +2189,16 @@ public final class LayeredViewport extends Canvas {
         return paintOrder;
     }
 
+    private void reindex(int from, int to) {
+        for (int i = from; i < to; i++) {
+            stack[i].zIndex = i;
+            retainedZ.set(i, stack[i].retained);
+        }
+    }
+
     private int indexOf(Layer layer) {
-        if (count > 0 && stack[count - 1] == layer) return count - 1;
-        for (int i = 0; i < count; i++) if (stack[i] == layer) return i;
+        int at = layer.zIndex;
+        if (at >= 0 && at < count && stack[at] == layer) return at;
         SWT.error(SWT.ERROR_INVALID_ARGUMENT);
         return -1;
     }
@@ -1981,11 +2214,15 @@ public final class LayeredViewport extends Canvas {
     }
 
     private double device(long coordinate, long origin) {
+        return device(coordinate, origin, zoom);
+    }
+
+    private static double device(long coordinate, long origin, double scale) {
         long difference = coordinate - origin;
         if (((coordinate ^ origin) & (coordinate ^ difference)) < 0) {
             return coordinate >= origin ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
         }
-        return (double) difference * zoom;
+        return (double) difference * scale;
     }
 
     private static int saturatedPixel(double value) {
@@ -2006,6 +2243,19 @@ public final class LayeredViewport extends Canvas {
             return increment > 0 ? Long.MAX_VALUE : Long.MIN_VALUE;
         }
         return result;
+    }
+
+    /* Exact cancellation before saturation: neither intermediate overflow may lose low bits. */
+    private static long saturatedAddSubtract(long a, long b, long c) {
+        try {
+            return Math.subtractExact(Math.addExact(a, b), c);
+        } catch (ArithmeticException overflow) {
+            try {
+                return Math.addExact(Math.subtractExact(a, c), b);
+            } catch (ArithmeticException stillOverflow) {
+                return b > c ? Long.MAX_VALUE : Long.MIN_VALUE;
+            }
+        }
     }
 
     private static int clipSource(double value, int bound, boolean roundUp) {
@@ -2048,7 +2298,7 @@ public final class LayeredViewport extends Canvas {
     /* a layer of Z index {@code z} changed inside {@code area}: the composites that include it are stale there */
     private void markRetained(int z, Rectangle area) {
         if (retainedCount == 0) return;
-        for (int i = Math.max(0, z); i < count; i++) {
+        for (int i = retainedZ.nextSetBit(Math.max(0, z)); i >= 0; i = retainedZ.nextSetBit(i + 1)) {
             if (stack[i].stale != null) stack[i].stale.add(area.x, area.y, area.width, area.height);
         }
     }
@@ -2138,7 +2388,10 @@ public final class LayeredViewport extends Canvas {
         } catch (ArithmeticException overflow) {
             return false;
         }
-        if (Math.abs(dx) >= size.width || Math.abs(dy) >= size.height) return false;
+        // abs(Long.MIN_VALUE) is negative: reject out-of-view pans before
+        // narrowing a signed-long delta to an int pixel translation.
+        if (dx <= -(long) size.width || dx >= size.width
+                || dy <= -(long) size.height || dy >= size.height) return false;
         int sx = (int) dx, sy = (int) dy;
         shiftStore(backBuffer, dirty, sx, sy, size);
         for (Layer layer : orderSnapshot()) {
@@ -2181,7 +2434,7 @@ public final class LayeredViewport extends Canvas {
     }
 
     /* moves a store's pixels by (sx, sy) and its dirty region with them; the band that comes into view is dirty */
-    private static void shiftStore(Image store, ViewportDamageRegion region, int sx, int sy, Rectangle size) {
+    private void shiftStore(Image store, ViewportDamageRegion region, int sx, int sy, Rectangle size) {
         GC gc = new GC(store);
         try {
             gc.copyArea(Math.max(0, -sx), Math.max(0, -sy), size.width - Math.abs(sx), size.height - Math.abs(sy),
@@ -2190,7 +2443,7 @@ public final class LayeredViewport extends Canvas {
             gc.dispose();
         }
         int n = region.rectCount();
-        int[] moved = new int[n * 4];
+        int[] moved = growMovedWork(Math.multiplyExact(n, 4));
         for (int i = 0; i < n; i++) {
             moved[i * 4] = region.x(i) + sx;
             moved[i * 4 + 1] = region.y(i) + sy;
@@ -2223,8 +2476,8 @@ public final class LayeredViewport extends Canvas {
         if (isDisposed() || layer.removed || control == null || control.isDisposed()) return;
         Rectangle area = getClientArea();
         long ox = layerOriginX(layer), oy = layerOriginY(layer);
-        double left = device(layer.x, ox), top = device(layer.y, oy);
-        double right = device(layer.right, ox), bottom = device(layer.bottom, oy);
+        double left = device(layer.x, ox, layerScaleX(layer)), top = device(layer.y, oy, layerScaleY(layer));
+        double right = device(layer.right, ox, layerScaleX(layer)), bottom = device(layer.bottom, oy, layerScaleY(layer));
         boolean shown = layer.visible && layer.opacity > 0 && right > area.x && left < (double) area.x + area.width
                 && bottom > area.y && top < (double) area.y + area.height;
         if (shown) {
@@ -2258,6 +2511,11 @@ public final class LayeredViewport extends Canvas {
     private NativeLayers nativeBackend;
     private long composition;
     private boolean nativeTried;
+    private int nativeRequestCount;
+    private long[] nativeHandles = new long[0];
+    private float[] nativeProperties = new float[0];
+    private boolean nativeSyncPending;
+    private int nativeFrameDepth;
 
     private boolean nativeAvailable() {
         if (!nativeTried) {
@@ -2271,7 +2529,7 @@ public final class LayeredViewport extends Canvas {
     /* an image drawn one to one (zoom 1, world size the image's size, no clip, 100% device zoom) with a backend */
     private boolean nativeEligible(Layer layer) {
         if (!layer.nativeRequested || layer.removed || layer.image == null || layer.image.isDisposed()) return false;
-        if (zoom != 1.0 || layer.worldClip != null || layer.blendMode != BLEND_NORMAL
+        if (layerScaleX(layer) != 1.0 || layerScaleY(layer) != 1.0 || layer.worldClip != null || layer.blendMode != BLEND_NORMAL
                 || DPIUtil.getDeviceZoom() != 100) return false;
         Rectangle size = layer.image.getBounds();
         return layer.right - layer.x == size.width && layer.bottom - layer.y == size.height && nativeAvailable();
@@ -2282,12 +2540,10 @@ public final class LayeredViewport extends Canvas {
      * one native frame carries every native layer's order, offset, opacity and visibility
      */
     private void syncNative() {
-        if (!nativeTried) {
-            boolean requested = false;
-            for (Layer layer : paintOrder) requested |= layer.nativeRequested;
-            if (!requested) return;
-        }
-        for (Layer layer : paintOrder) {
+        if (composition == 0 && (nativeRequestCount == 0 || nativeTried)) return;
+        // Ordinary Java-only edits do not materialize a lazy order snapshot.
+        Layer[] frame = orderSnapshot();
+        for (Layer layer : frame) {
             boolean eligible = nativeEligible(layer);
             if (eligible && layer.nativeLayer == 0) {
                 Rectangle size = layer.image.getBounds();
@@ -2321,21 +2577,77 @@ public final class LayeredViewport extends Canvas {
     /* one native frame: the native layers in Z order with their offset, opacity and visibility */
     private boolean applyNative() {
         if (composition == 0) return false;
-        int n = 0;
-        for (Layer layer : paintOrder) if (layer.nativeLayer != 0) n++;
-        long[] handles = new long[n];
-        float[] props = new float[n * 4];
-        int i = 0;
-        for (Layer layer : paintOrder) {
-            if (layer.nativeLayer == 0) continue;
-            handles[i] = layer.nativeLayer;
-            props[i * 4] = (float) device(layer.x, layerOriginX(layer));
-            props[i * 4 + 1] = (float) device(layer.y, layerOriginY(layer));
-            props[i * 4 + 2] = layer.opacity / 255f;
-            props[i * 4 + 3] = layer.visible && layer.opacity > 0 ? 1 : 0;
-            i++;
+        if (batchDepth != 0) {
+            // deferred to endBatch: nothing committed yet, so a caller keeps its CPU repaint
+            nativeSyncPending = true;
+            return false;
         }
-        return nativeBackend.apply(composition, handles, props, n) == 0;
+        nativeSyncPending = false;
+        Layer[] frame = orderSnapshot();
+        int n = 0;
+        for (Layer layer : frame) if (layer.nativeLayer != 0) n++;
+        long[] handles;
+        float[] properties;
+        if (nativeFrameDepth == 0) {
+            if (nativeHandles.length < n) {
+                int next = nativeHandles.length >= Integer.MAX_VALUE / 8
+                        ? n : Math.max(4, nativeHandles.length * 2);
+                int capacity = Math.max(n, next);
+                int propertyCapacity = Math.multiplyExact(capacity, 4);
+                // Publish the pair only after both allocations succeed.
+                long[] grownHandles = new long[capacity];
+                float[] grownProperties = new float[propertyCapacity];
+                nativeHandles = grownHandles;
+                nativeProperties = grownProperties;
+            }
+            handles = nativeHandles;
+            properties = nativeProperties;
+        } else {
+            // A synchronous backend callback must not overwrite its outer frame.
+            int propertyCount = Math.multiplyExact(n, 4);
+            handles = new long[n];
+            properties = new float[propertyCount];
+        }
+        long submittedComposition = composition;
+        NativeLayers submittedBackend = nativeBackend;
+        nativeFrameDepth++;
+        try {
+            Rectangle area = getClientArea();
+            int i = 0;
+            for (Layer layer : frame) {
+                if (layer.nativeLayer == 0) continue;
+                handles[i] = layer.nativeLayer;
+                double x = device(layer.x, layerOriginX(layer), layerScaleX(layer));
+                double y = device(layer.y, layerOriginY(layer), layerScaleY(layer));
+                boolean shown = area.width > 0 && area.height > 0 && layer.visible && layer.opacity > 0
+                        && Double.isFinite(x) && Double.isFinite(y)
+                        && x < (double) area.x + area.width && y < (double) area.y + area.height
+                        && x + (layer.right - layer.x) > area.x && y + (layer.bottom - layer.y) > area.y;
+                properties[i * 4] = shown ? (float) x : 0;
+                properties[i * 4 + 1] = shown ? (float) y : 0;
+                properties[i * 4 + 2] = layer.opacity / 255f;
+                properties[i * 4 + 3] = shown ? 1 : 0;
+                i++;
+            }
+            int result = submittedBackend.apply(submittedComposition, handles, properties, n);
+            if (result != 0 && !isDisposed() && composition == submittedComposition
+                    && nativeBackend == submittedBackend) {
+                // A nested callback may have changed the live stack or already
+                // disposed this composition. Detach it before any teardown call.
+                composition = 0;
+                nativeSyncPending = false;
+                for (Layer layer : orderSnapshot()) {
+                    if (layer.nativeLayer == 0) continue;
+                    layer.nativeLayer = 0;
+                    if (!layer.removed) damageBounds(layer);
+                }
+                // dispose owns every native layer, including any added by a callback.
+                submittedBackend.dispose(submittedComposition);
+            }
+            return result == 0;
+        } finally {
+            nativeFrameDepth--;
+        }
     }
 
     /* an image's pixels as premultiplied ARGB, row by row, with its alpha (alpha data, global alpha, transparent pixel) */

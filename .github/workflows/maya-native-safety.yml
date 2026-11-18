@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/render/NativeDirtyRegions.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/LayeredViewport.java'
+      - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_NativeLayers.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
@@ -13,6 +16,9 @@ on:
     branches: [ master ]
     paths:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/render/NativeDirtyRegions.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/LayeredViewport.java'
+      - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_NativeLayers.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'

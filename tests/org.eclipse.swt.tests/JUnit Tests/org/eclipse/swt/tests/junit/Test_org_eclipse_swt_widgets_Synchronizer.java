@@ -10,12 +10,14 @@
  *******************************************************************************/
 package org.eclipse.swt.tests.junit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
+import java.lang.reflect.*;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FrameListener;
@@ -60,6 +62,7 @@ public class Test_org_eclipse_swt_widgets_Synchronizer {
 		}
 	}
 
+
 	/**
 	 * Regression test for
 	 * https://github.com/eclipse-platform/eclipse.platform.swt/issues/3151
@@ -92,7 +95,7 @@ public class Test_org_eclipse_swt_widgets_Synchronizer {
 	 * produces a test failure rather than an infinite hang.
 	 */
 	@Test
-	@Timeout(TIMEOUT_MS)
+	@Timeout(value = TIMEOUT_MS, unit = TimeUnit.MILLISECONDS)
 	public void test_asyncExec_allTasksComplete_noMissedWakeup() throws InterruptedException {
 		final int PRODUCERS = 4;
 		final int TASKS_PER_PRODUCER = 1_000;
@@ -144,6 +147,332 @@ public class Test_org_eclipse_swt_widgets_Synchronizer {
 		} finally {
 			display.dispose();
 		}
+	}
+
+	@Test
+	public void test_keyedAsyncExec_isScopedByPriority() throws Exception {
+		withDisplay(display -> {
+			Synchronizer sync = display.getSynchronizer();
+			List<String> calls = new ArrayList<>();
+			sync.asyncExec(Synchronizer.INPUT, "key", () -> calls.add("old input"));
+			sync.asyncExec(Synchronizer.DEFAULT, "key", () -> calls.add("default"));
+			sync.asyncExec(Synchronizer.INPUT, "key", () -> calls.add("new input"));
+			dispatch(sync, true);
+			assertEquals(List.of("new input", "default"), calls);
+		});
+	}
+
+	private record CollisionKey(int value) {
+		@Override
+		public int hashCode() { return 7; }
+	}
+
+	@Test
+	public void test_keyedAsyncExec_collisionsGrowthDeletionAndWrap() throws Exception {
+		withDisplay(display -> {
+			Synchronizer sync = display.getSynchronizer();
+			for (int round = 0; round < 4; round++) {
+				List<List<Integer>> actual = new ArrayList<>();
+				for (int priority = Synchronizer.INPUT; priority <= Synchronizer.IDLE; priority++) {
+					List<Integer> lane = new ArrayList<>();
+					actual.add(lane);
+					for (int key = 0; key < 73; key++) {
+						int value = key;
+						sync.asyncExec(priority, new CollisionKey(key), () -> lane.add(value));
+					}
+					for (int key = 0; key < 73; key += 2) {
+						int value = 1000 + key;
+						sync.asyncExec(priority, new CollisionKey(key), () -> lane.add(value));
+					}
+				}
+				dispatch(sync, true);
+				fireTick(display, sync);
+				dispatch(sync, true);
+				List<Integer> expected = new ArrayList<>();
+				for (int key = 0; key < 73; key++) expected.add((key & 1) == 0 ? 1000 + key : key);
+				for (List<Integer> lane : actual) assertEquals(expected, lane);
+			}
+		});
+	}
+
+	@Test
+	public void test_dueFrameAndListeners_surviveSynchronizerReplacement() throws Exception {
+		withDisplay(display -> {
+			Synchronizer original = display.getSynchronizer();
+			List<String> calls = new ArrayList<>();
+			FrameListener listener = (d, generation) -> calls.add("frame " + generation);
+			original.addFrameListener(listener);
+			original.asyncExec(Synchronizer.MODEL, null, () -> calls.add("patch"));
+			dispatch(original, false);
+			fireTick(display, original);
+			Synchronizer replacement = new Synchronizer(display);
+			display.setSynchronizer(replacement);
+			assertTrue(dispatch(replacement, true));
+			assertEquals(List.of("patch", "frame 1"), calls);
+			replacement.requestFrame();
+			dispatch(replacement, false);
+			fireTick(display, replacement);
+			dispatch(replacement, true);
+			assertEquals(List.of("patch", "frame 1", "frame 2"), calls);
+			replacement.removeFrameListener(listener);
+			replacement.requestFrame();
+			dispatch(replacement, false);
+			fireTick(display, replacement);
+			dispatch(replacement, true);
+			assertEquals(3, replacement.getFrameGeneration());
+			assertEquals(3, calls.size());
+		});
+	}
+
+	@Test
+	public void test_frameRequestWithoutModel_survivesPendingTimerReplacement() throws Exception {
+		withDisplay(display -> {
+			Synchronizer original = display.getSynchronizer();
+			AtomicInteger frames = new AtomicInteger();
+			original.addFrameListener((d, generation) -> frames.incrementAndGet());
+			original.requestFrame();
+			dispatch(original, false);
+			Synchronizer replacement = new Synchronizer(display);
+			display.setSynchronizer(replacement);
+			fireTick(display, replacement);
+			dispatch(replacement, true);
+			assertEquals(1, frames.get());
+			assertEquals(1, replacement.getFrameGeneration());
+		});
+	}
+
+	@Test
+	public void test_replacementPreservesOrderAndPreviouslyCapturedQueues() throws Exception {
+		withDisplay(display -> {
+			Synchronizer original = display.getSynchronizer();
+			Synchronizer replacement = new Synchronizer(display);
+			Object captured = queue(replacement);
+			List<String> calls = new ArrayList<>();
+			original.asyncExec(null, () -> calls.add("old"));
+			replacement.asyncExec(null, () -> calls.add("prepared"));
+			display.setSynchronizer(replacement);
+			original.asyncExec(null, () -> calls.add("old reference"));
+			invoke(captured, "add", Synchronizer.DEFAULT, null, (Runnable) () -> calls.add("captured queue"), null);
+			replacement.asyncExec(null, () -> calls.add("new"));
+			dispatch(replacement, true);
+			assertEquals(List.of("old", "prepared", "old reference", "captured queue", "new"), calls);
+			display.setSynchronizer(original);
+			original.asyncExec(null, () -> calls.add("restored"));
+			dispatch(original, true);
+			assertEquals("restored", calls.getLast());
+		});
+	}
+
+	@Test
+	public void test_nestedModelDispatch_defersOnlyFramePublication() throws Exception {
+		withDisplay(display -> {
+			Synchronizer sync = display.getSynchronizer();
+			List<String> calls = new ArrayList<>();
+			sync.addFrameListener((d, generation) -> calls.add("frame " + generation));
+			sync.asyncExec(Synchronizer.MODEL, null, () -> {
+				calls.add("first start");
+				assertTrue(dispatch(sync, false), "nested model callbacks must remain dispatchable");
+				assertEquals(0, sync.getFrameGeneration(), "outer patch is unfinished");
+				calls.add("first end");
+			});
+			sync.asyncExec(Synchronizer.MODEL, null, () -> calls.add("second"));
+			dispatch(sync, false);
+			fireTick(display, sync);
+			dispatch(sync, true);
+			assertEquals(List.of("first start", "second", "first end", "frame 1"), calls);
+		});
+	}
+
+	@Test
+	public void test_nestedModelDispatch_doesNotExtendTheAdmittedFrame() throws Exception {
+		withDisplay(display -> {
+			Synchronizer sync = display.getSynchronizer();
+			List<String> calls = new ArrayList<>();
+			sync.addFrameListener((d, generation) -> calls.add("frame " + generation));
+			sync.asyncExec(Synchronizer.MODEL, null, () -> {
+				calls.add("first start");
+				assertTrue(dispatch(sync, false));
+				sync.asyncExec(Synchronizer.MODEL, null, () -> calls.add("future"));
+				calls.add("first end");
+			});
+			sync.asyncExec(Synchronizer.MODEL, null, () -> calls.add("second"));
+			dispatch(sync, false);
+			fireTick(display, sync);
+			dispatch(sync, true);
+			assertEquals(List.of("first start", "second", "first end", "frame 1"), calls);
+			fireTick(display, sync);
+			dispatch(sync, true);
+			assertEquals(List.of("first start", "second", "first end", "frame 1", "future", "frame 2"), calls);
+		});
+	}
+
+	@Test
+	public void test_nestedModelDuringNotification_requestsFollowupPublication() throws Exception {
+		withDisplay(display -> {
+			Synchronizer sync = display.getSynchronizer();
+			List<String> calls = new ArrayList<>();
+			sync.addFrameListener((d, generation) -> {
+				calls.add("frame " + generation + " start");
+				if (generation == 1) {
+					sync.asyncExec(Synchronizer.MODEL, null, () -> calls.add("nested"));
+					assertTrue(dispatch(sync, false));
+					assertEquals(1, sync.getFrameGeneration());
+				}
+				calls.add("frame " + generation + " end");
+			});
+			sync.requestFrame();
+			dispatch(sync, false);
+			fireTick(display, sync);
+			dispatch(sync, true);
+			assertEquals(List.of("frame 1 start", "nested", "frame 1 end"), calls);
+			fireTick(display, sync);
+			dispatch(sync, true);
+			assertEquals(List.of("frame 1 start", "nested", "frame 1 end", "frame 2 start", "frame 2 end"), calls);
+		});
+	}
+
+	@Test
+	public void test_replacementInsideModelPatch_retainsActiveFrame() throws Exception {
+		withDisplay(display -> {
+			Synchronizer original = display.getSynchronizer();
+			Synchronizer replacement = new Synchronizer(display);
+			List<String> calls = new ArrayList<>();
+			original.addFrameListener((d, generation) -> calls.add("frame " + generation));
+			original.asyncExec(Synchronizer.MODEL, null, () -> {
+				calls.add("first start");
+				display.setSynchronizer(replacement);
+				assertTrue(dispatch(replacement, false));
+				assertEquals(0, replacement.getFrameGeneration());
+				calls.add("first end");
+			});
+			original.asyncExec(Synchronizer.MODEL, null, () -> calls.add("second"));
+			dispatch(original, false);
+			fireTick(display, original);
+			dispatch(original, true);
+			assertEquals(List.of("first start", "second", "first end", "frame 1"), calls);
+			assertEquals(1, replacement.getFrameGeneration());
+		});
+	}
+
+	@Test
+	public void test_requestDuringPatchOrListener_producesFollowupFrame() throws Exception {
+		withDisplay(display -> {
+			Synchronizer sync = display.getSynchronizer();
+			List<Long> frames = new ArrayList<>();
+			sync.addFrameListener((d, generation) -> {
+				frames.add(generation);
+				if (generation == 1) {
+					sync.requestFrame();
+					assertFalse(dispatch(sync, false));
+				}
+			});
+			sync.asyncExec(Synchronizer.MODEL, null, sync::requestFrame);
+			dispatch(sync, false);
+			fireTick(display, sync);
+			dispatch(sync, true);
+			assertEquals(List.of(1L), frames);
+			fireTick(display, sync);
+			dispatch(sync, true);
+			assertEquals(List.of(1L, 2L), frames);
+		});
+	}
+
+	@Test
+	public void test_modelFailure_doesNotPoisonLaterFrames() throws Exception {
+		withDisplay(display -> {
+			Synchronizer sync = display.getSynchronizer();
+			AtomicInteger completed = new AtomicInteger();
+			sync.asyncExec(Synchronizer.MODEL, null, () -> { throw new IllegalStateException("model failure"); });
+			sync.asyncExec(Synchronizer.MODEL, null, completed::incrementAndGet);
+			dispatch(sync, false);
+			fireTick(display, sync);
+			assertThrows(RuntimeException.class, () -> dispatch(sync, true));
+			assertEquals(0, sync.getFrameGeneration());
+			dispatch(sync, false);
+			fireTick(display, sync);
+			dispatch(sync, true);
+			assertEquals(1, completed.get());
+			assertEquals(1, sync.getFrameGeneration());
+		});
+	}
+
+	@Test
+	@Timeout(value = TIMEOUT_MS, unit = TimeUnit.MILLISECONDS)
+	public void test_syncExecWaiter_completesAcrossReplacement() throws Exception {
+		withDisplay(display -> {
+			Synchronizer original = display.getSynchronizer();
+			AtomicReference<Throwable> failure = new AtomicReference<>();
+			AtomicBoolean ran = new AtomicBoolean();
+			Thread caller = new Thread(() -> {
+				try {
+					display.syncExec(() -> {
+						assertSame(Thread.currentThread(), display.getThread());
+						ran.set(true);
+					});
+				} catch (Throwable error) { failure.set(error); }
+			}, "synchronizer-replacement-caller");
+			caller.setDaemon(true);
+			caller.start();
+			long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+			while ((boolean) invoke(queue(original), "isEmpty") && System.nanoTime() < deadline) Thread.sleep(1);
+			assertFalse((boolean) invoke(queue(original), "isEmpty"), "caller submitted its syncExec");
+			Synchronizer replacement = new Synchronizer(display);
+			display.setSynchronizer(replacement);
+			dispatch(replacement, true);
+			caller.join(5000);
+			assertFalse(caller.isAlive(), "syncExec waiter was notified");
+			assertNull(failure.get());
+			assertTrue(ran.get());
+		});
+	}
+
+	@FunctionalInterface
+	private interface DisplayTest { void run(Display display) throws Exception; }
+
+	private static void withDisplay(DisplayTest test) throws Exception {
+		Display display = new Display();
+		try { test.run(display); } finally { if (!display.isDisposed()) display.dispose(); }
+	}
+
+	private static Object queue(Synchronizer sync) {
+		try {
+			Field field = Synchronizer.class.getDeclaredField("queue");
+			field.setAccessible(true);
+			return field.get(sync);
+		} catch (ReflectiveOperationException error) { throw new AssertionError(error); }
+	}
+
+	private static boolean dispatch(Synchronizer sync, boolean all) {
+		return (boolean) invoke(queue(sync), "run", all);
+	}
+
+	/** Exercise the actual timer callback at a deterministic boundary, without wall-clock sleeps. */
+	private static void fireTick(Display display, Synchronizer sync) {
+		try {
+			Object queue = queue(sync);
+			Field field = queue.getClass().getDeclaredField("tick");
+			field.setAccessible(true);
+			Runnable tick = (Runnable) field.get(queue);
+			display.timerExec(-1, tick);
+			tick.run();
+		} catch (ReflectiveOperationException error) { throw new AssertionError(error); }
+	}
+
+	private static Object invoke(Object target, String name, Object... args) {
+		try {
+			for (Method method : target.getClass().getDeclaredMethods()) {
+				if (method.getName().equals(name) && method.getParameterCount() == args.length) {
+					method.setAccessible(true);
+					return method.invoke(target, args);
+				}
+			}
+			throw new AssertionError("Missing queue operation: " + name);
+		} catch (InvocationTargetException error) {
+			Throwable cause = error.getCause();
+			if (cause instanceof RuntimeException exception) throw exception;
+			if (cause instanceof Error failure) throw failure;
+			throw new AssertionError(cause);
+		} catch (ReflectiveOperationException error) { throw new AssertionError(error); }
 	}
 
 }
