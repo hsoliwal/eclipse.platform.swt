@@ -62,6 +62,9 @@ public abstract class Control extends Widget implements Drawable {
 	/* GTK4: where the pointer last moved over this control, relative to it */
 	double pointerX, pointerY;
 	long redrawWindow, enableWindow, provider;
+	/* Per-widget, style-context-owned CSS provider for explicit native relief. */
+	private int nativeBorderRelief = SWT.DEFAULT;
+	private long nativeBorderProvider;
 	int drawCount, backgroundAlpha = 255;
 	long dragGesture, zoomGesture, rotateGesture, panGesture;
 	Composite parent;
@@ -3290,6 +3293,58 @@ GdkRGBA getBaseGdkRGBA () {
 }
 
 /**
+ * Returns the opt-in native border relief, or SWT.DEFAULT before an override.
+ *
+ * @return SWT.DEFAULT or the explicit SWT.SHADOW_* value
+ */
+public int getBorderRelief () {
+	checkWidget ();
+	return nativeBorderRelief;
+}
+
+/**
+ * Applies CSS relief to this existing GtkWidget's native style context.
+ * The foreground/background provider remains independent. A higher provider
+ * priority lets this explicit override supersede Group's constructor shadow.
+ *
+ * @param relief SWT.DEFAULT, SWT.SHADOW_NONE, SWT.SHADOW_IN,
+ *     SWT.SHADOW_OUT, SWT.SHADOW_ETCHED_IN or SWT.SHADOW_ETCHED_OUT
+ */
+public void setBorderRelief (int relief) {
+	checkWidget ();
+	if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+	if (relief == nativeBorderRelief) return;
+	long context = GTK.gtk_widget_get_style_context (handle);
+	if (context == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+	if (nativeBorderProvider == 0 && relief != SWT.DEFAULT) {
+		long candidate = GTK.gtk_css_provider_new ();
+		if (candidate == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+		GTK.gtk_style_context_add_provider (context, candidate,
+				GTK.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 1);
+		/* GtkStyleContext retains the reference until widget destruction. */
+		OS.g_object_unref (candidate);
+		nativeBorderProvider = candidate;
+	}
+	if (nativeBorderProvider != 0) {
+		String declaration = NativeBorderRelief.gtkDeclaration (relief);
+		String css = "";
+		if (!declaration.isEmpty ()) {
+			String name = display.gtk_widget_class_get_css_name (handle);
+			css = name + " { " + declaration + " }";
+		}
+		byte[] bytes = Converter.wcsToMbcs (css, true);
+		if (GTK.GTK4) {
+			GTK4.gtk_css_provider_load_from_data (nativeBorderProvider, bytes, -1);
+		} else {
+			GTK3.gtk_css_provider_load_from_data (nativeBorderProvider, bytes, -1, null);
+		}
+	}
+	nativeBorderRelief = relief;
+	GTK.gtk_widget_queue_resize (handle);
+	GTK.gtk_widget_queue_draw (handle);
+}
+
+/**
  * Returns the receiver's border width in points.
  *
  * @return the border width
@@ -3304,8 +3359,15 @@ public int getBorderWidth () {
 }
 
 int getBorderWidthInPixels () {
-	checkWidget();
-	return 0;
+	checkWidget ();
+	if (nativeBorderRelief == SWT.DEFAULT || nativeBorderRelief == SWT.SHADOW_NONE) return 0;
+	long context = GTK.gtk_widget_get_style_context (handle);
+	if (context == 0) return 0;
+	GtkBorder metrics = new GtkBorder ();
+	gtk_style_context_get_border (context, GTK.gtk_widget_get_state_flags (handle), metrics);
+	/* SWT exposes one symmetric width; return the largest actual themed side. */
+	return Math.max (Math.max (metrics.left, metrics.right),
+			Math.max (metrics.top, metrics.bottom));
 }
 
 int getClientWidth () {
@@ -5211,6 +5273,7 @@ void release (boolean destroy) {
 void releaseHandle () {
 	super.releaseHandle ();
 	fixedHandle = 0;
+	nativeBorderProvider = 0; // released by GtkStyleContext
 	parent = null;
 	cairoDisposeRegion();
 }
