@@ -1358,6 +1358,44 @@ public void test_nativeBorderRelief_cocoaNativeBezel() {
 }
 
 @Test
+public void test_nativeBorderRelief_gtkScrollableBorderHosts() {
+    if (!"gtk".equals(SWT.getPlatform())) return;
+    Control[] scrollables = {
+            new org.eclipse.swt.widgets.List(shell, SWT.BORDER),
+            new org.eclipse.swt.widgets.Text(shell, SWT.BORDER | SWT.MULTI),
+            new org.eclipse.swt.widgets.Tree(shell, SWT.BORDER)
+    };
+    try {
+        shell.open();
+        for (Control control : scrollables) {
+            control.setBounds(10, 10, 160, 90);
+            org.eclipse.swt.graphics.Rectangle original = control.getBounds();
+            for (int relief : new int[] {
+                    SWT.SHADOW_IN, SWT.SHADOW_OUT,
+                    SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT
+            }) {
+                control.setBorderRelief(relief);
+                assertEquals(relief, control.getBorderRelief());
+                assertEquals(original, control.getBounds(),
+                        "styling the native frame cannot change the outer SWT Control bounds");
+                control.redraw();
+                control.update();
+            }
+            control.setBorderStyle(SWT.SHADOW_IN);
+            assertEquals(SWT.SHADOW_IN, control.getBorderRelief(),
+                    "the border-style alias must not create another CSS owner");
+            control.setBorderRelief(SWT.DEFAULT);
+            assertEquals(SWT.DEFAULT, control.getBorderRelief());
+            assertEquals(original, control.getBounds());
+        }
+    } finally {
+        for (Control control : scrollables) {
+            if (!control.isDisposed()) control.dispose();
+        }
+    }
+}
+
+@Test
 public void test_nativeBorderRelief_gtkDeclarations() {
     assertTrue(org.eclipse.swt.internal.NativeBorderRelief
             .gtkDeclaration(SWT.SHADOW_IN).contains("inset"));
