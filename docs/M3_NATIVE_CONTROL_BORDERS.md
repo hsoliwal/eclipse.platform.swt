@@ -161,3 +161,36 @@ This remains a **draft** feature and must not be merged or presented as fully
 cross-platform until the specified tests, Apple/Android native pixels,
 Win32/GTK trim and lifecycle contracts, and current-master collision gates
 are satisfied.
+
+## Win32 post-#532 frame invalidation and direct-control relief
+
+PR #532 defines Win32's existing *last explicit setter wins* contract:
+`Composite.setBevelBorder` retains its own saved selection; a later
+`Control.setBorderRelief` temporarily overrides the visible border; restoring
+`SWT.DEFAULT` reveals that saved Composite bevel. A subsequent
+`setBevelBorder` resets the Control override. This contract is preserved.
+
+A direct `Composite` or `Canvas` has one GDI `DrawEdge` painter in
+`Composite.wmNCPaint`, which requires `WS_EX_CLIENTEDGE` non-client trim.
+The existing `Control.setBorderRelief(SWT.SHADOW_OUT)` originally selected
+`WS_EX_WINDOWEDGE` uniformly, preventing that painter from handling the
+outset case. For exact direct `Composite` or `Canvas`, select CLIENTEDGE
+for an explicit SHADOW_OUT; all other controls retain the existing WINDOWEDGE
+selection. Constructor SWT style bits, native HWND and JNI bindings are
+unchanged.
+
+Two etched modes use the same extended Win32 frame bits but different
+`DrawEdge` flags. A client-only `InvalidateRect` does not guarantee a new
+non-client paint. Use the *existing* `OS.RedrawWindow` JNI method with
+`RDW_INVALIDATE | RDW_FRAME` after any genuine relief transition, including
+SWT.DEFAULT restoration and etched-to-etched swaps. Unchanged relief remains
+a no-op. Request layout if and only if the measured native border width
+changed, with original widget disposal checks preserved.
+
+Win32-specific regression coverage must assert native CLIENTEDGE selection
+for direct Composite/Canvas raised relief, preserve WINDOWEDGE selection
+for other native peers, verify inverse setter precedence, and exercise
+etched transitions/reset without falsely equating geometry assertions with
+screen-pixel proof. Native Win32 screenshots at multiple DPIs, dark/high-
+contrast themes, RTL, scrolling, printing and Maya compatibility remain
+release gates and must not be claimed from static inspection alone.
