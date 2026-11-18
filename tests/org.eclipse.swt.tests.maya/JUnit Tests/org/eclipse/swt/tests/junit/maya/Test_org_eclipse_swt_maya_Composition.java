@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.eclipse.swt.SWT;
@@ -21,6 +22,7 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.internal.maya.MayaComposition;
+import org.eclipse.swt.internal.maya.MayaFramePacket;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.jupiter.api.AfterEach;
@@ -200,6 +202,78 @@ public class Test_org_eclipse_swt_maya_Composition {
 		assertNotEquals(0, MayaComposition.uploadDirty(red, patches, rects, Integer.MAX_VALUE));
 		frame(new long[] { red }, 20, 20, 1, 1);
 		assertEquals(BLUE, screen(24, 24), "invalid batched frames must preserve the prior compositor surface");
+	}
+
+	@Test
+	public void directPacketAndLegacyFramesHaveIdenticalNativePixels() {
+		// Older fragments did not export _nApplyPacked. Ordinary SWT tests
+		// may skip that new route; native release qualification must set
+		// -Dswt.maya.packed.required=true and must not accept a skipped gate.
+		int version;
+		try {
+			version = MayaComposition._nFramePacketVersion();
+		} catch (UnsatisfiedLinkError oldNativeLibrary) {
+			version = -1;
+		}
+		if (Boolean.getBoolean("swt.maya.packed.required")) {
+			assertEquals(MayaFramePacket.VERSION, version, "required Maya packet JNI ABI is missing");
+		}
+		assumeTrue(version == MayaFramePacket.VERSION, "older Maya native ABI has no packed frame");
+		long red = layer(OPAQUE_RED), blue = layer(OPAQUE_BLUE);
+		long[] order = { red, blue };
+		float[] props = { 20, 20, 1, 1, 60, 60, 0.5f, 1 };
+		frame(order, props); // established legacy native pixel oracle
+		RGB redOnly = screen(30, 30);
+		RGB overlap = screen(80, 80);
+
+		MayaFramePacket.Encoder encoder = new MayaFramePacket.Encoder();
+		ByteBuffer packet = encoder.encode(order, props, order.length, 1L);
+		paints = 0;
+		assertEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(redOnly, screen(30, 30));
+		assertNear(overlap, screen(80, 80));
+		assertEquals(0, paints, "the packed transaction still composites native pixels");
+
+		// Property-only packet: same Z, changed opacity and X offset.
+		props[6] = 1;
+		props[4] = 110;
+		packet = encoder.encode(order, props, order.length, 2L);
+		assertEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(RED, screen(80, 80));
+		assertEquals(BLUE, screen(140, 140));
+
+		// Pixel-only upload MUST be published by a packed frame even though
+		// all layer properties and Z-order are unchanged.
+		int[] green = new int[SIZE * SIZE];
+		Arrays.fill(green, 0xFF00FF00);
+		assertEquals(0, MayaComposition._nUpload(red, green));
+		assertEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(new RGB(0, 255, 0), screen(30, 30));
+		RGB committed = screen(30, 30);
+
+		// Invalid packets, stale/foreign handles, and duplicate IDs may
+		// never change the last successfully committed native frame.
+		packet.putInt(0, 0);
+		assertNotEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(committed, screen(30, 30));
+		packet = encoder.encode(order, props, order.length, 3L);
+		packet.putLong(MayaFramePacket.HEADER_BYTES + MayaFramePacket.RECORD_BYTES, red);
+		assertNotEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(committed, screen(30, 30));
+		packet = encoder.encode(order, props, order.length, 4L);
+		packet.putLong(MayaFramePacket.HEADER_BYTES, Long.MAX_VALUE);
+		assertNotEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(committed, screen(30, 30));
+
+		// A normal legacy frame must still work after a packed transaction.
+		frame(order, props);
+		assertEquals(committed, screen(30, 30));
 	}
 
 	@Test
