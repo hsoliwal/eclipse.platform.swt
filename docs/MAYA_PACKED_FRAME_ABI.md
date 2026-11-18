@@ -76,8 +76,10 @@ ABI and failure behavior:
 
 The Win32 `MayaNativeLayers` adapter is unchanged by default.
 Only `-Dswt.maya.packedFrame=true` enables the optional packet route, and
-only for 64..65,536 layers. A legacy Maya DLL/SO lacking either new JNI export
-falls back to the original seven-symbol path (without replacing the DLL).
+only for 64..65,536 layers. Native packet-version negotiation is cached once
+per backend class, not performed on every frame. A legacy Maya DLL/SO lacking
+either new JNI export falls back to the original seven-symbol path (without
+replacing the DLL); a standalone native-symbol test verifies this fallback.
 Failure to find the protocol version disables the attempted route; the
 seven old method descriptors are unchanged.
 
