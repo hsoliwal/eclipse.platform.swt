@@ -13,9 +13,12 @@ package org.eclipse.swt.tests.junit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
@@ -196,6 +199,41 @@ public class Test_org_eclipse_swt_widgets_Synchronizer {
 			assertTrue (done.await (2, TimeUnit.SECONDS), "disposal left syncExec worker blocked");
 			assertNotNull (failure.get (), "disposing a queued syncExec must fail, not run");
 		} finally {
+			if (!display.isDisposed ()) display.dispose ();
+		}
+	}
+
+
+	@Test
+	@Timeout(value = 8, unit = TimeUnit.SECONDS)
+	public void test_cpuCalculationPublishesOnlyOnSwtThread () throws InterruptedException {
+		Display display = Display.getDefault ();
+		Synchronizer synchronizer = display.getSynchronizer ();
+		ExecutorService workers = Executors.newSingleThreadExecutor ();
+		Thread ui = Thread.currentThread ();
+		AtomicReference<Thread> producerThread = new AtomicReference<> ();
+		AtomicReference<Thread> consumerThread = new AtomicReference<> ();
+		AtomicInteger published = new AtomicInteger ();
+		Object viewportKey = new Object ();
+		int [] detachedRows = {3, 5, 7, 9};
+		try {
+			workers.execute (() -> {
+				producerThread.set (Thread.currentThread ());
+				int sum = 0;
+				for (int row : detachedRows) sum += row;
+				final int cpuResult = sum;
+				synchronizer.asyncExec (Synchronizer.MODEL, viewportKey, () -> {
+					consumerThread.set (Thread.currentThread ());
+					published.set (cpuResult);
+				});
+			});
+			dispatchUntil (display, () -> consumerThread.get () != null, 4000);
+			assertEquals (24, published.get ());
+			assertEquals (ui, consumerThread.get (), "the native publication must be on Display thread");
+			assertNotNull (producerThread.get (), "worker did not calculate");
+			assertNotEquals (ui, producerThread.get (), "CPU calculation ran on GUI thread");
+		} finally {
+			workers.shutdownNow ();
 			if (!display.isDisposed ()) display.dispose ();
 		}
 	}
