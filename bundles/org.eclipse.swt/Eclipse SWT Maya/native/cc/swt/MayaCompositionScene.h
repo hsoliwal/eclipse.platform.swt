@@ -16,11 +16,13 @@
 namespace swt_maya {
 
 constexpr int SCENE_FLOATS = 14;
+constexpr int MAX_SCENE_LAYERS = 65536; // follows the existing packed-frame transport limit
 constexpr int SCENE_CLIP = 1;
 constexpr float SCENE_LIMIT = 1048576.0f;
 
 inline bool validSceneArrays(int count, int handles, int floats, int flags) noexcept {
-    return count >= 0 && handles >= 0 && floats >= 0 && flags >= 0
+    return count >= 0 && count <= MAX_SCENE_LAYERS
+        && handles >= 0 && floats >= 0 && flags >= 0
         && count <= handles && count <= flags && count <= floats / SCENE_FLOATS;
 }
 
