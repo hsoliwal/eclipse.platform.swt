@@ -25,6 +25,11 @@ This rule overrides any older text in this file.
 
 
 
+
+## Priority 0 — additive best-of-best API superset, full-history merge custody (2026-11-18)
+
+Before any code merge, preserve the accepted upstream plus fork-specific **backward-compatible superset** (public API/ABI, behavior, fixes, native lifecycle, optimizations and applicable test contracts). Compare competing historical branches, tags and PRs and choose the best *proven* algorithm/implementation; never silently overwrite or delete an earlier accepted capability. Review earliest reachable ancestors through all relevant heads, both merge parents, merged/closed/reverted PRs, rename/delete history and regressions; never rebase `develop`. Record in the canonical Synexia last-checked register a pinned ref/head SHA, checked date, scope, oldest ancestry covered, last verified SHA, PR/branch coverage, lost-code findings, and PENDING/PARTIAL/VERIFIED/HOLD. A new HEAD snapshot is **not** a complete history audit. Source changes remain recipe-first and qualified in Synexia; this clean receiving product accepts executed postimages and product-native tests, not recipe copies or evidence crates. Prefer Apache-2.0 for newly authored separable contributions, but retain original OpenJDK/Eclipse/upstream licenses and NOTICE; LLM rewriting of donor code does not erase copyright or license obligations. Canonical policy: [Synexia full-history superset merge](https://github.com/hsoliwal/com.synexia/blob/governance/superset-history-last-checked-20261118/docs/M3-SCALE/invariants/SYNEXIA-ADDITIVE-MERGE-FULL-HISTORY-20261118.md). Initial 236-repo inventory is PENDING, not a certified historical audit.
+
 ## Project Overview
 
 This is the **Eclipse Platform SWT** (Standard Widget Toolkit) repository - a cross-platform GUI library for JVM-based desktop applications. SWT is the foundation for the Eclipse IDE and many other desktop applications.
