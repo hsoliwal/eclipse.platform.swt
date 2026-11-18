@@ -52,9 +52,11 @@ struct Composition {
     IDCompositionTarget *target = nullptr;
     IDCompositionVisual *root = nullptr;
     std::vector<Layer *> layers;
-    // Native copies of the active JNI prefix, reused across frames on the composition's UI thread.
+    // Native copies of the active JNI prefix, reused across ordinary UI-thread frames.
+    // Nested native updates must not replace an outer update's in-use prefix.
     std::vector<jlong> frameOrder;
-    std::vector<jfloat> frameProperties;
+    std::vector<jfloat> frameProps;
+    int activeApplyDepth = 0;
 };
 
 void destroy(Layer *layer) {
@@ -151,19 +153,25 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
     Composition *c = reinterpret_cast<Composition *>(composition);
     if (!c || !layers || !props || count < 0 || count > std::numeric_limits<jsize>::max() / 4
         || env->GetArrayLength(layers) < count || env->GetArrayLength(props) < count * 4) return E_INVALIDARG;
-    c->frameOrder.resize(static_cast<size_t>(count));
-    c->frameProperties.resize(static_cast<size_t>(count) * 4);
+    std::vector<jlong> nestedOrder;
+    std::vector<jfloat> nestedProps;
+    const bool nested = c->activeApplyDepth != 0;
+    std::vector<jlong> &order = nested ? nestedOrder : c->frameOrder;
+    std::vector<jfloat> &p = nested ? nestedProps : c->frameProps;
+    order.resize(static_cast<size_t>(count));
+    p.resize(static_cast<size_t>(count) * 4);
     if (count > 0) {
-        env->GetLongArrayRegion(layers, 0, count, c->frameOrder.data());
+        env->GetLongArrayRegion(layers, 0, count, order.data());
         if (env->ExceptionCheck()) return E_FAIL;
-        env->GetFloatArrayRegion(props, 0, count * 4, c->frameProperties.data());
+        env->GetFloatArrayRegion(props, 0, count * 4, p.data());
         if (env->ExceptionCheck()) return E_FAIL;
     }
+    ++c->activeApplyDepth;
     HRESULT hr = c->root->RemoveAllVisuals();
     for (jint i = 0; SUCCEEDED(hr) && i < count; i++) {
-        Layer *layer = reinterpret_cast<Layer *>(c->frameOrder[i]);
+        Layer *layer = reinterpret_cast<Layer *>(order[i]);
         if (!layer) continue;
-        const jfloat *q = &c->frameProperties[static_cast<size_t>(i) * 4];
+        const jfloat *q = &p[static_cast<size_t>(i) * 4];
         hr = layer->visual->SetOffsetX(q[0]);
         if (SUCCEEDED(hr)) hr = layer->visual->SetOffsetY(q[1]);
         if (SUCCEEDED(hr)) hr = layer->effect->SetOpacity(q[2]);
@@ -171,6 +179,7 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
         if (SUCCEEDED(hr) && q[3] != 0.0f) hr = c->root->AddVisual(layer->visual, FALSE, nullptr);
     }
     if (SUCCEEDED(hr)) hr = c->device->Commit();
+    --c->activeApplyDepth;
     return hr;
 }
 
