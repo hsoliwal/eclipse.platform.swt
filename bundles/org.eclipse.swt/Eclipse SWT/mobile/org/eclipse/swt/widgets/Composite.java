@@ -34,6 +34,28 @@ public class Composite extends Scrollable {
 		super(parent, style, softwareScroll);
 	}
 	Composite(Display display, int style) { super(display, style); }
+
+	/**
+	 * Compatibility alias over the original Control's native border relief.
+	 * No second mobile peer, border painter or lifecycle state is introduced.
+	 */
+	public int getBevelBorder() {
+		checkWidget();
+		int relief = getBorderRelief();
+		return relief == SWT.DEFAULT || relief == SWT.SHADOW_NONE ? SWT.NONE : relief;
+	}
+
+	public void setBevelBorder(int border) {
+		checkWidget();
+		if (border == SWT.NONE || border == SWT.SHADOW_NONE) {
+			setBorderRelief(SWT.DEFAULT);
+			return;
+		}
+		if (border != SWT.SHADOW_IN && border != SWT.SHADOW_OUT
+				&& border != SWT.SHADOW_ETCHED_IN && border != SWT.SHADOW_ETCHED_OUT)
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		setBorderRelief(border);
+	}
 	@Override protected void checkSubclass() { }
 	void addChild(Control child) { if (childCount == children.length) children = Arrays.copyOf(children, childCount + 8); children[childCount++] = child; }
 	void removeChild(Control child) { for (int i = 0; i < childCount; i++) if (children[i] == child) { System.arraycopy(children, i + 1, children, i, --childCount - i); children[childCount] = null; break; } }

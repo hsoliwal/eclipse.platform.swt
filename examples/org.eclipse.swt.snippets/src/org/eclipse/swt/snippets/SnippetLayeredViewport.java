@@ -48,10 +48,36 @@ public class SnippetLayeredViewport {
                     }
                 });
         yellow.setOpacity(160);
+        LayeredViewport.LayerGroup group =
+                view.addLayerGroup("annotations", 170, 120, 230, 145);
+        group.addPaintChild("group background", 0, 0, 230, 145, (gc, context) -> {
+            Color before = gc.getBackground();
+            try {
+                gc.setBackground(display.getSystemColor(SWT.COLOR_GRAY));
+                gc.fillRectangle(context.clip());
+            } finally {
+                gc.setBackground(before);
+            }
+        });
+        group.addPaintChild("group highlight", 45, 30, 150, 90, (gc, context) -> {
+            Color before = gc.getBackground();
+            try {
+                gc.setBackground(display.getSystemColor(SWT.COLOR_CYAN));
+                gc.fillRectangle(context.clip());
+            } finally {
+                gc.setBackground(before);
+            }
+        });
+        group.getLayer().setOpacity(170);
         view.setOrigin(90, 70);
         view.addListener(SWT.MouseDown, event -> {
             LayeredViewport.Layer picked = view.hitTest(event.x, event.y);
-            shell.setText(picked == null ? "No layer" : "Selected: " + picked.getName());
+            if (picked == group.getLayer()) {
+                LayeredViewport.LayerGroup.Child child = group.hitTestChild(event.x, event.y);
+                shell.setText(child == null ? "No group child" : "Selected child: " + child.getName());
+            } else {
+                shell.setText(picked == null ? "No layer" : "Selected: " + picked.getName());
+            }
         });
         shell.setSize(720, 520);
         shell.open();

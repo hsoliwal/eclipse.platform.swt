@@ -208,3 +208,82 @@ and reused after warming. Nested paint work gets separate temporary space.
 This does **not** claim native UI reentrancy or disposal behavior has been
 qualified for all SWT backends; focused native visual tests and the canonical
 source-sealed Synexia result-only handoff are still required.
+
+
+## Composited layer groups (follow-up)
+
+A group is represented by one existing painter Layer in the parent Z-stack,
+with an array-backed, independently reorderable set of local painted or raster
+children. The group root is the sole top-level layer, so moving it in Z is
+atomic and it needs no native child controls. The root's world bounds define
+the group's local origin and clip. Changing those bounds moves every child
+together; each child stores relative bounds.
+
+~~~java
+LayeredViewport.LayerGroup group =
+    viewport.addLayerGroup("Annotations", 100, 200, 800, 600);
+
+group.addPaintChild("labels", 10, 10, 200, 100, (gc, ctx) -> {
+    Point at = ctx.toScreen(10, 10);
+    gc.drawText("Important", at.x, at.y);
+});
+group.addImageChild("raster", borrowedImage, 200, 100);
+
+group.getLayer().setOpacity(160); // completed group's alpha, not each child
+group.getLayer().setPinned(SWT.VERTICAL);
+group.getLayer().moveTo(viewport.getLayers().length - 1);
+~~~
+
+GroupPaintContext reports group-to-device coordinates consistent with
+pinned and sticky root layers. group.hitTestChild(x,y) returns the topmost
+visible, unlocked child. The parent Layer exposes the usual pointer listener
+and can use the child query to route events. Group children are not SWT
+Controls and do not own SWT Images; removing children invalidates stable
+handles but never disposes borrowed images.
+
+The current implementation is one group level and supports isolated GROUP
+opacity through the existing paintIsolated backing-store path. Children paint
+normally within the group. They do not independently expose blend modes,
+opacity, transforms, arbitrary alpha masks or native widgets. A group is
+repainted only when its parent scene is damaged. Child traversal uses an array snapshot for up to 32 children, then the existing
+LayerRectIndex with group-local bounds for paint and pick queries. Sparse group
+views reject offscreen children without scanning every child; overlapping
+rectangles can still require linear work.
+A child content change must use its setters or call
+group.getLayer().redraw() explicitly. Existing retained composites may cache
+the final group image but no per-group spatial index or tile LRU exists yet.
+
+Limitations: setBlendMode on a painter root still follows normal painter
+blending; non-normal grouped blending and pass-through groups require a later
+compositor pass. Group children do not participate in native window-system Z,
+focus, accessibility, or IME themselves. OS child Controls should continue
+to use addControlLayer.
+
+Verification added: group Z-order and root translation, child pick/visibility/
+lock/snapshot identity, local clipping, and an SWT pixel oracle asserting
+that overlap is resolved before the GROUP opacity is applied. The native
+Tycho/GTK/Win32/Cocoa suites still need to run before promoting the feature.
+
+## Optional native device-loss containment (Win32 Maya)
+
+The native compositor is still **optional**. If the existing DirectComposition
+submission path fails, `LayeredViewport` detaches its native layers, disposes
+the failed composition and redraws those layer bounds through the original
+SWT painted backing store. There is no silent recursive GPU reinitialization.
+
+Applications that know their display/graphics device has recovered may call
+`viewport.retryNativeComposition()` explicitly from the SWT UI thread.
+The method refuses paint/native-frame/model-batch reentrancy, issues at most
+one creation attempt per call, then reuploads borrowed images via the same
+`NativeLayers` backend and returns whether the composition is available.
+If native recreation or frame commit fails, ordinary software painting remains
+authoritative; no automatic retry loop starts.
+
+The Windows Maya owner validates the DirectComposition device state before
+native uploads and every frame (even an unchanged-property frame). Lost
+devices report their HRESULT and force native scene-cache invalidation. That
+failure reaches the already established painted fallback.
+
+See [MAYA_DEVICE_LOSS_RECOVERY.md](MAYA_DEVICE_LOSS_RECOVERY.md) for the
+portable C++ health oracle, explicit recovery contract, native UI ownership,
+test coverage, and still-unexecuted Windows hardware release gates.

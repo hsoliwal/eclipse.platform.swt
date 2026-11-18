@@ -50,6 +50,8 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_custom_CCombo.class, //
 		Test_org_eclipse_swt_custom_CLabel.class, //
 		Test_org_eclipse_swt_custom_LayeredViewport.class, //
+		Test_org_eclipse_swt_custom_LayeredRibbon.class, //
+		Test_org_eclipse_swt_custom_LayeredPageDeck.class, //
 		Test_org_eclipse_swt_custom_CTabFolder.class, //
 		Test_org_eclipse_swt_custom_CTabFolder_SameColour.class, //
 		Test_org_eclipse_swt_custom_SameFontAndColour.class, //

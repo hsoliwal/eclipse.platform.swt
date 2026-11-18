@@ -161,6 +161,42 @@ GdkRGBA getContextBackgroundGdkRGBA () {
 	return super.getContextBackgroundGdkRGBA();
 }
 
+/**
+ * GTK4 removed GtkFrame's shadow-type property. Apply the existing SWT Group
+ * hint to the frame's native CSS node, leaving its theme-defined colors,
+ * border widths and child layout intact.
+ */
+private void configureGtk4ShadowBorder () {
+	String borderStyle;
+	if ((style & SWT.SHADOW_IN) != 0) {
+		borderStyle = "inset";
+	} else if ((style & SWT.SHADOW_OUT) != 0) {
+		borderStyle = "outset";
+	} else if ((style & SWT.SHADOW_ETCHED_IN) != 0) {
+		borderStyle = "groove";
+	} else if ((style & SWT.SHADOW_ETCHED_OUT) != 0) {
+		borderStyle = "ridge";
+	} else if ((style & SWT.SHADOW_NONE) != 0) {
+		borderStyle = "none";
+	} else {
+		return;
+	}
+	long cssProvider = GTK.gtk_css_provider_new ();
+	if (cssProvider == 0) {
+		error(SWT.ERROR_NO_HANDLES);
+	}
+	try {
+		String css = "frame { border-style: " + borderStyle + "; }";
+		GTK4.gtk_css_provider_load_from_data (
+			cssProvider, Converter.wcsToMbcs (css, true), -1);
+		long context = GTK.gtk_widget_get_style_context (handle);
+		GTK.gtk_style_context_add_provider (
+			context, cssProvider, GTK.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	} finally {
+		OS.g_object_unref (cssProvider);
+	}
+}
+
 @Override
 void createHandle(int index) {
 	state |= HANDLE | THEME_BACKGROUND;
@@ -200,6 +236,7 @@ void createHandle(int index) {
 	if (GTK.GTK4) {
 		OS.swt_fixed_add(fixedHandle, handle);
 		GTK4.gtk_frame_set_child(handle, clientHandle);
+		configureGtk4ShadowBorder ();
 	} else {
 		GTK3.gtk_container_add (fixedHandle, handle);
 		GTK3.gtk_container_add (handle, clientHandle);

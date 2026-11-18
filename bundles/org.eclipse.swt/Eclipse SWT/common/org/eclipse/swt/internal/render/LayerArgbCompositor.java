@@ -14,9 +14,11 @@ import java.util.Objects;
  *
  * <p>Native execution is off by default: enable with
  * {@code -Dswt.layerblend.native=true} and supply a matched library named
- * {@code swt-layerblend}. Missing libraries fall back to Java. The threshold
- * of 8192 pixels avoids crossing the JNI boundary for small draws, but is
- * not a measured performance crossover and must be benchmarked per platform.</p>
+ * {@code swt-layerblend}. Missing libraries fall back to Java. An older JNI
+ * library supporting only the first three modes is detected without changing
+ * its existing ABI, and one without the masked entry point keeps masked
+ * blends in Java. The threshold of 8192 pixels avoids crossing the JNI
+ * boundary for small draws; it is not a measured performance crossover.</p>
  *
  * @noreference This class is not intended to be referenced by clients.
  */
@@ -37,7 +39,8 @@ public final class LayerArgbCompositor {
 	/**
 	 * Composite {@code length} source pixels over the destination. Opacity is
 	 * a global multiplier in [0,255]. The source may alias the destination;
-	 * partially overlapping aliases preserve snapshot semantics without allocation.
+	 * partially overlapping aliases are traversed in the safe direction,
+	 * without making a temporary copy.
 	 * Premultiplied color input is required; this kernel is not a converter.
 	 */
 	public static void composite(int[] dst, int dstOffset, int[] src, int srcOffset,
@@ -51,24 +54,24 @@ public final class LayerArgbCompositor {
 			throw new IndexOutOfBoundsException("invalid scanline bounds");
 		}
 		if (opacity == 0 || length == 0) return;
-		// Memmove traversal preserves snapshot semantics without a temporary array.
-		boolean reverse = dst == src && dstOffset > srcOffset &&
-				(long) dstOffset < (long) srcOffset + length;
-		if (length >= NATIVE_THRESHOLD && dst != src && Native.ENABLED && mode.ordinal() <= Mode.SCREEN.ordinal()) {
+		if (length >= NATIVE_THRESHOLD && dst != src && mode.ordinal() < Native.MODE_COUNT) {
 			blendNative(dst, dstOffset, src, srcOffset, length, opacity, mode.ordinal());
 			return;
 		}
-		for (int i = reverse ? length - 1 : 0, limit = reverse ? -1 : length,
-				step = reverse ? -1 : 1; i != limit; i += step) {
+		boolean backward = dst == src && dstOffset > srcOffset &&
+				(long) dstOffset < (long) srcOffset + length;
+		for (int k = 0; k < length; k++) {
+			int i = backward ? length - 1 - k : k;
 			dst[dstOffset + i] = blendPixel(src[srcOffset + i], dst[dstOffset + i], opacity, mode);
 		}
-
 	}
 
-
-	/** Compose a byte-coverage mask (unsigned 0..255) over premultiplied ARGB.
-	 * 0 leaves the destination untouched, 255 matches {@link #composite}.
-	 * Both the ordinary and optional JNI paths share the same rounding.
+	/**
+	 * Composite {@code length} source pixels over the destination through a byte coverage mask (unsigned 0..255),
+	 * for every {@link Mode}. Coverage 0 leaves the destination pixel untouched; 255 matches {@link #composite}.
+	 * The effective opacity of a pixel is {@code (opacity * coverage + 127) / 255}, the same rounding in Java and
+	 * in the optional JNI kernel. Aliasing follows {@link #composite}: partial overlaps are traversed in the safe
+	 * direction without a temporary copy.
 	 */
 	public static void compositeMasked(int[] dst, int dstOffset, int[] src, int srcOffset,
 			byte[] mask, int maskOffset, int length, int opacity, Mode mode) {
@@ -83,28 +86,25 @@ public final class LayerArgbCompositor {
 			throw new IndexOutOfBoundsException("invalid masked scanline bounds");
 		}
 		if (length == 0 || opacity == 0) return;
-		boolean reverse = dst == src && dstOffset > srcOffset &&
-				(long) dstOffset < (long) srcOffset + length;
-		if (length >= NATIVE_THRESHOLD && dst != src && Native.ENABLED &&
-				!Native.MASK_UNAVAILABLE && mode.ordinal() <= Mode.SCREEN.ordinal()) {
+		if (length >= NATIVE_THRESHOLD && dst != src && mode.ordinal() < Native.MODE_COUNT && !Native.maskUnavailable) {
 			try {
-				blendMaskedNative(dst, dstOffset, src, srcOffset, mask, maskOffset,
-						length, opacity, mode.ordinal());
+				blendMaskedNative(dst, dstOffset, src, srcOffset, mask, maskOffset, length, opacity, mode.ordinal());
 				return;
-			} catch (UnsatisfiedLinkError missingSymbol) {
-				// A legacy optional native library may predate this entry point.
-				Native.MASK_UNAVAILABLE = true;
+			} catch (UnsatisfiedLinkError olderLibrary) {
+				// A library built before the masked entry point keeps its unmasked ABI; use Java from now on.
+				Native.maskUnavailable = true;
 			}
 		}
-		for (int i = reverse ? length - 1 : 0, limit = reverse ? -1 : length,
-				step = reverse ? -1 : 1; i != limit; i += step) {
+		boolean backward = dst == src && dstOffset > srcOffset &&
+				(long) dstOffset < (long) srcOffset + length;
+		for (int k = 0; k < length; k++) {
+			int i = backward ? length - 1 - k : k;
 			int coverage = mul255(opacity, mask[maskOffset + i] & 255);
-			if (coverage != 0) dst[dstOffset + i] = blendPixel(
-					src[srcOffset + i], dst[dstOffset + i], coverage, mode);
+			if (coverage != 0) dst[dstOffset + i] = blendPixel(src[srcOffset + i], dst[dstOffset + i], coverage, mode);
 		}
 	}
 
-	/** Shared per-pixel Java atom (existing integer and W3C blend equations). */
+	/** One premultiplied pixel of {@code mode} at {@code opacity}: the Java atom both scanline paths share. */
 	private static int blendPixel(int s, int d, int opacity, Mode mode) {
 		int sa = mul255(s >>> 24, opacity);
 		int sr = mul255((s >>> 16) & 255, opacity);
@@ -136,8 +136,8 @@ public final class LayerArgbCompositor {
 				b = separable(mode, sb, sa, db, da);
 			}
 		}
-		return (a << 24) | (Math.min(r, a) << 16)
-				| (Math.min(g, a) << 8) | Math.min(b, a);
+		// Fixed-point independent rounding can exceed alpha by one or two.
+		return (a << 24) | (Math.min(r, a) << 16) | (Math.min(g, a) << 8) | Math.min(b, a);
 	}
 
 	private static int mul255(int x, int y) { return (x * y + 127) / 255; }
@@ -183,7 +183,19 @@ public final class LayerArgbCompositor {
 
 	private static final class Native {
 		static final boolean ENABLED = load();
-		static volatile boolean MASK_UNAVAILABLE;
+		static final int MODE_COUNT = modes();
+		/* set once an older library is found to lack the masked entry point */
+		static volatile boolean maskUnavailable;
+		private static int modes() {
+			if (!ENABLED) return 0;
+			try {
+				int supported = nativeModeCount();
+				return supported >= 3 && supported <= Mode.values().length ? supported : 3;
+			} catch (UnsatisfiedLinkError incompatible) {
+				// A pre-extension library has no capability query and supports modes 0..2.
+				return 3;
+			}
+		}
 		private static boolean load() {
 			if (!Boolean.getBoolean("swt.layerblend.native")) return false;
 			try {
@@ -195,10 +207,11 @@ public final class LayerArgbCompositor {
 		}
 	}
 
+	private static native int nativeModeCount();
+
 	private static native void blendNative(int[] dst, int dstOffset,
 			int[] src, int srcOffset, int length, int opacity, int mode);
 
 	private static native void blendMaskedNative(int[] dst, int dstOffset,
-			int[] src, int srcOffset, byte[] mask, int maskOffset,
-			int length, int opacity, int mode);
+			int[] src, int srcOffset, byte[] mask, int maskOffset, int length, int opacity, int mode);
 }
