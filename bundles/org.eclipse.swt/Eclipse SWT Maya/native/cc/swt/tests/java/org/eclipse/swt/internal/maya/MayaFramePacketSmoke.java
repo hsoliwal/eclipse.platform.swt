@@ -56,6 +56,13 @@ public final class MayaFramePacketSmoke {
         ByteBuffer many = codec.encode(manyHandles, manyProps, manyHandles.length, 1034);
         eq(many.remaining() == 32 + 4096 * 32, "bulk payload");
         eq(MayaComposition._nApplyPacked(777L, many, many.remaining()) == 778, "bulk native transfer");
+        // Exercise the actual production MayaNativeLayers entry with opt-in
+        // enabled in the test JVM. Small frames preserve the legacy path.
+        org.eclipse.swt.internal.render.MayaNativeLayers backend =
+                new org.eclipse.swt.internal.render.MayaNativeLayers();
+        eq(backend.apply(999L, handles, props, 2) == 777, "small legacy frame");
+        eq(backend.apply(777L, manyHandles, manyProps, manyHandles.length) == 778,
+                "bulk frame through native backend adapter");
         System.out.println("MayaFramePacketSmoke PASS: JDK21 -Xcheck:jni, 4096-layer native transport");
     }
 }
