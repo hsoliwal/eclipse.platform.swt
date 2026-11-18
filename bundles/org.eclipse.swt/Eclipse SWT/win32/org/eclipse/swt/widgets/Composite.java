@@ -67,7 +67,11 @@ public class Composite extends Scrollable {
 	 */
 	private int nativeBevelEdge () {
 		if (getClass () != Composite.class && getClass () != Canvas.class) return 0;
-		return switch (bevelBorder) {
+		/* Explicit Control relief temporarily takes precedence over our
+		 * existing bevel, without changing the stored bevel selection. */
+		int effective = nativeBorderReliefForPaint ();
+		if (effective == SWT.DEFAULT) effective = bevelBorder;
+		return switch (effective) {
 			case SWT.SHADOW_IN -> OS.EDGE_SUNKEN;
 			case SWT.SHADOW_OUT -> OS.EDGE_RAISED;
 			case SWT.SHADOW_ETCHED_IN -> OS.EDGE_ETCHED;
@@ -133,6 +137,8 @@ public int getBevelBorder () {
  * Applies a native Windows non-client bevel to this Composite or Canvas.
  * No constructor shadow bits are interpreted, because SWT reuses style bits.
  * The original SWT.BORDER frame is restored when the bevel is cleared.
+ * Control.setBorderRelief temporarily overrides this bevel; a later
+ * setBevelBorder call takes precedence and resets that override.
  *
  * @param border one of SWT.NONE, SWT.SHADOW_NONE, SWT.SHADOW_IN,
  * SWT.SHADOW_OUT, SWT.SHADOW_ETCHED_IN, or SWT.SHADOW_ETCHED_OUT
@@ -151,6 +157,9 @@ public void setBevelBorder (int border) {
 	if (getClass () != Composite.class && getClass () != Canvas.class) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
+	/* An explicit Composite bevel is the most recent request; drop any
+	 * Control-level override before modifying the native frame. */
+	if (nativeBorderReliefForPaint () != SWT.DEFAULT) setBorderRelief (SWT.DEFAULT);
 	if (bevelBorder == border) return;
 
 	long hwnd = borderHandle ();

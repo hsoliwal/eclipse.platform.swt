@@ -1287,6 +1287,14 @@ public int getBorderRelief () {
 }
 
 /**
+ * Internal UI-thread accessor for platform non-client painting.
+ * Unlike the public getter it is safe during partial widget construction.
+ */
+int nativeBorderReliefForPaint () {
+	return nativeBorderRelief;
+}
+
+/**
  * Changes the border relief of this control's existing native border handle.
  * SWT.DEFAULT restores the original native edge bits, SHADOW_NONE removes the
  * native edge; this is independent of the original SWT.BORDER style bit.
@@ -6494,6 +6502,9 @@ LRESULT WM_NCPAINT (long wParam, long lParam) {
 	LRESULT result = wmNCPaint(handle, wParam, lParam);
 	if (isDisposed() || !NativeBorderRelief.isEtched(nativeBorderRelief)
 			|| borderHandle() != handle) return result;
+	/* Composite/Canvas has already performed the native DrawEdge pass.
+	 * Performing it again would overwrite the explicit bevel. */
+	if (getClass() == Composite.class || getClass() == Canvas.class) return result;
 	// Let the original class paint its frame before replacing only the bevel pixels.
 	if (result == null) result = new LRESULT(callWindowProc(handle, OS.WM_NCPAINT, wParam, lParam));
 	if (isDisposed()) return result;
