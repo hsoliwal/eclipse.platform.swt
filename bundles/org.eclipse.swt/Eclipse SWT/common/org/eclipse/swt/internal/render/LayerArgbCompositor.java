@@ -4,7 +4,6 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.render;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -38,7 +37,7 @@ public final class LayerArgbCompositor {
 	/**
 	 * Composite {@code length} source pixels over the destination. Opacity is
 	 * a global multiplier in [0,255]. The source may alias the destination;
-	 * partially overlapping aliases are snapshotted to preserve semantics.
+	 * partially overlapping aliases preserve snapshot semantics without allocation.
 	 * Premultiplied color input is required; this kernel is not a converter.
 	 */
 	public static void composite(int[] dst, int dstOffset, int[] src, int srcOffset,
@@ -52,53 +51,93 @@ public final class LayerArgbCompositor {
 			throw new IndexOutOfBoundsException("invalid scanline bounds");
 		}
 		if (opacity == 0 || length == 0) return;
-		if (dst == src && dstOffset != srcOffset &&
-				(long) dstOffset < (long) srcOffset + length &&
-				(long) srcOffset < (long) dstOffset + length) {
-			src = Arrays.copyOfRange(src, srcOffset, srcOffset + length);
-			srcOffset = 0;
-		}
+		// Memmove traversal preserves snapshot semantics without a temporary array.
+		boolean reverse = dst == src && dstOffset > srcOffset &&
+				(long) dstOffset < (long) srcOffset + length;
 		if (length >= NATIVE_THRESHOLD && dst != src && Native.ENABLED && mode.ordinal() <= Mode.SCREEN.ordinal()) {
 			blendNative(dst, dstOffset, src, srcOffset, length, opacity, mode.ordinal());
 			return;
 		}
-		for (int i = 0; i < length; i++) {
-			int s = src[srcOffset + i];
-			int d = dst[dstOffset + i];
-			int sa = mul255(s >>> 24, opacity);
-			int sr = mul255((s >>> 16) & 255, opacity);
-			int sg = mul255((s >>> 8) & 255, opacity);
-			int sb = mul255(s & 255, opacity);
-			int da = d >>> 24;
-			int dr = (d >>> 16) & 255, dg = (d >>> 8) & 255, db = d & 255;
-			int a = sa + mul255(da, 255 - sa);
-			int r, g, b;
-			switch (mode) {
-				case SRC_OVER -> {
-					r = sr + mul255(dr, 255 - sa);
-					g = sg + mul255(dg, 255 - sa);
-					b = sb + mul255(db, 255 - sa);
-				}
-				case MULTIPLY -> {
-					r = mul255(sr, 255 - da) + mul255(dr, 255 - sa) + mul255(sr, dr);
-					g = mul255(sg, 255 - da) + mul255(dg, 255 - sa) + mul255(sg, dg);
-					b = mul255(sb, 255 - da) + mul255(db, 255 - sa) + mul255(sb, db);
-				}
-				case SCREEN -> {
-					r = sr + dr - mul255(sr, dr);
-					g = sg + dg - mul255(sg, dg);
-					b = sb + db - mul255(sb, db);
-				}
-				default -> {
-					r = separable(mode, sr, sa, dr, da);
-					g = separable(mode, sg, sa, dg, da);
-					b = separable(mode, sb, sa, db, da);
-				}
-			}
-			// Fixed-point independent rounding can exceed alpha by one or two.
-			dst[dstOffset + i] = (a << 24) | (Math.min(r, a) << 16)
-					| (Math.min(g, a) << 8) | Math.min(b, a);
+		for (int i = reverse ? length - 1 : 0, limit = reverse ? -1 : length,
+				step = reverse ? -1 : 1; i != limit; i += step) {
+			dst[dstOffset + i] = blendPixel(src[srcOffset + i], dst[dstOffset + i], opacity, mode);
 		}
+
+	}
+
+
+	/** Compose a byte-coverage mask (unsigned 0..255) over premultiplied ARGB.
+	 * 0 leaves the destination untouched, 255 matches {@link #composite}.
+	 * Both the ordinary and optional JNI paths share the same rounding.
+	 */
+	public static void compositeMasked(int[] dst, int dstOffset, int[] src, int srcOffset,
+			byte[] mask, int maskOffset, int length, int opacity, Mode mode) {
+		Objects.requireNonNull(dst, "destination");
+		Objects.requireNonNull(src, "source");
+		Objects.requireNonNull(mask, "mask");
+		Objects.requireNonNull(mode, "mode");
+		if (opacity < 0 || opacity > 255) throw new IllegalArgumentException("opacity outside 0..255");
+		if (length < 0 || dstOffset < 0 || srcOffset < 0 || maskOffset < 0 ||
+				dstOffset > dst.length - length || srcOffset > src.length - length ||
+				maskOffset > mask.length - length) {
+			throw new IndexOutOfBoundsException("invalid masked scanline bounds");
+		}
+		if (length == 0 || opacity == 0) return;
+		boolean reverse = dst == src && dstOffset > srcOffset &&
+				(long) dstOffset < (long) srcOffset + length;
+		if (length >= NATIVE_THRESHOLD && dst != src && Native.ENABLED &&
+				!Native.MASK_UNAVAILABLE && mode.ordinal() <= Mode.SCREEN.ordinal()) {
+			try {
+				blendMaskedNative(dst, dstOffset, src, srcOffset, mask, maskOffset,
+						length, opacity, mode.ordinal());
+				return;
+			} catch (UnsatisfiedLinkError missingSymbol) {
+				// A legacy optional native library may predate this entry point.
+				Native.MASK_UNAVAILABLE = true;
+			}
+		}
+		for (int i = reverse ? length - 1 : 0, limit = reverse ? -1 : length,
+				step = reverse ? -1 : 1; i != limit; i += step) {
+			int coverage = mul255(opacity, mask[maskOffset + i] & 255);
+			if (coverage != 0) dst[dstOffset + i] = blendPixel(
+					src[srcOffset + i], dst[dstOffset + i], coverage, mode);
+		}
+	}
+
+	/** Shared per-pixel Java atom (existing integer and W3C blend equations). */
+	private static int blendPixel(int s, int d, int opacity, Mode mode) {
+		int sa = mul255(s >>> 24, opacity);
+		int sr = mul255((s >>> 16) & 255, opacity);
+		int sg = mul255((s >>> 8) & 255, opacity);
+		int sb = mul255(s & 255, opacity);
+		int da = d >>> 24;
+		int dr = (d >>> 16) & 255, dg = (d >>> 8) & 255, db = d & 255;
+		int a = sa + mul255(da, 255 - sa);
+		int r, g, b;
+		switch (mode) {
+			case SRC_OVER -> {
+				r = sr + mul255(dr, 255 - sa);
+				g = sg + mul255(dg, 255 - sa);
+				b = sb + mul255(db, 255 - sa);
+			}
+			case MULTIPLY -> {
+				r = mul255(sr, 255 - da) + mul255(dr, 255 - sa) + mul255(sr, dr);
+				g = mul255(sg, 255 - da) + mul255(dg, 255 - sa) + mul255(sg, dg);
+				b = mul255(sb, 255 - da) + mul255(db, 255 - sa) + mul255(sb, db);
+			}
+			case SCREEN -> {
+				r = sr + dr - mul255(sr, dr);
+				g = sg + dg - mul255(sg, dg);
+				b = sb + db - mul255(sb, db);
+			}
+			default -> {
+				r = separable(mode, sr, sa, dr, da);
+				g = separable(mode, sg, sa, dg, da);
+				b = separable(mode, sb, sa, db, da);
+			}
+		}
+		return (a << 24) | (Math.min(r, a) << 16)
+				| (Math.min(g, a) << 8) | Math.min(b, a);
 	}
 
 	private static int mul255(int x, int y) { return (x * y + 127) / 255; }
@@ -144,6 +183,7 @@ public final class LayerArgbCompositor {
 
 	private static final class Native {
 		static final boolean ENABLED = load();
+		static volatile boolean MASK_UNAVAILABLE;
 		private static boolean load() {
 			if (!Boolean.getBoolean("swt.layerblend.native")) return false;
 			try {
@@ -157,4 +197,8 @@ public final class LayerArgbCompositor {
 
 	private static native void blendNative(int[] dst, int dstOffset,
 			int[] src, int srcOffset, int length, int opacity, int mode);
+
+	private static native void blendMaskedNative(int[] dst, int dstOffset,
+			int[] src, int srcOffset, byte[] mask, int maskOffset,
+			int length, int opacity, int mode);
 }
