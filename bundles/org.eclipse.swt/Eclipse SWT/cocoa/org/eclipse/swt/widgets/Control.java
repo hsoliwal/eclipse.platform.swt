@@ -80,6 +80,7 @@ public abstract class Control extends Widget implements Drawable {
 	Accessible accessible;
 	boolean inCacheDisplayInRect;
 	boolean touchEnabled;
+	private int nativeBorderRelief = SWT.DEFAULT;
 
 	final static int CLIPPING = 1 << 10;
 	final static int VISIBLE_REGION = 1 << 12;
@@ -1717,6 +1718,26 @@ public Image getBackgroundImage () {
         control = this;
     }
 	return control.backgroundImage;
+}
+
+/**
+ * Returns the requested native border relief; SWT.DEFAULT indicates that the
+ * original platform decoration has not been overridden.
+ */
+public int getBorderRelief () {
+    checkWidget();
+    return nativeBorderRelief;
+}
+
+/**
+ * Cocoa native two-tone bevel rendering is not yet implemented. Refuse a
+ * visible relief rather than pretending that CALayer's flat border is inset.
+ */
+public void setBorderRelief (int relief) {
+    checkWidget();
+    if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (relief != SWT.DEFAULT && relief != SWT.SHADOW_NONE) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+    nativeBorderRelief = relief;
 }
 
 /**
