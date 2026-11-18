@@ -1286,6 +1286,11 @@ public int getBorderRelief () {
     return nativeBorderRelief;
 }
 
+/* Native non-client paint owner: no widget API call or duplicate state. */
+int currentNativeBorderRelief () {
+    return nativeBorderRelief;
+}
+
 /**
  * Changes the border relief of this control's existing native border handle.
  * SWT.DEFAULT restores the original native edge bits, SHADOW_NONE removes the
@@ -1304,6 +1309,7 @@ public void setBorderRelief (int relief) {
     int mask = OS.WS_EX_CLIENTEDGE | OS.WS_EX_WINDOWEDGE | OS.WS_EX_STATICEDGE;
     int exStyle = OS.GetWindowLong(hwnd, OS.GWL_EXSTYLE);
     int nativeStyle = OS.GetWindowLong(hwnd, OS.GWL_STYLE);
+    int previousWidth = getBorderWidthInPixels();
     if (!nativeBorderReliefSaved) {
         originalNativeBorderEdges = exStyle & mask;
         originalNativeBorderStyle = nativeStyle & OS.WS_BORDER;
@@ -1311,7 +1317,10 @@ public void setBorderRelief (int relief) {
     }
     int selected = switch (relief) {
         case SWT.SHADOW_IN, SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT -> OS.WS_EX_CLIENTEDGE;
-        case SWT.SHADOW_OUT -> OS.WS_EX_WINDOWEDGE;
+        // Direct Composite/Canvas paints the raised edge itself and requires
+        // a CLIENTEDGE trim. Other native controls retain WINDOWEDGE.
+        case SWT.SHADOW_OUT -> (getClass() == Composite.class || getClass() == Canvas.class)
+                ? OS.WS_EX_CLIENTEDGE : OS.WS_EX_WINDOWEDGE;
         case SWT.DEFAULT -> originalNativeBorderEdges;
         default -> 0;
     };
@@ -1328,7 +1337,11 @@ public void setBorderRelief (int relief) {
                 OS.SWP_NOMOVE | OS.SWP_NOSIZE | OS.SWP_NOZORDER
                         | OS.SWP_NOACTIVATE | OS.SWP_FRAMECHANGED);
     }
-    if (!isDisposed()) OS.InvalidateRect(hwnd, null, true);
+    if (isDisposed()) return;
+    // Both etched modes have the same native EXSTYLE bits: a client-area
+    // invalidation cannot update the non-client relief ring.
+    OS.RedrawWindow(hwnd, null, 0, OS.RDW_FRAME | OS.RDW_INVALIDATE);
+    if (!isDisposed() && previousWidth != getBorderWidthInPixels()) requestLayout();
 }
 
 /**
@@ -6493,7 +6506,8 @@ LRESULT WM_NCLBUTTONDOWN (long wParam, long lParam) {
 LRESULT WM_NCPAINT (long wParam, long lParam) {
 	LRESULT result = wmNCPaint(handle, wParam, lParam);
 	if (isDisposed() || !NativeBorderRelief.isEtched(nativeBorderRelief)
-			|| borderHandle() != handle) return result;
+			|| borderHandle() != handle
+			|| getClass() == Composite.class || getClass() == Canvas.class) return result;
 	// Let the original class paint its frame before replacing only the bevel pixels.
 	if (result == null) result = new LRESULT(callWindowProc(handle, OS.WM_NCPAINT, wParam, lParam));
 	if (isDisposed()) return result;

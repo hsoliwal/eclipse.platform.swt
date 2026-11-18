@@ -58,7 +58,6 @@ public class Composite extends Scrollable {
 	int layoutCount, backgroundMode;
 
 	static final int TOOLTIP_LIMIT = 4096;
-	private int bevelBorder;
 
 	/*
 	 * Composite and Canvas constructor bits cannot encode a bevel: SWT style bits
@@ -67,7 +66,7 @@ public class Composite extends Scrollable {
 	 */
 	private int nativeBevelEdge () {
 		if (getClass () != Composite.class && getClass () != Canvas.class) return 0;
-		return switch (bevelBorder) {
+		return switch (currentNativeBorderRelief ()) {
 			case SWT.SHADOW_IN -> OS.EDGE_SUNKEN;
 			case SWT.SHADOW_OUT -> OS.EDGE_RAISED;
 			case SWT.SHADOW_ETCHED_IN -> OS.EDGE_ETCHED;
@@ -119,14 +118,15 @@ public Composite (Composite parent, int style) {
 }
 
 /**
- * Returns the explicitly selected native bevel, or {@link SWT#NONE}.
- * Constructor style bits never select a bevel.
+ * Returns the effective Control border relief using SWT's bevel vocabulary.
+ * SWT.DEFAULT and SWT.SHADOW_NONE both read as SWT.NONE; getBorderRelief()
+ * distinguishes restoring the original native frame from suppressing it.
  *
- * @return a SHADOW_IN, SHADOW_OUT, SHADOW_ETCHED_IN, SHADOW_ETCHED_OUT or NONE value
+ * @return SWT.NONE or one of the four supported SWT.SHADOW_* relief values
  */
 public int getBevelBorder () {
-	checkWidget ();
-	return bevelBorder;
+    int relief = getBorderRelief ();
+    return relief == SWT.DEFAULT || relief == SWT.SHADOW_NONE ? SWT.NONE : relief;
 }
 
 /**
@@ -141,35 +141,19 @@ public int getBevelBorder () {
  * @exception SWTException if called after disposal or from a non-UI thread
  */
 public void setBevelBorder (int border) {
-	checkWidget ();
-	if (border == SWT.SHADOW_NONE) border = SWT.NONE;
-	switch (border) {
-		case SWT.NONE, SWT.SHADOW_IN, SWT.SHADOW_OUT,
-				SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT -> { /* valid */ }
-		default -> error (SWT.ERROR_INVALID_ARGUMENT);
-	}
-	if (getClass () != Composite.class && getClass () != Canvas.class) {
-		error (SWT.ERROR_INVALID_ARGUMENT);
-	}
-	if (bevelBorder == border) return;
-
-	long hwnd = borderHandle ();
-	int exStyle = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
-	int winStyle = OS.GetWindowLong (hwnd, OS.GWL_STYLE);
-	int nextExStyle = exStyle & ~OS.WS_EX_CLIENTEDGE;
-	int nextWinStyle = winStyle & ~OS.WS_BORDER;
-	if (border != SWT.NONE || ((style & SWT.BORDER) != 0 && !isUseWsBorder ())) {
-		nextExStyle |= OS.WS_EX_CLIENTEDGE;
-	} else if ((style & SWT.BORDER) != 0) {
-		nextWinStyle |= OS.WS_BORDER;
-	}
-
-	bevelBorder = border;
-	if (nextExStyle != exStyle) OS.SetWindowLong (hwnd, OS.GWL_EXSTYLE, nextExStyle);
-	if (nextWinStyle != winStyle) OS.SetWindowLong (hwnd, OS.GWL_STYLE, nextWinStyle);
-	OS.SetWindowPos (hwnd, 0, 0, 0, 0, 0, OS.SWP_FRAMECHANGED
-			| OS.SWP_NOACTIVATE | OS.SWP_NOMOVE | OS.SWP_NOSIZE | OS.SWP_NOZORDER);
-	requestLayout ();
+    checkWidget ();
+    if (border == SWT.SHADOW_NONE) border = SWT.NONE;
+    switch (border) {
+        case SWT.NONE, SWT.SHADOW_IN, SWT.SHADOW_OUT,
+                SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT -> { /* valid */ }
+        default -> error (SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (getClass () != Composite.class && getClass () != Canvas.class) {
+        error (SWT.ERROR_INVALID_ARGUMENT);
+    }
+    // The original SWT.BORDER trim is restored by SWT.NONE.
+    // The effective edge and repaint are owned by Control, not a second field.
+    setBorderRelief (border == SWT.NONE ? SWT.DEFAULT : border);
 }
 
 Control [] _getChildren () {
