@@ -13,6 +13,11 @@ int main() {
     assert(validSceneArrays(0, 0, 0, 0));
     assert(validSceneArrays(2, 4, 28, 2));
     assert(validSceneArrays(1, 2, 28, 2));
+    assert(validSceneArrays(MAX_SCENE_LAYERS, MAX_SCENE_LAYERS,
+                            MAX_SCENE_LAYERS * SCENE_FLOATS, MAX_SCENE_LAYERS));
+    assert(!validSceneArrays(MAX_SCENE_LAYERS + 1, MAX_SCENE_LAYERS + 1,
+                             (MAX_SCENE_LAYERS + 1) * SCENE_FLOATS,
+                             MAX_SCENE_LAYERS + 1));
     assert(!validSceneArrays(-1, 2, 28, 2));
     assert(!validSceneArrays(2, 1, 28, 2));
     assert(!validSceneArrays(2, 2, 27, 2));
