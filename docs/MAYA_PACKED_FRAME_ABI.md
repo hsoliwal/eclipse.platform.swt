@@ -83,13 +83,36 @@ replacing the DLL); a standalone native-symbol test verifies this fallback.
 Failure to find the protocol version disables the attempted route; the
 seven old method descriptors are unchanged.
 
-**Important limitation:** v1 JNI decodes a direct ByteBuffer, allocates two
-JNI arrays, and invokes the original compositor's `_nApply`. It currently
-adds work, rather than removing copies or JNI calls. It is a correctness and
-interoperability milestone, NOT an optimization or proof of higher FPS.
-The follow-up native change should consume the decoded contiguous frame
-directly in the DirectComposition transaction *after* reconciling overlapping
-MayaComposition.cc PRs. DO NOT merge this by assuming it is faster.
+**Direct native transaction (follow-up):** the v1 JNI method descriptors
+and on-wire packet remain unchanged. `MayaFramePacket.cc` decodes the
+bounded direct-buffer bytes into a C++ `Frame` and now calls
+`applyDecodedFrame` in the original `MayaComposition.cc` owner.
+A single `applyNativeFrame` template consumes both the legacy JNI array
+view and the packet view, without creating any new `jlongArray` or
+`jfloatArray` in the packed path.
+
+This is **not fully zero-copy**: the Java encoder copies primitive arrays
+into a direct buffer, and the JNI ingress checks/decodes that packet into an
+owned C++ vector before COM calls. That copy is essential for transaction
+stability if Java mutates the originating frame. There is no asserted FPS
+speedup or universal JNI crossover. The existing `CompositionFrameDelta`
+and `CommittedLayerProperties` still decide when native Z order and
+properties change. Critically, a pending successful pixel-only
+`IDCompositionSurface::EndDraw` still causes `Commit`, even if the
+layer properties and Z order are identical.
+
+Both paths validate opaque native handles and composition ownership before
+mutating the COM tree. On native exceptions/Commit failures they invalidate
+cached property/order authority for replay; a successful transaction alone
+publishes new cache truth. The native method, native export list, direct
+frame layout, and feature-negotiation property remain unchanged.
+
+**Release hold:** do not merge based solely on Linux JNI stub tests. Run
+the exact new Win32 `MayaComposition.cc` and `MayaFramePacket.cc` in
+MSVC JDK21/25, rebuild `maya.dll`, run real Maya screen pixels and
+the `-Dswt.maya.packed.required=true` gate, compare legacy versus packet
+Z/offset/opacity/visibility and pixel-only commits, then measure native
+frame latency/copies/allocations before considering opt-in default.
 
 ## Verification and acceptance matrix
 

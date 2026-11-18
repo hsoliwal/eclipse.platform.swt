@@ -65,9 +65,11 @@ public final class MayaComposition {
 
 	/**
 	 * Optional 32-byte-header/32-byte-record little-endian direct frame envelope.
-	 * The native implementation validates all bytes before calling original _nApply;
-	 * malformed buffers return -2, JNI staging failure returns -3. This is
-	 * experimental transport, not a promised performance improvement.
+	 * The native implementation validates the whole buffer and feeds the same
+	 * ownership-checked DirectComposition transaction as the legacy _nApply,
+	 * without reconstructing JNI heap arrays. Malformed buffers return -2;
+	 * native decoding failures return -3. This is experimental transport,
+	 * not a measured performance guarantee.
 	 */
 	public static native int _nApplyPacked(long composition, ByteBuffer packet, int byteLength);
 
