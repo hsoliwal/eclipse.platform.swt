@@ -99,9 +99,9 @@ public class Test_org_eclipse_swt_custom_LayeredRibbon {
             shell.open();
             ribbon.setExpanded(true, true);
             ribbon.close();
-            assertTrue(ribbon.tabs() == null);
-        } catch (org.eclipse.swt.SWTException expectedDisposed) {
-            assertEquals(SWT.ERROR_WIDGET_DISPOSED, expectedDisposed.code);
+            org.eclipse.swt.SWTException error = assertThrows(org.eclipse.swt.SWTException.class,
+                    () -> ribbon.tabs());
+            assertEquals(SWT.ERROR_WIDGET_DISPOSED, error.code);
         } finally {
             if (!shell.isDisposed()) shell.dispose();
             drain(display);
