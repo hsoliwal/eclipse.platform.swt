@@ -1286,6 +1286,18 @@ public int getBorderRelief () {
     return nativeBorderRelief;
 }
 
+/* Package-owned state for native painting, including pre-create style checks.
+ * No second mutable bevel flag in Composite or Canvas. */
+int borderReliefState () {
+    return nativeBorderRelief;
+}
+
+/* Direct Composite/Canvas uses its existing GDI DrawEdge border painter.
+ * Other native controls retain the inherited Win32 OS edge treatment. */
+boolean usesCompositeBevelPainter () {
+    return false;
+}
+
 /**
  * Changes the border relief of this control's existing native border handle.
  * SWT.DEFAULT restores the original native edge bits, SHADOW_NONE removes the
@@ -1311,7 +1323,8 @@ public void setBorderRelief (int relief) {
     }
     int selected = switch (relief) {
         case SWT.SHADOW_IN, SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT -> OS.WS_EX_CLIENTEDGE;
-        case SWT.SHADOW_OUT -> OS.WS_EX_WINDOWEDGE;
+        case SWT.SHADOW_OUT -> usesCompositeBevelPainter()
+                ? OS.WS_EX_CLIENTEDGE : OS.WS_EX_WINDOWEDGE;
         case SWT.DEFAULT -> originalNativeBorderEdges;
         default -> 0;
     };
@@ -6492,7 +6505,7 @@ LRESULT WM_NCLBUTTONDOWN (long wParam, long lParam) {
 
 LRESULT WM_NCPAINT (long wParam, long lParam) {
 	LRESULT result = wmNCPaint(handle, wParam, lParam);
-	if (isDisposed() || !NativeBorderRelief.isEtched(nativeBorderRelief)
+	if (result != null || isDisposed() || !NativeBorderRelief.isEtched(nativeBorderRelief)
 			|| borderHandle() != handle) return result;
 	// Let the original class paint its frame before replacing only the bevel pixels.
 	if (result == null) result = new LRESULT(callWindowProc(handle, OS.WM_NCPAINT, wParam, lParam));
