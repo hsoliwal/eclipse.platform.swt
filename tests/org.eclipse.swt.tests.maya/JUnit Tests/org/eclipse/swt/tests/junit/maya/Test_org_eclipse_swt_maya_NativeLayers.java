@@ -19,6 +19,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
@@ -152,6 +153,33 @@ public class Test_org_eclipse_swt_maya_NativeLayers {
 		pump(300);
 		assertFalse(layer.isNative());
 		assertEquals(RED, screen(55, 25), "painted again, in the same place");
+	}
+
+
+	@Test
+	public void partialNativeImageRedrawChangesOnlyOneRectangle() {
+		Layer layer = viewport.addImageLayer("partially dirty", red, 20, 20);
+		shell.open();
+		pump(250);
+		assertTrue(layer.setNative(true));
+		pump(300);
+		assertEquals(RED, screen(25, 25));
+		long identity = layer.getId();
+		GC ink = new GC(red);
+		try {
+			ink.setBackground(display.getSystemColor(SWT.COLOR_BLUE));
+			ink.fillRectangle(7, 8, 6, 5);
+		} finally {
+			ink.dispose();
+		}
+		paints = 0;
+		layer.redraw(new Rectangle(7, 8, 6, 5));
+		pump(300);
+		assertEquals(BLUE, screen(29, 30), "native changed region");
+		assertEquals(RED, screen(25, 25), "outside dirty region retained");
+		assertEquals(identity, layer.getId(), "stable logical layer identity");
+		assertTrue(layer.isNative());
+		assertEquals(0, paints, "native dirty pixels need no SWT Canvas paint");
 	}
 
 	@Test
