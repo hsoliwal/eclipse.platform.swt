@@ -13,10 +13,13 @@ package org.eclipse.swt.tests.junit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FrameListener;
+import org.eclipse.swt.widgets.Synchronizer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
@@ -28,6 +31,34 @@ import org.junit.jupiter.api.Timeout;
 public class Test_org_eclipse_swt_widgets_Synchronizer {
 
 	private static final int TIMEOUT_MS = 20_000;
+
+	/** A model patch's request for another frame must survive completion of the current frame. */
+	@Test
+	@Timeout(value = TIMEOUT_MS, unit = TimeUnit.MILLISECONDS)
+	public void test_requestFrameDuringModelPatchSchedulesAnotherFrame() {
+		Display display = Display.getDefault();
+		Synchronizer synchronizer = display.getSynchronizer();
+		AtomicInteger frames = new AtomicInteger();
+		AtomicBoolean timedOut = new AtomicBoolean();
+		Runnable timeout = () -> timedOut.set(true);
+		FrameListener listener = (current, generation) -> frames.incrementAndGet();
+		try {
+			synchronizer.addFrameListener(listener);
+			synchronizer.asyncExec(Synchronizer.MODEL, new Object(), synchronizer::requestFrame);
+			display.timerExec(3_000, timeout);
+			while (frames.get() < 2 && !timedOut.get()) {
+				if (!display.readAndDispatch()) {
+					display.sleep();
+				}
+			}
+			assertFalse(timedOut.get(), "A frame requested by a running model patch was lost");
+			assertEquals(2, frames.get(), "Exactly one follow-up frame should be delivered");
+		} finally {
+			display.timerExec(-1, timeout);
+			synchronizer.removeFrameListener(listener);
+			display.dispose();
+		}
+	}
 
 	/**
 	 * Regression test for
