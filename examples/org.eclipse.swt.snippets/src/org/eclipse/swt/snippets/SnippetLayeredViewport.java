@@ -39,8 +39,13 @@ public class SnippetLayeredViewport {
         });
         LayeredViewport.Layer yellow = view.addPaintLayer(
                 "yellow", 260, 180, 400, 260, (gc, context) -> {
-                    gc.setBackground(display.getSystemColor(SWT.COLOR_YELLOW));
-                    gc.fillRectangle(context.clip());
+                    Color before = gc.getBackground();
+                    try {
+                        gc.setBackground(display.getSystemColor(SWT.COLOR_YELLOW));
+                        gc.fillRectangle(context.clip());
+                    } finally {
+                        gc.setBackground(before);
+                    }
                 });
         yellow.setOpacity(160);
         view.setOrigin(90, 70);
