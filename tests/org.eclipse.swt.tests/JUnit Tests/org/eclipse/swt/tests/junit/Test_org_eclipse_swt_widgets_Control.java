@@ -1189,6 +1189,33 @@ public void test_NoExceptionsThrownInFillLayout () {
 }
 
 @Test
+public void test_borderStyleDelegatesToSingleReliefOwner() {
+    Control nativeControl = new org.eclipse.swt.widgets.Composite(shell, SWT.BORDER);
+    try {
+        assertEquals(SWT.DEFAULT, nativeControl.getBorderStyle());
+        assertEquals(nativeControl.getBorderRelief(), nativeControl.getBorderStyle());
+        assertThrows(IllegalArgumentException.class,
+                () -> nativeControl.setBorderStyle(SWT.BORDER));
+        assertEquals(SWT.DEFAULT, nativeControl.getBorderStyle());
+
+        if ("cocoa".equals(SWT.getPlatform())) {
+            assertThrows(org.eclipse.swt.SWTError.class,
+                    () -> nativeControl.setBorderStyle(SWT.SHADOW_OUT));
+            assertEquals(SWT.DEFAULT, nativeControl.getBorderRelief());
+        } else {
+            nativeControl.setBorderStyle(SWT.SHADOW_IN);
+            assertEquals(SWT.SHADOW_IN, nativeControl.getBorderRelief());
+            nativeControl.setBorderRelief(SWT.SHADOW_OUT);
+            assertEquals(SWT.SHADOW_OUT, nativeControl.getBorderStyle());
+            nativeControl.setBorderStyle(SWT.DEFAULT);
+            assertEquals(SWT.DEFAULT, nativeControl.getBorderRelief());
+        }
+    } finally {
+        nativeControl.dispose();
+    }
+}
+
+@Test
 public void test_nativeBorderRelief_contract() {
     Control control = new org.eclipse.swt.widgets.Composite(shell, SWT.NONE);
     try {
