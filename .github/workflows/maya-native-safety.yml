@@ -6,6 +6,11 @@ on:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionScene.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java'
+      - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_Composition.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionSceneTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionDeltaTest.cc'
       - '.github/workflows/maya-native-safety.yml'
@@ -15,6 +20,11 @@ on:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionScene.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java'
+      - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_Composition.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionSceneTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionDeltaTest.cc'
       - '.github/workflows/maya-native-safety.yml'
@@ -46,6 +56,17 @@ jobs:
             -fsanitize=address,undefined -fno-omit-frame-pointer \
             "$root/tests/MayaCompositionDeltaTest.cc" -o /tmp/maya-delta
           /tmp/maya-delta
+      - name: Validate native scene ABI and retained affine/clip state (C++17)
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            "$root/tests/MayaCompositionSceneTest.cc" -o /tmp/maya-scene-check
+          /tmp/maya-scene-check
+          grep -Fq 'Java_org_eclipse_swt_internal_maya_MayaComposition__1nApplyScene' \
+            'bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def'
       - name: Compile non-Windows JNI stub exports
         shell: bash
         run: |
@@ -54,6 +75,8 @@ jobs:
           g++ -std=c++17 -O2 -Wall -Wextra -Werror -fPIC \
             -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
             -shared "$root/MayaComposition.cc" -o /tmp/libmaya-composition-stubs.so
+          nm -D --defined-only /tmp/libmaya-composition-stubs.so |
+            grep -Fq 'Java_org_eclipse_swt_internal_maya_MayaComposition__1nApplyScene'
 
   windows-native-source:
     runs-on: windows-2022
