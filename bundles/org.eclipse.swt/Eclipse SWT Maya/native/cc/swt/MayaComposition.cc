@@ -22,6 +22,7 @@
 #include "MayaCompositionChecks.h"
 #include "MayaCompositionDelta.h"
 #include "MayaCompositionDirty.h"
+#include "MayaDeviceHealth.h"
 #include "MayaFrameDirect.h"
 #include "MayaFrameView.h"
 #include <cstring>
@@ -79,6 +80,23 @@ Composition *getComposition(jlong handle) {
 }
 Layer *getLayer(jlong handle) {
     return liveLayers.get(static_cast<std::uint64_t>(handle));
+}
+
+/*
+ * The OS compositor and its D3D11 device must be recreated together after
+ * DXGI removal/reset. A successful no-op frame still needs this check: merely
+ * comparing Z/property caches cannot establish that retained visuals exist.
+ * The Java LayeredViewport owns the software fallback/recovery boundary.
+ */
+HRESULT checkNativeDevice(Composition *composition) noexcept {
+    BOOL valid = FALSE;
+    HRESULT status = composition->device->CheckDeviceState(&valid);
+    if (SUCCEEDED(status) && valid) return S_OK;
+    const HRESULT reason = composition->d3d
+            ? composition->d3d->GetDeviceRemovedReason() : S_OK;
+    return static_cast<HRESULT>(swt_maya::compositionHealth(
+            static_cast<std::int32_t>(status), valid != FALSE,
+            static_cast<std::int32_t>(reason)));
 }
 
 void destroy(Layer *layer) {
@@ -143,7 +161,8 @@ extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaCompos
 extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nAddLayer
   (JNIEnv *, jclass, jlong composition, jint width, jint height) {
     Composition *c = getComposition(composition);
-    if (!c || !swt_maya::validPixelSize(width, height)) return 0;
+    if (!c || !swt_maya::validPixelSize(width, height) ||
+            FAILED(checkNativeDevice(c))) return 0;
     Layer *layer = new (std::nothrow) Layer();
     if (!layer) return 0;
     layer->owner = c;
@@ -184,6 +203,8 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
   (JNIEnv *env, jclass, jlong layerHandle, jintArray pixels) {
     Layer *layer = getLayer(layerHandle);
     if (!layer || !pixels) return E_POINTER;
+    const HRESULT health = checkNativeDevice(layer->owner);
+    if (FAILED(health)) return health;
     jsize n = env->GetArrayLength(pixels);
     if (!swt_maya::validPixelBuffer(layer->width, layer->height, n)) return E_INVALIDARG;
     const jsize count = static_cast<jsize>(static_cast<std::uint64_t>(layer->width) * layer->height);
@@ -210,6 +231,8 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
   (JNIEnv *env, jclass, jlong layerHandle, jintArray packed, jintArray rectangles, jint count) {
     Layer *layer = getLayer(layerHandle);
     if (!layer || !packed || !rectangles) return E_POINTER;
+    const HRESULT health = checkNativeDevice(layer->owner);
+    if (FAILED(health)) return health;
     const jsize rectangleLength = env->GetArrayLength(rectangles);
     if (count < 0 || count > swt_maya::MAX_DIRTY_RECTS || count > rectangleLength / 4) return E_INVALIDARG;
     try {
@@ -286,6 +309,12 @@ jint applyNativeFrame(Composition *c, const View &view) noexcept {
     const std::size_t count = view.size();
     if (count > static_cast<std::size_t>(std::numeric_limits<jint>::max() / 4))
         return E_INVALIDARG;
+    const HRESULT health = checkNativeDevice(c);
+    if (FAILED(health)) {
+        // Never treat a cached no-op frame as valid after DXGI reset.
+        invalidateFrameCache(c);
+        return health;
+    }
     try {
         // Validation precedes frameDelta.begin, RemoveAllVisuals and all
         // property writes. Duplicate/foreign/stale handles are rejected.
@@ -422,7 +451,11 @@ extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nWaitForCommit
   (JNIEnv *, jclass, jlong composition) {
     Composition *c = getComposition(composition);
-    return c ? c->device->WaitForCommitCompletion() : E_POINTER;
+    if (!c) return E_POINTER;
+    const HRESULT before = checkNativeDevice(c);
+    if (FAILED(before)) return before;
+    const HRESULT waited = c->device->WaitForCommitCompletion();
+    return SUCCEEDED(waited) ? checkNativeDevice(c) : waited;
 }
 
 extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nDispose
