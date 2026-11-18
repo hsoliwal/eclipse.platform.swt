@@ -21,6 +21,7 @@ import org.eclipse.swt.internal.ViewportDamageRegion;
 import org.eclipse.swt.internal.ViewportRuntime;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 
 /**
  * An opt-in, painted Z-stack over a long-coordinate, zoomable XY viewport.
@@ -78,6 +79,22 @@ public final class LayeredViewport extends Canvas {
     }
 
     /**
+     * Immutable pointer notification for an opt-in painted interaction surface.
+     * The original SWT event continues to the Canvas listeners unchanged.
+     * Capture is logical to this Canvas and ends on focus loss or mouse exit;
+     * it does not move OS input ownership away from native child controls.
+     */
+    public record LayerPointerEvent(Layer layer, int type, int x, int y,
+            long worldX, long worldY, int button, int count, int stateMask,
+            int time, boolean captured) { }
+
+    /** An optional handler for pointer events on a painted layer. */
+    @FunctionalInterface
+    public interface LayerPointerListener {
+        void handle(LayerPointerEvent event);
+    }
+
+    /**
      * Stable logical handle. Removing the layer invalidates this handle,
      * but it does not dispose an Image supplied by its application.
      */
@@ -97,6 +114,7 @@ public final class LayeredViewport extends Canvas {
         private Image image;
         private LayerPainter painter;
         private LayerHitTester hitTester;
+        private LayerPointerListener pointerListener;
         private WorldBounds worldClip;
 
         private Layer(long id, String name, long x, long y,
@@ -179,6 +197,7 @@ public final class LayeredViewport extends Canvas {
             invalidate(this);
             opacity = value;
             spatialDirty = true;
+            if (opacity == 0 && capturedLayer == this) clearPointerCapture();
             invalidate(this);
         }
 
@@ -193,6 +212,7 @@ public final class LayeredViewport extends Canvas {
             invalidate(this);
             visible = value;
             spatialDirty = true;
+            if (!visible && capturedLayer == this) clearPointerCapture();
             invalidate(this);
         }
 
@@ -243,6 +263,7 @@ public final class LayeredViewport extends Canvas {
         public void setLocked(boolean value) {
             checked();
             locked = value;
+            if (locked && capturedLayer == this) clearPointerCapture();
         }
 
         /** A replacement raster is borrowed, not copied or owned. */
@@ -266,6 +287,25 @@ public final class LayeredViewport extends Canvas {
         public void setHitTester(LayerHitTester value) {
             checked();
             hitTester = value;
+        }
+
+        /**
+         * Opt into mouse dispatch without allocating a native Control for this
+         * layer. Decoration layers without a handler are skipped by dispatch,
+         * but remain ordinary targets of {@link LayeredViewport#hitTest(int, int)}.
+         */
+        public void setPointerListener(LayerPointerListener value) {
+            checked();
+            if (pointerListener == value) return;
+            if (pointerListener == null && value != null) pointerListenerCount++;
+            if (pointerListener != null && value == null) pointerListenerCount--;
+            pointerListener = value;
+            if (value == null && capturedLayer == this) clearPointerCapture();
+        }
+
+        public LayerPointerListener getPointerListener() {
+            checked();
+            return pointerListener;
         }
 
         public int getZIndex() {
@@ -293,6 +333,8 @@ public final class LayeredViewport extends Canvas {
         public void remove() {
             checked();
             invalidate(this);
+            if (capturedLayer == this) clearPointerCapture();
+            if (pointerListener != null) pointerListenerCount--;
             int index = indexOf(this);
             System.arraycopy(stack, index + 1, stack, index, count - index - 1);
             stack[--count] = null;
@@ -301,6 +343,7 @@ public final class LayeredViewport extends Canvas {
             image = null;
             painter = null;
             hitTester = null;
+            pointerListener = null;
             worldClip = null;
             publishOrder();
         }
@@ -351,6 +394,9 @@ public final class LayeredViewport extends Canvas {
     private int batchDepth;
     private int activePaintFrames;
     private int activeHitQueries;
+    private int pointerListenerCount;
+    private int capturedButtons;
+    private Layer capturedLayer;
     private int count;
     private long nextId = 1;
     private long originX, originY;
@@ -369,6 +415,15 @@ public final class LayeredViewport extends Canvas {
         viewportRuntime.initializeOrigin(0, 0);
         dirty = new ViewportDamageRegion();
         addPaintListener(event -> paintLayers(event.gc));
+        addListener(SWT.MouseDown, this::dispatchPointer);
+        addListener(SWT.MouseUp, this::dispatchPointer);
+        addListener(SWT.MouseMove, this::dispatchPointer);
+        addListener(SWT.MouseEnter, this::dispatchPointer);
+        addListener(SWT.MouseHover, this::dispatchPointer);
+        addListener(SWT.MouseDoubleClick, this::dispatchPointer);
+        addListener(SWT.MouseWheel, this::dispatchPointer);
+        addListener(SWT.MouseExit, event -> clearPointerCapture());
+        addListener(SWT.FocusOut, event -> clearPointerCapture());
         addListener(SWT.Dispose, event -> {
             if (backBuffer != null) backBuffer.dispose();
             if (scratch != null) scratch.dispose();
@@ -379,10 +434,13 @@ public final class LayeredViewport extends Canvas {
                 stack[i].image = null;
                 stack[i].painter = null;
                 stack[i].hitTester = null;
+                stack[i].pointerListener = null;
                 stack[i].worldClip = null;
                 stack[i] = null;
             }
             count = 0;
+            pointerListenerCount = 0;
+            clearPointerCapture();
             paintOrder = new Layer[0];
             spatialIndex.clear();
             Arrays.fill(paintCandidates, null);
@@ -478,11 +536,23 @@ public final class LayeredViewport extends Canvas {
     /** Topmost visible, unlocked layer, using a narrow two-axis spatial query. */
     public Layer hitTest(int deviceX, int deviceY) {
         checkWidget();
+        return queryHit(deviceX, deviceY, worldX(deviceX), worldY(deviceY), false);
+    }
+
+    private long worldX(int deviceX) {
+        return saturatedAdd(originX, floorLong(deviceX / zoom));
+    }
+
+    private long worldY(int deviceY) {
+        return saturatedAdd(originY, floorLong(deviceY / zoom));
+    }
+
+    private Layer queryHit(int deviceX, int deviceY, long worldX, long worldY,
+            boolean withPointerListener) {
         if (!getClientArea().contains(deviceX, deviceY)) return null;
-        WorldPoint point = toWorld(deviceX, deviceY);
         ensureSpatialIndex();
-        int candidates = spatialIndex.query(point.x, point.y,
-                saturatedAdd(point.x, 1), saturatedAdd(point.y, 1));
+        int candidates = spatialIndex.query(worldX, worldY,
+                saturatedAdd(worldX, 1), saturatedAdd(worldY, 1));
         // Hit testers may re-enter the scene; capture handles before callbacks.
         Layer[] hits = activeHitQueries == 0
                 ? growHitCandidates(candidates) : new Layer[candidates];
@@ -493,14 +563,74 @@ public final class LayeredViewport extends Canvas {
         try {
             for (int i = candidates - 1; i >= 0; i--) {
                 Layer layer = hits[i];
-                if (layer.removed || layer.locked || !layer.visible || layer.opacity == 0) continue;
-                if (layer.hitTester == null
-                        || layer.hitTester.contains(layer, point.x, point.y)) return layer;
+                if (layer.removed || layer.locked || !layer.visible || layer.opacity == 0
+                        || (withPointerListener && layer.pointerListener == null)) continue;
+                if ((layer.hitTester == null
+                        || layer.hitTester.contains(layer, worldX, worldY))
+                        && !layer.removed && !layer.locked && layer.visible
+                        && layer.opacity != 0
+                        && (!withPointerListener || layer.pointerListener != null)) return layer;
             }
             return null;
         } finally {
             Arrays.fill(hits, 0, candidates, null);
             activeHitQueries--;
+        }
+    }
+
+    /** Current logical pointer capture, or null. The layer is never a native Control. */
+    public Layer getPointerCapture() {
+        checkWidget();
+        return capturedLayer;
+    }
+
+    /** Releases logical pointer capture without altering SWT/native event routing. */
+    public void releasePointerCapture() {
+        checkWidget();
+        clearPointerCapture();
+    }
+
+    private void clearPointerCapture() {
+        capturedLayer = null;
+        capturedButtons = 0;
+    }
+
+    private static int buttonBit(int button) {
+        return button > 0 && button <= 31 ? 1 << (button - 1) : 0;
+    }
+
+    private void dispatchPointer(Event event) {
+        if (pointerListenerCount == 0 && capturedLayer == null) return;
+        boolean byCapture = capturedLayer != null && event.type != SWT.MouseWheel;
+        long worldX = worldX(event.x), worldY = worldY(event.y);
+        Layer layer = byCapture ? capturedLayer
+                : queryHit(event.x, event.y, worldX, worldY, true);
+        if (layer == null || layer.removed) return;
+        LayerPointerListener listener = layer.pointerListener;
+        if (listener == null) {
+            if (byCapture) clearPointerCapture();
+            return;
+        }
+        int button = buttonBit(event.button);
+        if (event.type == SWT.MouseDown && button != 0) {
+            if (capturedLayer == null) capturedLayer = layer;
+            capturedButtons |= button;
+        }
+        boolean delivered = false;
+        try {
+            listener.handle(new LayerPointerEvent(layer, event.type, event.x, event.y,
+                    worldX, worldY, event.button, event.count, event.stateMask,
+                    event.time, byCapture));
+            delivered = true;
+        } finally {
+            if (!delivered && event.type == SWT.MouseDown && capturedLayer == layer) {
+                capturedButtons &= ~button;
+                if (capturedButtons == 0) clearPointerCapture();
+            }
+            if (event.type == SWT.MouseUp && capturedLayer == layer) {
+                capturedButtons &= ~button;
+                if (capturedButtons == 0 || button == 0) clearPointerCapture();
+            }
         }
     }
 
