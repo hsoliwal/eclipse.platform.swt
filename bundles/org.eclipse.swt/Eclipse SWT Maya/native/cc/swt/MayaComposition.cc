@@ -256,8 +256,10 @@ extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
             c->layers.erase(c->layers.begin() + i);
             c->root->RemoveVisual(layer->visual);
             c->device->Commit();
-            // The next frame rebuilds membership; never dereference a retired layer.
+            // The next frame rebuilds membership and reapplies retained properties.
+            // A failed RemoveVisual/Commit must not make cached state authoritative.
             c->frameDelta.invalidate();
+            for (Layer *remaining : c->layers) remaining->committedProperties.invalidate();
             destroy(layer);
             return;
         }
