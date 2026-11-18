@@ -315,6 +315,10 @@ public final class LayeredViewport extends Canvas {
        image a translucent painter layer is isolated in; made on first paint, remade at a new size */
     private Image backBuffer, scratch;
     private ViewportDamageRegion dirty;
+    // Parent-owned primitive dirty-rectangle snapshot. Nested paint callbacks
+    // borrow independent arrays rather than corrupt an active outer scan.
+    private int[] staleWork = new int[64];
+    private int staleDepth;
 
     public LayeredViewport(Composite parent, int style) {
         super(parent, style | SWT.DOUBLE_BUFFERED);
@@ -465,30 +469,72 @@ public final class LayeredViewport extends Canvas {
         if (damage == null) return;
         ensureBackBuffer(area);
         int n = dirty.rectCount();
-        int[] stale = new int[n * 4];
-        int staleCount = 0;
-        for (int i = 0; i < n; i++) {
-            Rectangle r = intersect(new Rectangle(dirty.x(i), dirty.y(i), dirty.width(i), dirty.height(i)), damage);
-            if (r == null) continue;
-            stale[staleCount * 4] = r.x;
-            stale[staleCount * 4 + 1] = r.y;
-            stale[staleCount * 4 + 2] = r.width;
-            stale[staleCount * 4 + 3] = r.height;
-            staleCount++;
-        }
-        if (staleCount > 0) {
-            GC[] back = { new GC(backBuffer) };
-            try {
-                for (int i = 0; i < staleCount; i++) {
-                    compose(back, new Rectangle(stale[i * 4], stale[i * 4 + 1], stale[i * 4 + 2], stale[i * 4 + 3]));
-                }
-            } finally {
-                back[0].dispose();
+        int required = Math.multiplyExact(n, 4);
+        int[] stale = staleDepth == 0 ? growStaleWork(required) : new int[required];
+        staleDepth++;
+        try {
+            int staleCount = 0;
+            for (int i = 0; i < n; i++) {
+                long x0 = Math.max((long) dirty.x(i), damage.x);
+                long y0 = Math.max((long) dirty.y(i), damage.y);
+                long x1 = Math.min((long) dirty.x(i) + dirty.width(i),
+                        (long) damage.x + damage.width);
+                long y1 = Math.min((long) dirty.y(i) + dirty.height(i),
+                        (long) damage.y + damage.height);
+                if (x1 <= x0 || y1 <= y0) continue;
+                int offset = staleCount++ * 4;
+                stale[offset] = (int) x0;
+                stale[offset + 1] = (int) y0;
+                stale[offset + 2] = (int) (x1 - x0);
+                stale[offset + 3] = (int) (y1 - y0);
             }
-            dirty.remove(damage.x, damage.y, damage.width, damage.height);
+            if (staleCount > 0) {
+                // Consume the captured damage BEFORE running user painters.
+                // New invalidations triggered by those callbacks must survive
+                // and be recomposed in a later SWT paint event.
+                dirty.remove(damage.x, damage.y, damage.width, damage.height);
+                GC[] back = { null };
+                boolean complete = false;
+                try {
+                    back[0] = new GC(backBuffer);
+                    for (int i = 0; i < staleCount; i++) {
+                        int offset = i * 4;
+                        compose(back, new Rectangle(stale[offset], stale[offset + 1],
+                                stale[offset + 2], stale[offset + 3]));
+                    }
+                    complete = true;
+                } finally {
+                    try {
+                        if (!complete && !isDisposed()) {
+                            // Rendering failed: do not drop any captured
+                            // damage just because it was consumed up front.
+                            for (int i = 0; i < staleCount; i++) {
+                                int offset = i * 4;
+                                dirty.add(stale[offset], stale[offset + 1],
+                                        stale[offset + 2], stale[offset + 3]);
+                            }
+                        }
+                    } finally {
+                        if (back[0] != null && !back[0].isDisposed()) back[0].dispose();
+                    }
+                }
+            }
+            if (!isDisposed()) {
+                gc.drawImage(backBuffer, damage.x, damage.y, damage.width, damage.height,
+                        damage.x, damage.y, damage.width, damage.height);
+            }
+        } finally {
+            staleDepth--;
         }
-        gc.drawImage(backBuffer, damage.x, damage.y, damage.width, damage.height,
-                damage.x, damage.y, damage.width, damage.height);
+    }
+
+    private int[] growStaleWork(int required) {
+        if (staleWork.length < required) {
+            int capacity = staleWork.length;
+            while (capacity < required) capacity += Math.max(64, capacity >>> 1);
+            staleWork = Arrays.copyOf(staleWork, capacity);
+        }
+        return staleWork;
     }
 
     /* the background, then every visible layer bottom to top, into the store's pixels inside {@code damage} */
