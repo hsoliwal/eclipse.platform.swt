@@ -370,7 +370,9 @@ public final class LayeredViewport extends Canvas {
             blendSource = null;
             if (nativeLayer != 0 && nativeBackend != null) {
                 ImageDataArgb rows = new ImageDataArgb(image.getImageData());
-                int[] packed = new int[width * height];
+                long pixelCount = (long) width * height;
+                if (pixelCount > Integer.MAX_VALUE) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+                int[] packed = new int[(int) pixelCount];
                 for (int row = 0; row < height; row++) {
                     rows.premultipliedSpan(y + row, x, width, packed, row * width);
                 }
