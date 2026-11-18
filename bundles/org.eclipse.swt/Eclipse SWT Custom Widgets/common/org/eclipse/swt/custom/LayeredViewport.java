@@ -155,6 +155,23 @@ public final class LayeredViewport extends Canvas {
         private int size;
         private long nextChildId = 1;
         private boolean orderDirty;
+        private boolean spatialDirty = true;
+        private final LayerRectIndex spatialIndex = new LayerRectIndex();
+        private final LayerRectIndex.Bounds spatialSource = new LayerRectIndex.Bounds() {
+            @Override public int size() { return order.length; }
+            @Override public boolean active(int at) {
+                Child c = order[at];
+                return !c.removed && c.visible;
+            }
+            @Override public long left(int at) { return order[at].x; }
+            @Override public long top(int at) { return order[at].y; }
+            @Override public long right(int at) { return order[at].right; }
+            @Override public long bottom(int at) { return order[at].bottom; }
+        };
+        private Child[] paintCandidates = new Child[16];
+        private Child[] hitCandidates = new Child[16];
+        private int activeGroupPaints;
+        private int activeChildHits;
 
         /** Stable group-local handle; bounds are relative to the root. */
         public final class Child {
@@ -217,6 +234,7 @@ public final class LayeredViewport extends Canvas {
                 y = localY;
                 right = localX + width;
                 bottom = localY + height;
+                spatialDirty = true;
             }
 
             public boolean isVisible() {
@@ -228,6 +246,7 @@ public final class LayeredViewport extends Canvas {
                 checked();
                 if (visible == value) return;
                 visible = value;
+                spatialDirty = true;
                 root.redraw();
             }
 
@@ -346,6 +365,7 @@ public final class LayeredViewport extends Canvas {
             if (orderDirty) {
                 order = Arrays.copyOf(children, size);
                 orderDirty = false;
+                spatialDirty = true;
             }
             return order;
         }
@@ -372,18 +392,59 @@ public final class LayeredViewport extends Canvas {
             return findChild(x - root.x, y - root.y);
         }
 
+        private void ensureChildIndex() {
+            orderSnapshot();
+            if (spatialDirty) {
+                spatialIndex.rebuild(spatialSource);
+                spatialDirty = false;
+            }
+        }
+
+        private Child[] growPaintCandidates(int selected) {
+            if (paintCandidates.length < selected) {
+                paintCandidates = Arrays.copyOf(paintCandidates, selected);
+            }
+            return paintCandidates;
+        }
+
+        private Child[] growHitCandidates(int selected) {
+            if (hitCandidates.length < selected) {
+                hitCandidates = Arrays.copyOf(hitCandidates, selected);
+            }
+            return hitCandidates;
+        }
+
         private Child findChild(long x, long y) {
             Child[] frame = orderSnapshot();
-            for (int i = frame.length - 1; i >= 0; i--) {
-                if (isDisposed()) return null;
-                Child c = frame[i];
-                if (!candidate(c, x, y)) continue;
-                GroupHitTester tester = c.hitTester;
-                boolean accepted = tester == null || tester.contains(c, x, y);
-                if (isDisposed()) return null;
-                if (accepted && candidate(c, x, y)) return c;
+            int selected;
+            Child[] candidates;
+            if (frame.length <= 32) {
+                selected = frame.length;
+                candidates = activeChildHits == 0 ? growHitCandidates(selected) : new Child[selected];
+                System.arraycopy(frame, 0, candidates, 0, selected);
+            } else {
+                ensureChildIndex();
+                int found = spatialIndex.query(x, y, saturatedAdd(x, 1), saturatedAdd(y, 1));
+                selected = found;
+                candidates = activeChildHits == 0 ? growHitCandidates(selected) : new Child[selected];
+                for (int k = 0; k < selected; k++) candidates[k] = frame[spatialIndex.resultAt(k)];
             }
-            return null;
+            activeChildHits++;
+            try {
+                for (int k = selected - 1; k >= 0; k--) {
+                    if (isDisposed()) return null;
+                    Child c = candidates[k];
+                    if (!candidate(c, x, y)) continue;
+                    GroupHitTester tester = c.hitTester;
+                    boolean accepted = tester == null || tester.contains(c, x, y);
+                    if (isDisposed()) return null;
+                    if (accepted && candidate(c, x, y)) return c;
+                }
+                return null;
+            } finally {
+                Arrays.fill(candidates, 0, selected, null);
+                activeChildHits--;
+            }
         }
 
         private boolean candidate(Child c, long x, long y) {
@@ -396,28 +457,73 @@ public final class LayeredViewport extends Canvas {
             double baseX = device(root.x, context.originX());
             double baseY = device(root.y, context.originY());
             Rectangle damage = context.clip();
-            // Capture the ordering before invoking re-entrant painter callbacks.
-            for (Child child : frame) {
-                if (isDisposed() || gc.isDisposed()) return;
-                if (child.removed || !child.visible) continue;
-                Rectangle tile = clipChild(child, baseX, baseY, damage, context.zoom());
-                if (tile == null) continue;
-                try (ViewportGcProxy state = ViewportGcProxy.wrap(gc)) {
-                    state.clip(tile);
-                    if (child.image != null) {
-                        if (!child.image.isDisposed()) {
-                            double left = baseX + child.x * context.zoom();
-                            double top = baseY + child.y * context.zoom();
-                            double right = baseX + child.right * context.zoom();
-                            double bottom = baseY + child.bottom * context.zoom();
-                            paintImage(gc, child.image, left, top, right, bottom, tile);
+            int selected;
+            Child[] candidates;
+            if (frame.length <= 32) {
+                selected = frame.length;
+                candidates = activeGroupPaints == 0 ? growPaintCandidates(selected) : new Child[selected];
+                System.arraycopy(frame, 0, candidates, 0, selected);
+            } else {
+                // The existing primitive spatial index is reused in group-local
+                // coordinates. The padding keeps fractional zoom conservative.
+                ensureChildIndex();
+                double scale = context.zoom();
+                long x0 = saturatedAdd(floorLong((damage.x - baseX) / scale), -1);
+                long y0 = saturatedAdd(floorLong((damage.y - baseY) / scale), -1);
+                long x1 = saturatedAdd(ceilLong(((double) damage.x + damage.width - baseX) / scale), 1);
+                long y1 = saturatedAdd(ceilLong(((double) damage.y + damage.height - baseY) / scale), 1);
+                selected = spatialIndex.query(x0, y0, x1, y1);
+                candidates = activeGroupPaints == 0 ? growPaintCandidates(selected) : new Child[selected];
+                for (int i = 0; i < selected; i++) candidates[i] = frame[spatialIndex.resultAt(i)];
+            }
+            activeGroupPaints++;
+            try {
+                for (int i = 0; i < selected; i++) {
+                    if (isDisposed() || gc.isDisposed()) return;
+                    Child child = candidates[i];
+                    if (child.removed || !child.visible) continue;
+                    Rectangle tile = clipChild(child, baseX, baseY, damage, context.zoom());
+                    if (tile == null) continue;
+                    try (ViewportGcProxy state = ViewportGcProxy.wrap(gc)) {
+                        state.clip(tile);
+                        if (child.image != null) {
+                            if (!child.image.isDisposed()) {
+                                double left = baseX + child.x * context.zoom();
+                                double top = baseY + child.y * context.zoom();
+                                double right = baseX + child.right * context.zoom();
+                                double bottom = baseY + child.bottom * context.zoom();
+                                paintImage(gc, child.image, left, top, right, bottom, tile);
+                            }
+                        } else if (child.painter != null) {
+                            child.painter.paint(gc, new GroupPaintContext(
+                                    child, tile, baseX, baseY, context.zoom()));
                         }
-                    } else if (child.painter != null) {
-                        child.painter.paint(gc, new GroupPaintContext(
-                                child, tile, baseX, baseY, context.zoom()));
                     }
                 }
+            } finally {
+                Arrays.fill(candidates, 0, selected, null);
+                activeGroupPaints--;
             }
+        }
+
+        private void releaseChildren() {
+            for (int i = 0; i < size; i++) {
+                Child child = children[i];
+                child.removed = true;
+                child.image = null;
+                child.painter = null;
+                child.hitTester = null;
+                children[i] = null;
+            }
+            size = 0;
+            order = new Child[0];
+            spatialIndex.clear();
+            if (activeGroupPaints == 0) Arrays.fill(paintCandidates, null);
+            if (activeChildHits == 0) Arrays.fill(hitCandidates, null);
+            paintCandidates = new Child[0];
+            hitCandidates = new Child[0];
+            spatialDirty = true;
+            orderDirty = false;
         }
 
         private Rectangle clipChild(Child child, double baseX, double baseY,
@@ -446,6 +552,7 @@ public final class LayeredViewport extends Canvas {
         if (name == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
         LayerGroup group = new LayerGroup();
         group.root = append(name, x, y, width, height, null, group::paint);
+        group.root.childGroup = group;
         group.root.setHitTester((layer, worldX, worldY) -> group.containsAny(worldX, worldY));
         return group;
     }
@@ -479,6 +586,7 @@ public final class LayeredViewport extends Canvas {
         private LayerPainter painter;
         private LayerHitTester hitTester;
         private LayerPointerListener pointerListener;
+        private LayerGroup childGroup;
         private WorldBounds worldClip;
         /* SWT.HORIZONTAL and/or SWT.VERTICAL: the axes on which the layer is measured from the view's origin */
         private int pinned;
@@ -839,6 +947,10 @@ public final class LayeredViewport extends Canvas {
             hitTester = null;
             pointerListener = null;
             worldClip = null;
+            if (childGroup != null) {
+                childGroup.releaseChildren();
+                childGroup = null;
+            }
             publishOrder();
         }
     }
@@ -948,6 +1060,8 @@ public final class LayeredViewport extends Canvas {
             if (activeBackingPaints == 0) disposeBackingImages();
             for (int i = 0; i < count; i++) {
                 stack[i].removed = true;
+                if (stack[i].childGroup != null) stack[i].childGroup.releaseChildren();
+                stack[i].childGroup = null;
                 stack[i].releaseComposite();
                 stack[i].control = null;
                 stack[i].image = null;
