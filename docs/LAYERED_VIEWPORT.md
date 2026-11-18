@@ -157,6 +157,19 @@ not add a JNI call per layer. Native state is destroyed with its composition.
 An excessive layer count or invalid frame sizes must fail safely rather than
 allow overflowing native array bounds.
 
+Layer structural mutations publish their Z order lazily. Native activation
+must discover requests in the authoritative stack and take its current
+order snapshot before composing the first frame; a newly appended image
+must not disappear until an unrelated paint or getLayers call.
+
+A native backend call may reenter its viewport. The outer call's arrays and
+the C++ composition's active prefix must remain immutable until that call
+returns. Nested invocations receive temporary private input lanes, while
+the ordinary (non-nested) hot path reuses composition-owned capacity.
+Every recursion-depth increment must have a matching decrement, including
+exceptional exits in Java. This remains distinct from native resource
+lifetime and callback ownership.
+
 This is an allocation-efficiency contract, **not** a claim of zero native
 allocations, O(1) Z composition, cross-platform GPU acceleration, or HTML/CSS
 layout conformance. DirectComposition remains the only active native layer
