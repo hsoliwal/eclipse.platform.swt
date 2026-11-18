@@ -123,8 +123,8 @@ final class DispatchQueue {
 		boolean wake;
 		synchronized (this) {
 			if (key != null) {
-				int at = findKey (key);
-				if (at >= 0 && keyClasses [at] == priority) {
+				int at = findKey (key, priority);
+				if (at >= 0) {
 					Ring ring = rings [priority];
 					int slot = ring.slot (keySequences [at]);
 					if (slot >= 0) {
@@ -357,6 +357,10 @@ final class DispatchQueue {
 		int count;
 		synchronized (this) {
 			count = rings [MODEL].size;
+			// Claim only requests for this frame. A request posted by a model
+			// callback must survive to schedule the following frame.
+			frameDue = false;
+			frameRequested = false;
 		}
 		for (int i = 0; i < count; i++) {
 			Runnable runnable;
@@ -377,11 +381,9 @@ final class DispatchQueue {
 		}
 		long frameGeneration;
 		synchronized (this) {
-			frameDue = false;
-			frameRequested = false;
 			lastFrameNanos = System.nanoTime ();
 			frameGeneration = ++generation;
-			if (rings [MODEL].size > 0) tickWanted = true;
+			if (rings [MODEL].size > 0 || frameRequested) tickWanted = true;
 		}
 		Display display = owner.display;
 		for (FrameListener listener : frameListeners) {
@@ -439,7 +441,20 @@ final class DispatchQueue {
 
 	void clear () {
 		synchronized (this) {
-			for (Ring ring : rings) ring.clear ();
+			// Disposal must release syncExec callers whose messages cannot run.
+			for (Ring ring : rings) {
+				for (int i = 0; i < ring.size; i++) {
+					SyncLock lock = ring.locks [(ring.head + i) % ring.locks.length];
+					if (lock != null) {
+						synchronized (lock) {
+							lock.throwable = new SWTException (SWT.ERROR_DEVICE_DISPOSED);
+							lock.done = true;
+							lock.notifyAll ();
+						}
+					}
+				}
+				ring.clear ();
+			}
 			java.util.Arrays.fill (keyTable, null);
 			keyCount = 0;
 			tickScheduled = tickWanted = frameDue = frameRequested = false;
@@ -448,18 +463,20 @@ final class DispatchQueue {
 
 	/* ---- the key table ---- */
 
-	private int findKey (Object key) {
+	private int findKey (Object key, int priority) {
 		int mask = keyTable.length - 1;
-		for (int i = mix (key.hashCode ()) & mask; keyTable [i] != null; i = (i + 1) & mask) {
-			if (keyTable [i].equals (key)) return i;
+		for (int i = mix (31 * key.hashCode () + priority) & mask; keyTable [i] != null; i = (i + 1) & mask) {
+			if (keyClasses [i] == priority && keyTable [i].equals (key)) return i;
 		}
 		return -1;
 	}
 
 	private void putKey (Object key, int priority, long sequence) {
 		if ((keyCount + 1) * 2 > keyTable.length) growKeys ();
-		int mask = keyTable.length - 1, i = mix (key.hashCode ()) & mask;
-		while (keyTable [i] != null && !keyTable [i].equals (key)) i = (i + 1) & mask;
+		int mask = keyTable.length - 1, i = mix (31 * key.hashCode () + priority) & mask;
+		while (keyTable [i] != null && !(keyClasses [i] == priority && keyTable [i].equals (key))) {
+			i = (i + 1) & mask;
+		}
 		if (keyTable [i] == null) keyCount++;
 		keyTable [i] = key;
 		keyClasses [i] = priority;
@@ -468,13 +485,13 @@ final class DispatchQueue {
 
 	/* removes the key when it still maps to this entry (a later entry with the key replaced the mapping otherwise) */
 	private void removeKey (Object key, int priority, long sequence) {
-		int at = findKey (key);
-		if (at < 0 || keyClasses [at] != priority || keySequences [at] != sequence) return;
+		int at = findKey (key, priority);
+		if (at < 0 || keySequences [at] != sequence) return;
 		int mask = keyTable.length - 1, hole = at;
 		keyTable [hole] = null;
 		keyCount--;
 		for (int i = (hole + 1) & mask; keyTable [i] != null; i = (i + 1) & mask) {
-			int home = mix (keyTable [i].hashCode ()) & mask;
+			int home = mix (31 * keyTable [i].hashCode () + keyClasses [i]) & mask;
 			if (hole <= i ? home <= hole || home > i : home <= hole && home > i) {
 				keyTable [hole] = keyTable [i];
 				keyClasses [hole] = keyClasses [i];
