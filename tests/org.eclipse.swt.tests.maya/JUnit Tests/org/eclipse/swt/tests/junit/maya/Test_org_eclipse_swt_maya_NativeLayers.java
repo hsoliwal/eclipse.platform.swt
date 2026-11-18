@@ -207,7 +207,7 @@ public class Test_org_eclipse_swt_maya_NativeLayers {
 			ink.dispose();
 		}
 		paints = 0;
-		layer.redraw(new Rectangle(4, 5, 5, 4), new Rectangle(23, 24, 6, 4));
+		layer.redrawRegions(new Rectangle(4, 5, 5, 4), new Rectangle(23, 24, 6, 4));
 		pump(300);
 		assertEquals(BLUE, screen(25, 26), "first rectangle");
 		assertEquals(new RGB(0, 255, 0), screen(46, 46), "second rectangle");

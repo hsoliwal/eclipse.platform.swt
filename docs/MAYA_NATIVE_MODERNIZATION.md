@@ -65,7 +65,7 @@ architecture references only. No upstream implementation source is copied.
 
 ## Multi-rectangle damage from a CPU-owned backing image
 
-Additive `Layer.redraw(Rectangle... dirtyRegions)` handles up to 4096
+Additive `Layer.redrawRegions(Rectangle... dirtyRegions)` handles up to 4096
 independent image-local regions through **one** Java-to-JNI `uploadDirty`
 invocation, even when many rows are changed. It snapshots caller-owned
 rectangle geometry into primitive `int[4*N]`, checks all bounds and the

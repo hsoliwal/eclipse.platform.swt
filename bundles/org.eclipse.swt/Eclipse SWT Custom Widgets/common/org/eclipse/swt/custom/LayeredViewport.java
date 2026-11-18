@@ -878,7 +878,7 @@ public final class LayeredViewport extends Canvas {
          *
          * @param dirtyRegions changed rectangles in borrowed image pixel coordinates
          */
-        public void redraw(Rectangle... dirtyRegions) {
+        public void redrawRegions(Rectangle... dirtyRegions) {
             checked();
             if (dirtyRegions == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
             if (image == null || image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
