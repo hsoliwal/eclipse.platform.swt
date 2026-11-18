@@ -1360,6 +1360,7 @@ private void setNativeBorderSelection (int relief, int bevel) {
 	int mask = OS.WS_EX_CLIENTEDGE | OS.WS_EX_WINDOWEDGE | OS.WS_EX_STATICEDGE;
 	int nativeEx = OS.GetWindowLong(hwnd, OS.GWL_EXSTYLE);
 	int nativeStyle = OS.GetWindowLong(hwnd, OS.GWL_STYLE);
+	int previousBorderWidth = getBorderWidthInPixels();
 	if (!nativeBorderReliefSaved) {
 		originalNativeBorderEdges = nativeEx & mask;
 		originalNativeBorderStyle = nativeStyle & OS.WS_BORDER;
@@ -1387,7 +1388,14 @@ private void setNativeBorderSelection (int relief, int bevel) {
 				OS.SWP_NOMOVE | OS.SWP_NOSIZE | OS.SWP_NOZORDER
 						| OS.SWP_NOACTIVATE | OS.SWP_FRAMECHANGED);
 	}
-	if (!isDisposed()) OS.InvalidateRect(hwnd, null, true);
+	if (!isDisposed()) {
+		// An etched-in -> etched-out transition keeps the same native EXSTYLE.
+		// InvalidateRect only requests client pixels; request the native frame.
+		OS.RedrawWindow(hwnd, null, 0, OS.RDW_INVALIDATE | OS.RDW_FRAME);
+		if (!isDisposed() && previousBorderWidth != getBorderWidthInPixels()) {
+			requestLayout();
+		}
+	}
 }
 
 /**
