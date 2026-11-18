@@ -287,7 +287,11 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
         // the first BeginDraw. A subsequent JNI exception cannot leave a batch
         // half-written to native surfaces. No Java heap is pinned during COM.
         const std::size_t pixelCount = swt_maya::packedDirtyPixelCount(rects.data(), count);
-        std::vector<jint> copy(pixelCount);
+        // Preserve SWT #554: exactly one complete JNI pixel copy BEFORE
+        // any DirectComposition BeginDraw. Only small, non-reentrant batches
+        // reuse per-thread storage; large/nested calls borrow a private copy.
+        static thread_local swt_maya::DirtyPixelScratch<jint> scratch;
+        swt_maya::DirtyPixelScratch<jint>::Lease copy(scratch, count, pixelCount);
         env->GetIntArrayRegion(packed, 0, static_cast<jsize>(pixelCount), copy.data());
         if (env->ExceptionCheck()) return E_FAIL;
         std::size_t offset = 0;

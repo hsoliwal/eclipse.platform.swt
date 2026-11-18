@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <memory>
 
 /*
  * Portable validation/copy atom for the optional DirectComposition dirty-region
@@ -90,6 +91,68 @@ inline std::size_t packedDirtyPixelCount(const int *rects, int count) noexcept {
     }
     return total;
 }
+
+/*
+ * Retain at most 1 MiB of native ARGB staging per SWT UI thread. A reentrant
+ * dirty JNI call uses an independent temporary buffer, never the in-use cache.
+ * Large packets still copy their WHOLE validated prefix before BeginDraw;
+ * they are transient rather than retained, preserving the no-JNI-after-COM
+ * behavior of the original Maya upload implementation.
+ */
+constexpr std::size_t MAX_RETAINED_DIRTY_PIXELS = 1u << 18;
+inline bool mayReuseDirtyPixels(int count, std::size_t pixels, bool inUse) noexcept {
+    return count > 1 && pixels > 0 && pixels <= MAX_RETAINED_DIRTY_PIXELS && !inUse;
+}
+
+/**
+ * Per-thread native pixel-copy staging. The retained allocation is at most
+ * MAX_RETAINED_DIRTY_PIXELS elements. Large packets and nested JNI calls
+ * receive independent short-lived allocations, keeping the full copied-in
+ * frame immutable until every GPU UpdateSubresource call completes.
+ *
+ * No Java reference, operating-system handle or JNI region is stored here.
+ */
+template<class Pixel> class DirtyPixelScratch final {
+    std::unique_ptr<Pixel[]> retained_;
+    std::size_t capacity_ = 0;
+    bool busy_ = false;
+
+public:
+    bool busy() const noexcept { return busy_; }
+    std::size_t retainedCapacity() const noexcept { return capacity_; }
+
+    class Lease final {
+        DirtyPixelScratch *owner_;
+        std::unique_ptr<Pixel[]> temporary_;
+        Pixel *data_ = nullptr;
+        bool retained_ = false;
+
+    public:
+        Lease(DirtyPixelScratch &owner, int rectCount, std::size_t pixelCount)
+                : owner_(&owner) {
+            retained_ = mayReuseDirtyPixels(rectCount, pixelCount, owner.busy_);
+            if (retained_) {
+                // new[] completes before resetting the old retained buffer:
+                // allocation failure cannot change owner state or ownership.
+                if (owner.capacity_ < pixelCount) {
+                    owner.retained_.reset(new Pixel[pixelCount]);
+                    owner.capacity_ = pixelCount;
+                }
+                owner.busy_ = true;
+                data_ = owner.retained_.get();
+            } else {
+                temporary_.reset(new Pixel[pixelCount]);
+                data_ = temporary_.get();
+            }
+        }
+        Lease(const Lease &) = delete;
+        Lease &operator=(const Lease &) = delete;
+        Lease(Lease &&) = delete;
+        Lease &operator=(Lease &&) = delete;
+        ~Lease() noexcept { if (retained_) owner_->busy_ = false; }
+        Pixel *data() const noexcept { return data_; }
+    };
+};
 
 inline std::size_t dirtyArea(const int *rect) noexcept {
     return static_cast<std::size_t>(rect[2]) * static_cast<std::size_t>(rect[3]);
