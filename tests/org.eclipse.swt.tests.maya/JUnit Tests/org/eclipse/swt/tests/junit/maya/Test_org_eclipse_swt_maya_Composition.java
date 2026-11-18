@@ -533,6 +533,81 @@ public class Test_org_eclipse_swt_maya_Composition {
 		assertEquals(WHITE, screen(140, 30));
 	}
 
+    @Test
+    public void nativeSurfaceQuotaIsOptInEnforcedAndReclaimedOnRetirement() {
+        long[] initial = MayaComposition.readSurfaceBudget(composition);
+        if (Boolean.getBoolean("swt.maya.surfaceBudget.required")) {
+            assertTrue(initial != null, "required surface-budget JNI ABI is absent");
+        }
+        assumeTrue(initial != null, "older Maya native DLL lacks budget ABI");
+        assertEquals(1L, initial[MayaComposition.BUDGET_VERSION]);
+        assertEquals(0L, initial[MayaComposition.BUDGET_LIMIT_BYTES],
+                "without opt-in the budget is unlimited");
+        assertEquals(0L, initial[MayaComposition.BUDGET_RESERVED_BYTES]);
+        final long oneSurface = SIZE * SIZE * 4L;
+        assertEquals(0, MayaComposition.setSurfaceBudget(composition, oneSurface));
+        long red = layer(OPAQUE_RED);
+        assertEquals(0L, MayaComposition._nAddLayer(composition, SIZE, SIZE),
+                "quota rejection happens before allocating the second native surface");
+        long[] refused = MayaComposition.readSurfaceBudget(composition);
+        assertEquals(oneSurface, refused[MayaComposition.BUDGET_RESERVED_BYTES]);
+        assertEquals(oneSurface, refused[MayaComposition.BUDGET_LIMIT_BYTES]);
+        assertEquals(oneSurface, refused[MayaComposition.BUDGET_PEAK_BYTES]);
+        assertEquals(1L, refused[MayaComposition.BUDGET_DENIALS]);
+        assertEquals(1L, refused[MayaComposition.BUDGET_ACCEPTED]);
+        assertNotEquals(0, MayaComposition.setSurfaceBudget(composition, oneSurface - 1),
+                "reducing the cap below a live reservation must preserve the old cap");
+        assertEquals(oneSurface, MayaComposition.readSurfaceBudget(
+                composition)[MayaComposition.BUDGET_LIMIT_BYTES]);
+
+        frame(new long[] { red }, 20, 20, 1, 1);
+        assertEquals(RED, screen(25, 25), "over-quota rejection preserved the valid scene");
+        assertEquals(0, MayaComposition.setSurfaceBudget(composition, 2 * oneSurface));
+        long blue = layer(OPAQUE_BLUE);
+        assertNotEquals(red, blue);
+        frame(new long[] { red, blue }, 20, 20, 1, 1, 120, 20, 1, 1);
+        assertEquals(RED, screen(25, 25));
+        assertEquals(BLUE, screen(125, 25));
+        long[] both = MayaComposition.readSurfaceBudget(composition);
+        assertEquals(2 * oneSurface, both[MayaComposition.BUDGET_RESERVED_BYTES]);
+        assertEquals(2 * oneSurface, both[MayaComposition.BUDGET_PEAK_BYTES]);
+        assertEquals(2L, both[MayaComposition.BUDGET_ACCEPTED]);
+
+        MayaComposition._nRemoveLayer(composition, blue);
+        frame(new long[] { red }, 20, 20, 1, 1);
+        assertEquals(oneSurface, MayaComposition.readSurfaceBudget(
+                composition)[MayaComposition.BUDGET_RESERVED_BYTES]);
+        assertEquals(0, MayaComposition.setSurfaceBudget(composition, oneSurface));
+        assertEquals(0L, MayaComposition._nAddLayer(composition, SIZE, SIZE));
+        assertEquals(2L, MayaComposition.readSurfaceBudget(
+                composition)[MayaComposition.BUDGET_DENIALS]);
+        assertEquals(0, MayaComposition.setSurfaceBudget(composition, 0),
+                "explicit zero restores default unlimited admission");
+        long reopened = layer(OPAQUE_BLUE);
+        frame(new long[] { red, reopened }, 20, 20, 1, 1, 120, 20, 1, 1);
+        long[] unlimited = MayaComposition.readSurfaceBudget(composition);
+        assertEquals(0, unlimited[MayaComposition.BUDGET_LIMIT_BYTES]);
+        assertEquals(2 * oneSurface, unlimited[MayaComposition.BUDGET_RESERVED_BYTES]);
+
+        long[] tooShort = new long[MayaComposition.SURFACE_BUDGET_FIELDS - 1];
+        assertNotEquals(0, MayaComposition._nReadSurfaceBudget(composition, tooShort));
+        long[] extra = new long[MayaComposition.SURFACE_BUDGET_FIELDS + 1];
+        extra[extra.length - 1] = -73;
+        assertEquals(0, MayaComposition._nReadSurfaceBudget(composition, extra));
+        assertEquals(-73L, extra[extra.length - 1],
+                "the native snapshot may write only its six-versioned-field prefix");
+        assertNotEquals(0, MayaComposition._nReadSurfaceBudget(Long.MAX_VALUE,
+                new long[MayaComposition.SURFACE_BUDGET_FIELDS]));
+
+        MayaComposition._nRemoveLayer(composition, red);
+        MayaComposition._nRemoveLayer(composition, reopened);
+        assertEquals(0L, MayaComposition.readSurfaceBudget(
+                composition)[MayaComposition.BUDGET_RESERVED_BYTES]);
+        assertEquals(2 * oneSurface, MayaComposition.readSurfaceBudget(
+                composition)[MayaComposition.BUDGET_PEAK_BYTES],
+                "the high-water logical estimate is retained after all releases");
+    }
+
 	@Test
 	public void invalidArgumentsAreRefused() {
 		assertEquals(0, MayaComposition._nAddLayer(0, SIZE, SIZE));
