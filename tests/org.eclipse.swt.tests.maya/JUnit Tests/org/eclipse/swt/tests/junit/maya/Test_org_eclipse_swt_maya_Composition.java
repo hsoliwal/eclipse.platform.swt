@@ -300,6 +300,21 @@ public class Test_org_eclipse_swt_maya_Composition {
 		assertEquals(BLUE, screen(30, 30));
 		assertNotEquals(0, MayaComposition._nApply(composition,
 				new long[] { oldLayer }, new float[] { 20, 20, 1, 1 }, 1));
+		// The versioned packed transport uses the same native token registry.
+		// A retired layer remains invalid after the allocator creates a new one.
+		int packetVersion = -1;
+		try {
+			packetVersion = MayaComposition._nFramePacketVersion();
+		} catch (UnsatisfiedLinkError oldMayaBinary) {
+			// Optional ABI: the ordinary legacy tests still run.
+		}
+		if (packetVersion == MayaFramePacket.VERSION) {
+			ByteBuffer staleFrame = new MayaFramePacket.Encoder().encode(
+					new long[] { oldLayer }, new float[] { 20, 20, 1, 1 }, 1, 8L);
+			assertNotEquals(0, MayaComposition._nApplyPacked(
+					composition, staleFrame, staleFrame.remaining()));
+			assertEquals(BLUE, screen(30, 30), "stale packed handle did not change committed pixels");
+		}
 		// Tokens are type-tagged. A layer token is never a composition,
 		// and a composition token is never a layer.
 		assertEquals(0, MayaComposition._nAddLayer(replacementLayer, SIZE, SIZE));
