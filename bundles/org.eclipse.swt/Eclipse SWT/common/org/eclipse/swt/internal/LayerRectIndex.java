@@ -169,6 +169,22 @@ public final class LayerRectIndex {
 
 	private void radixSort(int[] order, long[] keys, int length) {
 		if (length < 2) return;
+		if (length <= 16) {
+			// A typical viewport has few layers. Avoid eight bucket resets and
+			// scratch-lane passes for a stack smaller than a radix histogram.
+			// Strict comparison keeps equal starts in their original order.
+			for (int i = 1; i < length; i++) {
+				int slot = order[i];
+				long key = keys[slot];
+				int j = i;
+				while (j > 0 && keys[order[j - 1]] > key) {
+					order[j] = order[j - 1];
+					j--;
+				}
+				order[j] = slot;
+			}
+			return;
+		}
 		int[] from = order, to = sortScratch;
 		for (int shift = 0; shift < Long.SIZE; shift += 8) {
 			Arrays.fill(frequencies, 0);
