@@ -71,6 +71,12 @@ public final class NativeDirtyRegionsProof {
         invalid(1, 1, new int[] {0, -1, 1, 1}, 1);
         invalid(1, 1, new int[] {0, 0, 2, 1}, 1);
         invalid(1, 1, new int[] {0, 0, 1, 2}, 1);
+        // JNI's D3D11 UINT row pitch is bytes, not pixels: 4*(2^30) is
+        // one byte above the representable unsigned 32-bit maximum.
+        invalid(1_073_741_824, 1, new int[] {0, 0, 1_073_741_824, 1}, 1);
+        equal(1_073_741_823,
+                NativeDirtyRegions.packedPixelCount(1_073_741_823, 1,
+                        new int[] {0, 0, 1_073_741_823, 1}, 1));
         invalid(100_000, 20_000, new int[] {0, 0, 100_000, 20_000}, 2);
         int[] large = new int[8];
         large[2] = large[6] = 46_340;

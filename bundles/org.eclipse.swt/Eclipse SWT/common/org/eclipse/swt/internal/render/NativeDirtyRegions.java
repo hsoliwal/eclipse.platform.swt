@@ -14,6 +14,9 @@ package org.eclipse.swt.internal.render;
  */
 public final class NativeDirtyRegions {
     public static final int MAX_RECTS = 4096;
+    // D3D11 UpdateSubresource takes a 32-bit UINT row pitch in bytes. The
+    // native MayaCompositionDirty.h validator has this same unsigned bound.
+    private static final long MAX_NATIVE_ROW_BYTES = 0xFFFF_FFFFL;
 
     private NativeDirtyRegions() { }
 
@@ -36,6 +39,9 @@ public final class NativeDirtyRegions {
                     || x >= imageWidth || y >= imageHeight
                     || width > imageWidth - x || height > imageHeight - y) {
                 throw new IllegalArgumentException("dirty rectangle exceeds image bounds");
+            }
+            if ((long) width * Integer.BYTES > MAX_NATIVE_ROW_BYTES) {
+                throw new IllegalArgumentException("dirty native row pitch exceeds unsigned 32-bit limit");
             }
             pixels += (long) width * height;
             if (pixels > Integer.MAX_VALUE) {
