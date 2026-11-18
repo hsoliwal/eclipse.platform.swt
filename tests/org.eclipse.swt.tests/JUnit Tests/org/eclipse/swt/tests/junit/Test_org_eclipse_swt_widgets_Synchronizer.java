@@ -13,6 +13,7 @@ package org.eclipse.swt.tests.junit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -33,7 +34,7 @@ public class Test_org_eclipse_swt_widgets_Synchronizer {
 
 	/** A model patch's request for another frame must survive completion of the current frame. */
 	@Test
-	@Timeout(TIMEOUT_MS)
+	@Timeout(value = TIMEOUT_MS, unit = TimeUnit.MILLISECONDS)
 	public void test_requestFrameDuringModelPatchSchedulesAnotherFrame() {
 		Display display = Display.getDefault();
 		Synchronizer synchronizer = display.getSynchronizer();
