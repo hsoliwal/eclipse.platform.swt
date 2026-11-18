@@ -109,7 +109,7 @@ public void test_nativeBorderReliefExplicitAndReset() {
 				SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT }) {
 			child.setBorderRelief(relief);
 			assertEquals(relief, child.getBorderRelief());
-			assertTrue(child.getBorderWidth() >= 0);
+			assertTrue(child.getBorderWidth() > 0, "visible native relief must reserve trim");
 		}
 		child.setBorderRelief(SWT.SHADOW_NONE);
 		assertEquals(SWT.SHADOW_NONE, child.getBorderRelief());
@@ -138,6 +138,27 @@ public void test_nativeBorderReliefWin32ConstructorPrecedence() {
 		child.setBorderRelief(SWT.DEFAULT);
 		assertEquals(originalWidth, child.getBorderWidth());
 		assertEquals(SWT.SHADOW_IN, child.getStyle() & SWT.SHADOW_IN);
+	} finally {
+		child.dispose();
+	}
+}
+
+@Test
+public void test_nativeBorderReliefGtkGroupShadowOverride() {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+	org.eclipse.swt.widgets.Group child =
+			new org.eclipse.swt.widgets.Group(shell, SWT.SHADOW_IN);
+	try {
+		child.setSize(120, 70);
+		child.setBorderRelief(SWT.SHADOW_OUT);
+		assertEquals(SWT.SHADOW_OUT, child.getBorderRelief());
+		assertTrue(child.getBorderWidth() > 0, "explicit Group relief must have visible trim");
+		child.setBackground(shell.getBackground());
+		child.setForeground(shell.getForeground());
+		assertEquals(SWT.SHADOW_OUT, child.getBorderRelief(),
+				"foreground/background CSS must not discard native border CSS");
+		child.setBorderRelief(SWT.DEFAULT);
+		assertEquals(SWT.DEFAULT, child.getBorderRelief());
 	} finally {
 		child.dispose();
 	}
