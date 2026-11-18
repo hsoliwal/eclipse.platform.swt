@@ -99,17 +99,24 @@ arrived on the master branch after the original Control relief work was
 authored. It has a different default sentinel: `SWT.NONE` means no explicit
 Composite bevel while `SWT.DEFAULT` means no explicit Control relief.
 
-These interfaces now converge on a **single active native border**:
+These interfaces now converge on **one mutable relief state owned by
+`Control`**, including for Win32 direct `Composite` and `Canvas`:
 
-- Win32 direct `Composite` and `Canvas` use their existing GDI
-  `DrawEdge` native painting for visible bevels; `setBorderRelief` delegates
-  to that same owner, and both getters report the active relief consistently.
-  A first-use native-style snapshot preserves *all* original extended edges
-  (`CLIENTEDGE`, `STATICEDGE`, `WINDOWEDGE`) and the original `WS_BORDER` bit;
-  clearing the bevel restores those exact bits rather than guessing from SWT style.
-- `setBorderRelief(SWT.SHADOW_NONE)` can remove all native borders.
-  `setBevelBorder(SWT.NONE)` restores the pre-existing constructor border.
-  Transitions between the two forms clear the prior native override first.
+- Win32 direct `Composite` and `Canvas` retain the existing GDI
+  `DrawEdge` painter, but derive the requested edge from the package-owned
+  `Control.borderReliefState()` instead of storing a second `bevelBorder`
+  field or a second native-style snapshot. The public `setBevelBorder` method
+  is a checked alias of `Control.setBorderRelief`. `Composite` uses
+  `WS_EX_CLIENTEDGE` to reserve trim even for GDI-raised edges, so the
+  existing paint callback owns all four edge variants.
+- `Control` alone captures the first native `WS_BORDER` and the extended
+  `CLIENTEDGE`, `STATICEDGE`, and `WINDOWEDGE` bits; `SWT.DEFAULT`
+  restores them exactly. `setBorderRelief(SWT.SHADOW_NONE)` removes the
+  native edge, while `setBevelBorder(SWT.NONE)` restores the constructor
+  border and maps the getter back to the historical `SWT.NONE` sentinel.
+- `Control.WM_NCPAINT` skips duplicate etched painting after a direct
+  Composite/Canvas GDI callback has handled the frame; unrelated SWT native
+  control subclasses retain their original Control-level etched path.
 - On GTK3/GTK4 and Android/iOS, `setBevelBorder` is a compatibility alias
   of the already-implemented `Control.setBorderRelief`. A single GTK CSS
   provider or mobile view remains the rendering owner.
