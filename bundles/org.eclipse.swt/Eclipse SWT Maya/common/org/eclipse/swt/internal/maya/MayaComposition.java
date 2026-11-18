@@ -30,6 +30,18 @@ public final class MayaComposition {
 
 	/** Floats per layer in {@link #_nApply}'s properties: x, y, opacity (0 to 1), visible (0 or 1). */
 	public static final int PROPS = 4;
+	/** Additive scene-v1 record: x/y, opacity, visible, affine 3x2, local clip L/T/R/B. */
+	public static final int SCENE_FLOATS = 14;
+	/** Scene flags bit enabling the source-local rectangular clip. */
+	public static final int SCENE_CLIP = 1;
+	/** Native scene-v1 affine transform support. */
+	public static final long CAP_AFFINE_2D = 1L;
+	/** Native scene-v1 local rectangle clip support. */
+	public static final long CAP_LOCAL_RECT_CLIP = 2L;
+	/** Optional dirty image upload support. */
+	public static final long CAP_DIRTY_UPLOAD = 4L;
+	private static volatile boolean capabilitiesUnavailable;
+	private static volatile boolean sceneUnavailable;
 
 	private MayaComposition() {
 	}
@@ -39,6 +51,23 @@ public final class MayaComposition {
 
 	/** A layer of the given pixel size, not yet shown, or 0. */
 	public static native long _nAddLayer(long composition, int width, int height);
+
+	/** Extension capabilities for this live composition, or zero; absent in older binaries. */
+	public static native long _nCapabilities(long composition);
+
+	/**
+	 * Reports supported rendering extensions, independently of the packed transport
+	 * version. Older Maya binaries retain their original legacy operations.
+	 */
+	public static long capabilities(long composition) {
+		if (composition == 0 || capabilitiesUnavailable) return 0;
+		try {
+			return _nCapabilities(composition);
+		} catch (UnsatisfiedLinkError olderMayaBinary) {
+			capabilitiesUnavailable = true;
+			return 0;
+		}
+	}
 
 	/** Replaces the layer's pixels (width * height premultiplied ARGB ints); 0 or a failure code. */
 	public static native int _nUpload(long layer, int[] pixels);
@@ -60,6 +89,34 @@ public final class MayaComposition {
 	 * (x, y, opacity, visible); layers not listed are not shown. One commit. Returns 0 or a failure code.
 	 */
 	public static native int _nApply(long composition, long[] layers, float[] props, int count);
+
+	/**
+	 * Optional scene-v1 transaction. Each layer has {@link #SCENE_FLOATS} floats:
+	 * physical client offsets X/Y, opacity, visibility, affine m11/m12/m21/m22/dx/dy,
+	 * and source-image-local clip left/top/right/bottom. The affine transform maps
+	 * source image pixels and transforms the clip with the visual. All values must
+	 * be finite and within +/- 2^20; opacity is 0..1 and visibility is 0 or 1.
+	 * Flags are zero or {@link #SCENE_CLIP}; an enabled clip must not be reversed.
+	 * All records are validated before native visual mutation. Legacy array and
+	 * packed-v1 frames restore identity transform and no clip for their layers.
+	 */
+	public static native int _nApplyScene(long composition, long[] layers, float[] packed,
+			int[] flags, int count);
+
+	/**
+	 * Uses the optional scene ABI, or returns unsupported (-1). A caller must use
+	 * its painted fallback when unsupported; a legacy frame cannot carry a scene.
+	 */
+	public static int applyScene(long composition, long[] layers, float[] packed,
+			int[] flags, int count) {
+		if (sceneUnavailable) return -1;
+		try {
+			return _nApplyScene(composition, layers, packed, flags, count);
+		} catch (UnsatisfiedLinkError olderMayaBinary) {
+			sceneUnavailable = true;
+			return -1;
+		}
+	}
 
 	/** Optional packet ingress ABI only (not an OS backend capability); absent in older Maya binaries. */
 	public static native int _nFramePacketVersion();

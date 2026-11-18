@@ -32,6 +32,8 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 
 /**
  * An opt-in, painted Z-stack over a long-coordinate, zoomable XY viewport.
@@ -691,6 +693,8 @@ public final class LayeredViewport extends Canvas {
         /* native: asked to be composited by the window system; nativeLayer is its native handle (0 while painted) */
         private boolean nativeRequested;
         private long nativeLayer;
+        private int nativePixelWidth, nativePixelHeight;
+        private boolean nativePreparing;
         /* the blend mode (BLEND_*) and, for a blended image layer, its pixels read once (null until needed) */
         private int blendMode = BLEND_NORMAL;
         private ImageData blendSource;
@@ -1064,8 +1068,10 @@ public final class LayeredViewport extends Canvas {
          * Asks for this image layer to be composited by the window system (a DirectComposition visual on Windows,
          * through the optional maya backend): its pan, opacity, visibility and Z order then change without
          * repainting anything, and it shows above every painted layer, like a control layer. It is native only
-         * while its image is drawn one to one (zoom 1, world size the image's size, no world clip, 100% device
-         * zoom; fixed axes may remain one to one at another viewport zoom) and a backend exists; otherwise, and when that stops being true, it is painted as before.
+         * while the backend can represent its image projection. Original backends retain the one-to-one,
+         * unclipped, 100% device-scale contract. A backend explicitly advertising affine/clip support can
+         * also scale images and apply rectangular world clips. Source pixels are mapped to this shell's
+         * physical client pixels; unsupported features and non-normal blend modes stay painted.
          *
          * @return whether the layer is native now
          */
@@ -1327,12 +1333,10 @@ public final class LayeredViewport extends Canvas {
         dirty = new ViewportDamageRegion();
         addPaintListener(event -> paintLayers(event.gc));
         addListener(SWT.Resize, event -> refreshNativeClientGeometry());
-        // A monitor/DPI zoom transition can change native device pixels
-        // without changing this viewport's logical client rectangle.
-        addListener(SWT.ZoomChanged, event -> {
-            nativeClientGeometryKnown = false;
-            refreshNativeClientGeometry();
-        });
+        // A monitor/DPI transition may leave logical bounds unchanged, and
+        // Win32 may adapt children after its Shell's asynchronous pass. Both
+        // notifications use the existing client-geometry synchronization owner.
+        addListener(SWT.ZoomChanged, nativeZoomListener);
         addListener(SWT.MouseDown, this::dispatchPointer);
         addListener(SWT.MouseUp, this::dispatchPointer);
         addListener(SWT.MouseMove, this::dispatchPointer);
@@ -1367,6 +1371,13 @@ public final class LayeredViewport extends Canvas {
             retainedZ.clear();
             nativeHandles = new long[0];
             nativeProperties = new float[0];
+            nativeSceneProperties = new float[0];
+            nativeSceneFlags = new int[0];
+            nativeCapabilities = nativeCapabilitiesComposition = 0;
+            if (nativeZoomShell != null && !nativeZoomShell.isDisposed()) {
+                nativeZoomShell.removeListener(SWT.ZoomChanged, nativeZoomListener);
+            }
+            nativeZoomShell = null;
             nativeSyncPending = false;
             pointerListenerCount = 0;
             clearPointerCapture();
@@ -2602,17 +2613,57 @@ public final class LayeredViewport extends Canvas {
     private int nativeRequestCount;
     private long[] nativeHandles = new long[0];
     private float[] nativeProperties = new float[0];
+    private float[] nativeSceneProperties = new float[0];
+    private int[] nativeSceneFlags = new int[0];
+    private long nativeCapabilities, nativeCapabilitiesComposition;
+    private Shell nativeZoomShell;
+    private final Listener nativeZoomListener = event -> {
+        if (!isDisposed()) {
+            nativeClientGeometryKnown = false;
+            refreshNativeClientGeometry();
+        }
+    };
     private boolean nativeSyncPending;
     private int nativeFrameDepth;
     private boolean nativeRetrying;
 
     private boolean nativeAvailable() {
+        if (isDisposed()) return false;
         if (!nativeTried) {
             nativeTried = true;
             nativeBackend = NativeLayers.platform();
-            if (nativeBackend != null) composition = nativeBackend.create(this);
+            NativeLayers backend = nativeBackend;
+            if (backend != null) {
+                long created = backend.create(this);
+                // A backend callback may dispose this viewport before returning.
+                if (isDisposed()) {
+                    if (created != 0) backend.dispose(created);
+                    return false;
+                }
+                composition = created;
+            }
         }
-        return composition != 0;
+        if (composition == 0) return false;
+        Shell shell = getShell();
+        if (nativeZoomShell != shell) {
+            if (nativeZoomShell != null && !nativeZoomShell.isDisposed()) {
+                nativeZoomShell.removeListener(SWT.ZoomChanged, nativeZoomListener);
+            }
+            nativeZoomShell = shell;
+            shell.addListener(SWT.ZoomChanged, nativeZoomListener);
+        }
+        if (nativeCapabilitiesComposition != composition) {
+            long queriedComposition = composition;
+            NativeLayers queriedBackend = nativeBackend;
+            // A nested query sees the original conservative contract, never a
+            // half-published feature set, and cannot recursively probe forever.
+            nativeCapabilitiesComposition = queriedComposition;
+            nativeCapabilities = 0;
+            long supported = queriedBackend.capabilities(queriedComposition);
+            if (isDisposed() || composition != queriedComposition || nativeBackend != queriedBackend) return false;
+            nativeCapabilities = supported & (NativeLayers.AFFINE_2D | NativeLayers.LOCAL_RECT_CLIP | NativeLayers.DIRTY_UPLOAD);
+        }
+        return !isDisposed() && composition != 0;
     }
 
     /**
@@ -2667,13 +2718,45 @@ public final class LayeredViewport extends Canvas {
         return !isDisposed() && composition == candidate;
     }
 
-    /* an image drawn one to one (zoom 1, world size the image's size, no clip, 100% device zoom) with a backend */
-    private boolean nativeEligible(Layer layer) {
-        if (!layer.nativeRequested || layer.removed || layer.image == null || layer.image.isDisposed()) return false;
-        if (layerScaleX(layer) != 1.0 || layerScaleY(layer) != 1.0 || layer.worldClip != null || layer.blendMode != BLEND_NORMAL
-                || DPIUtil.getDeviceZoom() != 100) return false;
-        Rectangle size = layer.image.getBounds();
-        return layer.right - layer.x == size.width && layer.bottom - layer.y == size.height && nativeAvailable();
+    /* Shell DPI is local to this window; SWT autoscale policy determines how
+       its logical Control coordinates map to native client pixels. ImageData
+       remains the canonical 100% raster, including for dirty subregions. */
+    private double nativePixelScale() {
+        return DPIUtil.getZoomForAutoscaleProperty(getShell().getZoom()) / 100.0;
+    }
+
+    private static final double NATIVE_SCENE_LIMIT = 0x1.0p20;
+
+    private static boolean nativeSceneValue(double value) {
+        return Double.isFinite(value) && Math.abs(value) <= NATIVE_SCENE_LIMIT;
+    }
+
+    private boolean nativeNeedsScene(Layer layer, int width, int height, double pixelScale) {
+        return pixelScale != 1.0 || layerScaleX(layer) != 1.0 || layerScaleY(layer) != 1.0
+                || layer.right - layer.x != width || layer.bottom - layer.y != height || layer.worldClip != null;
+    }
+
+    /* Eligibility is feature-specific. No advanced call is made merely because
+       a backend class can load. The unchanged legacy path remains the fallback. */
+    private boolean nativeEligible(Layer layer, double pixelScale, Rectangle area) {
+        if (isDisposed() || layer.nativePreparing || !layer.nativeRequested || layer.removed
+                || layer.image == null || layer.image.isDisposed() || layer.blendMode != BLEND_NORMAL) return false;
+        if (!nativeAvailable() || layer.removed || !layer.nativeRequested
+                || layer.image == null || layer.image.isDisposed() || layer.blendMode != BLEND_NORMAL) return false;
+        int width = layer.nativePixelWidth, height = layer.nativePixelHeight;
+        if (layer.nativeLayer == 0) {
+            Rectangle size = layer.image.getBounds();
+            width = size.width;
+            height = size.height;
+        }
+        if (width <= 0 || height <= 0 || layer.right <= layer.x || layer.bottom <= layer.y) return false;
+        if (!Double.isFinite(pixelScale) || pixelScale <= 0) return false;
+        if (!nativeNeedsScene(layer, width, height, pixelScale)) return true;
+        boolean affine = pixelScale != 1.0 || layerScaleX(layer) != 1.0 || layerScaleY(layer) != 1.0
+                || layer.right - layer.x != width || layer.bottom - layer.y != height;
+        if (affine && (nativeCapabilities & NativeLayers.AFFINE_2D) == 0) return false;
+        if (layer.worldClip != null && (nativeCapabilities & NativeLayers.LOCAL_RECT_CLIP) == 0) return false;
+        return nativeSceneRecord(layer, width, height, pixelScale, area, null, 0) >= 0;
     }
 
     /*
@@ -2681,33 +2764,70 @@ public final class LayeredViewport extends Canvas {
      * one native frame carries every native layer's order, offset, opacity and visibility
      */
     private void syncNative() {
-        if (composition == 0 && (nativeRequestCount == 0 || nativeTried)) return;
+        if (isDisposed() || composition == 0 && (nativeRequestCount == 0 || nativeTried)) return;
+        // One window-DPI/client snapshot for the membership pass, not one
+        // OS query per layer. Reentrant passes own their own local snapshot.
+        double pixelScale = nativePixelScale();
+        Rectangle area = getClientArea();
         // Ordinary Java-only edits do not materialize a lazy order snapshot.
         Layer[] frame = orderSnapshot();
         for (Layer layer : frame) {
-            boolean eligible = nativeEligible(layer);
+            if (isDisposed()) return;
+            if (layer.nativePreparing) continue;
+            boolean eligible = nativeEligible(layer, pixelScale, area);
+            if (isDisposed()) return;
             if (eligible && layer.nativeLayer == 0) {
-                Rectangle size = layer.image.getBounds();
-                long handle = nativeBackend.addLayer(composition, size.width, size.height);
-                if (handle != 0 && nativeBackend.upload(handle, premultiplied(layer.image.getImageData())) == 0) {
-                    damageBounds(layer); // its pixels leave the store
-                    layer.nativeLayer = handle;
-                } else if (handle != 0) {
-                    nativeBackend.removeLayer(composition, handle);
+                NativeLayers backend = nativeBackend;
+                long owner = composition;
+                Image source = layer.image;
+                long handle = 0;
+                layer.nativePreparing = true;
+                try {
+                    ImageData data = source.getImageData();
+                    if (!nativeOwnerCurrent(layer, source, backend, owner)) continue;
+                    handle = backend.addLayer(owner, data.width, data.height);
+                    if (!nativeOwnerCurrent(layer, source, backend, owner)) continue;
+                    int result = handle == 0 ? -1 : backend.upload(handle, premultiplied(data));
+                    if (!nativeOwnerCurrent(layer, source, backend, owner)) continue;
+                    if (result == 0) {
+                        damageBounds(layer); // its pixels leave the store
+                        layer.nativePixelWidth = data.width;
+                        layer.nativePixelHeight = data.height;
+                        layer.nativeLayer = handle;
+                        handle = 0; // ownership transferred to the layer
+                    }
+                } finally {
+                    layer.nativePreparing = false;
+                    // Includes exceptional uploads and callbacks that retired
+                    // the logical layer. A disposed composition already owns
+                    // cleanup of every handle added to it.
+                    if (handle != 0 && !isDisposed() && composition == owner && nativeBackend == backend) {
+                        backend.removeLayer(owner, handle);
+                    }
                 }
+                // Native callbacks can change projection or clip while the
+                // image is uploaded. Recheck before publishing a scene frame.
+                if (!isDisposed() && layer.nativeLayer != 0 && !nativeEligible(layer, pixelScale, area)) dropNative(layer);
             } else if (!eligible && layer.nativeLayer != 0) {
                 dropNative(layer);
             }
         }
-        applyNative();
+        if (!isDisposed()) applyNative();
+    }
+
+    private boolean nativeOwnerCurrent(Layer layer, Image image, NativeLayers backend, long owner) {
+        return !isDisposed() && composition == owner && nativeBackend == backend && !layer.removed
+                && layer.nativeRequested && layer.image == image && !image.isDisposed();
     }
 
     /* a layer stops being native: its native layer is freed and its pixels return to the store */
     private void dropNative(Layer layer) {
-        if (layer.nativeLayer == 0) return;
-        nativeBackend.removeLayer(composition, layer.nativeLayer);
-        layer.nativeLayer = 0;
-        if (!layer.removed) damageBounds(layer);
+        long handle = layer.nativeLayer;
+        if (handle == 0) return;
+        layer.nativeLayer = 0; // detach before a native callback can reenter
+        layer.nativePixelWidth = layer.nativePixelHeight = 0;
+        nativeBackend.removeLayer(composition, handle);
+        if (!isDisposed() && !layer.removed) damageBounds(layer);
     }
 
     private void damageBounds(Layer layer) {
@@ -2715,9 +2835,74 @@ public final class LayeredViewport extends Canvas {
         if (bounds != null) redraw(bounds.x, bounds.y, bounds.width, bounds.height, false);
     }
 
-    /* one native frame: the native layers in Z order with their offset, opacity and visibility */
+    /* Fill a source-image-pixel -> physical-client-pixel record. Intersect
+       world clips before subtraction, so signed-long distant clips cannot
+       overflow. Hidden layers submit a finite neutral record. No native call,
+       callback or mutable snapshot escapes this calculation. */
+    private int nativeSceneRecord(Layer layer, int width, int height, double pixelScale,
+            Rectangle area, float[] properties, int at) {
+        if (width <= 0 || height <= 0 || layer.right <= layer.x || layer.bottom <= layer.y) return -1;
+        double sx = ((layer.right - layer.x) / (double) width) * layerScaleX(layer) * pixelScale;
+        double sy = ((layer.bottom - layer.y) / (double) height) * layerScaleY(layer) * pixelScale;
+        if (!nativeSceneValue(sx) || !nativeSceneValue(sy) || sx <= 0 || sy <= 0) return -1;
+        long originX = layerOriginX(layer), originY = layerOriginY(layer);
+        double scaleX = layerScaleX(layer), scaleY = layerScaleY(layer);
+        double x = device(layer.x, originX, scaleX) * pixelScale;
+        double y = device(layer.y, originY, scaleY) * pixelScale;
+        long visibleLeft = layer.x, visibleTop = layer.y;
+        long visibleRight = layer.right, visibleBottom = layer.bottom;
+        int flags = 0;
+        double left = 0, top = 0, right = 0, bottom = 0;
+        if (layer.worldClip != null) {
+            WorldBounds clip = layer.worldClip;
+            long x0 = Math.max(layer.x, clip.x()), y0 = Math.max(layer.y, clip.y());
+            long x1 = Math.min(layer.right, clip.x() + clip.width());
+            long y1 = Math.min(layer.bottom, clip.y() + clip.height());
+            visibleLeft = x0;
+            visibleTop = y0;
+            visibleRight = x1;
+            visibleBottom = y1;
+            if (x0 < x1 && y0 < y1) {
+                left = (x0 - layer.x) / (double) (layer.right - layer.x) * width;
+                top = (y0 - layer.y) / (double) (layer.bottom - layer.y) * height;
+                right = (x1 - layer.x) / (double) (layer.right - layer.x) * width;
+                bottom = (y1 - layer.y) / (double) (layer.bottom - layer.y) * height;
+                if (!nativeSceneValue(left) || !nativeSceneValue(top)
+                        || !nativeSceneValue(right) || !nativeSceneValue(bottom)) return -1;
+                flags = NativeLayers.SCENE_CLIP;
+            }
+        }
+        // Primitive culling avoids allocating a Rectangle for every retained
+        // native layer on every frame. The caller owns the one client snapshot.
+        boolean shown = area.width > 0 && area.height > 0 && layer.visible && layer.opacity > 0
+                && visibleLeft < visibleRight && visibleTop < visibleBottom
+                && device(visibleRight, originX, scaleX) > area.x
+                && device(visibleLeft, originX, scaleX) < (double) area.x + area.width
+                && device(visibleBottom, originY, scaleY) > area.y
+                && device(visibleTop, originY, scaleY) < (double) area.y + area.height;
+        if (shown && (!nativeSceneValue(x) || !nativeSceneValue(y))) return -1;
+        if (properties != null) {
+            Arrays.fill(properties, at, at + NativeLayers.SCENE_FLOATS, 0);
+            properties[at] = shown ? (float) x : 0;
+            properties[at + 1] = shown ? (float) y : 0;
+            properties[at + 2] = layer.opacity / 255f;
+            properties[at + 3] = shown ? 1 : 0;
+            properties[at + 4] = shown ? (float) sx : 1;
+            properties[at + 7] = shown ? (float) sy : 1;
+            if (shown && flags != 0) {
+                properties[at + 10] = (float) left;
+                properties[at + 11] = (float) top;
+                properties[at + 12] = (float) right;
+                properties[at + 13] = (float) bottom;
+            }
+        }
+        return shown ? flags : 0;
+    }
+
+    /* One retained native frame. Preserve legacy arrays and identity-reset
+       behavior when no member needs the optional scene representation. */
     private boolean applyNative() {
-        if (composition == 0) return false;
+        if (isDisposed() || composition == 0) return false;
         if (batchDepth != 0) {
             // deferred to endBatch: nothing committed yet, so a caller keeps its CPU repaint
             nativeSyncPending = true;
@@ -2726,28 +2911,45 @@ public final class LayeredViewport extends Canvas {
         nativeSyncPending = false;
         Layer[] frame = orderSnapshot();
         int n = 0;
-        for (Layer layer : frame) if (layer.nativeLayer != 0) n++;
+        boolean scene = false;
+        double pixelScale = nativePixelScale();
+        for (Layer layer : frame) {
+            if (layer.nativeLayer == 0) continue;
+            n++;
+            scene |= nativeNeedsScene(layer, layer.nativePixelWidth, layer.nativePixelHeight, pixelScale);
+        }
+        int stride = scene ? NativeLayers.SCENE_FLOATS : 4;
         long[] handles;
         float[] properties;
+        int[] flags = null;
         if (nativeFrameDepth == 0) {
-            if (nativeHandles.length < n) {
-                int next = nativeHandles.length >= Integer.MAX_VALUE / 8
-                        ? n : Math.max(4, nativeHandles.length * 2);
-                int capacity = Math.max(n, next);
-                int propertyCapacity = Math.multiplyExact(capacity, 4);
-                // Publish the pair only after both allocations succeed.
-                long[] grownHandles = new long[capacity];
-                float[] grownProperties = new float[propertyCapacity];
-                nativeHandles = grownHandles;
+            int capacity = nativeHandles.length;
+            if (capacity < n) {
+                int next = capacity >= Integer.MAX_VALUE / (NativeLayers.SCENE_FLOATS * 2)
+                        ? n : Math.max(4, capacity * 2);
+                capacity = Math.max(n, next);
+            }
+            // Allocate every needed lane before publishing any replacements.
+            long[] grownHandles = nativeHandles.length < capacity ? new long[capacity] : nativeHandles;
+            float[] current = scene ? nativeSceneProperties : nativeProperties;
+            float[] grownProperties = current.length < Math.multiplyExact(capacity, stride)
+                    ? new float[Math.multiplyExact(capacity, stride)] : current;
+            int[] grownFlags = scene && nativeSceneFlags.length < capacity ? new int[capacity] : nativeSceneFlags;
+            nativeHandles = grownHandles;
+            if (scene) {
+                nativeSceneProperties = grownProperties;
+                nativeSceneFlags = grownFlags;
+                flags = grownFlags;
+            } else {
                 nativeProperties = grownProperties;
             }
-            handles = nativeHandles;
-            properties = nativeProperties;
+            handles = grownHandles;
+            properties = grownProperties;
         } else {
             // A synchronous backend callback must not overwrite its outer frame.
-            int propertyCount = Math.multiplyExact(n, 4);
             handles = new long[n];
-            properties = new float[propertyCount];
+            properties = new float[Math.multiplyExact(n, stride)];
+            if (scene) flags = new int[n];
         }
         long submittedComposition = composition;
         NativeLayers submittedBackend = nativeBackend;
@@ -2755,31 +2957,44 @@ public final class LayeredViewport extends Canvas {
         try {
             Rectangle area = getClientArea();
             int i = 0;
+            int result = 0;
             for (Layer layer : frame) {
                 if (layer.nativeLayer == 0) continue;
                 handles[i] = layer.nativeLayer;
-                double x = device(layer.x, layerOriginX(layer), layerScaleX(layer));
-                double y = device(layer.y, layerOriginY(layer), layerScaleY(layer));
-                boolean shown = area.width > 0 && area.height > 0 && layer.visible && layer.opacity > 0
-                        && Double.isFinite(x) && Double.isFinite(y)
-                        && x < (double) area.x + area.width && y < (double) area.y + area.height
-                        && x + (layer.right - layer.x) > area.x && y + (layer.bottom - layer.y) > area.y;
-                properties[i * 4] = shown ? (float) x : 0;
-                properties[i * 4 + 1] = shown ? (float) y : 0;
-                properties[i * 4 + 2] = layer.opacity / 255f;
-                properties[i * 4 + 3] = shown ? 1 : 0;
+                if (scene) {
+                    int value = nativeSceneRecord(layer, layer.nativePixelWidth, layer.nativePixelHeight,
+                            pixelScale, area, properties, i * stride);
+                    if (value < 0) { result = -1; break; }
+                    flags[i] = value;
+                } else {
+                    double x = device(layer.x, layerOriginX(layer), layerScaleX(layer));
+                    double y = device(layer.y, layerOriginY(layer), layerScaleY(layer));
+                    boolean shown = area.width > 0 && area.height > 0 && layer.visible && layer.opacity > 0
+                            && Double.isFinite(x) && Double.isFinite(y)
+                            && x < (double) area.x + area.width && y < (double) area.y + area.height
+                            && x + (layer.right - layer.x) > area.x && y + (layer.bottom - layer.y) > area.y;
+                    properties[i * 4] = shown ? (float) x : 0;
+                    properties[i * 4 + 1] = shown ? (float) y : 0;
+                    properties[i * 4 + 2] = layer.opacity / 255f;
+                    properties[i * 4 + 3] = shown ? 1 : 0;
+                }
                 i++;
             }
-            int result = submittedBackend.apply(submittedComposition, handles, properties, n);
+            if (result == 0) {
+                result = scene ? submittedBackend.applyScene(submittedComposition, handles, properties, flags, n)
+                        : submittedBackend.apply(submittedComposition, handles, properties, n);
+            }
             if (result != 0 && !isDisposed() && composition == submittedComposition
                     && nativeBackend == submittedBackend) {
                 // A nested callback may have changed the live stack or already
                 // disposed this composition. Detach it before any teardown call.
                 composition = 0;
+                nativeCapabilities = nativeCapabilitiesComposition = 0;
                 nativeSyncPending = false;
                 for (Layer layer : orderSnapshot()) {
                     if (layer.nativeLayer == 0) continue;
                     layer.nativeLayer = 0;
+                    layer.nativePixelWidth = layer.nativePixelHeight = 0;
                     if (!layer.removed) damageBounds(layer);
                 }
                 // dispose owns every native layer, including any added by a callback.

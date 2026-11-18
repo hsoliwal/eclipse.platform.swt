@@ -2663,6 +2663,26 @@ fail:
 }
 #endif
 
+#ifndef NO_gtk_1snapshot_1append_1node
+JNIEXPORT void JNICALL GTK4_NATIVE(gtk_1snapshot_1append_1node)
+	(JNIEnv *env, jclass that, jlong arg0, jlong arg1)
+{
+	GTK4_NATIVE_ENTER(env, that, gtk_1snapshot_1append_1node_FUNC);
+	gtk_snapshot_append_node((GtkSnapshot *)arg0, (GskRenderNode *)arg1);
+	GTK4_NATIVE_EXIT(env, that, gtk_1snapshot_1append_1node_FUNC);
+}
+#endif
+
+#ifndef NO_gtk_1snapshot_1append_1texture
+JNIEXPORT void JNICALL GTK4_NATIVE(gtk_1snapshot_1append_1texture)
+	(JNIEnv *env, jclass that, jlong arg0, jlong arg1, jlong arg2)
+{
+	GTK4_NATIVE_ENTER(env, that, gtk_1snapshot_1append_1texture_FUNC);
+	gtk_snapshot_append_texture((GtkSnapshot *)arg0, (GdkTexture *)arg1, (const graphene_rect_t *)arg2);
+	GTK4_NATIVE_EXIT(env, that, gtk_1snapshot_1append_1texture_FUNC);
+}
+#endif
+
 #ifndef NO_gtk_1snapshot_1free_1to_1node
 JNIEXPORT jlong JNICALL GTK4_NATIVE(gtk_1snapshot_1free_1to_1node)
 	(JNIEnv *env, jclass that, jlong arg0)
@@ -2697,6 +2717,16 @@ JNIEXPORT void JNICALL GTK4_NATIVE(gtk_1snapshot_1pop)
 }
 #endif
 
+#ifndef NO_gtk_1snapshot_1push_1clip
+JNIEXPORT void JNICALL GTK4_NATIVE(gtk_1snapshot_1push_1clip)
+	(JNIEnv *env, jclass that, jlong arg0, jlong arg1)
+{
+	GTK4_NATIVE_ENTER(env, that, gtk_1snapshot_1push_1clip_FUNC);
+	gtk_snapshot_push_clip((GtkSnapshot *)arg0, (const graphene_rect_t *)arg1);
+	GTK4_NATIVE_EXIT(env, that, gtk_1snapshot_1push_1clip_FUNC);
+}
+#endif
+
 #ifndef NO_gtk_1snapshot_1push_1mask
 JNIEXPORT void JNICALL GTK4_NATIVE(gtk_1snapshot_1push_1mask)
 	(JNIEnv *env, jclass that, jlong arg0, jint arg1)
@@ -2712,6 +2742,46 @@ JNIEXPORT void JNICALL GTK4_NATIVE(gtk_1snapshot_1push_1mask)
 		}
 	}
 	GTK4_NATIVE_EXIT(env, that, gtk_1snapshot_1push_1mask_FUNC);
+}
+#endif
+
+#ifndef NO_gtk_1snapshot_1push_1opacity
+JNIEXPORT void JNICALL GTK4_NATIVE(gtk_1snapshot_1push_1opacity)
+	(JNIEnv *env, jclass that, jlong arg0, jdouble arg1)
+{
+	GTK4_NATIVE_ENTER(env, that, gtk_1snapshot_1push_1opacity_FUNC);
+	gtk_snapshot_push_opacity((GtkSnapshot *)arg0, arg1);
+	GTK4_NATIVE_EXIT(env, that, gtk_1snapshot_1push_1opacity_FUNC);
+}
+#endif
+
+#ifndef NO_gtk_1snapshot_1restore
+JNIEXPORT void JNICALL GTK4_NATIVE(gtk_1snapshot_1restore)
+	(JNIEnv *env, jclass that, jlong arg0)
+{
+	GTK4_NATIVE_ENTER(env, that, gtk_1snapshot_1restore_FUNC);
+	gtk_snapshot_restore((GtkSnapshot *)arg0);
+	GTK4_NATIVE_EXIT(env, that, gtk_1snapshot_1restore_FUNC);
+}
+#endif
+
+#ifndef NO_gtk_1snapshot_1save
+JNIEXPORT void JNICALL GTK4_NATIVE(gtk_1snapshot_1save)
+	(JNIEnv *env, jclass that, jlong arg0)
+{
+	GTK4_NATIVE_ENTER(env, that, gtk_1snapshot_1save_FUNC);
+	gtk_snapshot_save((GtkSnapshot *)arg0);
+	GTK4_NATIVE_EXIT(env, that, gtk_1snapshot_1save_FUNC);
+}
+#endif
+
+#ifndef NO_gtk_1snapshot_1scale
+JNIEXPORT void JNICALL GTK4_NATIVE(gtk_1snapshot_1scale)
+	(JNIEnv *env, jclass that, jlong arg0, jfloat arg1, jfloat arg2)
+{
+	GTK4_NATIVE_ENTER(env, that, gtk_1snapshot_1scale_FUNC);
+	gtk_snapshot_scale((GtkSnapshot *)arg0, arg1, arg2);
+	GTK4_NATIVE_EXIT(env, that, gtk_1snapshot_1scale_FUNC);
 }
 #endif
 

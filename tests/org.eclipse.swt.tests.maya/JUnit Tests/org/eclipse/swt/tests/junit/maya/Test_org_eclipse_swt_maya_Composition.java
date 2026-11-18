@@ -213,6 +213,135 @@ public class Test_org_eclipse_swt_maya_Composition {
 		assertEquals(BLUE, screen(24, 24), "invalid batched frames must preserve the prior compositor surface");
 	}
 
+	private void requireSceneAbi() {
+		long required = MayaComposition.CAP_AFFINE_2D | MayaComposition.CAP_LOCAL_RECT_CLIP;
+		long available = MayaComposition.capabilities(composition);
+		if (Boolean.getBoolean("swt.maya.scene.required")) {
+			assertEquals(required, available & required, "required Maya affine/clip JNI ABI is missing");
+		}
+		assumeTrue((available & required) == required, "older Maya native ABI has no affine/clip scene");
+	}
+
+	private void scene(long[] layers, float[] properties, int[] flags) {
+		assertEquals(0, MayaComposition.applyScene(composition, layers, properties, flags, layers.length));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+	}
+
+	@Test
+	public void nativeSceneAppliesLocalClipAndLegacyFrameResetsAffineState() {
+		requireSceneAbi();
+		long red = layer(OPAQUE_RED);
+		long[] handles = { red };
+		float[] properties = { 0, 0, 1, 1, 2, 0, 0, 1, 20, 20, 0, 0, 25, 60 };
+		int[] flags = { MayaComposition.SCENE_CLIP };
+		paints = 0;
+		scene(handles, properties, flags);
+		assertEquals(RED, screen(30, 30));
+		assertEquals(WHITE, screen(80, 30), "source-local clip transforms with the image");
+		properties[12] = 60;
+		scene(handles, properties, flags);
+		assertEquals(RED, screen(80, 30), "clip-only change reaches the retained native visual");
+		scene(handles, properties, flags); // no-op scene must retain the same pixels
+		assertEquals(RED, screen(80, 30));
+		assertEquals(0, paints, "native affine and clip properties do not repaint the shell");
+
+		frame(handles, 20, 20, 1, 1);
+		assertEquals(RED, screen(80, 30));
+		assertEquals(WHITE, screen(140, 30), "legacy frame clears the old affine scale");
+	}
+
+	@Test
+	public void packedLegacyFrameClearsSceneClipAndSceneOnlyUploadCommitsPixels() {
+		requireSceneAbi();
+		long red = layer(OPAQUE_RED);
+		long[] handles = { red };
+		float[] properties = { 0, 0, 1, 1, 2, 0, 0, 1, 20, 20, 0, 0, 25, 60 };
+		int[] flags = { MayaComposition.SCENE_CLIP };
+		scene(handles, properties, flags);
+		assertEquals(RED, screen(30, 30));
+		assertEquals(WHITE, screen(80, 30));
+		int[] blue = new int[SIZE * SIZE];
+		Arrays.fill(blue, OPAQUE_BLUE);
+		assertEquals(0, MayaComposition._nUpload(red, blue));
+		scene(handles, properties, flags); // same properties, pending EndDraw must still commit
+		assertEquals(BLUE, screen(30, 30));
+		assertEquals(WHITE, screen(80, 30));
+		assertEquals(MayaFramePacket.VERSION, MayaComposition._nFramePacketVersion());
+		ByteBuffer packet = new MayaFramePacket.Encoder()
+				.encode(handles, new float[] { 20, 20, 1, 1 }, 1, 1L);
+		assertEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(BLUE, screen(80, 30), "packed v1 clears the old source clip");
+		assertEquals(WHITE, screen(140, 30), "packed v1 clears the old scale");
+	}
+
+	@Test
+	public void sceneValidationRejectsTheWholeFrameBeforeAnyVisualChanges() {
+		requireSceneAbi();
+		long red = layer(OPAQUE_RED), blue = layer(OPAQUE_BLUE);
+		long[] handles = { red, blue };
+		float[] properties = {
+				20, 20, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 100, 100,
+				120, 20, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 100, 100 };
+		int[] flags = { 0, MayaComposition.SCENE_CLIP };
+		scene(handles, properties, flags);
+		assertEquals(RED, screen(30, 30));
+		assertEquals(BLUE, screen(130, 30));
+		properties[0] = 60; // valid first record must not move if record two is invalid
+		properties[18] = Float.NaN;
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, handles, properties, flags, 2));
+		properties[18] = 1;
+		for (int invalid : new int[] { -1, 2, Integer.MAX_VALUE }) {
+			flags[1] = invalid;
+			assertNotEquals(0, MayaComposition._nApplyScene(composition, handles, properties, flags, 2));
+		}
+		flags[1] = MayaComposition.SCENE_CLIP;
+		properties[26] = -1; // right edge precedes left
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, handles, properties, flags, 2));
+		properties[26] = 100;
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, handles, new float[27], flags, 2));
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, handles, properties, new int[1], 2));
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, handles, properties, flags, Integer.MAX_VALUE));
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, new long[] { red, red }, properties, flags, 2));
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, new long[] { red, Long.MAX_VALUE }, properties, flags, 2));
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, null, properties, flags, 2));
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, handles, null, flags, 2));
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, handles, properties, null, 2));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(RED, screen(30, 30), "invalid later record did not move the first visual");
+		assertEquals(BLUE, screen(130, 30));
+		properties[0] = -20;
+		properties[1] = -20;
+		properties[14] = 120;
+		scene(handles, properties, flags);
+		assertEquals(RED, screen(10, 10), "negative finite physical offsets are supported");
+	}
+
+	@Test
+	public void capabilitiesAndSceneHandlesFollowNativeLifetime() {
+		requireSceneAbi();
+		long extensions = MayaComposition._nCapabilities(composition);
+		assertEquals(MayaComposition.CAP_AFFINE_2D | MayaComposition.CAP_LOCAL_RECT_CLIP
+				| MayaComposition.CAP_DIRTY_UPLOAD, extensions);
+		assertEquals(0, MayaComposition._nCapabilities(0));
+		assertEquals(0, MayaComposition._nCapabilities(Long.MAX_VALUE));
+		long red = layer(OPAQUE_RED);
+		float[] properties = { 20, 20, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 100, 100 };
+		assertEquals(0, MayaComposition._nCapabilities(red), "a layer token is not a composition");
+		MayaComposition._nRemoveLayer(composition, red);
+		assertNotEquals(0, MayaComposition._nApplyScene(composition,
+				new long[] { red }, properties, new int[] { 0 }, 1));
+		long disposed = composition;
+		MayaComposition._nDispose(disposed);
+		composition = 0;
+		assertEquals(0, MayaComposition._nCapabilities(disposed));
+		assertNotEquals(0, MayaComposition._nApplyScene(disposed,
+				new long[0], new float[0], new int[0], 0));
+	}
+
 	@Test
 	public void directPacketAndLegacyFramesHaveIdenticalNativePixels() {
 		// Older fragments did not export _nApplyPacked. Ordinary SWT tests

@@ -1797,7 +1797,10 @@ public void setBorderRelief (int relief) {
         }
         return;
     }
-    if (!hasBorder() || !(this instanceof Scrollable scrollable)) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+    if (!hasBorder() || !(this instanceof Scrollable scrollable)) {
+        SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+        return; // Make the failed pattern match terminal to Java flow analysis.
+    }
     NSScrollView frame = scrollable.scrollView;
     if (frame == null || frame.borderType() != OS.NSBezelBorder) {
         SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
