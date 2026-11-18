@@ -153,4 +153,32 @@ public class Test_org_eclipse_swt_maya_NativeLayers {
 		assertFalse(layer.isNative());
 		assertEquals(RED, screen(55, 25), "painted again, in the same place");
 	}
+
+	@Test
+	public void aPinnedNativeHeaderStaysWhileTheRowsPanUnderIt() {
+		// a row, then a header above it in Z pinned vertically: both composited by the window system
+		Layer row = viewport.addImageLayer("row", blue, 0, 60);
+		Layer header = viewport.addImageLayer("header", red, 0, 0);
+		header.setPinned(SWT.VERTICAL);
+		shell.open();
+		pump(250);
+		assertTrue(row.setNative(true), "maya composites the row");
+		assertTrue(header.setNative(true), "and the pinned header");
+		pump(300);
+		assertEquals(BLUE, screen(20, 70));
+		viewport.setOrigin(0, 40); // the row scrolls up to 20..60, under the header at 0..40
+		pump(300);
+		assertEquals(RED, screen(20, 10), "the pinned header stays at the top");
+		assertEquals(RED, screen(20, 30), "above the row that scrolled under it");
+		assertEquals(BLUE, screen(20, 50), "the row moved up");
+		viewport.setOrigin(25, 40); // a horizontal pan moves both
+		pump(300);
+		assertEquals(RED, screen(10, 10));
+		assertEquals(WHITE, screen(20, 10), "the header followed the horizontal pan");
+		assertTrue(header.isNative() && row.isNative(), "still composited by the window system");
+		header.setNative(false);
+		pump(300);
+		assertEquals(RED, screen(10, 10), "painted in the store, pinned in the same place");
+		assertEquals(WHITE, screen(20, 10));
+	}
 }
