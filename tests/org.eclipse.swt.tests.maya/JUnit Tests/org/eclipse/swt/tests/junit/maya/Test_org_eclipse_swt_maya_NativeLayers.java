@@ -9,6 +9,8 @@
 package org.eclipse.swt.tests.junit.maya;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,6 +24,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.internal.maya.MayaComposition;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.jupiter.api.AfterEach;
@@ -180,6 +183,37 @@ public class Test_org_eclipse_swt_maya_NativeLayers {
 		assertEquals(identity, layer.getId(), "stable logical layer identity");
 		assertTrue(layer.isNative());
 		assertEquals(0, paints, "native dirty pixels need no SWT Canvas paint");
+	}
+
+	@Test
+	public void batchedNativeImageDamageUsesTwoRectsAndOneCommit() {
+		int probe = MayaComposition.uploadDirty(0, new int[0], new int[0], 0);
+		if (Boolean.getBoolean("swt.maya.dirty.required")) {
+			assertNotEquals(-1, probe, "required native dirty upload ABI is missing");
+		}
+		assumeTrue(probe != -1, "native dirty image ABI not yet packaged");
+		Layer layer = viewport.addImageLayer("two changed regions", red, 20, 20);
+		shell.open();
+		pump(250);
+		assertTrue(layer.setNative(true));
+		pump(300);
+		GC ink = new GC(red);
+		try {
+			ink.setBackground(display.getSystemColor(SWT.COLOR_BLUE));
+			ink.fillRectangle(4, 5, 5, 4);
+			ink.setBackground(display.getSystemColor(SWT.COLOR_GREEN));
+			ink.fillRectangle(23, 24, 6, 4);
+		} finally {
+			ink.dispose();
+		}
+		paints = 0;
+		layer.redraw(new Rectangle(4, 5, 5, 4), new Rectangle(23, 24, 6, 4));
+		pump(300);
+		assertEquals(BLUE, screen(25, 26), "first rectangle");
+		assertEquals(new RGB(0, 255, 0), screen(46, 46), "second rectangle");
+		assertEquals(RED, screen(35, 35), "pixels between rectangles preserved");
+		assertTrue(layer.isNative());
+		assertEquals(0, paints, "CPU-staged native changes never require a Canvas repaint");
 	}
 
 	@Test

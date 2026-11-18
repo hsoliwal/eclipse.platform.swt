@@ -25,6 +25,7 @@ import org.eclipse.swt.internal.ViewportDamageRegion;
 import org.eclipse.swt.internal.ViewportGcProxy;
 import org.eclipse.swt.internal.ViewportRuntime;
 import org.eclipse.swt.internal.render.ImageDataArgb;
+import org.eclipse.swt.internal.render.NativeDirtyRegions;
 import org.eclipse.swt.internal.render.LayerArgbCompositor;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
@@ -861,6 +862,62 @@ public final class LayeredViewport extends Canvas {
                         new int[] { x, y, width, height }, 1) == 0) {
                     if (applyNative()) return; // dirty-only frames also require a successful Commit
                 }
+            }
+            redraw();
+        }
+
+
+        /**
+         * Submits several image-local dirty rectangles as a single JNI call.
+         * All rectangles and the aggregate packed payload are checked on the
+         * CPU before converting any pixels. Regions can overlap; later patches
+         * cover earlier ones. The existing software/full-image path remains
+         * the fallback when a native backend or its optional export is absent.
+         * No new SWT controls or native handles are created for individual
+         * rectangles. An empty array is a no-op.
+         *
+         * @param dirtyRegions changed rectangles in borrowed image pixel coordinates
+         */
+        public void redraw(Rectangle... dirtyRegions) {
+            checked();
+            if (dirtyRegions == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            if (image == null || image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            int count = dirtyRegions.length;
+            if (count == 0) return;
+            if (count > NativeDirtyRegions.MAX_RECTS) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            int[] regions = new int[count * 4];
+            for (int i = 0; i < count; i++) {
+                Rectangle region = dirtyRegions[i];
+                if (region == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+                int at = i * 4;
+                regions[at] = region.x;
+                regions[at + 1] = region.y;
+                regions[at + 2] = region.width;
+                regions[at + 3] = region.height;
+            }
+            Rectangle size = image.getBounds();
+            int pixels;
+            try {
+                pixels = NativeDirtyRegions.packedPixelCount(size.width, size.height, regions, count);
+            } catch (IllegalArgumentException invalid) {
+                SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+                return;
+            }
+            blendSource = null;
+            if (nativeLayer != 0 && nativeBackend != null) {
+                ImageDataArgb rows = new ImageDataArgb(image.getImageData());
+                int[] packed = new int[pixels];
+                int offset = 0;
+                for (int i = 0; i < count; i++) {
+                    int at = i * 4;
+                    int x = regions[at], y = regions[at + 1];
+                    int width = regions[at + 2], height = regions[at + 3];
+                    for (int row = 0; row < height; row++) {
+                        rows.premultipliedSpan(y + row, x, width, packed, offset);
+                        offset += width;
+                    }
+                }
+                if (nativeBackend.uploadDirty(nativeLayer, packed, regions, count) == 0 && applyNative()) return;
             }
             redraw();
         }

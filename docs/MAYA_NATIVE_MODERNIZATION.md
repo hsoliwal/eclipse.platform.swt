@@ -62,3 +62,29 @@ Android/Cocoa/GTK/Wayland native compositor layers have been shipped.
 
 Donors: Microsoft DirectComposition API docs and Android NDK docs are
 architecture references only. No upstream implementation source is copied.
+
+## Multi-rectangle damage from a CPU-owned backing image
+
+Additive `Layer.redraw(Rectangle... dirtyRegions)` handles up to 4096
+independent image-local regions through **one** Java-to-JNI `uploadDirty`
+invocation, even when many rows are changed. It snapshots caller-owned
+rectangle geometry into primitive `int[4*N]`, checks all bounds and the
+total signed-int packed pixel count on the CPU (shared
+`NativeDirtyRegions` validation), then copies only those image spans
+into a packed ARGB payload. Overlap is allowed and counted per region.
+The existing single-rectangle `redraw(Rectangle)` remains unchanged.
+
+Only the SWT UI thread changes image pixels and native visual ownership.
+The CPU image/backing store is the authority; DirectComposition is an
+optional presentation endpoint. A missing/failed JNI upload or Commit
+falls back to the original `Layer.redraw()` full-image sync. A no-op
+empty array never allocates native resources. No browser/DOM renderer,
+native widget per rectangle or new OS handle is introduced.
+
+The Java21 proof compiles the exact `NativeDirtyRegions.java` with
+`-Xlint:all -Werror` and passed **221,313** deterministic argument and
+payload cases. The existing native C++ proof separately passed
+3,915,491 packed-pixel and 20,467,204 extended observations. The
+new Win32 native screen test and exact Maven/OpenRewrite/Tycho runs
+are **NOT RUN**; a missing optional DLL symbol skips the normal test,
+while `-Dswt.maya.dirty.required=true` must fail release proof.
