@@ -1188,4 +1188,51 @@ public void test_NoExceptionsThrownInFillLayout () {
 	assertNotNull(label2.getLayoutData());
 }
 
+@Test
+public void test_nativeBorderRelief_contract() {
+    Control control = new org.eclipse.swt.widgets.Composite(shell, SWT.NONE);
+    try {
+        assertEquals(SWT.DEFAULT, control.getBorderRelief());
+        assertThrows(IllegalArgumentException.class,
+                () -> control.setBorderRelief(SWT.PUSH | SWT.BORDER));
+        assertEquals(SWT.DEFAULT, control.getBorderRelief());
+        if ("cocoa".equals(SWT.getPlatform())) {
+            assertThrows(org.eclipse.swt.SWTException.class,
+                    () -> control.setBorderRelief(SWT.SHADOW_IN));
+            assertEquals(SWT.DEFAULT, control.getBorderRelief());
+            return;
+        }
+        for (int relief : new int[] {
+                SWT.SHADOW_IN, SWT.SHADOW_OUT,
+                SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT
+        }) {
+            control.setBorderRelief(relief);
+            assertEquals(relief, control.getBorderRelief());
+            assertTrue(control.getBorderWidth() > 0, "Visible relief needs native trim");
+        }
+        control.setBorderRelief(SWT.SHADOW_NONE);
+        assertEquals(SWT.SHADOW_NONE, control.getBorderRelief());
+        control.setBorderRelief(SWT.DEFAULT);
+        assertEquals(SWT.DEFAULT, control.getBorderRelief());
+    } finally {
+        control.dispose();
+    }
+}
+
+@Test
+public void test_nativeBorderRelief_gtkDeclarations() {
+    assertTrue(org.eclipse.swt.internal.NativeBorderRelief
+            .gtkDeclaration(SWT.SHADOW_IN).contains("inset"));
+    assertTrue(org.eclipse.swt.internal.NativeBorderRelief
+            .gtkDeclaration(SWT.SHADOW_OUT).contains("outset"));
+    assertTrue(org.eclipse.swt.internal.NativeBorderRelief
+            .gtkDeclaration(SWT.SHADOW_ETCHED_IN).contains("groove"));
+    assertTrue(org.eclipse.swt.internal.NativeBorderRelief
+            .gtkDeclaration(SWT.SHADOW_ETCHED_OUT).contains("ridge"));
+    assertEquals("", org.eclipse.swt.internal.NativeBorderRelief
+            .gtkDeclaration(SWT.DEFAULT));
+    assertFalse(org.eclipse.swt.internal.NativeBorderRelief.isValid(SWT.BORDER));
+}
+
+
 }
