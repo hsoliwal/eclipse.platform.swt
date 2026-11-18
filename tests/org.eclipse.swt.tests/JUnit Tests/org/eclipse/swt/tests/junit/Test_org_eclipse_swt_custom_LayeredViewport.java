@@ -243,6 +243,95 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertSameAsAFullRecomposition();
     }
 
+    @Test
+    public void testARetainedLayerIsNotRepaintedByChangesAboveIt() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        int[] mapPaints = { 0 }, mapColor = { SWT.COLOR_DARK_GREEN };
+        Layer map = viewport.addPaintLayer("map", 0, 0, 300, 240, (gc, ctx) -> {
+            mapPaints[0]++;
+            gc.setForeground(gc.getDevice().getSystemColor(mapColor[0]));
+            for (int y = 0; y < 240; y += 6) gc.drawLine(0, y, 300, 240 - y);
+        });
+        map.setRetained(true);
+        assertTrue(map.isRetained());
+        Layer marker = viewport.addPaintLayer("marker", 20, 20, 10, 10, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_RED));
+            gc.fillRectangle(ctx.clip());
+        });
+        show();
+        mapPaints[0] = 0;
+        marker.setWorldBounds(100, 100, 10, 10);
+        viewport.update();
+        assertEquals(0, mapPaints[0], "the map under the moved marker comes from its retained composite");
+        viewport.beginUpdate();
+        marker.setWorldBounds(150, 60, 10, 10);
+        viewport.endUpdate();
+        viewport.update();
+        assertEquals(0, mapPaints[0], "batched changes keep that precision");
+        assertSameAsAFullRecomposition();
+        // the retained layer's own content changes: its composite is recomposed
+        mapColor[0] = SWT.COLOR_MAGENTA;
+        map.redraw();
+        viewport.update();
+        assertTrue(mapPaints[0] > 0, "the map repaints its own change");
+        assertSameAsAFullRecomposition();
+    }
+
+    @Test
+    public void testAChangeBelowARetainedLayerRefreshesItsComposite() {
+        int[] ground = { SWT.COLOR_WHITE };
+        Layer below = viewport.addPaintLayer("ground", 0, 0, 300, 240, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(ground[0]));
+            gc.fillRectangle(ctx.clip());
+        });
+        Layer top = viewport.addPaintLayer("lines", 0, 0, 300, 240, (gc, ctx) -> {
+            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
+            gc.drawLine(0, 0, 299, 239);
+        });
+        top.setRetained(true);
+        show();
+        ground[0] = SWT.COLOR_YELLOW;
+        below.redraw();
+        viewport.update();
+        assertEquals(viewport.getDisplay().getSystemColor(SWT.COLOR_YELLOW).getRGB(), rgb(pixels(), 200, 20),
+                "the retained composite above the change is recomposed");
+        assertSameAsAFullRecomposition();
+    }
+
+    @Test
+    public void testRetainedCompositesMoveWithAPan() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        java.util.List<Rectangle> clips = new java.util.ArrayList<>();
+        Layer stripes = viewport.addPaintLayer("stripes", -4000, 0, 8000, 4000, (gc, ctx) -> {
+            clips.add(ctx.clip());
+            Rectangle clip = ctx.clip();
+            for (int x = clip.x; x < clip.x + clip.width; x++) {
+                boolean dark = Math.floorMod(ctx.originX() + x, 9) == 0;
+                gc.setForeground(gc.getDevice().getSystemColor(dark ? SWT.COLOR_BLUE : SWT.COLOR_WHITE));
+                gc.drawLine(x, clip.y, x, clip.y + clip.height - 1);
+            }
+        });
+        stripes.setRetained(true);
+        viewport.addPaintLayer("dot", 40, 40, 8, 8, (gc, ctx) -> gc.fillRectangle(ctx.clip()));
+        show();
+        clips.clear();
+        viewport.setOrigin(-12, 0);
+        viewport.update();
+        assertFalse(clips.isEmpty());
+        for (Rectangle clip : clips) assertTrue(clip.width <= 12, "only the band: " + clips);
+        assertSameAsAFullRecomposition();
+    }
+
+    @Test
+    public void testABackgroundChangeAfterTheFirstPaintIsShown() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        viewport.addPaintLayer("dot", 10, 10, 5, 5, (gc, ctx) -> gc.fillRectangle(ctx.clip()));
+        show();
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_CYAN));
+        viewport.update();
+        assertEquals(viewport.getDisplay().getSystemColor(SWT.COLOR_CYAN).getRGB(), rgb(pixels(), 150, 150));
+    }
+
     /* the pixels shown equal those of recomposing every layer at the current origin */
     private void assertSameAsAFullRecomposition() {
         ImageData shown = pixels();
