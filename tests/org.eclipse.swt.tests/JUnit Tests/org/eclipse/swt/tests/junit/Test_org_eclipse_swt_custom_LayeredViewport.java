@@ -7,8 +7,12 @@ package org.eclipse.swt.tests.junit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.LayeredViewport;
@@ -21,6 +25,13 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.LineAttributes;
+import org.eclipse.swt.graphics.Pattern;
+import org.eclipse.swt.graphics.Region;
+import org.eclipse.swt.graphics.Transform;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -571,5 +582,597 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertEquals(1, backEvents.size());
         assertSame(back, backEvents.get(0).layer());
         assertEquals(large + 10, backEvents.get(0).worldX());
+    }
+
+    @Test
+    public void testHitCallbackCanRemoveManyLayersAndAppendDuringNestedQuery() {
+        Layer bottom = viewport.addPaintLayer("bottom", 0, 0, 40, 40, (gc, ctx) -> { });
+        List<Layer> removed = new ArrayList<>();
+        for (int i = 0; i < 64; i++) {
+            removed.add(viewport.addPaintLayer("middle " + i, 0, 0, 40, 40, (gc, ctx) -> { }));
+        }
+        Layer top = viewport.addPaintLayer("top", 0, 0, 40, 40, (gc, ctx) -> { });
+        Layer[] appended = new Layer[1];
+        top.setHitTester((candidate, x, y) -> {
+            for (Layer layer : removed) layer.remove();
+            candidate.remove();
+            appended[0] = viewport.addPaintLayer("new", 0, 0, 40, 40, (gc, ctx) -> { });
+            assertSame(appended[0], viewport.hitTest(5, 5),
+                    "a nested query observes the newly published scene");
+            return true;
+        });
+
+        assertSame(bottom, assertDoesNotThrow(() -> viewport.hitTest(5, 5)),
+                "the outer query skips removed handles and retains its original candidate snapshot");
+        assertArrayEquals(new Layer[] {bottom, appended[0]}, viewport.getLayers());
+        assertSame(appended[0], viewport.hitTest(5, 5));
+        assertThrows(IllegalArgumentException.class, top::getId);
+    }
+
+    @Test
+    public void testHitCallbacksRevalidateTheirOwnAndLaterCandidateEligibility() {
+        Layer bottom = viewport.addPaintLayer("bottom", 0, 0, 200, 200, (gc, ctx) -> { });
+        List<Consumer<Layer>> changes = List.of(
+                layer -> layer.setVisible(false),
+                layer -> layer.setLocked(true),
+                layer -> layer.setOpacity(0),
+                layer -> layer.setWorldBounds(100, 100, 20, 20),
+                layer -> layer.setWorldClip(new WorldBounds(100, 100, 20, 20)));
+        for (Consumer<Layer> change : changes) {
+            Layer top = viewport.addPaintLayer("changing", 0, 0, 40, 40, (gc, ctx) -> { });
+            top.setHitTester((candidate, x, y) -> {
+                change.accept(candidate);
+                return true;
+            });
+            assertSame(bottom, viewport.hitTest(5, 5),
+                    "a true callback result cannot return a layer made ineligible during that callback");
+            top.remove();
+        }
+
+        Layer middle = viewport.addPaintLayer("later candidate", 0, 0, 40, 40, (gc, ctx) -> { });
+        middle.setHitTester((candidate, x, y) -> {
+            fail("a layer moved out of bounds by an earlier callback must not be called");
+            return true;
+        });
+        Layer top = viewport.addPaintLayer("moves another candidate", 0, 0, 40, 40, (gc, ctx) -> { });
+        top.setHitTester((candidate, x, y) -> {
+            middle.setWorldBounds(100, 100, 20, 20);
+            return false;
+        });
+        assertSame(bottom, viewport.hitTest(5, 5));
+    }
+
+    @Test
+    public void testHitCallbackMayDisposeViewport() {
+        viewport.addPaintLayer("bottom", 0, 0, 40, 40, (gc, ctx) -> { });
+        Layer top = viewport.addPaintLayer("disposes", 0, 0, 40, 40, (gc, ctx) -> { });
+        top.setHitTester((candidate, x, y) -> {
+            disposedIntentionally = true;
+            viewport.dispose();
+            return true;
+        });
+        assertNull(assertDoesNotThrow(() -> viewport.hitTest(5, 5)));
+        assertTrue(viewport.isDisposed());
+    }
+
+    @Test
+    public void testSparseReadsAcrossBulkAppendKeepStableDefensiveOrder() throws Exception {
+        List<Layer> expected = new ArrayList<>();
+        for (int batch = 0; batch < 8; batch++) {
+            Layer[] beforeAppend = cachedOrder();
+            viewport.beginUpdate();
+            try {
+                for (int i = 0; i < 256; i++) {
+                    Layer layer = viewport.addPaintLayer("layer " + expected.size(),
+                            0, 0, 10, 10, (gc, ctx) -> { });
+                    expected.add(layer);
+                    if (batch == 0 && i == 0) layer.setRetained(true);
+                }
+            } finally {
+                viewport.endUpdate();
+            }
+            assertSame(beforeAppend, cachedOrder(),
+                    "ordinary painter appends must not rebuild the order snapshot, even with a retained layer present");
+            assertArrayEquals(expected.toArray(new Layer[0]), viewport.getLayers());
+            assertSame(expected.get(expected.size() - 1), viewport.hitTest(3, 4));
+        }
+        Layer[] earlier = viewport.getLayers();
+        Layer earlierLast = earlier[earlier.length - 1];
+        for (int i = 0; i < 128; i++) {
+            expected.add(viewport.addPaintLayer("tail " + i, 0, 0, 10, 10, (gc, ctx) -> { }));
+        }
+        assertEquals(2048, earlier.length);
+        assertSame(earlierLast, earlier[earlier.length - 1], "an earlier structural snapshot stays stable");
+        Layer first = expected.remove(0);
+        first.moveTo(expected.size());
+        expected.add(first);
+        expected.remove(17).remove();
+        Layer[] current = viewport.getLayers();
+        assertArrayEquals(expected.toArray(new Layer[0]), current);
+        current[0] = null;
+        assertSame(expected.get(0), viewport.getLayers()[0]);
+        assertSame(first, viewport.hitTest(3, 4));
+    }
+
+    private Layer[] cachedOrder() throws ReflectiveOperationException {
+        Field field = LayeredViewport.class.getDeclaredField("paintOrder");
+        field.setAccessible(true);
+        return (Layer[]) field.get(viewport);
+    }
+
+    @Test
+    public void testPaintMutationKeepsFrameOrderAndSchedulesTheNextFrame() {
+        viewport.setSize(64, 64);
+        List<String> calls = new ArrayList<>();
+        Layer[] peers = new Layer[2];
+        boolean[] changed = {false};
+        viewport.addPaintLayer("A", 0, 0, 64, 64, (gc, ctx) -> {
+            calls.add("A");
+            if (!changed[0]) {
+                changed[0] = true;
+                peers[0].remove();
+                peers[1].moveTo(0);
+                viewport.addPaintLayer("D", 0, 0, 64, 64, (next, context) -> calls.add("D"));
+            }
+        });
+        peers[0] = viewport.addPaintLayer("B", 0, 0, 64, 64, (gc, ctx) -> calls.add("B"));
+        peers[1] = viewport.addPaintLayer("C", 0, 0, 64, 64, (gc, ctx) -> calls.add("C"));
+        Image target = new Image(viewport.getDisplay(), 64, 64);
+        GC gc = new GC(target);
+        try {
+            paintInto(gc);
+            assertEquals(List.of("A", "C"), calls,
+                    "removals take effect immediately; reorder and append do not rewrite the active frame");
+            calls.clear();
+            paintInto(gc);
+            assertEquals(List.of("C", "A", "D"), calls,
+                    "callback-created damage survives retirement of the preceding frame's damage");
+            calls.clear();
+            paintInto(gc);
+            assertTrue(calls.isEmpty(), "a subsequent clean expose is served from the backing store");
+        } finally {
+            gc.dispose();
+            target.dispose();
+        }
+    }
+
+    @Test
+    public void testPanDuringPainterDefersBackingCopy() {
+        viewport.setSize(64, 64);
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        int[] calls = {0};
+        viewport.addPaintLayer("marker", 0, 0, 100, 100, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
+            gc.fillRectangle((int) (10 - ctx.originX()), 10, 4, 4);
+            if (++calls[0] == 1) viewport.setOrigin(1, 0);
+        });
+        Image target = new Image(viewport.getDisplay(), 64, 64);
+        GC gc = new GC(target);
+        try {
+            assertDoesNotThrow(() -> paintInto(gc),
+                    "panning from a painter cannot open another GC on its active backing image");
+            paintInto(gc);
+            assertEquals(2, calls[0]);
+            ImageData data = target.getImageData();
+            assertEquals(new RGB(0, 0, 0), rgb(data, 9, 11));
+            assertEquals(new RGB(255, 255, 255), rgb(data, 13, 11),
+                    "the next composition retires the marker's pre-pan pixels");
+        } finally {
+            gc.dispose();
+            target.dispose();
+        }
+    }
+
+    @Test
+    public void testOpaquePainterMayDisposeViewport() {
+        assertPainterMayDisposeViewport(255);
+    }
+
+    @Test
+    public void testIsolatedPainterMayDisposeViewport() {
+        assertPainterMayDisposeViewport(128);
+    }
+
+    @Test
+    public void testRetainedPainterMayDisposeViewport() {
+        assertPainterMayDisposeViewport(255, true);
+    }
+
+    @Test
+    public void testRetainedPainterCanRemoveItsOwnLayer() {
+        viewport.setSize(64, 64);
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer retained = viewport.addPaintLayer("removes its cache", 0, 0, 64, 64, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLUE));
+            gc.fillRectangle(ctx.clip());
+            ctx.layer().remove();
+        });
+        retained.setRetained(true);
+        Image target = new Image(viewport.getDisplay(), 64, 64);
+        GC gc = new GC(target);
+        try {
+            assertDoesNotThrow(() -> paintInto(gc),
+                    "removal cannot destroy the retained Image while its composition GC is selected");
+            assertEquals(0, viewport.getLayers().length);
+            paintInto(gc);
+            assertEquals(new RGB(255, 255, 255), rgb(target.getImageData(), 12, 12),
+                    "the next frame erases the removed retained layer");
+            assertThrows(IllegalArgumentException.class, retained::getId);
+        } finally {
+            gc.dispose();
+            target.dispose();
+        }
+    }
+
+    @Test
+    public void testRetainedPainterCanDisableItsOwnCache() {
+        viewport.setSize(64, 64);
+        int[] calls = {0};
+        Layer retained = viewport.addPaintLayer("disables its cache", 0, 0, 64, 64, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_RED));
+            gc.fillRectangle(ctx.clip());
+            if (++calls[0] == 1) ctx.layer().setRetained(false);
+        });
+        retained.setRetained(true);
+        Image target = new Image(viewport.getDisplay(), 64, 64);
+        GC gc = new GC(target);
+        try {
+            assertDoesNotThrow(() -> paintInto(gc),
+                    "disabling retention cannot clear fields still used by the active refresh");
+            assertFalse(retained.isRetained());
+            paintInto(gc);
+            assertEquals(2, calls[0]);
+            assertEquals(new RGB(255, 0, 0), rgb(target.getImageData(), 12, 12));
+            paintInto(gc);
+            assertEquals(2, calls[0], "the clean backing store remains usable after the cache is retired");
+        } finally {
+            gc.dispose();
+            target.dispose();
+        }
+    }
+
+    @Test
+    public void testRedrawInsideRetainedRefreshSurvivesTheCurrentFrame() {
+        viewport.setSize(64, 64);
+        int[] calls = {0};
+        Layer retained = viewport.addPaintLayer("refreshes again", 0, 0, 64, 64, (gc, ctx) -> {
+            int paint = ++calls[0];
+            gc.setBackground(gc.getDevice().getSystemColor(paint == 1 ? SWT.COLOR_BLACK : SWT.COLOR_RED));
+            gc.fillRectangle(ctx.clip());
+            if (paint == 1) ctx.layer().redraw();
+        });
+        retained.setRetained(true);
+        Image target = new Image(viewport.getDisplay(), 64, 64);
+        GC gc = new GC(target);
+        try {
+            paintInto(gc);
+            paintInto(gc);
+            assertEquals(2, calls[0],
+                    "a retained refresh must not consume stale pixels added by its own callback");
+            assertEquals(new RGB(255, 0, 0), rgb(target.getImageData(), 12, 12));
+            paintInto(gc);
+            assertEquals(2, calls[0]);
+        } finally {
+            gc.dispose();
+            target.dispose();
+        }
+    }
+
+    @Test
+    public void testControlOrderAndPlacementSurviveSparseReadsAfterBulkAppend() {
+        Button lowerControl = new Button(viewport, SWT.PUSH);
+        Button upperControl = new Button(viewport, SWT.PUSH);
+        Layer lower = viewport.addControlLayer("lower control", lowerControl, 20, 30, 40, 20);
+        viewport.beginUpdate();
+        Layer upper;
+        try {
+            for (int i = 0; i < 256; i++) {
+                viewport.addPaintLayer("below upper " + i, 0, 0, 10, 10, (gc, ctx) -> { });
+            }
+            upper = viewport.addControlLayer("upper control", upperControl, 40, 40, 40, 20);
+            for (int i = 0; i < 128; i++) {
+                viewport.addPaintLayer("above controls " + i, 0, 0, 10, 10, (gc, ctx) -> { });
+            }
+        } finally {
+            viewport.endUpdate();
+        }
+        assertSame(upperControl, viewport.getChildren()[0]);
+        assertSame(lowerControl, viewport.getControl(lower));
+        assertSame(upperControl, viewport.getControl(upper));
+        lower.moveTo(viewport.getLayers().length - 1);
+        assertSame(lowerControl, viewport.getChildren()[0]);
+        viewport.setOrigin(10, 5);
+        viewport.setZoom(2);
+        assertEquals(new Rectangle(20, 50, 80, 40), lowerControl.getBounds());
+        assertEquals(new Rectangle(60, 70, 80, 40), upperControl.getBounds());
+        lower.moveTo(0);
+        assertSame(upperControl, viewport.getChildren()[0],
+                "lazy structural snapshots cannot leave native control stacking at an older order");
+    }
+
+    private void assertPainterMayDisposeViewport(int opacity) {
+        assertPainterMayDisposeViewport(opacity, false);
+    }
+
+    private void assertPainterMayDisposeViewport(int opacity, boolean retained) {
+        viewport.setSize(64, 64);
+        Layer layer = viewport.addPaintLayer("disposes", 0, 0, 64, 64, (gc, ctx) -> {
+            disposedIntentionally = true;
+            viewport.dispose();
+        });
+        layer.setOpacity(opacity);
+        layer.setRetained(retained);
+        viewport.addPaintLayer("must not run", 0, 0, 64, 64,
+                (gc, ctx) -> fail("painting must stop after widget disposal"));
+        Image target = new Image(viewport.getDisplay(), 64, 64);
+        GC gc = new GC(target);
+        try {
+            assertDoesNotThrow(() -> paintInto(gc));
+            assertTrue(viewport.isDisposed());
+            assertFalse(gc.isDisposed(), "the PaintEvent GC is borrowed");
+            gc.fillRectangle(0, 0, 2, 2);
+        } finally {
+            gc.dispose();
+            target.dispose();
+        }
+    }
+
+    @Test
+    public void testComposeLayersPreservesCompleteCallerStateAndRegionHoles() {
+        Image target = new Image(viewport.getDisplay(), 64, 64);
+        Image source = new Image(viewport.getDisplay(), 16, 16);
+        GC gc = new GC(target);
+        GC sourceGc = new GC(source);
+        Region callerClip = new Region(viewport.getDisplay());
+        Transform callerTransform = new Transform(viewport.getDisplay(), 1, 0, 0, 1, 3, 5);
+        Transform changedTransform = new Transform(viewport.getDisplay(), 1, 0, 0, 1, 30, 40);
+        Color red = viewport.getDisplay().getSystemColor(SWT.COLOR_RED);
+        Color blue = viewport.getDisplay().getSystemColor(SWT.COLOR_BLUE);
+        Pattern foreground = new Pattern(viewport.getDisplay(), 0, 0, 8, 8, red, blue);
+        Pattern background = new Pattern(viewport.getDisplay(), 0, 0, 8, 8, blue, red);
+        Pattern changedPattern = new Pattern(viewport.getDisplay(), 0, 0, 4, 4, red, red);
+        Font changedFont = new Font(viewport.getDisplay(), gc.getFont().getFontData()[0].getName(), 17, SWT.BOLD);
+        try {
+            gc.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+            gc.fillRectangle(target.getBounds());
+            sourceGc.setBackground(red);
+            sourceGc.fillRectangle(source.getBounds());
+            sourceGc.dispose();
+            callerClip.add(0, 0, 64, 64);
+            callerClip.subtract(12, 12, 8, 8);
+            gc.setClipping(callerClip);
+            gc.setTransform(callerTransform);
+            gc.setAlpha(200);
+            gc.setForeground(blue);
+            gc.setBackground(red);
+            gc.setForegroundPattern(foreground);
+            gc.setBackgroundPattern(background);
+            gc.setLineAttributes(new LineAttributes(2, SWT.CAP_ROUND, SWT.JOIN_BEVEL,
+                    SWT.LINE_CUSTOM, new float[] {3, 2}, 1, 7));
+            gc.setAntialias(SWT.ON);
+            gc.setTextAntialias(SWT.ON);
+            gc.setInterpolation(SWT.LOW);
+            gc.setFillRule(SWT.FILL_EVEN_ODD);
+            try (GcState original = new GcState(gc)) {
+                Region layerClip = new Region(viewport.getDisplay());
+                try {
+                    layerClip.add(original.clip);
+                    layerClip.intersect(0, 0, 48, 48);
+                    int[] callbacks = {0};
+                    viewport.addPaintLayer("changes GC", 0, 0, 48, 48, (paint, ctx) -> {
+                        callbacks[0]++;
+                        original.assertState(paint, 200, layerClip);
+                        mutateGc(paint, changedPattern, changedFont, changedTransform);
+                    });
+                    viewport.addPaintLayer("observes restored GC", 0, 0, 48, 48, (paint, ctx) -> {
+                        callbacks[0]++;
+                        original.assertState(paint, 200, layerClip);
+                    });
+                    Layer raster = viewport.addImageLayer("alpha", source, 0, 0);
+                    raster.setOpacity(128);
+                    composeInto(gc, target, new Rectangle(0, 0, 48, 48));
+                    assertEquals(2, callbacks[0]);
+                    original.assertState(gc, 200, original.clip);
+                    ImageData data = target.getImageData();
+                    RGB blended = rgb(data, 6, 8);
+                    assertEquals(255, blended.red);
+                    assertTrue(Math.abs(blended.green - 155) <= 1 && Math.abs(blended.blue - 155) <= 1,
+                            "caller alpha 200 times image-layer alpha 128 must composite at alpha 100: " + blended);
+                    assertEquals(new RGB(255, 255, 255), rgb(data, 14, 14),
+                            "the caller Region's interior hole must remain unpainted");
+                } finally {
+                    layerClip.dispose();
+                }
+            }
+        } finally {
+            if (!viewport.isDisposed()) {
+                for (Layer layer : viewport.getLayers()) layer.remove();
+            }
+            if (!sourceGc.isDisposed()) sourceGc.dispose();
+            gc.dispose();
+            changedFont.dispose();
+            changedPattern.dispose();
+            background.dispose();
+            foreground.dispose();
+            changedTransform.dispose();
+            callerTransform.dispose();
+            callerClip.dispose();
+            source.dispose();
+            target.dispose();
+        }
+    }
+
+    @Test
+    public void testComposeLayersRestoresStateAfterPainterThrows() {
+        Image target = new Image(viewport.getDisplay(), 64, 64);
+        GC gc = new GC(target);
+        Region clip = new Region(viewport.getDisplay());
+        Transform caller = new Transform(viewport.getDisplay(), 1, 0, 0, 1, 2, 3);
+        Transform changed = new Transform(viewport.getDisplay(), 1, 0, 0, 1, 20, 30);
+        IllegalStateException failure = new IllegalStateException("painter failure");
+        try {
+            clip.add(0, 0, 40, 40);
+            clip.subtract(10, 10, 5, 5);
+            gc.setClipping(clip);
+            gc.setTransform(caller);
+            gc.setAlpha(137);
+            try (GcState original = new GcState(gc)) {
+                viewport.addPaintLayer("throws", 0, 0, 40, 40, (paint, ctx) -> {
+                    paint.setAlpha(9);
+                    paint.setBackground(paint.getDevice().getSystemColor(SWT.COLOR_RED));
+                    paint.setLineWidth(9);
+                    paint.setTransform(changed);
+                    paint.setClipping(1, 1, 2, 2);
+                    throw failure;
+                });
+                assertSame(failure, assertThrows(IllegalStateException.class,
+                        () -> composeInto(gc, target, new Rectangle(0, 0, 40, 40))));
+                original.assertState(gc, 137, original.clip);
+                assertFalse(gc.isDisposed());
+            }
+        } finally {
+            if (!viewport.isDisposed()) {
+                for (Layer layer : viewport.getLayers()) layer.remove();
+            }
+            gc.dispose();
+            changed.dispose();
+            caller.dispose();
+            clip.dispose();
+            target.dispose();
+        }
+    }
+
+    /* Dispatches the real paint listener into an offscreen SWT Image GC. */
+    private void paintInto(GC gc) {
+        Event event = new Event();
+        event.gc = gc;
+        event.width = event.height = 64;
+        viewport.notifyListeners(SWT.Paint, event);
+    }
+
+    /*
+     * Exercise the existing composition seam with a real caller GC, including
+     * nonrectangular clipping that the ordinary backing store does not create.
+     * These tests use only opaque painters and image layers; they do not claim
+     * screen-capture coverage or change the public widget API.
+     */
+    private void composeInto(GC gc, Image target, Rectangle damage) {
+        try {
+            Method method = LayeredViewport.class.getDeclaredMethod("composeLayers",
+                    GC[].class, Image.class, Rectangle.class, int.class, int.class);
+            method.setAccessible(true);
+            method.invoke(viewport, new GC[] {gc}, target, damage, 0, viewport.getLayers().length);
+        } catch (InvocationTargetException exception) {
+            Throwable cause = exception.getCause();
+            if (cause instanceof RuntimeException runtime) throw runtime;
+            if (cause instanceof Error error) throw error;
+            throw new AssertionError(cause);
+        } catch (ReflectiveOperationException exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    private static void mutateGc(GC gc, Pattern pattern, Font font, Transform transform) {
+        gc.setAlpha(17);
+        gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_GREEN));
+        gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_YELLOW));
+        gc.setForegroundPattern(pattern);
+        gc.setBackgroundPattern(pattern);
+        gc.setFont(font);
+        gc.setLineAttributes(new LineAttributes(7, SWT.CAP_SQUARE, SWT.JOIN_ROUND,
+                SWT.LINE_CUSTOM, new float[] {6, 1}, 3, 4));
+        gc.setAntialias(SWT.OFF);
+        gc.setTextAntialias(SWT.OFF);
+        gc.setInterpolation(SWT.HIGH);
+        gc.setFillRule(SWT.FILL_WINDING);
+        gc.setXORMode(true);
+        gc.setTransform(transform);
+        gc.setClipping(1, 2, 3, 4);
+    }
+
+    private static final class GcState implements AutoCloseable {
+        final Region clip;
+        final float[] transform;
+        final boolean advanced, clipped, xor;
+        final int antialias, textAntialias, interpolation, fillRule;
+        final Color foreground, background;
+        final Pattern foregroundPattern, backgroundPattern;
+        final Font font;
+        final LineAttributes line;
+
+        GcState(GC gc) {
+            clip = new Region(gc.getDevice());
+            gc.getClipping(clip);
+            transform = transformElements(gc);
+            advanced = gc.getAdvanced();
+            clipped = gc.isClipped();
+            xor = gc.getXORMode();
+            antialias = gc.getAntialias();
+            textAntialias = gc.getTextAntialias();
+            interpolation = gc.getInterpolation();
+            fillRule = gc.getFillRule();
+            foreground = gc.getForeground();
+            background = gc.getBackground();
+            foregroundPattern = gc.getForegroundPattern();
+            backgroundPattern = gc.getBackgroundPattern();
+            font = gc.getFont();
+            line = gc.getLineAttributes();
+        }
+
+        void assertState(GC gc, int expectedAlpha, Region expectedClip) {
+            assertEquals(expectedAlpha, gc.getAlpha());
+            assertArrayEquals(transform, transformElements(gc));
+            assertEquals(advanced, gc.getAdvanced());
+            assertEquals(clipped, gc.isClipped());
+            assertEquals(xor, gc.getXORMode());
+            assertEquals(antialias, gc.getAntialias());
+            assertEquals(textAntialias, gc.getTextAntialias());
+            assertEquals(interpolation, gc.getInterpolation());
+            assertEquals(fillRule, gc.getFillRule());
+            assertEquals(foreground, gc.getForeground());
+            assertEquals(background, gc.getBackground());
+            assertSame(foregroundPattern, gc.getForegroundPattern());
+            assertSame(backgroundPattern, gc.getBackgroundPattern());
+            assertEquals(font, gc.getFont());
+            LineAttributes actualLine = gc.getLineAttributes();
+            assertEquals(line.width, actualLine.width);
+            assertEquals(line.cap, actualLine.cap);
+            assertEquals(line.join, actualLine.join);
+            assertEquals(line.style, actualLine.style);
+            assertArrayEquals(line.dash, actualLine.dash);
+            assertEquals(line.dashOffset, actualLine.dashOffset);
+            assertEquals(line.miterLimit, actualLine.miterLimit);
+            Region actual = new Region(gc.getDevice());
+            Region difference = new Region(gc.getDevice());
+            try {
+                gc.getClipping(actual);
+                difference.add(expectedClip);
+                difference.subtract(actual);
+                assertTrue(difference.isEmpty(), "clip lost caller pixels");
+                difference.add(actual);
+                difference.subtract(expectedClip);
+                assertTrue(difference.isEmpty(), "clip gained pixels, including a caller Region hole");
+            } finally {
+                difference.dispose();
+                actual.dispose();
+            }
+        }
+
+        @Override
+        public void close() {
+            clip.dispose();
+        }
+    }
+
+    private static float[] transformElements(GC gc) {
+        Transform transform = new Transform(gc.getDevice());
+        try {
+            gc.getTransform(transform);
+            float[] elements = new float[6];
+            transform.getElements(elements);
+            return elements;
+        } finally {
+            transform.dispose();
+        }
     }
 }

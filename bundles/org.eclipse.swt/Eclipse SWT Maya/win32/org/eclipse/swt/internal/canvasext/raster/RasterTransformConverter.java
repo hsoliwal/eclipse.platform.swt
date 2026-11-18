@@ -53,7 +53,7 @@ public class RasterTransformConverter {
 		// persp1, persp2]
 		// SWT Transform: [m11, m12, m21, m22, dx, dy]
 		// Correct inverse mapping: Skija [0,1,2,3,4,5] -> SWT [0,3,1,4,2,5]
-		transform.setElements(m[0], m[3], sc.autoScaleDown(m[1]), m[4], m[2], sc.autoScaleDown(m[5]));
+		transform.setElements(m[0], m[3], m[1], m[4], sc.autoScaleDown(m[2]), sc.autoScaleDown(m[5]));
 
 	}
 

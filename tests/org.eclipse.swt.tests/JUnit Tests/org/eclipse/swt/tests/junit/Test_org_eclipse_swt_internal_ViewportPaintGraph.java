@@ -825,4 +825,703 @@ public class Test_org_eclipse_swt_internal_ViewportPaintGraph {
 		return workspaceField.get (graph);
 	}
 
+
+	@Test
+	public void test_imageLayersPaintAndPickInStableSiblingZOrder () {
+		Image red = solidLayer (20, 20, SWT.COLOR_RED);
+		Image blue = solidLayer (20, 20, SWT.COLOR_BLUE);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int bottom = graph.image (graph.root (), red, 4, 4);
+			int top = graph.image (graph.root (), blue, 8, 8);
+			assertEquals (255, graph.opacity (top));
+			assertTrue (graph.isVisible (top));
+			assertTrue (graph.isPickable (top));
+			graph.setZOrder (bottom, Integer.MIN_VALUE);
+			graph.setZOrder (top, Integer.MAX_VALUE);
+			assertEquals (2, graph.replay (gc).drawnCommands ());
+			assertEquals (rgb (SWT.COLOR_BLUE), pixelRgb (12, 12));
+			assertEquals (top, graph.hitTestImage (12, 12).node ());
+			assertEquals (-1, graph.hitTestImage (12, 12).instance ());
+			assertEquals (4f, graph.hitTestImage (12, 12).x ());
+			assertEquals (4f, graph.hitTestImage (12, 12).y ());
+
+			graph.setZOrder (bottom, Integer.MAX_VALUE);
+			graph.setZOrder (top, Integer.MIN_VALUE);
+			clearLayerTarget ();
+			graph.replay (gc);
+			assertEquals (rgb (SWT.COLOR_RED), pixelRgb (12, 12));
+			assertEquals (bottom, graph.hitTestImage (12, 12).node ());
+
+			graph.setZOrder (bottom, 7);
+			graph.setZOrder (top, 7);
+			clearLayerTarget ();
+			graph.replay (gc);
+			assertEquals (rgb (SWT.COLOR_BLUE), pixelRgb (12, 12));
+			assertEquals (top, graph.hitTestImage (12, 12).node (),
+					"equal z restores creation order for both painting and picking");
+		} finally {
+			blue.dispose ();
+			red.dispose ();
+		}
+	}
+
+	@Test
+	public void test_imageLayersRespectVisibilityAndInputTransparentAncestors () {
+		Image red = solidLayer (20, 20, SWT.COLOR_RED);
+		Image blue = solidLayer (20, 20, SWT.COLOR_BLUE);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int bottom = graph.image (graph.root (), red, 0, 0);
+			int group = graph.group (graph.root ());
+			int top = graph.image (group, blue, 0, 0);
+			graph.setPickable (group, false);
+			assertFalse (graph.isPickable (group));
+			assertEquals (bottom, graph.hitTestImage (5, 5).node ());
+			graph.replay (gc);
+			assertEquals (rgb (SWT.COLOR_BLUE), pixelRgb (5, 5),
+					"an input-transparent layer remains visible");
+
+			graph.setPickable (group, true);
+			graph.setVisible (group, false);
+			assertFalse (graph.isVisible (group));
+			assertEquals (bottom, graph.hitTestImage (5, 5).node ());
+			clearLayerTarget ();
+			assertEquals (1, graph.replay (gc).drawnCommands ());
+			assertEquals (rgb (SWT.COLOR_RED), pixelRgb (5, 5));
+
+			graph.setVisible (group, true);
+			graph.setOpacity (top, 0);
+			assertEquals (bottom, graph.hitTestImage (5, 5).node ());
+			assertEquals (1, graph.replay (gc).drawnCommands ());
+			graph.setOpacity (top, 255);
+			graph.setPickable (top, false);
+			assertEquals (bottom, graph.hitTestImage (5, 5).node ());
+			graph.setPickable (top, true);
+			assertEquals (top, graph.hitTestImage (5, 5).node ());
+		} finally {
+			blue.dispose ();
+			red.dispose ();
+		}
+	}
+
+	@Test
+	public void test_imageLayerOpacityCompositesFlattenedOverlapsOnce () {
+		Image source = solidLayer (32, 16, SWT.COLOR_WHITE);
+		GC sourceGc = new GC (source);
+		try {
+			sourceGc.setBackground (display.getSystemColor (SWT.COLOR_RED));
+			sourceGc.fillRectangle (0, 0, 20, 16);
+			sourceGc.fillRectangle (10, 0, 20, 16);
+			sourceGc.dispose ();
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int layer = graph.image (graph.root (), source, 0, 0);
+			graph.setOpacity (layer, 128);
+			graph.replay (gc);
+			RGB oneStroke = pixelRgb (5, 5);
+			RGB overlappingStrokes = pixelRgb (15, 5);
+			assertEquals (oneStroke, overlappingStrokes,
+					"opacity belongs to the flattened image, not to each source stroke");
+			assertColorNear (new RGB (255, 127, 127), oneStroke, 1);
+			assertEquals (255, gc.getAlpha (), "replay restores the caller alpha");
+
+			clearLayerTarget ();
+			gc.setAlpha (128);
+			graph.replay (gc);
+			assertColorNear (new RGB (255, 191, 191), pixelRgb (15, 5), 1);
+			assertEquals (128, gc.getAlpha (),
+					"caller alpha and layer opacity multiply and caller state survives");
+		} finally {
+			if (!sourceGc.isDisposed ()) sourceGc.dispose ();
+			source.dispose ();
+		}
+	}
+
+	@Test
+	public void test_imageReplacementAndMovementKeepBorrowedResourcesAndFreshBounds () {
+		Image first = solidLayer (20, 20, SWT.COLOR_RED);
+		Image replacement = solidLayer (6, 8, SWT.COLOR_BLUE);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int layer = graph.image (graph.root (), first, 2, 3);
+			graph.replay (gc);
+			assertEquals (rgb (SWT.COLOR_RED), pixelRgb (3, 4));
+			graph.setImage (layer, replacement);
+			graph.setImageLocation (layer, 30, 20);
+			clearLayerTarget ();
+			graph.replay (gc);
+			assertEquals (rgb (SWT.COLOR_WHITE), pixelRgb (3, 4),
+					"a fresh frame clears the former layer position");
+			assertEquals (rgb (SWT.COLOR_BLUE), pixelRgb (31, 21));
+			assertNull (graph.hitTestImage (3, 4));
+			assertNull (graph.hitTestImage (36, 21), "right image edge is exclusive");
+			assertNull (graph.hitTestImage (31, 28), "bottom image edge is exclusive");
+			assertEquals (layer, graph.hitTestImage (35.5f, 27.5f).node ());
+			assertFalse (first.isDisposed (), "replacing a borrowed image never disposes it");
+			assertFalse (replacement.isDisposed (), "replay never disposes a borrowed image");
+			graph.setVisible (layer, false);
+			clearLayerTarget ();
+			graph.replay (gc);
+			assertEquals (rgb (SWT.COLOR_WHITE), pixelRgb (31, 21));
+		} finally {
+			replacement.dispose ();
+			first.dispose ();
+		}
+	}
+
+	@Test
+	public void test_imagePickingUsesNestedTransformAndClipCoordinates () {
+		Image source = solidLayer (12, 10, SWT.COLOR_RED);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int viewport = graph.group (graph.root (), Affine.translation (8, 6));
+			graph.setClip (viewport, 0, 0, 30, 30);
+			int content = graph.group (viewport, Affine.scale (2, 2));
+			graph.setClip (content, 2, 3, 6, 5);
+			int layer = graph.image (content, source, 2, 3);
+			var hit = graph.hitTestImage (18, 16);
+			assertNotNull (hit);
+			assertEquals (layer, hit.node ());
+			assertEquals (3f, hit.x (), 0.0001f);
+			assertEquals (2f, hit.y (), 0.0001f);
+			assertNull (graph.hitTestImage (11, 16));
+			assertNull (graph.hitTestImage (24, 16), "nested clip right edge is exclusive");
+			assertNull (graph.hitTestImage (18, 22), "nested clip bottom edge is exclusive");
+			graph.setTransform (content, new Affine (0, 0, 0, 0, 0, 0));
+			assertNull (graph.hitTestImage (8, 6), "singular mappings cannot be picked");
+		} finally {
+			source.dispose ();
+		}
+	}
+
+	@Test
+	public void test_imagePickingReportsTheAttachedSharedTemplateInstance () {
+		Image source = solidLayer (12, 12, SWT.COLOR_RED);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int template = graph.template ();
+			int layer = graph.image (template, source, 1, 2);
+			int first = graph.instance (graph.root (), template, Affine.translation (5, 6));
+			int nested = graph.template ();
+			graph.instance (nested, template, Affine.translation (2, 3));
+			int second = graph.instance (graph.root (), nested, Affine.translation (30, 6));
+			var firstHit = graph.hitTestImage (8, 11);
+			var secondHit = graph.hitTestImage (35, 14);
+			assertEquals (layer, firstHit.node ());
+			assertEquals (layer, secondHit.node ());
+			assertEquals (first, firstHit.instance ());
+			assertEquals (second, secondHit.instance (),
+					"the outer attached instance distinguishes a shared detached template");
+			assertEquals (2f, firstHit.x ());
+			assertEquals (3f, firstHit.y ());
+			assertEquals (2f, secondHit.x ());
+			assertEquals (3f, secondHit.y ());
+			graph.setVisible (first, false);
+			assertNull (graph.hitTestImage (8, 11));
+			assertEquals (second, graph.hitTestImage (35, 14).instance ());
+		} finally {
+			source.dispose ();
+		}
+	}
+
+	@Test
+	public void test_imageLayerClipIntersectsCallerRegionAndRestoresItsHoles () {
+		Image source = solidLayer (24, 24, SWT.COLOR_RED);
+		Region caller = new Region (display);
+		Region after = new Region (display);
+		try {
+			caller.add (0, 0, 64, 64);
+			caller.subtract (12, 12, 2, 2);
+			gc.setClipping (caller);
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int group = graph.group (graph.root (), Affine.translation (10, 10));
+			graph.setClip (group, 0, 0, 8, 8);
+			graph.image (group, source, 0, 0);
+			graph.replay (gc);
+			gc.getClipping (after);
+			ImageData actualPixels = image.getImageData ();
+			for (int y = 0; y < 64; y++) {
+				for (int x = 0; x < 64; x++) {
+					boolean expected = x >= 10 && x < 18 && y >= 10 && y < 18
+							&& caller.contains (x, y);
+					assertEquals (rgb (expected ? SWT.COLOR_RED : SWT.COLOR_WHITE),
+							actualPixels.palette.getRGB (actualPixels.getPixel (x, y)),
+							"clipped layer pixel at " + x + "," + y);
+					assertEquals (caller.contains (x, y), after.contains (x, y),
+							"caller clip must retain holes at " + x + "," + y);
+				}
+			}
+		} finally {
+			after.dispose ();
+			caller.dispose ();
+			source.dispose ();
+		}
+	}
+
+	@Test
+	public void test_rotatedLayerClipConstrainsPixelsAndPicking () {
+		Image source = solidLayer (24, 24, SWT.COLOR_RED);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int group = graph.group (graph.root (), new Affine (0, 1, -1, 0, 30, 10));
+			graph.setClip (group, 2, 3, 8, 6);
+			int layer = graph.image (group, source, 0, 0);
+			graph.replay (gc);
+			ImageData actualPixels = image.getImageData ();
+			for (int y = 0; y < 64; y++) {
+				for (int x = 0; x < 64; x++) {
+					boolean expected = x >= 21 && x < 27 && y >= 12 && y < 20;
+					assertEquals (rgb (expected ? SWT.COLOR_RED : SWT.COLOR_WHITE),
+							actualPixels.palette.getRGB (actualPixels.getPixel (x, y)),
+							"rotated layer clip at " + x + "," + y);
+				}
+			}
+			assertEquals (layer, graph.hitTestImage (24, 16).node ());
+			assertNull (graph.hitTestImage (20, 16));
+			assertNull (graph.hitTestImage (24, 21));
+		} finally {
+			source.dispose ();
+		}
+	}
+
+	@Test
+	public void test_layerClipDoesNotEscapeIntoLaterSiblingsOrCallerTransform () {
+		Image source = solidLayer (24, 24, SWT.COLOR_RED);
+		Transform caller = new Transform (display, 1, 0, 0, 1, 3, 4);
+		Transform after = new Transform (display);
+		try {
+			gc.setTransform (caller);
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int first = graph.group (graph.root (), Affine.translation (4, 5));
+			graph.setClip (first, 0, 0, 6, 6);
+			graph.image (first, source, 0, 0);
+			graph.image (graph.root (), source, 30, 20);
+			graph.replay (gc);
+			assertEquals (rgb (SWT.COLOR_RED), pixelRgb (8, 10));
+			assertEquals (rgb (SWT.COLOR_WHITE), pixelRgb (14, 10));
+			assertEquals (rgb (SWT.COLOR_RED), pixelRgb (35, 26),
+					"the first sibling clip cannot suppress a later un-clipped image");
+			gc.getTransform (after);
+			float [] expected = new float [6];
+			float [] actual = new float [6];
+			caller.getElements (expected);
+			after.getElements (actual);
+			assertArrayEquals (expected, actual, 0.0001f);
+		} finally {
+			after.dispose ();
+			caller.dispose ();
+			source.dispose ();
+		}
+	}
+
+	@Test
+	public void test_layerReplayRestoresCallerStateWhenBorrowedImageWasDisposed () {
+		Image source = solidLayer (12, 12, SWT.COLOR_RED);
+		Transform caller = new Transform (display, 1, 0, 0, 1, 2, 3);
+		Transform after = new Transform (display);
+		Region clip = new Region (display);
+		Region afterClip = new Region (display);
+		try {
+			clip.add (0, 0, 32, 32);
+			clip.subtract (8, 8, 4, 4);
+			gc.setTransform (caller);
+			gc.setClipping (clip);
+			gc.setAlpha (91);
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int group = graph.group (graph.root (), Affine.scale (2, 2));
+			graph.setClip (group, 0, 0, 6, 6);
+			int layer = graph.image (group, source, 0, 0);
+			graph.setOpacity (layer, 100);
+			source.dispose ();
+			assertThrows (IllegalArgumentException.class, () -> graph.replay (gc));
+			assertEquals (91, gc.getAlpha ());
+			gc.getTransform (after);
+			float [] expected = new float [6];
+			float [] actual = new float [6];
+			caller.getElements (expected);
+			after.getElements (actual);
+			assertArrayEquals (expected, actual, 0.0001f);
+			gc.getClipping (afterClip);
+			for (int y = 0; y < 40; y++) {
+				for (int x = 0; x < 40; x++) {
+					assertEquals (clip.contains (x, y), afterClip.contains (x, y));
+				}
+			}
+		} finally {
+			afterClip.dispose ();
+			clip.dispose ();
+			after.dispose ();
+			caller.dispose ();
+			if (!source.isDisposed ()) source.dispose ();
+		}
+	}
+
+	@Test
+	public void test_layerPickingIsBoundsBasedWithoutImagePixelReadback () {
+		ImageData pixels = new ImageData (8, 8, 24, new PaletteData (0xff0000, 0xff00, 0xff));
+		pixels.alphaData = new byte [64];
+		Image transparent = new Image (display, pixels);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int layer = graph.image (graph.root (), transparent, 2, 3);
+			assertEquals (layer, graph.hitTestImage (4, 5).node (),
+					"per-pixel masks are a separate owner policy; this is bounds picking");
+			graph.setPickable (layer, false);
+			assertNull (graph.hitTestImage (4, 5));
+		} finally {
+			transparent.dispose ();
+		}
+	}
+
+	@Test
+	public void test_layerValidationRefusesInvalidStateBeforeMutation () {
+		Image source = solidLayer (8, 8, SWT.COLOR_RED);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int layer = graph.image (graph.root (), source, 0, 0);
+			graph.setOpacity (layer, 170);
+			assertThrows (IllegalArgumentException.class, () -> graph.setOpacity (layer, -1));
+			assertThrows (IllegalArgumentException.class, () -> graph.setOpacity (layer, 256));
+			assertEquals (170, graph.opacity (layer));
+			int primitive = graph.fillRectangle (graph.root (), 20, 20, 2, 2);
+			assertThrows (IllegalArgumentException.class, () -> graph.setOpacity (primitive, 128));
+			assertThrows (IllegalArgumentException.class, () -> graph.setImageLocation (graph.root (), 1, 2));
+			assertThrows (IllegalArgumentException.class, () -> graph.setVisible (-1, false));
+			assertThrows (IllegalArgumentException.class, () -> graph.setPickable (-1, false));
+			assertThrows (IllegalArgumentException.class, () -> graph.hitTestImage (Float.NaN, 0));
+			assertThrows (IllegalArgumentException.class, () -> graph.hitTestImage (0, Float.POSITIVE_INFINITY));
+			graph.setClip (graph.root (), 0, 0, 0, 8);
+			assertNull (graph.hitTestImage (1, 1));
+			assertEquals (0, graph.replay (gc).drawnCommands ());
+		} finally {
+			source.dispose ();
+		}
+	}
+
+	@Test
+	public void test_shearedLayerClipUsesThePolygonRatherThanItsBoundingBox () {
+		Image source = solidLayer (24, 24, SWT.COLOR_RED);
+		Region expectedClip = new Region (display);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int group = graph.group (graph.root (), new Affine (1, 0, 1, 1, 8, 6));
+			graph.setClip (group, 2, 3, 8, 6);
+			int layer = graph.image (group, source, 0, 0);
+			expectedClip.add (new int [] {13, 9, 21, 9, 27, 15, 19, 15});
+			graph.replay (gc);
+			ImageData actual = image.getImageData ();
+			for (int py = 0; py < 64; py++) {
+				for (int px = 0; px < 64; px++) {
+					RGB expected = rgb (expectedClip.contains (px, py) ? SWT.COLOR_RED : SWT.COLOR_WHITE);
+					assertEquals (expected, actual.palette.getRGB (actual.getPixel (px, py)),
+							"sheared polygon clipping at " + px + "," + py);
+				}
+			}
+			assertEquals (layer, graph.hitTestImage (20, 12).node ());
+			assertNull (graph.hitTestImage (13, 14),
+					"a point inside the polygon's AABB but outside the clip must miss");
+		} finally {
+			expectedClip.dispose ();
+			source.dispose ();
+		}
+	}
+
+	@Test
+	public void test_singularImageTransformDoesNotPoisonTheFollowingPrimitive () {
+		Image source = solidLayer (8, 8, SWT.COLOR_RED);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int collapsed = graph.group (graph.root (), new Affine (0, 0, 0, 0, 24, 24));
+			graph.image (collapsed, source, 0, 0);
+			graph.fillRectangle (graph.root (), 40, 40, 8, 8);
+			var stats = assertDoesNotThrow (() -> graph.replay (gc));
+			assertEquals (1, stats.drawnCommands (),
+					"the singular image is skipped before touching the native GC transform");
+			assertEquals (rgb (SWT.COLOR_WHITE), pixelRgb (24, 24));
+			assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (42, 42),
+					"a valid primitive after the singular image must still paint");
+			gc.fillRectangle (52, 52, 4, 4);
+			assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (53, 53),
+					"the borrowed native GC must remain usable after replay");
+		} finally {
+			source.dispose ();
+		}
+	}
+
+	@Test
+	public void test_imageLayersRestoreAdvancedModeAndExplicitClipPresence () {
+		Image source = solidLayer (8, 8, SWT.COLOR_RED);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int group = graph.group (graph.root (), Affine.translation (4, 5));
+			graph.setClip (group, 0, 0, 4, 4);
+			int layer = graph.image (group, source, 0, 0);
+			graph.setOpacity (layer, 96);
+			for (boolean requestedAdvanced : new boolean [] {false, true}) {
+				for (boolean explicitClip : new boolean [] {false, true}) {
+					gc.setAdvanced (requestedAdvanced);
+					gc.setClipping (explicitClip ? new Rectangle (0, 0, 60, 60) : null);
+					boolean originalAdvanced = gc.getAdvanced ();
+					boolean originalClipped = gc.isClipped ();
+					Rectangle originalClip = gc.getClipping ();
+					graph.replay (gc);
+					assertEquals (originalAdvanced, gc.getAdvanced (),
+							"restore the mode actually provided by this backend");
+					assertEquals (originalClipped, gc.isClipped (),
+							"an inherited temporary clip must not become an explicit caller clip");
+					assertEquals (originalClip, gc.getClipping ());
+				}
+			}
+		} finally {
+			source.dispose ();
+		}
+	}
+
+	@Test
+	public void test_repeatedImagePickingAcrossWideSiblingList () {
+		Image source = solidLayer (8, 8, SWT.COLOR_RED);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int [] nodes = new int [96];
+			for (int i = 0; i < nodes.length; i++) {
+				nodes [i] = graph.image (graph.root (), source, i * 12, 0);
+			}
+			for (int sample = 0; sample < 4096; sample++) {
+				int index = sample * 37 % nodes.length;
+				var hit = graph.hitTestImage (index * 12 + 3, 4);
+				assertNotNull (hit);
+				assertEquals (nodes [index], hit.node ());
+				assertEquals (3f, hit.x ());
+				assertEquals (4f, hit.y ());
+				assertNull (graph.hitTestImage (index * 12 + 9, 4),
+						"an empty gap must not reuse a previous traversal result");
+			}
+			for (int i = 0; i < nodes.length; i += 2) graph.setVisible (nodes [i], false);
+			for (int i = 0; i < nodes.length; i++) {
+				var hit = graph.hitTestImage (i * 12 + 3, 4);
+				if ((i & 1) == 0) assertNull (hit);
+				else assertEquals (nodes [i], hit.node ());
+			}
+		} finally {
+			source.dispose ();
+		}
+	}
+
+	@Test
+	public void test_wideSiblingPlanesKeepPaintAndPickOrderAfterZChanges () {
+		Image red = solidLayer (8, 8, SWT.COLOR_RED);
+		Image blue = solidLayer (8, 8, SWT.COLOR_BLUE);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int [] planes = new int [256];
+			int [] nodes = new int [planes.length];
+			Integer [] order = new Integer [planes.length];
+			for (int i = 0; i < planes.length; i++) {
+				planes [i] = graph.group (graph.root ());
+				nodes [i] = graph.image (planes [i], (i & 1) == 0 ? red : blue, 4, 4);
+				graph.setZOrder (planes [i], i % 11 - 5);
+				order [i] = i;
+			}
+			Arrays.sort (order, Comparator.<Integer>comparingInt (i -> i % 11 - 5)
+					.thenComparingInt (i -> i));
+			assertEquals (planes.length, graph.replay (gc).drawnCommands ());
+			int front = order [order.length - 1];
+			assertEquals (rgb ((front & 1) == 0 ? SWT.COLOR_RED : SWT.COLOR_BLUE), pixelRgb (6, 6));
+			for (int i = order.length - 1; i >= 0; i--) {
+				int expected = order [i];
+				var hit = graph.hitTestImage (6, 6);
+				assertNotNull (hit);
+				assertEquals (nodes [expected], hit.node (),
+						"wide traversal must resume the next sibling in descending z and creation order");
+				assertEquals (-1, hit.instance ());
+				assertEquals (2f, hit.x ());
+				assertEquals (2f, hit.y ());
+				graph.setVisible (planes [expected], false);
+			}
+			assertNull (graph.hitTestImage (6, 6));
+			for (int plane : planes) graph.setVisible (plane, true);
+			graph.setZOrder (planes [1], Integer.MAX_VALUE);
+			graph.setZOrder (planes [0], Integer.MAX_VALUE);
+			assertEquals (nodes [1], graph.hitTestImage (6, 6).node (),
+					"equal z retains creation order even after reinsertion in the opposite order");
+			graph.setZOrder (planes [1], Integer.MIN_VALUE);
+			assertEquals (nodes [0], graph.hitTestImage (6, 6).node ());
+			clearLayerTarget ();
+			graph.replay (gc);
+			assertEquals (rgb (SWT.COLOR_RED), pixelRgb (6, 6));
+		} finally {
+			blue.dispose ();
+			red.dispose ();
+		}
+	}
+
+	@Test
+	public void test_manyPrimitivesInOneAffinePlaneApplyTheTransformOnce () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int plane = graph.group (graph.root (), Affine.scale (2, 2));
+		for (int i = 0; i < 96; i++) {
+			graph.fillRectangle (plane, i % 16 * 2, i / 16 * 2, 1, 1);
+		}
+		var stats = graph.replay (gc);
+		assertEquals (96, stats.drawnCommands ());
+		assertEquals (1, stats.transformSwitches (),
+				"one inherited affine plane needs one native transform application, independent of its width");
+		for (int i = 0; i < 96; i++) {
+			assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (i % 16 * 4, i / 16 * 4));
+			assertEquals (rgb (SWT.COLOR_WHITE), pixelRgb (i % 16 * 4 + 3, i / 16 * 4));
+		}
+		Transform observed = new Transform (display);
+		try {
+			gc.getTransform (observed);
+			assertTrue (observed.isIdentity (), "the caller transform is restored after the cached plane");
+		} finally {
+			observed.dispose ();
+		}
+	}
+
+	@Test
+	public void test_cachedAffinePlaneSurvivesSiblingClipChanges () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int plane = graph.group (graph.root (), Affine.scale (2, 2));
+		int left = graph.group (plane);
+		graph.setClip (left, 0, 0, 8, 8);
+		graph.fillRectangle (left, 0, 0, 16, 16);
+		int empty = graph.group (plane);
+		graph.setClip (empty, 0, 0, 0, 16);
+		graph.fillRectangle (empty, 0, 0, 32, 32);
+		int right = graph.group (plane);
+		graph.setClip (right, 12, 0, 4, 8);
+		graph.fillRectangle (right, 0, 0, 16, 16);
+		graph.fillRectangle (plane, 8, 10, 4, 4);
+		assertEquals (3, graph.replay (gc).drawnCommands ());
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (12, 12));
+		assertEquals (rgb (SWT.COLOR_WHITE), pixelRgb (20, 12),
+				"neither clipped sibling may fill the gap between its device-space polygons");
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (28, 12),
+				"installing the next clip must invalidate and reapply the inherited transform");
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (20, 24),
+				"the later primitive inherits the parent clip, not the preceding sibling's clip");
+		assertEquals (rgb (SWT.COLOR_WHITE), pixelRgb (28, 24));
+	}
+
+	@Test
+	public void test_nestedPathInstanceAndPrimitiveResumeTheRightAffinePlane () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		PathData first = new PathData ();
+		first.types = new byte [] {SWT.PATH_MOVE_TO, SWT.PATH_LINE_TO, SWT.PATH_LINE_TO,
+				SWT.PATH_LINE_TO, SWT.PATH_CLOSE};
+		first.points = new float [] {2, 2, 6, 2, 6, 6, 2, 6};
+		int inner = graph.template ();
+		graph.fillPath (inner, first);
+		int outer = graph.template ();
+		graph.instance (outer, inner, Affine.IDENTITY);
+		graph.fillRectangle (outer, 2, 10, 4, 4);
+		Affine scale = Affine.scale (2, 2);
+		graph.instance (graph.root (), outer, scale);
+		graph.fillRectangle (graph.root (), 40, 24, 4, 4);
+		int last = graph.group (graph.root (), scale);
+		PathData second = new PathData ();
+		second.types = first.types.clone ();
+		second.points = new float [] {16, 2, 20, 2, 20, 6, 16, 6};
+		graph.fillPath (last, second);
+
+		assertEquals (4, graph.replay (gc).drawnCommands ());
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (8, 8));
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (8, 24),
+				"returning from a nested instance must resume the adjacent primitive in its parent plane");
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (42, 26),
+				"the ordinary root primitive must restore the identity transform after the path");
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (36, 8),
+				"the same affine values must be applied again after the identity primitive");
+		assertEquals (rgb (SWT.COLOR_WHITE), pixelRgb (18, 4),
+				"the later path must not reuse the identity CTM or the first path's native geometry");
+		assertEquals (rgb (SWT.COLOR_WHITE), pixelRgb (2, 2));
+	}
+
+	@Test
+	public void test_imageLayersInheritAcceptedGroupOpacityAndPointerLocks () {
+		Image source = solidLayer (8, 8, SWT.COLOR_RED);
+		Image expected = solidLayer (64, 64, SWT.COLOR_WHITE);
+		GC oracle = new GC (expected);
+		try {
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			int parent = graph.group (graph.root (), Affine.translation (8, 10));
+			graph.setHitBounds (parent, 0, 0, 30, 30);
+			graph.setOpacity (parent, 128);
+			int layer = graph.image (parent, source, 4, 6);
+			graph.setOpacity (layer, 128);
+			assertEquals (128, graph.opacity (layer));
+			assertEquals (64, graph.effectiveOpacity (layer));
+			gc.setAlpha (200);
+			oracle.setAlpha (50);
+			oracle.drawImage (source, 12, 16);
+			assertEquals (1, graph.replay (gc).drawnCommands ());
+			assertEquals (200, gc.getAlpha ());
+			assertImagesEqual (expected, image,
+					"image and group opacity multiply with caller alpha exactly once");
+			assertEquals (parent, graph.hitTest (14, 18));
+			assertEquals (layer, graph.hitTestImage (14, 18).node ());
+
+			graph.setLocked (parent, true);
+			assertTrue (graph.isLocked (layer));
+			assertEquals (-1, graph.hitTest (14, 18));
+			assertNull (graph.hitTestImage (14, 18));
+			clearLayerTarget ();
+			assertEquals (1, graph.replay (gc).drawnCommands ());
+			assertImagesEqual (expected, image, "an inherited pointer lock does not alter image painting");
+			graph.setLocked (parent, false);
+			graph.setPickable (parent, false);
+			assertEquals (-1, graph.hitTest (14, 18));
+			assertNull (graph.hitTestImage (14, 18));
+			graph.setPickable (parent, true);
+			graph.setOpacity (parent, 0);
+			assertEquals (0, graph.effectiveOpacity (layer));
+			assertEquals (-1, graph.hitTest (14, 18));
+			assertNull (graph.hitTestImage (14, 18));
+			assertEquals (0, graph.replay (gc).drawnCommands ());
+			graph.setOpacity (parent, 255);
+			graph.setVisible (parent, false);
+			assertTrue (graph.isVisible (layer));
+			assertFalse (graph.isEffectivelyVisible (layer));
+			assertFalse (graph.isInteractive (layer));
+		} finally {
+			oracle.dispose ();
+			expected.dispose ();
+			source.dispose ();
+		}
+	}
+
+	private Image solidLayer (int width, int height, int color) {
+		Image layer = new Image (display, width, height);
+		GC painter = null;
+		boolean complete = false;
+		try {
+			painter = new GC (layer);
+			painter.setBackground (display.getSystemColor (color));
+			painter.fillRectangle (layer.getBounds ());
+			complete = true;
+			return layer;
+		} finally {
+			if (painter != null) painter.dispose ();
+			if (!complete) layer.dispose ();
+		}
+	}
+
+	private void clearLayerTarget () {
+		int alpha = gc.getAlpha ();
+		gc.setAlpha (255);
+		gc.setBackground (display.getSystemColor (SWT.COLOR_WHITE));
+		gc.fillRectangle (image.getBounds ());
+		gc.setBackground (display.getSystemColor (SWT.COLOR_BLACK));
+		gc.setAlpha (alpha);
+	}
+
+	private void assertColorNear (RGB expected, RGB actual, int tolerance) {
+		assertTrue (Math.abs (expected.red - actual.red) <= tolerance
+				&& Math.abs (expected.green - actual.green) <= tolerance
+				&& Math.abs (expected.blue - actual.blue) <= tolerance,
+				() -> "expected " + expected + " but was " + actual);
+	}
+
+
 }
