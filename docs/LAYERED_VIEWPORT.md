@@ -245,8 +245,10 @@ The current implementation is one group level and supports isolated GROUP
 opacity through the existing paintIsolated backing-store path. Children paint
 normally within the group. They do not independently expose blend modes,
 opacity, transforms, arbitrary alpha masks or native widgets. A group is
-repainted only when its parent scene is damaged. The initial child traversal
-is linear in group size and rejects offscreen children by projected rectangle.
+repainted only when its parent scene is damaged. Child traversal uses an array snapshot for up to 32 children, then the existing
+LayerRectIndex with group-local bounds for paint and pick queries. Sparse group
+views reject offscreen children without scanning every child; overlapping
+rectangles can still require linear work.
 A child content change must use its setters or call
 group.getLayer().redraw() explicitly. Existing retained composites may cache
 the final group image but no per-group spatial index or tile LRU exists yet.
