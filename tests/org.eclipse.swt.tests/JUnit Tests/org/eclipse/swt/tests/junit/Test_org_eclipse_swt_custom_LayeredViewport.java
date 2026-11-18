@@ -86,6 +86,48 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testDisjointClipAndBatchedLayerChanges() {
+        Layer layer = viewport.addPaintLayer("clipped", 0, 0, 100, 100,
+                (gc, context) -> { });
+        layer.setWorldClip(new WorldBounds(200, 200, 20, 20));
+        assertNull(viewport.hitTest(10, 10));
+        viewport.beginUpdate();
+        viewport.beginUpdate();
+        try {
+            layer.setWorldClip(new WorldBounds(4, 4, 30, 30));
+            layer.setWorldBounds(5, 5, 45, 45);
+            layer.setOpacity(210);
+            layer.setVisible(false);
+            layer.setVisible(true);
+        } finally {
+            viewport.endUpdate();
+            viewport.endUpdate();
+        }
+        assertSame(layer, viewport.hitTest(10, 10));
+        assertThrows(IllegalArgumentException.class, viewport::endUpdate);
+    }
+
+    @Test
+    public void testReentrantHitTesterPreservesOuterCandidateSnapshot() {
+        Layer bottom = viewport.addPaintLayer("bottom", 0, 0, 200, 200,
+                (gc, context) -> { });
+        Layer top = viewport.addPaintLayer("top", 0, 0, 200, 200,
+                (gc, context) -> { });
+        final boolean[] nested = { false };
+        top.setHitTester((candidate, x, y) -> {
+            if (!nested[0]) {
+                nested[0] = true;
+                top.setLocked(true);
+                assertSame(bottom, viewport.hitTest(5, 5));
+                top.setLocked(false);
+            }
+            return false;
+        });
+        assertSame(bottom, viewport.hitTest(5, 5));
+        assertTrue(nested[0]);
+    }
+
+    @Test
     public void testInvalidBoundsAndHitTestRefinement() {
         assertThrows(IllegalArgumentException.class, () ->
                 viewport.addPaintLayer("bad", Long.MAX_VALUE, 0, 2, 1,

@@ -16,6 +16,8 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.internal.LayerRectIndex;
+import org.eclipse.swt.internal.ViewportDamageRegion;
 import org.eclipse.swt.internal.ViewportRuntime;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
@@ -127,6 +129,7 @@ public final class LayeredViewport extends Canvas {
             if (value != null) validateBounds(value.x(), value.y(), value.width(), value.height());
             invalidate(this);
             worldClip = value;
+            spatialDirty = true;
             invalidate(this);
         }
 
@@ -140,6 +143,7 @@ public final class LayeredViewport extends Canvas {
             y = newY;
             right = newX + width;
             bottom = newY + height;
+            spatialDirty = true;
             invalidate(this);
         }
 
@@ -155,6 +159,7 @@ public final class LayeredViewport extends Canvas {
             if (opacity == value) return;
             invalidate(this);
             opacity = value;
+            spatialDirty = true;
             invalidate(this);
         }
 
@@ -168,6 +173,7 @@ public final class LayeredViewport extends Canvas {
             if (visible == value) return;
             invalidate(this);
             visible = value;
+            spatialDirty = true;
             invalidate(this);
         }
 
@@ -248,6 +254,45 @@ public final class LayeredViewport extends Canvas {
     private final ViewportRuntime viewportRuntime = new ViewportRuntime();
     private Layer[] stack = new Layer[8];
     private Layer[] paintOrder = new Layer[0];
+    private final LayerRectIndex spatialIndex = new LayerRectIndex();
+    private final LayerRectIndex.Bounds spatialSource = new LayerRectIndex.Bounds() {
+        @Override public int size() { return paintOrder.length; }
+        @Override public boolean active(int at) {
+            Layer layer = paintOrder[at];
+            if (layer.removed || !layer.visible || layer.opacity == 0) return false;
+            WorldBounds clip = layer.worldClip;
+            return clip == null || (Math.max(layer.x, clip.x()) <
+                    Math.min(layer.right, clip.x() + clip.width()) &&
+                    Math.max(layer.y, clip.y()) <
+                    Math.min(layer.bottom, clip.y() + clip.height()));
+        }
+        @Override public long left(int at) {
+            Layer l = paintOrder[at];
+            return l.worldClip == null ? l.x : Math.max(l.x, l.worldClip.x());
+        }
+        @Override public long top(int at) {
+            Layer l = paintOrder[at];
+            return l.worldClip == null ? l.y : Math.max(l.y, l.worldClip.y());
+        }
+        @Override public long right(int at) {
+            Layer l = paintOrder[at];
+            return l.worldClip == null ? l.right
+                    : Math.min(l.right, l.worldClip.x() + l.worldClip.width());
+        }
+        @Override public long bottom(int at) {
+            Layer l = paintOrder[at];
+            return l.worldClip == null ? l.bottom
+                    : Math.min(l.bottom, l.worldClip.y() + l.worldClip.height());
+        }
+    };
+    private final ViewportDamageRegion pendingDamage = new ViewportDamageRegion();
+    private Layer[] paintCandidates = new Layer[16];
+    private Layer[] hitCandidates = new Layer[16];
+    private boolean spatialDirty = true;
+    private boolean fullDamage;
+    private int batchDepth;
+    private int activePaintFrames;
+    private int activeHitQueries;
     private int count;
     private long nextId = 1;
     private long originX, originY;
@@ -268,6 +313,12 @@ public final class LayeredViewport extends Canvas {
             }
             count = 0;
             paintOrder = new Layer[0];
+            spatialIndex.clear();
+            Arrays.fill(paintCandidates, null);
+            Arrays.fill(hitCandidates, null);
+            paintCandidates = new Layer[0];
+            hitCandidates = new Layer[0];
+            pendingDamage.clear();
         });
     }
 
@@ -352,23 +403,33 @@ public final class LayeredViewport extends Canvas {
                 saturatedAdd(originY, floorLong(deviceY / zoom)));
     }
 
-    /** Topmost visible, non-locked, nontransparent *bounding* layer. */
+    /** Topmost visible, unlocked layer, using a narrow two-axis spatial query. */
     public Layer hitTest(int deviceX, int deviceY) {
         checkWidget();
         if (!getClientArea().contains(deviceX, deviceY)) return null;
         WorldPoint point = toWorld(deviceX, deviceY);
-        for (int i = paintOrder.length - 1; i >= 0; i--) {
-            Layer layer = paintOrder[i];
-            if (layer.removed || !layer.visible || layer.locked || layer.opacity == 0) continue;
-            if (point.x < layer.x || point.x >= layer.right
-                    || point.y < layer.y || point.y >= layer.bottom) continue;
-            WorldBounds clip = layer.worldClip;
-            if (clip != null && (point.x < clip.x() || point.x >= clip.x() + clip.width()
-                    || point.y < clip.y() || point.y >= clip.y() + clip.height())) continue;
-            if (layer.hitTester == null
-                    || layer.hitTester.contains(layer, point.x, point.y)) return layer;
+        ensureSpatialIndex();
+        int candidates = spatialIndex.query(point.x, point.y,
+                saturatedAdd(point.x, 1), saturatedAdd(point.y, 1));
+        // Hit testers may re-enter the scene; capture handles before callbacks.
+        Layer[] hits = activeHitQueries == 0
+                ? growHitCandidates(candidates) : new Layer[candidates];
+        for (int i = 0; i < candidates; i++) {
+            hits[i] = paintOrder[spatialIndex.resultAt(i)];
         }
-        return null;
+        activeHitQueries++;
+        try {
+            for (int i = candidates - 1; i >= 0; i--) {
+                Layer layer = hits[i];
+                if (layer.removed || layer.locked || !layer.visible || layer.opacity == 0) continue;
+                if (layer.hitTester == null
+                        || layer.hitTester.contains(layer, point.x, point.y)) return layer;
+            }
+            return null;
+        } finally {
+            Arrays.fill(hits, 0, candidates, null);
+            activeHitQueries--;
+        }
     }
 
     private void paintLayers(GC gc) {
@@ -376,9 +437,25 @@ public final class LayeredViewport extends Canvas {
         if (damage == null) return;
         int originalAlpha = gc.getAlpha();
         Rectangle originalClip = gc.getClipping();
+        ensureSpatialIndex();
+        long x0 = saturatedAdd(originX, saturatedAdd(floorLong(damage.x / zoom), -1));
+        long y0 = saturatedAdd(originY, saturatedAdd(floorLong(damage.y / zoom), -1));
+        long x1 = saturatedAdd(originX, saturatedAdd(ceilLong(
+                ((double) damage.x + damage.width) / zoom), 1));
+        long y1 = saturatedAdd(originY, saturatedAdd(ceilLong(
+                ((double) damage.y + damage.height) / zoom), 1));
+        int selected = spatialIndex.query(x0, y0, x1, y1);
+        Layer[] candidates = activePaintFrames == 0
+                ? growPaintCandidates(selected) : new Layer[selected];
         Layer[] frame = paintOrder;
+        for (int i = 0; i < selected; i++) {
+            candidates[i] = frame[spatialIndex.resultAt(i)];
+        }
+        activePaintFrames++;
         try {
-            for (Layer layer : frame) {
+            for (int i = 0; i < selected; i++) {
+                if (isDisposed()) break;
+                Layer layer = candidates[i];
                 if (layer.removed || !layer.visible || layer.opacity == 0) continue;
                 Rectangle tile = projectedClip(layer, damage);
                 if (tile == null) continue;
@@ -397,9 +474,42 @@ public final class LayeredViewport extends Canvas {
                 }
             }
         } finally {
+            Arrays.fill(candidates, 0, selected, null);
+            activePaintFrames--;
             gc.setAlpha(originalAlpha);
             gc.setClipping(originalClip);
         }
+    }
+
+    private Layer[] growPaintCandidates(int selected) {
+        if (selected > paintCandidates.length) {
+            int capacity = paintCandidates.length;
+            while (capacity < selected) capacity = capacity + Math.max(16, capacity >>> 1);
+            paintCandidates = Arrays.copyOf(paintCandidates, capacity);
+        }
+        return paintCandidates;
+    }
+
+    private Layer[] growHitCandidates(int selected) {
+        if (selected > hitCandidates.length) {
+            int capacity = hitCandidates.length;
+            while (capacity < selected) capacity = capacity + Math.max(16, capacity >>> 1);
+            hitCandidates = Arrays.copyOf(hitCandidates, capacity);
+        }
+        return hitCandidates;
+    }
+
+    private void ensureSpatialIndex() {
+        if (spatialDirty) {
+            spatialIndex.rebuild(spatialSource);
+            spatialDirty = false;
+        }
+    }
+
+    private static long ceilLong(double value) {
+        if (value >= Long.MAX_VALUE) return Long.MAX_VALUE;
+        if (value <= Long.MIN_VALUE) return Long.MIN_VALUE;
+        return (long) Math.ceil(value);
     }
 
     private void paintImage(GC gc, Layer layer, Rectangle tile) {
@@ -465,14 +575,51 @@ public final class LayeredViewport extends Canvas {
         return x1 > x0 && y1 > y0 ? new Rectangle(x0, y0, x1 - x0, y1 - y0) : null;
     }
 
+    /**
+     * Begin coalescing damage for several layer edits. Every call requires a
+     * matching endUpdate on the SWT UI thread, including exceptional paths.
+     */
+    public void beginUpdate() {
+        checkWidget();
+        batchDepth++;
+    }
+
+    /** Flush the bounded device-pixel damage region when the outer batch ends. */
+    public void endUpdate() {
+        checkWidget();
+        if (batchDepth == 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (--batchDepth != 0) return;
+        if (fullDamage) {
+            redraw();
+        } else {
+            for (int i = 0; i < pendingDamage.rectCount(); i++) {
+                redraw(pendingDamage.x(i), pendingDamage.y(i),
+                        pendingDamage.width(i), pendingDamage.height(i), false);
+            }
+        }
+        pendingDamage.clear();
+        fullDamage = false;
+    }
+
     private void invalidate(Layer layer) {
         if (!layer.visible || layer.opacity == 0) return;
         Rectangle bounds = projectedClip(layer, getClientArea());
-        if (bounds != null) redraw(bounds.x, bounds.y, bounds.width, bounds.height, false);
+        if (bounds == null) return;
+        if (batchDepth == 0) {
+            redraw(bounds.x, bounds.y, bounds.width, bounds.height, false);
+        } else if (!fullDamage) {
+            try {
+                pendingDamage.add(bounds.x, bounds.y, bounds.width, bounds.height);
+            } catch (IllegalArgumentException largeDeviceBounds) {
+                fullDamage = true;
+                pendingDamage.clear();
+            }
+        }
     }
 
     private void publishOrder() {
         paintOrder = Arrays.copyOf(stack, count);
+        spatialDirty = true;
     }
 
     private int indexOf(Layer layer) {
