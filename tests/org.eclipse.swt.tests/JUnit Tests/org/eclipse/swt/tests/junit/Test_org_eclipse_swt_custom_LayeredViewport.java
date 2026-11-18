@@ -1545,4 +1545,44 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         viewport.update();
         assertEquals(system(SWT.COLOR_BLUE), rgb(pixels(), 40, 40));
     }
+
+    @Test
+    public void testLayerGroupIndexAndReentrantHitTest() {
+        LayeredViewport.LayerGroup group = viewport.addLayerGroup("many", 0, 0, 250, 100);
+        for (int i = 0; i < 64; i++) {
+            group.addPaintChild("small-" + i, i * 3, 20, 2, 6, (gc, ctx) -> { });
+        }
+        LayeredViewport.LayerGroup.Child over = group.addPaintChild(
+                "over", 10, 10, 60, 30, (gc, ctx) -> { });
+        assertSame(over, group.hitTestChild(16, 23));
+        // A hit-test callback may move itself: recheck captured candidates
+        // instead of returning a stale hit or corrupting the packed Z array.
+        over.setHitTester((child, x, y) -> {
+            over.setLocalBounds(100, 40, 20, 20);
+            assertNotSame(over, group.hitTestChild(16, 23));
+            return true;
+        });
+        LayeredViewport.LayerGroup.Child found = group.hitTestChild(16, 23);
+        assertNotNull(found);
+        assertNotSame(over, found);
+        assertEquals("small-5", found.getName());
+        assertSame(over, group.hitTestChild(110, 45));
+    }
+
+    @Test
+    public void testPinnedLayerGroupAndChildPainting() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        LayeredViewport.LayerGroup group = viewport.addLayerGroup("header", 0, 0, 150, 30);
+        group.addPaintChild("blue header", 0, 0, 150, 30, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLUE));
+            gc.fillRectangle(ctx.clip());
+        });
+        group.getLayer().setPinned(SWT.VERTICAL);
+        show();
+        viewport.setOrigin(0, 200);
+        viewport.update();
+        assertSame(group.getLayer(), viewport.hitTest(10, 10));
+        assertEquals("blue header", group.hitTestChild(10, 10).getName());
+        assertEquals(system(SWT.COLOR_BLUE), rgb(pixels(), 10, 10));
+    }
 }
