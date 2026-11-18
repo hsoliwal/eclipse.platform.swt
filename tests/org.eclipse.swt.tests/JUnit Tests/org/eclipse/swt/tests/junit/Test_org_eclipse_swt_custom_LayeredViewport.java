@@ -2012,6 +2012,36 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testNativeBorderReentrancyCoalescesViewportFrame() throws ReflectiveOperationException {
+        org.junit.jupiter.api.Assumptions.assumeTrue("win32".equals(SWT.getPlatform()),
+                "This contract requires a synchronous Win32 non-client frame transition");
+        viewport.setSize(100, 100);
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        Image image = nativeTestImage(8, 8, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("reentrant native border", image, 98, 40);
+        try {
+            assertTrue(layer.setNative(true));
+            int before = backend.applications;
+            backend.onApply = () -> viewport.setBorderRelief(SWT.DEFAULT);
+            viewport.setBorderRelief(SWT.SHADOW_IN);
+            assertEquals(SWT.DEFAULT, viewport.getBorderRelief(),
+                    "a nested native callback overrides the preceding request");
+            Rectangle area = viewport.getClientArea();
+            Field field = LayeredViewport.class.getDeclaredField("nativeClientGeometry");
+            field.setAccessible(true);
+            assertArrayEquals(new int[] {area.x, area.y, area.width, area.height},
+                    (int[]) field.get(viewport),
+                    "the final client rectangle is published after reentrant frame changes");
+            assertTrue(backend.applications > before);
+            assertEquals(1, backend.additions, "reentrant geometry must not duplicate native layers");
+            assertEquals(0, backend.disposals, "reentrant frame synchronization retains composition ownership");
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
     public void testNativeCullingRespondsToViewportResize() throws ReflectiveOperationException {
         viewport.setSize(100, 100);
         RecordingNativeLayers backend = installRecordingNativeLayers();
