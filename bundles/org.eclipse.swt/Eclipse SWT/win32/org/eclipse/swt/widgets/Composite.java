@@ -68,15 +68,10 @@ public class Composite extends Scrollable {
 	 */
 	private int nativeBevelEdge () {
 		if (getClass () != Composite.class && getClass () != Canvas.class) return 0;
+		int requested = requestedBorderRelief ();
+		if (requested != SWT.DEFAULT) return edgeForRelief (requested);
 		int shadow = style & BEVEL_MASK;
-		if (Integer.bitCount (shadow) != 1) return 0;
-		return switch (shadow) {
-			case SWT.SHADOW_IN -> OS.EDGE_SUNKEN;
-			case SWT.SHADOW_OUT -> OS.EDGE_RAISED;
-			case SWT.SHADOW_ETCHED_IN -> OS.EDGE_ETCHED;
-			case SWT.SHADOW_ETCHED_OUT -> OS.EDGE_BUMP;
-			default -> 0;
-		};
+		return Integer.bitCount (shadow) == 1 ? edgeForRelief (shadow) : 0;
 	}
 
 /**

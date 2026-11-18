@@ -99,6 +99,21 @@ public abstract class Control extends Widget implements Drawable {
 	public void setLocation(Point p) { if (p == null) SWT.error(SWT.ERROR_NULL_ARGUMENT); setLocation(p.x, p.y); }
 	public void setSize(int width, int height) { setBounds(bounds.x, bounds.y, width, height); }
 	public void setSize(Point p) { if (p == null) SWT.error(SWT.ERROR_NULL_ARGUMENT); setSize(p.x, p.y); }
+/** Returns SWT.DEFAULT until this mobile peer supports native relief. */
+	public int getBorderRelief() { checkWidget(); return SWT.DEFAULT; }
+
+	/**
+	 * Validates the cross-platform relief API without claiming native mobile
+	 * bevel drawing before Android and iOS peers implement and qualify it.
+	 */
+	public void setBorderRelief(int relief) {
+		checkWidget();
+		boolean valid = relief == SWT.DEFAULT || relief == SWT.SHADOW_NONE
+				|| relief == SWT.SHADOW_IN || relief == SWT.SHADOW_OUT
+				|| relief == SWT.SHADOW_ETCHED_IN || relief == SWT.SHADOW_ETCHED_OUT;
+		if (!valid) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		if (relief != SWT.DEFAULT) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+	}
 	public int getBorderWidth() { checkWidget(); return (style & SWT.BORDER) == 0 ? 0 : 1; }
 	private Rectangle clientBounds() {
 		int trim = getBorderWidth() * 2;

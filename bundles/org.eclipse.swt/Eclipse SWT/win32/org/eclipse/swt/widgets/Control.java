@@ -87,6 +87,10 @@ public abstract class Control extends Widget implements Drawable {
 	/* Retained planes: GPU_RETAINED in retainedBits (a mask bit set at creation) and the frame driver */
 	int retainedBits;
 	RetainedFrame retainedFrame;
+	/* Optional relief on the existing border HWND, never a replacement peer. */
+	private int nativeBorderRelief = SWT.DEFAULT;
+	private int originalNativeBorderEdges;
+	private boolean nativeBorderReliefSaved;
 
 	/**
 	 * @deprecated use {@link Shell#getZoom(AutoscalingMode)} instead to obtain the zoom of the shell.
@@ -1273,6 +1277,74 @@ int getBackgroundPixel () {
 }
 
 /**
+ * Returns this Control's optional native relief. SWT.DEFAULT means that
+ * the original native border and constructor decoration remain active.
+ *
+ * @return the requested SWT.SHADOW_* relief or SWT.DEFAULT
+ */
+public int getBorderRelief () {
+	checkWidget ();
+	return nativeBorderRelief;
+}
+
+/**
+ * Selects an opt-in native relief on the original border HWND. The
+ * constructor style and SWT.BORDER remain unchanged. The two etched
+ * variants require the SWT paint callback to own the border HWND.
+ *
+ * @param relief SWT.DEFAULT, SWT.SHADOW_NONE, SWT.SHADOW_IN,
+ *     SWT.SHADOW_OUT, SWT.SHADOW_ETCHED_IN or SWT.SHADOW_ETCHED_OUT
+ */
+public void setBorderRelief (int relief) {
+	checkWidget ();
+	if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+	if (relief == nativeBorderRelief) return;
+	long hwnd = borderHandle ();
+	if (hwnd == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+	if (NativeBorderRelief.isEtched(relief) && hwnd != handle) {
+		SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+	}
+	int mask = OS.WS_EX_CLIENTEDGE | OS.WS_EX_STATICEDGE | OS.WS_EX_WINDOWEDGE;
+	int oldStyle = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
+	if (!nativeBorderReliefSaved) {
+		originalNativeBorderEdges = oldStyle & mask;
+		nativeBorderReliefSaved = true;
+	}
+	int selected = switch (relief) {
+		case SWT.DEFAULT -> originalNativeBorderEdges;
+		case SWT.SHADOW_NONE -> 0;
+		case SWT.SHADOW_OUT -> hwnd == handle ? OS.WS_EX_CLIENTEDGE : OS.WS_EX_WINDOWEDGE;
+		default -> OS.WS_EX_CLIENTEDGE;
+	};
+	int newStyle = (oldStyle & ~mask) | selected;
+	/* Reentrant non-client messages observe the updated edge policy. */
+	nativeBorderRelief = relief;
+	if (newStyle != oldStyle) {
+		OS.SetWindowLong (hwnd, OS.GWL_EXSTYLE, newStyle);
+		OS.SetWindowPos (hwnd, 0, 0, 0, 0, 0,
+				OS.SWP_NOMOVE | OS.SWP_NOSIZE | OS.SWP_NOZORDER
+				| OS.SWP_NOACTIVATE | OS.SWP_FRAMECHANGED);
+	}
+	/* CLIENT-only invalidation misses etched-to-etched transitions. */
+	OS.RedrawWindow (hwnd, null, 0, OS.RDW_INVALIDATE | OS.RDW_FRAME);
+}
+
+/* Internal: Composite/Canvas constructor shadows use this same edge mapping. */
+int requestedBorderRelief () {
+	return nativeBorderRelief;
+}
+
+static int edgeForRelief (int relief) {
+	return switch (relief) {
+		case SWT.SHADOW_IN -> OS.EDGE_SUNKEN;
+		case SWT.SHADOW_OUT -> OS.EDGE_RAISED;
+		case SWT.SHADOW_ETCHED_IN -> OS.EDGE_ETCHED;
+		case SWT.SHADOW_ETCHED_OUT -> OS.EDGE_BUMP;
+		default -> 0;
+	};
+}
+
+/**
  * Returns the receiver's border width in points.
  *
  * @return the border width
@@ -1295,6 +1367,9 @@ int getBorderWidthInPixels () {
     }
     if ((bits1 & OS.WS_EX_STATICEDGE) != 0) {
         return getSystemMetrics(OS.SM_CXBORDER);
+    }
+    if (nativeBorderRelief == SWT.SHADOW_OUT && (bits1 & OS.WS_EX_WINDOWEDGE) != 0) {
+        return getSystemMetrics(OS.SM_CXEDGE);
     }
 	int bits2 = OS.GetWindowLong (borderHandle, OS.GWL_STYLE);
 
@@ -6428,7 +6503,35 @@ LRESULT WM_NCLBUTTONDOWN (long wParam, long lParam) {
 }
 
 LRESULT WM_NCPAINT (long wParam, long lParam) {
-	return wmNCPaint (handle, wParam, lParam);
+	LRESULT result = wmNCPaint (handle, wParam, lParam);
+	int edge = edgeForRelief (nativeBorderRelief);
+	if (edge == 0 || borderHandle () != handle
+			|| getClass () == Composite.class || getClass () == Canvas.class) {
+		return result;
+	}
+	/* Call the original native class for scrollbars and ordinary non-client
+	 * details, then replace only the relief ring on the same HWND. */
+	if (result == null) result = new LRESULT (callWindowProc (handle, OS.WM_NCPAINT, wParam, lParam));
+	if (isDisposed ()) return result;
+	long dc = OS.GetWindowDC (handle);
+	if (dc != 0) {
+		try {
+			RECT rect = new RECT ();
+			if (OS.GetWindowRect (handle, rect)) {
+				rect.right -= rect.left;
+				rect.bottom -= rect.top;
+				rect.left = rect.top = 0;
+				int inset = getSystemMetrics (OS.SM_CXEDGE);
+				OS.ExcludeClipRect (dc, inset, inset,
+						Math.max (inset, rect.right - inset),
+						Math.max (inset, rect.bottom - inset));
+				OS.DrawEdge (dc, rect, edge, OS.BF_RECT);
+			}
+		} finally {
+			OS.ReleaseDC (handle, dc);
+		}
+	}
+	return result;
 }
 
 LRESULT WM_NOTIFY (long wParam, long lParam) {

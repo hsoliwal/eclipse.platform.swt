@@ -1720,6 +1720,29 @@ public Image getBackgroundImage () {
 }
 
 /**
+ * Returns the requested optional border relief, or SWT.DEFAULT when no
+ * native decoration override exists.
+ *
+ * @return SWT.DEFAULT on the Cocoa backend
+ */
+public int getBorderRelief () {
+	checkWidget ();
+	return SWT.DEFAULT;
+}
+
+/**
+ * Sets optional native relief. A two-tone bevel is not currently available
+ * through this Control's Cocoa peer; unsupported values fail explicitly.
+ *
+ * @param relief an SWT.SHADOW_* relief or SWT.DEFAULT
+ */
+public void setBorderRelief (int relief) {
+	checkWidget ();
+	if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+	if (relief != SWT.DEFAULT) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+}
+
+/**
  * Returns the receiver's border width in points.
  *
  * @return the border width

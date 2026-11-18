@@ -1648,6 +1648,7 @@ public class OS extends C {
 	public static final int WS_EX_RIGHT = 0x00001000;
 	public static final int WS_EX_RTLREADING = 0x00002000;
 	public static final int WS_EX_STATICEDGE = 0x20000;
+	public static final int WS_EX_WINDOWEDGE = 0x100;
 	public static final int WS_EX_TOOLWINDOW = 0x80;
 	public static final int WS_EX_TOPMOST = 0x8;
 	public static final int WS_EX_TRANSPARENT = 0x20;
