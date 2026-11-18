@@ -1736,7 +1736,7 @@ public int getBorderRelief () {
 public void setBorderRelief (int relief) {
     checkWidget();
     if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-    if (relief != SWT.DEFAULT && relief != SWT.SHADOW_NONE) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+    if (relief != SWT.DEFAULT) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
     nativeBorderRelief = relief;
 }
 
