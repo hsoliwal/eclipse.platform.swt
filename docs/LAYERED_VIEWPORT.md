@@ -86,3 +86,19 @@ release qualification.
 Before promotion run the fork's recipe/replay, source and binary API diff,
 JDK 21 compilation, widget JUnit tests, native GTK/Win32/Cocoa tests,
 pixel comparisons (alpha and damage), and resource/disposal measurements.
+
+## Callback-created damage under a retained backing store (candidate #484)
+
+The damage region has a capture/consume rule. A paint pass snapshots the dirty
+rectangles intersecting its clipping rectangle and consumes that **old**
+damage before invoking application painter callbacks. If a painter changes a
+layer, the resulting `redraw` adds **new** damage, which must remain pending
+for a later SWT paint event. On a failed compose the captured old regions are
+restored.
+
+This prevents a user callback from having its own new invalidation erased by
+a late `dirty.remove`. The primitive snapshot lane is owned by this viewport
+and reused after warming. Nested paint work gets separate temporary space.
+This does **not** claim native UI reentrancy or disposal behavior has been
+qualified for all SWT backends; focused native visual tests and the canonical
+source-sealed Synexia result-only handoff are still required.
