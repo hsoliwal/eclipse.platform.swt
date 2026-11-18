@@ -1799,8 +1799,7 @@ public void setBorderRelief (int relief) {
     }
     if (!hasBorder() || !(this instanceof Scrollable scrollable)) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
     NSScrollView frame = scrollable.scrollView;
-    if (frame == null || OS.objc_msgSend(frame.id,
-            OS.sel_registerName("borderType")) != OS.NSBezelBorder) {
+    if (frame == null || frame.borderType() != OS.NSBezelBorder) {
         SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
     }
     NSSize content = new NSSize();
