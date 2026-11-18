@@ -418,6 +418,53 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertSame(a, viewport.getChildren()[0], "moving the layer up moves its control up");
     }
 
+    /* an image of one colour */
+    private Image solidImage(int color, int size) {
+        Image image = new Image(viewport.getDisplay(), size, size);
+        GC gc = new GC(image);
+        gc.setBackground(viewport.getDisplay().getSystemColor(color));
+        gc.fillRectangle(0, 0, size, size);
+        gc.dispose();
+        return image;
+    }
+
+    @Test
+    public void testBlendModesOfAnImageLayer() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        viewport.addPaintLayer("blue", 0, 0, 120, 120, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLUE));
+            gc.fillRectangle(ctx.clip());
+        });
+        Image red = solidImage(SWT.COLOR_RED, 40), white = solidImage(SWT.COLOR_WHITE, 40);
+        try {
+            Layer layer = viewport.addImageLayer("red", red, 20, 20);
+            assertEquals(LayeredViewport.BLEND_NORMAL, layer.getBlendMode());
+            layer.setBlendMode(LayeredViewport.BLEND_MULTIPLY);
+            show();
+            assertEquals(new RGB(0, 0, 0), rgb(pixels(), 30, 30), "red multiplied with blue");
+            assertEquals(new RGB(0, 0, 255), rgb(pixels(), 100, 100), "outside the image the blue is unchanged");
+            assertEquals(new RGB(255, 255, 255), rgb(pixels(), 200, 200));
+            layer.setBlendMode(LayeredViewport.BLEND_SCREEN);
+            viewport.update();
+            assertEquals(new RGB(255, 0, 255), rgb(pixels(), 30, 30), "red screened over blue");
+            layer.setImage(white);
+            layer.setBlendMode(LayeredViewport.BLEND_DIFFERENCE);
+            viewport.update();
+            assertEquals(new RGB(255, 255, 0), rgb(pixels(), 30, 30), "white minus blue");
+            layer.setImage(red);
+            layer.setBlendMode(LayeredViewport.BLEND_MULTIPLY);
+            layer.setOpacity(128);
+            viewport.update();
+            assertEquals(new RGB(0, 0, 127), rgb(pixels(), 30, 30), "multiply at half opacity");
+            assertThrows(IllegalArgumentException.class, () -> layer.setBlendMode(LayeredViewport.BLEND_EXCLUSION + 1));
+            assertThrows(IllegalArgumentException.class, () -> layer.setBlendMode(-1));
+            assertSameAsAFullRecomposition();
+        } finally {
+            red.dispose();
+            white.dispose();
+        }
+    }
+
     /* the pixels shown equal those of recomposing every layer at the current origin */
     private void assertSameAsAFullRecomposition() {
         ImageData shown = pixels();
