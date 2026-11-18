@@ -7,6 +7,7 @@
 #include <iostream>
 #include <limits>
 #include <random>
+#include <vector>
 
 int main() {
     std::uint64_t assertions = 0;
@@ -49,5 +50,69 @@ int main() {
     const int one[] = {0,0,INT_MAX,1};
     assert(swt_maya::packedDirtyPixelCount(one,1) ==
         static_cast<std::size_t>(INT_MAX)); ++assertions;
+    // Scratch reuse is bounded and must fail closed while another JNI frame
+    // on this SWT UI thread has the temporary region buffer borrowed.
+    for (int count = -1; count <= 4097; ++count) {
+        for (std::size_t pixels : {std::size_t(0), std::size_t(1),
+                std::size_t(262143), std::size_t(262144), std::size_t(262145),
+                std::size_t(1048576)}) {
+            for (bool busy : {false, true}) {
+                const bool expected = count > 1 && pixels > 0 &&
+                        pixels <= 262144 && !busy;
+                assert(swt_maya::mayReuseDirtyPixels(count, pixels, busy) == expected);
+                ++assertions;
+            }
+        }
+    }
+    // Model the reentrant case and capacity ownership with two independent
+    // buffers: the nested request cannot modify the first staging snapshot.
+    std::vector<std::uint32_t> retained(256, 0xA5A5A5A5u);
+    std::vector<std::uint32_t> nested(256, 0x5A5A5A5Au);
+    bool borrowed = true;
+    assert(!swt_maya::mayReuseDirtyPixels(4, retained.size(), borrowed));
+    ++assertions;
+    for (std::size_t i = 0; i < retained.size(); ++i) {
+        assert(retained[i] == 0xA5A5A5A5u);
+        assert(nested[i] == 0x5A5A5A5Au);
+        assertions += 2;
+    }
+    borrowed = false;
+    assert(swt_maya::mayReuseDirtyPixels(4, retained.size(), borrowed));
+    ++assertions;
+    // These are the SAME retained native array and reentrant lease helpers
+    // used by MayaComposition. A nested upload cannot overwrite the outer
+    // frame, and large batches must never enlarge retained storage.
+    swt_maya::DirtyPixelScratch<std::uint32_t> pixels;
+    assert(pixels.retainedCapacity() == 0 && !pixels.busy()); ++assertions;
+    std::uint32_t *previous = nullptr;
+    {
+        swt_maya::DirtyPixelScratch<std::uint32_t>::Lease outer(pixels, 3, 1024);
+        previous = outer.data();
+        assert(pixels.busy() && pixels.retainedCapacity() == 1024);
+        ++assertions;
+        for (std::size_t i=0;i<1024;i++) outer.data()[i] = 0xA5A5A5A5u;
+        {
+            swt_maya::DirtyPixelScratch<std::uint32_t>::Lease nested(pixels, 3, 500);
+            assert(nested.data() != outer.data()); ++assertions;
+            for (std::size_t i=0;i<500;i++) nested.data()[i] = 0x5A5A5A5Au;
+            assert(pixels.busy()); ++assertions;
+        }
+        for (std::size_t i=0;i<1024;i++) {
+            assert(outer.data()[i] == 0xA5A5A5A5u); ++assertions;
+        }
+    }
+    assert(!pixels.busy()); ++assertions;
+    {
+        swt_maya::DirtyPixelScratch<std::uint32_t>::Lease reuse(pixels, 3, 500);
+        assert(reuse.data() == previous && pixels.retainedCapacity() == 1024);
+        ++assertions;
+    }
+    {
+        swt_maya::DirtyPixelScratch<std::uint32_t>::Lease large(pixels, 3, 262145);
+        assert(large.data() != previous && pixels.retainedCapacity() == 1024);
+        ++assertions;
+    }
+    assert(!pixels.busy() && pixels.retainedCapacity() <= 262144);
+    ++assertions;
     std::cout << "PASS " << assertions << " Maya upload byte-pitch and prefix checks\n";
 }
