@@ -92,7 +92,7 @@ this fork with `git grep` (2026-11-18).
 
 | Platform | Facility | Z order | Offset | Opacity | Content | Since | This fork today |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Windows | DirectComposition (`dcomp.dll`: `DCompositionCreateDevice`, `IDCompositionTarget`, `IDCompositionVisual`) | `IDCompositionVisual::AddVisual(visual, insertAbove, reference)` | `SetOffsetX/Y` | effect group `SetOpacity` | `IDCompositionSurface` or a swap chain | Windows 8 | no binding (layered windows only, for shell alpha) |
+| Windows | DirectComposition (`dcomp.dll`: `DCompositionCreateDevice`, `IDCompositionTarget`, `IDCompositionVisual`) | `IDCompositionVisual::AddVisual(visual, insertAbove, reference)` | `SetOffsetX/Y` | effect group `SetOpacity` | `IDCompositionSurface` or a swap chain | Windows 8 | bound in maya: `org.eclipse.swt.internal.maya.MayaComposition` (one visual per layer, premultiplied pixels uploaded, one `_nApply` per frame for order, offset, opacity, visibility; `Test_org_eclipse_swt_maya_Composition`); `LayeredViewport` does not use it yet |
 | Windows 10+ | Windows.UI.Composition visual layer (`Compositor`, `ContainerVisual`, `SpriteVisual`) | `Children.InsertAbove` | `Offset` | `Opacity` | composition surface brush | 1803 | none |
 | macOS | Core Animation `CALayer` | sublayer order, `zPosition` | `position` | `opacity` | `contents` (CGImage, IOSurface) | 10.5 | `CALayer` class bound, sublayer order and `zPosition` not |
 | iOS | `CALayer` under UIKit views | as macOS | as macOS | as macOS | as macOS | 2.0 | mobile port: not bound |

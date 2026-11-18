@@ -40,7 +40,7 @@ SKIA_INCLUDES = ["", "include/config", "include/core", "include/encode", "includ
                  "third_party/externals/icu/source/common", "third_party/icu", "modules/skparagraph/src"]
 LIBS = ["skottie.lib", "sksg.lib", "skshaper.lib", "skunicode.lib", "skresources.lib", "skparagraph.lib", "svg.lib", "skia.lib",
         "harfbuzz.lib", "icu.lib", "freetype2.lib", "libpng.lib", "libjpeg.lib", "libwebp.lib", "libwebp_sse41.lib", "wuffs.lib",
-        "zlib.lib", "expat.lib", "skcms.lib", "d3d12allocator.lib", "spirv_cross.lib", "d3d12.lib", "dxgi.lib", "d3dcompiler.lib",
+        "zlib.lib", "expat.lib", "skcms.lib", "d3d12allocator.lib", "spirv_cross.lib", "d3d12.lib", "d3d11.lib", "dcomp.lib", "dxgi.lib", "d3dcompiler.lib",
         "opengl32.lib", "user32.lib", "gdi32.lib", "ole32.lib", "OleAut32.lib", "usp10.lib", "dwrite.lib", "fontsub.lib",
         "advapi32.lib"]
 
