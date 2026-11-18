@@ -2129,15 +2129,24 @@ LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
 				code = callWindowProc (hwnd, OS.WM_NCPAINT, wParam, lParam);
 			}
 			long hDC = OS.GetWindowDC (hwnd);
-			RECT rect = new RECT ();
-			OS.GetWindowRect (hwnd, rect);
-			rect.right -= rect.left;
-			rect.bottom -= rect.top;
-			rect.left = rect.top = 0;
-			int border = getSystemMetrics (OS.SM_CXEDGE);
-			OS.ExcludeClipRect (hDC, border, border, rect.right - border, rect.bottom - border);
-			OS.DrawThemeBackground(display.hEditTheme(nativeZoom), hDC, OS.EP_EDITTEXT, OS.ETS_NORMAL, rect, null);
-			OS.ReleaseDC (hwnd, hDC);
+			if (hDC != 0) {
+				try {
+					RECT rect = new RECT ();
+					if (OS.GetWindowRect (hwnd, rect)) {
+						rect.right -= rect.left;
+						rect.bottom -= rect.top;
+						rect.left = rect.top = 0;
+						int border = getSystemMetrics (OS.SM_CXEDGE);
+						OS.ExcludeClipRect (hDC, border, border,
+								Math.max (border, rect.right - border),
+								Math.max (border, rect.bottom - border));
+						OS.DrawThemeBackground(display.hEditTheme(nativeZoom), hDC,
+								OS.EP_EDITTEXT, OS.ETS_NORMAL, rect, null);
+					}
+				} finally {
+					OS.ReleaseDC (hwnd, hDC);
+				}
+			}
 			return new LRESULT (code);
 		}
 	}
