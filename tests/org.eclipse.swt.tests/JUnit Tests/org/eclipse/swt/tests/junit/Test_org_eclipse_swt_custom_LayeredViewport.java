@@ -1959,6 +1959,89 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testNativeBorderClientAreaResynchronizesControlAndCompositor() throws ReflectiveOperationException {
+        org.junit.jupiter.api.Assumptions.assumeFalse("cocoa".equals(SWT.getPlatform()),
+                "Unbordered Cocoa Canvas intentionally has no NSScrollView bezel");
+        viewport.setSize(100, 100);
+        Rectangle original = viewport.getClientArea();
+        Button control = new Button(viewport, SWT.PUSH);
+        Layer childLayer = viewport.addControlLayer("native edge child", control, 98, 10, 8, 18);
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        Image image = nativeTestImage(8, 8, SWT.COLOR_RED);
+        Layer nativeLayer = viewport.addImageLayer("native edge image", image, 98, 40);
+        try {
+            assertTrue(nativeLayer.setNative(true));
+            assertEquals(1f, backend.lastProperties[3], "initial client region exposes the native layer");
+            assertTrue(control.getVisible(), "initial client region exposes the child");
+
+            int applications = backend.applications;
+            viewport.setBorderRelief(SWT.SHADOW_IN);
+            Rectangle inset = viewport.getClientArea();
+            Field field = LayeredViewport.class.getDeclaredField("nativeClientGeometry");
+            field.setAccessible(true);
+            assertArrayEquals(new int[] {inset.x, inset.y, inset.width, inset.height},
+                    (int[]) field.get(viewport), "native client geometry remains authoritative");
+            boolean inside = inset.width > 98 && inset.height > 40;
+            assertEquals(inside, control.getVisible(), "the OS client area determines native child culling");
+            assertEquals(inside ? 1f : 0f, backend.lastProperties[3],
+                    "the same client area determines Maya native-layer culling");
+            if (!original.equals(inset)) {
+                assertTrue(backend.applications > applications,
+                        "a client-area change must submit a revised native frame");
+            }
+
+            applications = backend.applications;
+            viewport.setBorderRelief(SWT.SHADOW_IN);
+            assertEquals(applications, backend.applications,
+                    "a no-op border request cannot issue another viewport frame");
+
+            viewport.setBorderRelief(SWT.DEFAULT);
+            assertEquals(original, viewport.getClientArea(),
+                    "restoring the native frame restores the original viewport geometry");
+            assertTrue(control.getVisible());
+            assertEquals(1f, backend.lastProperties[3]);
+            assertSame(control, viewport.getControl(childLayer),
+                    "native child ownership is unchanged");
+        } finally {
+            if (!viewport.isDisposed()) {
+                nativeLayer.remove();
+                childLayer.remove();
+            }
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeBorderReentrancyCoalescesViewportFrame() throws ReflectiveOperationException {
+        org.junit.jupiter.api.Assumptions.assumeTrue("win32".equals(SWT.getPlatform()),
+                "This contract requires a synchronous Win32 non-client frame transition");
+        viewport.setSize(100, 100);
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        Image image = nativeTestImage(8, 8, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("reentrant native border", image, 98, 40);
+        try {
+            assertTrue(layer.setNative(true));
+            int before = backend.applications;
+            backend.onApply = () -> viewport.setBorderRelief(SWT.DEFAULT);
+            viewport.setBorderRelief(SWT.SHADOW_IN);
+            assertEquals(SWT.DEFAULT, viewport.getBorderRelief(),
+                    "a nested native callback overrides the preceding request");
+            Rectangle area = viewport.getClientArea();
+            Field field = LayeredViewport.class.getDeclaredField("nativeClientGeometry");
+            field.setAccessible(true);
+            assertArrayEquals(new int[] {area.x, area.y, area.width, area.height},
+                    (int[]) field.get(viewport),
+                    "the final client rectangle is published after reentrant frame changes");
+            assertTrue(backend.applications > before);
+            assertEquals(1, backend.additions, "reentrant geometry must not duplicate native layers");
+            assertEquals(0, backend.disposals, "reentrant frame synchronization retains composition ownership");
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
     public void testNativeCullingRespondsToViewportResize() throws ReflectiveOperationException {
         viewport.setSize(100, 100);
         RecordingNativeLayers backend = installRecordingNativeLayers();

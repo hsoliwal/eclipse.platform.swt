@@ -1310,16 +1310,23 @@ public final class LayeredViewport extends Canvas {
     // Main and retained stores move sequentially on the SWT UI thread.
     // Share one growable primitive rectangle lane across those stores.
     private int[] movedWork = new int[64];
+    /*
+     * The native client rectangle is authoritative. A border/frame-style
+     * transition may change it without changing the outer Control bounds.
+     * Store only primitive geometry, not one object per viewport/layout edit.
+     */
+    private final int[] nativeClientGeometry = new int[4];
+    private boolean nativeClientGeometryKnown;
+    private boolean nativeClientGeometryRefreshing;
+    private boolean nativeClientGeometryPending;
+    private boolean nativeClientGeometryQueued;
 
     public LayeredViewport(Composite parent, int style) {
         super(parent, style | SWT.DOUBLE_BUFFERED);
         viewportRuntime.initializeOrigin(0, 0);
         dirty = new ViewportDamageRegion();
         addPaintListener(event -> paintLayers(event.gc));
-        addListener(SWT.Resize, event -> {
-            placeControls();
-            if (!isDisposed()) syncNative();
-        });
+        addListener(SWT.Resize, event -> refreshNativeClientGeometry());
         addListener(SWT.MouseDown, this::dispatchPointer);
         addListener(SWT.MouseUp, this::dispatchPointer);
         addListener(SWT.MouseMove, this::dispatchPointer);
@@ -1424,6 +1431,81 @@ public final class LayeredViewport extends Canvas {
         publishOrder();
         invalidate(layer);
         return layer;
+    }
+
+    /**
+     * Resync native child bounds and compositor visibility after a change in
+     * the actual platform client rectangle, including border-only changes that
+     * do not issue a normal outer-window SWT.Resize event.
+     *
+     * The native OS still owns frame recalculation. This UI-thread method only
+     * observes the resulting client area; the existing Control.setBounds and
+     * NativeLayers.apply backends own the native geometry operations.
+     */
+    @Override
+    public void setBorderRelief(int relief) {
+        super.setBorderRelief(relief);
+        if (!isDisposed()) refreshNativeClientGeometry();
+    }
+
+    private boolean matchesNativeClientGeometry(Rectangle area) {
+        return nativeClientGeometryKnown && nativeClientGeometry[0] == area.x
+                && nativeClientGeometry[1] == area.y
+                && nativeClientGeometry[2] == area.width
+                && nativeClientGeometry[3] == area.height;
+    }
+
+    /*
+     * SWT/OS native frame callbacks and child resize listeners can re-enter
+     * this method. Never recursively apply child positions or overwrite an
+     * active Maya composition frame. Two synchronous passes absorb ordinary
+     * reentry; a further change is coalesced into one UI-thread callback.
+     */
+    private void refreshNativeClientGeometry() {
+        if (isDisposed()) return;
+        if (nativeClientGeometryRefreshing) {
+            nativeClientGeometryPending = true;
+            return;
+        }
+        nativeClientGeometryRefreshing = true;
+        try {
+            for (int pass = 0; pass < 2 && !isDisposed(); pass++) {
+                Rectangle area = getClientArea();
+                if (matchesNativeClientGeometry(area)) {
+                    nativeClientGeometryPending = false;
+                    break;
+                }
+                nativeClientGeometry[0] = area.x;
+                nativeClientGeometry[1] = area.y;
+                nativeClientGeometry[2] = area.width;
+                nativeClientGeometry[3] = area.height;
+                nativeClientGeometryKnown = true;
+                nativeClientGeometryPending = false;
+
+                // Clip, retained pixels, native child visibility and compositor
+                // culling all depend on the same OS-reported client rectangle.
+                spatialDirty = true;
+                redraw();
+                if (isDisposed()) break;
+                placeControls();
+                if (isDisposed()) break;
+                syncNative();
+                if (isDisposed()) break;
+                if (!matchesNativeClientGeometry(getClientArea())) {
+                    nativeClientGeometryPending = true;
+                }
+                if (!nativeClientGeometryPending) break;
+            }
+        } finally {
+            nativeClientGeometryRefreshing = false;
+        }
+        if (nativeClientGeometryPending && !nativeClientGeometryQueued && !isDisposed()) {
+            nativeClientGeometryQueued = true;
+            getDisplay().asyncExec(() -> {
+                nativeClientGeometryQueued = false;
+                if (!isDisposed()) refreshNativeClientGeometry();
+            });
+        }
     }
 
     /** Bottom-to-top snapshot; changing this array cannot reorder the view. */
