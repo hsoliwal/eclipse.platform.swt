@@ -45,10 +45,12 @@ template <class T> void release(T *&p) {
 
 struct Composition;
 struct Layer;
-// Stable typed handles, not allocator addresses: a freed native object's
-// pointer can be reused, but its retired Java token never can.
-swt_maya::TokenRegistry<Composition, 0x31> liveCompositions;
-swt_maya::TokenRegistry<Layer, 0x32> liveLayers;
+// Each SWT Display/UI thread owns its native objects. Partition live lookups
+// by that thread, but issue tokens globally: two Displays cannot race inside
+// unordered_map or accidentally resolve one another's handle. Never move an
+// existing COM object to a different thread to work around SWT ownership.
+thread_local swt_maya::TokenRegistry<Composition, 0x31> liveCompositions;
+thread_local swt_maya::TokenRegistry<Layer, 0x32> liveLayers;
 
 struct Layer {
     jlong token = 0;

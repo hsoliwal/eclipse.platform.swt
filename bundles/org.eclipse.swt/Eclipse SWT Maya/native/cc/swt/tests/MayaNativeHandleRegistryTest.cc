@@ -4,11 +4,14 @@
  *******************************************************************************/
 #include "../MayaNativeHandleRegistry.h"
 
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <new>
+#include <thread>
+#include <unordered_set>
 #include <vector>
 
 namespace {
@@ -61,6 +64,20 @@ int main() {
     assert(compositions.retire(compositionToken, &object));
     assert(layers.retire(layerToken, &object));
 
+    // While both objects remain alive, an opaque handle issued by one
+    // Display must never resolve through a different Display's registry.
+    swt_maya::TokenRegistry<NativeObject, 0x32> firstDisplay;
+    swt_maya::TokenRegistry<NativeObject, 0x32> secondDisplay;
+    const auto firstDisplayToken = firstDisplay.admit(&object);
+    const auto secondDisplayToken = secondDisplay.admit(&object);
+    assert(firstDisplayToken != secondDisplayToken);
+    assert(firstDisplay.get(secondDisplayToken) == nullptr);
+    assert(secondDisplay.get(firstDisplayToken) == nullptr);
+    assert(firstDisplay.get(firstDisplayToken) == &object);
+    assert(secondDisplay.get(secondDisplayToken) == &object);
+    assert(firstDisplay.retire(firstDisplayToken, &object));
+    assert(secondDisplay.retire(secondDisplayToken, &object));
+
     // A long churn run simulates a native allocator recycling one address.
     // No returned token can equal an earlier retired token.
     std::vector<std::uint64_t> retired;
@@ -86,6 +103,44 @@ int main() {
     assert(layers.get(0xffffffffffffffffULL) == nullptr);
     assert(layers.get(0x3200ffffffffffffULL) == nullptr);
 
-    std::cout << "MayaNativeHandleRegistryTest PASS: typed handles, forced ABA, 100000 retire/reissue rounds\n";
+    // Multiple independent SWT Display threads issue handles concurrently.
+    // Each has a private live map; the shared atomic sequence must still
+    // reject accidental process-wide aliasing and wrong-Display lookup.
+    constexpr std::size_t displays = 6;
+    constexpr std::uint64_t perDisplay = 20000;
+    std::array<std::vector<std::uint64_t>, displays> issued;
+    std::vector<std::thread> workers;
+    workers.reserve(displays);
+    for (std::size_t d = 0; d < displays; d++) {
+        workers.emplace_back([&, d] {
+            swt_maya::TokenRegistry<NativeObject, 0x32> ownDisplay;
+            issued[d].reserve(static_cast<std::size_t>(perDisplay));
+            std::uint64_t last = 0;
+            for (std::uint64_t i = 0; i < perDisplay; i++) {
+                NativeObject current{(static_cast<std::uint64_t>(d) << 32) | i};
+                const auto token = ownDisplay.admit(&current);
+                assert(token > last);
+                assert(ownDisplay.get(token) == &current);
+                assert(ownDisplay.retire(token, &current));
+                assert(ownDisplay.get(token) == nullptr);
+                issued[d].push_back(token);
+                last = token;
+            }
+            assert(ownDisplay.liveCount() == 0);
+        });
+    }
+    for (auto &worker : workers) worker.join();
+    std::unordered_set<std::uint64_t> unique;
+    unique.reserve(static_cast<std::size_t>(displays * perDisplay));
+    for (const auto &displayTokens : issued) {
+        for (const auto token : displayTokens) {
+            assert(unique.insert(token).second);
+            assert(layers.get(token) == nullptr);
+        }
+    }
+    assert(unique.size() == displays * perDisplay);
+
+    std::cout << "MayaNativeHandleRegistryTest PASS: typed handles, forced ABA, 100000 retire/reissue"
+                 " rounds, 6 display threads / 120000 distinct tokens\n";
     return 0;
 }
