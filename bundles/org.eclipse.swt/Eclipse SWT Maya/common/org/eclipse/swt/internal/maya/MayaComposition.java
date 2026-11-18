@@ -28,6 +28,12 @@ public final class MayaComposition {
 	/** Floats per layer in {@link #_nApply}'s properties: x, y, opacity (0 to 1), visible (0 or 1). */
 	public static final int PROPS = 4;
 
+	/** The opt-in native scene frame stores fourteen float properties per layer. */
+	public static final int SCENE_FLOATS = 14;
+
+	/** Opt-in scene bit indicating a local rectangular clip. */
+	public static final int SCENE_CLIP = 1;
+
 	private MayaComposition() {
 	}
 
@@ -45,6 +51,23 @@ public final class MayaComposition {
 	 * (x, y, opacity, visible); layers not listed are not shown. One commit. Returns 0 or a failure code.
 	 */
 	public static native int _nApply(long composition, long[] layers, float[] props, int count);
+
+	/**
+	 * One opt-in compositor frame with {@link #SCENE_FLOATS} floats per layer:
+	 * offsetX, offsetY, opacity, visible, affine m11/m12/m21/m22/dx/dy,
+	 * and local clip left/top/right/bottom. Each flags element may set
+	 * {@link #SCENE_CLIP}; unsupported flags or malformed frames are refused
+	 * without changing the last committed native pixels.
+	 * <p>
+	 * Existing {@link #_nApply} remains unchanged and resets opt-in transforms
+	 * and clips before returning to legacy presentation. All arrays are read
+	 * synchronously by one JNI call on the SWT display thread.
+	 * Unsupported native builds return an error; callers must use the normal
+	 * SWT backing-store route when this optional capability is unavailable.
+	 * </p>
+	 */
+	public static native int _nApplyScene(long composition, long[] layers, float[] packed,
+			int[] flags, int count);
 
 	/** Removes and frees a layer. */
 	public static native void _nRemoveLayer(long composition, long layer);
