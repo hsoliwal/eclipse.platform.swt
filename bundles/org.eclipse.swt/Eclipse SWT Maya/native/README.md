@@ -42,9 +42,11 @@ with the Skia release that Skija 0.116.3 was made with. The fragment `org.eclips
 - `cc/swt/MayaFramePacket.h` and `MayaFramePacket.cc`: independent
   little-endian bulk frame parser and opt-in JNI ingress. They add two symbols
   to the existing seven MayaComposition exports; neither old symbol nor
-  native-handle ownership contract is removed. The v1 bridge **currently
-  allocates legacy JNI arrays before calling the old `_nApply`**: no speedup
-  is claimed. `-Dswt.maya.packedFrame=true` opts in at >=64 layers, with
+  native-handle ownership contract is removed. The packed v1 JNI ingress now decodes into an
+  owned native frame and calls the **same native COM transaction** as the
+  legacy `_nApply`, without staging temporary JNI arrays. The encoder and
+  native frame decoder still copy bytes; no FPS or zero-copy speedup is
+  claimed until real hardware qualification. `-Dswt.maya.packedFrame=true` opts in at >=64 layers, with
   legacy fallback when a previously shipped Maya library lacks the symbols.
   The new source has sanitizer, Java21 `-Xcheck:jni`, and MSVC compile tests
   in `.github/workflows/maya-packet-abi.yml`.
