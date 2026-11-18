@@ -167,3 +167,41 @@ Upstream references:
 - Windows DirectComposition commits: https://learn.microsoft.com/en-us/windows/win32/api/dcomp/nf-dcomp-idcompositiondevice-commit
 - GTK4 GSK: https://docs.gtk.org/gsk4/
 - JDK21 FFM status: https://openjdk.org/jeps/442
+
+## Typed lifetime-safe native handles (follow-up)
+
+Windows Maya now issues **typed, non-reused 64-bit opaque tokens** instead of
+publishing raw C++ `Layer*` and `Composition*` addresses as JNI `long`s.
+The top byte identifies the kind (composition `0x31`, layer `0x32`),
+with a monotonic nonzero 56-bit counter. Both are positive Java long values.
+The token is valid only while its native object lives. Retirement does **not**
+recycle the identity even when the C++ allocator reuses the same address.
+
+The internal C++ `MayaNativeHandleRegistry.h` maps live tokens to owning
+pointers and verifies the kind before looking up a pointer. Existing
+`getComposition` and `getLayer` perform this check before any COM work.
+Every native creation path returns `0` if it cannot allocate a token, and
+cleans up native resources. Removal/disposal retires tokens and releases the
+existing COM owners. A stale token can never be confused with a newly
+allocated owner simply because an address was recycled.
+
+This changes no Java method descriptor, exported JNI symbol, wire-frame
+record size, packet version, DirectComposition visual structure or SWT
+`Control.handle` HWND contract. A `MayaFramePacket` 64-bit handle field is
+still an opaque bit pattern. Both legacy `long[]` and packed frames resolve
+via the same typed registry. Unsupported platforms keep their previous stub
+behavior. Native tokens are ephemeral and should never be persisted or
+reinterpreted as pointer addresses by Java code.
+
+The registry remains confined to SWT's UI/native compositor thread. It does
+not allow arbitrary cross-thread JNI disposal or replace the UI event loop.
+A test deliberately places two native records at the same C++ address,
+retires the first, and ensures its old token is never accepted. Another runs
+100,000 create/retire cycles under GCC/Clang ASan/UBSan. A Win32 native
+screen test checks token invalidation and composition ownership after
+layer removal and composition disposal.
+
+**Mandatory release gate:** rebuild Maya on Windows, run the original
+`AllMayaGcTests` and new stale-token screen test under `-Xcheck:jni`,
+verify the full legacy and packed-frame ABI, and measure registry lookup and
+native lifetime costs. Source-level tests are not proof of Win32 GPU parity.
