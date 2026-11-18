@@ -166,6 +166,48 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertSame(layer, viewport.hitTest(65, 12));
     }
 
+
+    @Test
+    public void testPinAndStickyChangesDuringHitRecheckProjectedCoordinates() {
+        Layer body = viewport.addPaintLayer("body", 0, 0, 300, 600, (gc, ctx) -> { });
+        Layer header = viewport.addPaintLayer("header", 0, 0, 200, 20, (gc, ctx) -> { });
+        header.setPinned(SWT.VERTICAL);
+        viewport.setOrigin(0, 180);
+        assertSame(header, viewport.hitTest(10, 10), "pinned header intercepts its device Y");
+        header.setHitTester((candidate, x, y) -> {
+            assertEquals(10, y, "the callback receives view-relative Y");
+            candidate.setPinned(SWT.NONE);
+            return true;
+        });
+        assertSame(body, viewport.hitTest(10, 10),
+                "the header moved to world Y=0, outside the visible world: recheck must reject it");
+
+        Layer group = viewport.addPaintLayer("group", 0, 100, 200, 16, (gc, ctx) -> { });
+        group.setSticky(SWT.VERTICAL, 20, 300);
+        assertSame(group, viewport.hitTest(10, 25));
+        group.setHitTester((candidate, x, y) -> {
+            assertEquals(105, y, "stuck group callback receives original local world Y");
+            candidate.setSticky(SWT.NONE, 0, 0);
+            return true;
+        });
+        assertSame(body, viewport.hitTest(10, 25),
+                "unstuck group no longer occupies the hit point after its callback");
+    }
+
+    @Test
+    public void testMixedScrolledPinnedAndStickyZOrderAfterReorder() {
+        Layer body = viewport.addPaintLayer("body", 0, 0, 300, 600, (gc, ctx) -> { });
+        Layer header = viewport.addPaintLayer("header", 0, 0, 100, 20, (gc, ctx) -> { });
+        header.setPinned(SWT.VERTICAL);
+        Layer sticky = viewport.addPaintLayer("sticky", 0, 100, 100, 16, (gc, ctx) -> { });
+        sticky.setSticky(SWT.VERTICAL, 5, 300);
+        viewport.setOrigin(0, 180);
+        assertSame(sticky, viewport.hitTest(10, 10), "topmost sticky above pinned header");
+        sticky.moveTo(0);
+        assertSame(header, viewport.hitTest(10, 10), "pinned header above reordered sticky");
+        assertSame(body, viewport.hitTest(10, 50), "world-space body remains selectable");
+    }
+
     /* opens the shell and lets every pending paint run */
     private void show() {
         shell.setSize(400, 340);
@@ -1414,7 +1456,6 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertSameAsAFullRecomposition();
         assertThrows(IllegalArgumentException.class, () -> column.setSticky(SWT.HORIZONTAL | SWT.VERTICAL, 0, 0));
     }
-
     @Test
     public void testParallaxPlanesKeepPaintHitAndPointerOrderAcrossBlitPans() {
         viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
