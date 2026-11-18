@@ -12,6 +12,11 @@ import org.eclipse.swt.custom.LayeredViewport;
 import org.eclipse.swt.custom.LayeredViewport.Layer;
 import org.eclipse.swt.custom.LayeredViewport.WorldBounds;
 import org.eclipse.swt.custom.LayeredViewport.WorldPoint;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Rectangle;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -143,5 +148,128 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertSame(layer, viewport.hitTest(65, 12));
         layer.setWorldClip(null);
         assertSame(layer, viewport.hitTest(65, 12));
+    }
+
+    /* opens the shell and lets every pending paint run */
+    private void show() {
+        shell.setSize(400, 340);
+        SwtTestUtil.openShell(shell);
+        viewport.update();
+        SwtTestUtil.processEvents();
+    }
+
+    /* the widget's pixels as they are on the screen */
+    private ImageData pixels() {
+        Rectangle area = viewport.getClientArea();
+        Image shot = new Image(viewport.getDisplay(), area.width, area.height);
+        GC gc = new GC(viewport);
+        try {
+            gc.copyArea(shot, 0, 0);
+        } finally {
+            gc.dispose();
+        }
+        ImageData data = shot.getImageData();
+        shot.dispose();
+        return data;
+    }
+
+    private static RGB rgb(ImageData data, int x, int y) {
+        return data.palette.getRGB(data.getPixel(x, y));
+    }
+
+    @Test
+    public void testAnExposeIsServedFromTheBackingStore() {
+        int[] paints = { 0 };
+        viewport.addPaintLayer("count", 0, 0, 200, 200, (gc, ctx) -> {
+            paints[0]++;
+            gc.fillRectangle(ctx.clip());
+        });
+        show();
+        int composed = paints[0];
+        assertTrue(composed > 0, "the first paint composes the layer");
+        // the window system asks for the pixels again (the shell repaints its children); no layer changed
+        shell.redraw(0, 0, shell.getSize().x, shell.getSize().y, true);
+        shell.update();
+        SwtTestUtil.processEvents();
+        assertEquals(composed, paints[0], "an expose is copied from the backing store");
+        viewport.redraw();
+        viewport.update();
+        assertTrue(paints[0] > composed, "redraw() still recomposes the layers");
+    }
+
+    @Test
+    public void testAPanRecomposesOnlyTheBandThatComesIntoView() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        java.util.List<Rectangle> clips = new java.util.ArrayList<>();
+        viewport.addPaintLayer("stripes", 0, 0, 4000, 4000, (gc, ctx) -> {
+            clips.add(ctx.clip());
+            Rectangle clip = ctx.clip();
+            for (int x = clip.x; x < clip.x + clip.width; x++) {
+                // stripes fixed in the world: a pan shows whether pixels moved with it
+                boolean dark = Math.floorMod(ctx.originX() + x, 7) == 0;
+                gc.setForeground(gc.getDevice().getSystemColor(dark ? SWT.COLOR_BLACK : SWT.COLOR_WHITE));
+                gc.drawLine(x, clip.y, x, clip.y + clip.height - 1);
+            }
+        });
+        show();
+        clips.clear();
+        viewport.setOrigin(10, 0);
+        viewport.update();
+        assertFalse(clips.isEmpty(), "the band is painted");
+        for (Rectangle clip : clips) assertTrue(clip.width <= 10, "only the band that came into view: " + clips);
+        assertSameAsAFullRecomposition();
+        // back the other way: the band is on the left
+        clips.clear();
+        viewport.setOrigin(0, 0);
+        viewport.update();
+        assertFalse(clips.isEmpty(), "the band is painted");
+        for (Rectangle clip : clips) {
+            assertTrue(clip.x == 0 && clip.width <= 10, "only the band that came into view: " + clips);
+        }
+        assertSameAsAFullRecomposition();
+    }
+
+    @Test
+    public void testDirtyPixelsMoveWithAPan() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer marker = viewport.addPaintLayer("marker", 30, 0, 10, 50, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
+            gc.fillRectangle(ctx.clip());
+        });
+        show();
+        marker.setWorldBounds(60, 0, 10, 50); // its old and new pixels are dirty, not yet repainted
+        viewport.setOrigin(10, 0); // and they move with the retained pixels
+        viewport.update();
+        assertSameAsAFullRecomposition();
+    }
+
+    /* the pixels shown equal those of recomposing every layer at the current origin */
+    private void assertSameAsAFullRecomposition() {
+        ImageData shown = pixels();
+        viewport.redraw();
+        viewport.update();
+        ImageData full = pixels();
+        for (int y = 0; y < shown.height; y++) {
+            for (int x = 0; x < shown.width; x++) {
+                assertEquals(rgb(full, x, y), rgb(shown, x, y), "pixel " + x + "," + y);
+            }
+        }
+    }
+
+    @Test
+    public void testATranslucentPainterLayerIsOneGroup() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer shapes = viewport.addPaintLayer("shapes", 0, 0, 200, 200, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
+            gc.fillRectangle(10, 10, 40, 40);
+            gc.fillRectangle(30, 30, 40, 40);
+        });
+        shapes.setOpacity(128);
+        show();
+        ImageData data = pixels();
+        RGB single = rgb(data, 15, 15), overlap = rgb(data, 35, 35);
+        assertEquals(single, overlap, "the layer's own shapes do not darken each other");
+        assertEquals(new RGB(255, 255, 255), rgb(data, 150, 150));
+        assertTrue(single.red > 100 && single.red < 160, "half black over white: " + single);
     }
 }

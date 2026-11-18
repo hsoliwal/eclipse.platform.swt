@@ -30,11 +30,20 @@ import org.eclipse.swt.widgets.Composite;
  * to the visible XY window; changing a layer only invalidates its projected
  * bounds. The array-backed stack is copied only on structural edits.</p>
  *
- * <p>Image layers receive opacity as one image-compositing operation.
- * Custom painter opacity applies to each GC operation, and therefore does
- * not yet provide isolated Photoshop-style group transparency. Non-normal
- * blend modes, arbitrary masks and native child-control composition are
- * deliberately outside this initial API.</p>
+ * <p>The viewport keeps a backing store: the composite of every layer, in
+ * widget pixels, retained between paints, with the region whose pixels no
+ * longer match the layers. A paint recomposes only the damaged pixels that
+ * are dirty and copies the rest from the store, so an expose (a window
+ * uncovered) repaints no layer. Changing a layer, {@link #redraw()} and a
+ * zoom mark their pixels dirty; panning by a whole number of pixels moves
+ * the retained pixels and recomposes only the band that comes into view.</p>
+ *
+ * <p>Opacity is Photoshop's layer opacity: an image layer is drawn once with
+ * its alpha, and a painter layer below 255 is painted onto a copy of the
+ * composite beneath it which is then blended once, so the layer's own shapes
+ * do not darken each other where they overlap. Non-normal blend modes,
+ * arbitrary masks and native child-control composition are deliberately
+ * outside this API.</p>
  *
  * <p>The widget never disposes application-owned Images or a PaintEvent GC.
  * All API access follows SWT widget-thread and disposal rules.</p>
@@ -51,7 +60,12 @@ public final class LayeredViewport extends Canvas {
     public record PaintContext(Layer layer, Rectangle clip, long originX,
             long originY, double zoom) { }
 
-    /** Paint into the event GC; do not dispose it or retain it past the call. */
+    /**
+     * Paint in widget pixels into the GC given (the viewport's backing store, or
+     * a scratch copy of it for a translucent layer); do not dispose it or retain
+     * it past the call. Only the context's clip needs painting.
+     */
+
     @FunctionalInterface
     public interface LayerPainter {
         void paint(GC gc, PaintContext context);
@@ -297,12 +311,20 @@ public final class LayeredViewport extends Canvas {
     private long nextId = 1;
     private long originX, originY;
     private double zoom = 1.0;
+    /* the backing store (composite of all layers), its pixels that no longer match the layers, and the scratch
+       image a translucent painter layer is isolated in; made on first paint, remade at a new size */
+    private Image backBuffer, scratch;
+    private ViewportDamageRegion dirty;
 
     public LayeredViewport(Composite parent, int style) {
         super(parent, style | SWT.DOUBLE_BUFFERED);
         viewportRuntime.initializeOrigin(0, 0);
+        dirty = new ViewportDamageRegion();
         addPaintListener(event -> paintLayers(event.gc));
         addListener(SWT.Dispose, event -> {
+            if (backBuffer != null) backBuffer.dispose();
+            if (scratch != null) scratch.dispose();
+            backBuffer = scratch = null;
             for (int i = 0; i < count; i++) {
                 stack[i].removed = true;
                 stack[i].image = null;
@@ -369,10 +391,11 @@ public final class LayeredViewport extends Canvas {
     public void setOrigin(long x, long y) {
         checkWidget();
         if (originX == x && originY == y) return;
+        long previousX = originX, previousY = originY;
         originX = x;
         originY = y;
         viewportRuntime.scrollTo((double) x, (double) y);
-        redraw();
+        if (!shiftBackBuffer(previousX, previousY)) redraw();
     }
 
     public double getZoom() {
@@ -432,11 +455,54 @@ public final class LayeredViewport extends Canvas {
         }
     }
 
+    /*
+     * recomposes the damaged pixels that are dirty into the backing store, then copies the damage from the store to
+     * the paint event's GC
+     */
     private void paintLayers(GC gc) {
-        Rectangle damage = intersect(gc.getClipping(), getClientArea());
+        Rectangle area = getClientArea();
+        Rectangle damage = intersect(gc.getClipping(), area);
         if (damage == null) return;
-        int originalAlpha = gc.getAlpha();
-        Rectangle originalClip = gc.getClipping();
+        ensureBackBuffer(area);
+        int n = dirty.rectCount();
+        int[] stale = new int[n * 4];
+        int staleCount = 0;
+        for (int i = 0; i < n; i++) {
+            Rectangle r = intersect(new Rectangle(dirty.x(i), dirty.y(i), dirty.width(i), dirty.height(i)), damage);
+            if (r == null) continue;
+            stale[staleCount * 4] = r.x;
+            stale[staleCount * 4 + 1] = r.y;
+            stale[staleCount * 4 + 2] = r.width;
+            stale[staleCount * 4 + 3] = r.height;
+            staleCount++;
+        }
+        if (staleCount > 0) {
+            GC[] back = { new GC(backBuffer) };
+            try {
+                for (int i = 0; i < staleCount; i++) {
+                    compose(back, new Rectangle(stale[i * 4], stale[i * 4 + 1], stale[i * 4 + 2], stale[i * 4 + 3]));
+                }
+            } finally {
+                back[0].dispose();
+            }
+            dirty.remove(damage.x, damage.y, damage.width, damage.height);
+        }
+        gc.drawImage(backBuffer, damage.x, damage.y, damage.width, damage.height,
+                damage.x, damage.y, damage.width, damage.height);
+    }
+
+    /* the background, then every visible layer bottom to top, into the store's pixels inside {@code damage} */
+    private void compose(GC[] back, Rectangle damage) {
+        back[0].setClipping(damage);
+        drawBackground(back[0], damage.x, damage.y, damage.width, damage.height);
+        composeLayers(back, damage);
+        back[0].setClipping((Rectangle) null);
+    }
+
+    /* the layers the spatial index finds under {@code damage}, bottom to top, into the store's GC */
+    private void composeLayers(GC[] back, Rectangle damage) {
+        int originalAlpha = back[0].getAlpha();
+        Rectangle originalClip = back[0].getClipping();
         ensureSpatialIndex();
         long x0 = saturatedAdd(originX, saturatedAdd(floorLong(damage.x / zoom), -1));
         long y0 = saturatedAdd(originY, saturatedAdd(floorLong(damage.y / zoom), -1));
@@ -459,6 +525,13 @@ public final class LayeredViewport extends Canvas {
                 if (layer.removed || !layer.visible || layer.opacity == 0) continue;
                 Rectangle tile = projectedClip(layer, damage);
                 if (tile == null) continue;
+                if (layer.image == null && layer.painter != null && layer.opacity < 255) {
+                    paintIsolated(back, layer, tile);
+                    back[0].setAlpha(originalAlpha);
+                    back[0].setClipping(originalClip);
+                    continue;
+                }
+                GC gc = back[0];
                 gc.setClipping(tile);
                 gc.setAlpha(layer.opacity);
                 try {
@@ -476,8 +549,8 @@ public final class LayeredViewport extends Canvas {
         } finally {
             Arrays.fill(candidates, 0, selected, null);
             activePaintFrames--;
-            gc.setAlpha(originalAlpha);
-            gc.setClipping(originalClip);
+            back[0].setAlpha(originalAlpha);
+            back[0].setClipping(originalClip);
         }
     }
 
@@ -510,6 +583,29 @@ public final class LayeredViewport extends Canvas {
         if (value >= Long.MAX_VALUE) return Long.MAX_VALUE;
         if (value <= Long.MIN_VALUE) return Long.MIN_VALUE;
         return (long) Math.ceil(value);
+    }
+
+    /*
+     * a translucent painter layer, as a group: painted onto a copy of the composite beneath it, which is then drawn
+     * once over the store with the layer's opacity, so overlapping shapes of the layer do not darken each other
+     */
+    private void paintIsolated(GC[] back, Layer layer, Rectangle tile) {
+        Rectangle size = backBuffer.getBounds();
+        if (scratch == null) scratch = new Image(getDisplay(), size.width, size.height);
+        back[0].dispose();
+        GC copy = new GC(scratch);
+        try {
+            copy.drawImage(backBuffer, tile.x, tile.y, tile.width, tile.height, tile.x, tile.y, tile.width, tile.height);
+            copy.setClipping(tile);
+            layer.painter.paint(copy, new PaintContext(layer, tile, originX, originY, zoom));
+        } finally {
+            copy.dispose();
+            back[0] = new GC(backBuffer);
+        }
+        back[0].setClipping(tile);
+        back[0].setAlpha(layer.opacity);
+        back[0].drawImage(scratch, tile.x, tile.y, tile.width, tile.height, tile.x, tile.y, tile.width, tile.height);
+        back[0].setAlpha(255);
     }
 
     private void paintImage(GC gc, Layer layer, Rectangle tile) {
@@ -679,5 +775,88 @@ public final class LayeredViewport extends Canvas {
         long y1 = Math.min((long) a.y + a.height, (long) b.y + b.height);
         if (x1 <= x0 || y1 <= y0) return null;
         return new Rectangle((int) x0, (int) y0, (int) (x1 - x0), (int) (y1 - y0));
+    }
+    /** Marks the whole view dirty, so the next paint recomposes every layer. */
+    @Override
+    public void redraw() {
+        super.redraw();
+        markDirty(getClientArea());
+    }
+
+    /** Marks the rectangle dirty, so the next paint recomposes the layers there. */
+    @Override
+    public void redraw(int x, int y, int width, int height, boolean all) {
+        super.redraw(x, y, width, height, all);
+        markDirty(new Rectangle(x, y, width, height));
+    }
+
+    private void markDirty(Rectangle area) {
+        if (dirty == null || backBuffer == null) return; // the first paint composes everything
+        Rectangle visible = intersect(area, getClientArea());
+        if (visible != null) dirty.add(visible.x, visible.y, visible.width, visible.height);
+    }
+
+    /* the store matches the client area; a new size starts with every pixel dirty */
+    private void ensureBackBuffer(Rectangle area) {
+        int width = Math.max(1, area.width), height = Math.max(1, area.height);
+        if (backBuffer != null) {
+            Rectangle size = backBuffer.getBounds();
+            if (size.width == width && size.height == height) return;
+            backBuffer.dispose();
+        }
+        if (scratch != null) {
+            scratch.dispose();
+            scratch = null;
+        }
+        backBuffer = new Image(getDisplay(), width, height);
+        dirty.clear();
+        dirty.add(0, 0, width, height);
+    }
+
+    /*
+     * a pan by a whole number of pixels moves the retained pixels, and the dirty region with them; only the band
+     * that comes into view is dirty. Returns false when the whole view must be recomposed instead.
+     */
+    private boolean shiftBackBuffer(long previousX, long previousY) {
+        if (backBuffer == null) return false;
+        // at zoom 1 a pan moves every layer by exactly the same whole number of pixels; other zooms recompose
+        if (zoom != 1.0) return false;
+        Rectangle size = backBuffer.getBounds();
+        long dx, dy;
+        try {
+            dx = Math.subtractExact(previousX, originX);
+            dy = Math.subtractExact(previousY, originY);
+        } catch (ArithmeticException overflow) {
+            return false;
+        }
+        if (Math.abs(dx) >= size.width || Math.abs(dy) >= size.height) return false;
+        int sx = (int) dx, sy = (int) dy;
+        GC gc = new GC(backBuffer);
+        try {
+            gc.copyArea(Math.max(0, -sx), Math.max(0, -sy), size.width - Math.abs(sx), size.height - Math.abs(sy),
+                    Math.max(0, sx), Math.max(0, sy));
+        } finally {
+            gc.dispose();
+        }
+        int n = dirty.rectCount();
+        int[] moved = new int[n * 4];
+        for (int i = 0; i < n; i++) {
+            moved[i * 4] = dirty.x(i) + sx;
+            moved[i * 4 + 1] = dirty.y(i) + sy;
+            moved[i * 4 + 2] = dirty.width(i);
+            moved[i * 4 + 3] = dirty.height(i);
+        }
+        dirty.clear();
+        Rectangle view = new Rectangle(0, 0, size.width, size.height);
+        for (int i = 0; i < n; i++) {
+            Rectangle r = intersect(new Rectangle(moved[i * 4], moved[i * 4 + 1], moved[i * 4 + 2], moved[i * 4 + 3]), view);
+            if (r != null) dirty.add(r.x, r.y, r.width, r.height);
+        }
+        if (sx > 0) dirty.add(0, 0, sx, size.height);
+        if (sx < 0) dirty.add(size.width + sx, 0, -sx, size.height);
+        if (sy > 0) dirty.add(0, 0, size.width, sy);
+        if (sy < 0) dirty.add(0, size.height + sy, size.width, -sy);
+        super.redraw();
+        return true;
     }
 }

@@ -24,23 +24,25 @@ of existing Canvas, Composite, Control.moveAbove/moveBelow, or ScrolledComposite
 | layers | painted callback or borrowed SWT Image |
 | world clip | optional additional rectangular clip for paint and picking |
 | visibility/lock | visible layers render; locked layers are skipped for picking |
-| alpha | 0..255; image compositing uses one image draw |
-| invalidation | old and new projected layer bounds; full damage for pan and zoom |
+| alpha | 0..255, Photoshop layer opacity: an image layer is one image draw; a painter layer below 255 is isolated (painted onto a copy of the composite beneath it, then blended once) |
+| backing store | the composite of all layers retained between paints (widget pixels) with a dirty region (`ViewportDamageRegion`); a paint recomposes only damage that is dirty, an expose is a copy from the store |
+| invalidation | old and new projected layer bounds, `redraw()`, zoom: their pixels become dirty; a whole-pixel pan at zoom 1 moves the retained pixels (and the dirty region) and dirties only the band that comes into view; other pans recompose the view |
 | virtualization | offscreen layer painting culled by the GC dirty clip |
 | hit testing | topmost bounding rectangle, optional application hit tester |
 | resource contract | borrowed images and paint GCs never disposed by viewport |
 | existing SWT API | original widget names and native ordering remain unchanged |
 
-Painter callbacks receive the **event GC in widget pixel coordinates**.
+Painter callbacks receive a **GC in widget pixel coordinates**: the viewport's backing store, or for a translucent layer a scratch copy of the composite beneath it.
 They should use PaintContext.clip() and transform world geometry using
 LayeredViewport.toScreen(). Callbacks must restore any GC settings they change
 except alpha/clipping, which the viewport restores. The GC is borrowed.
 
-**Opacity qualification:** for an Image layer, alpha applies to one image draw.
-For a paint callback, GC alpha applies to its individual drawing operations.
-Overlapping painter primitives are therefore **not** an isolated
-Photoshop-style transparent group. No claim of complete Photoshop blending
-or pixel-perfect alpha is made.
+**Opacity:** for an Image layer, alpha applies to one image draw. A paint
+callback layer below 255 paints onto a copy of the composite beneath it (the
+scratch image); that copy is then drawn once over the store with the layer's
+alpha, so overlapping primitives of one layer form one transparent group (the
+test checks that an overlap of two black shapes at 128 over white is the same
+grey as either shape alone). Only normal (source-over) blending exists.
 
 The initial clipping region is world-space rectangular; arbitrary alpha masks and per-pixel clip masks are not implemented. The visibility gate is rectangular. It avoids work for fully invisible
 layers but does not yet spatially index millions of scattered layers. The
@@ -49,8 +51,9 @@ iteration does not allocate a new layer array every frame.
 
 ## Next implementation boundaries
 
-1. **Isolated Z-group surfaces:** clip-sized or tiled offscreen composition
-   with correct group opacity, parent/child groups, and clip/mask propagation.
+1. **Z-group surfaces:** per-layer retained surfaces (a changed layer recomposes
+   from cached layers below and above instead of repainting them), parent/child
+   groups, and clip/mask propagation. Group opacity for one layer is done.
 2. **Paint composition:** source-over, multiply, screen, overlay and other
    explicit blend modes; CPU reference pixels and backend differential tests.
 3. **Spatial query:** rectangle index, dirty-tile index, generation fences,
@@ -67,13 +70,19 @@ iteration does not allocate a new layer array every frame.
 ## Verification
 
 The accompanying JUnit test exercises ordering, stable IDs, remove,
-visibility, opacity, lock, 64-bit origin and hit testing. Run it with a
-provisioned SWT native display and the exact fork dependencies.
+visibility, opacity, lock, 64-bit origin and hit testing, and on screen pixels:
+an expose served from the backing store without calling painters, `redraw()`
+still recomposing, a pan in either direction recomposing only the band that
+comes into view with pixels equal to a full recomposition, dirty pixels moving
+with a pan, and isolated group opacity. Run on win32 (JDK 21): 125/125 of the
+class with its inherited Canvas tests (one inherited test skips itself on
+win32); the new tests fail on the first implementation, and seven mutants of
+the store and of `ViewportDamageRegion.remove` are rejected.
 
 A separate manual snippet demonstrates painted overlapping layers.
 
-This draft has not established SWT native execution, composited pixel
-goldens, platform parity, benchmark claims, or release qualification.
+Not yet established: GTK and Cocoa runs, platform parity, benchmarks and
+release qualification.
 Before promotion run the fork's recipe/replay, source and binary API diff,
 JDK 21 compilation, widget JUnit tests, native GTK/Win32/Cocoa tests,
 pixel comparisons (alpha and damage), and resource/disposal measurements.
