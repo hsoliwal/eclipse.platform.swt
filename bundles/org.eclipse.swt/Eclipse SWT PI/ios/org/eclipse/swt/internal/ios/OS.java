@@ -48,6 +48,11 @@ public final class OS {
 		ACTION_DECREMENT = MobilePlatform.ACTION_DECREMENT;
 	public static final int NO_FOCUS = SWT.NO_FOCUS;
 	public static final int BORDER = SWT.BORDER;
+	// Native CoreGraphics border relief; generated -h constants match SWT's values.
+	public static final int DEFAULT = SWT.DEFAULT, SHADOW_NONE = SWT.SHADOW_NONE;
+	public static final int SHADOW_IN = SWT.SHADOW_IN, SHADOW_OUT = SWT.SHADOW_OUT;
+	public static final int SHADOW_ETCHED_IN = SWT.SHADOW_ETCHED_IN,
+		SHADOW_ETCHED_OUT = SWT.SHADOW_ETCHED_OUT;
 	public static final int TEXT = MobilePlatform.TEXT;
 	public static final int MULTI = SWT.MULTI, PASSWORD = SWT.PASSWORD;
 	public static final int DEFAULT_SELECTION = SWT.DefaultSelection;
