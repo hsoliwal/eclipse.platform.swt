@@ -107,7 +107,12 @@ public final class LayeredViewport extends Canvas {
      * The original five record components retain their uniform-zoom contract.
      */
     public record PaintContext(Layer layer, Rectangle clip, long originX,
-            long originY, double zoom) { }
+            long originY, double zoom) {
+        /** Widget pixel of world {@code x} under the layer's current projection, fixed and pinned axes included (#498). */
+        public int projectX(long x) { return saturatedPixel(layer.getProjection().projectX(x)); }
+        /** Widget pixel of world {@code y} under the layer's current projection, fixed and pinned axes included (#498). */
+        public int projectY(long y) { return saturatedPixel(layer.getProjection().projectY(y)); }
+    }
 
     /**
      * Paint in widget pixels into the GC given (the viewport's backing store, or
