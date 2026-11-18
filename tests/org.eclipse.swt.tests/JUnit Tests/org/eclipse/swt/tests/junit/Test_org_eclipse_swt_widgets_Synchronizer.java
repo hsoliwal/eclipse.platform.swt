@@ -12,11 +12,19 @@ package org.eclipse.swt.tests.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FrameListener;
+import org.eclipse.swt.widgets.Synchronizer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
@@ -112,6 +120,83 @@ public class Test_org_eclipse_swt_widgets_Synchronizer {
 			assertEquals(TOTAL_TASKS, completedCount.get(), "Not all asyncExec tasks were executed.");
 		} finally {
 			display.dispose();
+		}
+	}
+
+
+	private static void dispatchUntil (Display display, BooleanSupplier finished, long millis)
+			throws InterruptedException {
+		long deadline = System.nanoTime () + TimeUnit.MILLISECONDS.toNanos (millis);
+		while (!finished.getAsBoolean () && System.nanoTime () < deadline) {
+			if (!display.readAndDispatch ()) Thread.sleep (1);
+		}
+	}
+
+	@Test
+	@Timeout(value = 8, unit = TimeUnit.SECONDS)
+	public void test_keyedAsyncExec_sameKeyDifferentClassesDoNotOverwrite () throws InterruptedException {
+		Display display = Display.getDefault ();
+		try {
+			Synchronizer synchronizer = display.getSynchronizer ();
+			Object key = new Object ();
+			StringBuilder seen = new StringBuilder ();
+			synchronizer.asyncExec (Synchronizer.DEFAULT, key, () -> seen.append ('A'));
+			synchronizer.asyncExec (Synchronizer.MODEL, key, () -> seen.append ('M'));
+			synchronizer.asyncExec (Synchronizer.DEFAULT, key, () -> seen.append ('D'));
+			dispatchUntil (display, () -> seen.length () == 2, 4000);
+			assertEquals ("DM", seen.toString (), "coalescing must be scoped to (priority, key)");
+		} finally {
+			if (!display.isDisposed ()) display.dispose ();
+		}
+	}
+
+	@Test
+	@Timeout(value = 8, unit = TimeUnit.SECONDS)
+	public void test_requestFrameFromModelCallbackSurvivesCurrentFrame () throws InterruptedException {
+		Display display = Display.getDefault ();
+		Synchronizer synchronizer = display.getSynchronizer ();
+		AtomicInteger frames = new AtomicInteger ();
+		FrameListener listener = (d, generation) -> frames.incrementAndGet ();
+		try {
+			synchronizer.addFrameListener (listener);
+			synchronizer.asyncExec (Synchronizer.MODEL, new Object (), synchronizer::requestFrame);
+			dispatchUntil (display, () -> frames.get () >= 2, 4000);
+			assertEquals (2, frames.get (),
+					"requestFrame during a model patch must schedule a second frame");
+		} finally {
+			synchronizer.removeFrameListener (listener);
+			if (!display.isDisposed ()) display.dispose ();
+		}
+	}
+
+	@Test
+	@Timeout(value = 8, unit = TimeUnit.SECONDS)
+	public void test_disposeReleasesQueuedSyncExecWaiter () throws InterruptedException {
+		Display display = Display.getDefault ();
+		AtomicReference<Throwable> failure = new AtomicReference<> ();
+		CountDownLatch done = new CountDownLatch (1);
+		Thread waiter = new Thread (() -> {
+			try {
+				display.syncExec (() -> { throw new AssertionError ("syncExec ran after disposal"); });
+			} catch (Throwable thrown) {
+				failure.set (thrown);
+			} finally {
+				done.countDown ();
+			}
+		}, "queued-syncExec-disposal");
+		waiter.setDaemon (true);
+		try {
+			waiter.start ();
+			long deadline = System.nanoTime () + TimeUnit.SECONDS.toNanos (3);
+			while (waiter.getState () != Thread.State.WAITING && System.nanoTime () < deadline) {
+				Thread.yield ();
+			}
+			assertEquals (Thread.State.WAITING, waiter.getState (), "worker did not reach sync wait");
+			display.dispose ();
+			assertTrue (done.await (2, TimeUnit.SECONDS), "disposal left syncExec worker blocked");
+			assertNotNull (failure.get (), "disposing a queued syncExec must fail, not run");
+		} finally {
+			if (!display.isDisposed ()) display.dispose ();
 		}
 	}
 
