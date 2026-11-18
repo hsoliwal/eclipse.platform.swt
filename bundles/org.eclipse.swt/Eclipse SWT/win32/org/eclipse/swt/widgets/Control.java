@@ -6505,7 +6505,11 @@ LRESULT WM_NCLBUTTONDOWN (long wParam, long lParam) {
 
 LRESULT WM_NCPAINT (long wParam, long lParam) {
 	LRESULT result = wmNCPaint(handle, wParam, lParam);
-	if (result != null || isDisposed() || !NativeBorderRelief.isEtched(nativeBorderRelief)
+	// Direct Composite/Canvas has already completed the native GDI bevel.
+	// Other controls retain the Control-level etched path even if their
+	// own non-client callback returned a handled result.
+	if ((result != null && usesCompositeBevelPainter()) || isDisposed()
+			|| !NativeBorderRelief.isEtched(nativeBorderRelief)
 			|| borderHandle() != handle) return result;
 	// Let the original class paint its frame before replacing only the bevel pixels.
 	if (result == null) result = new LRESULT(callWindowProc(handle, OS.WM_NCPAINT, wParam, lParam));
