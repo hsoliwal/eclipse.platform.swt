@@ -7,9 +7,13 @@ package org.eclipse.swt.tests.junit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.LayeredViewport;
 import org.eclipse.swt.custom.LayeredViewport.Layer;
+import org.eclipse.swt.custom.LayeredViewport.LayerPointerEvent;
 import org.eclipse.swt.custom.LayeredViewport.WorldBounds;
 import org.eclipse.swt.custom.LayeredViewport.WorldPoint;
 import org.eclipse.swt.graphics.GC;
@@ -17,6 +21,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Event;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -430,5 +435,141 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertEquals(single, overlap, "the layer's own shapes do not darken each other");
         assertEquals(new RGB(255, 255, 255), rgb(data, 150, 150));
         assertTrue(single.red > 100 && single.red < 160, "half black over white: " + single);
+    }
+
+    private void pointer(int type, int x, int y, int button) {
+        Event event = new Event();
+        event.x = x;
+        event.y = y;
+        event.button = button;
+        event.count = 1;
+        event.time = 1234;
+        event.stateMask = SWT.SHIFT;
+        viewport.notifyListeners(type, event);
+    }
+
+    @Test
+    public void testPointerSurfaceIgnoresDecorationAndRetainsCanvasEvents() {
+        Layer interactive = viewport.addPaintLayer("cell", 0, 0, 100, 100, (gc, ctx) -> { });
+        Layer decoration = viewport.addPaintLayer("decoration", 0, 0, 100, 100, (gc, ctx) -> { });
+        List<LayerPointerEvent> delivered = new ArrayList<>();
+        List<Integer> nativeEvents = new ArrayList<>();
+        interactive.setPointerListener(delivered::add);
+        viewport.addListener(SWT.MouseDown, event -> nativeEvents.add(event.type));
+        viewport.addListener(SWT.MouseMove, event -> nativeEvents.add(event.type));
+        viewport.addListener(SWT.MouseUp, event -> nativeEvents.add(event.type));
+
+        assertSame(decoration, viewport.hitTest(10, 10),
+                "public picking still includes noninteractive decorations");
+        pointer(SWT.MouseDown, 10, 10, 1);
+        assertSame(interactive, viewport.getPointerCapture());
+        assertEquals(1, delivered.size());
+        assertSame(interactive, delivered.get(0).layer());
+        assertEquals(SWT.MouseDown, delivered.get(0).type());
+        assertEquals(10, delivered.get(0).worldX());
+        assertFalse(delivered.get(0).captured(), "first down begins capture");
+        assertEquals(SWT.SHIFT, delivered.get(0).stateMask());
+
+        pointer(SWT.MouseMove, 290, 230, 0);
+        assertEquals(2, delivered.size(), "drag keeps the original layer outside its bounds");
+        assertTrue(delivered.get(1).captured());
+        assertEquals(290, delivered.get(1).worldX());
+        pointer(SWT.MouseUp, 290, 230, 1);
+        assertEquals(3, delivered.size());
+        assertNull(viewport.getPointerCapture());
+        pointer(SWT.MouseMove, 290, 230, 0);
+        assertEquals(3, delivered.size(), "the layer no longer receives out-of-bounds moves");
+        assertEquals(List.of(SWT.MouseDown, SWT.MouseMove, SWT.MouseUp, SWT.MouseMove), nativeEvents,
+                "normal SWT Canvas listeners must still observe every event");
+        pointer(SWT.MouseHover, 10, 10, 0);
+        assertEquals(SWT.MouseHover, delivered.get(3).type());
+    }
+
+    @Test
+    public void testPointerStateAndFineHitTestRetainBackLayerRouting() {
+        Layer back = viewport.addPaintLayer("back", 0, 0, 100, 100, (gc, ctx) -> { });
+        Layer front = viewport.addPaintLayer("front", 0, 0, 100, 100, (gc, ctx) -> { });
+        List<LayerPointerEvent> delivered = new ArrayList<>();
+        back.setPointerListener(delivered::add);
+        front.setPointerListener(delivered::add);
+
+        pointer(SWT.MouseMove, 5, 5, 0);
+        assertSame(front, delivered.get(0).layer());
+        front.setHitTester((layer, x, y) -> false);
+        pointer(SWT.MouseMove, 5, 5, 0);
+        assertSame(back, delivered.get(1).layer());
+        front.setHitTester(null);
+        front.setLocked(true);
+        pointer(SWT.MouseMove, 5, 5, 0);
+        assertSame(back, delivered.get(2).layer());
+        front.setLocked(false);
+        front.setOpacity(0);
+        pointer(SWT.MouseMove, 5, 5, 0);
+        assertSame(back, delivered.get(3).layer());
+        front.setOpacity(255);
+        front.setVisible(false);
+        pointer(SWT.MouseMove, 5, 5, 0);
+        assertSame(back, delivered.get(4).layer());
+        front.setVisible(true);
+        front.setPointerListener(null);
+        pointer(SWT.MouseMove, 5, 5, 0);
+        assertSame(back, delivered.get(5).layer());
+    }
+
+    @Test
+    public void testPointerCaptureMultiButtonCancellationAndRemoval() {
+        Layer layer = viewport.addPaintLayer("handle", 0, 0, 100, 100, (gc, ctx) -> { });
+        List<LayerPointerEvent> delivered = new ArrayList<>();
+        layer.setPointerListener(delivered::add);
+        pointer(SWT.MouseDown, 10, 10, 1);
+        pointer(SWT.MouseDown, 10, 10, 3);
+        pointer(SWT.MouseUp, 10, 10, 1);
+        assertSame(layer, viewport.getPointerCapture(), "second button still holds capture");
+        pointer(SWT.MouseUp, 10, 10, 3);
+        assertNull(viewport.getPointerCapture());
+
+        pointer(SWT.MouseDown, 10, 10, 1);
+        layer.setVisible(false);
+        assertNull(viewport.getPointerCapture(), "hidden target releases capture");
+        layer.setVisible(true);
+        pointer(SWT.MouseDown, 10, 10, 1);
+        viewport.notifyListeners(SWT.MouseExit, new Event());
+        assertNull(viewport.getPointerCapture(), "leaving the Canvas releases logical capture");
+        pointer(SWT.MouseDown, 10, 10, 1);
+        viewport.releasePointerCapture();
+        assertNull(viewport.getPointerCapture());
+        pointer(SWT.MouseDown, 10, 10, 1);
+        viewport.notifyListeners(SWT.FocusOut, new Event());
+        assertNull(viewport.getPointerCapture());
+        pointer(SWT.MouseDown, 10, 10, 1);
+        layer.remove();
+        assertNull(viewport.getPointerCapture(), "removed handle cannot hold input");
+        pointer(SWT.MouseMove, 10, 10, 0);
+        assertEquals(9, delivered.size(), "no callback to removed or unregistered surfaces");
+    }
+
+    @Test
+    public void testPointerWorldCoordsAndReentrantHandlerMutation() {
+        long large = 1L << 55;
+        viewport.setOrigin(large, large);
+        viewport.setZoom(2);
+        Layer back = viewport.addPaintLayer("back", large, large, 80, 80, (gc, ctx) -> { });
+        Layer front = viewport.addPaintLayer("front", large, large, 80, 80, (gc, ctx) -> { });
+        List<LayerPointerEvent> backEvents = new ArrayList<>();
+        back.setPointerListener(backEvents::add);
+        front.setPointerListener(event -> {
+            if (event.type() == SWT.MouseDown) {
+                assertEquals(large + 10, event.worldX());
+                assertEquals(large + 15, event.worldY());
+                assertSame(front, viewport.getPointerCapture());
+                front.remove();
+                pointer(SWT.MouseMove, 20, 30, 0);
+            }
+        });
+        pointer(SWT.MouseDown, 20, 30, 1);
+        assertNull(viewport.getPointerCapture());
+        assertEquals(1, backEvents.size());
+        assertSame(back, backEvents.get(0).layer());
+        assertEquals(large + 10, backEvents.get(0).worldX());
     }
 }
