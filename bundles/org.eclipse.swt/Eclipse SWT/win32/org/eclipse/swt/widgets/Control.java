@@ -89,7 +89,6 @@ public abstract class Control extends Widget implements Drawable {
 	RetainedFrame retainedFrame;
 	/* Optional native edge, owned by the existing HWND (not a child Canvas). */
 	private int nativeBorderRelief = SWT.DEFAULT;
-	/* A prior Composite/Canvas bevel is a logical fallback, not a second HWND owner. */
 	private int savedCompositeBevel = SWT.NONE;
 	private int originalNativeBorderEdges;
 	private int originalNativeBorderStyle;
