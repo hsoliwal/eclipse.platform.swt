@@ -74,6 +74,8 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_custom_TextChangeListener.class, //
 		Test_org_eclipse_swt_custom_VerifyKeyListener.class, //
 		Test_org_eclipse_swt_widgets_Button.class, //
+		Test_CanvasLayerXor.class, //
+		Test_CanvasLayers.class, //
 		Test_org_eclipse_swt_widgets_Canvas.class, //
 		Test_org_eclipse_swt_widgets_Caret.class, //
 		Test_org_eclipse_swt_widgets_ColorDialog.class, //

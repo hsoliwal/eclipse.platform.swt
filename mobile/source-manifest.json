@@ -715,7 +715,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Canvas.java",
-      "sha256": "97bc80b42595cf2c1d8de7f99c03450d11f4c4b9c9815dc71d6b4955099cd6ae"
+      "sha256": "b4ae8948eb38d86652e722d74289260562c2c82459b353f5e63e9b16772b8db1"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Combo.java",
@@ -783,7 +783,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/ViewportRuntime.java",
-      "sha256": "c5ee2c3bbc4cc5a4fc1d4a3ec7a3721fcedb506b0d931c7bcbd6ed204b7b344b"
+      "sha256": "c1e37f58419f91318f7ad3f7a826e6d420e8c5fb53f70247d6326ec8a3db1f9d"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/PackedHeapGrowth.java",
@@ -816,6 +816,10 @@
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobileTableSelection.java",
       "sha256": "d8220d94863a6fdfcffd0ee767e2433bb5dce254392c80240fa0ab3ce0ab1f6e"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/CanvasLayerSupport.java",
+      "sha256": "dde7e30b78e9c8feab43eccdc76d944b99651091dbfa740bfae85433f9376bbe"
     }
   ],
   "platforms": {
@@ -873,7 +877,7 @@
   "contractSources": [
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/ContractPlatform.java",
-      "sha256": "b07adca96a377cb9451b6c785ae4aed285abd9af2e308354c69493543bb67f24"
+      "sha256": "0ef2aaa6f44ae859a601df8c97c6cf7aca98e8dd837b15a1072db59e0a7ced87"
     },
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCoreContractTest.java",
@@ -902,6 +906,14 @@
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileLifecycleContractTest.java",
       "sha256": "0a26f2fb0e8c588d32a7337024cae31126c2dd0b58f1aa31e3068e758ddd5b48"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_CanvasLayers.java",
+      "sha256": "366235abf536a167095ea4ddcf63ff9c894e97bc79609269092aa5dff531fd00"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCanvasLayersContractJUnitTest.java",
+      "sha256": "c3c26a525e08872bf4dbb42d56cdd4a6064e9c389153d3e6a01d8f5a07a143b9"
     }
   ]
 }
