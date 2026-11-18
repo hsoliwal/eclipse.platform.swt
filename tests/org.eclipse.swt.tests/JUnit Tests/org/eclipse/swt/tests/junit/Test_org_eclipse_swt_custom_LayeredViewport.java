@@ -1777,6 +1777,7 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         private int additions, uploads, applications, removals, disposals;
         private int creations;
         private boolean allowCreate;
+        private long createdComposition = 1L;
         private int applyResult;
         private Runnable onApply;
         private long[] submittedHandleArray, lastHandles = new long[0];
@@ -1786,7 +1787,7 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         public long create(org.eclipse.swt.widgets.Control control) {
             assertTrue(allowCreate, "unexpected native compositor creation");
             creations++;
-            return 1L;
+            return createdComposition;
         }
 
         @Override
@@ -2077,14 +2078,19 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             // requests one new native composition on the SWT event thread.
             backend.applyResult = 0;
             backend.allowCreate = true;
+            backend.createdComposition = 0; // a still-unavailable graphics adapter
+            assertFalse(viewport.retryNativeComposition());
+            assertEquals(1, backend.creations);
+            assertEquals(1, backend.disposals);
+            backend.createdComposition = 1;
             assertTrue(viewport.retryNativeComposition());
             assertTrue(layer.isNative());
-            assertEquals(1, backend.creations);
+            assertEquals(2, backend.creations, "zero-create attempt was not retried automatically");
             assertEquals(2, backend.additions, "new compositor owns a fresh layer");
             assertEquals(2, backend.uploads, "pixels come from the borrowed Image again");
             assertEquals(1, backend.disposals, "the old compositor was released once");
             assertTrue(viewport.retryNativeComposition(), "already healthy");
-            assertEquals(1, backend.creations, "a healthy compositor is not recreated");
+            assertEquals(2, backend.creations, "a healthy compositor is not recreated");
             assertFalse(image.isDisposed());
 
             layer.setNative(false);
@@ -2108,6 +2114,17 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             layer.setOpacity(190);
             assertEquals(0, backend.creations);
             assertTrue(layer.isNative());
+            viewport.addPaintLayer("paint reentry probe", 0, 0, 16, 16,
+                    (gc, context) -> assertFalse(viewport.retryNativeComposition(),
+                            "a painter callback cannot recreate native resources"));
+            Image target = new Image(viewport.getDisplay(), 32, 32);
+            GC gc = new GC(target);
+            try {
+                paintInto(gc);
+            } finally {
+                gc.dispose();
+                target.dispose();
+            }
             viewport.beginUpdate();
             try {
                 assertFalse(viewport.retryNativeComposition(),
