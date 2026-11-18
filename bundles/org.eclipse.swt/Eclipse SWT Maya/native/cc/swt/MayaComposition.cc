@@ -21,6 +21,7 @@
 #include "MayaNativeHandleRegistry.h"
 #include "MayaCompositionChecks.h"
 #include "MayaCompositionDelta.h"
+#include "MayaCompositionTelemetry.h"
 #include "MayaCompositionDirty.h"
 #include "MayaDeviceHealth.h"
 #include "MayaFrameDirect.h"
@@ -76,6 +77,7 @@ struct Composition {
     std::vector<Layer *> layers;
     swt_maya::CompositionFrameDelta<Layer> frameDelta;
     bool pendingSurfaceCommit = false;
+    swt_maya::CompositionTelemetry telemetry;
 };
 Composition *getComposition(jlong handle) {
     return liveCompositions.get(static_cast<std::uint64_t>(handle));
@@ -93,15 +95,21 @@ Layer *getLayer(jlong handle) {
 HRESULT checkNativeDevice(Composition *composition) noexcept {
     BOOL valid = FALSE;
     HRESULT status = composition->device->CheckDeviceState(&valid);
-    if (SUCCEEDED(status) && valid) return S_OK;
+    if (SUCCEEDED(status) && valid) {
+        composition->telemetry.deviceProbe(false);
+        return S_OK;
+    }
     const HRESULT reason = composition->d3d
             ? composition->d3d->GetDeviceRemovedReason() : S_OK;
-    return static_cast<HRESULT>(swt_maya::compositionHealth(
+    const HRESULT normalized = static_cast<HRESULT>(swt_maya::compositionHealth(
             static_cast<std::int32_t>(status), valid != FALSE,
             static_cast<std::int32_t>(reason)));
+    composition->telemetry.deviceProbe(FAILED(normalized));
+    return normalized;
 }
 
 void destroy(Layer *layer) {
+    if (layer->token != 0 && layer->owner) layer->owner->telemetry.retiredLayer();
     liveLayers.retire(static_cast<std::uint64_t>(layer->token), layer);
     release(layer->effect);
     release(layer->surface);
@@ -189,6 +197,7 @@ extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaCompos
             return 0;
         }
         layer->token = static_cast<jlong>(token);
+        c->telemetry.createdLayer();
         return layer->token;
     } catch (const std::bad_alloc &) {
         // push_back or registry insertion may fail independently. Retire
@@ -241,6 +250,7 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
         if (SUCCEEDED(finished)) {
             layer->initialized = true;
             layer->owner->pendingSurfaceCommit = true;
+            layer->owner->telemetry.fullUpload(static_cast<std::uint64_t>(count));
         }
         return finished;
     } catch (const std::bad_alloc &) {
@@ -300,7 +310,10 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
                     static_cast<UINT>(r[2]) * 4, 0);
             release(texture);
             hr = layer->surface->EndDraw();
-            if (SUCCEEDED(hr)) layer->owner->pendingSurfaceCommit = true;
+            if (SUCCEEDED(hr)) {
+                layer->owner->pendingSurfaceCommit = true;
+                layer->owner->telemetry.dirtyPatch(static_cast<std::uint64_t>(area));
+            }
             if (FAILED(hr)) return hr; // later failures may have changed prior patches
         }
         return S_OK;
@@ -333,13 +346,17 @@ inline void invalidateFrameCache(Composition *c) noexcept {
 
 template<class View>
 jint applyNativeFrame(Composition *c, const View &view) noexcept {
+    c->telemetry.attemptFrame();
     const std::size_t count = view.size();
-    if (count > static_cast<std::size_t>(std::numeric_limits<jint>::max() / 4))
+    if (count > static_cast<std::size_t>(std::numeric_limits<jint>::max() / 4)) {
+        c->telemetry.rejectFrame();
         return E_INVALIDARG;
+    }
     const HRESULT health = checkNativeDevice(c);
     if (FAILED(health)) {
         // Never treat a cached no-op frame as valid after DXGI reset.
         invalidateFrameCache(c);
+        c->telemetry.rejectFrame();
         return health;
     }
     try {
@@ -355,7 +372,10 @@ jint applyNativeFrame(Composition *c, const View &view) noexcept {
             Layer *layer = lookupFrameLayer(value.handle);
             if (!layer || layer->owner != c || layer->seenFrame == generation ||
                     !swt_maya::validLayerProperties(value.x, value.y,
-                            value.opacity, value.visible)) return E_INVALIDARG;
+                            value.opacity, value.visible)) {
+                c->telemetry.rejectFrame();
+                return E_INVALIDARG;
+            }
             layer->seenFrame = generation;
         }
 
@@ -395,8 +415,15 @@ jint applyNativeFrame(Composition *c, const View &view) noexcept {
 
         // A pending successful EndDraw is a changed native surface even
         // when Z, offsets and opacity are unchanged (merged dirty upload).
-        if (SUCCEEDED(hr) && changed) hr = c->device->Commit();
+        bool failedCommit = false;
+        if (SUCCEEDED(hr) && changed) {
+            hr = c->device->Commit();
+            failedCommit = FAILED(hr);
+            if (failedCommit) c->telemetry.failedCommit();
+        }
         if (SUCCEEDED(hr)) {
+            if (changed) c->telemetry.committedFrame(reorder);
+            else c->telemetry.noopFrame();
             if (changed) c->pendingSurfaceCommit = false;
             if (reorder) c->frameDelta.accept();
             if (changed) {
@@ -408,13 +435,16 @@ jint applyNativeFrame(Composition *c, const View &view) noexcept {
                 }
             }
         } else {
+            if (!failedCommit) c->telemetry.rejectFrame();
             invalidateFrameCache(c);
         }
         return hr;
     } catch (const std::bad_alloc &) {
+        c->telemetry.rejectFrame();
         invalidateFrameCache(c);
         return E_OUTOFMEMORY;
     } catch (...) {
+        c->telemetry.rejectFrame();
         invalidateFrameCache(c);
         return E_FAIL;
     }
@@ -485,6 +515,23 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
     return SUCCEEDED(waited) ? checkNativeDevice(c) : waited;
 }
 
+// A read-only explicitly requested snapshot. No widget or GPU call, no new
+// native object graph and no JNI polling on normal frame submissions.
+extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nReadMetrics
+  (JNIEnv *env, jclass, jlong composition, jlongArray output) {
+    Composition *c = getComposition(composition);
+    if (!c || !output) return E_POINTER;
+    if (env->GetArrayLength(output) < static_cast<jsize>(swt_maya::CompositionTelemetry::FIELD_COUNT))
+        return E_INVALIDARG;
+    const auto snapshot = c->telemetry.snapshot(
+            static_cast<std::uint64_t>(c->layers.size()), c->pendingSurfaceCommit);
+    std::array<jlong, swt_maya::CompositionTelemetry::FIELD_COUNT> values{};
+    for (std::size_t i = 0; i < snapshot.size(); ++i)
+        values[i] = static_cast<jlong>(snapshot[i]); // all are <= INT64_MAX
+    env->SetLongArrayRegion(output, 0, static_cast<jsize>(values.size()), values.data());
+    return env->ExceptionCheck() ? E_FAIL : S_OK;
+}
+
 extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nDispose
   (JNIEnv *, jclass, jlong composition) {
     Composition *c = getComposition(composition);
@@ -512,6 +559,8 @@ extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
   (JNIEnv *, jclass, jlong, jlong) {}
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nWaitForCommit
   (JNIEnv *, jclass, jlong) { return -1; }
+extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nReadMetrics
+  (JNIEnv *, jclass, jlong, jlongArray) { return -1; }
 extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nDispose
   (JNIEnv *, jclass, jlong) {}
 
