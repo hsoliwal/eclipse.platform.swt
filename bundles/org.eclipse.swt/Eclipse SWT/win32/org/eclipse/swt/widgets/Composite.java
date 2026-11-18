@@ -132,18 +132,6 @@ public int getBevelBorder () {
 }
 
 /**
- * One native HWND owner, two compatible logical choices:
- * SWT.DEFAULT on the Control overlay restores the stored Composite bevel.
- */
-@Override
-public void setBorderRelief (int relief) {
-	checkWidget ();
-	if (super.getBorderRelief () == relief) return;
-	super.setBorderRelief (relief);
-	if (!isDisposed ()) requestLayout ();
-}
-
-/**
  * Keeps the original Composite/Canvas API with its accepted semantics.
  * The bevel is a fallback value stored by Control; a later Control overlay
  * temporarily overrides it until SWT.DEFAULT. No second HWND state exists.
@@ -158,8 +146,8 @@ public void setBevelBorder (int border) {
 	}
 	if (!usesCompositeBevelPainter ()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	if (compositeBevelState () == border && super.getBorderRelief () == SWT.DEFAULT) return;
+	// Control recomputes trim, non-client damage and layout only when needed.
 	setCompositeBevelState(border);
-	if (!isDisposed ()) requestLayout ();
 }
 
 Control [] _getChildren () {
