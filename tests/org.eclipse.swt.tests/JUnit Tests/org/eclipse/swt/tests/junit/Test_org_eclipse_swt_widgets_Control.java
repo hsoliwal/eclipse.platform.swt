@@ -1197,8 +1197,10 @@ public void test_nativeBorderRelief_contract() {
                 () -> control.setBorderRelief(SWT.PUSH | SWT.BORDER));
         assertEquals(SWT.DEFAULT, control.getBorderRelief());
         if ("cocoa".equals(SWT.getPlatform())) {
-            assertThrows(org.eclipse.swt.SWTException.class,
+            assertThrows(org.eclipse.swt.SWTError.class,
                     () -> control.setBorderRelief(SWT.SHADOW_IN));
+            assertThrows(org.eclipse.swt.SWTError.class,
+                    () -> control.setBorderRelief(SWT.SHADOW_NONE));
             assertEquals(SWT.DEFAULT, control.getBorderRelief());
             return;
         }
