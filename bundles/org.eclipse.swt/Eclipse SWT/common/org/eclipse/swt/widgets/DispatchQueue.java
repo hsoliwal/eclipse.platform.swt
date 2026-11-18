@@ -356,6 +356,10 @@ final class DispatchQueue {
 	private void runFrame () {
 		int count;
 		synchronized (this) {
+			/* Consume this frame's request before applying its patches. A patch (or another
+			 * thread) may request a subsequent frame while the current one is running. */
+			frameDue = false;
+			frameRequested = false;
 			count = rings [MODEL].size;
 		}
 		for (int i = 0; i < count; i++) {
@@ -377,11 +381,9 @@ final class DispatchQueue {
 		}
 		long frameGeneration;
 		synchronized (this) {
-			frameDue = false;
-			frameRequested = false;
 			lastFrameNanos = System.nanoTime ();
 			frameGeneration = ++generation;
-			if (rings [MODEL].size > 0) tickWanted = true;
+			if (rings [MODEL].size > 0 || frameRequested) tickWanted = true;
 		}
 		Display display = owner.display;
 		for (FrameListener listener : frameListeners) {
