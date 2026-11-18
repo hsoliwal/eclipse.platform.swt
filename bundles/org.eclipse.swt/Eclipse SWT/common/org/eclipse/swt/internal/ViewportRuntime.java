@@ -1311,6 +1311,28 @@ public final class ViewportRuntime {
 			};
 		}
 
+		/**
+		 * Signed Q8 scroll displacement (logical coordinates), with floor rounding
+		 * for fractional and negative motion. Ordinary frames allocate nothing;
+		 * the rare overflowing calculation uses an exact saturated slow path.
+		 */
+		public static long scrollOffset (long origin, int rateQ8) {
+			if (rateQ8 < -MAX_RATE || rateQ8 > MAX_RATE) {
+				throw new IllegalArgumentException ("scroll multiplier out of range");
+			}
+			try {
+				return Math.addExact (
+						Math.multiplyExact (origin / SCROLL, (long) rateQ8),
+						Math.floorDiv ((origin % SCROLL) * (long) rateQ8, SCROLL));
+			} catch (ArithmeticException overflow) {
+				java.math.BigInteger scaled = java.math.BigInteger.valueOf (origin)
+						.multiply (java.math.BigInteger.valueOf (rateQ8)).shiftRight (8);
+				if (scaled.compareTo (LONG_MAX) > 0) return Long.MAX_VALUE;
+				if (scaled.compareTo (LONG_MIN) < 0) return Long.MIN_VALUE;
+				return scaled.longValue ();
+			}
+		}
+
 		/** Whether a changed scroll axis can move a layer with these Q8 factors. */
 		public static boolean movesWithScroll (int xRateQ8, int yRateQ8,
 				boolean horizontalChanged, boolean verticalChanged) {
