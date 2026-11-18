@@ -25,8 +25,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
@@ -102,6 +104,76 @@ public void test_nativeBevelBorderStyles() {
 	defaultBorder.dispose();
 	constructorHint.dispose();
 	plain.dispose();
+}
+
+@Test
+public void test_nativeReliefAndBevelShareTheSameNativeOwner() {
+    if (!SwtTestUtil.isWindows && !"gtk".equals(SWT.getPlatform())) return;
+    Composite framed = new Composite(shell, SWT.BORDER);
+    try {
+        int originalWidth = framed.getBorderWidth();
+        int originalStyle = framed.getStyle();
+        assertEquals(SWT.DEFAULT, framed.getBorderRelief());
+        assertEquals(SWT.NONE, framed.getBevelBorder());
+        framed.setBevelBorder(SWT.SHADOW_IN);
+        assertEquals(SWT.SHADOW_IN, framed.getBorderRelief());
+        framed.setBorderRelief(SWT.SHADOW_OUT);
+        assertEquals(SWT.SHADOW_OUT, framed.getBevelBorder());
+        framed.setBevelBorder(SWT.SHADOW_ETCHED_IN);
+        assertEquals(SWT.SHADOW_ETCHED_IN, framed.getBorderRelief());
+        framed.setBorderRelief(SWT.SHADOW_ETCHED_OUT);
+        assertEquals(SWT.SHADOW_ETCHED_OUT, framed.getBevelBorder());
+        framed.setBorderRelief(SWT.SHADOW_NONE);
+        assertEquals(SWT.NONE, framed.getBevelBorder());
+        assertEquals(0, framed.getBorderWidth());
+        framed.setBevelBorder(SWT.NONE);
+        assertEquals(SWT.DEFAULT, framed.getBorderRelief());
+        assertEquals(SWT.NONE, framed.getBevelBorder());
+        assertEquals(originalWidth, framed.getBorderWidth());
+        framed.setBevelBorder(SWT.SHADOW_NONE);
+        assertEquals(SWT.DEFAULT, framed.getBorderRelief());
+        assertEquals(originalStyle, framed.getStyle(), "Constructor style bits remain immutable");
+    } finally {
+        framed.dispose();
+    }
+}
+
+@Test
+public void test_nativeReliefCanvasUsesTheSameTwoPublicSpellings() {
+    if (!SwtTestUtil.isWindows && !"gtk".equals(SWT.getPlatform())) return;
+    Canvas canvas = new Canvas(shell, SWT.NONE);
+    try {
+        canvas.setBorderRelief(SWT.SHADOW_ETCHED_IN);
+        assertEquals(SWT.SHADOW_ETCHED_IN, canvas.getBevelBorder());
+        canvas.setBevelBorder(SWT.SHADOW_OUT);
+        assertEquals(SWT.SHADOW_OUT, canvas.getBorderRelief());
+        canvas.setBevelBorder(SWT.NONE);
+        assertEquals(SWT.DEFAULT, canvas.getBorderRelief());
+    } finally {
+        canvas.dispose();
+    }
+}
+
+@Test
+public void test_nativeReliefGtkGroupOverridePreservesControlStyles() {
+    if (!"gtk".equals(SWT.getPlatform())) return;
+    Group group = new Group(shell, SWT.SHADOW_IN);
+    try {
+        int originalStyle = group.getStyle();
+        group.setBevelBorder(SWT.SHADOW_OUT);
+        assertEquals(SWT.SHADOW_OUT, group.getBorderRelief());
+        assertEquals(SWT.SHADOW_OUT, group.getBevelBorder());
+        assertTrue(group.getBorderWidth() > 0, "Native GTK relief must reserve a CSS border");
+        group.setForeground(shell.getForeground());
+        group.setBackground(shell.getBackground());
+        assertEquals(SWT.SHADOW_OUT, group.getBevelBorder(),
+                "Changing the colors must not replace the relief provider");
+        group.setBevelBorder(SWT.NONE);
+        assertEquals(SWT.DEFAULT, group.getBorderRelief());
+        assertEquals(originalStyle, group.getStyle());
+    } finally {
+        group.dispose();
+    }
 }
 
 @Test

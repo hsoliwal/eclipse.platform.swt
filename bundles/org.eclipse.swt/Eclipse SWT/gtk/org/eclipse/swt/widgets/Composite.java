@@ -172,7 +172,8 @@ public int getBevelBorder () {
  * existing GtkWidget. SWT.NONE or SHADOW_NONE restores default decoration.
  *
  * @param border an SWT shadow style or SWT.NONE
- * @exception SWTException ERROR_NOT_IMPLEMENTED for a supported bevel style
+ * @exception IllegalArgumentException if the relief is invalid
+ * @exception org.eclipse.swt.SWTException for SWT disposal or thread violations
  */
 public void setBevelBorder (int border) {
     checkWidget ();
