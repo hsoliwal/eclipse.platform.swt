@@ -64,6 +64,45 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
     }
 }
 
+
+@Test
+public void test_nativeBevelBorderAndControlReliefShareOnePaintOwner() {
+	if (!SwtTestUtil.isWindows) return;
+	Composite direct = new Composite(shell, SWT.NONE);
+	try {
+		direct.setSize(120, 60);
+		direct.setBevelBorder(SWT.SHADOW_OUT);
+		int originalWidth = direct.getBorderWidth();
+		assertTrue(originalWidth > 0, "native Composite bevel has non-client trim");
+		for (int relief : new int[] {SWT.SHADOW_IN, SWT.SHADOW_OUT,
+				SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT}) {
+			direct.setBorderRelief(relief);
+			assertEquals(relief, direct.getBorderRelief());
+			assertEquals(SWT.SHADOW_OUT, direct.getBevelBorder(),
+					"Control relief preserves the underlying Composite bevel");
+			assertTrue(direct.getBorderWidth() > 0);
+		}
+		direct.setBorderRelief(SWT.SHADOW_NONE);
+		assertEquals(0, direct.getBorderWidth(), "explicit no-border overrides bevel");
+		direct.setBorderRelief(SWT.DEFAULT);
+		assertEquals(originalWidth, direct.getBorderWidth(),
+				"reset recovers the underlying Composite bevel");
+		direct.setBorderRelief(SWT.SHADOW_IN);
+		direct.setBevelBorder(SWT.SHADOW_ETCHED_IN);
+		assertEquals(SWT.DEFAULT, direct.getBorderRelief(),
+				"latest Composite request supersedes Control relief");
+		assertEquals(SWT.SHADOW_ETCHED_IN, direct.getBevelBorder());
+		assertTrue(direct.getBorderWidth() > 0);
+		direct.setBorderRelief(SWT.SHADOW_NONE);
+		assertEquals(0, direct.getBorderWidth());
+		direct.setBorderRelief(SWT.DEFAULT);
+		assertEquals(SWT.SHADOW_ETCHED_IN, direct.getBevelBorder());
+		assertTrue(direct.getBorderWidth() > 0);
+	} finally {
+		direct.dispose();
+	}
+}
+
 @Test
 public void test_nativeBevelBorderStyles() {
 	if (!SwtTestUtil.isWindows) return;
@@ -250,7 +289,6 @@ public void test_bug2162_transparentStyle() {
 	shell.setLayout(new FillLayout());
 	shell.open();
 }
-
 
 @Test
 public void test_nativeReliefAndCompositeBevelShareOneOwner() {
