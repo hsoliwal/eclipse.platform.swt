@@ -19,11 +19,14 @@ import org.eclipse.swt.widgets.Listener;
  * created. The caller retains ownership of the supplied native Control.
  *
  * <p>On every edge the layer is pinned to both viewport axes. Native child
- * controls are above painted and DirectComposition image layers; unlike
- * images, they cannot be interleaved with painted layers or alpha-blended.</p>
+ * controls are above the painted SWT plane; their order relative to
+ * DirectComposition image visuals is platform-specific and requires pixel
+ * verification. Controls cannot be interleaved with painted layers or alpha-blended.</p>
  */
 public final class LayeredSlidePanel implements AutoCloseable {
     private static final int FRAME_MILLIS = 16;
+    private static final int MAX_EXTENT = 1 << 14;
+    private static final int MAX_DURATION_MILLIS = 10_000;
     private final LayeredViewport viewport;
     private final Control control;
     private final LayeredViewport.Layer layer;
@@ -45,7 +48,7 @@ public final class LayeredSlidePanel implements AutoCloseable {
         if (control.getParent() != viewport) SWT.error(SWT.ERROR_INVALID_PARENT);
         if (edge != SWT.TOP && edge != SWT.BOTTOM && edge != SWT.LEFT && edge != SWT.RIGHT)
             SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-        if (collapsedExtent < 0 || expandedExtent < collapsedExtent || expandedExtent > 16384)
+        if (collapsedExtent < 0 || expandedExtent < collapsedExtent || expandedExtent > MAX_EXTENT)
             SWT.error(SWT.ERROR_INVALID_ARGUMENT);
         this.viewport = viewport;
         this.control = control;
@@ -98,7 +101,7 @@ public final class LayeredSlidePanel implements AutoCloseable {
     /** Set a bounded frame duration; zero disables animation. */
     public void setDurationMillis(int value) {
         check();
-        if (value < 0 || value > 10000) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (value < 0 || value > MAX_DURATION_MILLIS) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
         durationMillis = value;
     }
 
