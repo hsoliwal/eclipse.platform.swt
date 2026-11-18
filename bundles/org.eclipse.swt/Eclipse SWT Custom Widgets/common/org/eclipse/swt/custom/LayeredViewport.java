@@ -14,9 +14,12 @@ import java.util.Arrays;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.internal.LayerRectIndex;
+import org.eclipse.swt.internal.DPIUtil;
+import org.eclipse.swt.internal.NativeLayers;
 import org.eclipse.swt.internal.ViewportDamageRegion;
 import org.eclipse.swt.internal.ViewportGcProxy;
 import org.eclipse.swt.internal.ViewportRuntime;
@@ -118,6 +121,9 @@ public final class LayeredViewport extends Canvas {
         private boolean removed;
         /* a control layer's native child, placed at the layer's bounds; null for painted layers */
         private Control control;
+        /* native: asked to be composited by the window system; nativeLayer is its native handle (0 while painted) */
+        private boolean nativeRequested;
+        private long nativeLayer;
         /* retained: this layer's composite (it and everything below it) kept in its own image, with the pixels of
            that image that no longer match the layers */
         private boolean retained;
@@ -180,6 +186,7 @@ public final class LayeredViewport extends Canvas {
             worldClip = value;
             spatialDirty = true;
             invalidate(this);
+            syncNative();
         }
 
         public void setWorldBounds(long newX, long newY, long width, long height) {
@@ -195,6 +202,7 @@ public final class LayeredViewport extends Canvas {
             spatialDirty = true;
             invalidate(this);
             placeControl(this);
+            syncNative();
         }
 
         public int getOpacity() {
@@ -213,6 +221,7 @@ public final class LayeredViewport extends Canvas {
             if (opacity == 0 && capturedLayer == this) clearPointerCapture();
             invalidate(this);
             placeControl(this);
+            syncNative();
         }
 
         public boolean isVisible() {
@@ -229,6 +238,7 @@ public final class LayeredViewport extends Canvas {
             if (!visible && capturedLayer == this) clearPointerCapture();
             invalidate(this);
             placeControl(this);
+            syncNative();
         }
 
         /**
@@ -261,6 +271,12 @@ public final class LayeredViewport extends Canvas {
          */
         public void redraw() {
             checked();
+            if (nativeLayer != 0) {
+                // a native layer's pixels are the window system's: send them again
+                dropNative(this);
+                syncNative();
+                return;
+            }
             invalidate(this);
         }
 
@@ -268,6 +284,28 @@ public final class LayeredViewport extends Canvas {
             if (composite != null) retireComposite(composite);
             composite = null;
             stale = null;
+        }
+
+        /**
+         * Asks for this image layer to be composited by the window system (a DirectComposition visual on Windows,
+         * through the optional maya backend): its pan, opacity, visibility and Z order then change without
+         * repainting anything, and it shows above every painted layer, like a control layer. It is native only
+         * while its image is drawn one to one (zoom 1, world size the image's size, no world clip, 100% device
+         * zoom) and a backend exists; otherwise, and when that stops being true, it is painted as before.
+         *
+         * @return whether the layer is native now
+         */
+        public boolean setNative(boolean value) {
+            checked();
+            nativeRequested = value;
+            syncNative();
+            return nativeLayer != 0;
+        }
+
+        /** Whether the window system composites this layer now (see {@link #setNative(boolean)}). */
+        public boolean isNative() {
+            checked();
+            return nativeLayer != 0;
         }
 
         public boolean isLocked() {
@@ -290,6 +328,8 @@ public final class LayeredViewport extends Canvas {
             image = value;
             painter = null;
             invalidate(this);
+            dropNative(this); // new pixels
+            syncNative();
         }
 
         public void setPainter(LayerPainter value) {
@@ -298,6 +338,7 @@ public final class LayeredViewport extends Canvas {
             painter = value;
             image = null;
             invalidate(this);
+            syncNative();
         }
 
         public void setHitTester(LayerHitTester value) {
@@ -345,6 +386,7 @@ public final class LayeredViewport extends Canvas {
             publishOrder();
             invalidate(this);
             orderControls();
+            syncNative();
         }
 
         public void remove() {
@@ -358,6 +400,7 @@ public final class LayeredViewport extends Canvas {
             removed = true;
             if (retained) retainedCount--;
             releaseComposite();
+            dropNative(this);
             control = null; // the control stays the application's, where it was
             image = null;
             painter = null;
@@ -450,6 +493,9 @@ public final class LayeredViewport extends Canvas {
         addListener(SWT.MouseExit, event -> clearPointerCapture());
         addListener(SWT.FocusOut, event -> clearPointerCapture());
         addListener(SWT.Dispose, event -> {
+            if (composition != 0) nativeBackend.dispose(composition);
+            composition = 0;
+            for (int i = 0; i < count; i++) stack[i].nativeLayer = 0;
             // A painter may dispose the widget while one of these images has a
             // selected GC. The active paint closes that GC before the images.
             if (activeBackingPaints == 0) disposeBackingImages();
@@ -560,6 +606,7 @@ public final class LayeredViewport extends Canvas {
         viewportRuntime.scrollTo((double) x, (double) y);
         if (!shiftBackBuffer(previousX, previousY)) redraw();
         placeControls();
+        syncNative();
     }
 
     public double getZoom() {
@@ -577,6 +624,7 @@ public final class LayeredViewport extends Canvas {
         zoom = value;
         redraw();
         placeControls();
+        syncNative();
     }
 
     public Point toScreen(long worldX, long worldY) {
@@ -921,7 +969,7 @@ public final class LayeredViewport extends Canvas {
             for (int i = 0; i < selected; i++) {
                 if (isDisposed() || back[0].isDisposed()) break;
                 Layer layer = candidates[i];
-                if (layer.removed || !layer.visible || layer.opacity == 0) continue;
+                if (layer.removed || !layer.visible || layer.opacity == 0 || layer.nativeLayer != 0) continue;
                 Rectangle tile = projectedClip(layer, damage);
                 if (tile == null) continue;
                 if (layer.image == null && layer.painter != null && layer.opacity < 255) {
@@ -1098,6 +1146,7 @@ public final class LayeredViewport extends Canvas {
     }
 
     private void invalidate(Layer layer) {
+        if (layer.nativeLayer != 0) return; // not in the store: the window system shows it
         if (!layer.visible || layer.opacity == 0) return;
         Rectangle bounds = projectedClip(layer, getClientArea());
         if (bounds == null) return;
@@ -1383,5 +1432,107 @@ public final class LayeredViewport extends Canvas {
 
     private static int clampPixel(double value, int low, int high) {
         return (int) Math.max(low, Math.min(high, value));
+    }
+
+    /* the native layer backend (null: none installed) and this viewport's composition, made on the first request */
+    private NativeLayers nativeBackend;
+    private long composition;
+    private boolean nativeTried;
+
+    private boolean nativeAvailable() {
+        if (!nativeTried) {
+            nativeTried = true;
+            nativeBackend = NativeLayers.platform();
+            if (nativeBackend != null) composition = nativeBackend.create(this);
+        }
+        return composition != 0;
+    }
+
+    /* an image drawn one to one (zoom 1, world size the image's size, no clip, 100% device zoom) with a backend */
+    private boolean nativeEligible(Layer layer) {
+        if (!layer.nativeRequested || layer.removed || layer.image == null || layer.image.isDisposed()) return false;
+        if (zoom != 1.0 || layer.worldClip != null || DPIUtil.getDeviceZoom() != 100) return false;
+        Rectangle size = layer.image.getBounds();
+        return layer.right - layer.x == size.width && layer.bottom - layer.y == size.height && nativeAvailable();
+    }
+
+    /*
+     * native layers are made or dropped as their eligibility changes (their pixels leave or join the store), then
+     * one native frame carries every native layer's order, offset, opacity and visibility
+     */
+    private void syncNative() {
+        if (!nativeTried) {
+            boolean requested = false;
+            for (Layer layer : paintOrder) requested |= layer.nativeRequested;
+            if (!requested) return;
+        }
+        for (Layer layer : paintOrder) {
+            boolean eligible = nativeEligible(layer);
+            if (eligible && layer.nativeLayer == 0) {
+                Rectangle size = layer.image.getBounds();
+                long handle = nativeBackend.addLayer(composition, size.width, size.height);
+                if (handle != 0 && nativeBackend.upload(handle, premultiplied(layer.image.getImageData())) == 0) {
+                    damageBounds(layer); // its pixels leave the store
+                    layer.nativeLayer = handle;
+                } else if (handle != 0) {
+                    nativeBackend.removeLayer(composition, handle);
+                }
+            } else if (!eligible && layer.nativeLayer != 0) {
+                dropNative(layer);
+            }
+        }
+        applyNative();
+    }
+
+    /* a layer stops being native: its native layer is freed and its pixels return to the store */
+    private void dropNative(Layer layer) {
+        if (layer.nativeLayer == 0) return;
+        nativeBackend.removeLayer(composition, layer.nativeLayer);
+        layer.nativeLayer = 0;
+        if (!layer.removed) damageBounds(layer);
+    }
+
+    private void damageBounds(Layer layer) {
+        Rectangle bounds = projectedClip(layer, getClientArea());
+        if (bounds != null) redraw(bounds.x, bounds.y, bounds.width, bounds.height, false);
+    }
+
+    /* one native frame: the native layers in Z order with their offset, opacity and visibility */
+    private void applyNative() {
+        if (composition == 0) return;
+        int n = 0;
+        for (Layer layer : paintOrder) if (layer.nativeLayer != 0) n++;
+        long[] handles = new long[n];
+        float[] props = new float[n * 4];
+        int i = 0;
+        for (Layer layer : paintOrder) {
+            if (layer.nativeLayer == 0) continue;
+            handles[i] = layer.nativeLayer;
+            props[i * 4] = (float) device(layer.x, originX);
+            props[i * 4 + 1] = (float) device(layer.y, originY);
+            props[i * 4 + 2] = layer.opacity / 255f;
+            props[i * 4 + 3] = layer.visible && layer.opacity > 0 ? 1 : 0;
+            i++;
+        }
+        nativeBackend.apply(composition, handles, props, n);
+    }
+
+    /* an image's pixels as premultiplied ARGB, row by row, with its alpha (alpha data, global alpha, transparent pixel) */
+    private static int[] premultiplied(ImageData data) {
+        int w = data.width, h = data.height;
+        int[] out = new int[w * h], pixels = new int[w];
+        byte[] alphas = new byte[w];
+        for (int y = 0; y < h; y++) {
+            data.getPixels(0, y, w, pixels, 0);
+            if (data.alphaData != null) data.getAlphas(0, y, w, alphas, 0);
+            for (int x = 0; x < w; x++) {
+                int a = data.alphaData != null ? alphas[x] & 0xFF : data.alpha >= 0 ? data.alpha : 255;
+                if (data.transparentPixel >= 0 && pixels[x] == data.transparentPixel) a = 0;
+                org.eclipse.swt.graphics.RGB rgb = data.palette.getRGB(pixels[x]);
+                out[y * w + x] = a << 24 | (rgb.red * a + 127) / 255 << 16 | (rgb.green * a + 127) / 255 << 8
+                        | (rgb.blue * a + 127) / 255;
+            }
+        }
+        return out;
     }
 }
