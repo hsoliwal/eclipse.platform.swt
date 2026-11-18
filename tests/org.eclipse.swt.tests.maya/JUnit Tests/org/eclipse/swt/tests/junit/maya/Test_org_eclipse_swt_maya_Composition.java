@@ -151,6 +151,39 @@ public class Test_org_eclipse_swt_maya_Composition {
 	}
 
 	@Test
+	public void oversizedFrameBuffersReadOnlyTheActivePrefix() {
+		long red = layer(OPAQUE_RED), blue = layer(OPAQUE_BLUE);
+		long[] handles = new long[8];
+		float[] props = new float[32];
+		Arrays.fill(props, 8, props.length, Float.NaN); // unused capacity must never influence a frame
+
+		handles[0] = red;
+		handles[1] = blue;
+		System.arraycopy(new float[] { 20, 20, 1, 1, 110, 110, 1, 1 }, 0, props, 0, 8);
+		assertEquals(0, MayaComposition._nApply(composition, handles, props, 2));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(RED, screen(30, 30));
+		assertEquals(BLUE, screen(140, 140));
+
+		// Reuse the same backing arrays. A shrinking active count must hide the old second layer.
+		assertEquals(0, MayaComposition._nApply(composition, handles, props, 1));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(RED, screen(30, 30));
+		assertEquals(WHITE, screen(140, 140));
+
+		// Growing back into the existing capacity must preserve order, opacity and coordinates.
+		handles[0] = blue;
+		handles[1] = red;
+		System.arraycopy(new float[] { 20, 20, 1, 1, 20, 20, 1, 1 }, 0, props, 0, 8);
+		assertEquals(0, MayaComposition._nApply(composition, handles, props, 2));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(RED, screen(30, 30), "the second layer is above the first");
+	}
+
+	@Test
 	public void invalidArgumentsAreRefused() {
 		assertEquals(0, MayaComposition._nAddLayer(0, SIZE, SIZE));
 		assertEquals(0, MayaComposition._nAddLayer(composition, 0, SIZE));
