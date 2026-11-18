@@ -54,6 +54,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_custom_SameFontAndColour.class, //
 		Test_org_eclipse_swt_custom_CTabItem.class, //
 		Test_org_eclipse_swt_custom_ExtendedModifyListener.class, //
+		Test_org_eclipse_swt_custom_LayeredViewport.class, //
 		Test_org_eclipse_swt_custom_LineBackgroundListener.class, //
 		Test_org_eclipse_swt_custom_LineStyleListener.class, //
 		Test_org_eclipse_swt_custom_StyleRange.class, //
