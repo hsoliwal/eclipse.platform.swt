@@ -507,6 +507,34 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         }
     }
 
+    @Test
+    public void testLargeBlendedTileCrossesNativeBatchBoundaryWithoutSeams() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Image red = solidImage(SWT.COLOR_RED, 180), blue = solidImage(SWT.COLOR_BLUE, 180);
+        try {
+            viewport.addImageLayer("base", blue, 0, 0);
+            Layer upper = viewport.addImageLayer("blend", red, 0, 0);
+            upper.setBlendMode(LayeredViewport.BLEND_MULTIPLY);
+            show();
+            ImageData shown = pixels();
+            // 180 * 180 pixels: the bounded 16K JNI batch is crossed at row 91.
+            for (int y : new int[] { 0, 89, 90, 91, 92, 179 }) {
+                assertEquals(new RGB(0, 0, 0), rgb(shown, 20, y), "multiply at row " + y);
+            }
+            assertEquals(new RGB(255, 255, 255), rgb(shown, 200, 200));
+            upper.setBlendMode(LayeredViewport.BLEND_SCREEN);
+            viewport.update();
+            shown = pixels();
+            for (int y : new int[] { 0, 90, 91, 179 }) {
+                assertEquals(new RGB(255, 0, 255), rgb(shown, 170, y), "screen at row " + y);
+            }
+            assertSameAsAFullRecomposition();
+        } finally {
+            red.dispose();
+            blue.dispose();
+        }
+    }
+
     /* the pixels shown equal those of recomposing every layer at the current origin */
     private void assertSameAsAFullRecomposition() {
         ImageData shown = pixels();

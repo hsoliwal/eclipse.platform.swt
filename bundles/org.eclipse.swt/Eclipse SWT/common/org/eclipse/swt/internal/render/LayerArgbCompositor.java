@@ -4,7 +4,6 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.render;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -15,9 +14,10 @@ import java.util.Objects;
  *
  * <p>Native execution is off by default: enable with
  * {@code -Dswt.layerblend.native=true} and supply a matched library named
- * {@code swt-layerblend}. Missing libraries fall back to Java. The threshold
- * of 8192 pixels avoids crossing the JNI boundary for small draws, but is
- * not a measured performance crossover and must be benchmarked per platform.</p>
+ * {@code swt-layerblend}. Missing libraries fall back to Java. An older JNI
+ * library supporting only the first three modes is detected without changing
+ * its existing ABI. The threshold of 8192 pixels avoids crossing the JNI
+ * boundary for small draws; it is not a measured performance crossover.</p>
  *
  * @noreference This class is not intended to be referenced by clients.
  */
@@ -38,7 +38,8 @@ public final class LayerArgbCompositor {
 	/**
 	 * Composite {@code length} source pixels over the destination. Opacity is
 	 * a global multiplier in [0,255]. The source may alias the destination;
-	 * partially overlapping aliases are snapshotted to preserve semantics.
+	 * partially overlapping aliases are traversed in the safe direction,
+	 * without making a temporary copy.
 	 * Premultiplied color input is required; this kernel is not a converter.
 	 */
 	public static void composite(int[] dst, int dstOffset, int[] src, int srcOffset,
@@ -52,17 +53,14 @@ public final class LayerArgbCompositor {
 			throw new IndexOutOfBoundsException("invalid scanline bounds");
 		}
 		if (opacity == 0 || length == 0) return;
-		if (dst == src && dstOffset != srcOffset &&
-				(long) dstOffset < (long) srcOffset + length &&
-				(long) srcOffset < (long) dstOffset + length) {
-			src = Arrays.copyOfRange(src, srcOffset, srcOffset + length);
-			srcOffset = 0;
-		}
-		if (length >= NATIVE_THRESHOLD && dst != src && Native.ENABLED && mode.ordinal() <= Mode.SCREEN.ordinal()) {
+		if (length >= NATIVE_THRESHOLD && dst != src && mode.ordinal() < Native.MODE_COUNT) {
 			blendNative(dst, dstOffset, src, srcOffset, length, opacity, mode.ordinal());
 			return;
 		}
-		for (int i = 0; i < length; i++) {
+		boolean backward = dst == src && dstOffset > srcOffset &&
+				(long) dstOffset < (long) srcOffset + length;
+		for (int k = 0; k < length; k++) {
+			int i = backward ? length - 1 - k : k;
 			int s = src[srcOffset + i];
 			int d = dst[dstOffset + i];
 			int sa = mul255(s >>> 24, opacity);
@@ -144,6 +142,17 @@ public final class LayerArgbCompositor {
 
 	private static final class Native {
 		static final boolean ENABLED = load();
+		static final int MODE_COUNT = modes();
+		private static int modes() {
+			if (!ENABLED) return 0;
+			try {
+				int supported = nativeModeCount();
+				return supported >= 3 && supported <= Mode.values().length ? supported : 3;
+			} catch (UnsatisfiedLinkError incompatible) {
+				// A pre-extension library has no capability query and supports modes 0..2.
+				return 3;
+			}
+		}
 		private static boolean load() {
 			if (!Boolean.getBoolean("swt.layerblend.native")) return false;
 			try {
@@ -154,6 +163,8 @@ public final class LayerArgbCompositor {
 			}
 		}
 	}
+
+	private static native int nativeModeCount();
 
 	private static native void blendNative(int[] dst, int dstOffset,
 			int[] src, int srcOffset, int length, int opacity, int mode);

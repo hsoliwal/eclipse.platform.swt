@@ -969,6 +969,8 @@ public final class LayeredViewport extends Canvas {
 
     private static final double MIN_ZOOM = 1.0 / 4096.0;
     private static final double MAX_ZOOM = 4096.0;
+    /* Native raster blending amortizes JNI over several rows without retaining a full tile of int arrays. */
+    private static final int BLEND_BATCH_PIXELS = 16_384;
 
     private final ViewportRuntime viewportRuntime = new ViewportRuntime();
     private Layer[] stack = new Layer[8];
@@ -1686,6 +1688,7 @@ public final class LayeredViewport extends Canvas {
      * source pixel, its alpha times the layer's opacity) by its mode, and written back once
      */
     private void paintBlended(GC[] back, Layer layer, Rectangle tile) {
+        if (tile.width <= 0 || tile.height <= 0) return;
         if (layer.blendSource == null) layer.blendSource = layer.image.getImageData();
         ImageData source = layer.blendSource;
         long ox = layerOriginX(layer), oy = layerOriginY(layer);
@@ -1696,22 +1699,34 @@ public final class LayeredViewport extends Canvas {
         try {
             back[0].copyArea(under, tile.x, tile.y);
             ImageData below = under.getImageData();
-            ImageDataArgb store = new ImageDataArgb(below); // whole rows, no object per pixel
-            int[] dst = new int[tile.width], src = new int[tile.width];
-            for (int j = 0; j < tile.height; j++) {
-                int sy = clipSource((tile.y + j + 0.5 - top) / height * source.height, source.height - 1, false);
-                for (int i = 0; i < tile.width; i++) {
-                    int sx = clipSource((tile.x + i + 0.5 - left) / width * source.width, source.width - 1, false);
-                    int pixel = source.getPixel(sx, sy);
-                    int alpha = source.alphaData != null ? source.getAlpha(sx, sy) : source.alpha >= 0 ? source.alpha : 255;
-                    if (source.transparentPixel >= 0 && pixel == source.transparentPixel) alpha = 0;
-                    org.eclipse.swt.graphics.RGB s = source.palette.getRGB(pixel);
-                    src[i] = alpha << 24 | (s.red * alpha + 127) / 255 << 16 | (s.green * alpha + 127) / 255 << 8
-                            | (s.blue * alpha + 127) / 255;
+            ImageDataArgb store = new ImageDataArgb(below); // whole-row conversion, no per-pixel RGB objects
+            ImageDataArgb sourceColors = new ImageDataArgb(source);
+            int rowsPerBatch = Math.max(1, BLEND_BATCH_PIXELS / tile.width);
+            int capacity = Math.min(rowsPerBatch, tile.height) * tile.width;
+            int[] dst = new int[capacity], src = new int[capacity];
+            for (int startRow = 0; startRow < tile.height; startRow += rowsPerBatch) {
+                int rows = Math.min(rowsPerBatch, tile.height - startRow);
+                for (int row = 0; row < rows; row++) {
+                    int j = startRow + row, base = row * tile.width;
+                    int sy = clipSource((tile.y + j + 0.5 - top) / height * source.height, source.height - 1, false);
+                    store.opaqueRow(j, dst, base);
+                    for (int i = 0; i < tile.width; i++) {
+                        int sx = clipSource((tile.x + i + 0.5 - left) / width * source.width, source.width - 1, false);
+                        int pixel = source.getPixel(sx, sy);
+                        int alpha = source.alphaData != null ? source.getAlpha(sx, sy) : source.alpha >= 0 ? source.alpha : 255;
+                        if (source.transparentPixel >= 0 && pixel == source.transparentPixel) alpha = 0;
+                        int rgb = sourceColors.rgb(pixel);
+                        src[base + i] = alpha << 24 | ((rgb >>> 16 & 0xFF) * alpha + 127) / 255 << 16
+                                | ((rgb >>> 8 & 0xFF) * alpha + 127) / 255 << 8
+                                | ((rgb & 0xFF) * alpha + 127) / 255;
+                    }
                 }
-                store.opaqueRow(j, dst, 0); // the store is opaque
-                LayerArgbCompositor.composite(dst, 0, src, 0, tile.width, layer.opacity, BLEND_MODES[layer.blendMode]);
-                store.setOpaqueRow(j, dst, 0);
+                LayerArgbCompositor.composite(dst, 0, src, 0, rows * tile.width,
+                        layer.opacity, BLEND_MODES[layer.blendMode]);
+                for (int row = 0; row < rows; row++) {
+                    int j = startRow + row, base = row * tile.width;
+                    store.setOpaqueRow(j, dst, base);
+                }
             }
             Image blended = new Image(getDisplay(), below);
             try {
