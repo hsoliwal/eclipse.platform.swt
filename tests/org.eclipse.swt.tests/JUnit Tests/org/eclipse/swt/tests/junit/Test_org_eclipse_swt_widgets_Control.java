@@ -1193,6 +1193,7 @@ public void test_nativeBorderRelief_contract() {
     Control control = new org.eclipse.swt.widgets.Composite(shell, SWT.NONE);
     try {
         assertEquals(SWT.DEFAULT, control.getBorderRelief());
+        int originalBorderWidth = control.getBorderWidth();
         assertThrows(IllegalArgumentException.class,
                 () -> control.setBorderRelief(SWT.PUSH | SWT.BORDER));
         assertEquals(SWT.DEFAULT, control.getBorderRelief());
