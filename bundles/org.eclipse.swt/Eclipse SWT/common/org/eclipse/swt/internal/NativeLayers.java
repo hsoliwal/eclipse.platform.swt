@@ -25,8 +25,29 @@ public interface NativeLayers {
 	/** The class of the backend, loaded by name so that SWT has no compile-time dependency on it. */
 	String BACKEND = "org.eclipse.swt.internal.render.MayaNativeLayers";
 
+	/** Source-pixel affine transforms are supported by {@link #applyScene}. */
+	long AFFINE_2D = 1L;
+	/** Source-pixel rectangular clips are supported by {@link #applyScene}. */
+	long LOCAL_RECT_CLIP = 2L;
+	/** The backend supports the optional packed dirty upload. */
+	long DIRTY_UPLOAD = 4L;
+	/** Number of floats in one {@link #applyScene} record. */
+	int SCENE_FLOATS = 14;
+	/** A scene record contains an active source-pixel clip rectangle. */
+	int SCENE_CLIP = 1;
+
 	/** A composition above the control's own pixels, or 0. */
 	long create(org.eclipse.swt.widgets.Control control);
+
+	/**
+	 * Optional features of this live composition. Zero retains the original
+	 * translation/opacity contract. Unknown bits must be ignored. Implementers
+	 * compiled against the original interface inherit this conservative default;
+	 * an OS name or an installed Java class is not evidence of native support.
+	 */
+	default long capabilities(long composition) {
+		return 0;
+	}
 
 	/** A layer of the given pixel size, not shown until {@link #apply}, or 0. */
 	long addLayer(long composition, int width, int height);
@@ -47,6 +68,25 @@ public interface NativeLayers {
 	 * each in {@code props}; one commit. 0, or a failure code.
 	 */
 	int apply(long composition, long[] layers, float[] props, int count);
+
+	/**
+	 * Optional scene frame, in the same bottom-to-top order as {@link #apply}.
+	 * Each fourteen-float record contains physical client-pixel offset X/Y,
+	 * opacity, visibility, the source-image-pixel affine matrix
+	 * (m11,m12,m21,m22,dx,dy), and source-image-pixel clip left/top/right/bottom.
+	 * The clip is applied before the affine transform and offset. A flags entry
+	 * of {@link #SCENE_CLIP} enables it; zero disables it. No world-coordinate
+	 * or logical-DPI conversion is performed by the backend. Values must be
+	 * finite and within +/-2^20; opacity and visibility keep the original
+	 * contract. An empty clip is valid. The original {@code apply} restores
+	 * identity transform and no clip after a successful scene frame.
+	 *
+	 * @return zero on success, or a nonzero failure/unsupported code; an
+	 *         unsupported scene must never silently discard its transform/clip
+	 */
+	default int applyScene(long composition, long[] layers, float[] props, int[] flags, int count) {
+		return -1;
+	}
 
 	/** Removes and frees a layer. */
 	void removeLayer(long composition, long layer);

@@ -154,6 +154,39 @@ jobs:
         ${{ (inputs.runtodotests == false && inputs.gtk =='gtk4' && inputs.gdk_backend == 'x11')     && '-DexcludedGroups=gtk4-todo' || '' }}
         ${{ (inputs.runtodotests == false && inputs.gtk =='gtk3' && inputs.gdk_backend == 'wayland') && '-DexcludedGroups=gtk3-wayland-todo' || '' }}
         clean install
+    - name: Resolve the focused native test runner
+      if: ${{ inputs.gtk == 'gtk4' || startsWith(inputs.native, 'cocoa.') }}
+      shell: bash
+      run: |
+        mvn --non-recursive --batch-mode -V \
+          org.apache.maven.plugins:maven-dependency-plugin:3.8.1:copy \
+          -Dartifact=org.junit.platform:junit-platform-console-standalone:1.11.4 \
+          -DoutputDirectory="$GITHUB_WORKSPACE/tests/org.eclipse.swt.tests/target/native-capabilities/deps"
+    - name: Exercise GTK4 snapshot JNI against the built fragment
+      if: ${{ inputs.native == 'gtk.linux.x86_64' && inputs.gtk == 'gtk4' }}
+      shell: bash
+      env:
+        SWT_GTK4: "1"
+        GDK_BACKEND: "${{ inputs.gdk_backend }}"
+      run: >-
+        ${{ inputs.gdk_backend == 'x11' && 'dbus-run-session -- xvfb-run -a -s "-screen 0 1024x768x24 -noreset"' || '' }}
+        ${{ inputs.gdk_backend == 'wayland' && 'XDG_RUNTIME_DIR="$(mktemp -p $(pwd) -d xdg-runtime-XXXXXX)" dbus-run-session -- mutter --headless --wayland --no-x11 --virtual-monitor 1024x768 --  ' || '' }}
+        python3 tests/org.eclipse.swt.tests/run_native_capability_tests.py
+        --platform gtk4
+        --fragment 'binaries/org.eclipse.swt.${{ inputs.native }}'
+        --junit tests/org.eclipse.swt.tests/target/native-capabilities/deps/junit-platform-console-standalone-1.11.4.jar
+        --java-home "$JAVA_HOME"
+        --output tests/org.eclipse.swt.tests/target/native-capabilities
+    - name: Exercise Cocoa Core Animation against the built fragment
+      if: ${{ startsWith(inputs.native, 'cocoa.') }}
+      shell: bash
+      run: >-
+        python3 tests/org.eclipse.swt.tests/run_native_capability_tests.py
+        --platform cocoa
+        --fragment 'binaries/org.eclipse.swt.${{ inputs.native }}'
+        --junit tests/org.eclipse.swt.tests/target/native-capabilities/deps/junit-platform-console-standalone-1.11.4.jar
+        --java-home "$JAVA_HOME"
+        --output tests/org.eclipse.swt.tests/target/native-capabilities
     - name: Require executed M3 sparse-state tests in JUnit XML
       shell: bash
       run: |
@@ -234,6 +267,7 @@ jobs:
           ${{ runner.temp }}/SWT_SOURCE_TREE
           ${{ github.workspace }}/**/target/surefire-reports/*.xml
           ${{ github.workspace }}/**/target/surefire-reports/*.txt
+          ${{ github.workspace }}/**/target/native-capabilities/surefire-reports/*.xml
           ${{ github.workspace }}/**/target/release-junit-coverage.json
           ${{ github.workspace }}/**/target/screenshots/**/*.png
           ${{ github.workspace }}/**/target/screenshots/**/*.txt

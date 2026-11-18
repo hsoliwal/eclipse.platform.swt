@@ -146,3 +146,27 @@ GCC/Clang sanitizer, Java 21 `-Xcheck:jni` and absent-export tests;
 the actual Win32 Maya/MSVC runtime still requires a rebuilt DLL, export
 closure, `AllMayaGcTests`, resource checks and measurements.
 See [MAYA_COMPOSITION_TELEMETRY.md](../../../docs/MAYA_COMPOSITION_TELEMETRY.md).
+
+## Optional native logical surface quotas
+
+The existing Windows Maya composition now owns a compact
+`MayaSurfaceBudget.h` logical BGRA reservation counter. The native
+`_nAddLayer` reserves `4 × width × height` bytes before creating its
+DirectComposition surface, and the same original `destroy(Layer*)` releases
+that reservation on creation failure, layer retirement or composition
+disposal. Quota enforcement is disabled by default (`0` = unlimited).
+
+For a deliberately bounded SWT viewport, use a backend startup flag,
+for example `-Dswt.maya.surfaceBudgetBytes=67108864`. The Maya backend
+configures the native composition before admitting its layers. If a
+nonzero cap is explicitly requested but the existing DLL lacks the new
+optional budget entry points, the adapter uses SWT's software-painted
+fallback rather than claiming the quota is enforced.
+
+Two *additive* JNI exports provide configuration and a six-field,
+explicitly requested diagnostic snapshot. This is a logical raw BGRA
+reservation total, **not measured GPU memory**, a cache or an eviction
+service. The Java API, native ABI and release gates are documented
+in [MAYA_SURFACE_BUDGET.md](https://github.com/hsoliwal/eclipse.platform.swt/blob/master/docs/MAYA_SURFACE_BUDGET.md).
+Full Win32 Maya DLL rebuilding and actual native JUnit resource/pixel
+qualification remain outstanding.

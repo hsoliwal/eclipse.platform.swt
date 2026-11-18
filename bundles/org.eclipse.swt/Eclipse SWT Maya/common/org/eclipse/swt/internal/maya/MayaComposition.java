@@ -30,6 +30,18 @@ public final class MayaComposition {
 
 	/** Floats per layer in {@link #_nApply}'s properties: x, y, opacity (0 to 1), visible (0 or 1). */
 	public static final int PROPS = 4;
+	/** Additive scene-v1 record: x/y, opacity, visible, affine 3x2, local clip L/T/R/B. */
+	public static final int SCENE_FLOATS = 14;
+	/** Scene flags bit enabling the source-local rectangular clip. */
+	public static final int SCENE_CLIP = 1;
+	/** Native scene-v1 affine transform support. */
+	public static final long CAP_AFFINE_2D = 1L;
+	/** Native scene-v1 local rectangle clip support. */
+	public static final long CAP_LOCAL_RECT_CLIP = 2L;
+	/** Optional dirty image upload support. */
+	public static final long CAP_DIRTY_UPLOAD = 4L;
+	private static volatile boolean capabilitiesUnavailable;
+	private static volatile boolean sceneUnavailable;
 
     /** Version-1 native metrics snapshot shape, all counters are nonnegative longs. */
     public static final int METRIC_COUNT = 16;
@@ -51,12 +63,6 @@ public final class MayaComposition {
     public static final int METRIC_HEALTH_PROBES = 15;
 
 
-	/** Floats per visual in the optional internal affine scene transaction. */
-	public static final int SCENE_FLOATS = 14;
-
-	/** Bit indicating that a scene visual has a local rectangular clip. */
-	public static final int SCENE_CLIP = 1;
-
 	private MayaComposition() {
 	}
 
@@ -65,6 +71,23 @@ public final class MayaComposition {
 
 	/** A layer of the given pixel size, not yet shown, or 0. */
 	public static native long _nAddLayer(long composition, int width, int height);
+
+	/** Extension capabilities for this live composition, or zero; absent in older binaries. */
+	public static native long _nCapabilities(long composition);
+
+	/**
+	 * Reports supported rendering extensions, independently of the packed transport
+	 * version. Older Maya binaries retain their original legacy operations.
+	 */
+	public static long capabilities(long composition) {
+		if (composition == 0 || capabilitiesUnavailable) return 0;
+		try {
+			return _nCapabilities(composition);
+		} catch (UnsatisfiedLinkError olderMayaBinary) {
+			capabilitiesUnavailable = true;
+			return 0;
+		}
+	}
 
 	/** Replaces the layer's pixels (width * height premultiplied ARGB ints); 0 or a failure code. */
 	public static native int _nUpload(long layer, int[] pixels);
@@ -88,28 +111,29 @@ public final class MayaComposition {
 	public static native int _nApply(long composition, long[] layers, float[] props, int count);
 
 	/**
-	 * Optional scene frame. Each of the `count` layers has a packed
-	 * {@link #SCENE_FLOATS}-float record: offset X/Y, opacity, visibility,
-	 * a 3x2 affine matrix and a local clip rectangle. Flags are zero or
-	 * {@link #SCENE_CLIP}. The native library copies only active array
-	 * prefixes and validates the entire frame before changing visuals.
-	 * Existing {@link #_nApply} resets native transform/clip state.
-	 *
-	 * @return zero on success; an error code otherwise; absent from older Maya binaries
+	 * Optional scene-v1 transaction. Each layer has {@link #SCENE_FLOATS} floats:
+	 * physical client offsets X/Y, opacity, visibility, affine m11/m12/m21/m22/dx/dy,
+	 * and source-image-local clip left/top/right/bottom. The affine transform maps
+	 * source image pixels and transforms the clip with the visual. All values must
+	 * be finite and within +/- 2^20; opacity is 0..1 and visibility is 0 or 1.
+	 * Flags are zero or {@link #SCENE_CLIP}; an enabled clip must not be reversed.
+	 * All records are validated before native visual mutation. Legacy array and
+	 * packed-v1 frames restore identity transform and no clip for their layers.
 	 */
 	public static native int _nApplyScene(long composition, long[] layers, float[] packed,
 			int[] flags, int count);
 
 	/**
-	 * Compatibility-safe entry for the optional scene capability. This method
-	 * never falls back to `_nApply` because ordinary frames cannot represent
-	 * transforms or clips; callers must choose their painted fallback.
+	 * Uses the optional scene ABI, or returns unsupported (-1). A caller must use
+	 * its painted fallback when unsupported; a legacy frame cannot carry a scene.
 	 */
 	public static int applyScene(long composition, long[] layers, float[] packed,
 			int[] flags, int count) {
+		if (sceneUnavailable) return -1;
 		try {
 			return _nApplyScene(composition, layers, packed, flags, count);
 		} catch (UnsatisfiedLinkError olderMayaBinary) {
+			sceneUnavailable = true;
 			return -1;
 		}
 	}
@@ -151,6 +175,46 @@ public final class MayaComposition {
         long[] snapshot = new long[METRIC_COUNT];
         try {
             return _nReadMetrics(composition, snapshot) == 0 ? snapshot : null;
+        } catch (UnsatisfiedLinkError olderMayaBinary) {
+            return null;
+        }
+    }
+
+    /** Version 1: the logical BGRA surface budget diagnostic array has six slots. */
+    public static final int SURFACE_BUDGET_FIELDS = 6;
+    public static final int BUDGET_VERSION = 0;
+    public static final int BUDGET_LIMIT_BYTES = 1;
+    public static final int BUDGET_RESERVED_BYTES = 2;
+    public static final int BUDGET_PEAK_BYTES = 3;
+    public static final int BUDGET_DENIALS = 4;
+    public static final int BUDGET_ACCEPTED = 5;
+
+    /**
+     * Optional per-composition logical BGRA surface reservation cap. Zero
+     * means unlimited. The native method refuses a cap below the already
+     * reserved logical surface bytes. It does NOT limit actual GPU residency.
+     * An unrecognized native method is not silently treated as success.
+     */
+    public static native int _nSetSurfaceBudget(long composition, long maxLogicalBytes);
+
+    /** Explicit opt-in budget, returning -1 on an older unsupported Maya DLL. */
+    public static int setSurfaceBudget(long composition, long maxLogicalBytes) {
+        if (maxLogicalBytes < 0) throw new IllegalArgumentException("negative native surface quota");
+        try {
+            return _nSetSurfaceBudget(composition, maxLogicalBytes);
+        } catch (UnsatisfiedLinkError olderMayaBinary) {
+            return -1;
+        }
+    }
+
+    /** Copies six primitive counters into the caller-owned prefix only. */
+    public static native int _nReadSurfaceBudget(long composition, long[] out);
+
+    /** Optional read-only logical reservation snapshot, or null if unsupported. */
+    public static long[] readSurfaceBudget(long composition) {
+        long[] snapshot = new long[SURFACE_BUDGET_FIELDS];
+        try {
+            return _nReadSurfaceBudget(composition, snapshot) == 0 ? snapshot : null;
         } catch (UnsatisfiedLinkError olderMayaBinary) {
             return null;
         }
