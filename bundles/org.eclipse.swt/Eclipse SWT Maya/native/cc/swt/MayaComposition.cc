@@ -22,6 +22,10 @@
 #include "MayaCompositionChecks.h"
 #include "MayaCompositionDelta.h"
 #include "MayaCompositionDirty.h"
+#include "MayaFrameDirect.h"
+#include "MayaFrameView.h"
+#include <cstring>
+#include <limits>
 #include <new>
 
 #ifdef _WIN32
@@ -230,85 +234,142 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
     }
 }
 
-// one frame: layers in Z order, bottom to top, with x, y, opacity (0..1) and visible (0 or 1) per layer in props;
-// hidden layers are detached; one Commit. Returns 0, or the failing HRESULT.
+// A single validated DirectComposition transaction for both legacy JNI heap
+// arrays and versioned packed direct-buffer frames. The two views yield the
+// same Values in Z order; neither one stages new JNI arrays to call the other.
+// All handles are checked against composition ownership before COM mutation.
+namespace {
+inline Layer *lookupFrameLayer(std::uint64_t bits) noexcept {
+    static_assert(sizeof(jlong) == sizeof(std::uint64_t),
+            "Maya requires 64-bit opaque JNI handles");
+    jlong signedHandle = 0;
+    std::memcpy(&signedHandle, &bits, sizeof(bits));
+    return getLayer(signedHandle);
+}
+
+inline void invalidateFrameCache(Composition *c) noexcept {
+    // After a failed or interrupted native transaction, the cached scene
+    // never becomes authority until a subsequent successful Commit.
+    c->frameDelta.invalidate();
+    for (Layer *layer : c->layers) layer->committedProperties.invalidate();
+}
+
+template<class View>
+jint applyNativeFrame(Composition *c, const View &view) noexcept {
+    const std::size_t count = view.size();
+    if (count > static_cast<std::size_t>(std::numeric_limits<jint>::max() / 4))
+        return E_INVALIDARG;
+    try {
+        // Validation precedes frameDelta.begin, RemoveAllVisuals and all
+        // property writes. Duplicate/foreign/stale handles are rejected.
+        std::uint64_t generation = ++c->frameSequence;
+        if (generation == 0) {
+            for (Layer *layer : c->layers) layer->seenFrame = 0;
+            generation = ++c->frameSequence;
+        }
+        for (std::size_t i = 0; i < count; i++) {
+            const auto value = view.at(i);
+            Layer *layer = lookupFrameLayer(value.handle);
+            if (!layer || layer->owner != c || layer->seenFrame == generation ||
+                    !swt_maya::validLayerProperties(value.x, value.y,
+                            value.opacity, value.visible)) return E_INVALIDARG;
+            layer->seenFrame = generation;
+        }
+
+        // The native OS tree is retained. The requested order is staged
+        // without mutating the committed order; accept() swaps only after
+        // successful Commit and cannot allocate.
+        c->frameDelta.begin();
+        for (std::size_t i = 0; i < count; i++) {
+            const auto value = view.at(i);
+            if (value.visible != 0.0f) {
+                c->frameDelta.includeVisible(lookupFrameLayer(value.handle));
+            }
+        }
+        const bool reorder = c->frameDelta.requiresRebuild();
+        bool changed = reorder || c->pendingSurfaceCommit;
+        HRESULT hr = reorder ? c->root->RemoveAllVisuals() : S_OK;
+        for (std::size_t i = 0; SUCCEEDED(hr) && i < count; i++) {
+            const auto value = view.at(i);
+            Layer *layer = lookupFrameLayer(value.handle);
+            if (!layer->committedProperties.sameX(value.x)) {
+                changed = true;
+                hr = layer->visual->SetOffsetX(value.x);
+            }
+            if (SUCCEEDED(hr) && !layer->committedProperties.sameY(value.y)) {
+                changed = true;
+                hr = layer->visual->SetOffsetY(value.y);
+            }
+            if (SUCCEEDED(hr) && !layer->committedProperties.sameOpacity(value.opacity)) {
+                changed = true;
+                hr = layer->effect->SetOpacity(value.opacity);
+            }
+            // Without a reference, insertAbove FALSE adds above the last
+            // sibling; the order is bottom-to-top in BOTH frame formats.
+            if (SUCCEEDED(hr) && reorder && value.visible != 0.0f)
+                hr = c->root->AddVisual(layer->visual, FALSE, nullptr);
+        }
+
+        // A pending successful EndDraw is a changed native surface even
+        // when Z, offsets and opacity are unchanged (merged dirty upload).
+        if (SUCCEEDED(hr) && changed) hr = c->device->Commit();
+        if (SUCCEEDED(hr)) {
+            if (changed) c->pendingSurfaceCommit = false;
+            if (reorder) c->frameDelta.accept();
+            if (changed) {
+                for (std::size_t i = 0; i < count; i++) {
+                    const auto value = view.at(i);
+                    Layer *layer = lookupFrameLayer(value.handle);
+                    layer->committedProperties.accept(
+                            value.x, value.y, value.opacity);
+                }
+            }
+        } else {
+            invalidateFrameCache(c);
+        }
+        return hr;
+    } catch (const std::bad_alloc &) {
+        invalidateFrameCache(c);
+        return E_OUTOFMEMORY;
+    } catch (...) {
+        invalidateFrameCache(c);
+        return E_FAIL;
+    }
+}
+} // namespace
+
+// Original seven-symbol JNI contract remains untouched. JNI array regions
+// are copied before entering DirectComposition, as on current master.
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nApply
   (JNIEnv *env, jclass, jlong composition, jlongArray layers, jfloatArray props, jint count) {
     Composition *c = getComposition(composition);
     if (!c || !layers || !props) return E_POINTER;
     if (!swt_maya::validFrameArrays(count, env->GetArrayLength(layers), env->GetArrayLength(props)))
         return E_INVALIDARG;
-    std::vector<jlong> order(static_cast<size_t>(count));
-    std::vector<jfloat> p(static_cast<size_t>(count) * 4);
-    if (count != 0) env->GetLongArrayRegion(layers, 0, count, order.data());
-    if (env->ExceptionCheck()) return E_FAIL;
-    if (count != 0) env->GetFloatArrayRegion(props, 0, count * 4, p.data());
-    if (env->ExceptionCheck()) return E_FAIL;
-    // Validate every handle and property before modifying the visible tree.
-    std::uint64_t generation = ++c->frameSequence;
-    if (generation == 0) {
-        for (Layer *layer : c->layers) layer->seenFrame = 0;
-        generation = ++c->frameSequence;
+    try {
+        std::vector<jlong> order(static_cast<std::size_t>(count));
+        std::vector<jfloat> properties(static_cast<std::size_t>(count) * 4);
+        if (count) env->GetLongArrayRegion(layers, 0, count, order.data());
+        if (env->ExceptionCheck()) return E_FAIL;
+        if (count) env->GetFloatArrayRegion(props, 0, count * 4, properties.data());
+        if (env->ExceptionCheck()) return E_FAIL;
+        return applyNativeFrame(c, swt_maya_frame::LegacyView<jlong, jfloat>{
+                order.data(), properties.data(), static_cast<std::size_t>(count)});
+    } catch (const std::bad_alloc &) {
+        return E_OUTOFMEMORY;
+    } catch (...) {
+        return E_FAIL;
     }
-    for (jint i = 0; i < count; i++) {
-        Layer *layer = getLayer(order[i]);
-        const jfloat *q = &p[static_cast<size_t>(i) * 4];
-        if (!layer || layer->owner != c || layer->seenFrame == generation ||
-                !swt_maya::validLayerProperties(q[0], q[1], q[2], q[3]))
-            return E_INVALIDARG;
-        layer->seenFrame = generation;
-    }
-    // The OS retains the previous visual tree. Build only a candidate visible order
-    // after validating all handles/properties; the last successful Commit owns truth.
-    c->frameDelta.begin();
-    for (jint i = 0; i < count; i++) {
-        if (p[static_cast<size_t>(i) * 4 + 3] != 0.0f) {
-            c->frameDelta.includeVisible(getLayer(order[i]));
-        }
-    }
-    const bool reorder = c->frameDelta.requiresRebuild();
-    bool changed = reorder || c->pendingSurfaceCommit;
-    HRESULT hr = reorder ? c->root->RemoveAllVisuals() : S_OK;
-    for (jint i = 0; SUCCEEDED(hr) && i < count; i++) {
-        Layer *layer = getLayer(order[i]);
-        const jfloat *q = &p[static_cast<size_t>(i) * 4];
-        // A property-only frame never detaches and rebuilds the visual tree.
-        if (!layer->committedProperties.sameX(q[0])) {
-            changed = true;
-            hr = layer->visual->SetOffsetX(q[0]);
-        }
-        if (SUCCEEDED(hr) && !layer->committedProperties.sameY(q[1])) {
-            changed = true;
-            hr = layer->visual->SetOffsetY(q[1]);
-        }
-        if (SUCCEEDED(hr) && !layer->committedProperties.sameOpacity(q[2])) {
-            changed = true;
-            hr = layer->effect->SetOpacity(q[2]);
-        }
-        // Without a reference, insertAbove FALSE adds above the last sibling.
-        if (SUCCEEDED(hr) && reorder && q[3] != 0.0f)
-            hr = c->root->AddVisual(layer->visual, FALSE, nullptr);
-    }
-    // DirectComposition queues commands atomically only at Commit. A no-op frame
-    // needs neither an OS call nor a new transaction.
-    if (SUCCEEDED(hr) && changed) hr = c->device->Commit();
-    if (SUCCEEDED(hr)) {
-        if (changed) c->pendingSurfaceCommit = false;
-        if (reorder) c->frameDelta.accept(); // noexcept: no allocation after Commit
-        if (changed) {
-            for (jint i = 0; i < count; i++) {
-                Layer *layer = getLayer(order[i]);
-                const jfloat *q = &p[static_cast<size_t>(i) * 4];
-                layer->committedProperties.accept(q[0], q[1], q[2]);
-            }
-        }
-    } else {
-        // A failed pending native transaction cannot become the cache authority.
-        // The next call must replay all visual order and property assignments.
-        c->frameDelta.invalidate();
-        for (Layer *layer : c->layers) layer->committedProperties.invalidate();
-    }
-    return hr;
+}
+
+// The packed frame has already been decoded transactionally on the JNI
+// stack. No NewLongArray / NewFloatArray / Set*ArrayRegion round trip.
+namespace swt_maya_frame {
+jint applyDecodedFrame(jlong composition, const Frame &frame) noexcept {
+    Composition *c = getComposition(composition);
+    if (!c) return E_POINTER;
+    return applyNativeFrame(c, PackedView{frame});
+}
 }
 
 extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nRemoveLayer
@@ -344,6 +405,11 @@ extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
 }
 
 #else // not yet on this platform: the same exports, answering "not supported"
+
+namespace swt_maya_frame {
+jint applyDecodedFrame(jlong, const Frame &) noexcept { return -1; }
+}
+
 
 extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nCreate
   (JNIEnv *, jclass, jlong) { return 0; }
