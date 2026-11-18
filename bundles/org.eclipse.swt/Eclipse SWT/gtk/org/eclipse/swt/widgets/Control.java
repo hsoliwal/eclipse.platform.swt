@@ -3301,20 +3301,37 @@ public int getBorderRelief () {
 }
 
 /**
- * Applies native GTK3/GTK4 CSS border relief to this Control's own style
- * context without replacing its foreground/background style provider.
+ * Returns the native widget that owns this Control's visible CSS frame.
+ * Scrollable widgets override this to use the existing scrolled-window peer.
+ */
+long borderHandle () {
+    return handle;
+}
+
+/**
+ * Applies GTK3/GTK4 native CSS relief on the border-owning widget rather than
+ * indiscriminately styling an inner child (for example GtkScrolledWindow's
+ * text/tree viewport). The original native widget and CSS owner remain intact.
  */
 public void setBorderRelief (int relief) {
     checkWidget();
     if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     if (relief == nativeBorderRelief) return;
+    long borderWidget = borderHandle();
+    if (borderWidget == 0) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
     if (nativeBorderProvider == 0 && relief != SWT.DEFAULT) {
-        long context = GTK.gtk_widget_get_style_context(handle);
-        nativeBorderProvider = GTK.gtk_css_provider_new();
-        GTK.gtk_style_context_add_provider(context, nativeBorderProvider,
-                GTK.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-        // The style context owns the reference until its widget is destroyed.
-        OS.g_object_unref(nativeBorderProvider);
+        long context = GTK.gtk_widget_get_style_context(borderWidget);
+        if (context == 0) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+        long provider = GTK.gtk_css_provider_new();
+        if (provider == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        try {
+            GTK.gtk_style_context_add_provider(context, provider,
+                    GTK.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        } finally {
+            // After successful attachment the GtkStyleContext owns the ref.
+            OS.g_object_unref(provider);
+        }
+        nativeBorderProvider = provider;
     }
     String declaration = NativeBorderRelief.gtkDeclaration(relief);
     if (nativeBorderProvider != 0) {
@@ -3326,8 +3343,8 @@ public void setBorderRelief (int relief) {
         }
     }
     nativeBorderRelief = relief;
-    GTK.gtk_widget_queue_resize(handle);
-    GTK.gtk_widget_queue_draw(handle);
+    GTK.gtk_widget_queue_resize(borderWidget);
+    GTK.gtk_widget_queue_draw(borderWidget);
 }
 
 /**
