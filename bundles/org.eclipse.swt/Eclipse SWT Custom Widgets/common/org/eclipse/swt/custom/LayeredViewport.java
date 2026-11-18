@@ -23,6 +23,7 @@ import org.eclipse.swt.internal.NativeLayers;
 import org.eclipse.swt.internal.ViewportDamageRegion;
 import org.eclipse.swt.internal.ViewportGcProxy;
 import org.eclipse.swt.internal.ViewportRuntime;
+import org.eclipse.swt.internal.render.LayerArgbCompositor;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -124,6 +125,9 @@ public final class LayeredViewport extends Canvas {
         /* native: asked to be composited by the window system; nativeLayer is its native handle (0 while painted) */
         private boolean nativeRequested;
         private long nativeLayer;
+        /* the blend mode (BLEND_*) and, for a blended image layer, its pixels read once (null until needed) */
+        private int blendMode = BLEND_NORMAL;
+        private ImageData blendSource;
         /* retained: this layer's composite (it and everything below it) kept in its own image, with the pixels of
            that image that no longer match the layers */
         private boolean retained;
@@ -271,6 +275,7 @@ public final class LayeredViewport extends Canvas {
          */
         public void redraw() {
             checked();
+            blendSource = null; // the image's pixels may have changed
             if (nativeLayer != 0) {
                 // a native layer's pixels are the window system's: send them again
                 dropNative(this);
@@ -308,6 +313,29 @@ public final class LayeredViewport extends Canvas {
             return nativeLayer != 0;
         }
 
+        /**
+         * The layer's blend mode with what is below it: {@link LayeredViewport#BLEND_NORMAL} or one of the W3C Compositing and
+         * Blending separable modes (multiply, screen, overlay, darken, lighten, color dodge, color burn, hard light,
+         * soft light, difference, exclusion), as in GIMP, Inkscape and Photoshop. Image layers blend; a painter layer
+         * draws normally whatever its mode. A blended layer is never native: the window system cannot read what is
+         * below it.
+         */
+        public void setBlendMode(int mode) {
+            checked();
+            if (mode < BLEND_NORMAL || mode > BLEND_EXCLUSION) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (blendMode == mode) return;
+            invalidate(this);
+            blendMode = mode;
+            invalidate(this);
+            syncNative();
+        }
+
+        /** The layer's blend mode, one of the {@code BLEND_} constants of {@link LayeredViewport}. */
+        public int getBlendMode() {
+            checked();
+            return blendMode;
+        }
+
         public boolean isLocked() {
             checked();
             return locked;
@@ -327,6 +355,7 @@ public final class LayeredViewport extends Canvas {
             invalidate(this);
             image = value;
             painter = null;
+            blendSource = null;
             invalidate(this);
             dropNative(this); // new pixels
             syncNative();
@@ -410,6 +439,17 @@ public final class LayeredViewport extends Canvas {
             publishOrder();
         }
     }
+
+    /**
+     * Blend modes of a layer ({@link Layer#setBlendMode(int)}): normal, then the separable modes of W3C Compositing
+     * and Blending Level 1 (the layer modes of GIMP, Inkscape and Photoshop).
+     */
+    public static final int BLEND_NORMAL = 0, BLEND_MULTIPLY = 1, BLEND_SCREEN = 2, BLEND_OVERLAY = 3,
+            BLEND_DARKEN = 4, BLEND_LIGHTEN = 5, BLEND_COLOR_DODGE = 6, BLEND_COLOR_BURN = 7,
+            BLEND_HARD_LIGHT = 8, BLEND_SOFT_LIGHT = 9, BLEND_DIFFERENCE = 10, BLEND_EXCLUSION = 11;
+
+    /* the compositor's mode of each BLEND_ constant (the same order) */
+    private static final LayerArgbCompositor.Mode[] BLEND_MODES = LayerArgbCompositor.Mode.values();
 
     private static final double MIN_ZOOM = 1.0 / 4096.0;
     private static final double MAX_ZOOM = 4096.0;
@@ -972,6 +1012,14 @@ public final class LayeredViewport extends Canvas {
                 if (layer.removed || !layer.visible || layer.opacity == 0 || layer.nativeLayer != 0) continue;
                 Rectangle tile = projectedClip(layer, damage);
                 if (tile == null) continue;
+                if (layer.image != null && layer.blendMode != BLEND_NORMAL) {
+                    // the scope restores the clip and alpha the blend sets, as for every other layer
+                    try (ViewportGcProxy state = ViewportGcProxy.wrap(back[0])) {
+                        state.clip(tile).alpha(255);
+                        if (!layer.image.isDisposed()) paintBlended(back, layer, tile);
+                    }
+                    continue;
+                }
                 if (layer.image == null && layer.painter != null && layer.opacity < 255) {
                     paintIsolated(back, target, layer, tile, originalAlpha);
                     continue;
@@ -1053,6 +1101,53 @@ public final class LayeredViewport extends Canvas {
 
     private static int combinedAlpha(int alpha, int opacity) {
         return (alpha * opacity + 127) / 255;
+    }
+
+    /*
+     * a blended image layer: the pixels below the tile are read from the store, blended with the layer's (nearest
+     * source pixel, its alpha times the layer's opacity) by its mode, and written back once
+     */
+    private void paintBlended(GC[] back, Layer layer, Rectangle tile) {
+        if (layer.blendSource == null) layer.blendSource = layer.image.getImageData();
+        ImageData source = layer.blendSource;
+        double left = device(layer.x, originX), top = device(layer.y, originY);
+        double width = device(layer.right, originX) - left, height = device(layer.bottom, originY) - top;
+        if (!(width > 0) || !(height > 0) || source.width == 0 || source.height == 0) return;
+        Image under = new Image(getDisplay(), tile.width, tile.height);
+        try {
+            back[0].copyArea(under, tile.x, tile.y);
+            ImageData below = under.getImageData();
+            org.eclipse.swt.graphics.PaletteData out = below.palette;
+            int[] dst = new int[tile.width], src = new int[tile.width];
+            for (int j = 0; j < tile.height; j++) {
+                int sy = clipSource((tile.y + j + 0.5 - top) / height * source.height, source.height - 1, false);
+                for (int i = 0; i < tile.width; i++) {
+                    int sx = clipSource((tile.x + i + 0.5 - left) / width * source.width, source.width - 1, false);
+                    int pixel = source.getPixel(sx, sy);
+                    int alpha = source.alphaData != null ? source.getAlpha(sx, sy) : source.alpha >= 0 ? source.alpha : 255;
+                    if (source.transparentPixel >= 0 && pixel == source.transparentPixel) alpha = 0;
+                    org.eclipse.swt.graphics.RGB s = source.palette.getRGB(pixel), b = out.getRGB(below.getPixel(i, j));
+                    src[i] = alpha << 24 | (s.red * alpha + 127) / 255 << 16 | (s.green * alpha + 127) / 255 << 8
+                            | (s.blue * alpha + 127) / 255;
+                    dst[i] = 0xFF000000 | b.red << 16 | b.green << 8 | b.blue; // the store is opaque
+                }
+                LayerArgbCompositor.composite(dst, 0, src, 0, tile.width, layer.opacity, BLEND_MODES[layer.blendMode]);
+                for (int i = 0; i < tile.width; i++) {
+                    int rgb = dst[i];
+                    below.setPixel(i, j, out.getPixel(new org.eclipse.swt.graphics.RGB(rgb >>> 16 & 0xFF, rgb >>> 8 & 0xFF, rgb & 0xFF)));
+                }
+            }
+            Image blended = new Image(getDisplay(), below);
+            try {
+                back[0].setClipping(tile);
+                back[0].setAlpha(255);
+                back[0].drawImage(blended, tile.x, tile.y);
+            } finally {
+                blended.dispose();
+            }
+        } finally {
+            under.dispose();
+        }
     }
 
     private void paintImage(GC gc, Layer layer, Rectangle tile) {
@@ -1451,7 +1546,8 @@ public final class LayeredViewport extends Canvas {
     /* an image drawn one to one (zoom 1, world size the image's size, no clip, 100% device zoom) with a backend */
     private boolean nativeEligible(Layer layer) {
         if (!layer.nativeRequested || layer.removed || layer.image == null || layer.image.isDisposed()) return false;
-        if (zoom != 1.0 || layer.worldClip != null || DPIUtil.getDeviceZoom() != 100) return false;
+        if (zoom != 1.0 || layer.worldClip != null || layer.blendMode != BLEND_NORMAL
+                || DPIUtil.getDeviceZoom() != 100) return false;
         Rectangle size = layer.image.getBounds();
         return layer.right - layer.x == size.width && layer.bottom - layer.y == size.height && nativeAvailable();
     }
