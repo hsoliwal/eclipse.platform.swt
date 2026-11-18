@@ -1296,6 +1296,15 @@ int effectiveBorderReliefForPaint () {
 
 /* A prior explicitly chosen Composite bezel must survive SWT.DEFAULT on the
  * Control property. The two logical choices share this one Control owner. */
+/**
+ * Preserve the pre-existing package-private access used by merged Win32
+ * consumers to inspect the explicit Control overlay during native callbacks.
+ * The effective border may instead be the saved Composite bevel.
+ */
+int nativeBorderReliefForPaint () {
+	return nativeBorderRelief;
+}
+
 int compositeBevelState () {
 	return savedCompositeBevel;
 }
