@@ -1222,4 +1222,252 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             transform.dispose();
         }
     }
+
+    private RGB system(int color) {
+        return viewport.getDisplay().getSystemColor(color).getRGB();
+    }
+
+    private Layer solid(String name, long x, long y, long width, long height, int color) {
+        return viewport.addPaintLayer(name, x, y, width, height, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(color));
+            gc.fillRectangle(ctx.clip());
+        });
+    }
+
+    /* rows of 10 world px, blue and white, under a red header pinned vertically; a green tooltip above the header */
+    private Layer[] treeWithHeader() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer rows = viewport.addPaintLayer("rows", 0, 0, 4000, 4000, (gc, ctx) -> {
+            Rectangle clip = ctx.clip();
+            for (int y = clip.y; y < clip.y + clip.height; y++) {
+                boolean blue = Math.floorMod(ctx.originY() + y, 20) < 10;
+                gc.setForeground(gc.getDevice().getSystemColor(blue ? SWT.COLOR_BLUE : SWT.COLOR_WHITE));
+                gc.drawLine(clip.x, y, clip.x + clip.width - 1, y);
+            }
+        });
+        Layer header = solid("header", 0, 0, 200, 20, SWT.COLOR_RED);
+        header.setPinned(SWT.VERTICAL);
+        Layer tooltip = solid("tooltip", 40, 137, 10, 10, SWT.COLOR_GREEN);
+        return new Layer[] { rows, header, tooltip };
+    }
+
+    @Test
+    public void testAPinnedHeaderStaysOnTopWhileTheRowsScrollUnderIt() {
+        Layer[] tree = treeWithHeader();
+        Layer rows = tree[0], header = tree[1], tooltip = tree[2];
+        assertEquals(SWT.VERTICAL, header.getPinned());
+        show();
+        RGB red = system(SWT.COLOR_RED), blue = system(SWT.COLOR_BLUE), white = system(SWT.COLOR_WHITE);
+        // down by blits, back up by a blit (the header's ghost lands inside the view), down again
+        for (int y : new int[] { 35, 100, 90, 135 }) {
+            viewport.setOrigin(0, y);
+            viewport.update();
+            ImageData shown = pixels();
+            assertEquals(red, rgb(shown, 100, 5), "the header stays on top at origin " + y);
+            assertEquals(Math.floorMod(y + 25, 20) < 10 ? blue : white, rgb(shown, 100, 25),
+                    "the rows scroll under it at origin " + y);
+            assertSameAsAFullRecomposition();
+        }
+        assertEquals(system(SWT.COLOR_GREEN), rgb(pixels(), 45, 5), "a layer above the header in Z paints over it");
+        assertSame(header, viewport.hitTest(100, 5));
+        assertSame(rows, viewport.hitTest(100, 25));
+        assertSame(tooltip, viewport.hitTest(45, 5));
+        // a horizontal pan moves the header with the rows: it ends at world x 200, device 170
+        viewport.setOrigin(30, 135);
+        viewport.update();
+        assertEquals(red, rgb(pixels(), 160, 5));
+        assertNotEquals(red, rgb(pixels(), 180, 5));
+        assertSameAsAFullRecomposition();
+    }
+
+    @Test
+    public void testPinnedLayersSeeViewRelativeCoordinatesAndPinTheirControls() {
+        Layer rows = viewport.addPaintLayer("rows", 0, 0, 4000, 4000, (gc, ctx) -> { });
+        Layer header = viewport.addPaintLayer("header", 0, 0, 200, 20, (gc, ctx) -> { });
+        header.setPinned(SWT.VERTICAL);
+        viewport.setOrigin(10, 300);
+        List<LayerPointerEvent> events = new ArrayList<>();
+        header.setPointerListener(events::add);
+        rows.setPointerListener(events::add);
+        pointer(SWT.MouseMove, 50, 5, 0);
+        pointer(SWT.MouseMove, 50, 40, 0);
+        assertSame(header, events.get(0).layer());
+        assertEquals(60, events.get(0).worldX(), "a free axis is world space");
+        assertEquals(5, events.get(0).worldY(), "a pinned axis is measured from the view's origin");
+        assertSame(rows, events.get(1).layer());
+        assertEquals(340, events.get(1).worldY());
+        // a control pinned on both axes keeps its place through any pan
+        Button button = new Button(viewport, SWT.PUSH);
+        Layer corner = viewport.addControlLayer("corner", button, 4, 6, 30, 20);
+        corner.setPinned(SWT.HORIZONTAL | SWT.VERTICAL);
+        assertEquals(new Rectangle(4, 6, 30, 20), button.getBounds());
+        assertTrue(button.getVisible());
+        viewport.setOrigin(-500, 9000);
+        assertEquals(new Rectangle(4, 6, 30, 20), button.getBounds());
+        corner.setPinned(SWT.NONE);
+        assertFalse(button.getVisible(), "unpinned, it is back at world (4, 6), far outside the view");
+        assertThrows(IllegalArgumentException.class, () -> corner.setPinned(SWT.LEFT));
+    }
+
+    @Test
+    public void testAPinnedLegendKeepsItsPlaceBetweenRetainedLayers() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer base = viewport.addPaintLayer("base", -4000, -4000, 8000, 8000, (gc, ctx) -> {
+            Rectangle clip = ctx.clip();
+            for (int x = clip.x; x < clip.x + clip.width; x++) {
+                boolean dark = Math.floorMod(ctx.originX() + x, 9) == 0;
+                gc.setForeground(gc.getDevice().getSystemColor(dark ? SWT.COLOR_BLUE : SWT.COLOR_WHITE));
+                gc.drawLine(x, clip.y, x, clip.y + clip.height - 1);
+            }
+            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_GREEN));
+            for (int y = clip.y; y < clip.y + clip.height; y++) {
+                if (Math.floorMod(ctx.originY() + y, 11) == 0) gc.drawLine(clip.x, y, clip.x + clip.width - 1, y);
+            }
+        });
+        base.setRetained(true);
+        Layer legend = solid("legend", 200, 150, 40, 40, SWT.COLOR_MAGENTA);
+        legend.setPinned(SWT.HORIZONTAL | SWT.VERTICAL);
+        // above the legend, a retained layer: its composite holds the legend's pixels too
+        solid("marker", 120, 60, 6, 6, SWT.COLOR_BLACK).setRetained(true);
+        show();
+        for (int[] origin : new int[][] { { 7, -9 }, { -20, 15 }, { 0, 0 }, { 33, 31 } }) {
+            viewport.setOrigin(origin[0], origin[1]);
+            viewport.update();
+            assertEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 220, 170), "at " + origin[0] + "," + origin[1]);
+            assertSameAsAFullRecomposition();
+        }
+    }
+
+    @Test
+    public void testAGroupHeaderSticksUnderTheColumnHeaderUntilTheNextGroupPushesItAway() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer rows = viewport.addPaintLayer("rows", 0, 0, 4000, 4000, (gc, ctx) -> {
+            Rectangle clip = ctx.clip();
+            for (int y = clip.y; y < clip.y + clip.height; y++) {
+                boolean blue = Math.floorMod(ctx.originY() + y, 20) < 10;
+                gc.setForeground(gc.getDevice().getSystemColor(blue ? SWT.COLOR_BLUE : SWT.COLOR_WHITE));
+                gc.drawLine(clip.x, y, clip.x + clip.width - 1, y);
+            }
+        });
+        // group A spans world y 100 to 300, group B 300 to 600; each header is 16 high and sticks 20 below the top
+        Layer a = solid("group A", 0, 100, 200, 16, SWT.COLOR_YELLOW);
+        a.setSticky(SWT.VERTICAL, 20, 300);
+        Layer b = solid("group B", 0, 300, 200, 16, SWT.COLOR_GREEN);
+        b.setSticky(SWT.VERTICAL, 20, 600);
+        solid("columns", 0, 0, 200, 20, SWT.COLOR_RED).setPinned(SWT.VERTICAL);
+        assertEquals(SWT.VERTICAL, a.getSticky());
+        show();
+        RGB yellow = system(SWT.COLOR_YELLOW), green = system(SWT.COLOR_GREEN), red = system(SWT.COLOR_RED);
+        // origin, then the device y expected of A's and B's top (A pushed up by B and under the column header;
+        // at 90 A is stuck, at 70 it is not: the pan between them unsticks it with its ghost in view)
+        int[][] steps = { { 0, 100, 300 }, { 50, 50, 250 }, { 150, 20, 150 }, { 270, 14, 30 }, { 400, -116, 20 },
+                { 380, -96, 20 }, { 90, 20, 210 }, { 70, 30, 230 }, { 150, 20, 150 } };
+        for (int[] step : steps) {
+            viewport.setOrigin(0, step[0]);
+            viewport.update();
+            ImageData shown = pixels();
+            String at = " at origin " + step[0];
+            assertEquals(red, rgb(shown, 100, 5), "the column header stays on top" + at);
+            if (step[1] + 15 >= 20) assertEquals(yellow, rgb(shown, 100, step[1] + 15), "A's last line" + at);
+            if (step[1] + 15 >= 20) assertEquals(yellow, rgb(shown, 2, step[1] + 15), "A sticks only vertically" + at);
+            if (step[2] < 240) assertEquals(green, rgb(shown, 100, step[2]), "B's first line" + at);
+            if (step[1] > 20) assertNotEquals(yellow, rgb(shown, 100, step[1] - 1), "above A" + at);
+            assertSameAsAFullRecomposition();
+        }
+        // hit testing and pointer events keep A's own world coordinates while it is stuck
+        assertSame(a, viewport.hitTest(100, 25));
+        List<LayerPointerEvent> events = new ArrayList<>();
+        a.setPointerListener(events::add);
+        rows.setPointerListener(events::add);
+        pointer(SWT.MouseMove, 100, 25, 0);
+        assertSame(a, events.get(0).layer());
+        assertEquals(105, events.get(0).worldY(), "stuck at origin 150 + 20: A's line 5 is under device line 25");
+        pointer(SWT.MouseMove, 100, 60, 0);
+        assertSame(rows, events.get(1).layer());
+        assertEquals(210, events.get(1).worldY());
+    }
+
+    @Test
+    public void testAStickyColumnAndItsArguments() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer column = solid("column", 100, 0, 30, 200, SWT.COLOR_MAGENTA);
+        column.setSticky(SWT.HORIZONTAL, 0, 1000);
+        show();
+        viewport.setOrigin(150, 0);
+        viewport.update();
+        assertEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 5, 50), "stuck at the left edge");
+        assertNotEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 35, 50));
+        assertSameAsAFullRecomposition();
+        viewport.setOrigin(140, 0);
+        viewport.update();
+        viewport.setOrigin(90, 0); // unstuck by a pan wider than the column: its ghost lands beside it
+        viewport.update();
+        assertEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 15, 50));
+        assertSameAsAFullRecomposition();
+        viewport.setOrigin(1000, 0);
+        viewport.update();
+        assertNotEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 5, 50), "pushed out past its limit");
+        column.setSticky(SWT.NONE, 0, 0);
+        viewport.setOrigin(150, 0);
+        viewport.update();
+        assertNotEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 5, 50), "no longer sticky: at world x 100");
+        assertSameAsAFullRecomposition();
+        assertThrows(IllegalArgumentException.class, () -> column.setSticky(SWT.HORIZONTAL | SWT.VERTICAL, 0, 0));
+    }
+
+    @Test
+    public void testParallaxPlanesKeepPaintHitAndPointerOrderAcrossBlitPans() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer rows = solid("body", 0, 0, 4000, 4000, SWT.COLOR_BLUE);
+        Layer parallax = solid("parallax", 140, 40, 40, 40, SWT.COLOR_MAGENTA);
+        parallax.setScrollRates(128, 128);
+        Layer header = solid("header", 0, 0, 300, 20, SWT.COLOR_RED);
+        header.setPinned(SWT.VERTICAL);
+        show();
+        assertEquals(128, parallax.getScrollRateX());
+        assertEquals(128, parallax.getScrollRateY());
+        for (int[] origin : new int[][] {{0, 0}, {20, 20}, {60, 40},
+                {80, 30}, {0, 0}}) {
+            viewport.setOrigin(origin[0], origin[1]);
+            viewport.update();
+            int x = 145 - origin[0] / 2;
+            int y = 45 - origin[1] / 2;
+            assertEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), x, y),
+                    "parallax layer at origin " + origin[0] + "," + origin[1]);
+            assertEquals(system(SWT.COLOR_RED), rgb(pixels(), 20, 5),
+                    "pinned header stays above independently scrolling body");
+            assertSame(parallax, viewport.hitTest(x, y));
+            assertSame(header, viewport.hitTest(20, 5));
+            assertSameAsAFullRecomposition();
+        }
+        List<LayerPointerEvent> events = new ArrayList<>();
+        parallax.setPointerListener(events::add);
+        viewport.setOrigin(60, 40);
+        viewport.update();
+        pointer(SWT.MouseMove, 115, 25, 0);
+        assertFalse(events.isEmpty(), "parallax layer receives routed pointer event");
+        assertEquals(145, events.get(0).worldX());
+        assertEquals(45, events.get(0).worldY());
+        assertSame(parallax, events.get(0).layer());
+        assertSame(rows, viewport.hitTest(100, 80));
+    }
+
+    @Test
+    public void testScrollRatesReverseFixedAndPinnedPrecedence() {
+        Layer layer = solid("effect", 140, 40, 40, 40, SWT.COLOR_MAGENTA);
+        assertEquals(256, layer.getScrollRateX());
+        assertEquals(256, layer.getScrollRateY());
+        assertThrows(IllegalArgumentException.class, () -> layer.setScrollRates(4097, 256));
+        assertThrows(IllegalArgumentException.class, () -> layer.setScrollRates(0, -4097));
+        assertEquals(256, layer.getScrollRateX());
+        layer.setScrollRates(0, -256);
+        viewport.setOrigin(10, 20);
+        assertSame(layer, viewport.hitTest(145, 65), "fixed X and reverse Y");
+        layer.setPinned(SWT.VERTICAL);
+        assertSame(layer, viewport.hitTest(145, 45), "native pin overrides reverse Y");
+        layer.setPinned(SWT.NONE);
+        assertSame(layer, viewport.hitTest(145, 65), "rate reactivates after unpin");
+        layer.setScrollRates(256, 256);
+        assertSame(layer, viewport.hitTest(135, 25), "ordinary world scrolling restored");
+    }
 }
