@@ -303,12 +303,21 @@ public abstract class Control extends Widget implements Drawable {
 		try {
 			gc.setClipping(savedClip.intersection(new Rectangle(x, y, bounds.width, bounds.height)));
 			if (border != 0) {
-				gc.setBackground(display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
-				gc.fillRectangle(x, y, bounds.width, 1);
-				if (bounds.height > 1) gc.fillRectangle(x, y + bounds.height - 1, bounds.width, 1);
-				if (bounds.height > 2) {
-					gc.fillRectangle(x, y + 1, 1, bounds.height - 2);
-					if (bounds.width > 1) gc.fillRectangle(x + bounds.width - 1, y + 1, 1, bounds.height - 2);
+				Color light = display.getSystemColor(SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW);
+				Color dark = display.getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
+				if (nativeBorderRelief == SWT.DEFAULT) {
+					printBorderRing(gc, x, y, bounds.width, bounds.height, 0,
+							display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW),
+							display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
+				} else {
+					boolean raised = nativeBorderRelief == SWT.SHADOW_OUT
+							|| nativeBorderRelief == SWT.SHADOW_ETCHED_OUT;
+					boolean etched = nativeBorderRelief == SWT.SHADOW_ETCHED_IN
+							|| nativeBorderRelief == SWT.SHADOW_ETCHED_OUT;
+					printBorderRing(gc, x, y, bounds.width, bounds.height, 0,
+							raised ? light : dark, raised ? dark : light);
+					printBorderRing(gc, x, y, bounds.width, bounds.height, 1,
+							(raised ^ etched) ? light : dark, (raised ^ etched) ? dark : light);
 				}
 			}
 			int clientX = Math.addExact(x, border), clientY = Math.addExact(y, border);
