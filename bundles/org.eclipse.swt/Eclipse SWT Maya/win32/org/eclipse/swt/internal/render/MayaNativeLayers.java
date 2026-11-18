@@ -8,8 +8,11 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.render;
 
+import java.nio.ByteBuffer;
+
 import org.eclipse.swt.internal.NativeLayers;
 import org.eclipse.swt.internal.maya.MayaComposition;
+import org.eclipse.swt.internal.maya.MayaFramePacket;
 import org.eclipse.swt.widgets.Control;
 
 /**
@@ -17,6 +20,14 @@ import org.eclipse.swt.widgets.Control;
  * this class by name ({@link NativeLayers#BACKEND}); without the maya fragment it is absent and layers stay painted.
  */
 public final class MayaNativeLayers implements NativeLayers {
+
+	// Off by default: the v1 bridge decodes, validates and invokes the old
+	// compositor path, so it is NOT a zero-copy performance optimization.
+	private static final boolean PACKED_FRAME = Boolean.getBoolean("swt.maya.packedFrame");
+	private static volatile boolean packedUnavailable;
+	private static final ThreadLocal<MayaFramePacket.Encoder> ENCODER =
+			ThreadLocal.withInitial(MayaFramePacket.Encoder::new);
+	private long epoch;
 
 	@Override
 	public long create(Control control) {
@@ -35,6 +46,19 @@ public final class MayaNativeLayers implements NativeLayers {
 
 	@Override
 	public int apply(long composition, long[] layers, float[] props, int count) {
+		if (PACKED_FRAME && !packedUnavailable && count >= 64 && count <= MayaFramePacket.MAX_LAYERS) {
+			try {
+				int version = MayaComposition._nFramePacketVersion();
+				if (version == MayaFramePacket.VERSION) {
+					ByteBuffer packet = ENCODER.get().encode(layers, props, count, ++epoch);
+					return MayaComposition._nApplyPacked(composition, packet, packet.remaining());
+				}
+				packedUnavailable = true;
+			} catch (UnsatisfiedLinkError olderMayaBinary) {
+				// Previously packaged seven-symbol Maya DLL/SO: preserve its old ABI.
+				packedUnavailable = true;
+			}
+		}
 		return MayaComposition._nApply(composition, layers, props, count);
 	}
 
