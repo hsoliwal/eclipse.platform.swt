@@ -69,7 +69,7 @@ public class Composite extends Scrollable {
 
 	private int nativeBevelEdge () {
 		if (!usesCompositeBevelPainter ()) return 0;
-		return switch (borderReliefState ()) {
+		return switch (effectiveBorderReliefForPaint ()) {
 			case SWT.SHADOW_IN -> OS.EDGE_SUNKEN;
 			case SWT.SHADOW_OUT -> OS.EDGE_RAISED;
 			case SWT.SHADOW_ETCHED_IN -> OS.EDGE_ETCHED;
@@ -128,11 +128,13 @@ public Composite (Composite parent, int style) {
  */
 public int getBevelBorder () {
 	checkWidget ();
-	int relief = super.getBorderRelief ();
-	return relief == SWT.DEFAULT || relief == SWT.SHADOW_NONE ? SWT.NONE : relief;
+	return compositeBevelState ();
 }
 
-/** This is the only native border state transition for both public APIs. */
+/**
+ * One native HWND owner, two compatible logical choices:
+ * SWT.DEFAULT on the Control overlay restores the stored Composite bevel.
+ */
 @Override
 public void setBorderRelief (int relief) {
 	checkWidget ();
@@ -142,16 +144,22 @@ public void setBorderRelief (int relief) {
 }
 
 /**
- * Keeps the historical Composite/Canvas bevel API as a checked alias of
- * Control.setBorderRelief. Constructor styles and unsupported subclasses are
- * unchanged, and no additional native edge state or HWND is created.
+ * Keeps the original Composite/Canvas API with its accepted semantics.
+ * The bevel is a fallback value stored by Control; a later Control overlay
+ * temporarily overrides it until SWT.DEFAULT. No second HWND state exists.
  */
 public void setBevelBorder (int border) {
 	checkWidget ();
-	if (border == SWT.SHADOW_NONE || border == SWT.NONE) border = SWT.DEFAULT;
-	if (!NativeBorderRelief.isValid(border)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+	if (border == SWT.SHADOW_NONE) border = SWT.NONE;
+	if (border != SWT.NONE && border != SWT.SHADOW_IN
+			&& border != SWT.SHADOW_OUT && border != SWT.SHADOW_ETCHED_IN
+			&& border != SWT.SHADOW_ETCHED_OUT) {
+		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+	}
 	if (!usesCompositeBevelPainter ()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	setBorderRelief (border);
+	if (compositeBevelState () == border && super.getBorderRelief () == SWT.DEFAULT) return;
+	setCompositeBevelState(border);
+	if (!isDisposed ()) requestLayout ();
 }
 
 Control [] _getChildren () {
