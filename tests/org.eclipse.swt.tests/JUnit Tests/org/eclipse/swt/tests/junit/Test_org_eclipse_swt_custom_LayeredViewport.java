@@ -178,6 +178,32 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testDamageRequestedInsidePainterSurvivesCurrentPaint() {
+        // Regression for removing dirty rectangles AFTER invoking a painter:
+        // that ordering erased this new redraw request.
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        int[] paints = { 0 };
+        Layer[] layer = { null };
+        layer[0] = viewport.addPaintLayer("reentrant", 0, 0, 200, 200,
+                (gc, context) -> {
+                    paints[0]++;
+                    if (paints[0] == 1) layer[0].setOpacity(128);
+                    org.eclipse.swt.graphics.Color old = gc.getBackground();
+                    try {
+                        gc.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_BLACK));
+                        gc.fillRectangle(context.clip());
+                    } finally {
+                        gc.setBackground(old);
+                    }
+                });
+        show();
+        viewport.update();
+        SwtTestUtil.processEvents();
+        assertTrue(paints[0] >= 2,
+                "new damage requested during the first paint must be recomposed");
+    }
+
+    @Test
     public void testAnExposeIsServedFromTheBackingStore() {
         int[] paints = { 0 };
         viewport.addPaintLayer("count", 0, 0, 200, 200, (gc, ctx) -> {
