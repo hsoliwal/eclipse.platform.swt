@@ -1347,7 +1347,8 @@ int getBorderWidthInPixels () {
     if ((bits1 & OS.WS_EX_STATICEDGE) != 0) {
         return getSystemMetrics(OS.SM_CXBORDER);
     }
-    if ((bits1 & OS.WS_EX_WINDOWEDGE) != 0) {
+    // Keep pre-existing WS_EX_WINDOWEDGE reporting unchanged unless explicitly opted in.
+    if (nativeBorderRelief == SWT.SHADOW_OUT && (bits1 & OS.WS_EX_WINDOWEDGE) != 0) {
         return getSystemMetrics(OS.SM_CXEDGE);
     }
 	int bits2 = OS.GetWindowLong (borderHandle, OS.GWL_STYLE);
