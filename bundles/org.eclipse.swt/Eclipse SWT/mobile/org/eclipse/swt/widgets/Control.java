@@ -18,6 +18,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.ExceptionStash;
+import org.eclipse.swt.internal.NativeBorderRelief;
 import org.eclipse.swt.internal.mobile.MobilePlatform;
 
 /** One SWT control owns one native view, its bounds, and its drawing image. */
@@ -34,6 +35,7 @@ public abstract class Control extends Widget implements Drawable {
 	private Font font;
 	private Object layoutData;
 	private String toolTipText;
+	private int nativeBorderRelief = SWT.DEFAULT;
 
 	public Control(Composite parent, int style) {
 		super(parent, style); this.parent = parent;
@@ -99,7 +101,38 @@ public abstract class Control extends Widget implements Drawable {
 	public void setLocation(Point p) { if (p == null) SWT.error(SWT.ERROR_NULL_ARGUMENT); setLocation(p.x, p.y); }
 	public void setSize(int width, int height) { setBounds(bounds.x, bounds.y, width, height); }
 	public void setSize(Point p) { if (p == null) SWT.error(SWT.ERROR_NULL_ARGUMENT); setSize(p.x, p.y); }
-	public int getBorderWidth() { checkWidget(); return (style & SWT.BORDER) == 0 ? 0 : 1; }
+	/** Returns SWT.DEFAULT until an explicit native relief override is requested. */
+	public int getBorderRelief() { checkWidget(); return nativeBorderRelief; }
+	/**
+	 * Changes the border of this control's existing native peer. Native geometry,
+	 * snapshots and input transforms remain owned by the platform Control.
+	 */
+	public void setBorderRelief(int relief) {
+		checkWidget();
+		if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		if (relief == nativeBorderRelief) return;
+		int oldWidth = getBorderWidth();
+		try { display.internal_platform().setBorderRelief(peer, relief); }
+		catch (UnsupportedOperationException unsupported) {
+			SWT.error(SWT.ERROR_NOT_IMPLEMENTED, unsupported);
+		}
+		nativeBorderRelief = relief;
+		if (oldWidth != getBorderWidth()) {
+			Image previous = image; image = null; damage = null;
+			if (previous != null) previous.internal_disposeWhenUnused();
+			if (this instanceof Composite composite) composite.layout(true);
+			if (!disposed && parent != null && !parent.isDisposed()) parent.layout(new Control[] { this });
+		}
+		if (!disposed) redrawAll();
+	}
+	public int getBorderWidth() {
+		checkWidget();
+		return switch (nativeBorderRelief) {
+			case SWT.SHADOW_NONE -> 0;
+			case SWT.DEFAULT -> (style & SWT.BORDER) == 0 ? 0 : 1;
+			default -> 2;
+		};
+	}
 	private Rectangle clientBounds() {
 		int trim = getBorderWidth() * 2;
 		return new Rectangle(0, 0, Math.max(0, bounds.width - trim), Math.max(0, bounds.height - trim));
