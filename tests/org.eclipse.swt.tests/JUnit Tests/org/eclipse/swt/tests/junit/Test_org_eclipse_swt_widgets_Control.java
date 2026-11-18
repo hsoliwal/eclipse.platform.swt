@@ -1225,6 +1225,25 @@ public void test_nativeBorderRelief_contract() {
 }
 
 @Test
+public void test_nativeBorderRelief_win32_removesAndRestoresWSBorder() {
+    if (!"win32".equals(SWT.getPlatform())) return;
+    Control framed = new org.eclipse.swt.widgets.Composite(shell, SWT.BORDER);
+    try {
+        int originalWidth = framed.getBorderWidth();
+        assertTrue(originalWidth > 0, "SWT.BORDER must have native trim");
+        framed.setBorderRelief(SWT.SHADOW_NONE);
+        assertEquals(SWT.SHADOW_NONE, framed.getBorderRelief());
+        assertEquals(0, framed.getBorderWidth(),
+                "SHADOW_NONE must remove both WS_BORDER and extended edges");
+        framed.setBorderRelief(SWT.DEFAULT);
+        assertEquals(originalWidth, framed.getBorderWidth(),
+                "Reverting relief restores the full original native edge");
+    } finally {
+        framed.dispose();
+    }
+}
+
+@Test
 public void test_nativeBorderRelief_gtkDeclarations() {
     assertTrue(org.eclipse.swt.internal.NativeBorderRelief
             .gtkDeclaration(SWT.SHADOW_IN).contains("inset"));
