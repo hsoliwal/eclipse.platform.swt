@@ -153,6 +153,46 @@ Keep the PR draft until a real Windows Maya build and native pixel/JNI tests
 have executed, and until the overlapping in-flight #503 C++ receiver is
 diff-reconciled.**
 
+## Native affine scene transport and content-dirty publication (candidate)
+
+The existing Maya DirectComposition compositor retains stable layer handles,
+visibility and source-over image surfaces. A deliberately **opt-in internal
+JNI** extension `_nApplyScene` accepts one Z-ordered batch with a 3-by-2
+affine transform and optional local rectangle clip per layer. The original
+`_nApply` retains its signature and restores identity/no-clip presentation
+after any opt-in scene frame. It is not automatic CSS transform admission:
+the SWT LayeredViewport's existing native eligibility, platform fallback,
+painting, hit testing, Control ownership, accessibility and event behavior
+remain unchanged.
+
+The candidate native transport is counted and validates a 14-float record
+and one flags word per layer: offset, opacity/visibility, six matrix values,
+four local clip coordinates, optional clip bit. No reentrant OS transaction
+retains Java array pointers. Invalid count, flags, nonfinite values,
+unknown/foreign/stale/duplicate handles, reversed clips and source-buffer
+undersizing are refused **before any window mutation**. Unknown native
+versions are not assumed to support this optional export. The new primitive
+C++ validation header is separately compiled with deterministic sanitizer
+differential tests.
+
+**Content and property dirtiness are independent.** A successful
+`IDCompositionSurface::EndDraw` leaves pixels awaiting the next
+`IDCompositionDevice::Commit`. The merged incremental scene optimization
+must therefore commit when native properties change **or when a surface
+upload completed**. The dirty state clears only after successful Commit;
+failing inputs and native failures cannot silently discard it. This
+is essential for both complete uploads and the separately held
+dirty-region JNI upgrade. A completely identical frame *with no pending
+surface content* may skip the native transaction.
+
+Windows can use `IDCompositionVisual::SetTransform(D2D_MATRIX_3X2_F)` and
+`SetClip(D2D_RECT_F)`. They transform the visual/subtree rather than
+repainting every child. Android ASurfaceTransaction and Apple CALayer have
+different native parameters, threading, clipping and resource-lifetime
+contracts; this proposal does **not** claim those adapters were implemented.
+Native compositing remains behind explicit capability probing and GPU
+pixel/ABI/performance qualification.
+
 ## Required PR gates
 
 - Source-sealed Synexia recipe (pre/post SHA-256, fixed point, drift refusal),
