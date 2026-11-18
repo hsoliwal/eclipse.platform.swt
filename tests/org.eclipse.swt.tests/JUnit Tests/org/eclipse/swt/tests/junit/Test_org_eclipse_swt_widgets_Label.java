@@ -120,4 +120,28 @@ public void test_consistency_MenuDetect () {
 public void test_consistency_DragDetect () {
 	consistencyEvent(10, 5, 20, 10, ConsistencyUtility.MOUSE_DRAG);
 }
+
+@Test
+public void test_nativeSeparatorOutsetAndInsetPaint() {
+    org.junit.jupiter.api.Assumptions.assumeTrue("win32".equals(SWT.getPlatform()),
+            "native Win32 GDI separator rendering");
+    for (int orientation : new int[] { SWT.HORIZONTAL, SWT.VERTICAL }) {
+        Label inset = new Label(shell, SWT.SEPARATOR | orientation | SWT.SHADOW_IN);
+        Label outset = new Label(shell, SWT.SEPARATOR | orientation | SWT.SHADOW_OUT);
+        try {
+            inset.setBounds(10, 10, 100, 24);
+            outset.setBounds(10, 42, 100, 24);
+            shell.open();
+            inset.redraw();
+            outset.redraw();
+            inset.update();
+            outset.update();
+            assertEquals(false, inset.isDisposed());
+            assertEquals(false, outset.isDisposed());
+        } finally {
+            inset.dispose();
+            outset.dispose();
+        }
+    }
+}
 }
