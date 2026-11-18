@@ -5,6 +5,7 @@
 #ifndef SWT_MAYA_NATIVE_HANDLE_REGISTRY_H
 #define SWT_MAYA_NATIVE_HANDLE_REGISTRY_H
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -20,15 +21,16 @@
  * a different live object (the ABA identity problem).
  *
  * Tokens are positive signed 64-bit values: high byte KIND, low 56 bits
- * a nonzero monotonically increasing issuance counter. Each live native
- * owner has exactly one process-lifetime registry per kind. No token is
- * recycled, even when an allocation fails or native memory addresses repeat.
+ * a nonzero monotonically increasing issuance counter. Each native UI thread
+ * owns its registry, while issuance is process-wide across those registries.
+ * No token is recycled, even when allocation fails or native addresses repeat.
  * Fail closed at exhaustion rather than wrap. Different object kinds cannot
  * resolve each other's handles. The JVM observes opaque longs, not pointers.
  *
- * Registry use is confined to the original SWT UI / native compositor owner
- * thread, exactly like the pre-existing live native pointer sets. This class
- * does not make unsynchronized lifetime changes across threads safe.
+ * Each registry instance is confined to its native compositor owner thread.
+ * Only issuance is shared and atomic; lookups/retirement remain lock-free on
+ * their owner thread. A token from another Display cannot resolve here.
+ * Do not access one registry instance concurrently from multiple threads.
  */
 namespace swt_maya {
 
@@ -40,7 +42,7 @@ class TokenRegistry {
     static constexpr std::uint64_t KIND_BITS = std::uint64_t{Kind} << 56;
 
     std::unordered_map<std::uint64_t, T *> live_;
-    std::uint64_t next_ = 1;
+    inline static std::atomic<std::uint64_t> next_{1};
 
 public:
     TokenRegistry() = default;
@@ -49,10 +51,19 @@ public:
 
     /** Returns zero only when exhausted or given a null pointer. May throw bad_alloc. */
     std::uint64_t admit(T *object) {
-        if (!object || next_ > COUNTER_MASK) return 0;
+        if (!object) return 0;
+        // Issue one unique process-wide token across all display threads.
+        // CAS prevents counter wrap and preserves retired-token non-reuse.
+        std::uint64_t next = next_.load(std::memory_order_relaxed);
+        while (next <= COUNTER_MASK && !next_.compare_exchange_weak(
+                next, next + 1, std::memory_order_relaxed,
+                std::memory_order_relaxed)) {
+            // A competing admission wrote the new counter into next.
+        }
+        if (next > COUNTER_MASK) return 0;
         // Consume identity before allocating the table entry: even an
         // insertion exception never allows its token to be reissued.
-        const std::uint64_t token = KIND_BITS | next_++;
+        const std::uint64_t token = KIND_BITS | next;
         live_.emplace(token, object);
         return token;
     }
