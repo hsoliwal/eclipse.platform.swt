@@ -62,6 +62,9 @@ public abstract class Control extends Widget implements Drawable {
 	/* GTK4: where the pointer last moved over this control, relative to it */
 	double pointerX, pointerY;
 	long redrawWindow, enableWindow, provider;
+	/* One per-widget native CSS provider for opt-in edge relief; no extra GtkWidget. */
+	private int nativeBorderRelief = SWT.DEFAULT;
+	private long nativeBorderProvider;
 	int drawCount, backgroundAlpha = 255;
 	long dragGesture, zoomGesture, rotateGesture, panGesture;
 	Composite parent;
@@ -3290,6 +3293,44 @@ GdkRGBA getBaseGdkRGBA () {
 }
 
 /**
+ * Returns the opt-in native border relief, or SWT.DEFAULT before an override.
+ */
+public int getBorderRelief () {
+    checkWidget();
+    return nativeBorderRelief;
+}
+
+/**
+ * Applies native GTK3/GTK4 CSS border relief to this Control's own style
+ * context without replacing its foreground/background style provider.
+ */
+public void setBorderRelief (int relief) {
+    checkWidget();
+    if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (relief == nativeBorderRelief) return;
+    if (nativeBorderProvider == 0 && relief != SWT.DEFAULT) {
+        long context = GTK.gtk_widget_get_style_context(handle);
+        nativeBorderProvider = GTK.gtk_css_provider_new();
+        GTK.gtk_style_context_add_provider(context, nativeBorderProvider,
+                GTK.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        // The style context owns the reference until its widget is destroyed.
+        OS.g_object_unref(nativeBorderProvider);
+    }
+    String declaration = NativeBorderRelief.gtkDeclaration(relief);
+    if (nativeBorderProvider != 0) {
+        byte[] css = Converter.wcsToMbcs(declaration.isEmpty() ? "" : "* { " + declaration + " }", true);
+        if (GTK.GTK4) {
+            GTK4.gtk_css_provider_load_from_data(nativeBorderProvider, css, -1);
+        } else {
+            GTK3.gtk_css_provider_load_from_data(nativeBorderProvider, css, -1, null);
+        }
+    }
+    nativeBorderRelief = relief;
+    GTK.gtk_widget_queue_resize(handle);
+    GTK.gtk_widget_queue_draw(handle);
+}
+
+/**
  * Returns the receiver's border width in points.
  *
  * @return the border width
@@ -3305,7 +3346,7 @@ public int getBorderWidth () {
 
 int getBorderWidthInPixels () {
 	checkWidget();
-	return 0;
+	return nativeBorderRelief == SWT.SHADOW_NONE || nativeBorderRelief == SWT.DEFAULT ? 0 : 2;
 }
 
 int getClientWidth () {
@@ -5211,6 +5252,7 @@ void release (boolean destroy) {
 void releaseHandle () {
 	super.releaseHandle ();
 	fixedHandle = 0;
+	nativeBorderProvider = 0; // released with the GtkStyleContext
 	parent = null;
 	cairoDisposeRegion();
 }

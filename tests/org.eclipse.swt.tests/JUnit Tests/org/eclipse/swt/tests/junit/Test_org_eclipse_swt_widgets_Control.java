@@ -1188,4 +1188,75 @@ public void test_NoExceptionsThrownInFillLayout () {
 	assertNotNull(label2.getLayoutData());
 }
 
+@Test
+public void test_nativeBorderRelief_contract() {
+    Control control = new org.eclipse.swt.widgets.Composite(shell, SWT.NONE);
+    try {
+        assertEquals(SWT.DEFAULT, control.getBorderRelief());
+        int originalBorderWidth = control.getBorderWidth();
+        assertThrows(IllegalArgumentException.class,
+                () -> control.setBorderRelief(SWT.PUSH | SWT.BORDER));
+        assertEquals(SWT.DEFAULT, control.getBorderRelief());
+        if ("cocoa".equals(SWT.getPlatform())) {
+            assertThrows(org.eclipse.swt.SWTError.class,
+                    () -> control.setBorderRelief(SWT.SHADOW_IN));
+            assertThrows(org.eclipse.swt.SWTError.class,
+                    () -> control.setBorderRelief(SWT.SHADOW_NONE));
+            assertEquals(SWT.DEFAULT, control.getBorderRelief());
+            return;
+        }
+        for (int relief : new int[] {
+                SWT.SHADOW_IN, SWT.SHADOW_OUT,
+                SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT
+        }) {
+            control.setBorderRelief(relief);
+            assertEquals(relief, control.getBorderRelief());
+            assertTrue(control.getBorderWidth() > 0, "Visible relief needs native trim");
+        }
+        control.setBorderRelief(SWT.SHADOW_NONE);
+        assertEquals(SWT.SHADOW_NONE, control.getBorderRelief());
+        control.setBorderRelief(SWT.DEFAULT);
+        assertEquals(SWT.DEFAULT, control.getBorderRelief());
+        assertEquals(originalBorderWidth, control.getBorderWidth(),
+                "Reset must restore the pre-existing border-width contract");
+    } finally {
+        control.dispose();
+    }
+}
+
+@Test
+public void test_nativeBorderRelief_win32_removesAndRestoresWSBorder() {
+    if (!"win32".equals(SWT.getPlatform())) return;
+    Control framed = new org.eclipse.swt.widgets.Composite(shell, SWT.BORDER);
+    try {
+        int originalWidth = framed.getBorderWidth();
+        assertTrue(originalWidth > 0, "SWT.BORDER must have native trim");
+        framed.setBorderRelief(SWT.SHADOW_NONE);
+        assertEquals(SWT.SHADOW_NONE, framed.getBorderRelief());
+        assertEquals(0, framed.getBorderWidth(),
+                "SHADOW_NONE must remove both WS_BORDER and extended edges");
+        framed.setBorderRelief(SWT.DEFAULT);
+        assertEquals(originalWidth, framed.getBorderWidth(),
+                "Reverting relief restores the full original native edge");
+    } finally {
+        framed.dispose();
+    }
+}
+
+@Test
+public void test_nativeBorderRelief_gtkDeclarations() {
+    assertTrue(org.eclipse.swt.internal.NativeBorderRelief
+            .gtkDeclaration(SWT.SHADOW_IN).contains("inset"));
+    assertTrue(org.eclipse.swt.internal.NativeBorderRelief
+            .gtkDeclaration(SWT.SHADOW_OUT).contains("outset"));
+    assertTrue(org.eclipse.swt.internal.NativeBorderRelief
+            .gtkDeclaration(SWT.SHADOW_ETCHED_IN).contains("groove"));
+    assertTrue(org.eclipse.swt.internal.NativeBorderRelief
+            .gtkDeclaration(SWT.SHADOW_ETCHED_OUT).contains("ridge"));
+    assertEquals("", org.eclipse.swt.internal.NativeBorderRelief
+            .gtkDeclaration(SWT.DEFAULT));
+    assertFalse(org.eclipse.swt.internal.NativeBorderRelief.isValid(SWT.BORDER));
+}
+
+
 }
