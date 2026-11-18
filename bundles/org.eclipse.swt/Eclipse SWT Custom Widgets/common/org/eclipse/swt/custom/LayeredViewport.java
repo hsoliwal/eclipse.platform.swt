@@ -10,6 +10,7 @@
 package org.eclipse.swt.custom;
 
 import java.util.Arrays;
+import java.util.function.Predicate;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
@@ -386,11 +387,26 @@ public final class LayeredViewport extends Canvas {
          * The parent layer's own bounds, clip, visibility and lock apply.
          */
         public Child hitTestChild(int deviceX, int deviceY) {
+            return queryChildHit(deviceX, deviceY, null);
+        }
+
+        /**
+         * Exclusion/acceptance search for editor drop targets and selection handles.
+         * The predicate is invoked front-to-back only for hittable children and may
+         * mutate the scene; a rejected child never changes its Z order or capture.
+         * Unlike a native SWT Control, a group child is only a logical object.
+         */
+        public Child hitTestChild(int deviceX, int deviceY, Predicate<? super Child> accept) {
+            if (accept == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            return queryChildHit(deviceX, deviceY, accept);
+        }
+
+        private Child queryChildHit(int deviceX, int deviceY, Predicate<? super Child> accept) {
             checked();
             if (!getClientArea().contains(deviceX, deviceY)) return null;
             long x = layerX(root, deviceX), y = layerY(root, deviceY);
             if (!containsHit(root, x, y)) return null;
-            return findChild(x - root.x, y - root.y);
+            return findChild(x - root.x, y - root.y, accept, deviceX, deviceY);
         }
 
         private void ensureChildIndex() {
@@ -416,6 +432,11 @@ public final class LayeredViewport extends Canvas {
         }
 
         private Child findChild(long x, long y) {
+            return findChild(x, y, null, 0, 0);
+        }
+
+        private Child findChild(long x, long y, Predicate<? super Child> accept,
+                int deviceX, int deviceY) {
             Child[] frame = orderSnapshot();
             int selected;
             Child[] candidates;
@@ -439,7 +460,18 @@ public final class LayeredViewport extends Canvas {
                     GroupHitTester tester = c.hitTester;
                     boolean accepted = tester == null || tester.contains(c, x, y);
                     if (isDisposed()) return null;
-                    if (accepted && candidate(c, x, y)) return c;
+                    if (accepted && candidate(c, x, y)) {
+                        if (accept == null) return c;
+                        boolean included = accept.test(c);
+                        if (isDisposed()) return null;
+                        // The callback can move its parent, remove the child or
+                        // change a pinned axis. Recheck in current device space.
+                        if (included) {
+                            long currentX = layerX(root, deviceX), currentY = layerY(root, deviceY);
+                            if (containsHit(root, currentX, currentY)
+                                    && candidate(c, currentX - root.x, currentY - root.y)) return c;
+                        }
+                    }
                 }
                 return null;
             } finally {
@@ -1210,6 +1242,19 @@ public final class LayeredViewport extends Canvas {
         return queryHit(deviceX, deviceY, false);
     }
 
+    /**
+     * Topmost hittable layer accepted by {@code accept}, or null. As in Draw2D's
+     * ExclusionSearch, callers can omit a dragged/selected layer and target the
+     * layers beneath it without changing scene order or native pointer capture.
+     * Filtering occurs after the layer's own hit tester; a callback may reenter
+     * or mutate the scene, and candidates are rechecked before returning.
+     */
+    public Layer hitTest(int deviceX, int deviceY, Predicate<? super Layer> accept) {
+        checkWidget();
+        if (accept == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        return queryHit(deviceX, deviceY, false, accept);
+    }
+
     private long worldX(int deviceX) {
         return saturatedAdd(originX, floorLong(deviceX / zoom));
     }
@@ -1219,6 +1264,11 @@ public final class LayeredViewport extends Canvas {
     }
 
     private Layer queryHit(int deviceX, int deviceY, boolean withPointerListener) {
+        return queryHit(deviceX, deviceY, withPointerListener, null);
+    }
+
+    private Layer queryHit(int deviceX, int deviceY, boolean withPointerListener,
+            Predicate<? super Layer> accept) {
         if (!getClientArea().contains(deviceX, deviceY)) return null;
         ensureSpatialIndex();
         long worldX = worldX(deviceX), worldY = worldY(deviceY);
@@ -1251,7 +1301,15 @@ public final class LayeredViewport extends Canvas {
                 // Callbacks can remove, move, hide or lock their own target,
                 // or another candidate captured by this query.
                 if (accepted && containsHit(layer, layerX(layer, deviceX), layerY(layer, deviceY))
-                        && (!withPointerListener || layer.pointerListener != null)) return layer;
+                        && (!withPointerListener || layer.pointerListener != null)) {
+                    if (accept == null) return layer;
+                    boolean included = accept.test(layer);
+                    if (isDisposed()) return null;
+                    // User filtering may change visibility, world origin, native
+                    // pinning or this very layer. Never return stale geometry.
+                    if (included && containsHit(layer, layerX(layer, deviceX), layerY(layer, deviceY))
+                            && (!withPointerListener || layer.pointerListener != null)) return layer;
+                }
             }
             return null;
         } finally {
