@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <vector>
 
 // Portable, independent of JNI/COM/Skia. All numeric fields are little-endian.
@@ -51,7 +52,8 @@ inline std::uint64_t u64(const std::uint8_t *p) {
 inline float f32(const std::uint8_t *p) {
     const std::uint32_t bits = u32(p);
     float value;
-    static_assert(sizeof(value) == sizeof(bits), "requires IEEE-754 binary32");
+    static_assert(sizeof(value) == sizeof(bits) && std::numeric_limits<float>::is_iec559,
+                  "requires IEEE-754 binary32");
     std::memcpy(&value, &bits, sizeof(value));
     return value;
 }
