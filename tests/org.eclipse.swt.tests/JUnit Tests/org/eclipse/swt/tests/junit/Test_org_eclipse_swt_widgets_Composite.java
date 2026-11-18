@@ -68,23 +68,39 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
 public void test_nativeBevelBorderStyles() {
 	if (!SwtTestUtil.isWindows) return;
 	Composite plain = new Composite(shell, SWT.NONE);
+	assertEquals(SWT.NONE, plain.getBevelBorder());
 	assertEquals(0, plain.getBorderWidth());
+	// SWT reuses SHADOW_ETCHED_IN as NO_SCROLL; do not reinterpret constructor bits.
+	Composite constructorHint = new Composite(shell, SWT.SHADOW_ETCHED_IN);
+	assertEquals(SWT.NONE, constructorHint.getBevelBorder());
+	assertEquals(0, constructorHint.getBorderWidth());
 	Composite defaultBorder = new Composite(shell, SWT.BORDER);
-	assertTrue(defaultBorder.getBorderWidth() > 0);
+	int originalWidth = defaultBorder.getBorderWidth();
+	assertTrue(originalWidth > 0);
 	for (int shadow : new int[] {SWT.SHADOW_IN, SWT.SHADOW_OUT,
 			SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT}) {
-		Composite bevel = new Composite(shell, shadow);
-		Composite combined = new Composite(shell, shadow | SWT.BORDER);
+		Composite bevel = new Composite(shell, SWT.NONE);
 		bevel.setSize(80, 40);
-		combined.setSize(80, 40);
-		assertTrue(bevel.getBorderWidth() > 0, "native border must reserve client trim");
-		assertEquals(bevel.getBorderWidth(), combined.getBorderWidth(),
-				"SWT.BORDER combined with a bevel must not double the native trim");
+		bevel.setBevelBorder(shadow);
+		assertEquals(shadow, bevel.getBevelBorder());
+		assertTrue(bevel.getBorderWidth() > 0, "native bevel must reserve client trim");
 		assertTrue(bevel.getClientArea().width < bevel.getSize().x);
+		bevel.setBevelBorder(SWT.SHADOW_NONE);
+		assertEquals(SWT.NONE, bevel.getBevelBorder());
+		assertEquals(0, bevel.getBorderWidth());
 		bevel.dispose();
-		combined.dispose();
+		defaultBorder.setBevelBorder(shadow);
+		assertEquals(originalWidth, defaultBorder.getBorderWidth(),
+				"Native bevel must not double an existing SWT.BORDER");
+		defaultBorder.setBevelBorder(SWT.NONE);
+		assertEquals(originalWidth, defaultBorder.getBorderWidth());
 	}
+	assertThrows(IllegalArgumentException.class,
+			() -> plain.setBevelBorder(SWT.SHADOW_IN | SWT.SHADOW_OUT));
+	assertThrows(IllegalArgumentException.class,
+			() -> plain.setBevelBorder(SWT.BORDER));
 	defaultBorder.dispose();
+	constructorHint.dispose();
 	plain.dispose();
 }
 

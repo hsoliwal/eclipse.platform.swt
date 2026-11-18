@@ -98,6 +98,35 @@ public Composite (Composite parent, int style) {
 	super (parent, style);
 }
 
+/**
+ * Returns the native bevel style, or SWT.NONE if none has been selected.
+ * Native bevel installation is not yet implemented on this backend.
+ *
+ * @return SWT.NONE
+ */
+public int getBevelBorder () {
+	checkWidget ();
+	return SWT.NONE;
+}
+
+/**
+ * Requests an explicitly selected native bevel. This backend does not yet
+ * provide a suitable native non-client bevel for arbitrary Composite/Canvas.
+ * Passing SWT.NONE or SWT.SHADOW_NONE leaves the original border unchanged.
+ *
+ * @param border an SWT shadow style or SWT.NONE
+ * @exception SWTException ERROR_NOT_IMPLEMENTED for a supported bevel style
+ */
+public void setBevelBorder (int border) {
+	checkWidget ();
+	if (border == SWT.NONE || border == SWT.SHADOW_NONE) return;
+	if (border != SWT.SHADOW_IN && border != SWT.SHADOW_OUT
+			&& border != SWT.SHADOW_ETCHED_IN && border != SWT.SHADOW_ETCHED_OUT) {
+		error (SWT.ERROR_INVALID_ARGUMENT);
+	}
+	error (SWT.ERROR_NOT_IMPLEMENTED);
+}
+
 Control [] _getChildren () {
 	NSView nsClipView = contentView();
     if (nsClipView == null) {
