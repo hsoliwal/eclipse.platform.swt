@@ -2103,16 +2103,17 @@ LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
 			if (hDC != 0) {
 				try {
 					RECT rect = new RECT ();
-					OS.GetWindowRect (hwnd, rect);
-					rect.right -= rect.left;
-					rect.bottom -= rect.top;
-					rect.left = rect.top = 0;
-					int inset = getSystemMetrics (OS.SM_CXEDGE);
-					/* Draw only native non-client frame pixels. */
-					OS.ExcludeClipRect (hDC, inset, inset,
-							Math.max (inset, rect.right - inset),
-							Math.max (inset, rect.bottom - inset));
-					OS.DrawEdge (hDC, rect, edge, OS.BF_RECT);
+					if (OS.GetWindowRect (hwnd, rect)) {
+						rect.right -= rect.left;
+						rect.bottom -= rect.top;
+						rect.left = rect.top = 0;
+						int inset = getSystemMetrics (OS.SM_CXEDGE);
+						/* Draw only native non-client frame pixels. */
+						OS.ExcludeClipRect (hDC, inset, inset,
+								Math.max (inset, rect.right - inset),
+								Math.max (inset, rect.bottom - inset));
+						OS.DrawEdge (hDC, rect, edge, OS.BF_RECT);
+					}
 				} finally {
 					OS.ReleaseDC (hwnd, hDC);
 				}
