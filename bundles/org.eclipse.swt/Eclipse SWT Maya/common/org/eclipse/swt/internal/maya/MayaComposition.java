@@ -30,6 +30,12 @@ public final class MayaComposition {
 	/** Floats per layer in {@link #_nApply}'s properties: x, y, opacity (0 to 1), visible (0 or 1). */
 	public static final int PROPS = 4;
 
+	/** Floats per visual in the optional internal affine scene transaction. */
+	public static final int SCENE_FLOATS = 14;
+
+	/** Bit indicating that a scene visual has a local rectangular clip. */
+	public static final int SCENE_CLIP = 1;
+
 	private MayaComposition() {
 	}
 
@@ -59,6 +65,33 @@ public final class MayaComposition {
 	 * (x, y, opacity, visible); layers not listed are not shown. One commit. Returns 0 or a failure code.
 	 */
 	public static native int _nApply(long composition, long[] layers, float[] props, int count);
+
+	/**
+	 * Optional scene frame. Each of the `count` layers has a packed
+	 * {@link #SCENE_FLOATS}-float record: offset X/Y, opacity, visibility,
+	 * a 3x2 affine matrix and a local clip rectangle. Flags are zero or
+	 * {@link #SCENE_CLIP}. The native library copies only active array
+	 * prefixes and validates the entire frame before changing visuals.
+	 * Existing {@link #_nApply} resets native transform/clip state.
+	 *
+	 * @return zero on success; an error code otherwise; absent from older Maya binaries
+	 */
+	public static native int _nApplyScene(long composition, long[] layers, float[] packed,
+			int[] flags, int count);
+
+	/**
+	 * Compatibility-safe entry for the optional scene capability. This method
+	 * never falls back to `_nApply` because ordinary frames cannot represent
+	 * transforms or clips; callers must choose their painted fallback.
+	 */
+	public static int applyScene(long composition, long[] layers, float[] packed,
+			int[] flags, int count) {
+		try {
+			return _nApplyScene(composition, layers, packed, flags, count);
+		} catch (UnsatisfiedLinkError olderMayaBinary) {
+			return -1;
+		}
+	}
 
 	/** Optional packet ingress ABI only (not an OS backend capability); absent in older Maya binaries. */
 	public static native int _nFramePacketVersion();
