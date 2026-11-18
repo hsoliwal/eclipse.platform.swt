@@ -23,6 +23,7 @@ import org.eclipse.swt.internal.NativeLayers;
 import org.eclipse.swt.internal.ViewportDamageRegion;
 import org.eclipse.swt.internal.ViewportGcProxy;
 import org.eclipse.swt.internal.ViewportRuntime;
+import org.eclipse.swt.internal.render.ImageDataArgb;
 import org.eclipse.swt.internal.render.LayerArgbCompositor;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
@@ -1245,7 +1246,7 @@ public final class LayeredViewport extends Canvas {
         try {
             back[0].copyArea(under, tile.x, tile.y);
             ImageData below = under.getImageData();
-            org.eclipse.swt.graphics.PaletteData out = below.palette;
+            ImageDataArgb store = new ImageDataArgb(below); // whole rows, no object per pixel
             int[] dst = new int[tile.width], src = new int[tile.width];
             for (int j = 0; j < tile.height; j++) {
                 int sy = clipSource((tile.y + j + 0.5 - top) / height * source.height, source.height - 1, false);
@@ -1254,16 +1255,13 @@ public final class LayeredViewport extends Canvas {
                     int pixel = source.getPixel(sx, sy);
                     int alpha = source.alphaData != null ? source.getAlpha(sx, sy) : source.alpha >= 0 ? source.alpha : 255;
                     if (source.transparentPixel >= 0 && pixel == source.transparentPixel) alpha = 0;
-                    org.eclipse.swt.graphics.RGB s = source.palette.getRGB(pixel), b = out.getRGB(below.getPixel(i, j));
+                    org.eclipse.swt.graphics.RGB s = source.palette.getRGB(pixel);
                     src[i] = alpha << 24 | (s.red * alpha + 127) / 255 << 16 | (s.green * alpha + 127) / 255 << 8
                             | (s.blue * alpha + 127) / 255;
-                    dst[i] = 0xFF000000 | b.red << 16 | b.green << 8 | b.blue; // the store is opaque
                 }
+                store.opaqueRow(j, dst, 0); // the store is opaque
                 LayerArgbCompositor.composite(dst, 0, src, 0, tile.width, layer.opacity, BLEND_MODES[layer.blendMode]);
-                for (int i = 0; i < tile.width; i++) {
-                    int rgb = dst[i];
-                    below.setPixel(i, j, out.getPixel(new org.eclipse.swt.graphics.RGB(rgb >>> 16 & 0xFF, rgb >>> 8 & 0xFF, rgb & 0xFF)));
-                }
+                store.setOpaqueRow(j, dst, 0);
             }
             Image blended = new Image(getDisplay(), below);
             try {
