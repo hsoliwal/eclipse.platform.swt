@@ -14,13 +14,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FrameListener;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Synchronizer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -424,6 +427,163 @@ public class Test_org_eclipse_swt_widgets_Synchronizer {
 			assertNull(failure.get());
 			assertTrue(ran.get());
 		});
+	}
+
+	@Test
+	@Timeout(value = TIMEOUT_MS, unit = TimeUnit.MILLISECONDS)
+	public void test_preEventFailure_releasesSyncExecCaller() throws Exception {
+		observerFailureReleasesCaller(SWT.PreEvent, null);
+	}
+
+	@Test
+	@Timeout(value = TIMEOUT_MS, unit = TimeUnit.MILLISECONDS)
+	public void test_postEventFailure_releasesSyncExecCaller() throws Exception {
+		observerFailureReleasesCaller(SWT.PostEvent, null);
+	}
+
+	@Test
+	@Timeout(value = TIMEOUT_MS, unit = TimeUnit.MILLISECONDS)
+	public void test_callbackAndPostEventFailures_preserveCallerCause() throws Exception {
+		observerFailureReleasesCaller(SWT.PostEvent, new IllegalArgumentException("callback failure"));
+	}
+
+	private static void observerFailureReleasesCaller(int eventType, RuntimeException callbackFailure) throws Exception {
+		withDisplay(display -> {
+			Synchronizer sync = display.getSynchronizer();
+			List<String> calls = new ArrayList<>();
+			IllegalStateException observerFailure = new IllegalStateException("observer failure");
+			Listener before = event -> {
+				if (event.detail == SWT.None) {
+					calls.add("pre");
+					if (eventType == SWT.PreEvent) throw observerFailure;
+				}
+			};
+			Listener after = event -> {
+				if (event.detail == SWT.None) {
+					calls.add("post");
+					if (eventType == SWT.PostEvent) throw observerFailure;
+				}
+			};
+			AtomicReference<Throwable> failure = new AtomicReference<>();
+			Thread caller = startSyncCaller(display, failure, () -> {
+				calls.add("runnable");
+				if (callbackFailure != null) throw callbackFailure;
+			});
+			awaitSyncWait(caller);
+			display.addListener(SWT.PreEvent, before);
+			display.addListener(SWT.PostEvent, after);
+			try {
+				assertSame(observerFailure, assertThrows(IllegalStateException.class, () -> dispatch(sync, false)),
+						"the UI observer exception keeps its original identity");
+				caller.join(2000);
+				assertFalse(caller.isAlive(), "observer failure stranded a syncExec caller");
+				SWTException reported = assertInstanceOf(SWTException.class, failure.get());
+				assertEquals(SWT.ERROR_FAILED_EXEC, reported.code);
+				assertSame(callbackFailure == null ? observerFailure : callbackFailure, reported.getCause());
+				assertNull(display.getSyncThread(), "failed dispatch must clear its caller identity");
+				assertEquals(eventType == SWT.PreEvent ? List.of("pre") : List.of("pre", "runnable", "post"), calls);
+			} finally {
+				display.removeListener(SWT.PreEvent, before);
+				display.removeListener(SWT.PostEvent, after);
+			}
+		});
+	}
+
+	@Test
+	@Timeout(value = TIMEOUT_MS, unit = TimeUnit.MILLISECONDS)
+	public void test_disposeDrainsQueuedSyncExecCaller() throws Exception {
+		withDisplay(display -> {
+			AtomicReference<Throwable> failure = new AtomicReference<>();
+			AtomicBoolean ran = new AtomicBoolean();
+			Thread caller = startSyncCaller(display, failure, () -> ran.set(true));
+			awaitSyncWait(caller);
+			display.dispose();
+			caller.join(2000);
+			assertFalse(caller.isAlive(), "disposal must finish the queued call");
+			assertTrue(ran.get(), "Display drains accepted default work before releasing its synchronizer");
+			assertNull(failure.get());
+		});
+	}
+
+	@Test
+	@Timeout(value = TIMEOUT_MS, unit = TimeUnit.MILLISECONDS)
+	public void test_disposeObserverFailure_completesBothQueuedCallers() throws Exception {
+		withDisplay(display -> {
+			AtomicReference<Throwable> firstFailure = new AtomicReference<>();
+			AtomicReference<Throwable> secondFailure = new AtomicReference<>();
+			AtomicBoolean firstRan = new AtomicBoolean(), secondRan = new AtomicBoolean();
+			Thread first = startSyncCaller(display, firstFailure, () -> firstRan.set(true));
+			awaitSyncWait(first);
+			Thread second = startSyncCaller(display, secondFailure, () -> secondRan.set(true));
+			awaitSyncWait(second);
+			IllegalStateException observerFailure = new IllegalStateException("disposal observer failure");
+			AtomicBoolean failOnce = new AtomicBoolean(true);
+			display.addListener(SWT.PreEvent, event -> {
+				if (event.detail == SWT.None && failOnce.getAndSet(false)) throw observerFailure;
+			});
+			assertSame(observerFailure, assertThrows(IllegalStateException.class, display::dispose));
+			first.join(2000);
+			second.join(2000);
+			assertFalse(first.isAlive(), "the failed in-flight call must finish");
+			assertFalse(second.isAlive(), "exceptional disposal must continue draining later work");
+			assertTrue(display.isDisposed());
+			assertFalse(firstRan.get());
+			assertTrue(secondRan.get());
+			SWTException reported = assertInstanceOf(SWTException.class, firstFailure.get());
+			assertEquals(SWT.ERROR_FAILED_EXEC, reported.code);
+			assertSame(observerFailure, reported.getCause());
+			assertNull(secondFailure.get());
+		});
+	}
+
+	@Test
+	@Timeout(value = TIMEOUT_MS, unit = TimeUnit.MILLISECONDS)
+	public void test_cpuCalculationPublishesOnlyOnSwtThread() throws Exception {
+		withDisplay(display -> {
+			Synchronizer sync = display.getSynchronizer();
+			Thread ui = Thread.currentThread();
+			AtomicReference<Thread> producer = new AtomicReference<>(), consumer = new AtomicReference<>();
+			AtomicInteger published = new AtomicInteger();
+			int[] detachedRows = {3, 5, 7, 9};
+			try (ExecutorService workers = Executors.newSingleThreadExecutor()) {
+				Future<?> preparation = workers.submit(() -> {
+					producer.set(Thread.currentThread());
+					int sum = 0;
+					for (int row : detachedRows) sum += row;
+					int result = sum;
+					sync.asyncExec(Synchronizer.MODEL, new Object(), () -> {
+						consumer.set(Thread.currentThread());
+						published.set(result);
+					});
+				});
+				long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+				while (consumer.get() == null && System.nanoTime() < deadline) {
+					if (!display.readAndDispatch()) Thread.sleep(1);
+				}
+				preparation.get(5, TimeUnit.SECONDS);
+				assertEquals(24, published.get());
+				assertNotNull(producer.get());
+				assertNotSame(ui, producer.get());
+				assertSame(ui, consumer.get());
+			}
+		});
+	}
+
+	private static Thread startSyncCaller(Display display, AtomicReference<Throwable> failure, Runnable runnable) {
+		Thread caller = new Thread(() -> {
+			try { display.syncExec(runnable); } catch (Throwable error) { failure.set(error); }
+		}, "synchronizer-lifecycle-caller");
+		caller.setDaemon(true); // a regression must not keep the test VM alive after its bounded assertion fails
+		caller.start();
+		return caller;
+	}
+
+	private static void awaitSyncWait(Thread caller) throws InterruptedException {
+		long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+		while (caller.getState() != Thread.State.WAITING && caller.getState() != Thread.State.TIMED_WAITING
+				&& caller.isAlive() && System.nanoTime() < deadline) Thread.sleep(1);
+		assertTrue(caller.getState() == Thread.State.WAITING || caller.getState() == Thread.State.TIMED_WAITING,
+				"worker did not reach the synchronous wait");
 	}
 
 	@FunctionalInterface

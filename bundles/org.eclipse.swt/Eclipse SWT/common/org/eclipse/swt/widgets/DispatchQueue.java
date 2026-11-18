@@ -377,23 +377,31 @@ final class DispatchQueue {
 		Synchronizer active = owner;
 		Display display = active.display;
 		active.syncThread = lock == null ? null : lock.thread;
-		display.sendPreEvent (SWT.None);
 		try {
-			if (runnable != null) {
-				try {
-					runnable.run ();
-				} catch (RuntimeException exception) {
-					display.getRuntimeExceptionHandler ().accept (exception);
-				} catch (Error error) {
-					display.getErrorHandler ().accept (error);
+			display.sendPreEvent (SWT.None);
+			try {
+				if (runnable != null) {
+					try {
+						runnable.run ();
+					} catch (RuntimeException exception) {
+						display.getRuntimeExceptionHandler ().accept (exception);
+					} catch (Error error) {
+						display.getErrorHandler ().accept (error);
+					}
 				}
+			} catch (Throwable t) {
+				if (lock != null) lock.throwable = t;
+				SWT.error (SWT.ERROR_FAILED_EXEC, t);
+			} finally {
+				Display current = owner.display;
+				if (current != null && !current.isDisposed ()) current.sendPostEvent (SWT.None);
 			}
 		} catch (Throwable t) {
-			if (lock != null) lock.throwable = t;
-			SWT.error (SWT.ERROR_FAILED_EXEC, t);
+			// Observers keep their UI exception identity; a waiting caller must receive the failure too.
+			if (lock != null && lock.throwable == null) lock.throwable = t;
+			throw t;
 		} finally {
-			Display current = owner.display;
-			if (current != null && !current.isDisposed ()) current.sendPostEvent (SWT.None);
+			// Pre/post observers can fail after this entry has left the queue. Cleanup must remain unconditional.
 			active.syncThread = null;
 			owner.syncThread = null;
 			if (lock != null) {
