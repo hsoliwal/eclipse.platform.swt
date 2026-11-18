@@ -157,10 +157,8 @@ public Composite (Composite parent, int style) {
 }
 
 /**
- * Returns the native bevel style, or SWT.NONE if none has been selected.
- * Native bevel installation is not yet implemented on this backend.
- *
- * @return SWT.NONE
+ * Returns the bevel style selected on this original native Control owner.
+ * SWT.NONE means no explicit relief is currently active.
  */
 public int getBevelBorder () {
 	checkWidget ();
@@ -169,8 +167,9 @@ public int getBevelBorder () {
 }
 
 /**
- * Compatibility alias for Control.setBorderRelief. Native rendering and
- * disposal remain owned by the original Control platform implementation.
+ * Compatibility alias for Control.setBorderRelief; never allocates a new
+ * NSView, GtkWidget, renderer or border provider.
+ * Unsupported platform-native modes fail through the original Control API.
  */
 public void setBevelBorder (int border) {
 	checkWidget ();
