@@ -61,7 +61,7 @@ jobs:
               "$root/tests/java/org/eclipse/swt/internal/maya/impl/Library.java" \
               "$root/tests/java/org/eclipse/swt/widgets/Control.java" \
               "$root/tests/java/org/eclipse/swt/internal/maya/MayaFramePacketSmoke.java"
-          java -Xcheck:jni -cp /tmp/maya-packet-classes \
+          java -Xcheck:jni -Dswt.maya.packedFrame=true -cp /tmp/maya-packet-classes \
               org.eclipse.swt.internal.maya.MayaFramePacketSmoke /tmp/libmaya-packet-test.so
           nm -D /tmp/libmaya-packet-test.so |
               grep -q 'Java_org_eclipse_swt_internal_maya_MayaComposition__1nApplyPacked'
