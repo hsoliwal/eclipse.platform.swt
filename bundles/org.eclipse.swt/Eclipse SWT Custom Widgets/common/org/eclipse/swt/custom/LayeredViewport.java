@@ -600,6 +600,8 @@ public final class LayeredViewport extends Canvas {
         addListener(SWT.Dispose, event -> {
             if (composition != 0) nativeBackend.dispose(composition);
             composition = 0;
+            nativeFrameHandles = new long[0];
+            nativeFrameProps = new float[0];
             for (int i = 0; i < count; i++) stack[i].nativeLayer = 0;
             // A painter may dispose the widget while one of these images has a
             // selected GC. The active paint closes that GC before the images.
@@ -1696,6 +1698,9 @@ public final class LayeredViewport extends Canvas {
     private NativeLayers nativeBackend;
     private long composition;
     private boolean nativeTried;
+    /* UI-thread-owned, capacity-reused transport; JNI reads only the active native layer prefix. */
+    private long[] nativeFrameHandles = new long[0];
+    private float[] nativeFrameProps = new float[0];
 
     private boolean nativeAvailable() {
         if (!nativeTried) {
@@ -1761,19 +1766,27 @@ public final class LayeredViewport extends Canvas {
         if (composition == 0) return;
         int n = 0;
         for (Layer layer : paintOrder) if (layer.nativeLayer != 0) n++;
-        long[] handles = new long[n];
-        float[] props = new float[n * 4];
+        if (nativeFrameHandles.length < n) {
+            int next = nativeFrameHandles.length >= Integer.MAX_VALUE / 8
+                    ? n : Math.max(4, nativeFrameHandles.length * 2);
+            int capacity = Math.max(n, next);
+            // Publish both arrays together: an allocation failure cannot leave mismatched capacities.
+            long[] handles = new long[capacity];
+            float[] props = new float[Math.multiplyExact(capacity, 4)];
+            nativeFrameHandles = handles;
+            nativeFrameProps = props;
+        }
         int i = 0;
         for (Layer layer : paintOrder) {
             if (layer.nativeLayer == 0) continue;
-            handles[i] = layer.nativeLayer;
-            props[i * 4] = (float) device(layer.x, layerOriginX(layer));
-            props[i * 4 + 1] = (float) device(layer.y, layerOriginY(layer));
-            props[i * 4 + 2] = layer.opacity / 255f;
-            props[i * 4 + 3] = layer.visible && layer.opacity > 0 ? 1 : 0;
+            nativeFrameHandles[i] = layer.nativeLayer;
+            nativeFrameProps[i * 4] = (float) device(layer.x, layerOriginX(layer));
+            nativeFrameProps[i * 4 + 1] = (float) device(layer.y, layerOriginY(layer));
+            nativeFrameProps[i * 4 + 2] = layer.opacity / 255f;
+            nativeFrameProps[i * 4 + 3] = layer.visible && layer.opacity > 0 ? 1 : 0;
             i++;
         }
-        nativeBackend.apply(composition, handles, props, n);
+        nativeBackend.apply(composition, nativeFrameHandles, nativeFrameProps, n);
     }
 
     /* an image's pixels as premultiplied ARGB, row by row, with its alpha (alpha data, global alpha, transparent pixel) */
