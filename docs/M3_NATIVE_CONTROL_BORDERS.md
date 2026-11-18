@@ -37,7 +37,7 @@ These properties are independent from widget-level Group shadow styles.
   foreground/background CSS provider, so color changes cannot wipe a border.
   Clearing uses an empty CSS provider; context ownership handles its disposal.
 - **Cocoa:** API is present for compile-time parity; rendering a true
-  *two-tone native bevel* is not implemented. Non-default visible styles
+  *two-tone native bevel* is not implemented. All non-default values
   reject with `SWT.ERROR_NOT_IMPLEMENTED` rather than silently painting a
   flat CALayer border and claiming it is a bevel.
 - **Android / iOS mobile:** not yet migrated. The mobile source manifest
