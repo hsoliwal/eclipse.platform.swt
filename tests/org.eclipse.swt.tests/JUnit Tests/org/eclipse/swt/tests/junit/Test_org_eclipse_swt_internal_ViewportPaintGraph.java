@@ -460,6 +460,102 @@ public class Test_org_eclipse_swt_internal_ViewportPaintGraph {
 	}
 
 
+
+	@Test
+	public void test_layerVisibilitySuppressesReplayAndCanBeRestored () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int layer = graph.group (graph.root ());
+		graph.fillRectangle (layer, 4, 4, 12, 12);
+		assertTrue (graph.isVisible (layer), "legacy groups must be visible by default");
+		graph.setVisible (layer, false);
+		assertFalse (graph.isVisible (layer));
+		assertEquals (0, graph.replay (gc).drawnCommands ());
+		assertEquals (rgb (SWT.COLOR_WHITE), pixelRgb (5, 5));
+		graph.setVisible (layer, true);
+		assertEquals (1, graph.replay (gc).drawnCommands ());
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (5, 5));
+	}
+
+	@Test
+	public void test_layerHitTestUsesZOrderAndInheritedVisibility () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int back = graph.group (graph.root ());
+		int front = graph.group (graph.root ());
+		graph.setHitBounds (back, 0, 0, 20, 20);
+		graph.setHitBounds (front, 0, 0, 20, 20);
+		graph.setZOrder (back, 10);
+		graph.setZOrder (front, 20);
+		assertEquals (front, graph.hitTest (5, 5));
+		graph.setVisible (front, false);
+		assertEquals (back, graph.hitTest (5, 5));
+		graph.setVisible (front, true);
+		graph.setZOrder (front, 0);
+		assertEquals (back, graph.hitTest (5, 5));
+		graph.clearHitBounds (back);
+		assertEquals (front, graph.hitTest (5, 5));
+		assertEquals (-1, graph.hitTest (20, 5), "hit regions are half-open");
+		graph.setZOrder (front, 5);
+		graph.setZOrder (back, 5);
+		graph.setHitBounds (back, 0, 0, 20, 20);
+		assertEquals (front, graph.hitTest (5, 5), "equal Z respects creation order");
+	}
+
+	@Test
+	public void test_layerHitTestRespectsAffineAndGroupClips () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int outer = graph.group (graph.root (), Affine.translation (10, 5));
+		int inner = graph.group (outer);
+		graph.setHitBounds (outer, 0, 0, 20, 20);
+		graph.setHitBounds (inner, 0, 0, 20, 20);
+		graph.setClip (outer, 4, 4, 8, 8);
+		assertEquals (inner, graph.hitTest (15, 10), "child takes priority over parent");
+		assertEquals (-1, graph.hitTest (13, 10), "outside ancestor local clip");
+		assertEquals (-1, graph.hitTest (22, 10), "right edge excluded");
+		graph.setTransform (inner, new Affine (0, 0, 0, 0, 0, 0));
+		assertEquals (outer, graph.hitTest (15, 10), "singular child has no pointer inverse");
+		assertThrows (IllegalArgumentException.class, () -> graph.hitTest (Float.NaN, 0));
+		assertThrows (IllegalArgumentException.class, () -> graph.hitTest (Float.POSITIVE_INFINITY, 0));
+		assertThrows (IllegalArgumentException.class, () -> graph.setHitBounds (outer, 0, 0, -1, 10));
+		assertThrows (IllegalArgumentException.class, () -> graph.setHitBounds (outer, 0, 0, Float.NaN, 10));
+	}
+
+	@Test
+	public void test_layerInstancesAreIndependentlyVisibleAndPickable () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int template = graph.template ();
+		graph.fillRectangle (template, 0, 0, 5, 5);
+		int instance = graph.instance (graph.root (), template, Affine.translation (20, 15));
+		graph.setHitBounds (instance, 0, 0, 5, 5);
+		assertEquals (instance, graph.hitTest (22, 17));
+		assertEquals (-1, graph.hitTest (2, 2), "detached template is not a global target");
+		graph.setVisible (instance, false);
+		assertEquals (-1, graph.hitTest (22, 17));
+		assertEquals (0, graph.replay (gc).drawnCommands ());
+		graph.setVisible (instance, true);
+		assertEquals (1, graph.replay (gc).drawnCommands ());
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (22, 17));
+		graph.setVisible (template, false);
+		assertEquals (0, graph.replay (gc).drawnCommands ());
+		assertEquals (-1, graph.hitTest (22, 17));
+	}
+
+	@Test
+	public void test_layerHitTestRejectsPrimitiveTargetsAndHandlesLargeScenes () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int paint = graph.fillRectangle (graph.root (), 0, 0, 10, 10);
+		assertThrows (IllegalArgumentException.class, () -> graph.setVisible (paint, false));
+		assertThrows (IllegalArgumentException.class, () -> graph.setHitBounds (paint, 0, 0, 10, 10));
+		assertThrows (IllegalArgumentException.class, () -> graph.clearHitBounds (paint));
+		for (int i = 0; i < 1024; i++) {
+			int group = graph.group (graph.root ());
+			graph.setHitBounds (group, 0, 0, 10, 10);
+		}
+		int frontmost = graph.nodeCount () - 1;
+		assertEquals (frontmost, graph.hitTest (3, 4));
+		assertEquals (frontmost, graph.hitTest (3, 4), "repeated hit traversal reuses scratch");
+		assertEquals (-1, graph.hitTest (10, 4));
+	}
+
 	@Test
 	public void test_retainedPathCopiesPrimitiveGeometryAndReplaysAcrossInstances () {
 		ViewportPaintGraph graph = new ViewportPaintGraph ();

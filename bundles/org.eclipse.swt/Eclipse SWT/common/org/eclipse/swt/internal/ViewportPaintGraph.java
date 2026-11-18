@@ -52,6 +52,8 @@ public final class ViewportPaintGraph {
 	private static final byte HAS_STROKE = 1 << 2;
 	private static final byte HAS_LAYER = 1 << 3;
 	private static final byte HAS_CULL_BOUNDS = 1 << 4;
+	private static final byte HIDDEN = 1 << 5;
+	private static final byte HAS_HIT_BOUNDS = 1 << 6;
 
 	private byte [] kinds = new byte [16];
 	private int [] firstChild = new int [16];
@@ -71,6 +73,10 @@ public final class ViewportPaintGraph {
 	private float [] cullY = new float [16];
 	private float [] cullWidth = new float [16];
 	private float [] cullHeight = new float [16];
+	private float [] hitX = new float [16];
+	private float [] hitY = new float [16];
+	private float [] hitWidth = new float [16];
+	private float [] hitHeight = new float [16];
 	private int [] lineWidth = new int [16];
 	private int [] lineStyle = new int [16];
 	private int [] lineCap = new int [16];
@@ -107,6 +113,8 @@ public final class ViewportPaintGraph {
 	 */
 	private final float [] affineScratch = new float [6];
 	private final float [] boundsScratch = new float [4];
+	private final float [] hitPointScratch = new float [2];
+	private int [] hitStack = new int [16];
 
 	public ViewportPaintGraph () {
 		Arrays.fill (firstChild, NONE);
@@ -302,6 +310,124 @@ public final class ViewportPaintGraph {
 	public void clearLayer (int group) {
 		requireGroup (group);
 		flags [group] &= ~HAS_LAYER;
+	}
+
+	/**
+	 * Controls local visibility of a retained group or instance. Existing nodes
+	 * remain visible by default. This is scene visibility, not SWT Control visibility;
+	 * the owning widget remains responsible for damage and native redraw requests.
+	 */
+	public void setVisible (int node, boolean visible) {
+		requireLayerOwner (node);
+		if (visible) {
+			flags [node] &= ~HIDDEN;
+		} else {
+			flags [node] |= HIDDEN;
+		}
+	}
+
+	/** Returns the local visibility bit, not the inherited effective visibility. */
+	public boolean isVisible (int node) {
+		requireLayerOwner (node);
+		return (flags [node] & HIDDEN) == 0;
+	}
+
+	/**
+	 * Attaches an opt-in half-open pointer region in the node's local coordinates.
+	 * Unlike conservative cull bounds, these bounds determine event eligibility.
+	 * Template instances need their own hit bounds because their template geometry
+	 * may be reused at multiple independent viewport positions.
+	 */
+	public void setHitBounds (int node, float x, float y, float width, float height) {
+		requireLayerOwner (node);
+		if (!Float.isFinite (x) || !Float.isFinite (y)
+				|| !Float.isFinite (width) || !Float.isFinite (height)
+				|| width < 0 || height < 0) {
+			throw new IllegalArgumentException ("invalid pointer bounds");
+		}
+		hitX [node] = x;
+		hitY [node] = y;
+		hitWidth [node] = width;
+		hitHeight [node] = height;
+		flags [node] |= HAS_HIT_BOUNDS;
+	}
+
+	/** Removes the node's pointer target without changing drawing or Z-order. */
+	public void clearHitBounds (int node) {
+		requireLayerOwner (node);
+		flags [node] &= ~HAS_HIT_BOUNDS;
+	}
+
+	/**
+	 * Finds the frontmost attached group or instance whose explicit region
+	 * contains the point. Descendants take priority over their own group's region.
+	 * Returns -1 if none qualifies. An instance is a distinct target; detached
+	 * template internals are never returned as ambiguous global pointer targets.
+	 * The normal event path reuses a bounded primitive stack (no recursion).
+	 */
+	public int hitTest (float rootX, float rootY) {
+		if (!Float.isFinite (rootX) || !Float.isFinite (rootY)) {
+			throw new IllegalArgumentException ("non-finite pointer position");
+		}
+		int size = 1;
+		hitStack [0] = ROOT;
+		while (size != 0) {
+			int entry = hitStack [--size];
+			if (entry < 0) {
+				int node = -entry - 1;
+				if (containsLocalPoint (
+						node, rootX, rootY,
+						hitX [node], hitY [node], hitWidth [node], hitHeight [node])) {
+					return node;
+				}
+				continue;
+			}
+			int node = entry;
+			if ((flags [node] & HIDDEN) != 0) continue;
+			if (kinds [node] == GROUP) {
+				if ((flags [node] & HAS_CLIP) != 0
+						&& !containsLocalPoint (
+								node, rootX, rootY,
+								clipX [node], clipY [node], clipWidth [node], clipHeight [node])) {
+					continue;
+				}
+				// Negative entries test parents after their children.
+				if (node != ROOT && (flags [node] & HAS_HIT_BOUNDS) != 0) {
+					pushHit (-node - 1, size++);
+				}
+				// Siblings are back to front; LIFO visits front to back.
+				for (int child = firstChild [node]; child != NONE; child = nextSibling [child]) {
+					pushHit (child, size++);
+				}
+			} else if (kinds [node] == INSTANCE
+					&& (flags [node] & HAS_HIT_BOUNDS) != 0
+					&& (flags [targets [node]] & HIDDEN) == 0
+					&& containsLocalPoint (
+							node, rootX, rootY,
+							hitX [node], hitY [node], hitWidth [node], hitHeight [node])) {
+				return node;
+			}
+		}
+		return NONE;
+	}
+
+	private void pushHit (int entry, int size) {
+		if (size >= hitStack.length) {
+			hitStack = Arrays.copyOf (hitStack, hitStack.length * 2);
+		}
+		hitStack [size] = entry;
+	}
+
+	private boolean containsLocalPoint (
+			int node, float rootX, float rootY,
+			float x, float y, float width, float height) {
+		if (width == 0 || height == 0 || !mapFromRoot (node, rootX, rootY, hitPointScratch)) {
+			return false;
+		}
+		// Promote subtraction to double to avoid overflowing finite float endpoints.
+		double dx = (double) hitPointScratch [0] - x;
+		double dy = (double) hitPointScratch [1] - y;
+		return dx >= 0 && dx < width && dy >= 0 && dy < height;
 	}
 
 	/**
@@ -734,6 +860,7 @@ public final class ViewportPaintGraph {
 
 				switch (kinds [node]) {
 					case GROUP -> {
+						if ((flags [node] & HIDDEN) != 0) continue;
 						Affine next = transform;
                         if (transformIds [node] != 0) {
                             next = transform.compose(transform(transformIds [node]));
@@ -766,6 +893,7 @@ public final class ViewportPaintGraph {
 						}
 					}
 					case INSTANCE -> {
+						if ((flags [node] & HIDDEN) != 0) continue;
 						Affine next = transform.compose (transform (transformIds [node]));
 						if (stackSize == nodeStack.length) {
 							nodeStack = Arrays.copyOf (nodeStack, nodeStack.length * 2);
@@ -1077,6 +1205,13 @@ public final class ViewportPaintGraph {
 		transforms [offset + 5] = transform.dy;
 	}
 
+	private void requireLayerOwner (int node) {
+		requireNode (node);
+		if (kinds [node] != GROUP && kinds [node] != INSTANCE) {
+			throw new IllegalArgumentException ("node is not a group or instance");
+		}
+	}
+
 	private void requireGroup (int node) {
 		if (node < 0 || node >= nodeCount || kinds [node] != GROUP) {
 			throw new IllegalArgumentException ("parent is not a group");
@@ -1200,6 +1335,10 @@ public final class ViewportPaintGraph {
 		cullY = Arrays.copyOf (cullY, next);
 		cullWidth = Arrays.copyOf (cullWidth, next);
 		cullHeight = Arrays.copyOf (cullHeight, next);
+		hitX = Arrays.copyOf (hitX, next);
+		hitY = Arrays.copyOf (hitY, next);
+		hitWidth = Arrays.copyOf (hitWidth, next);
+		hitHeight = Arrays.copyOf (hitHeight, next);
 		lineWidth = Arrays.copyOf (lineWidth, next);
 		lineStyle = Arrays.copyOf (lineStyle, next);
 		lineCap = Arrays.copyOf (lineCap, next);
