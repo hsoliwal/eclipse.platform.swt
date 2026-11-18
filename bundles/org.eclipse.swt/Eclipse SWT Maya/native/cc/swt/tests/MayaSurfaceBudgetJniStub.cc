@@ -7,6 +7,18 @@
 #include <array>
 #include <cstdint>
 
+// Test-only legacy Create/Dispose entry points ensure opt-in SWT backend
+// quota admission fails closed when an old DLL lacks the two budget symbols.
+namespace {
+int disposals = 0;
+}
+extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nCreate
+  (JNIEnv *, jclass, jlong hwnd) { return hwnd == 777 ? 731 : 0; }
+extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nDispose
+  (JNIEnv *, jclass, jlong composition) { if (composition == 731) ++disposals; }
+extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaSurfaceBudgetJniSmoke_disposals
+  (JNIEnv *, jclass) { return disposals; }
+
 #ifdef SWT_MAYA_SURFACE_BUDGET_LEGACY
 extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *, void *) {
     return JNI_VERSION_1_6;
