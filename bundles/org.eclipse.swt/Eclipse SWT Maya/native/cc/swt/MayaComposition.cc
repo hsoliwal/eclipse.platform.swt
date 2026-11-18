@@ -17,6 +17,7 @@
 // - Arrays are copied in (Get*ArrayRegion, no critical section), so the GC is never held while the system works.
 #include <jni.h>
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 #ifdef _WIN32
@@ -51,6 +52,9 @@ struct Composition {
     IDCompositionTarget *target = nullptr;
     IDCompositionVisual *root = nullptr;
     std::vector<Layer *> layers;
+    // Native copies of the active JNI prefix, reused across frames on the composition's UI thread.
+    std::vector<jlong> frameOrder;
+    std::vector<jfloat> frameProperties;
 };
 
 void destroy(Layer *layer) {
@@ -145,16 +149,21 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nApply
   (JNIEnv *env, jclass, jlong composition, jlongArray layers, jfloatArray props, jint count) {
     Composition *c = reinterpret_cast<Composition *>(composition);
-    if (!c || count < 0 || env->GetArrayLength(layers) < count || env->GetArrayLength(props) < count * 4) return E_INVALIDARG;
-    std::vector<jlong> order(count);
-    std::vector<jfloat> p(static_cast<size_t>(count) * 4);
-    env->GetLongArrayRegion(layers, 0, count, order.data());
-    env->GetFloatArrayRegion(props, 0, count * 4, p.data());
+    if (!c || !layers || !props || count < 0 || count > std::numeric_limits<jsize>::max() / 4
+        || env->GetArrayLength(layers) < count || env->GetArrayLength(props) < count * 4) return E_INVALIDARG;
+    c->frameOrder.resize(static_cast<size_t>(count));
+    c->frameProperties.resize(static_cast<size_t>(count) * 4);
+    if (count > 0) {
+        env->GetLongArrayRegion(layers, 0, count, c->frameOrder.data());
+        if (env->ExceptionCheck()) return E_FAIL;
+        env->GetFloatArrayRegion(props, 0, count * 4, c->frameProperties.data());
+        if (env->ExceptionCheck()) return E_FAIL;
+    }
     HRESULT hr = c->root->RemoveAllVisuals();
     for (jint i = 0; SUCCEEDED(hr) && i < count; i++) {
-        Layer *layer = reinterpret_cast<Layer *>(order[i]);
+        Layer *layer = reinterpret_cast<Layer *>(c->frameOrder[i]);
         if (!layer) continue;
-        const jfloat *q = &p[static_cast<size_t>(i) * 4];
+        const jfloat *q = &c->frameProperties[static_cast<size_t>(i) * 4];
         hr = layer->visual->SetOffsetX(q[0]);
         if (SUCCEEDED(hr)) hr = layer->visual->SetOffsetY(q[1]);
         if (SUCCEEDED(hr)) hr = layer->effect->SetOpacity(q[2]);
