@@ -26,6 +26,7 @@ of existing Canvas, Composite, Control.moveAbove/moveBelow, or ScrolledComposite
 | visibility/lock | visible layers render; locked layers are skipped for picking |
 | alpha | 0..255, Photoshop layer opacity: an image layer is one image draw; a painter layer below 255 is isolated (painted onto a copy of the composite beneath it, then blended once) |
 | backing store | the composite of all layers retained between paints (widget pixels) with a dirty region (`ViewportDamageRegion`); a paint recomposes only damage that is dirty, an expose is a copy from the store |
+| control layers | `addControlLayer(name, control, x, y, w, h)` places a native child control (any SWT or Nebula widget) at world bounds; it moves and resizes with every pan and zoom, hides with its layer, at opacity 0 and outside the view; among control layers the native Z order is the layers' order. The window system draws child controls above every painted layer (they cannot be blended). Removing the layer leaves the control where it was |
 | retained layers | `Layer.setRetained(true)` keeps the composite of that layer and everything below it in an image of its own with its own dirty region (Photoshop's flatten-below kept as a cache): a change above it is recomposed from that image and the layers beneath are not repainted; a paint brings the retained composites up to date bottom to top, each from the one below it; `Layer.redraw()` declares a layer's own content changed |
 | invalidation | a layer change dirties the store and the retained composites at or above its Z index (batched changes keep that precision); old and new projected layer bounds, `redraw()`, zoom: their pixels become dirty; a whole-pixel pan at zoom 1 moves the retained pixels (and the dirty region) and dirties only the band that comes into view; other pans recompose the view |
 | virtualization | offscreen layer painting culled by the GC dirty clip |
@@ -71,6 +72,16 @@ iteration does not allocate a new layer array every frame.
    viewport work only after the existing owners are inventoried, pinned,
    and checked against native and source/binary compatibility contracts.
 
+## Reference designs (all run on Windows, macOS and Linux)
+
+GIMP and its engine GEGL/babl (layer modes, layer groups, masks, the Photoshop
+layer model), Inkscape (SVG layers and Z order of objects), GTK 4 GSK (render
+node composition: opacity, transform, clip, blend nodes) and the W3C
+Compositing and Blending specification (the blend formulas). They are used as
+designs and as pixel oracles to compare against; no code is copied. Licences
+(GPL-3 GIMP, LGPL-3 GEGL/babl, GPL-2+ Inkscape, LGPL-2.1 GTK) are recorded, not
+acted on yet (owner, 2026-11-18).
+
 ## OS compositor routes (native layers, not bound yet)
 
 Current systems already composite Z-ordered layers themselves: a layer's order,
@@ -105,12 +116,14 @@ still recomposing, a pan in either direction recomposing only the band that
 comes into view with pixels equal to a full recomposition, dirty pixels moving
 with a pan, isolated group opacity, a retained layer not repainted by changes
 above it (batched or not) but recomposed for its own change and for a change
-below it, retained composites moving with a pan, and a background change after
-the first paint. Run on win32 (JDK 21): 131/131 of the
+below it, retained composites moving with a pan, a background change after
+the first paint, and control layers (a native button following pan, zoom and
+its layer's bounds, hiding with the layer, at opacity 0 and outside the view,
+released on remove; native Z order following layer order). Run on win32 (JDK 21): 134/134 of the
 class with its inherited Canvas tests and the damage region tests (one
 inherited test skips itself on win32); the store tests fail on the first
 implementation; mutants rejected: 7 of the store and `ViewportDamageRegion.remove`,
-9 of the retained layers.
+9 of the retained layers, 6 of the control layers.
 
 A separate manual snippet demonstrates painted overlapping layers.
 
