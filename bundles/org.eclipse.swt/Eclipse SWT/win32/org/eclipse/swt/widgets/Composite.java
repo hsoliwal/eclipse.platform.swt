@@ -66,7 +66,8 @@ public class Composite extends Scrollable {
 	 * native bevel to ordinary Composite and Canvas; subclasses preserve their
 	 * existing independent interpretation of the bits.
 	 */
-	private int nativeBevelEdge () {
+	@Override
+	int nativeBevelEdge () {
 		if (getClass () != Composite.class && getClass () != Canvas.class) return 0;
 		int shadow = style & BEVEL_MASK;
 		if (Integer.bitCount (shadow) != 1) return 0;
@@ -2063,31 +2064,6 @@ LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
         return result;
     }
 	long borderHandle = borderHandle ();
-	int edge = nativeBevelEdge ();
-	if (edge != 0 && hwnd == borderHandle) {
-		int extStyle = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
-		if ((extStyle & OS.WS_EX_CLIENTEDGE) != 0) {
-			long hDC = OS.GetWindowDC (hwnd);
-			if (hDC != 0) {
-				int bits = OS.GetWindowLong (hwnd, OS.GWL_STYLE);
-				long code = (bits & (OS.WS_HSCROLL | OS.WS_VSCROLL)) != 0
-						? callWindowProc (hwnd, OS.WM_NCPAINT, wParam, lParam) : 0;
-				RECT rect = new RECT ();
-				OS.GetWindowRect (hwnd, rect);
-				rect.right -= rect.left;
-				rect.bottom -= rect.top;
-				rect.left = rect.top = 0;
-				int inset = getSystemMetrics (OS.SM_CXEDGE);
-				/* DrawEdge is a native GDI frame operation; do not touch client pixels. */
-				OS.ExcludeClipRect (hDC, inset, inset,
-						Math.max (inset, rect.right - inset),
-						Math.max (inset, rect.bottom - inset));
-				OS.DrawEdge (hDC, rect, edge, OS.BF_RECT);
-				OS.ReleaseDC (hwnd, hDC);
-				return new LRESULT (code);
-			}
-		}
-	}
 	if ((state & CANVAS) != 0 || (hwnd == borderHandle && handle != borderHandle)) {
 		int bits1 = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
 		if ((bits1 & OS.WS_EX_CLIENTEDGE) != 0) {

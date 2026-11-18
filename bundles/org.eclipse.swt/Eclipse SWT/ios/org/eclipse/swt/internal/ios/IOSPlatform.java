@@ -96,6 +96,7 @@ public final class IOSPlatform implements MobilePlatform {
 	@Override public void setBounds(long peer, int x, int y, int w, int h) { check(); OS.setBounds(peer, x, y, w, h); }
 	@Override public void setVisible(long peer, boolean visible) { check(); OS.setVisible(peer, visible); }
 	@Override public void setEnabled(long peer, boolean enabled) { check(); OS.setEnabled(peer, enabled); }
+	@Override public void setBorderStyle(long peer, int style) { check(); OS.setBorderStyle(peer, style); }
 	@Override public void textContent(long peer, String text, int selectionStart,
 			int selectionEnd, boolean editable, int limit, String hint) {
 		check();

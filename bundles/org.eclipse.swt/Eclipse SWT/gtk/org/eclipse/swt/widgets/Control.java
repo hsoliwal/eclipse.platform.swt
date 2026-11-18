@@ -62,6 +62,8 @@ public abstract class Control extends Widget implements Drawable {
 	/* GTK4: where the pointer last moved over this control, relative to it */
 	double pointerX, pointerY;
 	long redrawWindow, enableWindow, provider;
+	long borderProvider;
+	int borderStyle = SWT.DEFAULT;
 	int drawCount, backgroundAlpha = 255;
 	long dragGesture, zoomGesture, rotateGesture, panGesture;
 	Composite parent;
@@ -3303,6 +3305,101 @@ public int getBorderWidth () {
 	return getBorderWidthInPixels();
 }
 
+/**
+ * Returns the explicit appearance of the receiver's existing native border.
+ * The initial value is {@link SWT#DEFAULT}, which uses the platform appearance.
+ *
+ * @return the border style
+ * @exception SWTException <ul>
+ * <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ * <li>ERROR_THREAD_INVALID_ACCESS - if not called from the creating thread</li>
+ * </ul>
+ * @see #setBorderStyle(int)
+ * @since 3.138
+ */
+public int getBorderStyle () {
+	checkWidget ();
+	return borderStyle;
+}
+
+/**
+ * Changes the appearance of the receiver's existing native border without
+ * changing its width, client area, children, or constructor style bits.
+ * <p>
+ * The style is one of {@link SWT#DEFAULT}, {@link SWT#SHADOW_IN},
+ * {@link SWT#SHADOW_OUT}, {@link SWT#SHADOW_ETCHED_IN}, or
+ * {@link SWT#SHADOW_ETCHED_OUT}. These values are individual method arguments,
+ * not flags to combine with the receiver's constructor styles. DEFAULT restores
+ * the original platform appearance. IN and OUT select sunken and raised edges;
+ * the etched variants select groove and ridge edges. Both appearances occupy
+ * the existing border, including when that border is only one pixel wide.
+ * </p><p>
+ * An explicit style requires SWT.BORDER and a supported native frame. A control
+ * or platform without that frame rejects the request without changing state.
+ * This method does not add a border to an unbordered control.
+ * </p>
+ * @param borderStyle the new border appearance
+ * @exception IllegalArgumentException <ul>
+ * <li>ERROR_INVALID_ARGUMENT - if the style is not one of the listed values</li>
+ * </ul>
+ * @exception SWTException <ul>
+ * <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ * <li>ERROR_THREAD_INVALID_ACCESS - if not called from the creating thread</li>
+ * </ul>
+ * @exception SWTError <ul>
+ * <li>ERROR_NOT_IMPLEMENTED - if the receiver has no supported native border</li>
+ * </ul>
+ * @see #getBorderStyle()
+ * @since 3.138
+ */
+public void setBorderStyle (int borderStyle) {
+	checkWidget ();
+	String edge = switch (borderStyle) {
+		case SWT.DEFAULT -> "";
+		case SWT.SHADOW_IN -> "inset";
+		case SWT.SHADOW_OUT -> "outset";
+		case SWT.SHADOW_ETCHED_IN -> "groove";
+		case SWT.SHADOW_ETCHED_OUT -> "ridge";
+		default -> null;
+	};
+	if (edge == null) error (SWT.ERROR_INVALID_ARGUMENT);
+	if (this.borderStyle == borderStyle) return;
+	long widget = borderHandle ();
+	if (borderStyle != SWT.DEFAULT) {
+		if ((style & SWT.BORDER) == 0 || widget == 0) error (SWT.ERROR_NOT_IMPLEMENTED);
+		GtkBorder border = new GtkBorder ();
+		gtk_style_context_get_border (GTK.gtk_widget_get_style_context (widget),
+				GTK.gtk_widget_get_state_flags (widget), border);
+		if (border.left <= 0 || border.right <= 0 || border.top <= 0 || border.bottom <= 0) {
+			error (SWT.ERROR_NOT_IMPLEMENTED);
+		}
+	}
+	long context = GTK.gtk_widget_get_style_context (widget);
+	if (borderProvider == 0) {
+		borderProvider = GTK.gtk_css_provider_new ();
+		if (borderProvider == 0) error (SWT.ERROR_NO_HANDLES);
+		GTK.gtk_style_context_add_provider (context, borderProvider, GTK.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		/* The style context owns this reference until the native widget is destroyed. */
+		OS.g_object_unref (borderProvider);
+	}
+	/* Keep the color provider independent: setBackground/setForeground must not
+	 * replace this style. Width, padding, focus outline and content are untouched. */
+	String css = borderStyle == SWT.DEFAULT ? "" : display.gtk_widget_class_get_css_name (widget)
+			+ " { border-style: " + edge + "; }";
+	byte [] bytes = Converter.wcsToMbcs (css, true);
+	if (GTK.GTK4) {
+		GTK4.gtk_css_provider_load_from_data (borderProvider, bytes, -1);
+	} else {
+		GTK3.gtk_css_provider_load_from_data (borderProvider, bytes, -1, null);
+	}
+	this.borderStyle = borderStyle;
+	GTK.gtk_widget_queue_draw (widget);
+}
+
+long borderHandle () {
+	return 0;
+}
+
 int getBorderWidthInPixels () {
 	checkWidget();
 	return 0;
@@ -5369,6 +5466,7 @@ void releaseWidget () {
 		accessible.internal_dispose_Accessible ();
 	}
 	accessible = null;
+	borderProvider = 0;
 	region = null;
 	if (dragGesture != 0) {
 		OS.g_object_unref(dragGesture);

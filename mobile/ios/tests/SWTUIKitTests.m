@@ -88,11 +88,25 @@ static void testNativeClientGeometry(void) {
 	parent.snapshot = snapshot;
 	check(parent.snapshot != NULL, "positive client accepts a new native presentation after an empty extent");
 	CGImageRelease(snapshot);
-	swtDrawBorder(gc.image.context, CGRectMake(8, 8, 10, 10), SWT(BORDER));
+	swtDrawBorder(gc.image.context, CGRectMake(8, 8, 10, 10), SWT(BORDER), SWT(DEFAULT));
 	check(area(gc) == 36, "native border is four non-overlapping one-point bands");
 	const uint32_t *data = pixels(gc);
 	for (int i = 0; i < TEST_SIZE * TEST_SIZE; i++)
 		check((data[i] >> 24) == 0 || data[i] == 0xff808080, "native border uses SWT widget normal shadow");
+	for (int raised = 0; raised <= 1; raised++) {
+		SWTUIKitGraphics *actual = graphics(), *expected = graphics();
+		swtDrawBorder(actual.image.context, CGRectMake(8, 8, 10, 10), SWT(BORDER),
+			raised ? SWT(SHADOW_OUT) : SWT(SHADOW_IN));
+		expected.background = raised ? 0xffffffff : 0xff808080;
+		expectedRect(expected, CGRectMake(8, 8, 10, 1));
+		expectedRect(expected, CGRectMake(8, 9, 1, 8));
+		expected.background = raised ? 0xff808080 : 0xffffffff;
+		expectedRect(expected, CGRectMake(8, 17, 10, 1));
+		expectedRect(expected, CGRectMake(17, 9, 1, 8));
+		check(memcmp(pixels(actual), pixels(expected), TEST_BYTES) == 0,
+			"native inset/outset rings preserve the untouched client and reverse light direction");
+		check(area(actual) == 36, "native inset/outset keeps the existing border area");
+	}
 }
 
 static void testClipAndRoundRectangle(void) {

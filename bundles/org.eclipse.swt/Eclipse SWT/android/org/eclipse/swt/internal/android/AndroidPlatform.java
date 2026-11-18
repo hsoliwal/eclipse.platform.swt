@@ -263,6 +263,21 @@ public final class AndroidPlatform implements MobilePlatform {
 		});
 	}
 	@Override public void disposeControl(long peer) { checkThread(); ui(() -> { releasePeer(controls.get(peer)); return null; }); }
+	@Override public void setBorderStyle(long peer, int style) {
+		checkThread();
+		if (style != SWT.DEFAULT && style != SWT.SHADOW_IN && style != SWT.SHADOW_OUT)
+			throw new UnsupportedOperationException("This native border supports inset and outset only");
+		ui(() -> {
+			PeerView view = controls.get(peer);
+			if (style != SWT.DEFAULT && view.borderWidth() == 0)
+				throw new UnsupportedOperationException("Control has no native border");
+			if (view.borderStyle != style) {
+				view.borderStyle = style;
+				view.invalidate();
+			}
+			return null;
+		});
+	}
 	private void releaseTree(PeerView view) {
 		// Reused registry slots do not imply native parent/child ordering.
 		while (view.getChildCount() != 0) {
@@ -474,6 +489,7 @@ public final class AndroidPlatform implements MobilePlatform {
 		boolean fillViewport;
 		Bitmap front;
 		final Paint borderPaint = new Paint();
+		int borderStyle = SWT.DEFAULT;
 		int pointer = -1;
 		PeerView(int kind, long parent, int style) {
 			super(activity);
@@ -623,9 +639,11 @@ public final class AndroidPlatform implements MobilePlatform {
 			int right = Math.max(left, getWidth() - getPaddingRight());
 			int bottom = Math.max(top, getHeight() - getPaddingBottom());
 			if (borderWidth() != 0) {
+				borderPaint.setColor(borderStyle == SWT.SHADOW_OUT ? 0xffffffff : 0xff808080);
 				canvas.drawRect(0, 0, getWidth(), top, borderPaint);
-				canvas.drawRect(0, bottom, getWidth(), getHeight(), borderPaint);
 				canvas.drawRect(0, top, left, bottom, borderPaint);
+				borderPaint.setColor(borderStyle == SWT.SHADOW_IN ? 0xffffffff : 0xff808080);
+				canvas.drawRect(0, bottom, getWidth(), getHeight(), borderPaint);
 				canvas.drawRect(right, top, getWidth(), bottom, borderPaint);
 			}
 			if (right > left && bottom > top && front != null && !front.isRecycled())

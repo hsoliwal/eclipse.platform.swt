@@ -83,6 +83,7 @@ public abstract class Control extends Widget implements Drawable {
 	Region region;
 	Font font;
 	int drawCount, foreground, background, backgroundAlpha = 255;
+	int borderStyle = SWT.DEFAULT;
 	AutoscalingMode autoscalingMode = AutoscalingMode.ENABLED;
 	/* Retained planes: GPU_RETAINED in retainedBits (a mask bit set at creation) and the frame driver */
 	int retainedBits;
@@ -1270,6 +1271,122 @@ public Image getBackgroundImage () {
 
 int getBackgroundPixel () {
 	return background != -1 ? background :  defaultBackground ();
+}
+
+/**
+ * Returns the appearance selected for the receiver's existing border.
+ * <p>
+ * The default value is <code>SWT.DEFAULT</code>, which uses the original
+ * platform appearance, including a supported constructor-selected bevel.
+ * An explicitly selected border appearance does not
+ * change the receiver's style bits, border width or client area.
+ * </p>
+ *
+ * @return <code>SWT.DEFAULT</code>, <code>SWT.SHADOW_IN</code>,
+ * <code>SWT.SHADOW_OUT</code>, <code>SWT.SHADOW_ETCHED_IN</code> or
+ * <code>SWT.SHADOW_ETCHED_OUT</code>
+ *
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @see #setBorderStyle(int)
+ * @since 3.138
+ */
+public int getBorderStyle () {
+	checkWidget ();
+	return borderStyle;
+}
+
+/**
+ * Sets the appearance of the receiver's existing border.
+ * <p>
+ * The appearance is one of <code>SWT.DEFAULT</code>, <code>SWT.SHADOW_IN</code>,
+ * <code>SWT.SHADOW_OUT</code>, <code>SWT.SHADOW_ETCHED_IN</code> or
+ * <code>SWT.SHADOW_ETCHED_OUT</code>. <code>SWT.DEFAULT</code> restores the
+ * original platform appearance, including a supported constructor-selected
+ * bevel. The shadow constants are values for this method; existing constructor
+ * style interpretations remain unchanged.
+ * </p><p>
+ * An explicit appearance requires an existing native border created with
+ * <code>SWT.BORDER</code> or one of the documented native bevel constructor
+ * hints on a direct <code>Composite</code> or <code>Canvas</code>. The border
+ * width, client area, scroll bars and child
+ * coordinates remain unchanged. Thin borders may not have room for both
+ * lines of an etched appearance. Unsupported controls reject the request
+ * without changing the previously selected appearance.
+ * </p>
+ *
+ * @param borderStyle the border appearance
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_INVALID_ARGUMENT - if the appearance is not one of the permitted values</li>
+ * </ul>
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ * @exception SWTError <ul>
+ *    <li>ERROR_NOT_IMPLEMENTED - if the receiver does not have a supported native border</li>
+ * </ul>
+ *
+ * @see #getBorderStyle()
+ * @since 3.138
+ */
+public void setBorderStyle (int borderStyle) {
+	checkWidget ();
+	switch (borderStyle) {
+		case SWT.DEFAULT:
+		case SWT.SHADOW_IN:
+		case SWT.SHADOW_OUT:
+		case SWT.SHADOW_ETCHED_IN:
+		case SWT.SHADOW_ETCHED_OUT:
+			break;
+		default:
+			error (SWT.ERROR_INVALID_ARGUMENT);
+	}
+	long hwnd = borderHandle ();
+	if (borderStyle != SWT.DEFAULT && (((style & SWT.BORDER) == 0 && nativeBevelEdge () == 0)
+			|| getBorderWidthInPixels () <= 0 || nativeBorderWidth (hwnd, false) <= 0
+			|| this instanceof Shell)) {
+		error (SWT.ERROR_NOT_IMPLEMENTED);
+	}
+	if (this.borderStyle == borderStyle) return;
+	this.borderStyle = borderStyle;
+	OS.RedrawWindow (hwnd, null, 0, OS.RDW_FRAME | OS.RDW_INVALIDATE);
+}
+
+/* Constructor-selected edges are supplied only by their existing owner.
+ * Other controls must not reinterpret the overlapping SHADOW_* style bits.
+ */
+int nativeBevelEdge () {
+	return 0;
+}
+
+private int effectiveBorderEdge () {
+	return switch (borderStyle) {
+		case SWT.SHADOW_IN -> OS.EDGE_SUNKEN;
+		case SWT.SHADOW_OUT -> OS.EDGE_RAISED;
+		case SWT.SHADOW_ETCHED_IN -> OS.EDGE_ETCHED;
+		case SWT.SHADOW_ETCHED_OUT -> OS.EDGE_BUMP;
+		default -> nativeBevelEdge ();
+	};
+}
+
+/* The actual native ring can be narrower than getBorderWidthInPixels(),
+ * which intentionally preserves old layout sizes for custom WS_BORDER themes.
+ */
+private int nativeBorderWidth (long hwnd, boolean vertical) {
+	int extendedStyle = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
+	if ((extendedStyle & OS.WS_EX_CLIENTEDGE) != 0) {
+		return getSystemMetrics (vertical ? OS.SM_CYEDGE : OS.SM_CXEDGE);
+	}
+	if ((extendedStyle & OS.WS_EX_STATICEDGE) != 0
+			|| (OS.GetWindowLong (hwnd, OS.GWL_STYLE) & OS.WS_BORDER) != 0) {
+		return getSystemMetrics (vertical ? OS.SM_CYBORDER : OS.SM_CXBORDER);
+	}
+	return 0;
 }
 
 /**
@@ -6429,6 +6546,80 @@ LRESULT WM_NCLBUTTONDOWN (long wParam, long lParam) {
 
 LRESULT WM_NCPAINT (long wParam, long lParam) {
 	return wmNCPaint (handle, wParam, lParam);
+}
+
+@Override
+LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
+	if (effectiveBorderEdge () == 0 || hwnd != borderHandle ()) {
+		return super.wmNCPaint (hwnd, wParam, lParam);
+	}
+	/* Keep the original non-client work, including native scroll bars. Only
+	 * the existing border ring is replaced after that work has completed.
+	 */
+	long result = callWindowProc (hwnd, OS.WM_NCPAINT, wParam, lParam);
+	if (!isDisposed ()) {
+		long hdc = OS.GetWindowDC (hwnd);
+		if (hdc != 0) {
+			try {
+				drawNativeBorder (hwnd, hdc);
+			} finally {
+				OS.ReleaseDC (hwnd, hdc);
+			}
+		}
+	}
+	return new LRESULT (result);
+}
+
+@Override
+LRESULT wmPrint (long hwnd, long wParam, long lParam) {
+	if (effectiveBorderEdge () == 0 || hwnd != borderHandle ()
+			|| (lParam & OS.PRF_NONCLIENT) == 0) {
+		return super.wmPrint (hwnd, wParam, lParam);
+	}
+	/* The caller owns this DC. The native procedure may change its clipping;
+	 * restore that state before drawing our ring and before returning to it.
+	 */
+	int saved = OS.SaveDC (wParam);
+	if (saved == 0) return super.wmPrint (hwnd, wParam, lParam);
+	long result;
+	try {
+		result = callWindowProc (hwnd, OS.WM_PRINT, wParam, lParam);
+	} finally {
+		OS.RestoreDC (wParam, saved);
+	}
+	if (!isDisposed ()) drawNativeBorder (hwnd, wParam);
+	return new LRESULT (result);
+}
+
+private void drawNativeBorder (long hwnd, long hdc) {
+	int edge = effectiveBorderEdge ();
+	if (edge == 0) return;
+	int borderX = nativeBorderWidth (hwnd, false);
+	int borderY = nativeBorderWidth (hwnd, true);
+	if (borderX <= 0 || borderY <= 0) return;
+	RECT rect = new RECT ();
+	if (!OS.GetWindowRect (hwnd, rect)) return;
+	int width = rect.right - rect.left, height = rect.bottom - rect.top;
+	if (width <= 0 || height <= 0) return;
+	rect.left = rect.top = 0;
+	rect.right = width;
+	rect.bottom = height;
+	int saved = OS.SaveDC (hdc);
+	if (saved == 0) return;
+	try {
+		/* Use DPI-aware native metrics, not the public compatibility trim.
+		 * Clipping also keeps two-line edges inside a one-pixel native ring.
+		 * Retain the caller's transform so printing to another DPI still works.
+		 */
+		if (OS.IntersectClipRect (hdc, 0, 0, width, height) <= OS.NULLREGION) return;
+		if (borderX < width - borderX && borderY < height - borderY) {
+			if (OS.ExcludeClipRect (hdc, borderX, borderY,
+					width - borderX, height - borderY) <= OS.NULLREGION) return;
+		}
+		OS.DrawEdge (hdc, rect, edge, OS.BF_RECT);
+	} finally {
+		OS.RestoreDC (hdc, saved);
+	}
 }
 
 LRESULT WM_NOTIFY (long wParam, long lParam) {

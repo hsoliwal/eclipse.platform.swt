@@ -450,6 +450,11 @@ int getBorderWidthInPixels () {
 	return 0;
 }
 
+@Override
+long borderHandle () {
+	return handle;
+}
+
 /**
  * Returns the amount that the receiver's value will be
  * modified by when the up/down arrows are pressed.

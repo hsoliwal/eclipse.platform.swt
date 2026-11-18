@@ -242,6 +242,11 @@ int getBorderWidthInPixels () {
 	}
 	return border;
 }
+
+@Override
+long borderHandle () {
+	return scrolledHandle;
+}
 /**
  * Returns a rectangle which describes the area of the
  * receiver which is capable of displaying data (that is,

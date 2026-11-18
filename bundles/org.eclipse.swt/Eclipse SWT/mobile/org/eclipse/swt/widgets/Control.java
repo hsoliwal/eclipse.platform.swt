@@ -30,6 +30,7 @@ public abstract class Control extends Widget implements Drawable {
 	private Rectangle damage;
 	private boolean visible = true, enabled = true, paintQueued;
 	private int redrawDepth, paintDepth;
+	private int borderStyle = SWT.DEFAULT;
 	private Color foreground, background;
 	private Font font;
 	private Object layoutData;
@@ -100,6 +101,63 @@ public abstract class Control extends Widget implements Drawable {
 	public void setSize(int width, int height) { setBounds(bounds.x, bounds.y, width, height); }
 	public void setSize(Point p) { if (p == null) SWT.error(SWT.ERROR_NULL_ARGUMENT); setSize(p.x, p.y); }
 	public int getBorderWidth() { checkWidget(); return (style & SWT.BORDER) == 0 ? 0 : 1; }
+	/**
+	 * Returns the independently selected native border appearance, or
+	 * {@link SWT#DEFAULT} when the original appearance is selected.
+	 *
+	 * @return the border appearance
+	 * @exception org.eclipse.swt.SWTException <ul>
+	 * <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+	 * <li>ERROR_THREAD_INVALID_ACCESS - if not called from the creating thread</li>
+	 * </ul>
+	 * @see #setBorderStyle(int)
+	 * @since 3.138
+	 */
+	public int getBorderStyle() { checkWidget(); return borderStyle; }
+
+	/**
+	 * Changes the appearance of the receiver's existing {@link SWT#BORDER}.
+	 * The native control, border width, client area and input coordinates are
+	 * preserved. The argument is independent of the constructor's style bits.
+	 * {@link SWT#DEFAULT} restores the original appearance.
+	 * <p>
+	 * Android and iOS support {@link SWT#SHADOW_IN} and {@link SWT#SHADOW_OUT}.
+	 * Their existing one-point border cannot accommodate two etched rings, so
+	 * {@link SWT#SHADOW_ETCHED_IN} and {@link SWT#SHADOW_ETCHED_OUT} are refused.
+	 * A transport without this capability refuses an explicit style.
+	 * </p>
+	 *
+	 * @param value DEFAULT, SHADOW_IN, SHADOW_OUT, SHADOW_ETCHED_IN or SHADOW_ETCHED_OUT
+	 * @exception IllegalArgumentException <ul>
+	 * <li>ERROR_INVALID_ARGUMENT - if the value is not a permitted appearance</li>
+	 * </ul>
+	 * @exception org.eclipse.swt.SWTException <ul>
+	 * <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+	 * <li>ERROR_THREAD_INVALID_ACCESS - if not called from the creating thread</li>
+	 * </ul>
+	 * @exception org.eclipse.swt.SWTError <ul>
+	 * <li>ERROR_NOT_IMPLEMENTED - if this control has no supported native border</li>
+	 * </ul>
+	 * @since 3.138
+	 */
+	public void setBorderStyle(int value) {
+		checkWidget();
+		switch (value) {
+			case SWT.DEFAULT, SWT.SHADOW_IN, SWT.SHADOW_OUT,
+					SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT -> { }
+			default -> SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (value == borderStyle) return;
+		if (value != SWT.DEFAULT && ((style & SWT.BORDER) == 0
+				|| value == SWT.SHADOW_ETCHED_IN || value == SWT.SHADOW_ETCHED_OUT))
+			SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+		try {
+			display.internal_platform().setBorderStyle(peer, value);
+		} catch (UnsupportedOperationException failure) {
+			SWT.error(SWT.ERROR_NOT_IMPLEMENTED, failure);
+		}
+		borderStyle = value;
+	}
 	private Rectangle clientBounds() {
 		int trim = getBorderWidth() * 2;
 		return new Rectangle(0, 0, Math.max(0, bounds.width - trim), Math.max(0, bounds.height - trim));
@@ -270,11 +328,17 @@ public abstract class Control extends Widget implements Drawable {
 		try {
 			gc.setClipping(savedClip.intersection(new Rectangle(x, y, bounds.width, bounds.height)));
 			if (border != 0) {
-				gc.setBackground(display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
+				gc.setBackground(display.getSystemColor(borderStyle == SWT.SHADOW_OUT
+						? SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW : SWT.COLOR_WIDGET_NORMAL_SHADOW));
 				gc.fillRectangle(x, y, bounds.width, 1);
-				if (bounds.height > 1) gc.fillRectangle(x, y + bounds.height - 1, bounds.width, 1);
 				if (bounds.height > 2) {
 					gc.fillRectangle(x, y + 1, 1, bounds.height - 2);
+				}
+				if (borderStyle != SWT.DEFAULT)
+					gc.setBackground(display.getSystemColor(borderStyle == SWT.SHADOW_IN
+							? SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW : SWT.COLOR_WIDGET_NORMAL_SHADOW));
+				if (bounds.height > 1) gc.fillRectangle(x, y + bounds.height - 1, bounds.width, 1);
+				if (bounds.height > 2) {
 					if (bounds.width > 1) gc.fillRectangle(x + bounds.width - 1, y + 1, 1, bounds.height - 2);
 				}
 			}

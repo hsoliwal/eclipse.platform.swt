@@ -309,7 +309,7 @@ static CGPoint swtClientPoint(CGPoint point, jint style) {
 	return CGPointMake(point.x - border, point.y - border);
 }
 
-static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
+static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style, jint borderStyle) {
 	CGFloat border = swtBorderWidth(style), width = bounds.size.width, height = bounds.size.height;
 	if (border == 0 || width <= 0 || height <= 0) return;
 	CGFloat top = MIN(border, height), bottom = MAX(top, height - border);
@@ -317,10 +317,13 @@ static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
 	CGContextSaveGState(context);
 	CGContextTranslateCTM(context, bounds.origin.x, bounds.origin.y);
 	CGContextSetShouldAntialias(context, NO);
-	CGContextSetRGBFillColor(context, 128 / 255.0, 128 / 255.0, 128 / 255.0, 1);
+	CGFloat leading = borderStyle == SWT(SHADOW_OUT) ? 1 : 128 / 255.0;
+	CGFloat trailing = borderStyle == SWT(SHADOW_IN) ? 1 : 128 / 255.0;
+	CGContextSetRGBFillColor(context, leading, leading, leading, 1);
 	CGContextFillRect(context, CGRectMake(0, 0, width, top));
-	CGContextFillRect(context, CGRectMake(0, bottom, width, height - bottom));
 	CGContextFillRect(context, CGRectMake(0, top, left, bottom - top));
+	CGContextSetRGBFillColor(context, trailing, trailing, trailing, 1);
+	CGContextFillRect(context, CGRectMake(0, bottom, width, height - bottom));
 	CGContextFillRect(context, CGRectMake(right, top, width - right, bottom - top));
 	CGContextRestoreGState(context);
 }
@@ -330,6 +333,7 @@ static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
 @property(nonatomic) jlong owner;
 @property(nonatomic) jint kind;
 @property(nonatomic) jint style;
+@property(nonatomic) jint borderStyle;
 @property(nonatomic) jint accessibilityRole;
 @property(nonatomic, strong) UIView *clientView;
 @property(nonatomic, strong) UIView *nativeEditor;
@@ -350,6 +354,7 @@ static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
 		self.contentMode = UIViewContentModeRedraw;
 		self.multipleTouchEnabled = YES;
 		self.enabled = YES;
+		self.borderStyle = SWT(DEFAULT);
 		self.hidden = YES;
 		_clientView = [[UIView alloc] initWithFrame:self.bounds];
 		_clientView.clipsToBounds = YES;
@@ -461,7 +466,7 @@ static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
 	(void)rect;
 	if (_disposed) return;
 	CGContextRef gc = UIGraphicsGetCurrentContext();
-	swtDrawBorder(gc, self.bounds, _style);
+	swtDrawBorder(gc, self.bounds, _style, _borderStyle);
 	CGRect client = swtClientBounds(self.bounds, _style);
 	if (_snapshot == NULL || CGRectIsEmpty(client)) return;
 	CGContextSaveGState(gc);
@@ -847,6 +852,25 @@ JNIEXPORT void JNICALL JNI(setEnabled)(JNI_ARGS, jlong peer, jboolean enabled) {
 			if (enabled) view.accessibilityTraits &= ~UIAccessibilityTraitNotEnabled; else view.accessibilityTraits |= UIAccessibilityTraitNotEnabled;
 			if (!enabled) { view.primaryTouch = nil; [view resignFirstResponder]; }
 		});
+	}
+}
+JNIEXPORT void JNICALL JNI(setBorderStyle)(JNI_ARGS, jlong peer, jint style) {
+	@autoreleasepool {
+		if (!swtOnDisplayThread(env)) return;
+		if (style != SWT(DEFAULT) && style != SWT(SHADOW_IN) && style != SWT(SHADOW_OUT)) {
+			swtThrow(env, "java/lang/UnsupportedOperationException", "This native border supports inset and outset only");
+			return;
+		}
+		__block BOOL supported = NO;
+		if (!swtUI(env, ^{
+			SWTUIKitView *view = swtView(peer);
+			supported = style == SWT(DEFAULT) || swtBorderWidth(view.style) != 0;
+			if (supported && view.borderStyle != style) {
+				view.borderStyle = style;
+				[view setNeedsDisplay];
+			}
+		})) return;
+		if (!supported) swtThrow(env, "java/lang/UnsupportedOperationException", "Control has no native border");
 	}
 }
 JNIEXPORT void JNICALL JNI(setTitle)(JNI_ARGS, jlong peer, jstring title) {
@@ -1498,6 +1522,7 @@ static JNINativeMethod swtMethods[] = {
 	{"setBounds", "(JIIII)V", (void *)JNI(setBounds)},
 	{"setVisible", "(JZ)V", (void *)JNI(setVisible)},
 	{"setEnabled", "(JZ)V", (void *)JNI(setEnabled)},
+	{"setBorderStyle", "(JI)V", (void *)JNI(setBorderStyle)},
 	{"setTitle", "(JLjava/lang/String;)V", (void *)JNI(setTitle)},
 	{"textContent", "(JLjava/lang/String;IIZILjava/lang/String;)V", (void *)JNI(textContent)},
 	{"getClipboardText", "()Ljava/lang/String;", (void *)JNI(getClipboardText)},

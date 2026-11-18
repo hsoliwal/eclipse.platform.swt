@@ -80,6 +80,8 @@ public abstract class Control extends Widget implements Drawable {
 	Accessible accessible;
 	boolean inCacheDisplayInRect;
 	boolean touchEnabled;
+	private int borderStyle = SWT.DEFAULT;
+	private double borderInsetX, borderInsetY;
 
 	final static int CLIPPING = 1 << 10;
 	final static int VISIBLE_REGION = 1 << 12;
@@ -1303,6 +1305,54 @@ boolean drawsBackground() {
 }
 
 @Override
+void drawRect (long id, long sel, NSRect rect) {
+	super.drawRect(id, sel, rect);
+	if (isDisposed() || borderStyle == SWT.DEFAULT || !isDrawing()) return;
+	if (!(this instanceof Scrollable scrollable) || scrollable.scrollView == null
+			|| id != scrollable.scrollView.id) return;
+	NSGraphicsContext context = NSGraphicsContext.currentContext();
+	if (context == null) return;
+	NSScrollView frame = scrollable.scrollView;
+	NSRect bounds = frame.bounds();
+	if (bounds.width <= 0 || bounds.height <= 0) return;
+	/* The existing native bezel keeps ownership of layout and input. Replace
+	 * only its painted bands after AppKit has painted the same native peer. */
+	context.saveGraphicsState();
+	try {
+		setClipRegion(frame);
+		context.setShouldAntialias(false);
+		boolean inset = borderStyle == SWT.SHADOW_IN || borderStyle == SWT.SHADOW_ETCHED_IN;
+		int rings = borderStyle == SWT.SHADOW_ETCHED_IN || borderStyle == SWT.SHADOW_ETCHED_OUT ? 2 : 1;
+		double insetX = Math.min(borderInsetX, bounds.width / 2);
+		double insetY = Math.min(borderInsetY, bounds.height / 2);
+		boolean flipped = frame.isFlipped();
+		NSColor highlight = NSColor.controlHighlightColor(), shadow = NSColor.controlShadowColor();
+		for (int ring = 0; ring < rings; ring++) {
+			double x = bounds.x + ring * insetX / rings, y = bounds.y + ring * insetY / rings;
+			double width = bounds.width - 2 * ring * insetX / rings;
+			double height = bounds.height - 2 * ring * insetY / rings;
+			double horizontal = insetX / rings, vertical = insetY / rings;
+			NSRect edge = new NSRect();
+			(inset ? shadow : highlight).setFill();
+			fillBorderBand(edge, x, flipped ? y : y + height - vertical, width, vertical);
+			fillBorderBand(edge, x, y + vertical, horizontal, height - 2 * vertical);
+			(inset ? highlight : shadow).setFill();
+			fillBorderBand(edge, x, flipped ? y + height - vertical : y, width, vertical);
+			fillBorderBand(edge, x + width - horizontal, y + vertical, horizontal, height - 2 * vertical);
+			inset = !inset;
+		}
+	} finally {
+		context.restoreGraphicsState();
+	}
+}
+
+private static void fillBorderBand(NSRect edge, double x, double y, double width, double height) {
+	if (width <= 0 || height <= 0) return;
+	edge.x = x; edge.y = y; edge.width = width; edge.height = height;
+	NSBezierPath.fillRect(edge);
+}
+
+@Override
 void drawWidget (long id, NSGraphicsContext context, NSRect rect) {
     if (id != paintView().id) {
         return;
@@ -1732,6 +1782,73 @@ public Image getBackgroundImage () {
 public int getBorderWidth () {
 	checkWidget();
 	return 0;
+}
+
+/**
+ * Returns the independently selected native border appearance, or
+ * {@link SWT#DEFAULT} when the original appearance is selected.
+ *
+ * @return the border appearance
+ * @exception SWTException <ul>
+ * <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ * <li>ERROR_THREAD_INVALID_ACCESS - if not called from the creating thread</li>
+ * </ul>
+ * @see #setBorderStyle(int)
+ * @since 3.138
+ */
+public int getBorderStyle() {
+	checkWidget();
+	return borderStyle;
+}
+
+/**
+ * Changes the appearance of the receiver's existing {@link SWT#BORDER}.
+ * The native control, border width, client area and input coordinates are
+ * preserved. The argument is independent of the constructor's style bits.
+ * {@link SWT#DEFAULT} restores the original appearance.
+ * <p>
+ * On Cocoa, this operation requires an existing native scroll-view bezel.
+ * Etched appearances require at least two points of existing border on each
+ * side. Other native frame types, including single-line text field frames,
+ * are not supported by this operation.
+ * </p>
+ *
+ * @param value DEFAULT, SHADOW_IN, SHADOW_OUT, SHADOW_ETCHED_IN or SHADOW_ETCHED_OUT
+ * @exception IllegalArgumentException <ul>
+ * <li>ERROR_INVALID_ARGUMENT - if the value is not a permitted appearance</li>
+ * </ul>
+ * @exception SWTException <ul>
+ * <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ * <li>ERROR_THREAD_INVALID_ACCESS - if not called from the creating thread</li>
+ * </ul>
+ * @exception SWTError <ul>
+ * <li>ERROR_NOT_IMPLEMENTED - if this control has no supported native border</li>
+ * </ul>
+ * @since 3.138
+ */
+public void setBorderStyle(int value) {
+	checkWidget();
+	switch (value) {
+		case SWT.DEFAULT, SWT.SHADOW_IN, SWT.SHADOW_OUT,
+				SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT -> { }
+		default -> error(SWT.ERROR_INVALID_ARGUMENT);
+	}
+	if (value == borderStyle) return;
+	if (!hasBorder() || !(this instanceof Scrollable)) error(SWT.ERROR_NOT_IMPLEMENTED);
+	NSScrollView frame = ((Scrollable)this).scrollView;
+	if (frame == null || OS.objc_msgSend(frame.id, OS.sel_registerName("borderType")) != OS.NSBezelBorder)
+		error(SWT.ERROR_NOT_IMPLEMENTED);
+	NSSize client = new NSSize();
+	client.width = client.height = 100;
+	NSSize outer = NSScrollView.frameSizeForContentSize(client, false, false, OS.NSBezelBorder);
+	double insetX = (outer.width - client.width) / 2, insetY = (outer.height - client.height) / 2;
+	if (value != SWT.DEFAULT && (insetX <= 0 || insetY <= 0
+			|| (value == SWT.SHADOW_ETCHED_IN || value == SWT.SHADOW_ETCHED_OUT)
+					&& (insetX < 2 || insetY < 2))) error(SWT.ERROR_NOT_IMPLEMENTED);
+	frame.setNeedsDisplay(true);
+	borderInsetX = insetX;
+	borderInsetY = insetY;
+	borderStyle = value;
 }
 
 /**

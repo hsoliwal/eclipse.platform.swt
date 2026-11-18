@@ -42,6 +42,8 @@ final class ContractPlatform implements MobilePlatform {
 	int createdImages, disposedImages, peakImages, imageDraws, presentations;
 	/** Deterministic transport failure, used to prove renderer cleanup paths. */
 	boolean failNextImageDraw;
+	boolean borderStylesSupported, failNextBorderChange;
+	int borderStyleAttempts, borderChanges;
 	boolean reportFocusChanges, queueNativeFocusAcknowledgements, rejectFocusRequests;
 	long focusedPeer, nativeFocusAfterRequest;
 	/** Whether this transport moves pixels inside an image (Graphics.copyArea), and how often it did. */
@@ -52,6 +54,7 @@ final class ContractPlatform implements MobilePlatform {
 	static final class Peer {
 		long parent;
 		int kind,x,y,width,height,selectionStart,selectionEnd,textLimit=Integer.MAX_VALUE;
+		int borderStyle=SWT.DEFAULT;
 		boolean enabled=true,visible,editable=true;
 		String title,label,text="",hint="";
 		int role,state; int[] frame;
@@ -70,6 +73,12 @@ final class ContractPlatform implements MobilePlatform {
 	@Override public void setBounds(long id,int x,int y,int w,int h){Peer p=peer(id);p.x=x;p.y=y;p.width=w;p.height=h;}
 	@Override public void setVisible(long id,boolean visible){peer(id).visible=visible;}
 	@Override public void setEnabled(long id,boolean enabled){peer(id).enabled=enabled;}
+	@Override public void setBorderStyle(long id,int style){
+		Peer p=peer(id);borderStyleAttempts++;
+		if(!borderStylesSupported){MobilePlatform.super.setBorderStyle(id,style);return;}
+		if(failNextBorderChange){failNextBorderChange=false;throw new IllegalStateException("Injected native border failure");}
+		p.borderStyle=style;borderChanges++;
+	}
 	@Override public void setTitle(long id,String title){peer(id).title=title;}
 	@Override public String getClipboardText(){check();return clipboard;}
 	@Override public void setClipboardText(String text){check();clipboard=java.util.Objects.requireNonNull(text);}

@@ -63,6 +63,15 @@ public interface MobilePlatform {
 	void setBounds(long peer, int x, int y, int width, int height);
 	void setVisible(long peer, boolean visible);
 	void setEnabled(long peer, boolean enabled);
+	/**
+	 * Changes only an existing native border's appearance. A successful call must
+	 * preserve the native view, content bounds and event coordinates. Older
+	 * transports retain their default appearance and refuse an explicit style.
+	 */
+	default void setBorderStyle(long peer, int style) {
+		if (style != org.eclipse.swt.SWT.DEFAULT)
+			throw new UnsupportedOperationException("Native border styles are not implemented by this transport");
+	}
 	void setTitle(long peer, String title);
 	/** Real system clipboard text, read only on the SWT Display thread. */
 	default String getClipboardText() {

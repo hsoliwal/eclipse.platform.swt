@@ -1101,6 +1101,7 @@ LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
 
 @Override
 LRESULT wmPrint (long hwnd, long wParam, long lParam) {
+	if (borderStyle != SWT.DEFAULT) return super.wmPrint (hwnd, wParam, lParam);
 	if ((lParam & OS.PRF_NONCLIENT) == 0 || !useCustomColors () || (OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE) & OS.WS_EX_CLIENTEDGE) == 0) {
 		return super.wmPrint (hwnd, wParam, lParam);
 	}

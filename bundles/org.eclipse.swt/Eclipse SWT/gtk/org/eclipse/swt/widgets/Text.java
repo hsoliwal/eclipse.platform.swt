@@ -969,6 +969,11 @@ int getBorderWidthInPixels () {
 	return 0;
 }
 
+@Override
+long borderHandle () {
+	return (style & SWT.MULTI) != 0 ? super.borderHandle () : handle;
+}
+
 /**
  * Returns the line number of the caret.
  * <p>

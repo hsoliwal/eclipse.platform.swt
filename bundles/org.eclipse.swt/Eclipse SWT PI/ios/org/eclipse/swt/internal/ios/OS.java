@@ -48,6 +48,7 @@ public final class OS {
 		ACTION_DECREMENT = MobilePlatform.ACTION_DECREMENT;
 	public static final int NO_FOCUS = SWT.NO_FOCUS;
 	public static final int BORDER = SWT.BORDER;
+	public static final int DEFAULT = SWT.DEFAULT, SHADOW_IN = SWT.SHADOW_IN, SHADOW_OUT = SWT.SHADOW_OUT;
 	public static final int TEXT = MobilePlatform.TEXT;
 	public static final int MULTI = SWT.MULTI, PASSWORD = SWT.PASSWORD;
 	public static final int DEFAULT_SELECTION = SWT.DefaultSelection;
@@ -73,6 +74,7 @@ public final class OS {
 	public static native void setBounds(long peer, int x, int y, int width, int height);
 	public static native void setVisible(long peer, boolean visible);
 	public static native void setEnabled(long peer, boolean enabled);
+	public static native void setBorderStyle(long peer, int style);
 	public static native void setTitle(long peer, String title);
 	public static native String getClipboardText();
 	public static native void setClipboardText(String text);
