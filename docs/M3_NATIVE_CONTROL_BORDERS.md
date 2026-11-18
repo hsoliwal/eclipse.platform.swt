@@ -104,6 +104,9 @@ These interfaces now converge on a **single active native border**:
 - Win32 direct `Composite` and `Canvas` use their existing GDI
   `DrawEdge` native painting for visible bevels; `setBorderRelief` delegates
   to that same owner, and both getters report the active relief consistently.
+  A first-use native-style snapshot preserves *all* original extended edges
+  (`CLIENTEDGE`, `STATICEDGE`, `WINDOWEDGE`) and the original `WS_BORDER` bit;
+  clearing the bevel restores those exact bits rather than guessing from SWT style.
 - `setBorderRelief(SWT.SHADOW_NONE)` can remove all native borders.
   `setBevelBorder(SWT.NONE)` restores the pre-existing constructor border.
   Transitions between the two forms clear the prior native override first.
