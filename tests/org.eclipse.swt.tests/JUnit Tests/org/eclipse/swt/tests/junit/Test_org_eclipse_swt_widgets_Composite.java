@@ -104,6 +104,32 @@ public void test_nativeBevelBorderAndControlReliefShareOnePaintOwner() {
 }
 
 @Test
+public void test_nativeTinyCanvasBordersPreserveNativeFrame() {
+	if (!SwtTestUtil.isWindows) return;
+	shell.open();
+	for (int size : new int[] {0, 1, 2, 3, 4, 8}) {
+		org.eclipse.swt.widgets.Canvas canvas =
+				new org.eclipse.swt.widgets.Canvas(shell, SWT.BORDER);
+		try {
+			canvas.setBounds(5, 5, size, size);
+			canvas.redraw();
+			canvas.update();
+			assertTrue(canvas.getBorderWidth() > 0, "original native border trim");
+			canvas.setBevelBorder(SWT.SHADOW_IN);
+			canvas.redraw();
+			canvas.update();
+			assertEquals(SWT.SHADOW_IN, canvas.getBevelBorder());
+			canvas.setBevelBorder(SWT.SHADOW_NONE);
+			canvas.redraw();
+			canvas.update();
+			assertEquals(SWT.NONE, canvas.getBevelBorder());
+		} finally {
+			canvas.dispose();
+		}
+	}
+}
+
+@Test
 public void test_nativeBevelBorderStyles() {
 	if (!SwtTestUtil.isWindows) return;
 	Composite plain = new Composite(shell, SWT.NONE);
