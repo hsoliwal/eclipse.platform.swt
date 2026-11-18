@@ -23,6 +23,7 @@
 #include "MayaCompositionDelta.h"
 #include "MayaCompositionTelemetry.h"
 #include "MayaCompositionDirty.h"
+#include "MayaCompositionScene.h"
 #include "MayaDeviceHealth.h"
 #include "MayaFrameDirect.h"
 #include "MayaFrameView.h"
@@ -59,6 +60,9 @@ struct Layer {
     Composition *owner = nullptr;
     std::uint64_t seenFrame = 0;
     swt_maya::CommittedLayerProperties committedProperties;
+    swt_maya::SceneLayerState committedScene;
+    // Marks any attempted opt-in transform/clip until a legacy or packed frame resets it.
+    bool sceneMayBeActive = false;
     IDCompositionVisual *visual = nullptr;
     IDCompositionSurface *surface = nullptr;
     IDCompositionEffectGroup *effect = nullptr;
@@ -287,11 +291,7 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
         // the first BeginDraw. A subsequent JNI exception cannot leave a batch
         // half-written to native surfaces. No Java heap is pinned during COM.
         const std::size_t pixelCount = swt_maya::packedDirtyPixelCount(rects.data(), count);
-        // Preserve SWT #554: exactly one complete JNI pixel copy BEFORE
-        // any DirectComposition BeginDraw. Only small, non-reentrant batches
-        // reuse per-thread storage; large/nested calls borrow a private copy.
-        static thread_local swt_maya::DirtyPixelScratch<jint> scratch;
-        swt_maya::DirtyPixelScratch<jint>::Lease copy(scratch, count, pixelCount);
+        std::vector<jint> copy(pixelCount);
         env->GetIntArrayRegion(packed, 0, static_cast<jsize>(pixelCount), copy.data());
         if (env->ExceptionCheck()) return E_FAIL;
         std::size_t offset = 0;
@@ -350,8 +350,33 @@ inline void invalidateFrameCache(Composition *c) noexcept {
     // After a failed or interrupted native transaction, the cached scene
     // never becomes authority until a subsequent successful Commit.
     c->frameDelta.invalidate();
-    for (Layer *layer : c->layers) layer->committedProperties.invalidate();
+    for (Layer *layer : c->layers) {
+        layer->committedProperties.invalidate();
+        layer->committedScene.invalidate();
+    }
 }
+
+// The opt-in affine scene frame: the legacy values plus a 3x2 matrix and an
+// optional local clip per layer, in one SCENE_FLOATS record (MayaCompositionScene.h).
+struct SceneView {
+    const jlong *handles;
+    const jfloat *packed;
+    const jint *flags;
+    std::size_t count;
+    std::size_t size() const noexcept { return count; }
+    const float *scene(std::size_t i) const noexcept {
+        return packed + i * static_cast<std::size_t>(swt_maya::SCENE_FLOATS);
+    }
+    int option(std::size_t i) const noexcept { return static_cast<int>(flags[i]); }
+    swt_maya_frame::Values at(std::size_t i) const noexcept {
+        const float *q = scene(i);
+        std::uint64_t opaque = 0;
+        std::memcpy(&opaque, handles + i, sizeof(opaque));
+        return {opaque, q[0], q[1], q[2], q[3]};
+    }
+};
+template<class View> struct SceneFrame { static constexpr bool carriesScene = false; };
+template<> struct SceneFrame<SceneView> { static constexpr bool carriesScene = true; };
 
 template<class View>
 jint applyNativeFrame(Composition *c, const View &view) noexcept {
@@ -379,7 +404,10 @@ jint applyNativeFrame(Composition *c, const View &view) noexcept {
         for (std::size_t i = 0; i < count; i++) {
             const auto value = view.at(i);
             Layer *layer = lookupFrameLayer(value.handle);
-            if (!layer || layer->owner != c || layer->seenFrame == generation ||
+            bool validScene = true;
+            if constexpr (SceneFrame<View>::carriesScene)
+                validScene = swt_maya::validSceneLayer(view.scene(i), view.option(i));
+            if (!layer || layer->owner != c || layer->seenFrame == generation || !validScene ||
                     !swt_maya::validLayerProperties(value.x, value.y,
                             value.opacity, value.visible)) {
                 c->telemetry.rejectFrame();
@@ -416,6 +444,32 @@ jint applyNativeFrame(Composition *c, const View &view) noexcept {
                 changed = true;
                 hr = layer->effect->SetOpacity(value.opacity);
             }
+            if constexpr (SceneFrame<View>::carriesScene) {
+                const float *q = view.scene(i);
+                const int option = view.option(i);
+                if (SUCCEEDED(hr) && !layer->committedScene.sameMatrix(q)) {
+                    changed = true;
+                    layer->sceneMayBeActive = true;
+                    const D2D_MATRIX_3X2_F matrix = {q[4], q[5], q[6], q[7], q[8], q[9]};
+                    hr = layer->visual->SetTransform(matrix);
+                }
+                if (SUCCEEDED(hr) && !layer->committedScene.sameClip(q, option)) {
+                    changed = true;
+                    layer->sceneMayBeActive = true;
+                    if ((option & swt_maya::SCENE_CLIP) != 0) {
+                        const D2D_RECT_F clip = {q[10], q[11], q[12], q[13]};
+                        hr = layer->visual->SetClip(clip);
+                    } else {
+                        hr = layer->visual->SetClip(static_cast<IDCompositionClip *>(nullptr));
+                    }
+                }
+            } else if (SUCCEEDED(hr) && layer->sceneMayBeActive) {
+                // Legacy and packed frames never inherit scene-only transforms or clips.
+                changed = true;
+                const D2D_MATRIX_3X2_F identity = {1, 0, 0, 1, 0, 0};
+                hr = layer->visual->SetTransform(identity);
+                if (SUCCEEDED(hr)) hr = layer->visual->SetClip(static_cast<IDCompositionClip *>(nullptr));
+            }
             // Without a reference, insertAbove FALSE adds above the last
             // sibling; the order is bottom-to-top in BOTH frame formats.
             if (SUCCEEDED(hr) && reorder && value.visible != 0.0f)
@@ -441,6 +495,13 @@ jint applyNativeFrame(Composition *c, const View &view) noexcept {
                     Layer *layer = lookupFrameLayer(value.handle);
                     layer->committedProperties.accept(
                             value.x, value.y, value.opacity);
+                    if constexpr (SceneFrame<View>::carriesScene) {
+                        layer->committedScene.accept(view.scene(i), view.option(i));
+                        layer->sceneMayBeActive = true;
+                    } else {
+                        layer->sceneMayBeActive = false;
+                        layer->committedScene.invalidate();
+                    }
                 }
             }
         } else {
@@ -506,6 +567,38 @@ jint applyDecodedFrame(jlong composition, const Frame &frame) noexcept {
 }
 }
 
+// One counted JNI frame for affine transforms and local rectangular clips,
+// through the same validated transaction as _nApply and packed frames. The
+// original _nApply remains available and resets this opt-in state on use.
+extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nApplyScene
+  (JNIEnv *env, jclass, jlong composition, jlongArray layers, jfloatArray packed, jintArray flags, jint count) {
+    Composition *c = getComposition(composition);
+    if (!c || !layers || !packed || !flags) return E_POINTER;
+    if (!swt_maya::validSceneArrays(count, env->GetArrayLength(layers),
+            env->GetArrayLength(packed), env->GetArrayLength(flags))
+            || static_cast<std::size_t>(count) > c->layers.size()) return E_INVALIDARG;
+    try {
+        const std::size_t n = static_cast<std::size_t>(count);
+        std::vector<jlong> order(n);
+        std::vector<jfloat> records(n * static_cast<std::size_t>(swt_maya::SCENE_FLOATS));
+        std::vector<jint> options(n);
+        if (count != 0) {
+            env->GetLongArrayRegion(layers, 0, count, order.data());
+            if (env->ExceptionCheck()) return E_FAIL;
+            env->GetFloatArrayRegion(packed, 0, count * swt_maya::SCENE_FLOATS, records.data());
+            if (env->ExceptionCheck()) return E_FAIL;
+            env->GetIntArrayRegion(flags, 0, count, options.data());
+            if (env->ExceptionCheck()) return E_FAIL;
+        }
+        return applyNativeFrame(c, SceneView{order.data(), records.data(), options.data(), n});
+    } catch (const std::bad_alloc &) {
+        // Never let a native allocation failure escape through JNI; nothing was mutated yet.
+        return E_OUTOFMEMORY;
+    } catch (...) {
+        return E_FAIL;
+    }
+}
+
 extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nRemoveLayer
   (JNIEnv *, jclass, jlong composition, jlong layerHandle) {
     Composition *c = getComposition(composition);
@@ -519,7 +612,10 @@ extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
             // The next frame rebuilds membership and reapplies retained properties.
             // A failed RemoveVisual/Commit must not make cached state authoritative.
             c->frameDelta.invalidate();
-            for (Layer *remaining : c->layers) remaining->committedProperties.invalidate();
+            for (Layer *remaining : c->layers) {
+                remaining->committedProperties.invalidate();
+                remaining->committedScene.invalidate();
+            }
             destroy(layer);
             return;
         }
@@ -576,6 +672,8 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
   (JNIEnv *, jclass, jlong, jintArray, jintArray, jint) { return -1; }
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nApply
   (JNIEnv *, jclass, jlong, jlongArray, jfloatArray, jint) { return -1; }
+extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nApplyScene
+  (JNIEnv *, jclass, jlong, jlongArray, jfloatArray, jintArray, jint) { return -1; }
 extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nRemoveLayer
   (JNIEnv *, jclass, jlong, jlong) {}
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nWaitForCommit

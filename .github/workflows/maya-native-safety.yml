@@ -19,6 +19,11 @@ on:
       - 'tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_custom_LayeredViewport.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaNativeHandleRegistry.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaNativeHandleRegistryTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionScene.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionSceneTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def'
+      - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_Composition.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionDeltaTest.cc'
       - '.github/workflows/maya-native-safety.yml'
@@ -41,6 +46,11 @@ on:
       - 'tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_custom_LayeredViewport.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaNativeHandleRegistry.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaNativeHandleRegistryTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionScene.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionSceneTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def'
+      - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_Composition.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionDeltaTest.cc'
       - '.github/workflows/maya-native-safety.yml'
@@ -130,6 +140,47 @@ jobs:
                 org.eclipse.swt.internal.maya.MayaTelemetryJniSmoke \
                 "/tmp/libmaya-legacy-${compiler}.so" legacy
           done
+      - name: C++17 affine scene admission, legacy reset state and JNI bounds
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            "$root/tests/MayaCompositionSceneTest.cc" -o /tmp/maya-scene
+          /tmp/maya-scene
+
+      - name: Compile original MayaComposition.java and reconcile every JNI export
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          mkdir -p "$tmp/stub/org/eclipse/swt/internal/maya/impl" "$tmp/headers" "$tmp/classes"
+          printf '%s\n' 'package org.eclipse.swt.internal.maya.impl;' \
+            'public final class Library {' \
+            '    private Library() {}' \
+            '    public static void staticLoad() {}' \
+            '}' > "$tmp/stub/org/eclipse/swt/internal/maya/impl/Library.java"
+          source='bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java'
+          javac --release 21 -Xlint:all -Werror -h "$tmp/headers" -d "$tmp/classes" \
+            "$source" "$tmp/stub/org/eclipse/swt/internal/maya/impl/Library.java"
+          python3 - "$tmp/headers/org_eclipse_swt_internal_maya_MayaComposition.h" \
+            'bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def' <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+          prefix = 'Java_org_eclipse_swt_internal_maya_MayaComposition__1'
+          header = Path(sys.argv[1]).read_text()
+          definition = Path(sys.argv[2]).read_text()
+          generated = set(re.findall(r'Java_org_eclipse_swt_internal_maya_MayaComposition__1\w+', header))
+          exported = set(re.findall(r'Java_org_eclipse_swt_internal_maya_MayaComposition__1\w+', definition))
+          if not generated or generated != exported:
+              raise SystemExit(f'JNI ABI mismatch: missing={generated - exported}, extra={exported - generated}')
+          if prefix + 'nApplyScene' not in exported or prefix + 'nApplyPacked' not in exported or prefix + 'nUploadDirty' not in exported:
+              raise SystemExit('JNI scene/packed/dirty ABI symbols missing')
+          print('MayaComposition JNI declarations/export list: exact match', len(exported))
+          PY
+
       - name: Compile non-Windows JNI stub exports
         shell: bash
         run: |
@@ -138,6 +189,9 @@ jobs:
           g++ -std=c++17 -O2 -Wall -Wextra -Werror -fPIC \
             -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
             -shared "$root/MayaComposition.cc" -o /tmp/libmaya-composition-stubs.so
+          nm -D --defined-only /tmp/libmaya-composition-stubs.so \
+            | grep -Fq 'Java_org_eclipse_swt_internal_maya_MayaComposition__1nApplyScene'
+
 
   windows-native-source:
     runs-on: windows-2022
