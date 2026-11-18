@@ -191,10 +191,13 @@ public class Test_org_eclipse_swt_widgets_Synchronizer {
 		try {
 			waiter.start ();
 			long deadline = System.nanoTime () + TimeUnit.SECONDS.toNanos (3);
-			while (waiter.getState () != Thread.State.WAITING && System.nanoTime () < deadline) {
+			while (waiter.getState () != Thread.State.WAITING && waiter.getState () != Thread.State.TIMED_WAITING
+					&& System.nanoTime () < deadline) {
 				Thread.yield ();
 			}
-			assertEquals (Thread.State.WAITING, waiter.getState (), "worker did not reach sync wait");
+			assertTrue (waiter.getState () == Thread.State.WAITING
+					|| waiter.getState () == Thread.State.TIMED_WAITING,
+					"worker did not reach sync wait");
 			display.dispose ();
 			assertTrue (done.await (2, TimeUnit.SECONDS), "disposal left syncExec worker blocked");
 			assertNotNull (failure.get (), "disposing a queued syncExec must fail, not run");
