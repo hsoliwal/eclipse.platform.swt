@@ -180,6 +180,46 @@ public final class MayaComposition {
         }
     }
 
+    /** Version 1: the logical BGRA surface budget diagnostic array has six slots. */
+    public static final int SURFACE_BUDGET_FIELDS = 6;
+    public static final int BUDGET_VERSION = 0;
+    public static final int BUDGET_LIMIT_BYTES = 1;
+    public static final int BUDGET_RESERVED_BYTES = 2;
+    public static final int BUDGET_PEAK_BYTES = 3;
+    public static final int BUDGET_DENIALS = 4;
+    public static final int BUDGET_ACCEPTED = 5;
+
+    /**
+     * Optional per-composition logical BGRA surface reservation cap. Zero
+     * means unlimited. The native method refuses a cap below the already
+     * reserved logical surface bytes. It does NOT limit actual GPU residency.
+     * An unrecognized native method is not silently treated as success.
+     */
+    public static native int _nSetSurfaceBudget(long composition, long maxLogicalBytes);
+
+    /** Explicit opt-in budget, returning -1 on an older unsupported Maya DLL. */
+    public static int setSurfaceBudget(long composition, long maxLogicalBytes) {
+        if (maxLogicalBytes < 0) throw new IllegalArgumentException("negative native surface quota");
+        try {
+            return _nSetSurfaceBudget(composition, maxLogicalBytes);
+        } catch (UnsatisfiedLinkError olderMayaBinary) {
+            return -1;
+        }
+    }
+
+    /** Copies six primitive counters into the caller-owned prefix only. */
+    public static native int _nReadSurfaceBudget(long composition, long[] out);
+
+    /** Optional read-only logical reservation snapshot, or null if unsupported. */
+    public static long[] readSurfaceBudget(long composition) {
+        long[] snapshot = new long[SURFACE_BUDGET_FIELDS];
+        try {
+            return _nReadSurfaceBudget(composition, snapshot) == 0 ? snapshot : null;
+        } catch (UnsatisfiedLinkError olderMayaBinary) {
+            return null;
+        }
+    }
+
 	/** Removes every layer from the window and frees the composition. */
 	public static native void _nDispose(long composition);
 }
