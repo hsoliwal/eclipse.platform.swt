@@ -1225,6 +1225,170 @@ public final class ViewportRuntime {
 		}
 	}
 
+
+	/**
+	 * Primitive, four-plane viewport projection used by native Trees, grids,
+	 * tables and future layered controls. A fixed header remains above the
+	 * vertically scrolling body; a frozen left region remains above the
+	 * horizontally scrolling body. The corner is fixed on both axes.
+	 *
+	 * <p>Geometry is in device pixels; scroll origin and logical rectangles use
+	 * signed long coordinates. Every clip/query writes into caller-owned int[4],
+	 * avoiding native handles, Rectangle allocation, and per-row scene nodes.
+	 * This model does not replace SWT's native TreeColumn header or input
+	 * routing, and does not change existing viewport scroll dirty masks.</p>
+	 */
+	public static final class PinnedPlanes {
+		public static final int BODY = ViewportRuntime.BODY;
+		public static final int HEADER = ViewportRuntime.HEADER;
+		public static final int FROZEN = ViewportRuntime.FROZEN;
+		/** The top-left intersection has no scrolling dependency. */
+		public static final int CORNER = 1 << 8;
+
+		private int width, height, headerHeight, frozenWidth;
+		private long originX, originY, generation;
+
+		public PinnedPlanes (int width, int height, int headerHeight, int frozenWidth) {
+			configure (width, height, headerHeight, frozenWidth);
+		}
+
+		/**
+		 * The top strip and left strip may be empty. Rejected changes leave the
+		 * previous geometry intact.
+		 */
+		public void configure (int width, int height, int headerHeight, int frozenWidth) {
+			if (width < 0 || height < 0 || headerHeight < 0 || headerHeight > height
+					|| frozenWidth < 0 || frozenWidth > width) {
+				throw new IllegalArgumentException ("invalid pinned viewport geometry");
+			}
+			if (this.width == width && this.height == height
+					&& this.headerHeight == headerHeight && this.frozenWidth == frozenWidth) return;
+			this.width = width;
+			this.height = height;
+			this.headerHeight = headerHeight;
+			this.frozenWidth = frozenWidth;
+			generation++;
+		}
+
+		/** Scroll only planes attached to the changed axes; never invalidate the corner. */
+		public int scrollTo (long x, long y) {
+			boolean horizontal = x != originX, vertical = y != originY;
+			if (!horizontal && !vertical) return 0;
+			originX = x;
+			originY = y;
+			generation++;
+			int dirty = 0;
+			if (horizontal) {
+				if (width > frozenWidth && height > headerHeight) dirty |= BODY;
+				if (width > frozenWidth && headerHeight > 0) dirty |= HEADER;
+			}
+			if (vertical) {
+				if (width > frozenWidth && height > headerHeight) dirty |= BODY;
+				if (frozenWidth > 0 && height > headerHeight) dirty |= FROZEN;
+			}
+			return dirty;
+		}
+
+		public long originX () { return originX; }
+		public long originY () { return originY; }
+		public long generation () { return generation; }
+
+		/**
+		 * Routes an interior pixel to its topmost fixed plane. Native editors,
+		 * focus, IME and accessible peers must be dispatched before this model.
+		 * Returns zero for a point outside the viewport.
+		 */
+		public int planeAt (int pixelX, int pixelY) {
+			if (pixelX < 0 || pixelY < 0 || pixelX >= width || pixelY >= height) return 0;
+			if (pixelY < headerHeight) return pixelX < frozenWidth ? CORNER : HEADER;
+			return pixelX < frozenWidth ? FROZEN : BODY;
+		}
+
+		/** Writes device-pixel x,y,width,height of a plane into caller-owned scratch. */
+		public boolean clip (int plane, int [] out) {
+			checkScratch (out);
+			int x0, y0, x1, y1;
+			switch (plane) {
+				case BODY -> {
+					x0 = frozenWidth; y0 = headerHeight; x1 = width; y1 = height;
+				}
+				case HEADER -> {
+					x0 = frozenWidth; y0 = 0; x1 = width; y1 = headerHeight;
+				}
+				case FROZEN -> {
+					x0 = 0; y0 = headerHeight; x1 = frozenWidth; y1 = height;
+				}
+				case CORNER -> {
+					x0 = 0; y0 = 0; x1 = frozenWidth; y1 = headerHeight;
+				}
+				default -> throw new IllegalArgumentException ("unknown viewport plane");
+			}
+			out [0] = x0;
+			out [1] = y0;
+			out [2] = x1 - x0;
+			out [3] = y1 - y0;
+			return x0 < x1 && y0 < y1;
+		}
+
+		/**
+		 * Projects a half-open logical rectangle to its plane and intersects its
+		 * visible clip. BODY and HEADER scroll horizontally, BODY and FROZEN
+		 * scroll vertically. Body rows are relative to the area under HEADER.
+		 * Offscreen content is not materialized, and all intermediate arithmetic
+		 * saturates before narrowing to device-pixel ints.
+		 */
+		public boolean project (int plane, long x, long y, long width, long height, int [] out) {
+			checkScratch (out);
+			if (width < 0 || height < 0 || (width > 0 && x > Long.MAX_VALUE - width)
+					|| (height > 0 && y > Long.MAX_VALUE - height)) {
+				throw new IllegalArgumentException ("invalid logical bounds");
+			}
+			if (!clip (plane, out) || width == 0 || height == 0) {
+				out [2] = out [3] = 0;
+				return false;
+			}
+			int left = out [0], top = out [1];
+			int right = left + out [2], bottom = top + out [3];
+			boolean horizontal = plane == BODY || plane == HEADER;
+			boolean vertical = plane == BODY || plane == FROZEN;
+			long sx = horizontal ? saturatingSubtract (x, originX) : x;
+			long sy = vertical ? saturatingAdd (
+					saturatingSubtract (y, originY), headerHeight) : y;
+			long ex = saturatingAdd (sx, width), ey = saturatingAdd (sy, height);
+			long x0 = Math.max ((long)left, sx), y0 = Math.max ((long)top, sy);
+			long x1 = Math.min ((long)right, ex), y1 = Math.min ((long)bottom, ey);
+			if (x0 >= x1 || y0 >= y1) {
+				out [2] = out [3] = 0;
+				return false;
+			}
+			out [0] = (int)x0; out [1] = (int)y0;
+			out [2] = (int)(x1 - x0); out [3] = (int)(y1 - y0);
+			return true;
+		}
+
+		private static void checkScratch (int [] out) {
+			if (out == null || out.length < 4) {
+				throw new IllegalArgumentException ("need four output ints");
+			}
+		}
+
+		private static long saturatingAdd (long a, long b) {
+			long value = a + b;
+			if (((a ^ value) & (b ^ value)) < 0) {
+				return b >= 0 ? Long.MAX_VALUE : Long.MIN_VALUE;
+			}
+			return value;
+		}
+
+		private static long saturatingSubtract (long a, long b) {
+			long value = a - b;
+			if (((a ^ b) & (a ^ value)) < 0) {
+				return a >= 0 ? Long.MAX_VALUE : Long.MIN_VALUE;
+			}
+			return value;
+		}
+	}
+
 	private double originX;
 	private double originY;
 	private boolean originInitialized;
