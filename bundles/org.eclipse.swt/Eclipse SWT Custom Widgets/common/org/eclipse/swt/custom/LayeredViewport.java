@@ -120,6 +120,8 @@ public final class LayeredViewport extends Canvas {
         private boolean visible = true;
         private boolean locked;
         private boolean removed;
+        /* Each axis scrolls independently; legacy layers move with both. */
+        private int scrollAxes = SCROLL_BOTH;
         /* a control layer's native child, placed at the layer's bounds; null for painted layers */
         private Control control;
         /* native: asked to be composited by the window system; nativeLayer is its native handle (0 while painted) */
@@ -175,6 +177,43 @@ public final class LayeredViewport extends Canvas {
         public WorldBounds getWorldBounds() {
             checked();
             return new WorldBounds(x, y, right - x, bottom - y);
+        }
+
+        /** The viewport axes whose panning moves this layer. */
+        public int getScrollAxes() {
+            checked();
+            return scrollAxes;
+        }
+
+        /**
+         * Set independent pan axes. SCROLL_X pins a column header vertically;
+         * SCROLL_Y freezes a column horizontally; zero pins both axes.
+         * Bounds and clips remain in this layer's local world coordinates.
+         */
+        public void setScrollAxes(int axes) {
+            checked();
+            if ((axes & ~SCROLL_BOTH) != 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (scrollAxes == axes) return;
+            invalidate(this);
+            scrollAxes = axes;
+            spatialDirty = true;
+            invalidate(this);
+            placeControl(this);
+            syncNative();
+        }
+
+        /** Convert a point using the layer's own horizontal and vertical pan policy. */
+        public Point toScreen(long worldX, long worldY) {
+            checked();
+            return new Point(saturatedPixel(device(worldX, axisOriginX(this))),
+                    saturatedPixel(device(worldY, axisOriginY(this))));
+        }
+
+        /** Inverse of toScreen, using the layer's own pan origin. */
+        public WorldPoint toWorld(int deviceX, int deviceY) {
+            checked();
+            return new WorldPoint(saturatedAdd(axisOriginX(this), floorLong(deviceX / zoom)),
+                    saturatedAdd(axisOriginY(this), floorLong(deviceY / zoom)));
         }
 
         /** Optional additional rectangular world-space paint/hit clip. */
@@ -444,6 +483,13 @@ public final class LayeredViewport extends Canvas {
      * Blend modes of a layer ({@link Layer#setBlendMode(int)}): normal, then the separable modes of W3C Compositing
      * and Blending Level 1 (the layer modes of GIMP, Inkscape and Photoshop).
      */
+    /** Horizontal pan moves the layer. */
+    public static final int SCROLL_X = 1;
+    /** Vertical pan moves the layer. */
+    public static final int SCROLL_Y = 2;
+    /** Original behavior: pan both axes. */
+    public static final int SCROLL_BOTH = SCROLL_X | SCROLL_Y;
+
     public static final int BLEND_NORMAL = 0, BLEND_MULTIPLY = 1, BLEND_SCREEN = 2, BLEND_OVERLAY = 3,
             BLEND_DARKEN = 4, BLEND_LIGHTEN = 5, BLEND_COLOR_DODGE = 6, BLEND_COLOR_BURN = 7,
             BLEND_HARD_LIGHT = 8, BLEND_SOFT_LIGHT = 9, BLEND_DIFFERENCE = 10, BLEND_EXCLUSION = 11;
@@ -459,11 +505,14 @@ public final class LayeredViewport extends Canvas {
     private Layer[] paintOrder = new Layer[0];
     private boolean orderDirty;
     private final LayerRectIndex spatialIndex = new LayerRectIndex();
+    /* Small fixed-axis overlay lane: integer indices retain the ordinary Z order. */
+    private int[] fixedZ = new int[4];
+    private int fixedCount;
     private final LayerRectIndex.Bounds spatialSource = new LayerRectIndex.Bounds() {
         @Override public int size() { return paintOrder.length; }
         @Override public boolean active(int at) {
             Layer layer = paintOrder[at];
-            if (layer.removed || !layer.visible || layer.opacity == 0) return false;
+            if (layer.scrollAxes != SCROLL_BOTH || layer.removed || !layer.visible || layer.opacity == 0) return false;
             WorldBounds clip = layer.worldClip;
             return clip == null || (Math.max(layer.x, clip.x()) <
                     Math.min(layer.right, clip.x() + clip.width()) &&
@@ -693,31 +742,53 @@ public final class LayeredViewport extends Canvas {
         return saturatedAdd(originY, floorLong(deviceY / zoom));
     }
 
+    private long axisOriginX(Layer layer) {
+        return (layer.scrollAxes & SCROLL_X) == 0 ? 0 : originX;
+    }
+
+    private long axisOriginY(Layer layer) {
+        return (layer.scrollAxes & SCROLL_Y) == 0 ? 0 : originY;
+    }
+
+    private long layerWorldX(Layer layer, int deviceX) {
+        return saturatedAdd(axisOriginX(layer), floorLong(deviceX / zoom));
+    }
+
+    private long layerWorldY(Layer layer, int deviceY) {
+        return saturatedAdd(axisOriginY(layer), floorLong(deviceY / zoom));
+    }
+
     private Layer queryHit(int deviceX, int deviceY, long worldX, long worldY,
             boolean withPointerListener) {
         if (!getClientArea().contains(deviceX, deviceY)) return null;
         ensureSpatialIndex();
-        int candidates = spatialIndex.query(worldX, worldY,
+        int scrolled = spatialIndex.query(worldX, worldY,
                 saturatedAdd(worldX, 1), saturatedAdd(worldY, 1));
-        // Hit testers may re-enter the scene; capture handles before callbacks.
+        int required = scrolled + fixedCount;
+        // Snapshot in paint order before callbacks; the fixed-index lane is Z-sorted.
         Layer[] hits = activeHitQueries == 0
-                ? growHitCandidates(candidates) : new Layer[candidates];
-        for (int i = 0; i < candidates; i++) {
-            hits[i] = paintOrder[spatialIndex.resultAt(i)];
+                ? growHitCandidates(required) : new Layer[required];
+        int a = 0, b = 0, candidates = 0;
+        while (a < scrolled || b < fixedCount) {
+            int zNormal = a < scrolled ? spatialIndex.resultAt(a) : Integer.MAX_VALUE;
+            int zFixed = b < fixedCount ? fixedZ[b] : Integer.MAX_VALUE;
+            if (zNormal < zFixed) a++;
+            else b++;
+            hits[candidates++] = paintOrder[Math.min(zNormal, zFixed)];
         }
         activeHitQueries++;
         try {
             for (int i = candidates - 1; i >= 0; i--) {
                 if (isDisposed()) return null;
                 Layer layer = hits[i];
-                if (!containsHit(layer, worldX, worldY)
+                long x = layerWorldX(layer, deviceX), y = layerWorldY(layer, deviceY);
+                if (!containsHit(layer, x, y)
                         || (withPointerListener && layer.pointerListener == null)) continue;
                 LayerHitTester tester = layer.hitTester;
-                boolean accepted = tester == null || tester.contains(layer, worldX, worldY);
+                boolean accepted = tester == null || tester.contains(layer, x, y);
                 if (isDisposed()) return null;
-                // Callbacks can remove, move, hide or lock their own target,
-                // or another candidate captured by this query.
-                if (accepted && containsHit(layer, worldX, worldY)
+                // A hit tester may change axes, move, hide or remove a candidate.
+                if (accepted && containsHit(layer, layerWorldX(layer, deviceX), layerWorldY(layer, deviceY))
                         && (!withPointerListener || layer.pointerListener != null)) return layer;
             }
             return null;
@@ -777,7 +848,8 @@ public final class LayeredViewport extends Canvas {
         boolean delivered = false;
         try {
             listener.handle(new LayerPointerEvent(layer, event.type, event.x, event.y,
-                    worldX, worldY, event.button, event.count, event.stateMask,
+                    layerWorldX(layer, event.x), layerWorldY(layer, event.y),
+                    event.button, event.count, event.stateMask,
                     event.time, byCapture));
             delivered = true;
         } finally {
@@ -991,10 +1063,16 @@ public final class LayeredViewport extends Canvas {
             long y1 = saturatedAdd(originY, saturatedAdd(ceilLong(
                     ((double) damage.y + damage.height) / zoom), 1));
             int found = spatialIndex.query(x0, y0, x1, y1);
-            candidates = activePaintFrames == 0 ? growPaintCandidates(found) : new Layer[found];
+            int capacity = found + fixedCount;
+            candidates = activePaintFrames == 0 ? growPaintCandidates(capacity) : new Layer[capacity];
             selected = 0;
-            for (int i = 0; i < found; i++) {
-                int z = spatialIndex.resultAt(i);
+            int a = 0, b = 0;
+            while (a < found || b < fixedCount) {
+                int zNormal = a < found ? spatialIndex.resultAt(a) : Integer.MAX_VALUE;
+                int zFixed = b < fixedCount ? fixedZ[b] : Integer.MAX_VALUE;
+                if (zNormal < zFixed) a++;
+                else b++;
+                int z = Math.min(zNormal, zFixed);
                 if (z >= from && z < to) candidates[selected++] = frame[z];
             }
         } else {
@@ -1031,7 +1109,7 @@ public final class LayeredViewport extends Canvas {
                         if (!layer.image.isDisposed()) paintImage(gc, layer, tile);
                     } else if (layer.painter != null) {
                         layer.painter.paint(gc,
-                                new PaintContext(layer, tile, originX, originY, zoom));
+                                new PaintContext(layer, tile, axisOriginX(layer), axisOriginY(layer), zoom));
                     }
                 }
             }
@@ -1063,6 +1141,12 @@ public final class LayeredViewport extends Canvas {
         orderSnapshot();
         if (spatialDirty) {
             spatialIndex.rebuild(spatialSource);
+            fixedCount = 0;
+            for (int z = 0; z < paintOrder.length; z++) {
+                if (paintOrder[z].scrollAxes == SCROLL_BOTH) continue;
+                if (fixedCount == fixedZ.length) fixedZ = Arrays.copyOf(fixedZ, fixedZ.length * 2);
+                fixedZ[fixedCount++] = z;
+            }
             spatialDirty = false;
         }
     }
@@ -1087,7 +1171,7 @@ public final class LayeredViewport extends Canvas {
         try {
             copy.drawImage(target, tile.x, tile.y, tile.width, tile.height, tile.x, tile.y, tile.width, tile.height);
             copy.setClipping(tile);
-            painter.paint(copy, new PaintContext(layer, tile, originX, originY, zoom));
+            painter.paint(copy, new PaintContext(layer, tile, axisOriginX(layer), axisOriginY(layer), zoom));
         } finally {
             copy.dispose();
             if (!isDisposed()) back[0] = new GC(target);
@@ -1110,8 +1194,9 @@ public final class LayeredViewport extends Canvas {
     private void paintBlended(GC[] back, Layer layer, Rectangle tile) {
         if (layer.blendSource == null) layer.blendSource = layer.image.getImageData();
         ImageData source = layer.blendSource;
-        double left = device(layer.x, originX), top = device(layer.y, originY);
-        double width = device(layer.right, originX) - left, height = device(layer.bottom, originY) - top;
+        double left = device(layer.x, axisOriginX(layer)), top = device(layer.y, axisOriginY(layer));
+        double width = device(layer.right, axisOriginX(layer)) - left;
+        double height = device(layer.bottom, axisOriginY(layer)) - top;
         if (!(width > 0) || !(height > 0) || source.width == 0 || source.height == 0) return;
         Image under = new Image(getDisplay(), tile.width, tile.height);
         try {
@@ -1154,10 +1239,10 @@ public final class LayeredViewport extends Canvas {
         Rectangle srcBounds = layer.image.getBounds();
         if (srcBounds.width == 0 || srcBounds.height == 0) return;
 
-        double left = device(layer.x, originX);
-        double top = device(layer.y, originY);
-        double right = device(layer.right, originX);
-        double bottom = device(layer.bottom, originY);
+        double left = device(layer.x, axisOriginX(layer));
+        double top = device(layer.y, axisOriginY(layer));
+        double right = device(layer.right, axisOriginX(layer));
+        double bottom = device(layer.bottom, axisOriginY(layer));
         double width = right - left;
         double height = bottom - top;
         if (width <= 0 || height <= 0) return;
@@ -1193,19 +1278,21 @@ public final class LayeredViewport extends Canvas {
     }
 
     private Rectangle projectedClip(Layer layer, Rectangle damage) {
-        Rectangle visible = projectedClip(layer.x, layer.y, layer.right, layer.bottom, damage);
+        long xOrigin = axisOriginX(layer), yOrigin = axisOriginY(layer);
+        Rectangle visible = projectedClip(layer.x, layer.y, layer.right, layer.bottom,
+                damage, xOrigin, yOrigin);
         if (visible == null || layer.worldClip == null) return visible;
         WorldBounds clip = layer.worldClip;
         return projectedClip(clip.x(), clip.y(), clip.x() + clip.width(),
-                clip.y() + clip.height(), visible);
+                clip.y() + clip.height(), visible, xOrigin, yOrigin);
     }
 
     private Rectangle projectedClip(long worldX, long worldY, long worldRight,
-            long worldBottom, Rectangle damage) {
-        double left = device(worldX, originX);
-        double top = device(worldY, originY);
-        double right = device(worldRight, originX);
-        double bottom = device(worldBottom, originY);
+            long worldBottom, Rectangle damage, long xOrigin, long yOrigin) {
+        double left = device(worldX, xOrigin);
+        double top = device(worldY, yOrigin);
+        double right = device(worldRight, xOrigin);
+        double bottom = device(worldBottom, yOrigin);
         int x0 = (int) Math.max((double) damage.x, Math.floor(left));
         int y0 = (int) Math.max((double) damage.y, Math.floor(top));
         int x1 = (int) Math.min((double) damage.x + damage.width, Math.ceil(right));
@@ -1447,6 +1534,14 @@ public final class LayeredViewport extends Canvas {
             return false;
         }
         if (Math.abs(dx) >= size.width || Math.abs(dy) >= size.height) return false;
+        ensureSpatialIndex();
+        // A flattened store containing fixed pixels cannot be moved as one image.
+        for (int i = 0; i < fixedCount; i++) {
+            Layer layer = paintOrder[fixedZ[i]];
+            if (layer.removed || !layer.visible || layer.opacity == 0 || layer.nativeLayer != 0) continue;
+            if ((dx != 0 && (layer.scrollAxes & SCROLL_X) == 0)
+                    || (dy != 0 && (layer.scrollAxes & SCROLL_Y) == 0)) return false;
+        }
         int sx = (int) dx, sy = (int) dy;
         shiftStore(backBuffer, dirty, sx, sy, size);
         for (Layer layer : orderSnapshot()) {
@@ -1498,8 +1593,8 @@ public final class LayeredViewport extends Canvas {
         Control control = layer.control;
         if (isDisposed() || layer.removed || control == null || control.isDisposed()) return;
         Rectangle area = getClientArea();
-        double left = device(layer.x, originX), top = device(layer.y, originY);
-        double right = device(layer.right, originX), bottom = device(layer.bottom, originY);
+        double left = device(layer.x, axisOriginX(layer)), top = device(layer.y, axisOriginY(layer));
+        double right = device(layer.right, axisOriginX(layer)), bottom = device(layer.bottom, axisOriginY(layer));
         boolean shown = layer.visible && layer.opacity > 0 && right > area.x && left < (double) area.x + area.width
                 && bottom > area.y && top < (double) area.y + area.height;
         if (shown) {
@@ -1604,8 +1699,8 @@ public final class LayeredViewport extends Canvas {
         for (Layer layer : paintOrder) {
             if (layer.nativeLayer == 0) continue;
             handles[i] = layer.nativeLayer;
-            props[i * 4] = (float) device(layer.x, originX);
-            props[i * 4 + 1] = (float) device(layer.y, originY);
+            props[i * 4] = (float) device(layer.x, axisOriginX(layer));
+            props[i * 4 + 1] = (float) device(layer.y, axisOriginY(layer));
             props[i * 4 + 2] = layer.opacity / 255f;
             props[i * 4 + 3] = layer.visible && layer.opacity > 0 ? 1 : 0;
             i++;

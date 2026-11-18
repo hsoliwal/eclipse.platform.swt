@@ -166,6 +166,94 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertSame(layer, viewport.hitTest(65, 12));
     }
 
+
+    @Test
+    public void testFixedHeaderScrollsWithColumnsButNotWithRows() {
+        Image body = new Image(viewport.getDisplay(), 80, 140);
+        GC dc = new GC(body);
+        try {
+            dc.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_RED));
+            dc.fillRectangle(0, 0, 80, 60);
+            dc.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_BLUE));
+            dc.fillRectangle(0, 60, 80, 80);
+        } finally {
+            dc.dispose();
+        }
+        try {
+            Layer rows = viewport.addImageLayer("scrolling rows", body, 0, 0);
+            Layer header = viewport.addPaintLayer("fixed header", 0, 0, 80, 20, (gc, context) -> {
+                gc.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_YELLOW));
+                gc.fillRectangle(context.clip());
+            });
+            header.setScrollAxes(LayeredViewport.SCROLL_X);
+            assertEquals(LayeredViewport.SCROLL_BOTH, rows.getScrollAxes());
+            assertEquals(LayeredViewport.SCROLL_X, header.getScrollAxes());
+            show();
+            assertEquals(new RGB(255, 255, 0), rgb(pixels(), 10, 10));
+            assertEquals(new RGB(255, 0, 0), rgb(pixels(), 10, 40));
+            viewport.setOrigin(0, 40);
+            viewport.update();
+            SwtTestUtil.processEvents();
+            ImageData scrolled = pixels();
+            assertEquals(new RGB(255, 255, 0), rgb(scrolled, 10, 10),
+                    "header remains above the rows after a vertical pan");
+            assertEquals(new RGB(0, 0, 255), rgb(scrolled, 10, 40),
+                    "the body scrolls under the fixed header");
+            assertSame(header, viewport.hitTest(10, 10));
+            assertSame(rows, viewport.hitTest(10, 40));
+            viewport.setOrigin(10, 40);
+            viewport.update();
+            SwtTestUtil.processEvents();
+            assertEquals(new RGB(255, 255, 0), rgb(pixels(), 10, 10),
+                    "header follows horizontal column motion");
+            assertEquals(new Point(0, 0), header.toScreen(10, 0));
+            assertEquals(new WorldPoint(20, 10), header.toWorld(10, 10));
+            assertEquals(new WorldPoint(20, 50), rows.toWorld(10, 10));
+            header.setScrollAxes(LayeredViewport.SCROLL_BOTH);
+            assertSame(rows, viewport.hitTest(10, 10), "unfixed header scrolls out of view");
+            assertThrows(IllegalArgumentException.class, () -> header.setScrollAxes(8));
+        } finally {
+            body.dispose();
+        }
+    }
+
+    @Test
+    public void testFrozenNativeControlIgnoresHorizontalPanAndRetainsVerticalScroll() {
+        Button button = new Button(viewport, SWT.PUSH);
+        Layer frozen = viewport.addControlLayer("frozen tree column", button, 20, 40, 90, 25);
+        frozen.setScrollAxes(LayeredViewport.SCROLL_Y);
+        viewport.setOrigin(200, 10);
+        assertEquals(new Rectangle(20, 30, 90, 25), button.getBounds());
+        assertEquals(new Point(20, 30), frozen.toScreen(20, 40));
+        assertSame(frozen, viewport.hitTest(25, 35));
+        viewport.setOrigin(200, 500);
+        assertFalse(button.getVisible(), "scrolled out-of-view native control is hidden");
+        viewport.setOrigin(300, 0);
+        assertEquals(new Rectangle(20, 40, 90, 25), button.getBounds());
+        assertTrue(button.getVisible());
+    }
+
+    @Test
+    public void testFixedPlanePointerCoordinatesAndReentrantAxisChange() {
+        Layer body = viewport.addPaintLayer("body", 0, 0, 100, 200, (gc, c) -> { });
+        Layer header = viewport.addPaintLayer("header", 0, 0, 100, 20, (gc, c) -> { });
+        header.setScrollAxes(LayeredViewport.SCROLL_X);
+        viewport.setOrigin(10, 50);
+        List<LayerPointerEvent> delivered = new ArrayList<>();
+        header.setPointerListener(delivered::add);
+        assertSame(header, viewport.hitTest(5, 5));
+        pointer(SWT.MouseMove, 5, 5, 0);
+        assertEquals(new WorldPoint(15, 5), new WorldPoint(delivered.get(0).worldX(), delivered.get(0).worldY()));
+        assertSame(body, viewport.hitTest(5, 25));
+        header.setHitTester((layer, x, y) -> {
+            layer.setScrollAxes(LayeredViewport.SCROLL_BOTH);
+            return true;
+        });
+        assertSame(body, viewport.hitTest(5, 5),
+                "a reentrant change must revalidate the captured plane coordinates");
+        assertEquals(LayeredViewport.SCROLL_BOTH, header.getScrollAxes());
+    }
+
     /* opens the shell and lets every pending paint run */
     private void show() {
         shell.setSize(400, 340);

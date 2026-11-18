@@ -53,6 +53,27 @@ layers but does not yet spatially index millions of scattered layers. The
 Z-order storage is an array snapshot updated on structure changes, so paint
 iteration does not allocate a new layer array every frame.
 
+## Independently scrolling layers
+
+Each `Layer` defaults to `SCROLL_BOTH` (the historical behavior).
+`Layer.setScrollAxes(LayeredViewport.SCROLL_X)` makes a header that follows
+horizontal column scrolling while its vertical position remains fixed;
+`SCROLL_Y` freezes a column, and zero fixes both axes. This works for
+painted, raster-image, native-image, and borrowed native Control layers.
+`Layer.toScreen`/`toWorld` and `PaintContext.originX/originY` use that
+layer's axis-local coordinates. Picking and pointer callbacks use the same
+coordinate system as the corresponding paint.
+
+The parent keeps ordinary scrolling world rectangles in `LayerRectIndex`,
+with a small primitive Z-index lane for fixed-axis overlays. Paint and hit
+queries merge these in stable Z order. A pan with a painted fixed-axis layer
+cannot safely move the flattened backing store by `copyArea` and therefore
+recomposes it. Native-image layers receive their axis-local offsets through
+maya's existing frame call. Native Controls remain above painted layers, so
+arbitrary interleaving is not promised. For a native Tree, the existing OS
+header window remains the authority; the axis policy is for new composite
+widgets and overlays.
+
 ## Next implementation boundaries
 
 1. **Z-group surfaces:** retained composites below a change are done; next are
