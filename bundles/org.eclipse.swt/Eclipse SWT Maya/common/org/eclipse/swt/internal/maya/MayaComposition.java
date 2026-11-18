@@ -8,6 +8,8 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.maya;
 
+import java.nio.ByteBuffer;
+
 import org.eclipse.swt.internal.maya.impl.Library;
 
 /**
@@ -45,6 +47,17 @@ public final class MayaComposition {
 	 * (x, y, opacity, visible); layers not listed are not shown. One commit. Returns 0 or a failure code.
 	 */
 	public static native int _nApply(long composition, long[] layers, float[] props, int count);
+
+	/** Optional packet ingress ABI only (not an OS backend capability); absent in older Maya binaries. */
+	public static native int _nFramePacketVersion();
+
+	/**
+	 * Optional 32-byte-header/32-byte-record little-endian direct frame envelope.
+	 * The native implementation validates all bytes before calling original _nApply;
+	 * malformed buffers return -2, JNI staging failure returns -3. This is
+	 * experimental transport, not a promised performance improvement.
+	 */
+	public static native int _nApplyPacked(long composition, ByteBuffer packet, int byteLength);
 
 	/** Removes and frees a layer. */
 	public static native void _nRemoveLayer(long composition, long layer);
