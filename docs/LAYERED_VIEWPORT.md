@@ -137,6 +137,31 @@ CALayer on cocoa and iOS, ASurfaceControl on Android; the Java composite above
 stays the reference implementation every native route is compared with pixel by
 pixel.
 
+
+## Native composition frame scratch contract
+
+The native image-layer route shares a bounded, UI-thread-owned frame transport
+between the existing `LayeredViewport` and the optional maya compositor.
+For a frame with `count` native layers, `apply` reads exactly `count`
+layer handles and `4 * count` properties in bottom-to-top order. Scratch
+arrays **may have more capacity than count**; their unused suffix has no
+semantic meaning and must never be read by a native backend.
+
+The viewport owns Java primitive-array scratch; the native `Composition`
+owns its own typed copied-in scratch. Both may reuse capacity after warm-up,
+must use the active prefix only, and must not retain app-owned images or
+published paint callbacks. All frame submission stays on the SWT UI thread.
+The JNI bridge performs one synchronous copy-in of each active array prefix,
+without holding the Java heap pinned while the OS compositor works; it does
+not add a JNI call per layer. Native state is destroyed with its composition.
+An excessive layer count or invalid frame sizes must fail safely rather than
+allow overflowing native array bounds.
+
+This is an allocation-efficiency contract, **not** a claim of zero native
+allocations, O(1) Z composition, cross-platform GPU acceleration, or HTML/CSS
+layout conformance. DirectComposition remains the only active native layer
+backend. Native pixel parity and platform tests remain release gates.
+
 ## Verification
 
 The accompanying JUnit test exercises ordering, stable IDs, remove,
