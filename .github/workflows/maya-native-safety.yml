@@ -10,6 +10,8 @@ on:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaDeviceHealth.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionTelemetry.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionTelemetryTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaDeviceHealthTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/LayeredViewport.java'
       - 'tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_custom_LayeredViewport.java'
@@ -28,6 +30,8 @@ on:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaDeviceHealth.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionTelemetry.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionTelemetryTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaDeviceHealthTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/LayeredViewport.java'
       - 'tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_custom_LayeredViewport.java'
@@ -85,6 +89,17 @@ jobs:
               -fsanitize=address,undefined -fno-omit-frame-pointer -I"$root" \
               "$root/tests/MayaDeviceHealthTest.cc" -o "/tmp/maya-health-${compiler}"
             ASAN_OPTIONS=detect_leaks=1 "/tmp/maya-health-${compiler}"
+          done
+      - name: Native composition counters, saturation and versioned ABI
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          for compiler in g++ clang++; do
+            "$compiler" -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+              -fsanitize=address,undefined -fno-omit-frame-pointer \
+              "$root/tests/MayaCompositionTelemetryTest.cc" -o "/tmp/maya-telemetry-${compiler}"
+            ASAN_OPTIONS=detect_leaks=1 "/tmp/maya-telemetry-${compiler}"
           done
       - name: Compile non-Windows JNI stub exports
         shell: bash
