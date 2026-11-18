@@ -210,11 +210,20 @@ Its native Tree mapping has no additional native HWND/GTK widget/NSView,
 and its geometry projection is expressed through the general positioning
 kernel. Native header controls remain the original platform owners.
 
-**Important limits:** the fixed/sticky/parallax policy is currently a shared
-model primitive. Automatic assignment of arbitrary policies to all Canvas,
-Tree, Table and Nebula layers, sticky section ownership/push-off, independent
-input/accessibility routing, and all-platform rendering remain **pending**.
-Do not confuse geometry-kernel availability with finished widgets.
+**Current candidate integration:** `LayeredViewport.Layer.setScrollRates(xQ8,
+yQ8)` uses the exact shared scroll-offset kernel. It places independently
+scrolling/parallax layers in the existing viewport-relative Z lane, preserving
+paint and input order without reindexing the entire normal world on pan.
+Pinned and sticky axes take precedence. The retained backing store's existing
+ghost-pixel repair covers differential motion and its regression pixel tests
+include half-parallax, zero, reverse and native pin priority.
+
+**Important limits:** the arbitrary viewport-edge anchors and generic sticky
+clamps are presently shared model primitives; platform-native Tree headers
+still use their existing peers. Automatic policy adoption across all Canvas,
+Tree, Table, Nebula and Swing widgets, sticky-section ownership, full
+accessibility/IME mapping, and all-platform native pixel verification remain
+**pending**. Source presence is not native release qualification.
 
 The source JUnit `Test_ViewportLayerPosition` is registered in `AllTests`.
 A standalone OpenJDK 21 model comparison exercised 200,000 exact
