@@ -140,3 +140,13 @@ from a compiled header alone.
 - D3D11 lost-device recovery: https://learn.microsoft.com/en-us/windows/uwp/gaming/handling-device-lost-scenarios
 - Device removed reason: https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11device-getdeviceremovedreason
 - DirectComposition commit semantics: https://learn.microsoft.com/en-us/windows/win32/api/dcomp/nf-dcomp-idcompositiondevice-commit
+
+## Read-only native recovery diagnostics
+
+The optional `MayaComposition.readMetrics(composition)` native telemetry
+snapshot can distinguish a successful native frame Commit, a skipped
+no-op Commit and failed device-health checks. A snapshot reports the
+current composition only; successful GPU/device recreation replaces
+that owner and resets its metrics. No automatic recording, polling
+or cross-thread native access is introduced.
+See [MAYA_COMPOSITION_TELEMETRY.md](MAYA_COMPOSITION_TELEMETRY.md).
