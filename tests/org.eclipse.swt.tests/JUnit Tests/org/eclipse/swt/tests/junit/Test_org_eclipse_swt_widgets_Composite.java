@@ -286,6 +286,53 @@ public void test_nativeReliefAndCompositeBevelShareOneOwner() {
 	}
 }
 
+@Test
+public void test_nativeReliefRestoresOriginalTrimAfterRepeatedMixedCalls() {
+	if ("cocoa".equals(SWT.getPlatform())) return;
+	Composite owned = new Composite(shell, SWT.BORDER);
+	Button child = new Button(owned, SWT.PUSH);
+	try {
+		int originalWidth = owned.getBorderWidth();
+		Control[] children = owned.getChildren();
+		for (int i = 0; i < 12; i++) {
+			int relief = (i & 1) == 0 ? SWT.SHADOW_OUT : SWT.SHADOW_ETCHED_IN;
+			owned.setBorderRelief(relief);
+			assertEquals(relief, owned.getBorderRelief());
+			assertEquals(relief, owned.getBevelBorder());
+			owned.setBevelBorder(SWT.SHADOW_OUT);
+			assertEquals(SWT.SHADOW_OUT, owned.getBorderRelief());
+			owned.setBorderRelief(SWT.SHADOW_NONE);
+			assertEquals(0, owned.getBorderWidth(), "Explicit none removes native trim");
+			assertEquals(SWT.NONE, owned.getBevelBorder());
+			owned.setBevelBorder(SWT.NONE);
+			assertEquals(SWT.DEFAULT, owned.getBorderRelief());
+			assertEquals(originalWidth, owned.getBorderWidth(),
+					"Each round trip restores the pre-existing border width");
+			assertArrayEquals(children, owned.getChildren(),
+					"A border transition never creates another SWT control");
+		}
+	} finally {
+		owned.dispose();
+	}
+}
+
+@Test
+public void test_nativeBevelSubclassRefusalDoesNotInvalidateInheritedRelief() {
+	if (!"win32".equals(SWT.getPlatform())) return;
+	Composite custom = new Composite(shell, SWT.NONE) { };
+	try {
+		assertThrows(IllegalArgumentException.class,
+				() -> custom.setBevelBorder(SWT.SHADOW_IN));
+		assertEquals(SWT.DEFAULT, custom.getBorderRelief());
+		custom.setBorderRelief(SWT.SHADOW_IN);
+		assertEquals(SWT.SHADOW_IN, custom.getBorderRelief());
+		custom.setBorderRelief(SWT.DEFAULT);
+		assertEquals(SWT.DEFAULT, custom.getBorderRelief());
+	} finally {
+		custom.dispose();
+	}
+}
+
 protected Composite getElementExpectedToHaveFocusAfterSetFocusOnParent(Composite visibleChild) {
 	return visibleChild;
 }
