@@ -99,24 +99,34 @@ arrived on the master branch after the original Control relief work was
 authored. It has a different default sentinel: `SWT.NONE` means no explicit
 Composite bevel while `SWT.DEFAULT` means no explicit Control relief.
 
-These interfaces now converge on **one mutable relief state owned by
-`Control`**, including for Win32 direct `Composite` and `Canvas`:
+These interfaces converge on **one native HWND border authority in
+`Control`**, while preserving the two distinct *logical requests* in the
+merged Win32 compatibility contract (SWT #532):
 
-- Win32 direct `Composite` and `Canvas` retain the existing GDI
-  `DrawEdge` painter, but derive the requested edge from the package-owned
-  `Control.borderReliefState()` instead of storing a second `bevelBorder`
-  field or a second native-style snapshot. The public `setBevelBorder` method
-  is a checked alias of `Control.setBorderRelief`. `Composite` uses
-  `WS_EX_CLIENTEDGE` to reserve trim even for GDI-raised edges, so the
-  existing paint callback owns all four edge variants.
-- `Control` alone captures the first native `WS_BORDER` and the extended
-  `CLIENTEDGE`, `STATICEDGE`, and `WINDOWEDGE` bits; `SWT.DEFAULT`
-  restores them exactly. `setBorderRelief(SWT.SHADOW_NONE)` removes the
-  native edge, while `setBevelBorder(SWT.NONE)` restores the constructor
-  border and maps the getter back to the historical `SWT.NONE` sentinel.
-- `Control.WM_NCPAINT` skips duplicate etched painting after a direct
-  Composite/Canvas GDI callback has handled the frame; unrelated SWT native
-  control subclasses retain their original Control-level etched path.
+- Win32 `Control` holds both the explicitly requested temporary relief
+  (`nativeBorderRelief`) and the stored Composite/Canvas bevel
+  (`savedCompositeBevel`). Both are fields of **the same Control owner**;
+  `Composite` has no competing `bevelBorder` field or native style snapshot.
+  The effective native border is the Control override unless it is
+  `SWT.DEFAULT`, in which case the prior Composite bevel is restored.
+- `getBorderRelief()` returns the explicit Control override, even when
+  `SWT.DEFAULT`; `getBevelBorder()` returns the stored Composite choice
+  even while Control is overriding it. This preserves the original merged
+  two-API observable contract and the latest-writer behavior.
+- Direct Win32 `Composite` and `Canvas` retain their original GDI
+  `DrawEdge` painter; it reads the effective Control relief without calling
+  a public getter during widget construction. All four visible variants
+  reserve `WS_EX_CLIENTEDGE` native trim; unrelated Control subclasses
+  retain their existing OS edge style handling.
+- `Control` alone captures the first `WS_BORDER` and extended
+  `CLIENTEDGE`, `STATICEDGE`, and `WINDOWEDGE` bits. Setting the
+  Composite bevel updates the fallback and clears the Control override;
+  `setBorderRelief(SWT.SHADOW_NONE)` removes the visible native edge
+  without discarding the stored bevel; `SWT.DEFAULT` restores that bevel,
+  or the original constructor border when none was selected.
+- `Control.WM_NCPAINT` avoids a duplicate etched drawing after direct
+  Composite/Canvas GDI handling. Unrelated native Control subclasses
+  retain their Control-level etched path.
 - On GTK3/GTK4 and Android/iOS, `setBevelBorder` is a compatibility alias
   of the already-implemented `Control.setBorderRelief`. A single GTK CSS
   provider or mobile view remains the rendering owner.
