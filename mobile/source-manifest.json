@@ -889,7 +889,7 @@
     },
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCoreContractJUnitTest.java",
-      "sha256": "d85e0d51bbbc63854f8fd771ae55974e0ace990edb427b6c681c5019919c2f29"
+      "sha256": "5f2d9a7d7b4a65ddc0d81349947c2e5d081adf56ee13459f9495a4b08280acea"
     },
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileListContractTest.java",
