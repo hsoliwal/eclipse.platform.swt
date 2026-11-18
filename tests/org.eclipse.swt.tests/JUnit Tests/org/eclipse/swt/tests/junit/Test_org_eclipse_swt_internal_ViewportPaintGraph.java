@@ -16,6 +16,7 @@ package org.eclipse.swt.tests.junit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.lang.reflect.*;
 import java.util.*;
 
 import org.eclipse.swt.*;
@@ -649,6 +650,179 @@ public class Test_org_eclipse_swt_internal_ViewportPaintGraph {
 		graph.mapToRoot (stationary, 2, 3, point);
 		assertArrayEquals (new float [] {42, 53}, point,
 				"updating one group must not change another group's transform");
+	}
+
+	@Test
+	public void test_deepRetainedGraphReusesFrontierSizedPaintStack () throws Exception {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int parent = graph.root ();
+		for (int index = 0; index < 4_096; index++) parent = graph.group (parent);
+		graph.fillRectangle (parent, 2, 2, 4, 4);
+
+		for (int frame = 0; frame < 5; frame++) {
+			assertEquals (1, graph.replay (gc).drawnCommands ());
+		}
+		Object workspace = paintWorkspace (graph);
+		Field nodesField = workspace.getClass ().getDeclaredField ("nodes");
+		nodesField.setAccessible (true);
+		int [] nodes = (int [])nodesField.get (workspace);
+		assertTrue (nodes.length <= 32,
+				"deep single-child graph must not allocate one stack slot per retained node");
+		Field transformsField = workspace.getClass ().getDeclaredField ("transforms");
+		transformsField.setAccessible (true);
+		Affine [] pending = (Affine [])transformsField.get (workspace);
+		for (Affine affine : pending) {
+			assertNull (affine, "a completed frame must not retain transform objects");
+		}
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (3, 3));
+	}
+
+	@Test
+	public void test_replayPathCacheReusesInstancesAndReleasesNativePaths () throws Exception {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int template = graph.template ();
+		PathData triangle = new PathData ();
+		triangle.types = new byte [] {SWT.PATH_MOVE_TO, SWT.PATH_LINE_TO,
+				SWT.PATH_LINE_TO, SWT.PATH_CLOSE};
+		triangle.points = new float [] {0, 0, 8, 0, 8, 8};
+		for (int index = 0; index < 18; index++) graph.fillPath (template, triangle);
+		graph.instance (graph.root (), template, Affine.translation (5, 5));
+		graph.instance (graph.root (), template, Affine.translation (24, 5));
+
+		for (int frame = 0; frame < 3; frame++) {
+			assertEquals (36, graph.replay (gc).drawnCommands ());
+			Object workspace = paintWorkspace (graph);
+			Field used = workspace.getClass ().getDeclaredField ("usedPaths");
+			used.setAccessible (true);
+			assertEquals (0, used.getInt (workspace), "native paths must be frame-local");
+			Field cached = workspace.getClass ().getDeclaredField ("paths");
+			cached.setAccessible (true);
+			for (Path path : (Path [])cached.get (workspace)) {
+				assertNull (path, "do not retain disposed native Path handles");
+			}
+		}
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (11, 8));
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (30, 8));
+	}
+
+	@Test
+	public void test_nestedLayerOpacityRestoresCallerAlphaAndLockOnlyAffectsInput () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int parent = graph.group (graph.root ());
+		int child = graph.group (parent);
+		graph.setHitBounds (child, 0, 0, 40, 40);
+		graph.setOpacity (parent, 128);
+		graph.setOpacity (child, 128);
+		graph.fillRectangle (child, 8, 8, 20, 20);
+
+		Image oracleImage = new Image (display, 64, 64);
+		GC oracle = new GC (oracleImage);
+		try {
+			oracle.setBackground (display.getSystemColor (SWT.COLOR_WHITE));
+			oracle.fillRectangle (oracleImage.getBounds ());
+			oracle.setBackground (display.getSystemColor (SWT.COLOR_BLACK));
+			oracle.setAlpha (50); // round(round(200 * 128 / 255) * 128 / 255)
+			oracle.fillRectangle (8, 8, 20, 20);
+
+			gc.setAlpha (200);
+			assertEquals (64, graph.effectiveOpacity (child));
+			assertEquals (1, graph.replay (gc).drawnCommands ());
+			assertEquals (200, gc.getAlpha (), "replay must preserve caller GC alpha");
+			assertImagesEqual (oracleImage, image, "nested opacity must match immediate SWT alpha");
+			assertEquals (child, graph.hitTest (9, 9));
+
+			graph.setLocked (parent, true);
+			assertTrue (graph.isLocked (child));
+			assertEquals (-1, graph.hitTest (9, 9));
+			assertEquals (1, graph.replay (gc).drawnCommands (),
+					"editor lock changes pointer eligibility, not visible painting");
+			graph.setLocked (parent, false);
+			graph.setOpacity (parent, 0);
+			assertEquals (0, graph.effectiveOpacity (child));
+			assertEquals (-1, graph.hitTest (9, 9));
+			assertEquals (0, graph.replay (gc).drawnCommands ());
+			graph.setOpacity (parent, 255);
+			graph.setVisible (parent, false);
+			assertTrue (graph.isVisible (child), "child's local visibility is unchanged");
+			assertFalse (graph.isEffectivelyVisible (child));
+			assertFalse (graph.isInteractive (child));
+			assertThrows (IllegalArgumentException.class, () -> graph.setOpacity (child, 256));
+			assertThrows (IllegalArgumentException.class, () -> graph.setOpacity (child, -1));
+		} finally {
+			oracle.dispose ();
+			oracleImage.dispose ();
+		}
+	}
+
+	@Test
+	public void test_templateInstanceUsesTemplateLockAndAlphaForHitTesting () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int template = graph.template ();
+		graph.fillRectangle (template, 0, 0, 10, 10);
+		int instance = graph.instance (graph.root (), template, Affine.translation (20, 20));
+		graph.setHitBounds (instance, 0, 0, 10, 10);
+		assertEquals (instance, graph.hitTest (22, 22));
+		graph.setLocked (template, true);
+		assertEquals (-1, graph.hitTest (22, 22));
+		assertEquals (1, graph.replay (gc).drawnCommands ());
+		graph.setLocked (template, false);
+		graph.setOpacity (template, 0);
+		assertEquals (-1, graph.hitTest (22, 22));
+		assertEquals (0, graph.replay (gc).drawnCommands ());
+		graph.setOpacity (template, 255);
+		assertEquals (instance, graph.hitTest (22, 22));
+	}
+
+	@Test
+	public void test_bulkZOrderTailInsertionAndReorderingRemainStable () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		for (int index = 0; index < 2_048; index++) {
+			int sibling = graph.group (graph.root ());
+			if ((index & 1) == 0) graph.fillRectangle (sibling, 8, 12, 20, 1);
+			else graph.line (sibling, 8, 12, 27, 12);
+		}
+		gc.setBackground (display.getSystemColor (SWT.COLOR_RED));
+		gc.setForeground (display.getSystemColor (SWT.COLOR_BLUE));
+		assertEquals (2_048, graph.replay (gc).drawnCommands ());
+		assertEquals (rgb (SWT.COLOR_BLUE), pixelRgb (10, 12),
+				"equal z preserves creation order even with O(1) tail appends");
+		graph.setZOrder (1, 100);
+		graph.replay (gc);
+		assertEquals (rgb (SWT.COLOR_RED), pixelRgb (10, 12),
+				"later z must put the earliest created group in front");
+		graph.setZOrder (1, -100);
+		graph.replay (gc);
+		assertEquals (rgb (SWT.COLOR_BLUE), pixelRgb (10, 12));
+	}
+
+	@Test
+	public void test_reachabilityRejectsCyclesWithoutPublishingInvalidInstances () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int first = graph.template ();
+		int middle = graph.template ();
+		int last = graph.template ();
+		graph.instance (first, middle, Affine.IDENTITY);
+		graph.instance (middle, last, Affine.IDENTITY);
+		int before = graph.nodeCount ();
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.instance (last, first, Affine.IDENTITY));
+		assertEquals (before, graph.nodeCount ());
+		assertThrows (NullPointerException.class,
+				() -> graph.instance (graph.root (), first, null));
+		assertThrows (NullPointerException.class,
+				() -> graph.group (graph.root (), null));
+		assertEquals (before, graph.nodeCount (),
+				"invalid arguments must not leave a linked ghost node");
+		for (int index = 0; index < 4_096; index++) {
+			graph.instance (graph.root (), first, Affine.IDENTITY);
+		}
+		assertEquals (before + 4_096, graph.nodeCount ());
+	}
+
+	private static Object paintWorkspace (ViewportPaintGraph graph) throws ReflectiveOperationException {
+		Field workspaceField = ViewportPaintGraph.class.getDeclaredField ("replayStack");
+		workspaceField.setAccessible (true);
+		return workspaceField.get (graph);
 	}
 
 }
