@@ -256,6 +256,7 @@ public void test_bug2162_transparentStyle() {
 public void test_nativeReliefAndCompositeBevelShareOneOwner() {
 	Composite local = new Composite(shell, SWT.BORDER);
 	try {
+		boolean win32 = "win32".equals(SWT.getPlatform());
 		assertEquals(SWT.NONE, local.getBevelBorder());
 		assertEquals(SWT.DEFAULT, local.getBorderRelief());
 		if ("cocoa".equals(SWT.getPlatform())) {
@@ -267,15 +268,22 @@ public void test_nativeReliefAndCompositeBevelShareOneOwner() {
 		for (int relief : new int[] {SWT.SHADOW_IN, SWT.SHADOW_OUT,
 				SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT}) {
 			local.setBevelBorder(relief);
-			assertEquals(relief, local.getBorderRelief());
+			assertEquals(win32 ? SWT.DEFAULT : relief, local.getBorderRelief(),
+					"Win32 preserves a stored bevel under the Control override");
+			assertEquals(relief, local.getBevelBorder());
 			local.setBorderRelief(relief);
+			assertEquals(relief, local.getBorderRelief());
 			assertEquals(relief, local.getBevelBorder());
 		}
 		local.setBorderRelief(SWT.SHADOW_NONE);
-		assertEquals(SWT.NONE, local.getBevelBorder());
+		assertEquals(win32 ? SWT.SHADOW_ETCHED_OUT : SWT.NONE,
+				local.getBevelBorder(), "Win32 preserves its prior bevel");
 		assertEquals(0, local.getBorderWidth());
+		local.setBorderRelief(SWT.DEFAULT);
+		assertEquals(SWT.DEFAULT, local.getBorderRelief());
+		if (win32) assertEquals(SWT.SHADOW_ETCHED_OUT, local.getBevelBorder());
 		local.setBevelBorder(SWT.SHADOW_OUT);
-		assertEquals(SWT.SHADOW_OUT, local.getBorderRelief());
+		assertEquals(win32 ? SWT.DEFAULT : SWT.SHADOW_OUT, local.getBorderRelief());
 		local.setBevelBorder(SWT.NONE);
 		assertEquals(SWT.DEFAULT, local.getBorderRelief());
 		assertEquals(SWT.NONE, local.getBevelBorder());
@@ -290,22 +298,31 @@ public void test_nativeReliefAndCompositeBevelShareOneOwner() {
 public void test_nativeReliefRestoresOriginalTrimAfterRepeatedMixedCalls() {
 	if ("cocoa".equals(SWT.getPlatform())) return;
 	Composite owned = new Composite(shell, SWT.BORDER);
-	Button child = new Button(owned, SWT.PUSH);
+	new Button(owned, SWT.PUSH);
 	try {
+		boolean win32 = "win32".equals(SWT.getPlatform());
 		int originalWidth = owned.getBorderWidth();
 		Control[] children = owned.getChildren();
 		for (int i = 0; i < 12; i++) {
 			int relief = (i & 1) == 0 ? SWT.SHADOW_OUT : SWT.SHADOW_ETCHED_IN;
 			owned.setBorderRelief(relief);
 			assertEquals(relief, owned.getBorderRelief());
-			assertEquals(relief, owned.getBevelBorder());
+			assertEquals(win32 ? SWT.NONE : relief, owned.getBevelBorder());
 			owned.setBevelBorder(SWT.SHADOW_OUT);
-			assertEquals(SWT.SHADOW_OUT, owned.getBorderRelief());
+			assertEquals(win32 ? SWT.DEFAULT : SWT.SHADOW_OUT,
+					owned.getBorderRelief());
 			owned.setBorderRelief(SWT.SHADOW_NONE);
 			assertEquals(0, owned.getBorderWidth(), "Explicit none removes native trim");
-			assertEquals(SWT.NONE, owned.getBevelBorder());
+			assertEquals(win32 ? SWT.SHADOW_OUT : SWT.NONE,
+					owned.getBevelBorder(), "Underlying Win32 bevel survives");
+			owned.setBorderRelief(SWT.DEFAULT);
+			if (win32) {
+				assertEquals(SWT.SHADOW_OUT, owned.getBevelBorder());
+				assertTrue(owned.getBorderWidth() > 0);
+			}
 			owned.setBevelBorder(SWT.NONE);
 			assertEquals(SWT.DEFAULT, owned.getBorderRelief());
+			assertEquals(SWT.NONE, owned.getBevelBorder());
 			assertEquals(originalWidth, owned.getBorderWidth(),
 					"Each round trip restores the pre-existing border width");
 			assertArrayEquals(children, owned.getChildren(),
