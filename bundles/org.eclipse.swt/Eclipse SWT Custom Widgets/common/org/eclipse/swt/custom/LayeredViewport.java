@@ -10,6 +10,7 @@
 package org.eclipse.swt.custom;
 
 import java.util.Arrays;
+import java.util.BitSet;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
@@ -108,6 +109,8 @@ public final class LayeredViewport extends Canvas {
      */
     public final class Layer {
         private final long id;
+        // Maintained by structural edits; hot-path invalidation never scans stack.
+        private int zIndex = -1;
         private String name;
         private long x, y, right, bottom;
         private int opacity = 255;
@@ -249,6 +252,8 @@ public final class LayeredViewport extends Canvas {
             if (retained == value) return;
             retained = value;
             releaseComposite();
+            retainedLayerCount += value ? 1 : -1;
+            retainedSlots.set(indexOf(this), value);
         }
 
         /**
@@ -339,6 +344,10 @@ public final class LayeredViewport extends Canvas {
                 System.arraycopy(stack, zIndex, stack, zIndex + 1, previous - zIndex);
             }
             stack[zIndex] = this;
+            for (int i = Math.min(previous, zIndex), last = Math.max(previous, zIndex);
+                    i <= last; i++) {
+                stack[i].zIndex = i;
+            }
             publishOrder();
             invalidate(this);
             orderControls();
@@ -352,6 +361,9 @@ public final class LayeredViewport extends Canvas {
             int index = indexOf(this);
             System.arraycopy(stack, index + 1, stack, index, count - index - 1);
             stack[--count] = null;
+            for (int i = index; i < count; i++) stack[i].zIndex = i;
+            zIndex = -1;
+            if (retained) retainedLayerCount--;
             removed = true;
             releaseComposite();
             control = null; // the control stays the application's, where it was
@@ -370,6 +382,9 @@ public final class LayeredViewport extends Canvas {
     private final ViewportRuntime viewportRuntime = new ViewportRuntime();
     private Layer[] stack = new Layer[8];
     private Layer[] paintOrder = new Layer[0];
+    /** Sparse indices of retained composites; ordinary edits skip all non-retained layers. */
+    private final BitSet retainedSlots = new BitSet();
+    private int retainedLayerCount;
     private final LayerRectIndex spatialIndex = new LayerRectIndex();
     private final LayerRectIndex.Bounds spatialSource = new LayerRectIndex.Bounds() {
         @Override public int size() { return paintOrder.length; }
@@ -455,6 +470,8 @@ public final class LayeredViewport extends Canvas {
                 stack[i] = null;
             }
             count = 0;
+            retainedLayerCount = 0;
+            retainedSlots.clear();
             pointerListenerCount = 0;
             clearPointerCapture();
             paintOrder = new Layer[0];
@@ -515,6 +532,7 @@ public final class LayeredViewport extends Canvas {
         if (nextId == Long.MAX_VALUE) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
         if (count == stack.length) stack = Arrays.copyOf(stack, count * 2);
         Layer layer = new Layer(nextId++, name, x, y, width, height, image, painter);
+        layer.zIndex = count;
         stack[count++] = layer;
         publishOrder();
         invalidate(layer);
@@ -1046,13 +1064,21 @@ public final class LayeredViewport extends Canvas {
 
     private void publishOrder() {
         paintOrder = Arrays.copyOf(stack, count);
+        retainedSlots.clear();
+        if (retainedLayerCount != 0) {
+            for (int i = 0; i < count; i++) {
+                if (paintOrder[i].retained) retainedSlots.set(i);
+            }
+        }
         spatialDirty = true;
     }
 
     private int indexOf(Layer layer) {
-        for (int i = 0; i < count; i++) if (stack[i] == layer) return i;
-        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-        return -1;
+        int z = layer.zIndex;
+        if (z < 0 || z >= count || stack[z] != layer) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        return z;
     }
 
     private static void validateBounds(long x, long y, long width, long height) {
@@ -1132,8 +1158,10 @@ public final class LayeredViewport extends Canvas {
 
     /* a layer of Z index {@code z} changed inside {@code area}: the composites that include it are stale there */
     private void markRetained(int z, Rectangle area) {
+        if (retainedLayerCount == 0) return;
         Layer[] frame = paintOrder;
-        for (int i = Math.max(0, z); i < frame.length; i++) {
+        for (int i = retainedSlots.nextSetBit(Math.max(0, z)); i >= 0;
+                i = retainedSlots.nextSetBit(i + 1)) {
             if (frame[i].stale != null) frame[i].stale.add(area.x, area.y, area.width, area.height);
         }
     }

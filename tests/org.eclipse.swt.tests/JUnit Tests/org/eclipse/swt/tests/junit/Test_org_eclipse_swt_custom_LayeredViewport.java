@@ -80,6 +80,53 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testCachedZPositionAcrossReorderInsertionAndRemoval() {
+        List<Layer> expected = new ArrayList<>();
+        for (int i = 0; i < 32; i++) {
+            expected.add(viewport.addPaintLayer("layer " + i,
+                    0, 0, 100, 100, (gc, ctx) -> { }));
+        }
+        java.util.Random random = new java.util.Random(87123L);
+        for (int iteration = 0; iteration < 256; iteration++) {
+            if (iteration % 17 == 0) {
+                Layer cached = expected.get(random.nextInt(expected.size()));
+                cached.setRetained(!cached.isRetained());
+            }
+            int from = random.nextInt(expected.size());
+            int to = random.nextInt(expected.size());
+            Layer moved = expected.remove(from);
+            expected.add(to, moved);
+            moved.moveTo(to);
+            moved.setWorldBounds(1 + iteration % 2, 0, 100, 100);
+            moved.setWorldBounds(0, 0, 100, 100);
+            Layer[] ordered = viewport.getLayers();
+            for (int i = 0; i < ordered.length; i++) {
+                assertSame(expected.get(i), ordered[i]);
+                assertEquals(i, ordered[i].getZIndex(), "Z cache after move " + iteration);
+            }
+            assertSame(expected.getLast(), viewport.hitTest(10, 10));
+        }
+
+        Layer appended = viewport.addPaintLayer("after reorders",
+                0, 0, 100, 100, (gc, ctx) -> { });
+        expected.add(appended);
+        assertEquals(expected.size() - 1, appended.getZIndex());
+        for (int i = 0; i < 12; i++) {
+            int position = random.nextInt(expected.size());
+            Layer removed = expected.remove(position);
+            removed.remove();
+            assertThrows(IllegalArgumentException.class, removed::getZIndex);
+            Layer[] ordered = viewport.getLayers();
+            assertEquals(expected.size(), ordered.length);
+            for (int z = 0; z < ordered.length; z++) {
+                assertSame(expected.get(z), ordered[z]);
+                assertEquals(z, ordered[z].getZIndex(), "Z cache after removal");
+            }
+        }
+        assertSame(expected.getLast(), viewport.hitTest(10, 10));
+    }
+
+    @Test
     public void testLongCoordinatesAndWorldProjection() {
         long large = 1L << 55;
         viewport.setOrigin(large, large);
