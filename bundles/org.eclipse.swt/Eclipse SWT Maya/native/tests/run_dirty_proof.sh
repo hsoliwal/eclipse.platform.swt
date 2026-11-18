@@ -38,3 +38,9 @@ java -cp "$tmp/classes" org.eclipse.swt.internal.render.NativeDirtyRegionsProof
 
 # Exact-source Java21/C++17 cross-language admission parity (not native GPU proof).
 bash "$here/run_dirty_parity.sh"
+
+# Original owner: portable checked D3D11 update rectangles, whole-batch
+# pixel-prefix packing and native edge cases (no Windows SDK needed).
+"${CXX:-clang++}" -std=c++17 -O2 -Wall -Wextra -Werror -pedantic \
+    -I"$src" "$here/MayaUploadBoundsProof.cc" -o "$tmp/upload-bounds-proof"
+"$tmp/upload-bounds-proof"

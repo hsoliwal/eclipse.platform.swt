@@ -88,3 +88,29 @@ payload cases. The existing native C++ proof separately passed
 new Win32 native screen test and exact Maven/OpenRewrite/Tycho runs
 are **NOT RUN**; a missing optional DLL symbol skips the normal test,
 while `-Dswt.maya.dirty.required=true` must fail release proof.
+
+## Native upload coalescing and D3D11 box safety
+
+The existing Java `Layer.redrawRegions(Rectangle...)` submits packed ARGB and
+image-local rectangles through a single `MayaComposition._nUploadDirty`
+JNI call. The Win32 native receiver now copies the validated **complete
+prefix once** with `GetIntArrayRegion` before the first GPU
+`IDCompositionSurface::BeginDraw`, and then uses checked offsets into that
+immutable native staging array for each rectangle. This replaces repeated
+per-region JNI array copies/allocations. It can use more *peak native memory*
+for a large batch than a single-region scratch buffer; no throughput or
+memory improvement is claimed before measurement.
+
+Full-image upload also catches `std::bad_alloc` and does not unwind C++
+exceptions across JNI. The existing `MayaCompositionDirty.h` is the single
+portable owner for checked 4-byte BGRA row pitches and returned D3D11 update
+offsets; unsigned addition avoids signed integer overflow in
+`D3D11_BOX` right/bottom geometry. Every successful `EndDraw` still marks
+the existing pending native surface Commit. The Java model/backing image
+continues to own all source pixels.
+
+Portable Clang++17 source proof: **251,775** box/prefix observations PASS;
+existing dirty-region C++ proof: **3,915,493** cases PASS. Actual full
+Maya native Windows build/DLL, `-Xcheck:jni` Win32, DirectComposition
+screen pixels, GPU/RSS/latency, SWT Java/Tycho and cross-platform native
+platform parity remain **NOT RUN** for this candidate.

@@ -63,6 +63,34 @@ inline bool validPackedDirtyFrame(int width, int height, int pixels,
     return true;
 }
 
+/**
+ * Portable D3D11 upload geometry: a four-byte ARGB row pitch must fit UINT,
+ * and a returned DirectComposition update offset must never be added using
+ * signed arithmetic. Only call after the source dimensions have been checked.
+ */
+inline bool validD3dUploadBox(int offsetX, int offsetY,
+        int width, int height) noexcept {
+    if (offsetX < 0 || offsetY < 0 || width <= 0 || height <= 0) return false;
+    constexpr std::uint64_t MAX_UINT = std::numeric_limits<std::uint32_t>::max();
+    return static_cast<std::uint64_t>(width) * sizeof(std::uint32_t) <= MAX_UINT
+        && static_cast<std::uint64_t>(offsetX) + width <= MAX_UINT
+        && static_cast<std::uint64_t>(offsetY) + height <= MAX_UINT;
+}
+
+/**
+ * Count the exact prefix of already-validated packed dirty rectangles. This
+ * runs before JNI pixel copy and before any BeginDraw; the earlier validation
+ * guarantees the count fits Java array length and a signed jsize.
+ */
+inline std::size_t packedDirtyPixelCount(const int *rects, int count) noexcept {
+    std::size_t total = 0;
+    for (int i = 0; i < count; ++i) {
+        const int *r = rects + static_cast<std::size_t>(i) * 4;
+        total += static_cast<std::size_t>(r[2]) * static_cast<std::size_t>(r[3]);
+    }
+    return total;
+}
+
 inline std::size_t dirtyArea(const int *rect) noexcept {
     return static_cast<std::size_t>(rect[2]) * static_cast<std::size_t>(rect[3]);
 }

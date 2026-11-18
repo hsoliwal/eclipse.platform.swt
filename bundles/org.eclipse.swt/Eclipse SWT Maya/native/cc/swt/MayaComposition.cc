@@ -209,24 +209,45 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
     if (FAILED(health)) return health;
     jsize n = env->GetArrayLength(pixels);
     if (!swt_maya::validPixelBuffer(layer->width, layer->height, n)) return E_INVALIDARG;
+    // Refuse a 4-byte D3D11 pitch overflow before allocating the native
+    // full-image staging vector or calling DirectComposition BeginDraw.
+    if (!swt_maya::validD3dUploadBox(0, 0, layer->width, layer->height))
+        return E_INVALIDARG;
     const jsize count = static_cast<jsize>(static_cast<std::uint64_t>(layer->width) * layer->height);
-    std::vector<jint> copy(static_cast<size_t>(count));
-    env->GetIntArrayRegion(pixels, 0, count, copy.data());
-    if (env->ExceptionCheck()) return E_FAIL;
-    ID3D11Texture2D *texture = nullptr;
-    POINT at;
-    HRESULT hr = layer->surface->BeginDraw(nullptr, __uuidof(ID3D11Texture2D), reinterpret_cast<void **>(&texture), &at);
-    if (FAILED(hr)) return hr;
-    D3D11_BOX box = { static_cast<UINT>(at.x), static_cast<UINT>(at.y), 0, static_cast<UINT>(at.x + layer->width),
-                      static_cast<UINT>(at.y + layer->height), 1 };
-    layer->owner->context->UpdateSubresource(texture, 0, &box, copy.data(), static_cast<UINT>(layer->width) * 4, 0);
-    release(texture);
-    const HRESULT finished = layer->surface->EndDraw();
-    if (SUCCEEDED(finished)) {
-        layer->initialized = true;
-        layer->owner->pendingSurfaceCommit = true;
+    try {
+        // Copy before touching COM. No pinned Java heap is held during the GPU update.
+        std::vector<jint> copy(static_cast<size_t>(count));
+        env->GetIntArrayRegion(pixels, 0, count, copy.data());
+        if (env->ExceptionCheck()) return E_FAIL;
+        ID3D11Texture2D *texture = nullptr;
+        POINT at = {};
+        HRESULT hr = layer->surface->BeginDraw(nullptr, __uuidof(ID3D11Texture2D),
+                reinterpret_cast<void **>(&texture), &at);
+        if (FAILED(hr)) return hr;
+        // DirectComposition can return a different update offset. Avoid signed
+        // overflow for the D3D11_BOX right/bottom and for the UINT byte pitch.
+        if (!swt_maya::validD3dUploadBox(at.x, at.y, layer->width, layer->height)) {
+            release(texture);
+            layer->surface->EndDraw();
+            return E_INVALIDARG;
+        }
+        const UINT x = static_cast<UINT>(at.x), y = static_cast<UINT>(at.y);
+        D3D11_BOX box = { x, y, 0, x + static_cast<UINT>(layer->width),
+                y + static_cast<UINT>(layer->height), 1 };
+        layer->owner->context->UpdateSubresource(texture, 0, &box, copy.data(),
+                static_cast<UINT>(static_cast<std::uint64_t>(layer->width) * sizeof(jint)), 0);
+        release(texture);
+        const HRESULT finished = layer->surface->EndDraw();
+        if (SUCCEEDED(finished)) {
+            layer->initialized = true;
+            layer->owner->pendingSurfaceCommit = true;
+        }
+        return finished;
+    } catch (const std::bad_alloc &) {
+        return E_OUTOFMEMORY;
+    } catch (...) {
+        return E_FAIL; // no C++ exception crosses JNI
     }
-    return finished;
 }
 
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nUploadDirty
@@ -247,15 +268,19 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
         if (count == 0) return S_OK;
         if (!layer->initialized) return E_INVALIDARG; // first draw must cover the entire surface
 
-        std::vector<jint> scratch;
-        jsize offset = 0;
+        // Stage the complete *validated* prefix in one JNI array copy, before
+        // the first BeginDraw. A subsequent JNI exception cannot leave a batch
+        // half-written to native surfaces. No Java heap is pinned during COM.
+        const std::size_t pixelCount = swt_maya::packedDirtyPixelCount(rects.data(), count);
+        std::vector<jint> copy(pixelCount);
+        env->GetIntArrayRegion(packed, 0, static_cast<jsize>(pixelCount), copy.data());
+        if (env->ExceptionCheck()) return E_FAIL;
+        std::size_t offset = 0;
         for (jint i = 0; i < count; ++i) {
             const jint *r = rects.data() + static_cast<size_t>(i) * 4;
-            const size_t area = swt_maya::dirtyArea(r);
-            scratch.resize(area);
-            env->GetIntArrayRegion(packed, offset, static_cast<jsize>(area), scratch.data());
-            if (env->ExceptionCheck()) return E_FAIL;
-            offset += static_cast<jsize>(area);
+            const std::size_t area = swt_maya::dirtyArea(r);
+            const jint *regionPixels = copy.data() + offset;
+            offset += area;
             RECT update = { r[0], r[1], r[0] + r[2], r[1] + r[3] };
             POINT at = {};
             ID3D11Texture2D *texture = nullptr;
@@ -263,9 +288,7 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
                     reinterpret_cast<void **>(&texture), &at);
             if (FAILED(hr)) return hr;
             // The returned offset is not necessarily the requested rectangle's origin.
-            if (at.x < 0 || at.y < 0 ||
-                    static_cast<std::uint64_t>(at.x) + r[2] > std::numeric_limits<UINT>::max() ||
-                    static_cast<std::uint64_t>(at.y) + r[3] > std::numeric_limits<UINT>::max()) {
+            if (!swt_maya::validD3dUploadBox(at.x, at.y, r[2], r[3])) {
                 release(texture);
                 layer->surface->EndDraw();
                 return E_INVALIDARG;
@@ -273,7 +296,7 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
             D3D11_BOX box = { static_cast<UINT>(at.x), static_cast<UINT>(at.y), 0,
                     static_cast<UINT>(at.x) + static_cast<UINT>(r[2]),
                     static_cast<UINT>(at.y) + static_cast<UINT>(r[3]), 1 };
-            layer->owner->context->UpdateSubresource(texture, 0, &box, scratch.data(),
+            layer->owner->context->UpdateSubresource(texture, 0, &box, regionPixels,
                     static_cast<UINT>(r[2]) * 4, 0);
             release(texture);
             hr = layer->surface->EndDraw();
@@ -283,6 +306,8 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
         return S_OK;
     } catch (const std::bad_alloc &) {
         return E_OUTOFMEMORY;
+    } catch (...) {
+        return E_FAIL; // fail closed, never unwind a C++ exception over JNI
     }
 }
 
