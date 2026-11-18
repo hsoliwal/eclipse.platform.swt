@@ -727,7 +727,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Composite.java",
-      "sha256": "dcfd25c0f9b75391fbb0566430fc757b01bb2efa974d6f89e0fd1cf1b228df0c"
+      "sha256": "e388bbbe7f991b249d912c1297b8c983cb2d9f6156de4ee4852e9e0753e662c2"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/widgets/Control.java",
@@ -905,7 +905,7 @@
     },
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileLifecycleContractJUnitTest.java",
-      "sha256": "1b97b3dceb961772f64aaad3340419f5c6e62c4f4fced6ce46b4e02a5e377b48"
+      "sha256": "9742e8beb5a3d2e91c9e253c8bd1ab0624631726b92ce9f9a63cf3843206c393"
     },
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileLifecycleContractTest.java",
