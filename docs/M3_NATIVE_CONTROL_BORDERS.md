@@ -113,3 +113,53 @@ This remains a **draft** feature and must not be merged or presented as fully
 cross-platform until the specified tests, Apple/Android native pixels,
 Win32/GTK trim and lifecycle contracts, and current-master collision gates
 are satisfied.
+
+## Post-merge single-owner correction contract (2026-11-18)
+
+The original Control relief implementation (#517) has merged, alongside
+Win32 `Composite.setBevelBorder` (#523). The old draft convergence PR #526
+branched before that merge. Its full file replacements are **not** a valid
+reconciliation: they would erase the now-present Android/iOS implementation.
+
+The existing public signatures are retained. This follow-up makes the single
+native peer authoritative for both convenience spellings:
+
+- `Control.setBorderRelief(relief)` owns the effective native effect.
+- `Composite.setBevelBorder(relief)` is an alias for the same effect rather
+  than an independent native painter or state variable. The pre-existing
+  `getBevelBorder()/setBevelBorder()` public methods are not removed.
+- `setBevelBorder(SWT.NONE)` or `setBevelBorder(SWT.SHADOW_NONE)` restores
+  `SWT.DEFAULT`, the original platform frame. `Control.setBorderRelief(
+  SWT.SHADOW_NONE)` explicitly suppresses native relief. Both map to
+  `getBevelBorder() == SWT.NONE`; `getBorderRelief()` distinguishes them.
+- A direct Win32 `Composite` or `Canvas` uses its existing
+  `Composite.wmNCPaint` as the **only** custom edge painter. The generic
+  `Control.WM_NCPAINT` handles native etched drawing for other eligible
+  HWND-backed controls, but must not draw a second edge over direct
+  `Composite`/`Canvas` instances. The direct Win32 raised case reserves
+  `WS_EX_CLIENTEDGE` and paints `EDGE_RAISED`; other HWND controls retain
+  the existing raised `WS_EX_WINDOWEDGE` path.
+- A same-width etched-to-etched transition invalidates the non-client frame
+  using the existing `RedrawWindow(RDW_FRAME | RDW_INVALIDATE)` JNI method.
+  Layout is re-requested only if the effective native border width changes.
+- Existing GTK native relief is used by `Composite.setBevelBorder`, rather
+  than rejecting a feature that `Control.setBorderRelief` already supports.
+  CSS declarations live in a widget-scoped provider with higher precedence
+  than the GTK4 Group constructor shadow and separate from the original
+  foreground/background provider. GTK's border metric query, not a hard-coded
+  two-pixel getter, supplies the override width.
+- The mobile `Composite` alias uses the existing `MobilePlatform` peer's
+  Android/iOS path; no new JNI export, UIView or Android View is created.
+  All modified manifest-pinned mobile Java/test sources require refreshed
+  SHA-256 after complete source readback. Pre-existing manifest drift is
+  reported, never silently treated as semantic equivalence.
+- Cocoa continues to reject unimplemented native two-tone relief; no false
+  AppKit/CALayer equivalence is claimed. Shared Swing BorderFactory parity is
+  expressly outside this native-edge correction.
+
+**Source, API, and release gates:** keep the new work on a draft PR until
+actual SWT Java/Tycho compilation, the existing desktop/mobile JUnit suites,
+Windows non-client screenshots at multiple DPIs and themes, GTK3/GTK4 CSS
+pixels and Group overrides, Android/iOS device rendering, and Maya/Nebula
+regression checks execute. Static source inspection or an isolated fixture
+is not a substitute for these proofs.
