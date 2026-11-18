@@ -549,7 +549,20 @@ final class DispatchQueue {
 
 	void clear () {
 		synchronized (this) {
-			for (Ring ring : rings) ring.clear ();
+			// Disposal must release syncExec callers whose messages cannot run.
+			for (Ring ring : rings) {
+				for (int i = 0; i < ring.size; i++) {
+					SyncLock lock = ring.locks [(ring.head + i) % ring.locks.length];
+					if (lock != null) {
+						synchronized (lock) {
+							lock.throwable = new SWTException (SWT.ERROR_DEVICE_DISPOSED);
+							lock.done = true;
+							lock.notifyAll ();
+						}
+					}
+				}
+				ring.clear ();
+			}
 			java.util.Arrays.fill (keyTable, null);
 			keyCount = 0;
 			frameListeners = NO_LISTENERS;
