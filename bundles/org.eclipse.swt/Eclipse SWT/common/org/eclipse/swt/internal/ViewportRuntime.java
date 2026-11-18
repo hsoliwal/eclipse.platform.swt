@@ -1492,9 +1492,13 @@ public final class ViewportRuntime {
 			int right = left + out [2], bottom = top + out [3];
 			boolean horizontal = plane == BODY || plane == HEADER;
 			boolean vertical = plane == BODY || plane == FROZEN;
-			long sx = horizontal ? saturatingSubtract (x, originX) : x;
-			long sy = vertical ? saturatingAdd (
-					saturatingSubtract (y, originY), headerHeight) : y;
+			long sx = LayerPosition.coordinate (x, width, originX, this.width,
+					horizontal ? LayerPosition.SCROLL : LayerPosition.FIXED,
+					LayerPosition.ANCHOR_START, LayerPosition.STICK_NONE, 0);
+			long sy = LayerPosition.coordinate (y, height, originY, this.height,
+					vertical ? LayerPosition.SCROLL : LayerPosition.FIXED,
+					LayerPosition.ANCHOR_START, LayerPosition.STICK_NONE, 0);
+			if (vertical) sy = saturatingAdd (sy, headerHeight);
 			long ex = saturatingAdd (sx, width), ey = saturatingAdd (sy, height);
 			long x0 = Math.max ((long)left, sx), y0 = Math.max ((long)top, sy);
 			long x1 = Math.min ((long)right, ex), y1 = Math.min ((long)bottom, ey);
