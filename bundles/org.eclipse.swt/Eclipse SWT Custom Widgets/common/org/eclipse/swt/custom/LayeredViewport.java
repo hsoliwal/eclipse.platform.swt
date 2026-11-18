@@ -26,6 +26,7 @@ import org.eclipse.swt.internal.ViewportDamageRegion;
 import org.eclipse.swt.internal.ViewportGcProxy;
 import org.eclipse.swt.internal.ViewportRuntime;
 import org.eclipse.swt.internal.render.ImageDataArgb;
+import org.eclipse.swt.internal.render.NativeDirtyRegions;
 import org.eclipse.swt.internal.render.LayerArgbCompositor;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
@@ -961,6 +962,98 @@ public final class LayeredViewport extends Canvas {
             invalidate(this);
         }
 
+        /**
+         * Updates only an image-local dirty rectangle on a compatible native
+         * DirectComposition layer. An older maya DLL, missing native backend or
+         * failed native update falls back to the original full redraw. Image
+         * ownership, the layer ID, paint GC and public Canvas contract do not
+         * change. The rectangle uses image pixels, not world coordinates.
+         */
+        public void redraw(Rectangle dirtyPixels) {
+            checked();
+            if (dirtyPixels == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            if (image == null || image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            Rectangle size = image.getBounds();
+            int x = dirtyPixels.x, y = dirtyPixels.y;
+            int width = dirtyPixels.width, height = dirtyPixels.height;
+            if (x < 0 || y < 0 || width <= 0 || height <= 0
+                    || x >= size.width || y >= size.height
+                    || width > size.width - x || height > size.height - y) {
+                SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            blendSource = null;
+            if (nativeLayer != 0 && nativeBackend != null) {
+                ImageDataArgb rows = new ImageDataArgb(image.getImageData());
+                long pixelCount = (long) width * height;
+                if (pixelCount > Integer.MAX_VALUE) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+                int[] packed = new int[(int) pixelCount];
+                for (int row = 0; row < height; row++) {
+                    rows.premultipliedSpan(y + row, x, width, packed, row * width);
+                }
+                if (nativeBackend.uploadDirty(nativeLayer, packed,
+                        new int[] { x, y, width, height }, 1) == 0) {
+                    if (applyNative()) return; // dirty-only frames also require a successful Commit
+                }
+            }
+            redraw();
+        }
+
+
+        /**
+         * Submits several image-local dirty rectangles as a single JNI call.
+         * All rectangles and the aggregate packed payload are checked on the
+         * CPU before converting any pixels. Regions can overlap; later patches
+         * cover earlier ones. The existing software/full-image path remains
+         * the fallback when a native backend or its optional export is absent.
+         * No new SWT controls or native handles are created for individual
+         * rectangles. An empty array is a no-op.
+         *
+         * @param dirtyRegions changed rectangles in borrowed image pixel coordinates
+         */
+        public void redrawRegions(Rectangle... dirtyRegions) {
+            checked();
+            if (dirtyRegions == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            if (image == null || image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            int count = dirtyRegions.length;
+            if (count == 0) return;
+            if (count > NativeDirtyRegions.MAX_RECTS) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            int[] regions = new int[count * 4];
+            for (int i = 0; i < count; i++) {
+                Rectangle region = dirtyRegions[i];
+                if (region == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+                int at = i * 4;
+                regions[at] = region.x;
+                regions[at + 1] = region.y;
+                regions[at + 2] = region.width;
+                regions[at + 3] = region.height;
+            }
+            Rectangle size = image.getBounds();
+            int pixels;
+            try {
+                pixels = NativeDirtyRegions.packedPixelCount(size.width, size.height, regions, count);
+            } catch (IllegalArgumentException invalid) {
+                SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+                return;
+            }
+            blendSource = null;
+            if (nativeLayer != 0 && nativeBackend != null) {
+                ImageDataArgb rows = new ImageDataArgb(image.getImageData());
+                int[] packed = new int[pixels];
+                int offset = 0;
+                for (int i = 0; i < count; i++) {
+                    int at = i * 4;
+                    int x = regions[at], y = regions[at + 1];
+                    int width = regions[at + 2], height = regions[at + 3];
+                    for (int row = 0; row < height; row++) {
+                        rows.premultipliedSpan(y + row, x, width, packed, offset);
+                        offset += width;
+                    }
+                }
+                if (nativeBackend.uploadDirty(nativeLayer, packed, regions, count) == 0 && applyNative()) return;
+            }
+            redraw();
+        }
+
         private void releaseComposite() {
             if (composite != null) retireComposite(composite);
             composite = null;
@@ -1214,7 +1307,8 @@ public final class LayeredViewport extends Canvas {
     // borrow independent arrays rather than corrupt an active outer scan.
     private int[] staleWork = new int[64];
     private int staleDepth;
-    // Main and retained images are shifted serially outside painting callbacks.
+    // Main and retained stores move sequentially on the SWT UI thread.
+    // Share one growable primitive rectangle lane across those stores.
     private int[] movedWork = new int[64];
 
     public LayeredViewport(Composite parent, int style) {
@@ -2294,7 +2388,8 @@ public final class LayeredViewport extends Canvas {
         } catch (ArithmeticException overflow) {
             return false;
         }
-        // abs(Long.MIN_VALUE) is negative; bound before narrowing a signed-long delta.
+        // abs(Long.MIN_VALUE) is negative: reject out-of-view pans before
+        // narrowing a signed-long delta to an int pixel translation.
         if (dx <= -(long) size.width || dx >= size.width
                 || dy <= -(long) size.height || dy >= size.height) return false;
         int sx = (int) dx, sy = (int) dy;
@@ -2480,11 +2575,12 @@ public final class LayeredViewport extends Canvas {
     }
 
     /* one native frame: the native layers in Z order with their offset, opacity and visibility */
-    private void applyNative() {
-        if (composition == 0) return;
+    private boolean applyNative() {
+        if (composition == 0) return false;
         if (batchDepth != 0) {
+            // deferred to endBatch: nothing committed yet, so a caller keeps its CPU repaint
             nativeSyncPending = true;
-            return;
+            return false;
         }
         nativeSyncPending = false;
         Layer[] frame = orderSnapshot();
@@ -2548,6 +2644,7 @@ public final class LayeredViewport extends Canvas {
                 // dispose owns every native layer, including any added by a callback.
                 submittedBackend.dispose(submittedComposition);
             }
+            return result == 0;
         } finally {
             nativeFrameDepth--;
         }

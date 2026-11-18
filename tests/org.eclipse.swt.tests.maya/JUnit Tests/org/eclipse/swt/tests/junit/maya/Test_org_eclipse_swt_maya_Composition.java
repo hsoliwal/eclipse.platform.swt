@@ -11,7 +11,9 @@ package org.eclipse.swt.tests.junit.maya;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.eclipse.swt.SWT;
@@ -21,6 +23,7 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.internal.maya.MayaComposition;
+import org.eclipse.swt.internal.maya.MayaFramePacket;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.jupiter.api.AfterEach;
@@ -178,6 +181,108 @@ public class Test_org_eclipse_swt_maya_Composition {
 		frame(new long[] { red }, 20, 20, 1, 1);
 		assertEquals(WHITE, screen(140, 140), "removal invalidates the cached scene order");
 		assertEquals(RED, screen(30, 30));
+	}
+
+	@Test
+	public void packedDirtyUpdatesOnlySpecifiedNativePixels() {
+		// The installed Maya binary may predate the optional _nUploadDirty export.
+		// Ordinary suites preserve legacy compatibility, while release qualification
+		// explicitly sets -Dswt.maya.dirty.required=true and cannot skip this gate.
+		int abiProbe = MayaComposition.uploadDirty(0, new int[0], new int[0], 0);
+		if (Boolean.getBoolean("swt.maya.dirty.required")) {
+			assertNotEquals(-1, abiProbe, "required Maya dirty JNI ABI is missing");
+		}
+		assumeTrue(abiProbe != -1, "optional native dirty-upload ABI is unavailable");
+		long red = layer(OPAQUE_RED); // initializes the whole native surface
+		frame(new long[] { red }, 20, 20, 1, 1);
+		assertEquals(RED, screen(24, 24)); // first commit before dirty-only frame
+		int[] patches = new int[16 + 9];
+		Arrays.fill(patches, 0, 16, OPAQUE_BLUE);
+		Arrays.fill(patches, 16, 25, 0xFF00FF00);
+		int[] rects = { 3, 3, 4, 4, 30, 30, 3, 3 };
+		assertEquals(0, MayaComposition.uploadDirty(red, patches, rects, 2));
+		frame(new long[] { red }, 20, 20, 1, 1);
+		assertEquals(RED, screen(21, 21));
+		assertEquals(BLUE, screen(24, 24));
+		assertEquals(new RGB(0, 255, 0), screen(51, 51));
+		assertEquals(RED, screen(60, 60));
+		assertNotEquals(0, MayaComposition.uploadDirty(red, new int[2], rects, 2));
+		assertNotEquals(0, MayaComposition.uploadDirty(red, patches, new int[] { 99, 99, 4, 4 }, 1));
+		assertNotEquals(0, MayaComposition.uploadDirty(red, patches, rects, Integer.MAX_VALUE));
+		frame(new long[] { red }, 20, 20, 1, 1);
+		assertEquals(BLUE, screen(24, 24), "invalid batched frames must preserve the prior compositor surface");
+	}
+
+	@Test
+	public void directPacketAndLegacyFramesHaveIdenticalNativePixels() {
+		// Older fragments did not export _nApplyPacked. Ordinary SWT tests
+		// may skip that new route; native release qualification must set
+		// -Dswt.maya.packed.required=true and must not accept a skipped gate.
+		int version;
+		try {
+			version = MayaComposition._nFramePacketVersion();
+		} catch (UnsatisfiedLinkError oldNativeLibrary) {
+			version = -1;
+		}
+		if (Boolean.getBoolean("swt.maya.packed.required")) {
+			assertEquals(MayaFramePacket.VERSION, version, "required Maya packet JNI ABI is missing");
+		}
+		assumeTrue(version == MayaFramePacket.VERSION, "older Maya native ABI has no packed frame");
+		long red = layer(OPAQUE_RED), blue = layer(OPAQUE_BLUE);
+		long[] order = { red, blue };
+		float[] props = { 20, 20, 1, 1, 60, 60, 0.5f, 1 };
+		frame(order, props); // established legacy native pixel oracle
+		RGB redOnly = screen(30, 30);
+		RGB overlap = screen(80, 80);
+
+		MayaFramePacket.Encoder encoder = new MayaFramePacket.Encoder();
+		ByteBuffer packet = encoder.encode(order, props, order.length, 1L);
+		paints = 0;
+		assertEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(redOnly, screen(30, 30));
+		assertNear(overlap, screen(80, 80));
+		assertEquals(0, paints, "the packed transaction still composites native pixels");
+
+		// Property-only packet: same Z, changed opacity and X offset.
+		props[6] = 1;
+		props[4] = 110;
+		packet = encoder.encode(order, props, order.length, 2L);
+		assertEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(RED, screen(80, 80));
+		assertEquals(BLUE, screen(140, 140));
+
+		// Pixel-only upload MUST be published by a packed frame even though
+		// all layer properties and Z-order are unchanged.
+		int[] green = new int[SIZE * SIZE];
+		Arrays.fill(green, 0xFF00FF00);
+		assertEquals(0, MayaComposition._nUpload(red, green));
+		assertEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(new RGB(0, 255, 0), screen(30, 30));
+		RGB committed = screen(30, 30);
+
+		// Invalid packets, stale/foreign handles, and duplicate IDs may
+		// never change the last successfully committed native frame.
+		packet.putInt(0, 0);
+		assertNotEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(committed, screen(30, 30));
+		packet = encoder.encode(order, props, order.length, 3L);
+		packet.putLong(MayaFramePacket.HEADER_BYTES + MayaFramePacket.RECORD_BYTES, red);
+		assertNotEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(committed, screen(30, 30));
+		packet = encoder.encode(order, props, order.length, 4L);
+		packet.putLong(MayaFramePacket.HEADER_BYTES, Long.MAX_VALUE);
+		assertNotEquals(0, MayaComposition._nApplyPacked(composition, packet, packet.remaining()));
+		assertEquals(committed, screen(30, 30));
+
+		// A normal legacy frame must still work after a packed transaction.
+		frame(order, props);
+		assertEquals(committed, screen(30, 30));
 	}
 
 	@Test

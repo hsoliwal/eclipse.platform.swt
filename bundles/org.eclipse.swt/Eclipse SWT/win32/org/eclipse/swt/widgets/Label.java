@@ -602,7 +602,8 @@ void wmDrawChildSeparator(DRAWITEMSTRUCT struct) {
 
 	RECT rect = new RECT ();
 	int lineWidth = getSystemMetrics (OS.SM_CXBORDER);
-	int flags = (style & SWT.SHADOW_IN) != 0 ? OS.EDGE_SUNKEN : OS.EDGE_ETCHED;
+	int flags = (style & SWT.SHADOW_IN) != 0 ? OS.EDGE_SUNKEN
+			: (style & SWT.SHADOW_OUT) != 0 ? OS.EDGE_RAISED : OS.EDGE_ETCHED;
 	if ((style & SWT.HORIZONTAL) != 0) {
 		int bottom = struct.top + Math.max (lineWidth * 2, (struct.bottom - struct.top) / 2);
 		OS.SetRect (rect, struct.left, struct.top, struct.right, bottom);

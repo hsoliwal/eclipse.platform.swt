@@ -21,8 +21,10 @@ import org.eclipse.swt.widgets.Control;
  */
 public final class MayaNativeLayers implements NativeLayers {
 
-	// Off by default: the v1 bridge decodes, validates and invokes the old
-	// compositor path, so it is NOT a zero-copy performance optimization.
+	// Off by default: v1 decodes into a native Frame and applies it directly
+	// through the legacy compositor transaction owner, without staging JNI
+	// arrays. Direct-buffer encoding/decoding still copies bytes; no speedup
+	// or true end-to-end zero-copy transport is claimed.
 	private static final boolean PACKED_FRAME = Boolean.getBoolean("swt.maya.packedFrame");
 	private static volatile int packetSupport; // 0 unknown, 1 supported, -1 missing
 	private static final ThreadLocal<MayaFramePacket.Encoder> ENCODER =
@@ -42,6 +44,11 @@ public final class MayaNativeLayers implements NativeLayers {
 	@Override
 	public int upload(long layer, int[] premultipliedArgb) {
 		return MayaComposition._nUpload(layer, premultipliedArgb);
+	}
+
+	@Override
+	public int uploadDirty(long layer, int[] packedArgb, int[] regions, int count) {
+		return MayaComposition.uploadDirty(layer, packedArgb, regions, count);
 	}
 
 	@Override
