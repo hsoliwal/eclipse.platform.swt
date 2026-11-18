@@ -6,6 +6,8 @@ on:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFramePacket*'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameDirect.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameView.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionScene.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/NativeLayers.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/**'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/sources.txt'
@@ -20,6 +22,8 @@ on:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFramePacket*'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameDirect.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameView.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionScene.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/NativeLayers.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/**'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/sources.txt'
@@ -60,17 +64,26 @@ jobs:
               -fsanitize=address,undefined -fno-omit-frame-pointer -I"$root" \
               "$root/tests/MayaFrameViewTest.cc" -o /tmp/maya-frame-views
           /tmp/maya-frame-views
+      - name: Scene affine and clip validation under sanitizers
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          ${{ matrix.compiler }} -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+              -fsanitize=address,undefined -fno-omit-frame-pointer -I"$root" \
+              "$root/tests/MayaCompositionSceneTest.cc" -o /tmp/maya-scene-validation
+          /tmp/maya-scene-validation
       - name: JNI bridge and Java 21 cross-language transport smoke
         shell: bash
         run: |
           set -euo pipefail
           root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
-          mkdir -p /tmp/maya-packet-classes
+          mkdir -p /tmp/maya-packet-classes /tmp/maya-native-headers
           ${{ matrix.compiler }} -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -fPIC -shared \
               -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
               "$root/MayaFramePacket.cc" "$root/tests/MayaFramePacketStub.cc" \
               -o /tmp/libmaya-packet-test.so
-          javac --release 21 -Xlint:all -Werror -d /tmp/maya-packet-classes \
+          javac --release 21 -Xlint:all -Werror -h /tmp/maya-native-headers -d /tmp/maya-packet-classes \
               'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaFramePacket.java' \
               'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java' \
               'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/NativeLayers.java' \
@@ -78,7 +91,8 @@ jobs:
               "$root/tests/java/org/eclipse/swt/internal/maya/impl/Library.java" \
               "$root/tests/java/org/eclipse/swt/widgets/Control.java" \
               "$root/tests/java/org/eclipse/swt/internal/maya/MayaFramePacketSmoke.java" \
-              "$root/tests/java/org/eclipse/swt/internal/maya/MayaFrameFallbackSmoke.java"
+              "$root/tests/java/org/eclipse/swt/internal/maya/MayaFrameFallbackSmoke.java" \
+              "$root/tests/java/org/eclipse/swt/internal/maya/MayaSceneStubSmoke.java"
           java -Xcheck:jni -Dswt.maya.packedFrame=true -cp /tmp/maya-packet-classes \
               org.eclipse.swt.internal.maya.MayaFramePacketSmoke /tmp/libmaya-packet-test.so
           nm -D /tmp/libmaya-packet-test.so |
@@ -102,6 +116,31 @@ jobs:
               -o /tmp/libmaya-composition-packet-stubs.so
           nm -D /tmp/libmaya-composition-packet-stubs.so |
               grep -q 'Java_org_eclipse_swt_internal_maya_MayaComposition__1nFramePacketVersion'
+          java -Xcheck:jni -cp /tmp/maya-packet-classes \
+              org.eclipse.swt.internal.maya.MayaSceneStubSmoke /tmp/libmaya-composition-packet-stubs.so
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+          prefix = 'Java_org_eclipse_swt_internal_maya_MayaComposition_'
+          pattern = prefix + r'[A-Za-z0-9_]+'
+          header_text = Path('/tmp/maya-native-headers/org_eclipse_swt_internal_maya_MayaComposition.h').read_text()
+          header = set(re.findall(pattern, header_text))
+          exports = set(re.findall(pattern, Path('bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def').read_text()))
+          linked = set(re.findall(pattern, subprocess.check_output(['nm', '-D', '/tmp/libmaya-composition-packet-stubs.so'], text=True)))
+          expected_descriptors = {
+              '_nCreate': '(J)J', '_nAddLayer': '(JII)J', '_nUpload': '(J[I)I',
+              '_nUploadDirty': '(J[I[II)I', '_nApply': '(J[J[FI)I',
+              '_nFramePacketVersion': '()I', '_nApplyPacked': '(JLjava/nio/ByteBuffer;I)I',
+              '_nRemoveLayer': '(JJ)V', '_nWaitForCommit': '(J)I', '_nDispose': '(J)V',
+              '_nCapabilities': '(J)J', '_nApplyScene': '(J[J[F[II)I',
+              '_nReadMetrics': '(J[J)I',
+          }
+          descriptors = re.findall(r'Method:\s+(\S+)\s+\*\s+Signature:\s+(\S+)', header_text)
+          assert len(descriptors) == 13 and dict(descriptors) == expected_descriptors, descriptors
+          assert len(header) == 13, header
+          assert header == exports == linked, (header ^ exports, header ^ linked)
+          print('Exact Java descriptors/header/export/linked JNI symbol closure: 13')
+          PY
 
   windows-compile:
     name: MSVC original DirectComposition transaction / JDK ${{ matrix.jdk }}

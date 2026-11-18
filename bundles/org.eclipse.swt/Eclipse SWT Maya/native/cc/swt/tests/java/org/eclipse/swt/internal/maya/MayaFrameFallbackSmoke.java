@@ -19,10 +19,18 @@ public final class MayaFrameFallbackSmoke {
         }
         MayaNativeLayers backend = new MayaNativeLayers();
         for (int i = 0; i < 3; i++) {
+            if (backend.capabilities(333) != 0) {
+                throw new AssertionError("old Maya ABI must not advertise scene capabilities");
+            }
+            if (backend.applyScene(333, new long[] { 1 },
+                    new float[] { 0, 0, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 10, 10 },
+                    new int[] { MayaComposition.SCENE_CLIP }, 1) != -1) {
+                throw new AssertionError("unsupported scene must select painted fallback");
+            }
             if (backend.apply(333, ids, props, ids.length) != 909) {
                 throw new AssertionError("old Maya ABI fallback failed at call " + i);
             }
         }
-        System.out.println("MayaFrameFallbackSmoke PASS: legacy seven-symbol ABI preserved");
+        System.out.println("MayaFrameFallbackSmoke PASS: legacy apply preserved, optional scene safely unsupported");
     }
 }

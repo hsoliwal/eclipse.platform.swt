@@ -31,6 +31,7 @@ import org.eclipse.swt.graphics.LineAttributes;
 import org.eclipse.swt.graphics.Pattern;
 import org.eclipse.swt.graphics.Region;
 import org.eclipse.swt.graphics.Transform;
+import org.eclipse.swt.internal.NativeLayers;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
 import org.junit.jupiter.api.BeforeEach;
@@ -1897,7 +1898,11 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         private boolean allowCreate;
         private long createdComposition = 1L;
         private int applyResult;
-        private Runnable onApply;
+        private long supported;
+        private int capabilityQueries, sceneApplications;
+        private boolean lastScene;
+        private int[] submittedFlagArray, lastFlags = new int[0];
+        private Runnable onApply, onCapabilities, onUpload;
         private long[] submittedHandleArray, lastHandles = new long[0];
         private float[] submittedPropertyArray, lastProperties = new float[0];
 
@@ -1906,6 +1911,16 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             assertTrue(allowCreate, "unexpected native compositor creation");
             creations++;
             return createdComposition;
+        }
+
+        @Override
+        public long capabilities(long composition) {
+            assertEquals(1L, composition);
+            capabilityQueries++;
+            Runnable callback = onCapabilities;
+            onCapabilities = null;
+            if (callback != null) callback.run();
+            return supported;
         }
 
         @Override
@@ -1922,6 +1937,9 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             assertTrue(pixelsPerLayer.containsKey(layer), "upload owns a live native layer");
             assertEquals(pixelsPerLayer.get(layer).intValue(), pixels.length);
             uploads++;
+            Runnable callback = onUpload;
+            onUpload = null;
+            if (callback != null) callback.run();
             return 0;
         }
 
@@ -1931,6 +1949,7 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             assertTrue(count >= 0 && count <= handles.length);
             assertTrue((long) count * 4 <= properties.length);
             applications++;
+            lastScene = false;
             submittedHandleArray = handles;
             submittedPropertyArray = properties;
             lastHandles = java.util.Arrays.copyOf(handles, count);
@@ -1943,6 +1962,41 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
                 }
                 assertTrue(properties[i * 4 + 2] >= 0 && properties[i * 4 + 2] <= 1);
                 assertTrue(properties[i * 4 + 3] == 0 || properties[i * 4 + 3] == 1);
+            }
+            Runnable callback = onApply;
+            onApply = null;
+            if (callback != null) callback.run();
+            return applyResult;
+        }
+
+        @Override
+        public int applyScene(long composition, long[] handles, float[] properties, int[] flags, int count) {
+            assertEquals(1L, composition);
+            assertTrue(count >= 0 && count <= handles.length && count <= flags.length);
+            assertTrue((long) count * NativeLayers.SCENE_FLOATS <= properties.length);
+            applications++;
+            sceneApplications++;
+            lastScene = true;
+            submittedHandleArray = handles;
+            submittedPropertyArray = properties;
+            submittedFlagArray = flags;
+            lastHandles = java.util.Arrays.copyOf(handles, count);
+            lastProperties = java.util.Arrays.copyOf(properties, count * NativeLayers.SCENE_FLOATS);
+            lastFlags = java.util.Arrays.copyOf(flags, count);
+            for (int i = 0; i < count; i++) {
+                assertTrue(pixelsPerLayer.containsKey(handles[i]));
+                assertEquals(0, flags[i] & ~NativeLayers.SCENE_CLIP);
+                int at = i * NativeLayers.SCENE_FLOATS;
+                for (int p = 0; p < NativeLayers.SCENE_FLOATS; p++) {
+                    assertTrue(Float.isFinite(properties[at + p]));
+                    assertTrue(Math.abs(properties[at + p]) <= 0x1.0p20);
+                }
+                assertTrue(properties[at + 2] >= 0 && properties[at + 2] <= 1);
+                assertTrue(properties[at + 3] == 0 || properties[at + 3] == 1);
+                if (flags[i] != 0) {
+                    assertTrue(properties[at + 10] <= properties[at + 12]);
+                    assertTrue(properties[at + 11] <= properties[at + 13]);
+                }
             }
             Runnable callback = onApply;
             onApply = null;
@@ -1997,6 +2051,278 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             gc.dispose();
         }
         return image;
+    }
+
+    @Test
+    public void testNativeSceneFeaturesAreAdmittedIndividually() throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        backend.supported = NativeLayers.AFFINE_2D;
+        Image image = nativeTestImage(40, 30, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("affine admission", image, 10, 20);
+        try {
+            viewport.setZoom(2);
+            assertTrue(layer.setNative(true));
+            assertTrue(backend.lastScene);
+            assertEquals(2, backend.lastProperties[4]);
+            layer.setWorldClip(new WorldBounds(10, 20, 20, 15));
+            assertFalse(layer.isNative(), "affine support does not imply clip support");
+            layer.setWorldClip(null);
+            assertTrue(layer.isNative());
+            layer.setBlendMode(LayeredViewport.BLEND_MULTIPLY);
+            assertFalse(layer.isNative(), "scene support does not imply a backdrop blend effect");
+            layer.setBlendMode(LayeredViewport.BLEND_NORMAL);
+            assertTrue(layer.isNative());
+            assertEquals(1, backend.capabilityQueries, "capabilities belong to this composition, not every frame");
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeClipSupportDoesNotImplyAffineSupport() throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        backend.supported = NativeLayers.LOCAL_RECT_CLIP;
+        Image image = nativeTestImage(40, 30, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("clip admission", image, 10, 20);
+        try {
+            layer.setWorldClip(new WorldBounds(15, 25, 10, 10));
+            assertTrue(layer.setNative(true));
+            assertArrayEquals(new int[] {NativeLayers.SCENE_CLIP}, backend.lastFlags);
+            assertEquals(5, backend.lastProperties[10]);
+            assertEquals(15, backend.lastProperties[12]);
+            viewport.setZoom(2);
+            assertFalse(layer.isNative());
+            viewport.setZoom(1);
+            assertTrue(layer.isNative());
+            layer.setWorldClip(null);
+            assertFalse(backend.lastScene, "legacy submission explicitly resets a prior clip");
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeAffineClipUsesSourcePixelsAndIndependentAxisProjection() throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        backend.supported = NativeLayers.AFFINE_2D | NativeLayers.LOCAL_RECT_CLIP;
+        Image image = nativeTestImage(40, 30, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("source pixels", image, 10, 20);
+        try {
+            layer.setWorldBounds(10, 20, 80, 60);
+            layer.setWorldClip(new WorldBounds(20, 25, 30, 15));
+            viewport.setOrigin(5, 7);
+            viewport.setZoom(2);
+            assertTrue(layer.setNative(true));
+            assertArrayEquals(new float[] {10, 26, 1, 1, 4, 0, 0, 4, 0, 0, 5, 2.5f, 20, 10},
+                    backend.lastProperties);
+            assertSame(layer, viewport.hitTest(40, 45));
+            assertNull(viewport.hitTest(20, 30));
+            layer.setFixedX(true);
+            assertEquals(10, backend.lastProperties[0]);
+            assertEquals(2, backend.lastProperties[4]);
+            assertEquals(4, backend.lastProperties[7]);
+            layer.setPinned(SWT.VERTICAL);
+            assertEquals(40, backend.lastProperties[1]);
+            assertEquals(1, backend.additions, "geometry changes retain the same native surface");
+            assertEquals(1, backend.uploads);
+            layer.setWorldClip(null);
+            layer.setWorldBounds(10, 20, 40, 30);
+            viewport.setZoom(1);
+            assertFalse(backend.lastScene, "the original apply resets identity and clip");
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeSceneDpiUsesShellAutoscaleAndKeepsCanonicalRaster() throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        backend.supported = NativeLayers.AFFINE_2D;
+        Image image = nativeTestImage(8, 6, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("DPI projection", image, 10, 20);
+        try {
+            assertTrue(layer.setNative(true));
+            org.eclipse.swt.internal.DPIUtil.runWithAutoScaleValue("150", () -> {
+                layer.setOpacity(200);
+                assertTrue(layer.isNative());
+                assertTrue(backend.lastScene);
+                assertEquals(15, backend.lastProperties[0]);
+                assertEquals(30, backend.lastProperties[1]);
+                assertEquals(1.5f, backend.lastProperties[4]);
+                assertEquals(1.5f, backend.lastProperties[7]);
+                assertEquals(48, backend.pixelsPerLayer.get(backend.lastHandles[0]).intValue());
+                assertEquals(1, backend.uploads, "DPI changes transform canonical pixels without resizing the source");
+            });
+            layer.setOpacity(255);
+            assertFalse(backend.lastScene);
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeSceneHiddenExtremesAndDisjointWorldClipStayFinite() throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        backend.supported = NativeLayers.AFFINE_2D | NativeLayers.LOCAL_RECT_CLIP;
+        Image image = nativeTestImage(8, 8, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("far scene", image, Long.MIN_VALUE, 20);
+        try {
+            viewport.setZoom(2);
+            assertTrue(layer.setNative(true));
+            assertEquals(0, backend.lastProperties[3]);
+            assertEquals(0, backend.lastProperties[0]);
+            assertEquals(1, backend.lastProperties[4]);
+            layer.setWorldClip(new WorldBounds(Long.MAX_VALUE - 8, 20, 8, 8));
+            assertTrue(layer.isNative());
+            assertEquals(0, backend.lastProperties[3]);
+            layer.setWorldClip(null);
+            viewport.setOrigin(Long.MIN_VALUE, 0);
+            assertEquals(1, backend.lastProperties[3]);
+            assertEquals(0, backend.lastProperties[0]);
+            layer.setWorldBounds(0, 0, Long.MAX_VALUE, 8);
+            assertFalse(layer.isNative(), "an unrepresentable affine falls back before native mutation");
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeSceneBatchesReuseAllLanesAndIsolateNestedCallbacks() throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        backend.supported = NativeLayers.AFFINE_2D | NativeLayers.LOCAL_RECT_CLIP;
+        Image image = nativeTestImage(20, 20, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("scene batch", image, 10, 20);
+        try {
+            viewport.setZoom(2);
+            assertTrue(layer.setNative(true));
+            long[] reusableHandles = backend.submittedHandleArray;
+            float[] reusableProperties = backend.submittedPropertyArray;
+            int[] reusableFlags = backend.submittedFlagArray;
+            int applications = backend.applications;
+            viewport.beginUpdate();
+            try {
+                layer.setOpacity(200);
+                layer.setWorldClip(new WorldBounds(12, 22, 10, 10));
+                layer.setWorldBounds(11, 21, 20, 20);
+                assertEquals(applications, backend.applications);
+            } finally {
+                viewport.endUpdate();
+            }
+            assertEquals(applications + 1, backend.applications);
+            assertSame(reusableHandles, backend.submittedHandleArray);
+            assertSame(reusableProperties, backend.submittedPropertyArray);
+            assertSame(reusableFlags, backend.submittedFlagArray);
+            backend.onApply = () -> {
+                float[] outer = backend.submittedPropertyArray;
+                int[] flags = backend.submittedFlagArray;
+                float[] expected = outer.clone();
+                int[] expectedFlags = flags.clone();
+                layer.setWorldClip(null);
+                assertNotSame(outer, backend.submittedPropertyArray);
+                assertArrayEquals(expected, outer);
+                assertArrayEquals(expectedFlags, flags);
+            };
+            layer.setOpacity(128);
+            layer.setOpacity(96);
+            assertSame(reusableProperties, backend.submittedPropertyArray);
+            assertSame(reusableFlags, backend.submittedFlagArray);
+            backend.onApply = () -> { throw new IllegalStateException("scene callback"); };
+            assertThrows(IllegalStateException.class, () -> layer.setOpacity(80));
+            layer.setOpacity(64);
+            assertSame(reusableProperties, backend.submittedPropertyArray);
+        } finally {
+            backend.onApply = null;
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeSceneFailurePreservesPaintedFallbackAndBorrowedImage() throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        backend.supported = NativeLayers.AFFINE_2D;
+        Image image = nativeTestImage(8, 8, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("scene failure", image, 10, 20);
+        try {
+            viewport.setZoom(2);
+            assertTrue(layer.setNative(true));
+            backend.applyResult = -1;
+            layer.setOpacity(128);
+            assertFalse(layer.isNative());
+            assertEquals(1, backend.disposals);
+            assertFalse(layer.setNative(true));
+            assertFalse(image.isDisposed());
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeCapabilityAndUploadCallbacksCannotPublishRetiredOwners() throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        backend.supported = NativeLayers.AFFINE_2D;
+        Image image = nativeTestImage(8, 8, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("capability callback", image, 10, 20);
+        try {
+            backend.onCapabilities = () -> layer.setBlendMode(LayeredViewport.BLEND_MULTIPLY);
+            assertFalse(layer.setNative(true));
+            assertEquals(0, backend.additions);
+            backend.onUpload = layer::remove;
+            layer.setBlendMode(LayeredViewport.BLEND_NORMAL);
+            assertEquals(1, backend.additions);
+            assertEquals(1, backend.removals);
+            assertTrue(backend.pixelsPerLayer.isEmpty());
+            assertFalse(image.isDisposed());
+        } finally {
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeExceptionalUploadReleasesUnpublishedSurface() throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        backend.supported = NativeLayers.AFFINE_2D;
+        Image image = nativeTestImage(8, 8, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("exceptional upload", image, 10, 20);
+        try {
+            backend.onUpload = () -> { throw new IllegalStateException("upload callback"); };
+            assertThrows(IllegalStateException.class, () -> layer.setNative(true));
+            assertEquals(1, backend.removals);
+            assertTrue(backend.pixelsPerLayer.isEmpty());
+            assertFalse(layer.isNative());
+            assertTrue(layer.setNative(true), "the preparation guard is restored on exceptional exit");
+            assertFalse(image.isDisposed());
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeCapabilityCallbackMayDisposeWithoutPublishingFeatures() throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        backend.supported = NativeLayers.AFFINE_2D;
+        Image image = nativeTestImage(8, 8, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("retired query", image, 10, 20);
+        try {
+            backend.onCapabilities = () -> {
+                disposedIntentionally = true;
+                viewport.dispose();
+            };
+            assertFalse(layer.setNative(true));
+            assertTrue(viewport.isDisposed());
+            assertEquals(0, backend.additions);
+            assertEquals(1, backend.disposals);
+            assertFalse(image.isDisposed());
+        } finally {
+            image.dispose();
+        }
     }
 
     @Test
@@ -2332,6 +2658,45 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             layer.setNative(false);
             assertFalse(layer.isNative());
             assertFalse(viewport.retryNativeComposition(), "no native requests remain");
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeSceneRecoveryReprobesFeaturesBeforeRestoringProjection()
+            throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        backend.supported = NativeLayers.AFFINE_2D | NativeLayers.LOCAL_RECT_CLIP;
+        Image image = nativeTestImage(20, 20, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("scene recovery", image, 10, 20);
+        try {
+            viewport.setZoom(2);
+            layer.setWorldClip(new WorldBounds(15, 25, 10, 10));
+            assertTrue(layer.setNative(true));
+            assertTrue(backend.lastScene);
+            float[] before = backend.lastProperties.clone();
+            backend.applyResult = -1;
+            layer.setOpacity(200);
+            assertFalse(layer.isNative());
+            backend.applyResult = 0;
+            backend.allowCreate = true;
+            assertTrue(viewport.retryNativeComposition());
+            assertTrue(layer.isNative());
+            assertEquals(2, backend.capabilityQueries);
+            before[2] = 200 / 255f;
+            assertArrayEquals(before, backend.lastProperties,
+                    "recovery restores the same source-pixel scale and clip");
+            assertArrayEquals(new int[] {NativeLayers.SCENE_CLIP}, backend.lastFlags);
+            backend.applyResult = -1;
+            layer.setOpacity(180);
+            backend.supported = 0;
+            backend.applyResult = 0;
+            assertTrue(viewport.retryNativeComposition(), "legacy composition is still available");
+            assertEquals(3, backend.capabilityQueries);
+            assertFalse(layer.isNative(), "a recovered legacy backend cannot inherit stale affine/clip permission");
+            assertFalse(image.isDisposed());
         } finally {
             if (!viewport.isDisposed()) layer.remove();
             image.dispose();

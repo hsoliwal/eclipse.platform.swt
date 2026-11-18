@@ -42,6 +42,11 @@ public final class MayaNativeLayers implements NativeLayers {
 	}
 
 	@Override
+	public long capabilities(long composition) {
+		return MayaComposition.capabilities(composition);
+	}
+
+	@Override
 	public int upload(long layer, int[] premultipliedArgb) {
 		return MayaComposition._nUpload(layer, premultipliedArgb);
 	}
@@ -68,6 +73,11 @@ public final class MayaNativeLayers implements NativeLayers {
 			}
 		}
 		return MayaComposition._nApply(composition, layers, props, count);
+	}
+
+	@Override
+	public int applyScene(long composition, long[] layers, float[] packed, int[] flags, int count) {
+		return MayaComposition.applyScene(composition, layers, packed, flags, count);
 	}
 
 	@Override

@@ -879,6 +879,26 @@ public class GTK4 {
 	 */
 	public static final native long gtk_snapshot_free_to_node(long snapshot);
 	/**
+	 * @param snapshot cast=(GtkSnapshot *)
+	 * @param node cast=(GskRenderNode *)
+	 */
+	public static final native void gtk_snapshot_append_node(long snapshot, long node);
+	/**
+	 * @param snapshot cast=(GtkSnapshot *)
+	 * @param texture cast=(GdkTexture *)
+	 * @param bounds cast=(const graphene_rect_t *)
+	 */
+	public static final native void gtk_snapshot_append_texture(long snapshot, long texture, long bounds);
+	/**
+	 * @param snapshot cast=(GtkSnapshot *)
+	 * @param bounds cast=(const graphene_rect_t *)
+	 */
+	public static final native void gtk_snapshot_push_clip(long snapshot, long bounds);
+	/**
+	 * @param snapshot cast=(GtkSnapshot *)
+	 */
+	public static final native void gtk_snapshot_push_opacity(long snapshot, double opacity);
+	/**
 	 * @method flags=dynamic
 	 * @param snapshot cast=(GtkSnapshot *)
 	 */
@@ -893,6 +913,18 @@ public class GTK4 {
 	 * @param bounds cast=(const graphene_rect_t *)
 	 */
 	public static final native void gtk_snapshot_append_color(long snapshot, GdkRGBA color, long bounds);
+	/**
+	 * @param snapshot cast=(GtkSnapshot *)
+	 */
+	public static final native void gtk_snapshot_save(long snapshot);
+	/**
+	 * @param snapshot cast=(GtkSnapshot *)
+	 */
+	public static final native void gtk_snapshot_restore(long snapshot);
+	/**
+	 * @param snapshot cast=(GtkSnapshot *)
+	 */
+	public static final native void gtk_snapshot_scale(long snapshot, float factor_x, float factor_y);
 
 	/* GtkImage */
 	/**
