@@ -160,4 +160,39 @@ public class Test_org_eclipse_swt_maya_Composition {
 		assertNotEquals(0, MayaComposition._nApply(composition, new long[] { red }, new float[2], 1), "too few properties");
 		assertNotEquals(0, MayaComposition._nApply(0, new long[0], new float[0], 0));
 	}
+
+	@Test
+	public void invalidNativeHandlesAndFrameArraysNeverReachTheCompositor() {
+		long red = layer(OPAQUE_RED);
+		frame(new long[] { red }, 20, 20, 1, 1);
+		assertEquals(RED, screen(30, 30));
+		assertNotEquals(0, MayaComposition._nApply(composition, null, new float[0], 0));
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[0], null, 0));
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[] { red },
+				new float[] { 20, 20, 1, 1 }, Integer.MAX_VALUE));
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[] { Long.MAX_VALUE },
+				new float[] { 20, 20, 1, 1 }, 1));
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[] { red, red },
+				new float[] { 20, 20, 1, 1, 20, 20, 1, 1 }, 2));
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[] { red },
+				new float[] { Float.NaN, 20, 1, 1 }, 1));
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[] { red },
+				new float[] { 20, 20, Float.POSITIVE_INFINITY, 1 }, 1));
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[] { red },
+				new float[] { 20, 20, -0.1f, 1 }, 1));
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[] { red },
+				new float[] { 20, 20, 1, 0.5f }, 1));
+		assertEquals(RED, screen(30, 30), "invalid frames must not alter the last committed frame");
+		assertNotEquals(0, MayaComposition._nUpload(Long.MAX_VALUE, new int[SIZE * SIZE]));
+		assertEquals(0, MayaComposition._nAddLayer(Long.MAX_VALUE, 2, 2));
+		assertEquals(0, MayaComposition._nAddLayer(composition, Integer.MAX_VALUE, Integer.MAX_VALUE));
+		assertNotEquals(0, MayaComposition._nWaitForCommit(Long.MAX_VALUE));
+		MayaComposition._nRemoveLayer(composition, Long.MAX_VALUE);
+		MayaComposition._nDispose(Long.MAX_VALUE);
+		MayaComposition._nRemoveLayer(composition, red);
+		assertNotEquals(0, MayaComposition._nUpload(red, new int[SIZE * SIZE]),
+				"a removed layer handle must be refused");
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[] { red },
+				new float[] { 0, 0, 1, 1 }, 1));
+	}
 }
