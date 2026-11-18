@@ -40,8 +40,22 @@ These properties are independent from widget-level Group shadow styles.
   *two-tone native bevel* is not implemented. All non-default values
   reject with `SWT.ERROR_NOT_IMPLEMENTED` rather than silently painting a
   flat CALayer border and claiming it is a bevel.
-- **Android / iOS mobile:** not yet migrated. The mobile source manifest
-  requires a separately qualified native peer implementation.
+- **Android:** the original `AndroidPlatform.PeerView` performs two-tone native
+  inset/outset/groove/ridge drawing in `onDraw`, with two logical-pixel trim,
+  density-rounded view padding and UI-thread native peer updates. The default
+  legacy `SWT.BORDER` path keeps its existing one-pixel grey edge.
+- **iOS:** the original `SWTUIKitView` performs two-tone CoreGraphics edge
+  drawing with native client insets and pointer-coordinate conversion. The
+  `OS.setBorderRelief(JI)V` JNI binding is registered in `SWTUIKit.m`;
+  `javac -h` must regenerate the matching exported header. The previous
+  raster is invalidated on geometry changes, and old native peers are not
+  replaced or retained.
+- **Mobile bridge:** `MobilePlatform.setBorderRelief` has a binary-compatible
+  default method. Existing third-party transports can still load unchanged,
+  but non-default relief fails explicitly until the transport implements it.
+  The original mobile `Control` owns selection, geometry, image invalidation
+  and print-path two-tone edge rendering. The `mobile/source-manifest.json`
+  SHA-256 pins the seven changed Java/test sources and new common validator.
 
 Only controls already backed by an OS widget are modified. Native child controls
 inside `LayeredViewport` retain their own independent border handles; native
@@ -57,8 +71,9 @@ border-width getter reports the opt-in two-pixel CSS border. Platform-native
 layout and `computeTrim`/`getClientArea` parity **must still be measured**
 before merger, including composed widgets with separate border handles.
 
-No border creates a new native window, new SWT child control, duplicate
-accessibility object, or JNI export. Existing `SWT.BORDER` semantics are
+No border creates a new native window, new SWT child control or duplicate
+accessibility object. Only the UIKit backend adds a JNI registration; Win32
+and GTK reuse their already-generated native bindings. Existing `SWT.BORDER` semantics are
 unmodified until the first explicit call to `setBorderRelief`.
 
 ## Required acceptance gates (not claimed)
@@ -73,7 +88,28 @@ unmodified until the first explicit call to `setBorderRelief`.
   changing a child Control border must not re-order its native visual.
 - Lifecycle/disposal/reentrancy, keyboard focus, accessibility, JUnit/PDE/Tycho,
   source/binary signature comparison and resource leak checks.
-- Cocoa bevel drawing + mobile native peers in separately reviewed follow-ups.
+- Cocoa AppKit bevel drawing remains unsupported rather than silently falling
+  back to a flat line. Android/iOS native screenshot/instrumentation acceptance
+  and regenerated `javac -h` JNI registration verification remain outstanding.
+
+## Donor and convergence inventory
+
+Existing Win32 `OS.DrawEdge`, `Composite.wmNCPaint` and current master
+`OS.EDGE_RAISED/EDGE_BUMP/EDGE_ETCHED/BF_RECT` constants are native
+authorities. Synexia #18560 is a *separate* draft style-bit recipe for
+Composite/Canvas only; that behavior is intentionally not copied or enabled
+by existing style bits because overloaded SWT constants could change legacy
+widget interpretations. Synexia #18558 documents GTK4 Group frame CSS and
+Synexia #18564 the independent Nebula Draw2D border-path candidate.
+No unverified donor merge is part of this feature.
+
+The shared public shape is the opt-in `Control.setBorderRelief` property,
+with immutable integer values and owned native peers; it is not an API-equivalent
+implementation of Swing's LineBorder, CompoundBorder or a generalized border
+factory. Any broader public border object hierarchy requires a separate
+compatibility proposal.
 
 This remains a **draft** feature and must not be merged or presented as fully
-cross-platform until those gates are satisfied.
+cross-platform until the specified tests, Apple/Android native pixels,
+Win32/GTK trim and lifecycle contracts, and current-master collision gates
+are satisfied.
