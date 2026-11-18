@@ -59,6 +59,8 @@ public class Composite extends Scrollable {
 
 	static final int TOOLTIP_LIMIT = 4096;
 	private int bevelBorder;
+	private int originalBevelExtendedEdges, originalBevelNativeStyle;
+	private boolean bevelOriginalCaptured;
 
 	/*
 	 * Composite and Canvas constructor bits cannot encode a bevel: SWT style bits
@@ -189,13 +191,18 @@ public void setBevelBorder (int border) {
 	long hwnd = borderHandle ();
 	int exStyle = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
 	int winStyle = OS.GetWindowLong (hwnd, OS.GWL_STYLE);
-	int nextExStyle = exStyle & ~OS.WS_EX_CLIENTEDGE;
-	int nextWinStyle = winStyle & ~OS.WS_BORDER;
-	if (border != SWT.NONE || ((style & SWT.BORDER) != 0 && !isUseWsBorder ())) {
-		nextExStyle |= OS.WS_EX_CLIENTEDGE;
-	} else if ((style & SWT.BORDER) != 0) {
-		nextWinStyle |= OS.WS_BORDER;
+	int mask = OS.WS_EX_CLIENTEDGE | OS.WS_EX_WINDOWEDGE | OS.WS_EX_STATICEDGE;
+	if (!bevelOriginalCaptured) {
+		originalBevelExtendedEdges = exStyle & mask;
+		originalBevelNativeStyle = winStyle & OS.WS_BORDER;
+		bevelOriginalCaptured = true;
 	}
+	// Round-trip the actual original HWND styles, including system/theme
+	// static/raised edges, rather than reconstructing them from SWT.BORDER.
+	int nextExStyle = (exStyle & ~mask) | (border == SWT.NONE
+			? originalBevelExtendedEdges : OS.WS_EX_CLIENTEDGE);
+	int nextWinStyle = (winStyle & ~OS.WS_BORDER) | (border == SWT.NONE
+			? originalBevelNativeStyle : 0);
 
 	bevelBorder = border;
 	if (nextExStyle != exStyle) OS.SetWindowLong (hwnd, OS.GWL_EXSTYLE, nextExStyle);
