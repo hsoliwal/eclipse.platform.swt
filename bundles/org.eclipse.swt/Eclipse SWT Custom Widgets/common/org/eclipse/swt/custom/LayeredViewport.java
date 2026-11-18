@@ -1327,6 +1327,12 @@ public final class LayeredViewport extends Canvas {
         dirty = new ViewportDamageRegion();
         addPaintListener(event -> paintLayers(event.gc));
         addListener(SWT.Resize, event -> refreshNativeClientGeometry());
+        // A monitor/DPI zoom transition can change native device pixels
+        // without changing this viewport's logical client rectangle.
+        addListener(SWT.ZoomChanged, event -> {
+            nativeClientGeometryKnown = false;
+            refreshNativeClientGeometry();
+        });
         addListener(SWT.MouseDown, this::dispatchPointer);
         addListener(SWT.MouseUp, this::dispatchPointer);
         addListener(SWT.MouseMove, this::dispatchPointer);
