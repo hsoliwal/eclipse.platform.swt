@@ -1298,6 +1298,8 @@ public void setBorderRelief (int relief) {
     if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     if (nativeBorderRelief == relief) return;
     long hwnd = borderHandle();
+    // Etched patterns require our non-client paint callback on this exact HWND.
+    if (NativeBorderRelief.isEtched(relief) && hwnd != handle) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
     int mask = OS.WS_EX_CLIENTEDGE | OS.WS_EX_WINDOWEDGE | OS.WS_EX_STATICEDGE;
     int exStyle = OS.GetWindowLong(hwnd, OS.GWL_EXSTYLE);
     if (!nativeBorderReliefSaved) {
