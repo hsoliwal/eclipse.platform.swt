@@ -5,14 +5,18 @@ on:
     paths:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionDeltaTest.cc'
       - '.github/workflows/maya-native-safety.yml'
   push:
     branches: [ master ]
     paths:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionDeltaTest.cc'
       - '.github/workflows/maya-native-safety.yml'
 
 jobs:
@@ -33,6 +37,15 @@ jobs:
             -fsanitize=address,undefined -fno-omit-frame-pointer \
             "$root/tests/MayaCompositionChecksTest.cc" -o /tmp/maya-checks
           /tmp/maya-checks
+      - name: C++17 retained composition delta differential tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            "$root/tests/MayaCompositionDeltaTest.cc" -o /tmp/maya-delta
+          /tmp/maya-delta
       - name: Compile non-Windows JNI stub exports
         shell: bash
         run: |
