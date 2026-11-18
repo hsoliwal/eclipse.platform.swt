@@ -6,6 +6,24 @@ root="$(cd "$here/.." && pwd)"
 src="$root/cc/swt"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
+
+# Platform-free reference pixels and packed-region bounds.
 "${CXX:-clang++}" -std=c++17 -Wall -Wextra -Werror -pedantic -O2 \
     -I"$src" "$here/dirty-check.cc" -o "$tmp/dirty-check"
 "$tmp/dirty-check"
+
+# Compile the ACTUAL MayaComposition.cc receiver's non-Windows JNI branch,
+# not a mocked C++ reproduction. Check all seven old + one new symbols with
+# Java 21's native signature resolver. It deliberately cannot test D3D/Win32.
+if [[ -z "${JAVA_HOME:-}" ]]; then
+    JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v javac)")")")"
+fi
+test -f "$JAVA_HOME/include/jni.h"
+test -f "$JAVA_HOME/include/linux/jni_md.h"
+"${CXX:-clang++}" -std=c++17 -Wall -Wextra -Werror -pedantic -O2 \
+    -fPIC -shared -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+    -I"$src" "$src/MayaComposition.cc" -o "$tmp/libmaya_native_abi.so"
+mkdir -p "$tmp/classes"
+javac --release 21 -Xlint:all -Werror -d "$tmp/classes" "$here/MayaCompositionStubProof.java"
+java -Xcheck:jni -cp "$tmp/classes" \
+    org.eclipse.swt.internal.maya.MayaCompositionStubProof "$tmp/libmaya_native_abi.so"
