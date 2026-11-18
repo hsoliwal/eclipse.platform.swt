@@ -114,3 +114,27 @@ existing dirty-region C++ proof: **3,915,493** cases PASS. Actual full
 Maya native Windows build/DLL, `-Xcheck:jni` Win32, DirectComposition
 screen pixels, GPU/RSS/latency, SWT Java/Tycho and cross-platform native
 platform parity remain **NOT RUN** for this candidate.
+
+## Retained per-thread pixel staging without extra JNI copies
+
+The merged full-prefix upload from SWT #554 is retained: native code still
+validates every source rectangle, copies the **entire used Java pixel
+prefix once before the first BeginDraw**, and then submits each region
+without holding a Java GC array or issuing any additional JNI reads.
+This preserves its safety boundary for JVM exceptions and GPU partial
+frames.
+
+Small multi-region batches (2 or more rectangles; <=262,144 ARGB ints,
+1 MiB pixel payload) now borrow a reusable **per-native-UI-thread**
+`DirtyPixelScratch` buffer. Its exact-element allocation never retains
+more than 1 MiB of pixel data; nested/reentrant calls and larger valid
+batches use independent temporary allocations and cannot overwrite
+an outer frame. Large batches retain the original full-prefix peak
+allocation but do not leave that allocation cached on the UI thread.
+
+This change does not add a renderer, Java process, JNI export or SWT
+public API. The original typed native handles, `CompositionFrameDelta`,
+device reset handling, surface Commit and CPU-owned backing store remain
+authoritative. The same portable C++17 scratch class and tests passed
+**302,509** assertions with Clang ASan/UBSan and GCC strict warnings.
+Native Win32 builds and CPU/GPU/RSS/latency benchmarks remain unqualified.

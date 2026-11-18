@@ -176,6 +176,46 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testFixedHeaderIgnoresPanZoomAndStillWinsHitTesting() {
+        Layer rows = viewport.addPaintLayer("rows", -1000, -1000, 3000, 3000, (gc, ctx) -> { });
+        Layer header = viewport.addPaintLayer("fixed header", 0, 0, 300, 24, (gc, ctx) -> { });
+        header.setFixed(true);
+        assertTrue(header.isFixed());
+        header.setHitTester((candidate, x, y) -> x < 100 && y < 20);
+        assertSame(header, viewport.hitTest(10, 10));
+        assertSame(rows, viewport.hitTest(110, 10), "fixed hit tester sees viewport pixels");
+        viewport.setOrigin(500, -400);
+        viewport.setZoom(2.0);
+        assertSame(header, viewport.hitTest(10, 10), "fixed layer is not shifted or scaled");
+        assertSame(rows, viewport.hitTest(110, 10));
+        assertSame(rows, viewport.hitTest(10, 30));
+        header.setWorldClip(new WorldBounds(20, 0, 200, 24));
+        assertSame(rows, viewport.hitTest(10, 10));
+        assertSame(header, viewport.hitTest(25, 10));
+        header.setWorldClip(null);
+        header.setFixed(false);
+        assertFalse(header.isFixed());
+        assertSame(rows, viewport.hitTest(25, 10), "the old fixed hit region is no longer indexed");
+    }
+
+    @Test
+    public void testTreeHeaderPinsOnlyVerticalAxisAndScrollsWithColumns() {
+        Layer rows = viewport.addPaintLayer("rows", -1000, -1000, 3000, 3000, (gc, ctx) -> { });
+        Layer header = viewport.addPaintLayer("column headings", 80, 0, 80, 24, (gc, ctx) -> { });
+        header.setFixedY(true);
+        assertTrue(header.isFixedY());
+        assertFalse(header.isFixedX());
+        header.setHitTester((candidate, x, y) -> x >= 80 && y < 24);
+        assertSame(header, viewport.hitTest(90, 10));
+        viewport.setOrigin(40, 500);
+        assertSame(header, viewport.hitTest(60, 10), "header follows horizontal column scroll");
+        assertSame(rows, viewport.hitTest(130, 10), "header did move horizontally");
+        viewport.setZoom(2.0);
+        assertSame(header, viewport.hitTest(90, 10), "header column width zooms with the body");
+        assertSame(rows, viewport.hitTest(90, 30), "header height remains fixed in widget pixels");
+    }
+
+    @Test
     public void testDisjointClipAndBatchedLayerChanges() {
         Layer layer = viewport.addPaintLayer("clipped", 0, 0, 100, 100,
                 (gc, context) -> { });
@@ -489,6 +529,65 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testPinnedHeaderDoesNotLeaveGhostPixelsAfterScroll() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        viewport.addPaintLayer("scrolling body", -2000, -2000, 4000, 4000, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLUE));
+            gc.fillRectangle(ctx.clip());
+        });
+        Layer header = viewport.addPaintLayer("sticky header", 0, 0, 300, 24, (gc, ctx) -> {
+            assertEquals(viewport.getOriginX(), ctx.originX());
+            assertEquals(0, ctx.originY());
+            assertEquals(viewport.getZoom(), ctx.zoom());
+            assertEquals(12, ctx.projectY(12));
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_RED));
+            gc.fillRectangle(ctx.clip());
+        });
+        header.setFixedY(true);
+        show();
+        RGB red = viewport.getDisplay().getSystemColor(SWT.COLOR_RED).getRGB();
+        RGB blue = viewport.getDisplay().getSystemColor(SWT.COLOR_BLUE).getRGB();
+        assertEquals(red, rgb(pixels(), 10, 10));
+        assertEquals(blue, rgb(pixels(), 10, 35));
+        viewport.setOrigin(0, -18); // copies old header pixels down toward the body
+        viewport.update();
+        assertEquals(red, rgb(pixels(), 10, 10), "header stays pinned");
+        assertEquals(blue, rgb(pixels(), 10, 35), "the shifted header's old pixels are repaired");
+        assertSameAsAFullRecomposition();
+        viewport.setZoom(2.0);
+        viewport.update();
+        assertEquals(red, rgb(pixels(), 10, 10));
+        assertEquals(blue, rgb(pixels(), 10, 35), "zoom does not scale fixed chrome");
+        assertSameAsAFullRecomposition();
+    }
+
+    @Test
+    public void testFrozenColumnDoesNotLeaveGhostPixelsAfterHorizontalScroll() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        viewport.addPaintLayer("scrolling rows", -2000, -2000, 4000, 4000, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLUE));
+            gc.fillRectangle(ctx.clip());
+        });
+        Layer frozen = viewport.addPaintLayer("row labels", 0, 0, 24, 240, (gc, ctx) -> {
+            assertEquals(0, ctx.originX());
+            assertEquals(12, ctx.projectX(12));
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_RED));
+            gc.fillRectangle(ctx.clip());
+        });
+        frozen.setFixedX(true);
+        show();
+        RGB red = viewport.getDisplay().getSystemColor(SWT.COLOR_RED).getRGB();
+        RGB blue = viewport.getDisplay().getSystemColor(SWT.COLOR_BLUE).getRGB();
+        assertEquals(red, rgb(pixels(), 10, 10));
+        assertEquals(blue, rgb(pixels(), 35, 10));
+        viewport.setOrigin(-18, 0);
+        viewport.update();
+        assertEquals(red, rgb(pixels(), 10, 10));
+        assertEquals(blue, rgb(pixels(), 35, 10), "old frozen pixels are repaired");
+        assertSameAsAFullRecomposition();
+    }
+
+    @Test
     public void testABackgroundChangeAfterTheFirstPaintIsShown() {
         viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
         viewport.addPaintLayer("dot", 10, 10, 5, 5, (gc, ctx) -> gc.fillRectangle(ctx.clip()));
@@ -528,6 +627,25 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertEquals(new Rectangle(60, 50, 20, 20), button.getBounds(), "a removed layer no longer moves its control");
         org.eclipse.swt.widgets.Button stranger = new org.eclipse.swt.widgets.Button(shell, SWT.PUSH);
         assertThrows(IllegalArgumentException.class, () -> viewport.addControlLayer("x", stranger, 0, 0, 5, 5));
+    }
+
+    @Test
+    public void testPinnedNativeTreeHeaderIsAboveScrollingControl() {
+        Button body = new Button(viewport, SWT.PUSH);
+        Button header = new Button(viewport, SWT.PUSH);
+        viewport.addControlLayer("scrolling body", body, 100, 100, 150, 100);
+        Layer chrome = viewport.addControlLayer("pinned header", header, 50, 0, 300, 24);
+        chrome.setFixedY(true);
+        assertSame(header, viewport.getChildren()[0], "native header is above native body");
+        viewport.setOrigin(50, 100);
+        assertEquals(new Rectangle(50, 0, 150, 100), body.getBounds());
+        assertEquals(new Rectangle(0, 0, 300, 24), header.getBounds());
+        viewport.setZoom(2.0);
+        assertEquals(new Rectangle(100, 0, 300, 200), body.getBounds());
+        assertEquals(new Rectangle(0, 0, 600, 24), header.getBounds());
+        chrome.setWorldBounds(50, 0, 300, 32);
+        assertEquals(new Rectangle(0, 0, 600, 32), header.getBounds());
+        assertSame(chrome, viewport.hitTest(10, 10));
     }
 
     @Test

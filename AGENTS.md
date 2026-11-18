@@ -25,6 +25,11 @@ This rule overrides any older text in this file.
 
 
 
+
+## Priority 0 — additive best-of-best API superset, full-history merge custody (2026-11-18)
+
+Before any code merge, preserve the accepted upstream plus fork-specific **backward-compatible superset** (public API/ABI, behavior, fixes, native lifecycle, optimizations and applicable test contracts). Compare competing historical branches, tags and PRs and choose the best *proven* algorithm/implementation; never silently overwrite or delete an earlier accepted capability. Review earliest reachable ancestors through all relevant heads, both merge parents, merged/closed/reverted PRs, rename/delete history and regressions; never rebase `develop`. Record in the canonical Synexia last-checked register a pinned ref/head SHA, checked date, scope, oldest ancestry covered, last verified SHA, PR/branch coverage, lost-code findings, and PENDING/PARTIAL/VERIFIED/HOLD. A new HEAD snapshot is **not** a complete history audit. Source changes remain recipe-first and qualified in Synexia; this clean receiving product accepts executed postimages and product-native tests, not recipe copies or evidence crates. Prefer Apache-2.0 for newly authored separable contributions, but retain original OpenJDK/Eclipse/upstream licenses and NOTICE; LLM rewriting of donor code does not erase copyright or license obligations. Canonical policy: [Synexia full-history superset merge](https://github.com/hsoliwal/com.synexia/blob/governance/superset-history-last-checked-20261118/docs/M3-SCALE/invariants/SYNEXIA-ADDITIVE-MERGE-FULL-HISTORY-20261118.md). Initial 236-repo inventory is PENDING, not a certified historical audit.
+
 ## Project Overview
 
 This is the **Eclipse Platform SWT** (Standard Widget Toolkit) repository - a cross-platform GUI library for JVM-based desktop applications. SWT is the foundation for the Eclipse IDE and many other desktop applications.
@@ -294,3 +299,13 @@ packages/contracts. Adapt donor ideas into these owners; do not introduce Swing
 widget/facade names or a second toolkit naming layer. Donor names belong in
 provenance. Preserve already-existing interoperability APIs and third-party
 notices; this rule does not authorize renaming or removing compatible APIs.
+
+## Additive historical-convergence owner directive (2026-11-18)
+
+Before a merge, loss repair or API enhancement, survey all accessible commits to history roots, all branches/tags, and paginated accepted/rejected/closed/merged PRs and head/merge refs. Compare actual pre/post class/member/atom source and tests: a merged PR or ancestry alone is not delivered code. Identify and restore lost working APIs, behavior and measured optimizations; never erase history to make a bad commit disappear.
+
+Choose the strongest *compatible* correct algorithms and atoms from every qualifying revision; the outcome is an additive, backward-compatible superset. Preserve source/binary/reflective behavior, callbacks, concurrency, native lifetime, resource budgets and regression tests for this toolkit. All reusable atomization/patternization and Java/Maven/OpenRewrite recipes remain canonically in `hsoliwal/com.synexia`; this product fork receives only legitimate code/test postimages.
+
+Prefer Apache-2.0 for separately original eligible contributions; preserve original upstream and per-file licenses (EPL/GPL/Apache/other), NOTICE, provenance and license exceptions. Algorithmic ideas may be independently reimplemented from lawful specifications, but LLM rewriting copyrighted code does not waive its rights or relevant patents.
+
+Central last-checked checkpoint: `hsoliwal/com.synexia/docs/M3-SCALE/invariants/SYNEXIA-HISTORY-REVIEW-LAST-CHECKED.tsv`. Record exact checked SHA/date and root/ref/PR coverage; label unverified/lost-source reviews PARTIAL. Do not store history audit bundles in this clean product repository.

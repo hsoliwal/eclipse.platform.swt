@@ -123,12 +123,23 @@ jobs:
           import re, subprocess
           prefix = 'Java_org_eclipse_swt_internal_maya_MayaComposition_'
           pattern = prefix + r'[A-Za-z0-9_]+'
-          header = set(re.findall(pattern, Path('/tmp/maya-native-headers/org_eclipse_swt_internal_maya_MayaComposition.h').read_text()))
+          header_text = Path('/tmp/maya-native-headers/org_eclipse_swt_internal_maya_MayaComposition.h').read_text()
+          header = set(re.findall(pattern, header_text))
           exports = set(re.findall(pattern, Path('bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def').read_text()))
           linked = set(re.findall(pattern, subprocess.check_output(['nm', '-D', '/tmp/libmaya-composition-packet-stubs.so'], text=True)))
-          assert len(header) == 12, header
+          expected_descriptors = {
+              '_nCreate': '(J)J', '_nAddLayer': '(JII)J', '_nUpload': '(J[I)I',
+              '_nUploadDirty': '(J[I[II)I', '_nApply': '(J[J[FI)I',
+              '_nFramePacketVersion': '()I', '_nApplyPacked': '(JLjava/nio/ByteBuffer;I)I',
+              '_nRemoveLayer': '(JJ)V', '_nWaitForCommit': '(J)I', '_nDispose': '(J)V',
+              '_nCapabilities': '(J)J', '_nApplyScene': '(J[J[F[II)I',
+              '_nReadMetrics': '(J[J)I',
+          }
+          descriptors = re.findall(r'Method:\s+(\S+)\s+\*\s+Signature:\s+(\S+)', header_text)
+          assert len(descriptors) == 13 and dict(descriptors) == expected_descriptors, descriptors
+          assert len(header) == 13, header
           assert header == exports == linked, (header ^ exports, header ^ linked)
-          print('Exact Java header/export/linked JNI symbol closure: 12')
+          print('Exact Java descriptors/header/export/linked JNI symbol closure: 13')
           PY
 
   windows-compile:

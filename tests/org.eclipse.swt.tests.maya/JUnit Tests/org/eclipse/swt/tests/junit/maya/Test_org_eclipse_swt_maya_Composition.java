@@ -469,6 +469,121 @@ public class Test_org_eclipse_swt_maya_Composition {
 				"old composition's layer cannot access a new native composition");
 	}
 
+    @Test
+    public void nativeMetricsExplainCommitNoopAndDirtyPixelPublication() {
+        long[] initial = MayaComposition.readMetrics(composition);
+        if (Boolean.getBoolean("swt.maya.metrics.required")) {
+            assertTrue(initial != null, "required Maya metrics ABI is unavailable");
+        }
+        assumeTrue(initial != null, "optional native metrics ABI not packaged");
+        assertEquals(MayaComposition.METRIC_COUNT, initial.length);
+        assertEquals(1L, initial[MayaComposition.METRIC_VERSION]);
+
+        long red = layer(OPAQUE_RED);
+        long[] uploaded = MayaComposition.readMetrics(composition);
+        assertEquals(initial[MayaComposition.METRIC_LAYERS_CREATED] + 1,
+                uploaded[MayaComposition.METRIC_LAYERS_CREATED]);
+        assertEquals(1L, uploaded[MayaComposition.METRIC_LIVE_LAYERS]);
+        assertEquals(initial[MayaComposition.METRIC_FULL_UPLOADS] + 1,
+                uploaded[MayaComposition.METRIC_FULL_UPLOADS]);
+        assertEquals(initial[MayaComposition.METRIC_UPLOAD_BYTES] + SIZE * SIZE * 4L,
+                uploaded[MayaComposition.METRIC_UPLOAD_BYTES]);
+        assertEquals(1L, uploaded[MayaComposition.METRIC_PENDING_SURFACE]);
+
+        long[] order = { red };
+        float[] props = { 20, 20, 1, 1 };
+        frame(order, props);
+        long[] committed = MayaComposition.readMetrics(composition);
+        assertEquals(uploaded[MayaComposition.METRIC_FRAME_ATTEMPTS] + 1,
+                committed[MayaComposition.METRIC_FRAME_ATTEMPTS]);
+        assertEquals(uploaded[MayaComposition.METRIC_FRAME_COMMITS] + 1,
+                committed[MayaComposition.METRIC_FRAME_COMMITS]);
+        assertEquals(0L, committed[MayaComposition.METRIC_PENDING_SURFACE]);
+        assertEquals(RED, screen(30, 30));
+
+        frame(order, props);
+        long[] noop = MayaComposition.readMetrics(composition);
+        assertEquals(committed[MayaComposition.METRIC_FRAME_ATTEMPTS] + 1,
+                noop[MayaComposition.METRIC_FRAME_ATTEMPTS]);
+        assertEquals(committed[MayaComposition.METRIC_FRAME_COMMITS],
+                noop[MayaComposition.METRIC_FRAME_COMMITS],
+                "unchanged native frame must not submit another Commit");
+        assertEquals(committed[MayaComposition.METRIC_FRAME_NOOPS] + 1,
+                noop[MayaComposition.METRIC_FRAME_NOOPS]);
+
+        // A successful full-image EndDraw is pending even with identical
+        // offsets, opacity, native Z order and visibility.
+        int[] blue = new int[SIZE * SIZE];
+        Arrays.fill(blue, OPAQUE_BLUE);
+        assertEquals(0, MayaComposition._nUpload(red, blue));
+        long[] pending = MayaComposition.readMetrics(composition);
+        assertEquals(1L, pending[MayaComposition.METRIC_PENDING_SURFACE]);
+        assertEquals(noop[MayaComposition.METRIC_FULL_UPLOADS] + 1,
+                pending[MayaComposition.METRIC_FULL_UPLOADS]);
+        frame(order, props);
+        long[] pixelCommit = MayaComposition.readMetrics(composition);
+        assertEquals(noop[MayaComposition.METRIC_FRAME_COMMITS] + 1,
+                pixelCommit[MayaComposition.METRIC_FRAME_COMMITS]);
+        assertEquals(0L, pixelCommit[MayaComposition.METRIC_PENDING_SURFACE]);
+        assertEquals(BLUE, screen(30, 30));
+
+        assertNotEquals(0, MayaComposition._nApply(composition,
+                new long[] { Long.MAX_VALUE }, props, 1));
+        long[] rejected = MayaComposition.readMetrics(composition);
+        assertEquals(pixelCommit[MayaComposition.METRIC_FRAME_REJECTIONS] + 1,
+                rejected[MayaComposition.METRIC_FRAME_REJECTIONS]);
+        assertEquals(pixelCommit[MayaComposition.METRIC_FRAME_COMMITS],
+                rejected[MayaComposition.METRIC_FRAME_COMMITS]);
+
+        long[] tooShort = new long[MayaComposition.METRIC_COUNT - 1];
+        assertNotEquals(0, MayaComposition._nReadMetrics(composition, tooShort));
+        long[] withTail = new long[MayaComposition.METRIC_COUNT + 1];
+        withTail[withTail.length - 1] = -77;
+        assertEquals(0, MayaComposition._nReadMetrics(composition, withTail));
+        assertEquals(-77L, withTail[withTail.length - 1],
+                "metrics JNI only writes its stable 16-field prefix");
+        MayaComposition._nRemoveLayer(composition, red);
+        long[] removed = MayaComposition.readMetrics(composition);
+        assertEquals(0L, removed[MayaComposition.METRIC_LIVE_LAYERS]);
+        assertEquals(rejected[MayaComposition.METRIC_LAYERS_RETIRED] + 1,
+                removed[MayaComposition.METRIC_LAYERS_RETIRED]);
+        assertNotEquals(0, MayaComposition._nReadMetrics(Long.MAX_VALUE,
+                new long[MayaComposition.METRIC_COUNT]));
+    }
+
+	@Test
+	public void oversizedFrameBuffersReadOnlyTheActivePrefix() {
+		long red = layer(OPAQUE_RED), blue = layer(OPAQUE_BLUE);
+		long[] handles = new long[8];
+		float[] props = new float[32];
+		Arrays.fill(props, 8, props.length, Float.NaN); // unused capacity must never influence a frame
+
+		handles[0] = red;
+		handles[1] = blue;
+		System.arraycopy(new float[] { 20, 20, 1, 1, 110, 110, 1, 1 }, 0, props, 0, 8);
+		assertEquals(0, MayaComposition._nApply(composition, handles, props, 2));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(RED, screen(30, 30));
+		assertEquals(BLUE, screen(140, 140));
+
+		// Reuse the same backing arrays. A shrinking active count must hide the old second layer.
+		assertEquals(0, MayaComposition._nApply(composition, handles, props, 1));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(RED, screen(30, 30));
+		assertEquals(WHITE, screen(140, 140));
+
+		// Growing back into the existing capacity must preserve order, opacity and coordinates.
+		handles[0] = blue;
+		handles[1] = red;
+		System.arraycopy(new float[] { 20, 20, 1, 1, 20, 20, 1, 1 }, 0, props, 0, 8);
+		assertEquals(0, MayaComposition._nApply(composition, handles, props, 2));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(RED, screen(30, 30), "the second layer is above the first");
+	}
+
 	@Test
 	public void invalidArgumentsAreRefused() {
 		assertEquals(0, MayaComposition._nAddLayer(0, SIZE, SIZE));
@@ -477,6 +592,10 @@ public class Test_org_eclipse_swt_maya_Composition {
 		assertNotEquals(0, MayaComposition._nUpload(red, new int[SIZE]), "too few pixels");
 		assertNotEquals(0, MayaComposition._nUpload(0, new int[SIZE * SIZE]));
 		assertNotEquals(0, MayaComposition._nApply(composition, new long[] { red }, new float[2], 1), "too few properties");
+		assertNotEquals(0, MayaComposition._nApply(composition, null, new float[0], 0), "null handles");
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[0], null, 0), "null properties");
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[0], new float[0],
+				Integer.MAX_VALUE), "the property count must never overflow");
 		assertNotEquals(0, MayaComposition._nApply(0, new long[0], new float[0], 0));
 	}
 

@@ -199,4 +199,65 @@ public class Test_LayerArgbCompositor {
 			assertEquals(0x80402000, dst[1], mode + ": a translucent source over nothing");
 		}
 	}
+
+	@Test
+	public void maskedCoverageMatchesReferenceAndAliases() {
+		Random random = new Random(0x4550414e4c4aL);
+		for (Mode mode : Mode.values()) for (int opacity : new int[] {0, 1, 63, 127, 191, 254, 255}) {
+			int n = 1024;
+			int[] dst = new int[n + 12], src = new int[n + 12];
+			byte[] mask = new byte[n + 12];
+			for (int i = 0; i < dst.length; i++) {
+				dst[i] = premulColor(random);
+				src[i] = premulColor(random);
+				mask[i] = (byte) random.nextInt(256);
+			}
+			mask[3] = 0; mask[4] = (byte) 255;
+			int[] expected = dst.clone(), actual = dst.clone();
+			for (int i = 0; i < n; i++) LayerArgbCompositor.composite(
+					expected, 5 + i, src, 2 + i, 1,
+					(opacity * (mask[3 + i] & 255) + 127) / 255, mode);
+			LayerArgbCompositor.compositeMasked(actual, 5, src, 2, mask, 3, n, opacity, mode);
+			assertArrayEquals(expected, actual, mode + " coverage");
+			for (int[] offsets : new int[][] {{0, 3}, {3, 0}, {0, 0}}) {
+				expected = dst.clone(); actual = dst.clone();
+				int[] snapshot = Arrays.copyOfRange(dst, offsets[1], offsets[1] + n);
+				for (int i = 0; i < n; i++) LayerArgbCompositor.composite(
+						expected, offsets[0] + i, snapshot, i, 1,
+						(opacity * (mask[3 + i] & 255) + 127) / 255, mode);
+				LayerArgbCompositor.compositeMasked(actual, offsets[0], actual,
+						offsets[1], mask, 3, n, opacity, mode);
+				assertArrayEquals(expected, actual, mode + " alias");
+			}
+		}
+		assertThrows(NullPointerException.class, () -> LayerArgbCompositor.compositeMasked(
+				new int[1], 0, new int[1], 0, null, 0, 1, 255, Mode.SRC_OVER));
+		assertThrows(IndexOutOfBoundsException.class, () -> LayerArgbCompositor.compositeMasked(
+				new int[1], 0, new int[1], 0, new byte[1], 1, 1, 255, Mode.SRC_OVER));
+	}
+
+	@Test
+	public void maskedNativeThresholdDifferential() {
+		Random random = new Random(19871118L);
+		int length = 32769;
+		int[] source = new int[length], initial = new int[length];
+		byte[] mask = new byte[length];
+		for (int i = 0; i < length; i++) {
+			source[i] = premulColor(random);
+			initial[i] = premulColor(random);
+			mask[i] = (byte) random.nextInt(256);
+		}
+		// Every mode 0..11: with -Dswt.layerblend.native=true and a matched library this is a JNI/Java differential.
+		for (Mode mode : Mode.values()) {
+			for (int opacity : new int[] {1, 128, 255}) {
+				int[] expected = initial.clone(), actual = initial.clone();
+				for (int i = 0; i < length; i++) LayerArgbCompositor.composite(
+						expected, i, source, i, 1,
+						(opacity * (mask[i] & 255) + 127) / 255, mode);
+				LayerArgbCompositor.compositeMasked(actual, 0, source, 0,
+						mask, 0, length, opacity, mode);
+				assertArrayEquals(expected, actual, mode + " JNI/fallback differential");
+			}
+		}
+	}
 }
