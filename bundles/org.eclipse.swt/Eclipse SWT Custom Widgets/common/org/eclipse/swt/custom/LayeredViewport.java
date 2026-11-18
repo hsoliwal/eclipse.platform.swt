@@ -138,6 +138,8 @@ public final class LayeredViewport extends Canvas {
         private LayerHitTester hitTester;
         private LayerPointerListener pointerListener;
         private WorldBounds worldClip;
+        /* SWT.HORIZONTAL and/or SWT.VERTICAL: the axes on which the layer is measured from the view's origin */
+        private int pinned;
 
         private Layer(long id, String name, long x, long y,
                 long width, long height, Image image, LayerPainter painter) {
@@ -203,6 +205,33 @@ public final class LayeredViewport extends Canvas {
             y = newY;
             right = newX + width;
             bottom = newY + height;
+            spatialDirty = true;
+            invalidate(this);
+            placeControl(this);
+            syncNative();
+        }
+
+        /** The axes this layer is pinned on: {@link SWT#NONE}, {@link SWT#HORIZONTAL}, {@link SWT#VERTICAL} or both. */
+        public int getPinned() {
+            checked();
+            return pinned;
+        }
+
+        /**
+         * Pins the layer on {@link SWT#HORIZONTAL}, {@link SWT#VERTICAL}, both, or neither ({@link SWT#NONE}): on a
+         * pinned axis its world coordinates are measured from the view's origin, so a pan along that axis leaves it
+         * where it is while the other layers move under and over it. A tree's or a table's header pinned vertically
+         * stays on top while the rows scroll beneath it, and still follows a horizontal pan; frozen columns or a row
+         * header are pinned horizontally; a corner cell, a legend, a minimap or a HUD on both. Zoom still applies.
+         * Its bounds, clip, painter context, hit tester and pointer events all use these view-relative coordinates.
+         */
+        public void setPinned(int axes) {
+            checked();
+            int value = axes & (SWT.HORIZONTAL | SWT.VERTICAL);
+            if (axes != value) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (pinned == value) return;
+            invalidate(this);
+            pinned = value;
             spatialDirty = true;
             invalidate(this);
             placeControl(this);
@@ -463,7 +492,8 @@ public final class LayeredViewport extends Canvas {
         @Override public int size() { return paintOrder.length; }
         @Override public boolean active(int at) {
             Layer layer = paintOrder[at];
-            if (layer.removed || !layer.visible || layer.opacity == 0) return false;
+            // pinned layers are found through pinnedZ: a pan moves them in world space
+            if (layer.removed || !layer.visible || layer.opacity == 0 || layer.pinned != 0) return false;
             WorldBounds clip = layer.worldClip;
             return clip == null || (Math.max(layer.x, clip.x()) <
                     Math.min(layer.right, clip.x() + clip.width()) &&
@@ -492,6 +522,9 @@ public final class LayeredViewport extends Canvas {
     private final ViewportDamageRegion pendingDamage = new ViewportDamageRegion();
     private Layer[] paintCandidates = new Layer[16];
     private Layer[] hitCandidates = new Layer[16];
+    /* the Z indices, ascending, of the shown pinned layers, collected with the spatial index */
+    private int[] pinnedZ = new int[4];
+    private int pinnedCount;
     private boolean spatialDirty = true;
     private boolean fullDamage;
     private int batchDepth;
@@ -556,6 +589,7 @@ public final class LayeredViewport extends Canvas {
             paintOrder = new Layer[0];
             orderDirty = false;
             spatialIndex.clear();
+            pinnedCount = 0;
             // Active callbacks keep their own local array reference and clear
             // it in finally; do not erase a snapshot still being traversed.
             if (activePaintFrames == 0) Arrays.fill(paintCandidates, null);
@@ -682,7 +716,7 @@ public final class LayeredViewport extends Canvas {
     /** Topmost visible, unlocked layer, using a narrow two-axis spatial query. */
     public Layer hitTest(int deviceX, int deviceY) {
         checkWidget();
-        return queryHit(deviceX, deviceY, worldX(deviceX), worldY(deviceY), false);
+        return queryHit(deviceX, deviceY, false);
     }
 
     private long worldX(int deviceX) {
@@ -693,23 +727,27 @@ public final class LayeredViewport extends Canvas {
         return saturatedAdd(originY, floorLong(deviceY / zoom));
     }
 
-    private Layer queryHit(int deviceX, int deviceY, long worldX, long worldY,
-            boolean withPointerListener) {
+    private Layer queryHit(int deviceX, int deviceY, boolean withPointerListener) {
         if (!getClientArea().contains(deviceX, deviceY)) return null;
         ensureSpatialIndex();
-        int candidates = spatialIndex.query(worldX, worldY,
+        long worldX = worldX(deviceX), worldY = worldY(deviceY);
+        int found = spatialIndex.query(worldX, worldY,
                 saturatedAdd(worldX, 1), saturatedAdd(worldY, 1));
+        int candidates = found + pinnedCount;
         // Hit testers may re-enter the scene; capture handles before callbacks.
         Layer[] hits = activeHitQueries == 0
                 ? growHitCandidates(candidates) : new Layer[candidates];
+        int[] cursor = new int[2];
         for (int i = 0; i < candidates; i++) {
-            hits[i] = paintOrder[spatialIndex.resultAt(i)];
+            hits[i] = paintOrder[mergedZ(cursor, found)];
         }
         activeHitQueries++;
         try {
             for (int i = candidates - 1; i >= 0; i--) {
                 if (isDisposed()) return null;
                 Layer layer = hits[i];
+                worldX = layerX(layer, deviceX);
+                worldY = layerY(layer, deviceY);
                 if (!containsHit(layer, worldX, worldY)
                         || (withPointerListener && layer.pointerListener == null)) continue;
                 LayerHitTester tester = layer.hitTester;
@@ -760,10 +798,10 @@ public final class LayeredViewport extends Canvas {
     private void dispatchPointer(Event event) {
         if (pointerListenerCount == 0 && capturedLayer == null) return;
         boolean byCapture = capturedLayer != null && event.type != SWT.MouseWheel;
-        long worldX = worldX(event.x), worldY = worldY(event.y);
         Layer layer = byCapture ? capturedLayer
-                : queryHit(event.x, event.y, worldX, worldY, true);
+                : queryHit(event.x, event.y, true);
         if (layer == null || layer.removed) return;
+        long worldX = layerX(layer, event.x), worldY = layerY(layer, event.y);
         LayerPointerListener listener = layer.pointerListener;
         if (listener == null) {
             if (byCapture) clearPointerCapture();
@@ -990,11 +1028,12 @@ public final class LayeredViewport extends Canvas {
                     ((double) damage.x + damage.width) / zoom), 1));
             long y1 = saturatedAdd(originY, saturatedAdd(ceilLong(
                     ((double) damage.y + damage.height) / zoom), 1));
-            int found = spatialIndex.query(x0, y0, x1, y1);
-            candidates = activePaintFrames == 0 ? growPaintCandidates(found) : new Layer[found];
+            int found = spatialIndex.query(x0, y0, x1, y1), total = found + pinnedCount;
+            candidates = activePaintFrames == 0 ? growPaintCandidates(total) : new Layer[total];
             selected = 0;
-            for (int i = 0; i < found; i++) {
-                int z = spatialIndex.resultAt(i);
+            int[] cursor = new int[2];
+            for (int i = 0; i < total; i++) {
+                int z = mergedZ(cursor, found);
                 if (z >= from && z < to) candidates[selected++] = frame[z];
             }
         } else {
@@ -1031,7 +1070,7 @@ public final class LayeredViewport extends Canvas {
                         if (!layer.image.isDisposed()) paintImage(gc, layer, tile);
                     } else if (layer.painter != null) {
                         layer.painter.paint(gc,
-                                new PaintContext(layer, tile, originX, originY, zoom));
+                                new PaintContext(layer, tile, layerOriginX(layer), layerOriginY(layer), zoom));
                     }
                 }
             }
@@ -1063,8 +1102,47 @@ public final class LayeredViewport extends Canvas {
         orderSnapshot();
         if (spatialDirty) {
             spatialIndex.rebuild(spatialSource);
+            pinnedCount = 0;
+            for (int z = 0; z < paintOrder.length; z++) {
+                Layer layer = paintOrder[z];
+                if (layer.pinned == 0 || layer.removed || !layer.visible || layer.opacity == 0) continue;
+                if (pinnedCount == pinnedZ.length) pinnedZ = Arrays.copyOf(pinnedZ, 2 * pinnedCount);
+                pinnedZ[pinnedCount++] = z;
+            }
             spatialDirty = false;
         }
+    }
+
+    /*
+     * the {@code at}-th Z index, ascending, of the last spatial query's {@code found} results merged with the pinned
+     * layers (no layer is in both)
+     */
+    private int mergedZ(int[] cursor, int found) {
+        int i = cursor[0], p = cursor[1];
+        if (p == pinnedCount || i < found && spatialIndex.resultAt(i) < pinnedZ[p]) {
+            cursor[0]++;
+            return spatialIndex.resultAt(i);
+        }
+        cursor[1]++;
+        return pinnedZ[p];
+    }
+
+    /* the origin a layer is projected from on each axis: the view's, or 0 where the layer is pinned */
+    private long layerOriginX(Layer layer) {
+        return (layer.pinned & SWT.HORIZONTAL) != 0 ? 0 : originX;
+    }
+
+    private long layerOriginY(Layer layer) {
+        return (layer.pinned & SWT.VERTICAL) != 0 ? 0 : originY;
+    }
+
+    /* a device point's world coordinates as a layer sees them */
+    private long layerX(Layer layer, int deviceX) {
+        return saturatedAdd(layerOriginX(layer), floorLong(deviceX / zoom));
+    }
+
+    private long layerY(Layer layer, int deviceY) {
+        return saturatedAdd(layerOriginY(layer), floorLong(deviceY / zoom));
     }
 
     private static long ceilLong(double value) {
@@ -1087,7 +1165,7 @@ public final class LayeredViewport extends Canvas {
         try {
             copy.drawImage(target, tile.x, tile.y, tile.width, tile.height, tile.x, tile.y, tile.width, tile.height);
             copy.setClipping(tile);
-            painter.paint(copy, new PaintContext(layer, tile, originX, originY, zoom));
+            painter.paint(copy, new PaintContext(layer, tile, layerOriginX(layer), layerOriginY(layer), zoom));
         } finally {
             copy.dispose();
             if (!isDisposed()) back[0] = new GC(target);
@@ -1110,8 +1188,9 @@ public final class LayeredViewport extends Canvas {
     private void paintBlended(GC[] back, Layer layer, Rectangle tile) {
         if (layer.blendSource == null) layer.blendSource = layer.image.getImageData();
         ImageData source = layer.blendSource;
-        double left = device(layer.x, originX), top = device(layer.y, originY);
-        double width = device(layer.right, originX) - left, height = device(layer.bottom, originY) - top;
+        long ox = layerOriginX(layer), oy = layerOriginY(layer);
+        double left = device(layer.x, ox), top = device(layer.y, oy);
+        double width = device(layer.right, ox) - left, height = device(layer.bottom, oy) - top;
         if (!(width > 0) || !(height > 0) || source.width == 0 || source.height == 0) return;
         Image under = new Image(getDisplay(), tile.width, tile.height);
         try {
@@ -1154,10 +1233,11 @@ public final class LayeredViewport extends Canvas {
         Rectangle srcBounds = layer.image.getBounds();
         if (srcBounds.width == 0 || srcBounds.height == 0) return;
 
-        double left = device(layer.x, originX);
-        double top = device(layer.y, originY);
-        double right = device(layer.right, originX);
-        double bottom = device(layer.bottom, originY);
+        long ox = layerOriginX(layer), oy = layerOriginY(layer);
+        double left = device(layer.x, ox);
+        double top = device(layer.y, oy);
+        double right = device(layer.right, ox);
+        double bottom = device(layer.bottom, oy);
         double width = right - left;
         double height = bottom - top;
         if (width <= 0 || height <= 0) return;
@@ -1193,19 +1273,20 @@ public final class LayeredViewport extends Canvas {
     }
 
     private Rectangle projectedClip(Layer layer, Rectangle damage) {
-        Rectangle visible = projectedClip(layer.x, layer.y, layer.right, layer.bottom, damage);
+        long ox = layerOriginX(layer), oy = layerOriginY(layer);
+        Rectangle visible = projectedClip(layer.x, layer.y, layer.right, layer.bottom, ox, oy, damage);
         if (visible == null || layer.worldClip == null) return visible;
         WorldBounds clip = layer.worldClip;
         return projectedClip(clip.x(), clip.y(), clip.x() + clip.width(),
-                clip.y() + clip.height(), visible);
+                clip.y() + clip.height(), ox, oy, visible);
     }
 
     private Rectangle projectedClip(long worldX, long worldY, long worldRight,
-            long worldBottom, Rectangle damage) {
-        double left = device(worldX, originX);
-        double top = device(worldY, originY);
-        double right = device(worldRight, originX);
-        double bottom = device(worldBottom, originY);
+            long worldBottom, long ox, long oy, Rectangle damage) {
+        double left = device(worldX, ox);
+        double top = device(worldY, oy);
+        double right = device(worldRight, ox);
+        double bottom = device(worldBottom, oy);
         int x0 = (int) Math.max((double) damage.x, Math.floor(left));
         int y0 = (int) Math.max((double) damage.y, Math.floor(top));
         int x1 = (int) Math.min((double) damage.x + damage.width, Math.ceil(right));
@@ -1452,8 +1533,35 @@ public final class LayeredViewport extends Canvas {
         for (Layer layer : orderSnapshot()) {
             if (layer.composite != null) shiftStore(layer.composite, layer.stale, sx, sy, size);
         }
+        repairPinned(sx, sy, size);
         super.redraw();
         return true;
+    }
+
+    /*
+     * after a blit by (sx, sy): a pinned layer did not move on its pinned axes, so the store shows a ghost of it
+     * shifted by the pan there, and its own place shows what was under the ghost; both are recomposed
+     */
+    private void repairPinned(int sx, int sy, Rectangle size) {
+        Rectangle view = new Rectangle(0, 0, size.width, size.height);
+        Rectangle reach = new Rectangle(-Math.abs(sx), -Math.abs(sy), size.width + 2 * Math.abs(sx),
+                size.height + 2 * Math.abs(sy));
+        Layer[] frame = orderSnapshot();
+        for (int z = 0; z < frame.length; z++) {
+            Layer layer = frame[z];
+            if (layer.pinned == 0 || layer.removed || !layer.visible || layer.opacity == 0 || layer.nativeLayer != 0) continue;
+            int gx = (layer.pinned & SWT.HORIZONTAL) != 0 ? sx : 0, gy = (layer.pinned & SWT.VERTICAL) != 0 ? sy : 0;
+            if (gx == 0 && gy == 0) continue; // the pan was along its free axes: it moved with everything else
+            Rectangle now = projectedClip(layer, reach);
+            if (now == null) continue;
+            Rectangle place = intersect(now, view);
+            Rectangle ghost = intersect(new Rectangle(now.x + gx, now.y + gy, now.width, now.height), view);
+            for (Rectangle r : new Rectangle[] { place, ghost }) {
+                if (r == null) continue;
+                dirty.add(r.x, r.y, r.width, r.height);
+                markRetained(z, r);
+            }
+        }
     }
 
     /* moves a store's pixels by (sx, sy) and its dirty region with them; the band that comes into view is dirty */
@@ -1498,8 +1606,9 @@ public final class LayeredViewport extends Canvas {
         Control control = layer.control;
         if (isDisposed() || layer.removed || control == null || control.isDisposed()) return;
         Rectangle area = getClientArea();
-        double left = device(layer.x, originX), top = device(layer.y, originY);
-        double right = device(layer.right, originX), bottom = device(layer.bottom, originY);
+        long ox = layerOriginX(layer), oy = layerOriginY(layer);
+        double left = device(layer.x, ox), top = device(layer.y, oy);
+        double right = device(layer.right, ox), bottom = device(layer.bottom, oy);
         boolean shown = layer.visible && layer.opacity > 0 && right > area.x && left < (double) area.x + area.width
                 && bottom > area.y && top < (double) area.y + area.height;
         if (shown) {
@@ -1604,8 +1713,8 @@ public final class LayeredViewport extends Canvas {
         for (Layer layer : paintOrder) {
             if (layer.nativeLayer == 0) continue;
             handles[i] = layer.nativeLayer;
-            props[i * 4] = (float) device(layer.x, originX);
-            props[i * 4 + 1] = (float) device(layer.y, originY);
+            props[i * 4] = (float) device(layer.x, layerOriginX(layer));
+            props[i * 4 + 1] = (float) device(layer.y, layerOriginY(layer));
             props[i * 4 + 2] = layer.opacity / 255f;
             props[i * 4 + 3] = layer.visible && layer.opacity > 0 ? 1 : 0;
             i++;

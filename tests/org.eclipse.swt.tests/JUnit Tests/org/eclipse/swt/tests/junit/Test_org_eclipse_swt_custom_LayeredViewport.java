@@ -1222,4 +1222,119 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             transform.dispose();
         }
     }
+
+    private RGB system(int color) {
+        return viewport.getDisplay().getSystemColor(color).getRGB();
+    }
+
+    private Layer solid(String name, long x, long y, long width, long height, int color) {
+        return viewport.addPaintLayer(name, x, y, width, height, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(color));
+            gc.fillRectangle(ctx.clip());
+        });
+    }
+
+    /* rows of 10 world px, blue and white, under a red header pinned vertically; a green tooltip above the header */
+    private Layer[] treeWithHeader() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer rows = viewport.addPaintLayer("rows", 0, 0, 4000, 4000, (gc, ctx) -> {
+            Rectangle clip = ctx.clip();
+            for (int y = clip.y; y < clip.y + clip.height; y++) {
+                boolean blue = Math.floorMod(ctx.originY() + y, 20) < 10;
+                gc.setForeground(gc.getDevice().getSystemColor(blue ? SWT.COLOR_BLUE : SWT.COLOR_WHITE));
+                gc.drawLine(clip.x, y, clip.x + clip.width - 1, y);
+            }
+        });
+        Layer header = solid("header", 0, 0, 200, 20, SWT.COLOR_RED);
+        header.setPinned(SWT.VERTICAL);
+        Layer tooltip = solid("tooltip", 40, 137, 10, 10, SWT.COLOR_GREEN);
+        return new Layer[] { rows, header, tooltip };
+    }
+
+    @Test
+    public void testAPinnedHeaderStaysOnTopWhileTheRowsScrollUnderIt() {
+        Layer[] tree = treeWithHeader();
+        Layer rows = tree[0], header = tree[1], tooltip = tree[2];
+        assertEquals(SWT.VERTICAL, header.getPinned());
+        show();
+        RGB red = system(SWT.COLOR_RED), blue = system(SWT.COLOR_BLUE), white = system(SWT.COLOR_WHITE);
+        // down by blits, back up by a blit (the header's ghost lands inside the view), down again
+        for (int y : new int[] { 35, 100, 90, 135 }) {
+            viewport.setOrigin(0, y);
+            viewport.update();
+            ImageData shown = pixels();
+            assertEquals(red, rgb(shown, 100, 5), "the header stays on top at origin " + y);
+            assertEquals(Math.floorMod(y + 25, 20) < 10 ? blue : white, rgb(shown, 100, 25),
+                    "the rows scroll under it at origin " + y);
+            assertSameAsAFullRecomposition();
+        }
+        assertEquals(system(SWT.COLOR_GREEN), rgb(pixels(), 45, 5), "a layer above the header in Z paints over it");
+        assertSame(header, viewport.hitTest(100, 5));
+        assertSame(rows, viewport.hitTest(100, 25));
+        assertSame(tooltip, viewport.hitTest(45, 5));
+        // a horizontal pan moves the header with the rows: it ends at world x 200, device 170
+        viewport.setOrigin(30, 135);
+        viewport.update();
+        assertEquals(red, rgb(pixels(), 160, 5));
+        assertNotEquals(red, rgb(pixels(), 180, 5));
+        assertSameAsAFullRecomposition();
+    }
+
+    @Test
+    public void testPinnedLayersSeeViewRelativeCoordinatesAndPinTheirControls() {
+        Layer rows = viewport.addPaintLayer("rows", 0, 0, 4000, 4000, (gc, ctx) -> { });
+        Layer header = viewport.addPaintLayer("header", 0, 0, 200, 20, (gc, ctx) -> { });
+        header.setPinned(SWT.VERTICAL);
+        viewport.setOrigin(10, 300);
+        List<LayerPointerEvent> events = new ArrayList<>();
+        header.setPointerListener(events::add);
+        rows.setPointerListener(events::add);
+        pointer(SWT.MouseMove, 50, 5, 0);
+        pointer(SWT.MouseMove, 50, 40, 0);
+        assertSame(header, events.get(0).layer());
+        assertEquals(60, events.get(0).worldX(), "a free axis is world space");
+        assertEquals(5, events.get(0).worldY(), "a pinned axis is measured from the view's origin");
+        assertSame(rows, events.get(1).layer());
+        assertEquals(340, events.get(1).worldY());
+        // a control pinned on both axes keeps its place through any pan
+        Button button = new Button(viewport, SWT.PUSH);
+        Layer corner = viewport.addControlLayer("corner", button, 4, 6, 30, 20);
+        corner.setPinned(SWT.HORIZONTAL | SWT.VERTICAL);
+        assertEquals(new Rectangle(4, 6, 30, 20), button.getBounds());
+        assertTrue(button.getVisible());
+        viewport.setOrigin(-500, 9000);
+        assertEquals(new Rectangle(4, 6, 30, 20), button.getBounds());
+        corner.setPinned(SWT.NONE);
+        assertFalse(button.getVisible(), "unpinned, it is back at world (4, 6), far outside the view");
+        assertThrows(IllegalArgumentException.class, () -> corner.setPinned(SWT.LEFT));
+    }
+
+    @Test
+    public void testAPinnedLegendKeepsItsPlaceBetweenRetainedLayers() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer base = viewport.addPaintLayer("base", -4000, -4000, 8000, 8000, (gc, ctx) -> {
+            Rectangle clip = ctx.clip();
+            for (int x = clip.x; x < clip.x + clip.width; x++) {
+                boolean dark = Math.floorMod(ctx.originX() + x, 9) == 0;
+                gc.setForeground(gc.getDevice().getSystemColor(dark ? SWT.COLOR_BLUE : SWT.COLOR_WHITE));
+                gc.drawLine(x, clip.y, x, clip.y + clip.height - 1);
+            }
+            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_GREEN));
+            for (int y = clip.y; y < clip.y + clip.height; y++) {
+                if (Math.floorMod(ctx.originY() + y, 11) == 0) gc.drawLine(clip.x, y, clip.x + clip.width - 1, y);
+            }
+        });
+        base.setRetained(true);
+        Layer legend = solid("legend", 200, 150, 40, 40, SWT.COLOR_MAGENTA);
+        legend.setPinned(SWT.HORIZONTAL | SWT.VERTICAL);
+        // above the legend, a retained layer: its composite holds the legend's pixels too
+        solid("marker", 120, 60, 6, 6, SWT.COLOR_BLACK).setRetained(true);
+        show();
+        for (int[] origin : new int[][] { { 7, -9 }, { -20, 15 }, { 0, 0 }, { 33, 31 } }) {
+            viewport.setOrigin(origin[0], origin[1]);
+            viewport.update();
+            assertEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 220, 170), "at " + origin[0] + "," + origin[1]);
+            assertSameAsAFullRecomposition();
+        }
+    }
 }
