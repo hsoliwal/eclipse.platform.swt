@@ -35,3 +35,6 @@ regionSource="$here/../../../Eclipse SWT/common/org/eclipse/swt/internal/render/
 javac --release 21 -Xlint:all -Werror -d "$tmp/classes" \
     "$regionSource" "$here/NativeDirtyRegionsProof.java"
 java -cp "$tmp/classes" org.eclipse.swt.internal.render.NativeDirtyRegionsProof
+
+# Exact-source Java21/C++17 cross-language admission parity (not native GPU proof).
+bash "$here/run_dirty_parity.sh"
