@@ -27,3 +27,11 @@ mkdir -p "$tmp/classes"
 javac --release 21 -Xlint:all -Werror -d "$tmp/classes" "$here/MayaCompositionStubProof.java"
 java -Xcheck:jni -cp "$tmp/classes" \
     org.eclipse.swt.internal.maya.MayaCompositionStubProof "$tmp/libmaya_native_abi.so"
+
+# Validate exactly the same independent CPU-side region arithmetic that the
+# SWT viewport uses before an optional multi-region JNI upload. No SWT/JUnit
+# or graphics display is required for this strict Java 21 proof.
+regionSource="$here/../../../Eclipse SWT/common/org/eclipse/swt/internal/render/NativeDirtyRegions.java"
+javac --release 21 -Xlint:all -Werror -d "$tmp/classes" \
+    "$regionSource" "$here/NativeDirtyRegionsProof.java"
+java -cp "$tmp/classes" org.eclipse.swt.internal.render.NativeDirtyRegionsProof

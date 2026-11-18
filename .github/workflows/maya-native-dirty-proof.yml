@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/render/NativeDirtyRegions.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/LayeredViewport.java'
       - '.github/workflows/maya-native-dirty-proof.yml'
   workflow_dispatch:
 permissions:
