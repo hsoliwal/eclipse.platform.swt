@@ -76,6 +76,7 @@ public final class LayeredViewport extends Canvas {
         private Image image;
         private LayerPainter painter;
         private LayerHitTester hitTester;
+        private WorldBounds worldClip;
 
         private Layer(long id, String name, long x, long y,
                 long width, long height, Image image, LayerPainter painter) {
@@ -113,6 +114,20 @@ public final class LayeredViewport extends Canvas {
         public WorldBounds getWorldBounds() {
             checked();
             return new WorldBounds(x, y, right - x, bottom - y);
+        }
+
+        /** Optional additional rectangular world-space paint/hit clip. */
+        public WorldBounds getWorldClip() {
+            checked();
+            return worldClip;
+        }
+
+        public void setWorldClip(WorldBounds value) {
+            checked();
+            if (value != null) validateBounds(value.x(), value.y(), value.width(), value.height());
+            invalidate(this);
+            worldClip = value;
+            invalidate(this);
         }
 
         public void setWorldBounds(long newX, long newY, long width, long height) {
@@ -222,6 +237,7 @@ public final class LayeredViewport extends Canvas {
             image = null;
             painter = null;
             hitTester = null;
+            worldClip = null;
             publishOrder();
         }
     }
@@ -247,6 +263,7 @@ public final class LayeredViewport extends Canvas {
                 stack[i].image = null;
                 stack[i].painter = null;
                 stack[i].hitTester = null;
+                stack[i].worldClip = null;
                 stack[i] = null;
             }
             count = 0;
@@ -345,6 +362,9 @@ public final class LayeredViewport extends Canvas {
             if (layer.removed || !layer.visible || layer.locked || layer.opacity == 0) continue;
             if (point.x < layer.x || point.x >= layer.right
                     || point.y < layer.y || point.y >= layer.bottom) continue;
+            WorldBounds clip = layer.worldClip;
+            if (clip != null && (point.x < clip.x() || point.x >= clip.x() + clip.width()
+                    || point.y < clip.y() || point.y >= clip.y() + clip.height())) continue;
             if (layer.hitTester == null
                     || layer.hitTester.contains(layer, point.x, point.y)) return layer;
         }
@@ -425,10 +445,19 @@ public final class LayeredViewport extends Canvas {
     }
 
     private Rectangle projectedClip(Layer layer, Rectangle damage) {
-        double left = device(layer.x, originX);
-        double top = device(layer.y, originY);
-        double right = device(layer.right, originX);
-        double bottom = device(layer.bottom, originY);
+        Rectangle visible = projectedClip(layer.x, layer.y, layer.right, layer.bottom, damage);
+        if (visible == null || layer.worldClip == null) return visible;
+        WorldBounds clip = layer.worldClip;
+        return projectedClip(clip.x(), clip.y(), clip.x() + clip.width(),
+                clip.y() + clip.height(), visible);
+    }
+
+    private Rectangle projectedClip(long worldX, long worldY, long worldRight,
+            long worldBottom, Rectangle damage) {
+        double left = device(worldX, originX);
+        double top = device(worldY, originY);
+        double right = device(worldRight, originX);
+        double bottom = device(worldBottom, originY);
         int x0 = (int) Math.max((double) damage.x, Math.floor(left));
         int y0 = (int) Math.max((double) damage.y, Math.floor(top));
         int x1 = (int) Math.min((double) damage.x + damage.width, Math.ceil(right));
