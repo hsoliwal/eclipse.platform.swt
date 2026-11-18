@@ -1189,40 +1189,61 @@ public void test_NoExceptionsThrownInFillLayout () {
 }
 
 @Test
-public void test_borderStyleDelegatesToSingleReliefOwner() {
-    org.eclipse.swt.widgets.Composite nativeControl =
+public void test_borderStyleDelegatesToNativeReliefOwner() {
+    org.eclipse.swt.widgets.Composite control =
             new org.eclipse.swt.widgets.Composite(shell, SWT.BORDER);
     try {
-        assertEquals(SWT.DEFAULT, nativeControl.getBorderStyle());
-        assertEquals(nativeControl.getBorderRelief(), nativeControl.getBorderStyle());
-        assertEquals(SWT.NONE, nativeControl.getBevelBorder());
+        assertEquals(SWT.DEFAULT, control.getBorderRelief());
+        assertEquals(SWT.DEFAULT, control.getBorderStyle());
+        assertEquals(SWT.NONE, control.getBevelBorder());
         assertThrows(IllegalArgumentException.class,
-                () -> nativeControl.setBorderStyle(SWT.BORDER));
+                () -> control.setBorderStyle(SWT.BORDER));
         assertThrows(IllegalArgumentException.class,
-                () -> nativeControl.setBorderStyle(SWT.NONE));
-        assertEquals(SWT.DEFAULT, nativeControl.getBorderStyle());
+                () -> control.setBorderStyle(SWT.NONE));
+        assertEquals(SWT.DEFAULT, control.getBorderRelief());
 
         if ("cocoa".equals(SWT.getPlatform())) {
             assertThrows(org.eclipse.swt.SWTError.class,
-                    () -> nativeControl.setBorderStyle(SWT.SHADOW_OUT));
-            assertEquals(SWT.DEFAULT, nativeControl.getBorderRelief());
+                    () -> control.setBorderStyle(SWT.SHADOW_OUT));
+            assertEquals(SWT.DEFAULT, control.getBorderStyle());
         } else {
-            nativeControl.setBorderStyle(SWT.SHADOW_IN);
-            assertEquals(SWT.SHADOW_IN, nativeControl.getBorderRelief());
-            assertEquals(SWT.SHADOW_IN, nativeControl.getBevelBorder());
-            nativeControl.setBevelBorder(SWT.SHADOW_OUT);
-            assertEquals(SWT.SHADOW_OUT, nativeControl.getBorderStyle());
-            nativeControl.setBorderRelief(SWT.SHADOW_ETCHED_IN);
-            assertEquals(SWT.SHADOW_ETCHED_IN, nativeControl.getBorderStyle());
-            nativeControl.setBorderStyle(SWT.SHADOW_NONE);
-            assertEquals(SWT.SHADOW_NONE, nativeControl.getBorderRelief());
-            assertEquals(SWT.NONE, nativeControl.getBevelBorder());
-            nativeControl.setBevelBorder(SWT.NONE);
-            assertEquals(SWT.DEFAULT, nativeControl.getBorderRelief());
-            assertEquals(SWT.DEFAULT, nativeControl.getBorderStyle());
+            control.setBorderStyle(SWT.SHADOW_IN);
+            assertEquals(SWT.SHADOW_IN, control.getBorderRelief());
+            assertEquals(SWT.SHADOW_IN, control.getBorderStyle());
+
+            if ("win32".equals(SWT.getPlatform())) {
+                // The Control override and Composite fallback are distinct
+                // logical choices but share a single native HWND painter.
+                assertEquals(SWT.NONE, control.getBevelBorder());
+                control.setBevelBorder(SWT.SHADOW_OUT);
+                assertEquals(SWT.DEFAULT, control.getBorderStyle());
+                assertEquals(SWT.SHADOW_OUT, control.getBevelBorder());
+                control.setBorderRelief(SWT.SHADOW_ETCHED_IN);
+                assertEquals(SWT.SHADOW_ETCHED_IN, control.getBorderStyle());
+                assertEquals(SWT.SHADOW_OUT, control.getBevelBorder());
+                control.setBorderStyle(SWT.SHADOW_NONE);
+                assertEquals(SWT.SHADOW_NONE, control.getBorderRelief());
+                assertEquals(SWT.SHADOW_OUT, control.getBevelBorder());
+                control.setBorderStyle(SWT.DEFAULT);
+                assertEquals(SWT.SHADOW_OUT, control.getBevelBorder());
+                control.setBevelBorder(SWT.NONE);
+                assertEquals(SWT.DEFAULT, control.getBorderStyle());
+                assertEquals(SWT.NONE, control.getBevelBorder());
+            } else {
+                // GTK Composite's legacy bevel API aliases Control relief.
+                assertEquals(SWT.SHADOW_IN, control.getBevelBorder());
+                control.setBevelBorder(SWT.SHADOW_OUT);
+                assertEquals(SWT.SHADOW_OUT, control.getBorderStyle());
+                control.setBorderStyle(SWT.SHADOW_NONE);
+                assertEquals(SWT.SHADOW_NONE, control.getBorderRelief());
+                assertEquals(SWT.NONE, control.getBevelBorder());
+                control.setBorderStyle(SWT.DEFAULT);
+                assertEquals(SWT.DEFAULT, control.getBorderRelief());
+                assertEquals(SWT.NONE, control.getBevelBorder());
+            }
         }
     } finally {
-        nativeControl.dispose();
+        control.dispose();
     }
 }
 
