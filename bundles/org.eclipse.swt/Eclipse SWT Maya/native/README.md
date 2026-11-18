@@ -42,9 +42,11 @@ with the Skia release that Skija 0.116.3 was made with. The fragment `org.eclips
 - `cc/swt/MayaFramePacket.h` and `MayaFramePacket.cc`: independent
   little-endian bulk frame parser and opt-in JNI ingress. They add two symbols
   to the existing seven MayaComposition exports; neither old symbol nor
-  native-handle ownership contract is removed. The v1 bridge **currently
-  allocates legacy JNI arrays before calling the old `_nApply`**: no speedup
-  is claimed. `-Dswt.maya.packedFrame=true` opts in at >=64 layers, with
+  native-handle ownership contract is removed. The packed v1 JNI ingress now decodes into an
+  owned native frame and calls the **same native COM transaction** as the
+  legacy `_nApply`, without staging temporary JNI arrays. The encoder and
+  native frame decoder still copy bytes; no FPS or zero-copy speedup is
+  claimed until real hardware qualification. `-Dswt.maya.packedFrame=true` opts in at >=64 layers, with
   legacy fallback when a previously shipped Maya library lacks the symbols.
   The new source has sanitizer, Java21 `-Xcheck:jni`, and MSVC compile tests
   in `.github/workflows/maya-packet-abi.yml`.
@@ -113,3 +115,34 @@ reproducible full build and native test qualification before the fragment is upd
   - running the arm64 library on a device (only the x86_64 library has run, on the emulator).
 - M3Canvas on graphics hardware: it is measured on raster surfaces only (`Test_org_eclipse_swt_maya_M3Canvas`; 1.6x
   faster than command-by-command replay at 2,000 and more commands per frame, equal within noise for small frames).
+
+## Typed native Maya handles
+
+The Windows DirectComposition backend no longer returns raw `Layer*` or
+`Composition*` C++ addresses to Java; it uses a typed, never-reused positive
+`jlong` token resolved by the process-lifetime UI-thread registry. This
+prevents stale Java layer/composition handles from becoming valid through
+native allocator address reuse. The original Maya JNI descriptors, native
+window handle input, composition GPU ownership, packet header, and native
+frame semantics stay unchanged. See `MayaNativeHandleRegistry.h` and its
+portable ASan/UBSan test; full Win32 Maya screenshot/disposal tests must pass
+before updating a packaged binary.
+
+## Optional per-composition native telemetry
+
+`MayaCompositionTelemetry.h` is an array-backed, per-composition C++17
+counter store (16 fixed slots). The original Maya owner increments counters
+at successful native layer creation/retirement, full and dirty
+`IDCompositionSurface::EndDraw` submissions, device-health probes,
+native frame submissions, successful or failed `IDCompositionDevice::Commit`,
+and suppressed no-op frames. The original packed/legacy frame owners remain
+unchanged; the optional `MayaComposition._nReadMetrics(long,long[])` symbol
+copies a single explicit read-only snapshot on demand.
+
+The Java compatibility helper returns null for previously packaged
+libraries without that new export. It does not create a native compositor
+or claim GPU presentation or FPS results. The metrics C++/JNI smoke has
+GCC/Clang sanitizer, Java 21 `-Xcheck:jni` and absent-export tests;
+the actual Win32 Maya/MSVC runtime still requires a rebuilt DLL, export
+closure, `AllMayaGcTests`, resource checks and measurements.
+See [MAYA_COMPOSITION_TELEMETRY.md](../../../docs/MAYA_COMPOSITION_TELEMETRY.md).

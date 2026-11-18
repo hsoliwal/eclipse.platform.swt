@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <memory>
 
 /*
  * Portable validation/copy atom for the optional DirectComposition dirty-region
@@ -62,6 +63,96 @@ inline bool validPackedDirtyFrame(int width, int height, int pixels,
     }
     return true;
 }
+
+/**
+ * Portable D3D11 upload geometry: a four-byte ARGB row pitch must fit UINT,
+ * and a returned DirectComposition update offset must never be added using
+ * signed arithmetic. Only call after the source dimensions have been checked.
+ */
+inline bool validD3dUploadBox(int offsetX, int offsetY,
+        int width, int height) noexcept {
+    if (offsetX < 0 || offsetY < 0 || width <= 0 || height <= 0) return false;
+    constexpr std::uint64_t MAX_UINT = std::numeric_limits<std::uint32_t>::max();
+    return static_cast<std::uint64_t>(width) * sizeof(std::uint32_t) <= MAX_UINT
+        && static_cast<std::uint64_t>(offsetX) + width <= MAX_UINT
+        && static_cast<std::uint64_t>(offsetY) + height <= MAX_UINT;
+}
+
+/**
+ * Count the exact prefix of already-validated packed dirty rectangles. This
+ * runs before JNI pixel copy and before any BeginDraw; the earlier validation
+ * guarantees the count fits Java array length and a signed jsize.
+ */
+inline std::size_t packedDirtyPixelCount(const int *rects, int count) noexcept {
+    std::size_t total = 0;
+    for (int i = 0; i < count; ++i) {
+        const int *r = rects + static_cast<std::size_t>(i) * 4;
+        total += static_cast<std::size_t>(r[2]) * static_cast<std::size_t>(r[3]);
+    }
+    return total;
+}
+
+/*
+ * Retain at most 1 MiB of native ARGB staging per SWT UI thread. A reentrant
+ * dirty JNI call uses an independent temporary buffer, never the in-use cache.
+ * Large packets still copy their WHOLE validated prefix before BeginDraw;
+ * they are transient rather than retained, preserving the no-JNI-after-COM
+ * behavior of the original Maya upload implementation.
+ */
+constexpr std::size_t MAX_RETAINED_DIRTY_PIXELS = 1u << 18;
+inline bool mayReuseDirtyPixels(int count, std::size_t pixels, bool inUse) noexcept {
+    return count > 1 && pixels > 0 && pixels <= MAX_RETAINED_DIRTY_PIXELS && !inUse;
+}
+
+/**
+ * Per-thread native pixel-copy staging. The retained allocation is at most
+ * MAX_RETAINED_DIRTY_PIXELS elements. Large packets and nested JNI calls
+ * receive independent short-lived allocations, keeping the full copied-in
+ * frame immutable until every GPU UpdateSubresource call completes.
+ *
+ * No Java reference, operating-system handle or JNI region is stored here.
+ */
+template<class Pixel> class DirtyPixelScratch final {
+    std::unique_ptr<Pixel[]> retained_;
+    std::size_t capacity_ = 0;
+    bool busy_ = false;
+
+public:
+    bool busy() const noexcept { return busy_; }
+    std::size_t retainedCapacity() const noexcept { return capacity_; }
+
+    class Lease final {
+        DirtyPixelScratch *owner_;
+        std::unique_ptr<Pixel[]> temporary_;
+        Pixel *data_ = nullptr;
+        bool retained_ = false;
+
+    public:
+        Lease(DirtyPixelScratch &owner, int rectCount, std::size_t pixelCount)
+                : owner_(&owner) {
+            retained_ = mayReuseDirtyPixels(rectCount, pixelCount, owner.busy_);
+            if (retained_) {
+                // new[] completes before resetting the old retained buffer:
+                // allocation failure cannot change owner state or ownership.
+                if (owner.capacity_ < pixelCount) {
+                    owner.retained_.reset(new Pixel[pixelCount]);
+                    owner.capacity_ = pixelCount;
+                }
+                owner.busy_ = true;
+                data_ = owner.retained_.get();
+            } else {
+                temporary_.reset(new Pixel[pixelCount]);
+                data_ = temporary_.get();
+            }
+        }
+        Lease(const Lease &) = delete;
+        Lease &operator=(const Lease &) = delete;
+        Lease(Lease &&) = delete;
+        Lease &operator=(Lease &&) = delete;
+        ~Lease() noexcept { if (retained_) owner_->busy_ = false; }
+        Pixel *data() const noexcept { return data_; }
+    };
+};
 
 inline std::size_t dirtyArea(const int *rect) noexcept {
     return static_cast<std::size_t>(rect[2]) * static_cast<std::size_t>(rect[3]);

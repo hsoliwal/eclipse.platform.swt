@@ -4,8 +4,21 @@ on:
   pull_request:
     paths:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/render/NativeDirtyRegions.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/LayeredViewport.java'
+      - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_NativeLayers.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaDeviceHealth.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionTelemetry.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionTelemetryTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaTelemetryJniStub.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/java/org/eclipse/swt/internal/maya/MayaTelemetryJniSmoke.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaDeviceHealthTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/LayeredViewport.java'
+      - 'tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_custom_LayeredViewport.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaNativeHandleRegistry.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaNativeHandleRegistryTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionScene.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionSceneTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java'
@@ -18,8 +31,21 @@ on:
     branches: [ master ]
     paths:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/render/NativeDirtyRegions.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/LayeredViewport.java'
+      - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_NativeLayers.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaDeviceHealth.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionTelemetry.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionTelemetryTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaTelemetryJniStub.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/java/org/eclipse/swt/internal/maya/MayaTelemetryJniSmoke.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaDeviceHealthTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/LayeredViewport.java'
+      - 'tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_custom_LayeredViewport.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaNativeHandleRegistry.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaNativeHandleRegistryTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionScene.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionSceneTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java'
@@ -56,6 +82,64 @@ jobs:
             -fsanitize=address,undefined -fno-omit-frame-pointer \
             "$root/tests/MayaCompositionDeltaTest.cc" -o /tmp/maya-delta
           /tmp/maya-delta
+      - name: Typed native handles, allocator ABA and concurrent Display issuance
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          for compiler in g++ clang++; do
+            "$compiler" -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic -pthread \
+              -fsanitize=address,undefined -fno-omit-frame-pointer \
+              "$root/tests/MayaNativeHandleRegistryTest.cc" -o "/tmp/maya-token-${compiler}"
+            ASAN_OPTIONS=detect_leaks=1 "/tmp/maya-token-${compiler}"
+          done
+      - name: Probe DirectComposition loss and reset policy with sanitizers
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          for compiler in g++ clang++; do
+            "$compiler" -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+              -fsanitize=address,undefined -fno-omit-frame-pointer -I"$root" \
+              "$root/tests/MayaDeviceHealthTest.cc" -o "/tmp/maya-health-${compiler}"
+            ASAN_OPTIONS=detect_leaks=1 "/tmp/maya-health-${compiler}"
+          done
+      - name: Native composition counters, saturation and versioned ABI
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          for compiler in g++ clang++; do
+            "$compiler" -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+              -fsanitize=address,undefined -fno-omit-frame-pointer \
+              "$root/tests/MayaCompositionTelemetryTest.cc" -o "/tmp/maya-telemetry-${compiler}"
+            ASAN_OPTIONS=detect_leaks=1 "/tmp/maya-telemetry-${compiler}"
+          done
+      - name: Checked Java-to-native telemetry ABI and absent-symbol fallback
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          mkdir -p /tmp/maya-telemetry-classes
+          javac --release 21 -Xlint:all -Werror -d /tmp/maya-telemetry-classes \
+              'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java' \
+              "$root/tests/java/org/eclipse/swt/internal/maya/impl/Library.java" \
+              "$root/tests/java/org/eclipse/swt/internal/maya/MayaTelemetryJniSmoke.java"
+          for compiler in g++ clang++; do
+            "$compiler" -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -fPIC -shared \
+                -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+                "$root/tests/MayaTelemetryJniStub.cc" -o "/tmp/libmaya-telemetry-${compiler}.so"
+            java -Xcheck:jni -cp /tmp/maya-telemetry-classes \
+                org.eclipse.swt.internal.maya.MayaTelemetryJniSmoke \
+                "/tmp/libmaya-telemetry-${compiler}.so"
+            "$compiler" -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -fPIC -shared \
+                -DSWT_MAYA_TELEMETRY_LEGACY \
+                -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+                "$root/tests/MayaTelemetryJniStub.cc" -o "/tmp/libmaya-legacy-${compiler}.so"
+            java -Xcheck:jni -cp /tmp/maya-telemetry-classes \
+                org.eclipse.swt.internal.maya.MayaTelemetryJniSmoke \
+                "/tmp/libmaya-legacy-${compiler}.so" legacy
+          done
       - name: C++17 affine scene admission, legacy reset state and JNI bounds
         shell: bash
         run: |

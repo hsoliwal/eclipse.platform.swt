@@ -167,6 +167,44 @@ CALayer on cocoa and iOS, ASurfaceControl on Android; the Java composite above
 stays the reference implementation every native route is compared with pixel by
 pixel.
 
+
+## Native composition frame scratch contract
+
+The native image-layer route shares a bounded, UI-thread-owned frame transport
+between the existing `LayeredViewport` and the optional maya compositor.
+For a frame with `count` native layers, `apply` reads exactly `count`
+layer handles and `4 * count` properties in bottom-to-top order. Scratch
+arrays **may have more capacity than count**; their unused suffix has no
+semantic meaning and must never be read by a native backend.
+
+The viewport owns Java primitive-array scratch; the native `Composition`
+owns its own typed copied-in scratch. Both may reuse capacity after warm-up,
+must use the active prefix only, and must not retain app-owned images or
+published paint callbacks. All frame submission stays on the SWT UI thread.
+The JNI bridge performs one synchronous copy-in of each active array prefix,
+without holding the Java heap pinned while the OS compositor works; it does
+not add a JNI call per layer. Native state is destroyed with its composition.
+An excessive layer count or invalid frame sizes must fail safely rather than
+allow overflowing native array bounds.
+
+Layer structural mutations publish their Z order lazily. Native activation
+must discover requests in the authoritative stack and take its current
+order snapshot before composing the first frame; a newly appended image
+must not disappear until an unrelated paint or getLayers call.
+
+A native backend call may reenter its viewport. The outer call's arrays and
+the C++ composition's active prefix must remain immutable until that call
+returns. Nested invocations receive temporary private input lanes, while
+the ordinary (non-nested) hot path reuses composition-owned capacity.
+Every recursion-depth increment must have a matching decrement, including
+exceptional exits in Java. This remains distinct from native resource
+lifetime and callback ownership.
+
+This is an allocation-efficiency contract, **not** a claim of zero native
+allocations, O(1) Z composition, cross-platform GPU acceleration, or HTML/CSS
+layout conformance. DirectComposition remains the only active native layer
+backend. Native pixel parity and platform tests remain release gates.
+
 ## Verification
 
 The accompanying JUnit test exercises ordering, stable IDs, remove,
@@ -263,3 +301,27 @@ Verification added: group Z-order and root translation, child pick/visibility/
 lock/snapshot identity, local clipping, and an SWT pixel oracle asserting
 that overlap is resolved before the GROUP opacity is applied. The native
 Tycho/GTK/Win32/Cocoa suites still need to run before promoting the feature.
+
+## Optional native device-loss containment (Win32 Maya)
+
+The native compositor is still **optional**. If the existing DirectComposition
+submission path fails, `LayeredViewport` detaches its native layers, disposes
+the failed composition and redraws those layer bounds through the original
+SWT painted backing store. There is no silent recursive GPU reinitialization.
+
+Applications that know their display/graphics device has recovered may call
+`viewport.retryNativeComposition()` explicitly from the SWT UI thread.
+The method refuses paint/native-frame/model-batch reentrancy, issues at most
+one creation attempt per call, then reuploads borrowed images via the same
+`NativeLayers` backend and returns whether the composition is available.
+If native recreation or frame commit fails, ordinary software painting remains
+authoritative; no automatic retry loop starts.
+
+The Windows Maya owner validates the DirectComposition device state before
+native uploads and every frame (even an unchanged-property frame). Lost
+devices report their HRESULT and force native scene-cache invalidation. That
+failure reaches the already established painted fallback.
+
+See [MAYA_DEVICE_LOSS_RECOVERY.md](MAYA_DEVICE_LOSS_RECOVERY.md) for the
+portable C++ health oracle, explicit recovery contract, native UI ownership,
+test coverage, and still-unexecuted Windows hardware release gates.

@@ -27,3 +27,20 @@ mkdir -p "$tmp/classes"
 javac --release 21 -Xlint:all -Werror -d "$tmp/classes" "$here/MayaCompositionStubProof.java"
 java -Xcheck:jni -cp "$tmp/classes" \
     org.eclipse.swt.internal.maya.MayaCompositionStubProof "$tmp/libmaya_native_abi.so"
+
+# Validate exactly the same independent CPU-side region arithmetic that the
+# SWT viewport uses before an optional multi-region JNI upload. No SWT/JUnit
+# or graphics display is required for this strict Java 21 proof.
+regionSource="$here/../../../Eclipse SWT/common/org/eclipse/swt/internal/render/NativeDirtyRegions.java"
+javac --release 21 -Xlint:all -Werror -d "$tmp/classes" \
+    "$regionSource" "$here/NativeDirtyRegionsProof.java"
+java -cp "$tmp/classes" org.eclipse.swt.internal.render.NativeDirtyRegionsProof
+
+# Exact-source Java21/C++17 cross-language admission parity (not native GPU proof).
+bash "$here/run_dirty_parity.sh"
+
+# Original owner: portable checked D3D11 update rectangles, whole-batch
+# pixel-prefix packing and native edge cases (no Windows SDK needed).
+"${CXX:-clang++}" -std=c++17 -O2 -Wall -Wextra -Werror -pedantic \
+    -I"$src" "$here/MayaUploadBoundsProof.cc" -o "$tmp/upload-bounds-proof"
+"$tmp/upload-bounds-proof"

@@ -144,4 +144,40 @@ public class Test_ImageDataArgb {
 		assertThrows(IllegalArgumentException.class, () -> rows.rgb(16));
 		assertThrows(IllegalArgumentException.class, () -> rows.rgb(-1));
 	}
+
+	@Test
+	public void signed32BitRowsEqualThePaletteAndPerPixelCalls() {
+		int[] source = {Integer.MIN_VALUE, 0xC0123400, 0xFF345600, -1, Integer.MAX_VALUE, 0x407F8000, 0};
+		for (PaletteData palette : new PaletteData[] {
+				new PaletteData(0xFF000000, 0xFF0000, 0xFF00),
+				new PaletteData(0xFF00, 0xFF000000, 0xFF0000),
+				new PaletteData(0xFF00, 0xFF0000, 0xFF000000)}) {
+			ImageData data = new ImageData(source.length, 2, 32, palette);
+			data.setPixels(0, 0, source.length, source, 0);
+			data.alphaData = new byte[source.length * 2];
+			System.arraycopy(new byte[] {(byte) 255, 127, 1, 0, (byte) 200, 50, (byte) 254},
+					0, data.alphaData, 0, source.length);
+			ImageDataArgb rows = new ImageDataArgb(data);
+			int[] actual = new int[source.length + 2];
+			java.util.Arrays.fill(actual, 0x13579BDF);
+			rows.premultipliedRow(0, actual, 1);
+			assertEquals(0x13579BDF, actual[0]);
+			assertEquals(0x13579BDF, actual[actual.length - 1]);
+			for (int x = 0; x < source.length; x++) {
+				assertEquals(source[x], data.getPixel(x, 0), "the fixture preserves the signed high bits");
+				assertEquals(reference(data, x, 0), actual[x + 1], "premultiplied signed pixel " + x);
+			}
+
+			rows.opaqueRow(0, actual, 1);
+			ImageData expected = (ImageData) data.clone();
+			for (int x = 0; x < source.length; x++) {
+				RGB color = palette.getRGB(source[x]);
+				assertEquals(0xFF000000 | color.red << 16 | color.green << 8 | color.blue, actual[x + 1]);
+				assertEquals(palette.getPixel(color), rows.pixel(actual[x + 1]));
+				expected.setPixel(x, 1, palette.getPixel(color));
+			}
+			rows.setOpaqueRow(1, actual, 1);
+			assertArrayEquals(expected.data, data.data, "signed high-bit row writes preserve the original palette mapping");
+		}
+	}
 }

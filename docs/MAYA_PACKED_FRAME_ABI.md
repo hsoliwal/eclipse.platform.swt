@@ -83,13 +83,36 @@ replacing the DLL); a standalone native-symbol test verifies this fallback.
 Failure to find the protocol version disables the attempted route; the
 seven old method descriptors are unchanged.
 
-**Important limitation:** v1 JNI decodes a direct ByteBuffer, allocates two
-JNI arrays, and invokes the original compositor's `_nApply`. It currently
-adds work, rather than removing copies or JNI calls. It is a correctness and
-interoperability milestone, NOT an optimization or proof of higher FPS.
-The follow-up native change should consume the decoded contiguous frame
-directly in the DirectComposition transaction *after* reconciling overlapping
-MayaComposition.cc PRs. DO NOT merge this by assuming it is faster.
+**Direct native transaction (follow-up):** the v1 JNI method descriptors
+and on-wire packet remain unchanged. `MayaFramePacket.cc` decodes the
+bounded direct-buffer bytes into a C++ `Frame` and now calls
+`applyDecodedFrame` in the original `MayaComposition.cc` owner.
+A single `applyNativeFrame` template consumes both the legacy JNI array
+view and the packet view, without creating any new `jlongArray` or
+`jfloatArray` in the packed path.
+
+This is **not fully zero-copy**: the Java encoder copies primitive arrays
+into a direct buffer, and the JNI ingress checks/decodes that packet into an
+owned C++ vector before COM calls. That copy is essential for transaction
+stability if Java mutates the originating frame. There is no asserted FPS
+speedup or universal JNI crossover. The existing `CompositionFrameDelta`
+and `CommittedLayerProperties` still decide when native Z order and
+properties change. Critically, a pending successful pixel-only
+`IDCompositionSurface::EndDraw` still causes `Commit`, even if the
+layer properties and Z order are identical.
+
+Both paths validate opaque native handles and composition ownership before
+mutating the COM tree. On native exceptions/Commit failures they invalidate
+cached property/order authority for replay; a successful transaction alone
+publishes new cache truth. The native method, native export list, direct
+frame layout, and feature-negotiation property remain unchanged.
+
+**Release hold:** do not merge based solely on Linux JNI stub tests. Run
+the exact new Win32 `MayaComposition.cc` and `MayaFramePacket.cc` in
+MSVC JDK21/25, rebuild `maya.dll`, run real Maya screen pixels and
+the `-Dswt.maya.packed.required=true` gate, compare legacy versus packet
+Z/offset/opacity/visibility and pixel-only commits, then measure native
+frame latency/copies/allocations before considering opt-in default.
 
 ## Verification and acceptance matrix
 
@@ -144,3 +167,41 @@ Upstream references:
 - Windows DirectComposition commits: https://learn.microsoft.com/en-us/windows/win32/api/dcomp/nf-dcomp-idcompositiondevice-commit
 - GTK4 GSK: https://docs.gtk.org/gsk4/
 - JDK21 FFM status: https://openjdk.org/jeps/442
+
+## Typed lifetime-safe native handles (follow-up)
+
+Windows Maya now issues **typed, non-reused 64-bit opaque tokens** instead of
+publishing raw C++ `Layer*` and `Composition*` addresses as JNI `long`s.
+The top byte identifies the kind (composition `0x31`, layer `0x32`),
+with a monotonic nonzero 56-bit counter. Both are positive Java long values.
+The token is valid only while its native object lives. Retirement does **not**
+recycle the identity even when the C++ allocator reuses the same address.
+
+The internal C++ `MayaNativeHandleRegistry.h` maps live tokens to owning
+pointers and verifies the kind before looking up a pointer. Existing
+`getComposition` and `getLayer` perform this check before any COM work.
+Every native creation path returns `0` if it cannot allocate a token, and
+cleans up native resources. Removal/disposal retires tokens and releases the
+existing COM owners. A stale token can never be confused with a newly
+allocated owner simply because an address was recycled.
+
+This changes no Java method descriptor, exported JNI symbol, wire-frame
+record size, packet version, DirectComposition visual structure or SWT
+`Control.handle` HWND contract. A `MayaFramePacket` 64-bit handle field is
+still an opaque bit pattern. Both legacy `long[]` and packed frames resolve
+via the same typed registry. Unsupported platforms keep their previous stub
+behavior. Native tokens are ephemeral and should never be persisted or
+reinterpreted as pointer addresses by Java code.
+
+The registry remains confined to SWT's UI/native compositor thread. It does
+not allow arbitrary cross-thread JNI disposal or replace the UI event loop.
+A test deliberately places two native records at the same C++ address,
+retires the first, and ensures its old token is never accepted. Another runs
+100,000 create/retire cycles under GCC/Clang ASan/UBSan. A Win32 native
+screen test checks token invalidation and composition ownership after
+layer removal and composition disposal.
+
+**Mandatory release gate:** rebuild Maya on Windows, run the original
+`AllMayaGcTests` and new stale-token screen test under `-Xcheck:jni`,
+verify the full legacy and packed-frame ABI, and measure registry lookup and
+native lifetime costs. Source-level tests are not proof of Win32 GPU parity.

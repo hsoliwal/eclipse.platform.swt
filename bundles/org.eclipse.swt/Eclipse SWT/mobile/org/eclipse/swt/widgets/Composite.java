@@ -35,21 +35,26 @@ public class Composite extends Scrollable {
 	}
 	Composite(Display display, int style) { super(display, style); }
 
-	/** Returns SWT.NONE until a native mobile bevel backend is available. */
-	public int getBevelBorder() { checkWidget(); return SWT.NONE; }
-
 	/**
-	 * Explicit bevel API parity with desktop SWT. Android/iOS native border
-	 * implementations must not be implied by constructor shadow bits.
+	 * Compatibility alias over the original Control's native border relief.
+	 * No second mobile peer, border painter or lifecycle state is introduced.
 	 */
+	public int getBevelBorder() {
+		checkWidget();
+		int relief = getBorderRelief();
+		return relief == SWT.DEFAULT || relief == SWT.SHADOW_NONE ? SWT.NONE : relief;
+	}
+
 	public void setBevelBorder(int border) {
 		checkWidget();
-		if (border == SWT.NONE || border == SWT.SHADOW_NONE) return;
-		if (border != SWT.SHADOW_IN && border != SWT.SHADOW_OUT
-				&& border != SWT.SHADOW_ETCHED_IN && border != SWT.SHADOW_ETCHED_OUT) {
-			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		if (border == SWT.NONE || border == SWT.SHADOW_NONE) {
+			setBorderRelief(SWT.DEFAULT);
+			return;
 		}
-		SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+		if (border != SWT.SHADOW_IN && border != SWT.SHADOW_OUT
+				&& border != SWT.SHADOW_ETCHED_IN && border != SWT.SHADOW_ETCHED_OUT)
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		setBorderRelief(border);
 	}
 	@Override protected void checkSubclass() { }
 	void addChild(Control child) { if (childCount == children.length) children = Arrays.copyOf(children, childCount + 8); children[childCount++] = child; }

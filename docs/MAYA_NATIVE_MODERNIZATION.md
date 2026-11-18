@@ -62,3 +62,79 @@ Android/Cocoa/GTK/Wayland native compositor layers have been shipped.
 
 Donors: Microsoft DirectComposition API docs and Android NDK docs are
 architecture references only. No upstream implementation source is copied.
+
+## Multi-rectangle damage from a CPU-owned backing image
+
+Additive `Layer.redrawRegions(Rectangle... dirtyRegions)` handles up to 4096
+independent image-local regions through **one** Java-to-JNI `uploadDirty`
+invocation, even when many rows are changed. It snapshots caller-owned
+rectangle geometry into primitive `int[4*N]`, checks all bounds and the
+total signed-int packed pixel count on the CPU (shared
+`NativeDirtyRegions` validation), then copies only those image spans
+into a packed ARGB payload. Overlap is allowed and counted per region.
+The existing single-rectangle `redraw(Rectangle)` remains unchanged.
+
+Only the SWT UI thread changes image pixels and native visual ownership.
+The CPU image/backing store is the authority; DirectComposition is an
+optional presentation endpoint. A missing/failed JNI upload or Commit
+falls back to the original `Layer.redraw()` full-image sync. A no-op
+empty array never allocates native resources. No browser/DOM renderer,
+native widget per rectangle or new OS handle is introduced.
+
+The Java21 proof compiles the exact `NativeDirtyRegions.java` with
+`-Xlint:all -Werror` and passed **221,313** deterministic argument and
+payload cases. The existing native C++ proof separately passed
+3,915,491 packed-pixel and 20,467,204 extended observations. The
+new Win32 native screen test and exact Maven/OpenRewrite/Tycho runs
+are **NOT RUN**; a missing optional DLL symbol skips the normal test,
+while `-Dswt.maya.dirty.required=true` must fail release proof.
+
+## Native upload coalescing and D3D11 box safety
+
+The existing Java `Layer.redrawRegions(Rectangle...)` submits packed ARGB and
+image-local rectangles through a single `MayaComposition._nUploadDirty`
+JNI call. The Win32 native receiver now copies the validated **complete
+prefix once** with `GetIntArrayRegion` before the first GPU
+`IDCompositionSurface::BeginDraw`, and then uses checked offsets into that
+immutable native staging array for each rectangle. This replaces repeated
+per-region JNI array copies/allocations. It can use more *peak native memory*
+for a large batch than a single-region scratch buffer; no throughput or
+memory improvement is claimed before measurement.
+
+Full-image upload also catches `std::bad_alloc` and does not unwind C++
+exceptions across JNI. The existing `MayaCompositionDirty.h` is the single
+portable owner for checked 4-byte BGRA row pitches and returned D3D11 update
+offsets; unsigned addition avoids signed integer overflow in
+`D3D11_BOX` right/bottom geometry. Every successful `EndDraw` still marks
+the existing pending native surface Commit. The Java model/backing image
+continues to own all source pixels.
+
+Portable Clang++17 source proof: **251,775** box/prefix observations PASS;
+existing dirty-region C++ proof: **3,915,493** cases PASS. Actual full
+Maya native Windows build/DLL, `-Xcheck:jni` Win32, DirectComposition
+screen pixels, GPU/RSS/latency, SWT Java/Tycho and cross-platform native
+platform parity remain **NOT RUN** for this candidate.
+
+## Retained per-thread pixel staging without extra JNI copies
+
+The merged full-prefix upload from SWT #554 is retained: native code still
+validates every source rectangle, copies the **entire used Java pixel
+prefix once before the first BeginDraw**, and then submits each region
+without holding a Java GC array or issuing any additional JNI reads.
+This preserves its safety boundary for JVM exceptions and GPU partial
+frames.
+
+Small multi-region batches (2 or more rectangles; <=262,144 ARGB ints,
+1 MiB pixel payload) now borrow a reusable **per-native-UI-thread**
+`DirtyPixelScratch` buffer. Its exact-element allocation never retains
+more than 1 MiB of pixel data; nested/reentrant calls and larger valid
+batches use independent temporary allocations and cannot overwrite
+an outer frame. Large batches retain the original full-prefix peak
+allocation but do not leave that allocation cached on the UI thread.
+
+This change does not add a renderer, Java process, JNI export or SWT
+public API. The original typed native handles, `CompositionFrameDelta`,
+device reset handling, surface Commit and CPU-owned backing store remain
+authoritative. The same portable C++17 scratch class and tests passed
+**302,509** assertions with Clang ASan/UBSan and GCC strict warnings.
+Native Win32 builds and CPU/GPU/RSS/latency benchmarks remain unqualified.
