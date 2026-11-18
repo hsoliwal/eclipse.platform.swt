@@ -4,17 +4,27 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.maya;
 
+import org.eclipse.swt.internal.render.MayaNativeLayers;
+import org.eclipse.swt.widgets.Control;
+
 /** Cross-language smoke using the exact production C++ surface-budget header. */
 public final class MayaSurfaceBudgetJniSmoke {
     private MayaSurfaceBudgetJniSmoke() { }
     private static native long reserve(int width, int height);
     private static native boolean release(long bytes);
+    private static native int disposals();
     private static void ok(boolean condition, String message) {
         if (!condition) throw new AssertionError(message);
     }
     public static void main(String[] args) {
         System.load(args[0]);
+        Control control = new Control();
+        control.handle = 777;
+        MayaNativeLayers backend = new MayaNativeLayers();
         if (args.length > 1 && "legacy".equals(args[1])) {
+            ok(backend.create(control) == 0,
+                    "old DLL cannot activate native backend under a requested quota");
+            ok(disposals() == 1, "failed quota setup disposes native composition");
             ok(MayaComposition.readSurfaceBudget(731) == null, "old JNI export absent");
             ok(MayaComposition.setSurfaceBudget(731, 40) == -1,
                     "old library cannot silently satisfy a quota");
@@ -52,6 +62,12 @@ public final class MayaSurfaceBudgetJniSmoke {
         ok(release(400), "retire after unlimited quota");
         ok(MayaComposition.readSurfaceBudget(731)[MayaComposition.BUDGET_RESERVED_BYTES] == 0,
                 "live count restored to zero");
+        ok(backend.create(control) == 731,
+                "SWT native adapter applies startup quota before image surfaces");
+        ok(MayaComposition.readSurfaceBudget(731)[MayaComposition.BUDGET_LIMIT_BYTES] == 40,
+                "backend installed explicit startup quota");
+        backend.dispose(731);
+        ok(disposals() == 1, "one native owner disposal");
         System.out.println("MayaSurfaceBudgetJniSmoke PASS: JDK21 -Xcheck:jni native budget");
     }
 }
