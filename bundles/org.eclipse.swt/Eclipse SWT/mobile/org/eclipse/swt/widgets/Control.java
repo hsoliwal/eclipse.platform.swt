@@ -125,6 +125,13 @@ public abstract class Control extends Widget implements Drawable {
 		}
 		if (!disposed) redrawAll();
 	}
+
+	/** Alias for getBorderRelief: the original mobile peer owns one border state. */
+	public int getBorderStyle() { return getBorderRelief(); }
+
+	/** Delegates to the existing native MobilePlatform border-relief operation. */
+	public void setBorderStyle(int style) { setBorderRelief(style); }
+
 	public int getBorderWidth() {
 		checkWidget();
 		return switch (nativeBorderRelief) {

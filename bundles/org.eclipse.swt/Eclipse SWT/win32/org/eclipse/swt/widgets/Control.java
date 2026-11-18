@@ -1311,6 +1311,24 @@ public void setBorderRelief (int relief) {
 	setNativeBorderSelection(relief, savedCompositeBevel);
 }
 
+/**
+ * Returns the current Control relief override. On direct Composite/Canvas the
+ * stored Composite bevel may remain underneath a SWT.DEFAULT relief.
+ * No second border state or native painter is created by this API.
+ */
+public int getBorderStyle () {
+	return getBorderRelief ();
+}
+
+/**
+ * Selects an explicit Control relief override through the incumbent native
+ * owner. SWT.DEFAULT removes the overlay and reveals a saved Composite bevel;
+ * SWT.SHADOW_NONE explicitly suppresses it. Constructor bits are unchanged.
+ */
+public void setBorderStyle (int style) {
+	setBorderRelief (style);
+}
+
 /** Native owner transition for Composite.setBevelBorder: the latest Composite
  * request resets the transient Control override but retains its bevel choice. */
 void setCompositeBevelState (int bevel) {
