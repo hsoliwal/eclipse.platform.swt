@@ -238,6 +238,7 @@ EXPORTS
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nCreate
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nAddLayer
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nUpload
+    Java_org_eclipse_swt_internal_maya_MayaComposition__1nUploadDirty
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nApply
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nRemoveLayer
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nWaitForCommit

@@ -20,6 +20,8 @@
 #include <vector>
 #include <unordered_set>
 #include "MayaCompositionChecks.h"
+#include "MayaCompositionDirty.h"
+#include <new>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -49,6 +51,7 @@ struct Layer {
     IDCompositionSurface *surface = nullptr;
     IDCompositionEffectGroup *effect = nullptr;
     int width = 0, height = 0;
+    bool initialized = false; // nonvirtual DirectComposition surfaces require an initial full draw
 };
 
 struct Composition {
@@ -160,7 +163,68 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
                       static_cast<UINT>(at.y + layer->height), 1 };
     layer->owner->context->UpdateSubresource(texture, 0, &box, copy.data(), static_cast<UINT>(layer->width) * 4, 0);
     release(texture);
-    return layer->surface->EndDraw();
+    HRESULT completed = layer->surface->EndDraw();
+    if (SUCCEEDED(completed)) layer->initialized = true;
+    return completed;
+}
+
+
+// Packed, concatenated premultiplied ARGB patches, each x,y,w,h in layer-local pixels.
+// All input regions are validated before touching the compositor. Each patch gets
+// BeginDraw/EndDraw with the returned updateOffset; the caller's _nApply commits
+// the updated surface after this call. No JNI pin is held while GPU work runs.
+extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nUploadDirty
+  (JNIEnv *env, jclass, jlong layerHandle, jintArray packed, jintArray rectangles, jint count) {
+    Layer *layer = getLayer(layerHandle);
+    if (!layer || !packed || !rectangles) return E_POINTER;
+    const jsize rectangleLength = env->GetArrayLength(rectangles);
+    if (count < 0 || count > swt_maya::MAX_DIRTY_RECTS || count > rectangleLength / 4) return E_INVALIDARG;
+    try {
+        std::vector<jint> rects(static_cast<size_t>(count) * 4);
+        if (count > 0) env->GetIntArrayRegion(rectangles, 0, count * 4, rects.data());
+        if (env->ExceptionCheck()) return E_FAIL;
+        const jsize pixelLength = env->GetArrayLength(packed);
+        if (!swt_maya::validPackedDirtyFrame(layer->width, layer->height, pixelLength,
+                rects.data(), count, rectangleLength)) return E_INVALIDARG;
+        if (count == 0) return S_OK;
+        if (!layer->initialized) return E_INVALIDARG; // first draw must cover the entire surface
+
+        std::vector<jint> scratch;
+        jsize offset = 0;
+        for (jint i = 0; i < count; ++i) {
+            const jint *r = rects.data() + static_cast<size_t>(i) * 4;
+            const size_t area = swt_maya::dirtyArea(r);
+            scratch.resize(area);
+            env->GetIntArrayRegion(packed, offset, static_cast<jsize>(area), scratch.data());
+            if (env->ExceptionCheck()) return E_FAIL;
+            offset += static_cast<jsize>(area);
+            RECT update = { r[0], r[1], r[0] + r[2], r[1] + r[3] };
+            POINT at = {};
+            ID3D11Texture2D *texture = nullptr;
+            HRESULT hr = layer->surface->BeginDraw(&update, __uuidof(ID3D11Texture2D),
+                    reinterpret_cast<void **>(&texture), &at);
+            if (FAILED(hr)) return hr;
+            // The returned offset is not necessarily the requested rectangle's origin.
+            if (at.x < 0 || at.y < 0 ||
+                    static_cast<std::uint64_t>(at.x) + r[2] > std::numeric_limits<UINT>::max() ||
+                    static_cast<std::uint64_t>(at.y) + r[3] > std::numeric_limits<UINT>::max()) {
+                release(texture);
+                layer->surface->EndDraw();
+                return E_INVALIDARG;
+            }
+            D3D11_BOX box = { static_cast<UINT>(at.x), static_cast<UINT>(at.y), 0,
+                    static_cast<UINT>(at.x) + static_cast<UINT>(r[2]),
+                    static_cast<UINT>(at.y) + static_cast<UINT>(r[3]), 1 };
+            layer->owner->context->UpdateSubresource(texture, 0, &box, scratch.data(),
+                    static_cast<UINT>(r[2]) * 4, 0);
+            release(texture);
+            hr = layer->surface->EndDraw();
+            if (FAILED(hr)) return hr; // later failures may have changed prior patches
+        }
+        return S_OK;
+    } catch (const std::bad_alloc &) {
+        return E_OUTOFMEMORY;
+    }
 }
 
 // one frame: layers in Z order, bottom to top, with x, y, opacity (0..1) and visible (0 or 1) per layer in props;
@@ -241,6 +305,8 @@ extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaCompos
   (JNIEnv *, jclass, jlong, jint, jint) { return 0; }
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nUpload
   (JNIEnv *, jclass, jlong, jintArray) { return -1; }
+extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nUploadDirty
+  (JNIEnv *, jclass, jlong, jintArray, jintArray, jint) { return -1; }
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nApply
   (JNIEnv *, jclass, jlong, jlongArray, jfloatArray, jint) { return -1; }
 extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nRemoveLayer

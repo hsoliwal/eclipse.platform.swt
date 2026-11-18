@@ -34,6 +34,14 @@ public interface NativeLayers {
 	int upload(long layer, int[] premultipliedArgb);
 
 	/**
+	 * Optional packed dirty rectangles; -1 if this backend lacks subregion
+	 * submission. Legacy implementations retain their original binary contract.
+	 */
+	default int uploadDirty(long layer, int[] packedArgb, int[] regions, int count) {
+		return -1;
+	}
+
+	/**
 	 * One frame: {@code count} layers in Z order, bottom to top, with x, y, opacity (0 to 1) and visible (0 or 1)
 	 * each in {@code props}; one commit. 0, or a failure code.
 	 */

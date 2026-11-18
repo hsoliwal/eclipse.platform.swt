@@ -150,6 +150,27 @@ public class Test_org_eclipse_swt_maya_Composition {
 		assertEquals(WHITE, screen(30, 30), "disposing removes every layer from the window");
 	}
 
+
+	@Test
+	public void packedDirtyUpdatesOnlySpecifiedNativePixels() {
+		long red = layer(OPAQUE_RED); // initializes the whole native surface
+		int[] patches = new int[16 + 9];
+		Arrays.fill(patches, 0, 16, OPAQUE_BLUE);
+		Arrays.fill(patches, 16, 25, 0xFF00FF00);
+		int[] rects = { 3, 3, 4, 4, 30, 30, 3, 3 };
+		assertEquals(0, MayaComposition.uploadDirty(red, patches, rects, 2));
+		frame(new long[] { red }, 20, 20, 1, 1);
+		assertEquals(RED, screen(21, 21));
+		assertEquals(BLUE, screen(24, 24));
+		assertEquals(new RGB(0, 255, 0), screen(51, 51));
+		assertEquals(RED, screen(60, 60));
+		assertNotEquals(0, MayaComposition.uploadDirty(red, new int[2], rects, 2));
+		assertNotEquals(0, MayaComposition.uploadDirty(red, patches, new int[] { 99, 99, 4, 4 }, 1));
+		assertNotEquals(0, MayaComposition.uploadDirty(red, patches, rects, Integer.MAX_VALUE));
+		frame(new long[] { red }, 20, 20, 1, 1);
+		assertEquals(BLUE, screen(24, 24), "invalid batched frames must preserve the prior compositor surface");
+	}
+
 	@Test
 	public void invalidArgumentsAreRefused() {
 		assertEquals(0, MayaComposition._nAddLayer(0, SIZE, SIZE));

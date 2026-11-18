@@ -347,6 +347,42 @@ public final class LayeredViewport extends Canvas {
             invalidate(this);
         }
 
+
+        /**
+         * Updates only an image-local dirty rectangle on a compatible native
+         * DirectComposition layer. An older maya DLL, missing native backend or
+         * failed native update falls back to the original full redraw. Image
+         * ownership, the layer ID, paint GC and public Canvas contract do not
+         * change. The rectangle uses image pixels, not world coordinates.
+         */
+        public void redraw(Rectangle dirtyPixels) {
+            checked();
+            if (dirtyPixels == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            if (image == null || image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            Rectangle size = image.getBounds();
+            int x = dirtyPixels.x, y = dirtyPixels.y;
+            int width = dirtyPixels.width, height = dirtyPixels.height;
+            if (x < 0 || y < 0 || width <= 0 || height <= 0
+                    || x >= size.width || y >= size.height
+                    || width > size.width - x || height > size.height - y) {
+                SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            blendSource = null;
+            if (nativeLayer != 0 && nativeBackend != null) {
+                ImageDataArgb rows = new ImageDataArgb(image.getImageData());
+                int[] packed = new int[width * height];
+                for (int row = 0; row < height; row++) {
+                    rows.premultipliedSpan(y + row, x, width, packed, row * width);
+                }
+                if (nativeBackend.uploadDirty(nativeLayer, packed,
+                        new int[] { x, y, width, height }, 1) == 0) {
+                    applyNative(); // EndDraw alone is not a visible compositor Commit.
+                    return;
+                }
+            }
+            redraw();
+        }
+
         private void releaseComposite() {
             if (composite != null) retireComposite(composite);
             composite = null;

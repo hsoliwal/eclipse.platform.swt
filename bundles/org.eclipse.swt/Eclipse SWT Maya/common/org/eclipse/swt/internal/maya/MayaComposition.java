@@ -41,6 +41,27 @@ public final class MayaComposition {
 	public static native int _nUpload(long layer, int[] pixels);
 
 	/**
+	 * Batched subrectangle update after a successful full upload. Packed ARGB pixels
+	 * appear in region order, row-major within each (x,y,width,height) rectangle.
+	 * Returns a failure code on malformed input or an uninitialized native surface.
+	 * The DirectComposition commit remains the caller's next _nApply.
+	 */
+	public static native int _nUploadDirty(long layer, int[] packedArgb, int[] regions, int count);
+
+	/**
+	 * Graceful ABI negotiation for a previously installed maya DLL without the
+	 * optional dirty-upload export. -1 means unavailable; the caller must issue
+	 * the original full upload, not assume a partial update succeeded.
+	 */
+	public static int uploadDirty(long layer, int[] packedArgb, int[] regions, int count) {
+		try {
+			return _nUploadDirty(layer, packedArgb, regions, count);
+		} catch (UnsatisfiedLinkError legacyBinary) {
+			return -1;
+		}
+	}
+
+	/**
 	 * One frame: {@code count} layers in Z order, bottom to top, with {@link #PROPS} floats each in {@code props}
 	 * (x, y, opacity, visible); layers not listed are not shown. One commit. Returns 0 or a failure code.
 	 */

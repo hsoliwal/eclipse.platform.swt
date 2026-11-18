@@ -34,6 +34,11 @@ public final class MayaNativeLayers implements NativeLayers {
 	}
 
 	@Override
+	public int uploadDirty(long layer, int[] packedArgb, int[] regions, int count) {
+		return MayaComposition.uploadDirty(layer, packedArgb, regions, count);
+	}
+
+	@Override
 	public int apply(long composition, long[] layers, float[] props, int count) {
 		return MayaComposition._nApply(composition, layers, props, count);
 	}
