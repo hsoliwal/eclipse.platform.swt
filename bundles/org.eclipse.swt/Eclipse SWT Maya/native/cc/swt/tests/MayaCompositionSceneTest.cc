@@ -16,6 +16,7 @@ int main() {
     static_assert(CAP_AFFINE_2D == 1 && CAP_LOCAL_RECT_CLIP == 2 && CAP_DIRTY_UPLOAD == 4);
     static_assert(SCENE_FLOATS == 14 && SCENE_CLIP == 1);
     assert(validSceneArrays(0, 0, 0, 0));
+    assert(validSceneArrays(2, 4, 28, 2));
     assert(validSceneArrays(1, 2, 28, 2)); // only the counted prefixes are read
     assert(validSceneArrays(MAX_SCENE_LAYERS, MAX_SCENE_LAYERS,
                            MAX_SCENE_LAYERS * SCENE_FLOATS, MAX_SCENE_LAYERS));
@@ -173,5 +174,46 @@ int main() {
         assert(item.x == v[0] + static_cast<float>(i));
         assert(validSceneLayer(item.scene, item.sceneFlags));
     }
+    // Retain the seeded admission/cache coverage accepted with the scene ABI.
+    std::uint32_t seed = 0x9E3779B9u;
+    auto next = [&seed]() noexcept {
+        seed ^= seed << 13;
+        seed ^= seed >> 17;
+        seed ^= seed << 5;
+        return seed;
+    };
+    std::uint64_t checked = 0;
+    for (int trial = 0; trial < 200000; ++trial) {
+        v[0] = static_cast<float>(next() % 2000);
+        v[1] = static_cast<float>(next() % 2000);
+        v[2] = static_cast<float>(next() % 256) / 255.0f;
+        v[3] = static_cast<float>(next() % 2);
+        for (int i = 4; i < 10; ++i) v[i] = static_cast<float>(next() % 20000) / 100.0f - 100.0f;
+        v[10] = static_cast<float>(next() % 100);
+        v[11] = static_cast<float>(next() % 100);
+        v[12] = v[10] + static_cast<float>(next() % 100);
+        v[13] = v[11] + static_cast<float>(next() % 100);
+        int flags = static_cast<int>(next() & 1u);
+        assert(validSceneLayer(v, flags));
+        ++checked;
+        state.accept(v, flags);
+        assert(state.sameMatrix(v));
+        ++checked;
+        assert(state.sameClip(v, flags));
+        ++checked;
+        if (flags == SCENE_CLIP) {
+            const float old = v[10];
+            v[10] += 1;
+            assert(!state.sameClip(v, flags));
+            v[10] = old;
+        } else {
+            v[10] += 1;
+            assert(state.sameClip(v, flags)); // ignored clip lanes
+            v[10] -= 1;
+        }
+        ++checked;
+    }
     std::cout << "MayaCompositionSceneTest PASS: counted ABI, finite bounds, affine order, clip, cache and three-view parity\n";
+    std::cout << "MayaCompositionScene: " << checked
+              << " seeded validation and state assertions passed\n";
 }

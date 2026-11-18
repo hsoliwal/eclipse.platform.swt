@@ -153,6 +153,50 @@ Keep the PR draft until a real Windows Maya build and native pixel/JNI tests
 have executed, and until the overlapping in-flight #503 C++ receiver is
 diff-reconciled.**
 
+## Native affine scene, current packed/dirty convergence candidate
+
+The canonical OS layer remains the original `MayaComposition.cc` owner. Merged
+SWT #512 supplies retained Z/order native commits; #518 supplies an optional
+versioned direct-buffer packet transport that forwards to legacy `_nApply`;
+#513 supplies `_nUploadDirty` and the authoritative
+`Composition.pendingSurfaceCommit` bit, set after a successful
+`IDCompositionSurface::EndDraw` and cleared only after a successful
+`IDCompositionDevice::Commit`. Do not introduce a duplicate dirty flag or
+lose any packed/dirty method or native export.
+
+The opt-in internal `MayaComposition._nApplyScene(long,long[],float[],int[],int)`
+adds 2D affine transforms and local rectangular clips in one counted call:
+14 floats per layer (x, y, opacity, visibility, six matrix coefficients,
+left/top/right/bottom) plus one per-layer flags word; bit 0 enables the clip.
+The existing seven Maya native declarations, and the optional packed and
+dirty declarations, retain their signatures, semantics and fallback. Older
+libraries return an unsupported result through the Java wrapper rather
+than accidentally calling ordinary `_nApply` with unrepresentable visual
+state. Existing SWT widgets never call the new API automatically.
+
+Every frame is admitted fully before COM mutation: count/array-prefix
+checks without overflow; live, owner-matched, nonduplicated handles; finite
+bounded affine and clip coordinates; flags and clipping rectangle validation.
+The original `CompositionFrameDelta` retains visible Z-order and
+`CommittedLayerProperties` retains offset/opacity; an additional small
+per-layer snapshot tracks scene matrix/clip, including failed native
+mutations. A visual property update or `pendingSurfaceCommit` triggers
+at most one native commit. Failed COM operations invalidate both snapshot
+families without clearing pending upload state. A subsequent legacy
+`_nApply`, including the existing packed path, restores an identity
+matrix and no local clip. Disposal and layer retirement invalidate cached
+state without creating or destroying caller-owned SWT images.
+
+The new C++17 `MayaCompositionScene.h` is a platform-independent
+validation/cache leaf with an original deterministic sanitizer test;
+the optional JNI call is native only on DirectComposition for now.
+GTK4/GSK, Core Animation on macOS/iOS, and Android NDK SurfaceControl
+remain separately gated backend candidates, not implemented support.
+The rendering viewport and native controls stay in their original
+SWT owners. Do not advertise complete CSS/HTML compliance on the
+strength of a layer compositor, and do not assume JNI itself is
+the performance bottleneck.
+
 ## Required PR gates
 
 - Source-sealed Synexia recipe (pre/post SHA-256, fixed point, drift refusal),
