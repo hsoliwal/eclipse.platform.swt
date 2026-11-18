@@ -1312,6 +1312,7 @@ public void setBorderRelief (int relief) {
     int mask = OS.WS_EX_CLIENTEDGE | OS.WS_EX_WINDOWEDGE | OS.WS_EX_STATICEDGE;
     int exStyle = OS.GetWindowLong(hwnd, OS.GWL_EXSTYLE);
     int nativeStyle = OS.GetWindowLong(hwnd, OS.GWL_STYLE);
+    int previousBorderWidth = getBorderWidthInPixels();
     if (!nativeBorderReliefSaved) {
         originalNativeBorderEdges = exStyle & mask;
         originalNativeBorderStyle = nativeStyle & OS.WS_BORDER;
@@ -1319,7 +1320,10 @@ public void setBorderRelief (int relief) {
     }
     int selected = switch (relief) {
         case SWT.SHADOW_IN, SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT -> OS.WS_EX_CLIENTEDGE;
-        case SWT.SHADOW_OUT -> OS.WS_EX_WINDOWEDGE;
+        // The native Composite/Canvas DrawEdge owner requires CLIENTEDGE
+        // trim even for a raised edge; all other Controls retain WINDOWEDGE.
+        case SWT.SHADOW_OUT -> (getClass() == Composite.class || getClass() == Canvas.class)
+                ? OS.WS_EX_CLIENTEDGE : OS.WS_EX_WINDOWEDGE;
         case SWT.DEFAULT -> originalNativeBorderEdges;
         default -> 0;
     };
@@ -1336,7 +1340,14 @@ public void setBorderRelief (int relief) {
                 OS.SWP_NOMOVE | OS.SWP_NOSIZE | OS.SWP_NOZORDER
                         | OS.SWP_NOACTIVATE | OS.SWP_FRAMECHANGED);
     }
-    if (!isDisposed()) OS.InvalidateRect(hwnd, null, true);
+    if (!isDisposed()) {
+        // Etched-in and etched-out share the same EXSTYLE bits. A client-only
+        // InvalidateRect would leave the non-client relief pixels stale.
+        OS.RedrawWindow(hwnd, null, 0, OS.RDW_INVALIDATE | OS.RDW_FRAME);
+        if (!isDisposed() && previousBorderWidth != getBorderWidthInPixels()) {
+            requestLayout();
+        }
+    }
 }
 
 /**
