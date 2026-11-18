@@ -1701,6 +1701,7 @@ public final class LayeredViewport extends Canvas {
     /* UI-thread-owned, capacity-reused transport; JNI reads only the active native layer prefix. */
     private long[] nativeFrameHandles = new long[0];
     private float[] nativeFrameProps = new float[0];
+    private int nativeFrameDepth;
 
     private boolean nativeAvailable() {
         if (!nativeTried) {
@@ -1727,10 +1728,14 @@ public final class LayeredViewport extends Canvas {
     private void syncNative() {
         if (!nativeTried) {
             boolean requested = false;
-            for (Layer layer : paintOrder) requested |= layer.nativeRequested;
+            for (int i = 0; i < count && !requested; i++) {
+                requested = stack[i].nativeRequested;
+            }
             if (!requested) return;
         }
-        for (Layer layer : paintOrder) {
+        // A just-appended layer has not yet been published into paintOrder.
+        Layer[] frame = orderSnapshot();
+        for (Layer layer : frame) {
             boolean eligible = nativeEligible(layer);
             if (eligible && layer.nativeLayer == 0) {
                 Rectangle size = layer.image.getBounds();
@@ -1745,7 +1750,7 @@ public final class LayeredViewport extends Canvas {
                 dropNative(layer);
             }
         }
-        applyNative();
+        applyNative(frame);
     }
 
     /* a layer stops being native: its native layer is freed and its pixels return to the store */
@@ -1762,31 +1767,46 @@ public final class LayeredViewport extends Canvas {
     }
 
     /* one native frame: the native layers in Z order with their offset, opacity and visibility */
-    private void applyNative() {
+    private void applyNative(Layer[] frame) {
         if (composition == 0) return;
         int n = 0;
-        for (Layer layer : paintOrder) if (layer.nativeLayer != 0) n++;
-        if (nativeFrameHandles.length < n) {
-            int next = nativeFrameHandles.length >= Integer.MAX_VALUE / 8
-                    ? n : Math.max(4, nativeFrameHandles.length * 2);
-            int capacity = Math.max(n, next);
-            // Publish both arrays together: an allocation failure cannot leave mismatched capacities.
-            long[] handles = new long[capacity];
-            float[] props = new float[Math.multiplyExact(capacity, 4)];
-            nativeFrameHandles = handles;
-            nativeFrameProps = props;
+        for (Layer layer : frame) if (layer.nativeLayer != 0) n++;
+        long[] handles;
+        float[] props;
+        if (nativeFrameDepth == 0) {
+            if (nativeFrameHandles.length < n) {
+                int next = nativeFrameHandles.length >= Integer.MAX_VALUE / 8
+                        ? n : Math.max(4, nativeFrameHandles.length * 2);
+                int capacity = Math.max(n, next);
+                // Stage both arrays: growth failure leaves the previously published pair intact.
+                long[] grownHandles = new long[capacity];
+                float[] grownProps = new float[Math.multiplyExact(capacity, 4)];
+                nativeFrameHandles = grownHandles;
+                nativeFrameProps = grownProps;
+            }
+            handles = nativeFrameHandles;
+            props = nativeFrameProps;
+        } else {
+            // A native backend can synchronously reenter the viewport: isolate the outer frame.
+            handles = new long[n];
+            props = new float[Math.multiplyExact(n, 4)];
         }
-        int i = 0;
-        for (Layer layer : paintOrder) {
-            if (layer.nativeLayer == 0) continue;
-            nativeFrameHandles[i] = layer.nativeLayer;
-            nativeFrameProps[i * 4] = (float) device(layer.x, layerOriginX(layer));
-            nativeFrameProps[i * 4 + 1] = (float) device(layer.y, layerOriginY(layer));
-            nativeFrameProps[i * 4 + 2] = layer.opacity / 255f;
-            nativeFrameProps[i * 4 + 3] = layer.visible && layer.opacity > 0 ? 1 : 0;
-            i++;
+        nativeFrameDepth++;
+        try {
+            int i = 0;
+            for (Layer layer : frame) {
+                if (layer.nativeLayer == 0) continue;
+                handles[i] = layer.nativeLayer;
+                props[i * 4] = (float) device(layer.x, layerOriginX(layer));
+                props[i * 4 + 1] = (float) device(layer.y, layerOriginY(layer));
+                props[i * 4 + 2] = layer.opacity / 255f;
+                props[i * 4 + 3] = layer.visible && layer.opacity > 0 ? 1 : 0;
+                i++;
+            }
+            nativeBackend.apply(composition, handles, props, n);
+        } finally {
+            nativeFrameDepth--;
         }
-        nativeBackend.apply(composition, nativeFrameHandles, nativeFrameProps, n);
     }
 
     /* an image's pixels as premultiplied ARGB, row by row, with its alpha (alpha data, global alpha, transparent pixel) */
