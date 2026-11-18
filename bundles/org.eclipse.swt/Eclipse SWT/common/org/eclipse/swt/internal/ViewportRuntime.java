@@ -1226,6 +1226,147 @@ public final class ViewportRuntime {
 	}
 
 
+
+	/**
+	 * Stateless coordinate policy for flowing, pinned, anchored, parallax and
+	 * sticky viewport layers. It owns neither native widgets nor scene nodes.
+	 * The common path uses no allocations; only extreme 64-bit intermediate
+	 * overflow falls back to exact BigInteger arithmetic.
+	 *
+	 * <p>The policy can be held in primitive columns in a retained graph,
+	 * with no per-row structural allocation. This projection deliberately
+	 * does not replace native TreeColumn headers or SWT input lifecycles.</p>
+	 */
+	public static final class LayerPosition {
+		public static final int FIXED = 0;
+		public static final int SCROLL = 256;
+		public static final int PARALLAX_HALF = 128;
+		public static final int ANCHOR_START = 0;
+		public static final int ANCHOR_CENTER = 1;
+		public static final int ANCHOR_END = 2;
+		public static final int STICK_NONE = 0;
+		public static final int STICK_START = 1;
+		public static final int STICK_END = 2;
+		private static final int MAX_RATE = 4096;
+		private static final java.math.BigInteger LONG_MAX =
+				java.math.BigInteger.valueOf(Long.MAX_VALUE);
+		private static final java.math.BigInteger LONG_MIN =
+				java.math.BigInteger.valueOf(Long.MIN_VALUE);
+
+		private LayerPosition () { }
+
+		/**
+		 * Maps one world coordinate to device-pixel space relative to a viewport.
+		 * A rate of 256 follows the full scroll origin; 0 is fixed; 128 is 50%
+		 * parallax; a negative factor moves oppositely. ANCHOR_END attaches the
+		 * far edge to the viewport edge, useful for a floating minimap/footer.
+		 * STICK_START/END clamps a layer to an edge, but does not decide when
+		 * a section loses ownership of its sticky layer.
+		 *
+		 * @param position layer offset from the anchor
+		 * @param extent nonnegative layer extent along this axis
+		 * @param origin logical scroll origin
+		 * @param viewportExtent viewport device-pixel length
+		 * @param rateQ8 scroll multiplier in 1/256 steps (-4096..4096)
+		 * @param anchor ANCHOR_START, ANCHOR_CENTER or ANCHOR_END
+		 * @param sticky STICK_NONE, STICK_START or STICK_END
+		 * @param inset nonnegative edge inset used only by sticky modes
+		 */
+		public static long coordinate (long position, long extent, long origin,
+				int viewportExtent, int rateQ8, int anchor, int sticky, int inset) {
+			if (extent < 0 || viewportExtent < 0 || rateQ8 < -MAX_RATE
+					|| rateQ8 > MAX_RATE || anchor < ANCHOR_START
+					|| anchor > ANCHOR_END || sticky < STICK_NONE
+					|| sticky > STICK_END || inset < 0) {
+				throw new IllegalArgumentException ("invalid layer positioning policy");
+			}
+			long span = (long) viewportExtent - extent;
+			long anchorOffset = switch (anchor) {
+				case ANCHOR_START -> 0L;
+				case ANCHOR_CENTER -> Math.floorDiv (span, 2L);
+				case ANCHOR_END -> span;
+				default -> throw new AssertionError (anchor);
+			};
+			long mapped;
+			try {
+				long scaled = Math.addExact (
+						Math.multiplyExact (origin / SCROLL, (long) rateQ8),
+						Math.floorDiv ((origin % SCROLL) * (long) rateQ8, SCROLL));
+				mapped = Math.subtractExact (Math.addExact (position, anchorOffset), scaled);
+			} catch (ArithmeticException overflow) {
+				java.math.BigInteger scaled = java.math.BigInteger.valueOf (origin)
+						.multiply (java.math.BigInteger.valueOf (rateQ8)).shiftRight (8);
+				java.math.BigInteger exact = java.math.BigInteger.valueOf (position)
+						.add (java.math.BigInteger.valueOf (anchorOffset)).subtract (scaled);
+				if (exact.compareTo (LONG_MAX) > 0) mapped = Long.MAX_VALUE;
+				else if (exact.compareTo (LONG_MIN) < 0) mapped = Long.MIN_VALUE;
+				else mapped = exact.longValue ();
+			}
+			return switch (sticky) {
+				case STICK_NONE -> mapped;
+				case STICK_START -> Math.max (mapped, (long) inset);
+				case STICK_END -> Math.min (mapped,
+						saturatedSubtract ((long) viewportExtent - extent, inset));
+				default -> throw new AssertionError (sticky);
+			};
+		}
+
+		/** Whether a changed scroll axis can move a layer with these Q8 factors. */
+		public static boolean movesWithScroll (int xRateQ8, int yRateQ8,
+				boolean horizontalChanged, boolean verticalChanged) {
+			if (xRateQ8 < -MAX_RATE || xRateQ8 > MAX_RATE
+					|| yRateQ8 < -MAX_RATE || yRateQ8 > MAX_RATE) {
+				throw new IllegalArgumentException ("scroll multiplier out of range");
+			}
+			return (horizontalChanged && xRateQ8 != 0)
+					|| (verticalChanged && yRateQ8 != 0);
+		}
+
+		/**
+		 * Clips projected half-open bounds to the viewport. Returns visibility,
+		 * writing x, y, width, height into caller-owned four-int scratch.
+		 * No Rectangle/GC/native object is created.
+		 */
+		public static boolean clip (long x, long y, long width, long height,
+				int viewportWidth, int viewportHeight, int [] out) {
+			if (out == null || out.length < 4) {
+				throw new IllegalArgumentException ("need four output ints");
+			}
+			if (width < 0 || height < 0 || viewportWidth < 0 || viewportHeight < 0) {
+				throw new IllegalArgumentException ("invalid layer bounds");
+			}
+			long x0 = Math.max (0L, x);
+			long y0 = Math.max (0L, y);
+			long x1 = Math.min (viewportWidth, saturatedAdd (x, width));
+			long y1 = Math.min (viewportHeight, saturatedAdd (y, height));
+			if (x0 >= x1 || y0 >= y1) {
+				out [0] = out [1] = out [2] = out [3] = 0;
+				return false;
+			}
+			out [0] = (int) x0;
+			out [1] = (int) y0;
+			out [2] = (int) (x1 - x0);
+			out [3] = (int) (y1 - y0);
+			return true;
+		}
+
+		private static long saturatedAdd (long a, long b) {
+			long value = a + b;
+			if (((a ^ value) & (b ^ value)) < 0) {
+				return b > 0 ? Long.MAX_VALUE : Long.MIN_VALUE;
+			}
+			return value;
+		}
+
+		private static long saturatedSubtract (long a, long b) {
+			long value = a - b;
+			if (((a ^ b) & (a ^ value)) < 0) {
+				return a >= 0 ? Long.MAX_VALUE : Long.MIN_VALUE;
+			}
+			return value;
+		}
+	}
+
 	/**
 	 * Primitive, four-plane viewport projection used by native Trees, grids,
 	 * tables and future layered controls. A fixed header remains above the
