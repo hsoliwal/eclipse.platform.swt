@@ -217,7 +217,7 @@ public final class RasterCanvasHandler implements IExternalCanvasHandler {
 		width = buffer.width;
 		height = buffer.height;
 		ImageInfo info = new ImageInfo (width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
-		surface = gpu == null ? Surface.makeRasterDirect (info, bits, width * 4L, FontSmoothing.surfaceProps ()) : gpuTarget (info);
+		surface = gpu == null ? Surface.wrapPixels (info, bits, width * 4L, FontSmoothing.surfaceProps ()) : gpuTarget (info);
 	}
 
 	/* a render target on the thread's GL context that starts from the buffer's pixels, so retained pixels survive a growth */

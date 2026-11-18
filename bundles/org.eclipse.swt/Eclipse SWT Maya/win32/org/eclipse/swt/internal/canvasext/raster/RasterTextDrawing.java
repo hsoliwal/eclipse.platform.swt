@@ -108,7 +108,7 @@ public class RasterTextDrawing {
 
 				}
 				surface.getCanvas().drawString(text, r.x, r.y + ascI, f, fgp);
-				yPos[0] += heightI + leading;
+				yPos[0] = (int) (yPos[0] + (heightI + leading));
 			}
 		});
 
@@ -142,7 +142,7 @@ public class RasterTextDrawing {
 					antiAlias);
 			if (cachedImage != null && !cachedImage.isClosed()) {
 				surface.getCanvas().drawImage(cachedImage, x, yPos[0]);
-				yPos[0] += Math.ceil(cachedImage.getHeight());
+				yPos[0] = (int) (yPos[0] + Math.ceil(cachedImage.getHeight()));
 				continue;
 			}
 			paintManager.performDraw(fgp -> {
@@ -229,7 +229,7 @@ public class RasterTextDrawing {
 					resources.cacheTextImage(text, props, transparent, backgroundColor, foregroundColor, antiAlias,
 							image);
 					surface.getCanvas().drawImage(image, x, yPos[0]);
-					yPos[0] += Math.ceil(image.getHeight());
+					yPos[0] = (int) (yPos[0] + Math.ceil(image.getHeight()));
 
 				}
 
