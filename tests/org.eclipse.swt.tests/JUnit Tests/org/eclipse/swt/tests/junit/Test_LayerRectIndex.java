@@ -107,4 +107,45 @@ public class Test_LayerRectIndex {
 		model.right[0] = -11;
 		assertThrows(IllegalArgumentException.class, () -> index.rebuild(model));
 	}
+
+	@Test
+	public void smallAndRadixStacksPreserveSignedLongAndZOrder() {
+		Random random = new Random(0x534f525454494e59L);
+		for (int size : new int[] {0, 1, 2, 8, 15, 16, 17, 18, 32}) {
+			Rects model = new Rects(size);
+			for (int i = 0; i < size; i++) {
+				long x = switch (random.nextInt(4)) {
+					case 0 -> Long.MIN_VALUE + 256;
+					case 1 -> Long.MAX_VALUE - 256;
+					default -> random.nextInt(12) - 6;
+				};
+				long y = random.nextInt(8) - 4;
+				model.x[i] = x;
+				model.y[i] = y;
+				model.right[i] = x + 5;
+				model.bottom[i] = y + 5;
+				model.active[i] = true;
+			}
+			LayerRectIndex index = new LayerRectIndex();
+			index.rebuild(model);
+			for (int q = 0; q < 512; q++) {
+				long x0 = switch (random.nextInt(4)) {
+					case 0 -> Long.MIN_VALUE + 255;
+					case 1 -> Long.MAX_VALUE - 257;
+					default -> random.nextInt(20) - 10;
+				};
+				long y0 = random.nextInt(16) - 8;
+				int found = index.query(x0, y0, x0 + 7, y0 + 7);
+				int expected = 0;
+				for (int i = 0; i < size; i++) {
+					if (model.x[i] < x0 + 7 && model.right[i] > x0
+							&& model.y[i] < y0 + 7 && model.bottom[i] > y0) {
+						assertTrue(expected < found, "missing size " + size + " source " + i);
+						assertEquals(i, index.resultAt(expected++), "size " + size + " query " + q);
+					}
+				}
+				assertEquals(expected, found, "size " + size + " query " + q);
+			}
+		}
+	}
 }
