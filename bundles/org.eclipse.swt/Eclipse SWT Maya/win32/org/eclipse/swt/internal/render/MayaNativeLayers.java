@@ -24,7 +24,7 @@ public final class MayaNativeLayers implements NativeLayers {
 	// Off by default: the v1 bridge decodes, validates and invokes the old
 	// compositor path, so it is NOT a zero-copy performance optimization.
 	private static final boolean PACKED_FRAME = Boolean.getBoolean("swt.maya.packedFrame");
-	private static volatile boolean packedUnavailable;
+	private static volatile int packetSupport; // 0 unknown, 1 supported, -1 missing
 	private static final ThreadLocal<MayaFramePacket.Encoder> ENCODER =
 			ThreadLocal.withInitial(MayaFramePacket.Encoder::new);
 	private long epoch;
@@ -46,17 +46,18 @@ public final class MayaNativeLayers implements NativeLayers {
 
 	@Override
 	public int apply(long composition, long[] layers, float[] props, int count) {
-		if (PACKED_FRAME && !packedUnavailable && count >= 64 && count <= MayaFramePacket.MAX_LAYERS) {
+		if (PACKED_FRAME && packetSupport >= 0 && count >= 64 && count <= MayaFramePacket.MAX_LAYERS) {
 			try {
-				int version = MayaComposition._nFramePacketVersion();
-				if (version == MayaFramePacket.VERSION) {
+				if (packetSupport == 0) {
+					packetSupport = MayaComposition._nFramePacketVersion() == MayaFramePacket.VERSION ? 1 : -1;
+				}
+				if (packetSupport == 1) {
 					ByteBuffer packet = ENCODER.get().encode(layers, props, count, ++epoch);
 					return MayaComposition._nApplyPacked(composition, packet, packet.remaining());
 				}
-				packedUnavailable = true;
 			} catch (UnsatisfiedLinkError olderMayaBinary) {
 				// Previously packaged seven-symbol Maya DLL/SO: preserve its old ABI.
-				packedUnavailable = true;
+				packetSupport = -1;
 			}
 		}
 		return MayaComposition._nApply(composition, layers, props, count);
