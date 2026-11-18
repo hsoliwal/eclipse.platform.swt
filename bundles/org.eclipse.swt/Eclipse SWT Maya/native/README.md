@@ -28,10 +28,29 @@ with the Skia release that Skija 0.116.3 was made with. The fragment `org.eclips
   - paints built from their (PaintKeys mask, ARGB) keys, and gradients and paths built in place;
   - text blobs looked up beforehand by the caller, in stream order.
   `OpStreamReplay.run` uses it. `-Dswt.m3canvas=false` keeps the command-by-command replay.
-- `sources.txt`: the 43 sources.
-- `maya.def`: the exports, which are `JNI_OnLoad`, `M3Canvas._nReplay` and the 233 Skija JNI functions reached by
+- `cc/swt/MayaComposition.cc`: SWT's own native source (Apache-2.0 OR EPL-2.0). Layers composited by the window system
+  above a window's own pixels (its backing store): on Windows DirectComposition (a D3D11 device, a composition device,
+  a topmost target for the window, one visual per layer with a premultiplied BGRA surface and an effect group for
+  opacity). Z order, offset, opacity and visibility are properties the system composites, so changing them repaints
+  nothing; `MayaComposition._nApply` carries every layer's properties in one call and commits once per frame. Other
+  platforms compile the same exports answering "not supported" (0); Android (ASurfaceControl) and Cocoa/UIKit
+  (CALayer) take their place there. Linked with `d3d11.lib` and `dcomp.lib`.
+- `sources.txt`: 44 original sources; the optional Maya frame-protocol ingress adds the 45th source when rebuilt.
+- `maya.def`: the exports, which are `JNI_OnLoad`, `M3Canvas._nReplay`, the seven `MayaComposition` natives and the 233 Skija JNI functions reached by
   SWT's code and the Maya backend tests (com.synexia `docs/M3-SCALE/runs/20261117-skija-absorb/REACHABLE_NATIVES_WITH_TESTS.txt`, traced by
   `tools/skija_reach.py`). Production code alone reaches 209 of them.
+- `cc/swt/MayaFramePacket.h` and `MayaFramePacket.cc`: independent
+  little-endian bulk frame parser and opt-in JNI ingress. They add two symbols
+  to the existing seven MayaComposition exports; neither old symbol nor
+  native-handle ownership contract is removed. The packed v1 JNI ingress now decodes into an
+  owned native frame and calls the **same native COM transaction** as the
+  legacy `_nApply`, without staging temporary JNI arrays. The encoder and
+  native frame decoder still copy bytes; no FPS or zero-copy speedup is
+  claimed until real hardware qualification. `-Dswt.maya.packedFrame=true` opts in at >=64 layers, with
+  legacy fallback when a previously shipped Maya library lacks the symbols.
+  The new source has sanitizer, Java21 `-Xcheck:jni`, and MSVC compile tests
+  in `.github/workflows/maya-packet-abi.yml`.
+  See `docs/MAYA_PACKED_FRAME_ABI.md` for exact schema and gates.
 - `build_maya.py`: compiles with MSVC (C++17, `/MT`, Skija's own defines) against the prebuilt Skia release
   `m116-d2c211228d` (HumbleUI/SkiaBuild, Windows Release x64). When `--skia` is not given, it downloads the release and
   checks its sha256. Each source folder compiles into its own object folder, emptied first so that no object of an
@@ -54,6 +73,12 @@ To update the fragment, copy `<dir>/maya.dll` to
 `bundles/org.eclipse.swt.maya/native/org/eclipse/swt/internal/maya/windows/x64/`. Then set `maya.version` beside it
 to `0.116.3-` followed by the first 12 hex digits of the new file's sha256. The test
 `Test_org_eclipse_swt_maya_MayaLibrary` checks that the version matches the library.
+
+## Previously checked Win32 packaged baseline (before the frame-packet additions)
+
+The binary hashes, counts and test totals below describe the earlier **235-export** binary,
+not a rebuilt packet-enabled Maya DLL. The new protocol source requires a new
+reproducible full build and native test qualification before the fragment is updated.
 
 ## What was checked (win32 x86_64, Visual Studio 2022 build tools, JDK 21)
 

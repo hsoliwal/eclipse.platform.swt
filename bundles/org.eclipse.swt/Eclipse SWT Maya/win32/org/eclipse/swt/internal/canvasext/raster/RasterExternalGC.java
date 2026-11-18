@@ -35,6 +35,7 @@ import org.eclipse.swt.graphics.ImageContent;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.LineAttributes;
 import org.eclipse.swt.graphics.Path;
+import org.eclipse.swt.graphics.PathData;
 import org.eclipse.swt.graphics.Pattern;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -42,6 +43,9 @@ import org.eclipse.swt.graphics.Region;
 import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.internal.canvasext.IExternalGC;
+import org.eclipse.swt.internal.gdip.Gdip;
+import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.internal.win32.RECT;
 
 import org.eclipse.swt.internal.maya.ClipMode;
 import org.eclipse.swt.internal.maya.EncoderPNG;
@@ -57,6 +61,7 @@ import org.eclipse.swt.internal.maya.PathEffect;
 import org.eclipse.swt.internal.maya.PathFillMode;
 import org.eclipse.swt.internal.maya.SamplingMode;
 import org.eclipse.swt.internal.maya.Shader;
+import org.eclipse.swt.internal.maya.types.IRect;
 import org.eclipse.swt.internal.maya.types.Rect;
 
 public class RasterExternalGC implements IExternalGC {
@@ -87,19 +92,25 @@ public class RasterExternalGC implements IExternalGC {
 	private final Device device;
 
 	private Matrix33 currentTransform = Matrix33.IDENTITY;
+	// A host matrix is deliberately left intact until this GC installs its own.
+	// IRasterCanvas cannot query an inherited matrix; identity is the public GC default.
+	private boolean explicitTransform;
 
 	private SamplingMode interpolationMode = SamplingMode.DEFAULT;
 
 	private boolean isClipSet;
-	private Rectangle currentClipBounds;
+	private boolean savedCanvasState;
+	// An owned SWT snapshot and a device-coordinate RGNDATA snapshot. Never replay
+	// RegionLog here: its operands may refer to caller Regions already disposed.
 	private Region currentClipRegion;
+	private int[] currentClipData;
 
 	private final IRasterCanvasExtension mayaExtension;
 	private final IRasterResources resources;
 	private final int style;
 	private int textAntiAlias = SWT.ON;
 
-	private final int initialSaveCount;
+	private int savedCanvasCount;
 	private final RasterPaintManager paintManager;
 	// M3 (efficiency): the Skia copy of each image drawn since the GC was made or disposed, by zoom and content changes
 	// (ImageContent), so an image drawn many times in one paint (the icon of every row) is copied from its bitmap once.
@@ -119,11 +130,8 @@ public class RasterExternalGC implements IExternalGC {
 		this.mayaExtension = exst;
 		this.resources = mayaExtension.getResources();
 		this.style = style;
-		// Save the initial canvas state so it can be fully restored on dispose()
-		this.initialSaveCount = this.surface.getCanvas().getSaveCount();
 		this.paintManager = new RasterPaintManager(this);
 		this.dpiScalerUtil = new DpiScalerUtil(this.resources.getScaler());
-		this.currentClipBounds = exst.getClientArea();
 
 	}
 
@@ -157,16 +165,17 @@ public class RasterExternalGC implements IExternalGC {
 
 		closeImages();
 		resources.resetBaseColors();
-		// Restore all canvas state changes made during the lifetime of this GC,
-		// including any clipping or transform layers pushed after construction
-		surface.getCanvas().restoreToCount(initialSaveCount);
-		// M3 (GC seam, leaf 3): the GC is reusable after dispose. A drawn plane disposes it after each owner-draw event
-		// and hands the same object to the next one, so the clip and transform bookkeeping goes back to the constructed
-		// state along with the canvas (a stale isClipSet would pop the plane's own frame clip on the next setClipping).
+		// Only this GC's private frame is removed; the host's matrix and clip survive.
+		if (savedCanvasState) {
+			surface.getCanvas().restoreToCount(savedCanvasCount);
+			savedCanvasState = false;
+		}
+		// Drawn planes reuse this GC after each owner-draw event.
+		releaseClipRegion();
 		isClipSet = false;
-		currentClipRegion = null;
-		currentClipBounds = mayaExtension.getClientArea();
+		currentClipData = null;
 		currentTransform = Matrix33.IDENTITY;
+		explicitTransform = false;
 
 	}
 
@@ -655,14 +664,19 @@ public class RasterExternalGC implements IExternalGC {
 
 	@Override
 	public void setTransform(Transform transform) {
-
-		final var sc = getScaler();
-		this.currentTransform = RasterTransformConverter.toMayaMatrix(transform, sc);
-		surface.getCanvas().setMatrix(this.currentTransform);
-		// Save the canvas state after applying the new transform, so subsequent
-		// operations (e.g. clipping) can be stacked and later restored independently
-		surface.getCanvas().save();
-
+		Matrix33 replacement = RasterTransformConverter.toMayaMatrix(transform, getScaler());
+		if (explicitTransform && Arrays.equals(currentTransform.getMat(), replacement.getMat())) {
+			return;
+		}
+		IRasterCanvas canvas = surface.getCanvas();
+		if (!savedCanvasState) {
+			savedCanvasCount = canvas.getSaveCount();
+			canvas.save();
+			savedCanvasState = true;
+		}
+		canvas.setMatrix(replacement);
+		currentTransform = replacement;
+		explicitTransform = true;
 	}
 
 	@Override
@@ -740,10 +754,14 @@ public class RasterExternalGC implements IExternalGC {
 
 	@Override
 	public Rectangle getClipping() {
-		if (currentClipRegion != null) {
-			return currentClipBounds;
+		long handle = clippingInUserCoordinates();
+		try {
+			RECT bounds = new RECT();
+			OS.GetRgnBox(handle, bounds);
+			return new Rectangle(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
+		} finally {
+			OS.DeleteObject(handle);
 		}
-		return mayaExtension.getBounds();
 	}
 
 	@Override
@@ -834,24 +852,17 @@ public class RasterExternalGC implements IExternalGC {
 
 	@Override
 	public void getClipping(Region region) {
-		if (region == null) {
-			SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		}
-		if (region.isDisposed()) {
-			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-		}
-
-		if (this.currentClipBounds != null) {
-
-			region.intersect(this.currentClipBounds);
-			region.add(this.currentClipBounds);
-			return;
-		}
-
-		if (this.currentClipRegion != null) {
-			region.intersect(this.currentClipRegion);
-			region.add(this.currentClipRegion);
-			return;
+		if (region == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+		if (region.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		long handle = clippingInUserCoordinates();
+		try {
+			int[] data = regionData(handle);
+			region.intersect(0, 0, 0, 0);
+			for (int index = data[0] / Integer.BYTES, end = index + data[2] * 4; index < end; index += 4) {
+				region.add(data[index], data[index + 1], data[index + 2] - data[index], data[index + 3] - data[index + 1]);
+			}
+		} finally {
+			OS.DeleteObject(handle);
 		}
 	}
 
@@ -966,80 +977,233 @@ public class RasterExternalGC implements IExternalGC {
 
 	@Override
 	public void setClipping(Path path) {
-		final IRasterCanvas canvas = surface.getCanvas();
-		if (isClipSet) {
-			canvas.restore(); // pop the previously saved clip layer
-			isClipSet = false;
-		}
 		if (path == null) {
+			clearClipping();
 			return;
 		}
-		if (path.isDisposed()) {
-			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-		}
-		try (final org.eclipse.swt.internal.maya.Path mayaPath = RasterPathConverter.convertSWTPathToMayaPath(path,
-				getScaler())) {
-			if (mayaPath == null) {
-				return;
-			}
+		if (path.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		// Prepare all resources before replacing the established clip.
+		int[] data = pathClipData(path);
+		try (org.eclipse.swt.internal.maya.Path mayaPath = RasterPathConverter.convertSWTPathToMayaPath(path, getScaler())) {
 			mayaPath.setFillMode(fillRule == SWT.FILL_EVEN_ODD ? PathFillMode.EVEN_ODD : PathFillMode.WINDING);
-			// Push a new canvas layer so the clip can be undone later with restore()
-			canvas.save();
-			isClipSet = true;
-			canvas.clipPath(mayaPath, ClipMode.INTERSECT, true);
+			replaceClipping(data, null, canvas -> canvas.clipPath(mayaPath, ClipMode.INTERSECT, true));
 		}
 	}
 
 	@Override
 	public void setClipping(Rectangle rect) {
-
-		// Skija uses a canvas state stack; each save() pushes a new layer,
-		// and restore() pops it, removing the clipping region set in that layer.
-		// Since only one clip is tracked at a time, no explicit restore() is needed
-		// here
-		// because the clip will be cleared when the next setClipping call is made or on
-		// dispose.
-		final IRasterCanvas canvas = surface.getCanvas();
-		if (isClipSet) {
-			canvas.restore(); // pop the previously saved clip layer
-			isClipSet = false;
-		}
 		if (rect == null) {
-			currentClipBounds = null;
+			clearClipping();
 			return;
 		}
-		currentClipBounds = new Rectangle(rect.x, rect.y, rect.width, rect.height);
-		// Push a new canvas layer so the clip can be undone later with restore()
-		canvas.save();
-		canvas.clipRect(RectangleConverter.createScaledRectangle(getScaler(), rect));
-		isClipSet = true;
-
+		Rect scaled = RectangleConverter.createScaledRectangle(getScaler(), rect);
+		Rect normalized = new Rect(Math.min(scaled.getLeft(), scaled.getRight()), Math.min(scaled.getTop(), scaled.getBottom()),
+				Math.max(scaled.getLeft(), scaled.getRight()), Math.max(scaled.getTop(), scaled.getBottom()));
+		long handle = checkedRegion(OS.CreateRectRgn((int) normalized.getLeft(), (int) normalized.getTop(),
+				(int) normalized.getRight(), (int) normalized.getBottom()));
+		try {
+			int[] data = transformedRegionData(handle, currentTransform);
+			replaceClipping(data, null, canvas -> canvas.clipRect(normalized));
+		} finally {
+			OS.DeleteObject(handle);
+		}
 	}
 
 	@Override
 	public void setClipping(Region region) {
-
-		// Skija uses a canvas state stack; each save() pushes a new layer,
-		// and restore() pops it, removing the clipping region set in that layer.
-		final IRasterCanvas canvas = surface.getCanvas();
-		if (isClipSet) {
-			canvas.restore(); // pop the previously saved clip layer
-			isClipSet = false;
-		}
-		currentClipBounds = null;
-		currentClipRegion = region;
-
 		if (region == null) {
+			clearClipping();
 			return;
 		}
-
-		final RasterRegionCalculator calc = new RasterRegionCalculator(region, mayaExtension);
-		// Push a new canvas layer so the clip can be undone later with restore()
-		canvas.save();
-		try (calc) {
-			canvas.clipRegion(calc.getMayaRegion());
+		if (region.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		Region owned = new Region(device);
+		boolean installed = false;
+		try {
+			// Region.add snapshots SWT's native operations, including holes. Only
+			// its actual native region is read, never its auxiliary RegionLog.
+			owned.add(region);
+			int[] data = transformedRegionData(Region.win32_getHandle(owned, getScaler().getNativeZoom()), currentTransform);
+			if (currentClipRegion != null && Arrays.equals(currentClipData, data)) {
+				// Equal device geometry needs no new Skia resource or canvas call.
+				releaseClipRegion();
+				currentClipRegion = owned;
+				installed = true;
+				return;
+			}
+			try (org.eclipse.swt.internal.maya.Region clip = new org.eclipse.swt.internal.maya.Region()) {
+				IRect[] rectangles = new IRect[data[2]];
+				for (int i = 0, offset = data[0] / Integer.BYTES; i < rectangles.length; i++, offset += 4) {
+					rectangles[i] = new IRect(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
+				}
+				clip.setRects(rectangles);
+				// Skia clipRegion ignores the CTM, so the snapshot is already mapped
+				// into device coordinates. Negative coordinates need no special clip.
+				replaceClipping(data, owned, canvas -> canvas.clipRegion(clip));
+				installed = true;
+			}
+		} finally {
+			if (!installed) owned.dispose();
 		}
-		isClipSet = true;
+	}
+
+	private void clearClipping() {
+		if (isClipSet) replaceClipping(null, null, canvas -> { });
+	}
+
+	private void replaceClipping(int[] data, Region owned, Consumer<IRasterCanvas> applyClip) {
+		IRasterCanvas canvas = surface.getCanvas();
+		if (savedCanvasState) {
+			canvas.restoreToCount(savedCanvasCount);
+		} else {
+			// Reused GCs can be entered under a different host frame/row clip.
+			savedCanvasCount = canvas.getSaveCount();
+		}
+		canvas.save();
+		savedCanvasState = true;
+		if (explicitTransform) canvas.setMatrix(currentTransform);
+		applyClip.accept(canvas);
+		releaseClipRegion();
+		currentClipRegion = owned;
+		currentClipData = data;
+		isClipSet = data != null;
+	}
+
+	private void releaseClipRegion() {
+		if (currentClipRegion != null) {
+			currentClipRegion.dispose();
+			currentClipRegion = null;
+		}
+	}
+
+	private static long checkedRegion(long handle) {
+		if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+		return handle;
+	}
+
+	private static int[] regionData(long handle) {
+		int bytes = OS.GetRegionData(handle, 0, null);
+		if (bytes == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+		int[] data = new int[bytes / Integer.BYTES];
+		if (OS.GetRegionData(handle, bytes, data) == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+		return data;
+	}
+
+	private static int[] transformedRegionData(long handle, Matrix33 transform) {
+		int[] data = regionData(handle);
+		float[] m = transform.getMat();
+		if (Arrays.equals(m, Matrix33.IDENTITY.getMat())) return data;
+		long mapped = checkedRegion(OS.ExtCreateRegion(new float[] { m[0], m[3], m[1], m[4], m[2], m[5] },
+				data.length * Integer.BYTES, data));
+		try {
+			return regionData(mapped);
+		} finally {
+			OS.DeleteObject(mapped);
+		}
+	}
+
+	private long clippingInUserCoordinates() {
+		// The host's real (possibly nonrectangular) clip and undisclosed matrix
+		// remain on its saved frame. IRasterCanvas cannot query that geometry;
+		// query coordinates track the transforms explicitly installed by this GC.
+		// RasterPlaneCanvasExtension exposes damage bounds in device pixels.
+		Rectangle bounds = mayaExtension.getClientArea();
+		long handle = checkedRegion(OS.CreateRectRgn(bounds.x, bounds.y,
+				bounds.x + bounds.width, bounds.y + bounds.height));
+		try {
+			if (currentClipData != null) {
+				long clip = checkedRegion(OS.ExtCreateRegion(null, currentClipData.length * Integer.BYTES, currentClipData));
+				try {
+					OS.CombineRgn(handle, handle, clip, OS.RGN_AND);
+				} finally {
+					OS.DeleteObject(clip);
+				}
+			}
+			float[] m = currentTransform.getMat();
+			if (getScaler().getNativeZoom() == 100 && Arrays.equals(m, Matrix33.IDENTITY.getMat())) {
+				long result = handle;
+				handle = 0;
+				return result;
+			}
+			double determinant = (double) m[0] * m[4] - (double) m[1] * m[3];
+			if (determinant == 0 || !Double.isFinite(determinant)) {
+				return checkedRegion(OS.CreateRectRgn(0, 0, 0, 0));
+			}
+			double scale = 100.0 / getScaler().getNativeZoom() / determinant;
+			float[] inverse = { (float) (m[4] * scale), (float) (-m[3] * scale),
+					(float) (-m[1] * scale), (float) (m[0] * scale),
+					(float) (((double) m[1] * m[5] - (double) m[4] * m[2]) * scale),
+					(float) (((double) m[3] * m[2] - (double) m[0] * m[5]) * scale) };
+			for (float element : inverse) {
+				if (!Float.isFinite(element)) return checkedRegion(OS.CreateRectRgn(0, 0, 0, 0));
+			}
+			int[] data = regionData(handle);
+			return checkedRegion(OS.ExtCreateRegion(inverse, data.length * Integer.BYTES, data));
+		} finally {
+			if (handle != 0) OS.DeleteObject(handle);
+		}
+	}
+
+	private int[] pathClipData(Path path) {
+		// Query geometry is rasterized once by SWT's existing GDI+ bindings;
+		// rendering continues through Maya's antialiased path clipping.
+		long nativePath = Gdip.GraphicsPath_new(fillRule == SWT.FILL_EVEN_ODD ? Gdip.FillModeAlternate : Gdip.FillModeWinding);
+		if (nativePath == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+		long matrix = 0, region = 0, dc = 0, graphics = 0, handle = 0;
+		try {
+			PathData data = path.getPathData();
+			float[] points = getScaler().autoScaleUp(data.points);
+			float x = 0, y = 0, startX = 0, startY = 0;
+			int index = 0;
+			for (byte type : data.types) {
+				switch (type) {
+				case SWT.PATH_MOVE_TO:
+					Gdip.GraphicsPath_StartFigure(nativePath);
+					x = startX = points[index++]; y = startY = points[index++];
+					break;
+				case SWT.PATH_LINE_TO:
+					Gdip.GraphicsPath_AddLine(nativePath, x, y, points[index], points[index + 1]);
+					x = points[index++]; y = points[index++];
+					break;
+				case SWT.PATH_CUBIC_TO:
+					Gdip.GraphicsPath_AddBezier(nativePath, x, y, points[index], points[index + 1], points[index + 2],
+							points[index + 3], points[index + 4], points[index + 5]);
+					x = points[index + 4]; y = points[index + 5]; index += 6;
+					break;
+				case SWT.PATH_QUAD_TO:
+					float controlX = points[index++], controlY = points[index++];
+					float endX = points[index++], endY = points[index++];
+					Gdip.GraphicsPath_AddBezier(nativePath, x, y, x + (controlX - x) * 2 / 3, y + (controlY - y) * 2 / 3,
+							endX + (controlX - endX) * 2 / 3, endY + (controlY - endY) * 2 / 3, endX, endY);
+					x = endX; y = endY;
+					break;
+				case SWT.PATH_CLOSE:
+					Gdip.GraphicsPath_CloseFigure(nativePath);
+					x = startX; y = startY;
+					break;
+				default:
+					throw new IllegalArgumentException("Unknown SWT path segment"); //$NON-NLS-1$
+				}
+			}
+			float[] m = currentTransform.getMat();
+			matrix = Gdip.Matrix_new(m[0], m[3], m[1], m[4], m[2], m[5]);
+			if (matrix == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+			Gdip.GraphicsPath_Transform(nativePath, matrix);
+			region = Gdip.Region_newGraphicsPath(nativePath);
+			if (region == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+			dc = OS.CreateCompatibleDC(0);
+			if (dc == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+			graphics = Gdip.Graphics_new(dc);
+			if (graphics == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+			handle = checkedRegion(Gdip.Region_GetHRGN(region, graphics));
+			return regionData(handle);
+		} finally {
+			if (handle != 0) OS.DeleteObject(handle);
+			if (graphics != 0) Gdip.Graphics_delete(graphics);
+			if (dc != 0) OS.DeleteDC(dc);
+			if (region != 0) Gdip.Region_delete(region);
+			if (matrix != 0) Gdip.Matrix_delete(matrix);
+			Gdip.GraphicsPath_delete(nativePath);
+		}
 	}
 
 	@Override

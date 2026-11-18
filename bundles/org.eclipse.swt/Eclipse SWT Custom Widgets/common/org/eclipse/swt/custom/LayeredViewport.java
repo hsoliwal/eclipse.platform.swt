@@ -10,15 +10,23 @@
 package org.eclipse.swt.custom;
 
 import java.util.Arrays;
+import java.util.function.Predicate;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.internal.LayerRectIndex;
+import org.eclipse.swt.internal.DPIUtil;
+import org.eclipse.swt.internal.NativeLayers;
 import org.eclipse.swt.internal.ViewportDamageRegion;
+import org.eclipse.swt.internal.ViewportGcProxy;
 import org.eclipse.swt.internal.ViewportRuntime;
+import org.eclipse.swt.internal.render.ImageDataArgb;
+import org.eclipse.swt.internal.render.NativeDirtyRegions;
+import org.eclipse.swt.internal.render.LayerArgbCompositor;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -30,7 +38,8 @@ import org.eclipse.swt.widgets.Event;
  * <p>Layer order is bottom-to-top. Unlike native Control.moveAbove/Below,
  * these layers are logical objects, not child controls. Painting is clipped
  * to the visible XY window; changing a layer only invalidates its projected
- * bounds. The array-backed stack is copied only on structural edits.</p>
+ * bounds. Structural edits invalidate a shared order snapshot, rebuilt only
+ * when painting, picking or reading the layer order requires it.</p>
  *
  * <p>The viewport keeps a backing store: the composite of every layer, in
  * widget pixels, retained between paints, with the region whose pixels no
@@ -102,6 +111,486 @@ public final class LayeredViewport extends Canvas {
         void handle(LayerPointerEvent event);
     }
 
+
+    /** A paint callback for a child of a composited layer group. */
+    @FunctionalInterface
+    public interface GroupPainter {
+        void paint(GC gc, GroupPaintContext context);
+    }
+
+    /** Hit testing for a group child; coordinates are relative to its group. */
+    @FunctionalInterface
+    public interface GroupHitTester {
+        boolean contains(LayerGroup.Child child, long localX, long localY);
+    }
+
+    /**
+     * Painting coordinates for a group child. Children use group-local
+     * world units; a pinned or sticky root is projected consistently with
+     * the parent layer. The callback may only use the borrowed GC in scope.
+     */
+    public record GroupPaintContext(LayerGroup.Child child, Rectangle clip,
+            double groupPixelX, double groupPixelY, double zoom) {
+        public Point toScreen(long localX, long localY) {
+            return new Point(saturatedPixel(groupPixelX + localX * zoom),
+                    saturatedPixel(groupPixelY + localY * zoom));
+        }
+    }
+
+    /**
+     * A single, reorderable Z item containing multiple painters and images.
+     *
+     * <p>The whole group is one ordinary painted {@link Layer}; setting the
+     * root's opacity uses the existing isolated painter composition. Thus
+     * overlapping child shapes receive group opacity once, and moving the
+     * root moves the children without changing their local bounds. Children
+     * are logical handles, never SWT native Controls.</p>
+     *
+     * <p>For predictable composition the first implementation is one level
+     * deep: each child paints normally inside the group's clipping bounds.
+     * Per-child opacity, nested blend groups and arbitrary masks require
+     * separate intermediate surfaces and are not advertised here.</p>
+     */
+    public final class LayerGroup {
+        private Layer root;
+        private Child[] children = new Child[8];
+        private Child[] order = new Child[0];
+        private int size;
+        private long nextChildId = 1;
+        private boolean orderDirty;
+        private boolean spatialDirty = true;
+        private final LayerRectIndex spatialIndex = new LayerRectIndex();
+        private final LayerRectIndex.Bounds spatialSource = new LayerRectIndex.Bounds() {
+            @Override public int size() { return order.length; }
+            @Override public boolean active(int at) {
+                Child c = order[at];
+                return !c.removed && c.visible;
+            }
+            @Override public long left(int at) { return order[at].x; }
+            @Override public long top(int at) { return order[at].y; }
+            @Override public long right(int at) { return order[at].right; }
+            @Override public long bottom(int at) { return order[at].bottom; }
+        };
+        private Child[] paintCandidates = new Child[16];
+        private Child[] hitCandidates = new Child[16];
+        private int activeGroupPaints;
+        private int activeChildHits;
+
+        /** Stable group-local handle; bounds are relative to the root. */
+        public final class Child {
+            private final long id;
+            private String name;
+            private long x, y, right, bottom;
+            private boolean visible = true;
+            private boolean locked;
+            private boolean removed;
+            private Image image;
+            private GroupPainter painter;
+            private GroupHitTester hitTester;
+
+            private Child(long id, String name, long x, long y, long width,
+                    long height, Image image, GroupPainter painter) {
+                this.id = id;
+                this.name = name;
+                this.x = x;
+                this.y = y;
+                right = x + width;
+                bottom = y + height;
+                this.image = image;
+                this.painter = painter;
+            }
+
+            private void checked() {
+                LayerGroup.this.checked();
+                if (removed) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+
+            public long getId() {
+                checked();
+                return id;
+            }
+
+            public String getName() {
+                checked();
+                return name;
+            }
+
+            public void setName(String value) {
+                checked();
+                if (value == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+                name = value;
+            }
+
+            /** Bounds relative to the layer group's origin. */
+            public WorldBounds getLocalBounds() {
+                checked();
+                return new WorldBounds(x, y, right - x, bottom - y);
+            }
+
+            public void setLocalBounds(long localX, long localY, long width, long height) {
+                checked();
+                validateBounds(localX, localY, width, height);
+                if (x == localX && y == localY
+                        && right == localX + width && bottom == localY + height) return;
+                root.redraw();
+                x = localX;
+                y = localY;
+                right = localX + width;
+                bottom = localY + height;
+                spatialDirty = true;
+            }
+
+            public boolean isVisible() {
+                checked();
+                return visible;
+            }
+
+            public void setVisible(boolean value) {
+                checked();
+                if (visible == value) return;
+                visible = value;
+                spatialDirty = true;
+                root.redraw();
+            }
+
+            public boolean isLocked() {
+                checked();
+                return locked;
+            }
+
+            /** Locking excludes picking but does not change painting. */
+            public void setLocked(boolean value) {
+                checked();
+                locked = value;
+            }
+
+            public void setImage(Image value) {
+                checked();
+                if (value != null && value.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+                image = value;
+                painter = null;
+                root.redraw();
+            }
+
+            public void setPainter(GroupPainter value) {
+                checked();
+                painter = value;
+                image = null;
+                root.redraw();
+            }
+
+            public void setHitTester(GroupHitTester value) {
+                checked();
+                hitTester = value;
+            }
+
+            public int getZIndex() {
+                checked();
+                return indexOf(this);
+            }
+
+            /** Group-local Z order; the entire group remains one parent Z item. */
+            public void moveTo(int z) {
+                checked();
+                if (z < 0 || z >= size) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+                int previous = indexOf(this);
+                if (previous == z) return;
+                if (previous < z) {
+                    System.arraycopy(children, previous + 1, children, previous, z - previous);
+                } else {
+                    System.arraycopy(children, z, children, z + 1, previous - z);
+                }
+                children[z] = this;
+                orderDirty = true;
+                root.redraw();
+            }
+
+            /** Does not dispose caller-owned images. */
+            public void remove() {
+                checked();
+                int at = indexOf(this);
+                System.arraycopy(children, at + 1, children, at, size - at - 1);
+                children[--size] = null;
+                removed = true;
+                image = null;
+                painter = null;
+                hitTester = null;
+                orderDirty = true;
+                root.redraw();
+            }
+        }
+
+        private void checked() {
+            LayeredViewport.this.checkWidget();
+            root.checked();
+        }
+
+        /** The group's parent Z-stack item; use it for opacity, clip and pan pinning. */
+        public Layer getLayer() {
+            checked();
+            return root;
+        }
+
+        public Child addPaintChild(String name, long localX, long localY,
+                long width, long height, GroupPainter painter) {
+            checked();
+            if (name == null || painter == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            return appendChild(name, localX, localY, width, height, null, painter);
+        }
+
+        public Child addImageChild(String name, Image image, long localX, long localY) {
+            checked();
+            if (name == null || image == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            if (image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            Rectangle bounds = image.getBounds();
+            return appendChild(name, localX, localY, bounds.width, bounds.height, image, null);
+        }
+
+        private Child appendChild(String name, long localX, long localY,
+                long width, long height, Image image, GroupPainter painter) {
+            validateBounds(localX, localY, width, height);
+            if (nextChildId == Long.MAX_VALUE) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (size == children.length) children = Arrays.copyOf(children, size * 2);
+            Child child = new Child(nextChildId++, name, localX, localY, width, height, image, painter);
+            children[size++] = child;
+            orderDirty = true;
+            root.redraw();
+            return child;
+        }
+
+        /** Bottom-to-top immutable-by-caller snapshot of child handles. */
+        public Child[] getChildren() {
+            checked();
+            return orderSnapshot().clone();
+        }
+
+        private Child[] orderSnapshot() {
+            if (orderDirty) {
+                order = Arrays.copyOf(children, size);
+                orderDirty = false;
+                spatialDirty = true;
+            }
+            return order;
+        }
+
+        private int indexOf(Child child) {
+            for (int i = 0; i < size; i++) if (children[i] == child) return i;
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            return -1;
+        }
+
+        private boolean containsAny(long worldX, long worldY) {
+            return findChild(worldX - root.x, worldY - root.y) != null;
+        }
+
+        /**
+         * Topmost visible unlocked child at a widget pixel, or null.
+         * The parent layer's own bounds, clip, visibility and lock apply.
+         */
+        public Child hitTestChild(int deviceX, int deviceY) {
+            return queryChildHit(deviceX, deviceY, null);
+        }
+
+        /**
+         * Exclusion/acceptance search for editor drop targets and selection handles.
+         * The predicate is invoked front-to-back only for hittable children and may
+         * mutate the scene; a rejected child never changes its Z order or capture.
+         * Unlike a native SWT Control, a group child is only a logical object.
+         */
+        public Child hitTestChild(int deviceX, int deviceY, Predicate<? super Child> accept) {
+            if (accept == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            return queryChildHit(deviceX, deviceY, accept);
+        }
+
+        private Child queryChildHit(int deviceX, int deviceY, Predicate<? super Child> accept) {
+            checked();
+            if (!getClientArea().contains(deviceX, deviceY)) return null;
+            long x = layerX(root, deviceX), y = layerY(root, deviceY);
+            if (!containsHit(root, x, y)) return null;
+            return findChild(x - root.x, y - root.y, accept, deviceX, deviceY);
+        }
+
+        private void ensureChildIndex() {
+            orderSnapshot();
+            if (spatialDirty) {
+                spatialIndex.rebuild(spatialSource);
+                spatialDirty = false;
+            }
+        }
+
+        private Child[] growPaintCandidates(int selected) {
+            if (paintCandidates.length < selected) {
+                paintCandidates = Arrays.copyOf(paintCandidates, selected);
+            }
+            return paintCandidates;
+        }
+
+        private Child[] growHitCandidates(int selected) {
+            if (hitCandidates.length < selected) {
+                hitCandidates = Arrays.copyOf(hitCandidates, selected);
+            }
+            return hitCandidates;
+        }
+
+        private Child findChild(long x, long y) {
+            return findChild(x, y, null, 0, 0);
+        }
+
+        private Child findChild(long x, long y, Predicate<? super Child> accept,
+                int deviceX, int deviceY) {
+            Child[] frame = orderSnapshot();
+            int selected;
+            Child[] candidates;
+            if (frame.length <= 32) {
+                selected = frame.length;
+                candidates = activeChildHits == 0 ? growHitCandidates(selected) : new Child[selected];
+                System.arraycopy(frame, 0, candidates, 0, selected);
+            } else {
+                ensureChildIndex();
+                int found = spatialIndex.query(x, y, saturatedAdd(x, 1), saturatedAdd(y, 1));
+                selected = found;
+                candidates = activeChildHits == 0 ? growHitCandidates(selected) : new Child[selected];
+                for (int k = 0; k < selected; k++) candidates[k] = frame[spatialIndex.resultAt(k)];
+            }
+            activeChildHits++;
+            try {
+                for (int k = selected - 1; k >= 0; k--) {
+                    if (isDisposed()) return null;
+                    Child c = candidates[k];
+                    if (!candidate(c, x, y)) continue;
+                    GroupHitTester tester = c.hitTester;
+                    boolean accepted = tester == null || tester.contains(c, x, y);
+                    if (isDisposed()) return null;
+                    if (accepted && candidate(c, x, y)) {
+                        if (accept == null) return c;
+                        boolean included = accept.test(c);
+                        if (isDisposed()) return null;
+                        // The callback can move its parent, remove the child or
+                        // change a pinned axis. Recheck in current device space.
+                        if (included) {
+                            long currentX = layerX(root, deviceX), currentY = layerY(root, deviceY);
+                            if (containsHit(root, currentX, currentY)
+                                    && candidate(c, currentX - root.x, currentY - root.y)) return c;
+                        }
+                    }
+                }
+                return null;
+            } finally {
+                Arrays.fill(candidates, 0, selected, null);
+                activeChildHits--;
+            }
+        }
+
+        private boolean candidate(Child c, long x, long y) {
+            return !c.removed && c.visible && !c.locked
+                    && x >= c.x && x < c.right && y >= c.y && y < c.bottom;
+        }
+
+        private void paint(GC gc, PaintContext context) {
+            Child[] frame = orderSnapshot();
+            double baseX = device(root.x, context.originX());
+            double baseY = device(root.y, context.originY());
+            Rectangle damage = context.clip();
+            int selected;
+            Child[] candidates;
+            if (frame.length <= 32) {
+                selected = frame.length;
+                candidates = activeGroupPaints == 0 ? growPaintCandidates(selected) : new Child[selected];
+                System.arraycopy(frame, 0, candidates, 0, selected);
+            } else {
+                // The existing primitive spatial index is reused in group-local
+                // coordinates. The padding keeps fractional zoom conservative.
+                ensureChildIndex();
+                double scale = context.zoom();
+                long x0 = saturatedAdd(floorLong((damage.x - baseX) / scale), -1);
+                long y0 = saturatedAdd(floorLong((damage.y - baseY) / scale), -1);
+                long x1 = saturatedAdd(ceilLong(((double) damage.x + damage.width - baseX) / scale), 1);
+                long y1 = saturatedAdd(ceilLong(((double) damage.y + damage.height - baseY) / scale), 1);
+                selected = spatialIndex.query(x0, y0, x1, y1);
+                candidates = activeGroupPaints == 0 ? growPaintCandidates(selected) : new Child[selected];
+                for (int i = 0; i < selected; i++) candidates[i] = frame[spatialIndex.resultAt(i)];
+            }
+            activeGroupPaints++;
+            try {
+                for (int i = 0; i < selected; i++) {
+                    if (isDisposed() || gc.isDisposed()) return;
+                    Child child = candidates[i];
+                    if (child.removed || !child.visible) continue;
+                    Rectangle tile = clipChild(child, baseX, baseY, damage, context.zoom());
+                    if (tile == null) continue;
+                    try (ViewportGcProxy state = ViewportGcProxy.wrap(gc)) {
+                        state.clip(tile);
+                        if (child.image != null) {
+                            if (!child.image.isDisposed()) {
+                                double left = baseX + child.x * context.zoom();
+                                double top = baseY + child.y * context.zoom();
+                                double right = baseX + child.right * context.zoom();
+                                double bottom = baseY + child.bottom * context.zoom();
+                                paintImage(gc, child.image, left, top, right, bottom, tile);
+                            }
+                        } else if (child.painter != null) {
+                            child.painter.paint(gc, new GroupPaintContext(
+                                    child, tile, baseX, baseY, context.zoom()));
+                        }
+                    }
+                }
+            } finally {
+                Arrays.fill(candidates, 0, selected, null);
+                activeGroupPaints--;
+            }
+        }
+
+        private void releaseChildren() {
+            for (int i = 0; i < size; i++) {
+                Child child = children[i];
+                child.removed = true;
+                child.image = null;
+                child.painter = null;
+                child.hitTester = null;
+                children[i] = null;
+            }
+            size = 0;
+            order = new Child[0];
+            spatialIndex.clear();
+            if (activeGroupPaints == 0) Arrays.fill(paintCandidates, null);
+            if (activeChildHits == 0) Arrays.fill(hitCandidates, null);
+            paintCandidates = new Child[0];
+            hitCandidates = new Child[0];
+            spatialDirty = true;
+            orderDirty = false;
+        }
+
+        private Rectangle clipChild(Child child, double baseX, double baseY,
+                Rectangle damage, double scale) {
+            // Child bounds are group-local. Root clipping is already imposed
+            // by the parent compositor; clip the child again, in device pixels.
+            double left = baseX + child.x * scale;
+            double top = baseY + child.y * scale;
+            double right = baseX + child.right * scale;
+            double bottom = baseY + child.bottom * scale;
+            int x0 = (int) Math.max((double) damage.x, Math.floor(left));
+            int y0 = (int) Math.max((double) damage.y, Math.floor(top));
+            int x1 = (int) Math.min((double) damage.x + damage.width, Math.ceil(right));
+            int y1 = (int) Math.min((double) damage.y + damage.height, Math.ceil(bottom));
+            return x1 > x0 && y1 > y0 ? new Rectangle(x0, y0, x1 - x0, y1 - y0) : null;
+        }
+    }
+
+    /**
+     * Creates one painted Z item with its own ordered logical children.
+     * Its opacity is isolated by the existing parent compositor, and its
+     * local children move when the root world bounds are repositioned.
+     */
+    public LayerGroup addLayerGroup(String name, long x, long y, long width, long height) {
+        checkWidget();
+        if (name == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        LayerGroup group = new LayerGroup();
+        group.root = append(name, x, y, width, height, null, group::paint);
+        group.root.childGroup = group;
+        group.root.setHitTester((layer, worldX, worldY) -> group.containsAny(worldX, worldY));
+        return group;
+    }
+
     /**
      * Stable logical handle. Removing the layer invalidates this handle,
      * but it does not dispose an Image supplied by its application.
@@ -116,6 +605,12 @@ public final class LayeredViewport extends Canvas {
         private boolean removed;
         /* a control layer's native child, placed at the layer's bounds; null for painted layers */
         private Control control;
+        /* native: asked to be composited by the window system; nativeLayer is its native handle (0 while painted) */
+        private boolean nativeRequested;
+        private long nativeLayer;
+        /* the blend mode (BLEND_*) and, for a blended image layer, its pixels read once (null until needed) */
+        private int blendMode = BLEND_NORMAL;
+        private ImageData blendSource;
         /* retained: this layer's composite (it and everything below it) kept in its own image, with the pixels of
            that image that no longer match the layers */
         private boolean retained;
@@ -125,7 +620,14 @@ public final class LayeredViewport extends Canvas {
         private LayerPainter painter;
         private LayerHitTester hitTester;
         private LayerPointerListener pointerListener;
+        private LayerGroup childGroup;
         private WorldBounds worldClip;
+        /* SWT.HORIZONTAL and/or SWT.VERTICAL: the axes on which the layer is measured from the view's origin */
+        private int pinned;
+        /* the axis (SWT.HORIZONTAL or SWT.VERTICAL) the layer sticks on, or 0; its inset from the view's leading
+           edge and the world coordinate its trailing edge does not pass */
+        private int sticky;
+        private long stickyInset, stickyLimit;
 
         private Layer(long id, String name, long x, long y,
                 long width, long height, Image image, LayerPainter painter) {
@@ -178,6 +680,7 @@ public final class LayeredViewport extends Canvas {
             worldClip = value;
             spatialDirty = true;
             invalidate(this);
+            syncNative();
         }
 
         public void setWorldBounds(long newX, long newY, long width, long height) {
@@ -193,6 +696,62 @@ public final class LayeredViewport extends Canvas {
             spatialDirty = true;
             invalidate(this);
             placeControl(this);
+            syncNative();
+        }
+
+        /** The axes this layer is pinned on: {@link SWT#NONE}, {@link SWT#HORIZONTAL}, {@link SWT#VERTICAL} or both. */
+        public int getPinned() {
+            checked();
+            return pinned;
+        }
+
+        /**
+         * Pins the layer on {@link SWT#HORIZONTAL}, {@link SWT#VERTICAL}, both, or neither ({@link SWT#NONE}): on a
+         * pinned axis its world coordinates are measured from the view's origin, so a pan along that axis leaves it
+         * where it is while the other layers move under and over it. A tree's or a table's header pinned vertically
+         * stays on top while the rows scroll beneath it, and still follows a horizontal pan; frozen columns or a row
+         * header are pinned horizontally; a corner cell, a legend, a minimap or a HUD on both. Zoom still applies.
+         * Its bounds, clip, painter context, hit tester and pointer events all use these view-relative coordinates.
+         */
+        public void setPinned(int axes) {
+            checked();
+            int value = axes & (SWT.HORIZONTAL | SWT.VERTICAL);
+            if (axes != value) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (pinned == value) return;
+            invalidate(this);
+            pinned = value;
+            spatialDirty = true;
+            invalidate(this);
+            placeControl(this);
+            syncNative();
+        }
+
+        /** The axis this layer is sticky on ({@link SWT#HORIZONTAL} or {@link SWT#VERTICAL}), or {@link SWT#NONE}. */
+        public int getSticky() {
+            checked();
+            return sticky;
+        }
+
+        /**
+         * Makes the layer sticky on one axis, like CSS {@code position: sticky}: it moves with the world until its
+         * leading edge comes within {@code inset} world units of the view's leading edge, stays there while the view
+         * pans on, and moves with the world again once its trailing edge reaches {@code limit}, the end of its
+         * group. A tree's or a list's group header sticks under the column header while its group scrolls by and is
+         * then pushed away by the next group's header. {@link SWT#NONE} ends it. Like a pinned layer, its bounds,
+         * clip, painter context, hit tester and pointer events keep its own world coordinates; a pinned axis wins.
+         */
+        public void setSticky(int axis, long inset, long limit) {
+            checked();
+            if (axis != SWT.NONE && axis != SWT.HORIZONTAL && axis != SWT.VERTICAL) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (sticky == axis && stickyInset == inset && stickyLimit == limit) return;
+            invalidate(this);
+            sticky = axis;
+            stickyInset = inset;
+            stickyLimit = limit;
+            spatialDirty = true;
+            invalidate(this);
+            placeControl(this);
+            syncNative();
         }
 
         public int getOpacity() {
@@ -211,6 +770,7 @@ public final class LayeredViewport extends Canvas {
             if (opacity == 0 && capturedLayer == this) clearPointerCapture();
             invalidate(this);
             placeControl(this);
+            syncNative();
         }
 
         public boolean isVisible() {
@@ -227,6 +787,7 @@ public final class LayeredViewport extends Canvas {
             if (!visible && capturedLayer == this) clearPointerCapture();
             invalidate(this);
             placeControl(this);
+            syncNative();
         }
 
         /**
@@ -248,6 +809,7 @@ public final class LayeredViewport extends Canvas {
             checked();
             if (retained == value) return;
             retained = value;
+            retainedCount += value ? 1 : -1;
             releaseComposite();
         }
 
@@ -258,13 +820,157 @@ public final class LayeredViewport extends Canvas {
          */
         public void redraw() {
             checked();
+            blendSource = null; // the image's pixels may have changed
+            if (nativeLayer != 0) {
+                // a native layer's pixels are the window system's: send them again
+                dropNative(this);
+                syncNative();
+                return;
+            }
             invalidate(this);
         }
 
+        /**
+         * Updates only an image-local dirty rectangle on a compatible native
+         * DirectComposition layer. An older maya DLL, missing native backend or
+         * failed native update falls back to the original full redraw. Image
+         * ownership, the layer ID, paint GC and public Canvas contract do not
+         * change. The rectangle uses image pixels, not world coordinates.
+         */
+        public void redraw(Rectangle dirtyPixels) {
+            checked();
+            if (dirtyPixels == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            if (image == null || image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            Rectangle size = image.getBounds();
+            int x = dirtyPixels.x, y = dirtyPixels.y;
+            int width = dirtyPixels.width, height = dirtyPixels.height;
+            if (x < 0 || y < 0 || width <= 0 || height <= 0
+                    || x >= size.width || y >= size.height
+                    || width > size.width - x || height > size.height - y) {
+                SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            blendSource = null;
+            if (nativeLayer != 0 && nativeBackend != null) {
+                ImageDataArgb rows = new ImageDataArgb(image.getImageData());
+                long pixelCount = (long) width * height;
+                if (pixelCount > Integer.MAX_VALUE) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+                int[] packed = new int[(int) pixelCount];
+                for (int row = 0; row < height; row++) {
+                    rows.premultipliedSpan(y + row, x, width, packed, row * width);
+                }
+                if (nativeBackend.uploadDirty(nativeLayer, packed,
+                        new int[] { x, y, width, height }, 1) == 0) {
+                    if (applyNative()) return; // dirty-only frames also require a successful Commit
+                }
+            }
+            redraw();
+        }
+
+
+        /**
+         * Submits several image-local dirty rectangles as a single JNI call.
+         * All rectangles and the aggregate packed payload are checked on the
+         * CPU before converting any pixels. Regions can overlap; later patches
+         * cover earlier ones. The existing software/full-image path remains
+         * the fallback when a native backend or its optional export is absent.
+         * No new SWT controls or native handles are created for individual
+         * rectangles. An empty array is a no-op.
+         *
+         * @param dirtyRegions changed rectangles in borrowed image pixel coordinates
+         */
+        public void redrawRegions(Rectangle... dirtyRegions) {
+            checked();
+            if (dirtyRegions == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            if (image == null || image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            int count = dirtyRegions.length;
+            if (count == 0) return;
+            if (count > NativeDirtyRegions.MAX_RECTS) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            int[] regions = new int[count * 4];
+            for (int i = 0; i < count; i++) {
+                Rectangle region = dirtyRegions[i];
+                if (region == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+                int at = i * 4;
+                regions[at] = region.x;
+                regions[at + 1] = region.y;
+                regions[at + 2] = region.width;
+                regions[at + 3] = region.height;
+            }
+            Rectangle size = image.getBounds();
+            int pixels;
+            try {
+                pixels = NativeDirtyRegions.packedPixelCount(size.width, size.height, regions, count);
+            } catch (IllegalArgumentException invalid) {
+                SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+                return;
+            }
+            blendSource = null;
+            if (nativeLayer != 0 && nativeBackend != null) {
+                ImageDataArgb rows = new ImageDataArgb(image.getImageData());
+                int[] packed = new int[pixels];
+                int offset = 0;
+                for (int i = 0; i < count; i++) {
+                    int at = i * 4;
+                    int x = regions[at], y = regions[at + 1];
+                    int width = regions[at + 2], height = regions[at + 3];
+                    for (int row = 0; row < height; row++) {
+                        rows.premultipliedSpan(y + row, x, width, packed, offset);
+                        offset += width;
+                    }
+                }
+                if (nativeBackend.uploadDirty(nativeLayer, packed, regions, count) == 0 && applyNative()) return;
+            }
+            redraw();
+        }
+
         private void releaseComposite() {
-            if (composite != null) composite.dispose();
+            if (composite != null) retireComposite(composite);
             composite = null;
             stale = null;
+        }
+
+        /**
+         * Asks for this image layer to be composited by the window system (a DirectComposition visual on Windows,
+         * through the optional maya backend): its pan, opacity, visibility and Z order then change without
+         * repainting anything, and it shows above every painted layer, like a control layer. It is native only
+         * while its image is drawn one to one (zoom 1, world size the image's size, no world clip, 100% device
+         * zoom) and a backend exists; otherwise, and when that stops being true, it is painted as before.
+         *
+         * @return whether the layer is native now
+         */
+        public boolean setNative(boolean value) {
+            checked();
+            nativeRequested = value;
+            syncNative();
+            return nativeLayer != 0;
+        }
+
+        /** Whether the window system composites this layer now (see {@link #setNative(boolean)}). */
+        public boolean isNative() {
+            checked();
+            return nativeLayer != 0;
+        }
+
+        /**
+         * The layer's blend mode with what is below it: {@link LayeredViewport#BLEND_NORMAL} or one of the W3C Compositing and
+         * Blending separable modes (multiply, screen, overlay, darken, lighten, color dodge, color burn, hard light,
+         * soft light, difference, exclusion), as in GIMP, Inkscape and Photoshop. Image layers blend; a painter layer
+         * draws normally whatever its mode. A blended layer is never native: the window system cannot read what is
+         * below it.
+         */
+        public void setBlendMode(int mode) {
+            checked();
+            if (mode < BLEND_NORMAL || mode > BLEND_EXCLUSION) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (blendMode == mode) return;
+            invalidate(this);
+            blendMode = mode;
+            invalidate(this);
+            syncNative();
+        }
+
+        /** The layer's blend mode, one of the {@code BLEND_} constants of {@link LayeredViewport}. */
+        public int getBlendMode() {
+            checked();
+            return blendMode;
         }
 
         public boolean isLocked() {
@@ -286,7 +992,10 @@ public final class LayeredViewport extends Canvas {
             invalidate(this);
             image = value;
             painter = null;
+            blendSource = null;
             invalidate(this);
+            dropNative(this); // new pixels
+            syncNative();
         }
 
         public void setPainter(LayerPainter value) {
@@ -295,6 +1004,7 @@ public final class LayeredViewport extends Canvas {
             painter = value;
             image = null;
             invalidate(this);
+            syncNative();
         }
 
         public void setHitTester(LayerHitTester value) {
@@ -342,6 +1052,7 @@ public final class LayeredViewport extends Canvas {
             publishOrder();
             invalidate(this);
             orderControls();
+            syncNative();
         }
 
         public void remove() {
@@ -353,29 +1064,50 @@ public final class LayeredViewport extends Canvas {
             System.arraycopy(stack, index + 1, stack, index, count - index - 1);
             stack[--count] = null;
             removed = true;
+            if (retained) retainedCount--;
             releaseComposite();
+            dropNative(this);
             control = null; // the control stays the application's, where it was
             image = null;
             painter = null;
             hitTester = null;
             pointerListener = null;
             worldClip = null;
+            if (childGroup != null) {
+                childGroup.releaseChildren();
+                childGroup = null;
+            }
             publishOrder();
         }
     }
 
+    /**
+     * Blend modes of a layer ({@link Layer#setBlendMode(int)}): normal, then the separable modes of W3C Compositing
+     * and Blending Level 1 (the layer modes of GIMP, Inkscape and Photoshop).
+     */
+    public static final int BLEND_NORMAL = 0, BLEND_MULTIPLY = 1, BLEND_SCREEN = 2, BLEND_OVERLAY = 3,
+            BLEND_DARKEN = 4, BLEND_LIGHTEN = 5, BLEND_COLOR_DODGE = 6, BLEND_COLOR_BURN = 7,
+            BLEND_HARD_LIGHT = 8, BLEND_SOFT_LIGHT = 9, BLEND_DIFFERENCE = 10, BLEND_EXCLUSION = 11;
+
+    /* the compositor's mode of each BLEND_ constant (the same order) */
+    private static final LayerArgbCompositor.Mode[] BLEND_MODES = LayerArgbCompositor.Mode.values();
+
     private static final double MIN_ZOOM = 1.0 / 4096.0;
     private static final double MAX_ZOOM = 4096.0;
+    /* Native raster blending amortizes JNI over several rows without retaining a full tile of int arrays. */
+    private static final int BLEND_BATCH_PIXELS = 16_384;
 
     private final ViewportRuntime viewportRuntime = new ViewportRuntime();
     private Layer[] stack = new Layer[8];
     private Layer[] paintOrder = new Layer[0];
+    private boolean orderDirty;
     private final LayerRectIndex spatialIndex = new LayerRectIndex();
     private final LayerRectIndex.Bounds spatialSource = new LayerRectIndex.Bounds() {
         @Override public int size() { return paintOrder.length; }
         @Override public boolean active(int at) {
             Layer layer = paintOrder[at];
-            if (layer.removed || !layer.visible || layer.opacity == 0) return false;
+            // pinned and sticky layers are found through pinnedZ: a pan moves them in world space
+            if (layer.removed || !layer.visible || layer.opacity == 0 || viewRelative(layer)) return false;
             WorldBounds clip = layer.worldClip;
             return clip == null || (Math.max(layer.x, clip.x()) <
                     Math.min(layer.right, clip.x() + clip.width()) &&
@@ -404,11 +1136,18 @@ public final class LayeredViewport extends Canvas {
     private final ViewportDamageRegion pendingDamage = new ViewportDamageRegion();
     private Layer[] paintCandidates = new Layer[16];
     private Layer[] hitCandidates = new Layer[16];
+    /* the Z indices, ascending, of the shown pinned and sticky layers, collected with the spatial index */
+    private int[] pinnedZ = new int[4];
+    private int pinnedCount;
     private boolean spatialDirty = true;
     private boolean fullDamage;
     private int batchDepth;
     private int activePaintFrames;
     private int activeHitQueries;
+    private int activeBackingPaints;
+    private Image[] retiredComposites = new Image[4];
+    private int retiredCompositeCount;
+    private int retainedCount;
     private int pointerListenerCount;
     private int capturedButtons;
     private Layer capturedLayer;
@@ -444,12 +1183,18 @@ public final class LayeredViewport extends Canvas {
         addListener(SWT.MouseExit, event -> clearPointerCapture());
         addListener(SWT.FocusOut, event -> clearPointerCapture());
         addListener(SWT.Dispose, event -> {
-            if (backBuffer != null) backBuffer.dispose();
-            if (scratch != null) scratch.dispose();
-            backBuffer = scratch = null;
+            if (composition != 0) nativeBackend.dispose(composition);
+            composition = 0;
+            for (int i = 0; i < count; i++) stack[i].nativeLayer = 0;
+            // A painter may dispose the widget while one of these images has a
+            // selected GC. The active paint closes that GC before the images.
+            if (activeBackingPaints == 0) disposeBackingImages();
             for (int i = 0; i < count; i++) {
                 stack[i].removed = true;
+                if (stack[i].childGroup != null) stack[i].childGroup.releaseChildren();
+                stack[i].childGroup = null;
                 stack[i].releaseComposite();
+                stack[i].control = null;
                 stack[i].image = null;
                 stack[i].painter = null;
                 stack[i].hitTester = null;
@@ -457,13 +1202,17 @@ public final class LayeredViewport extends Canvas {
                 stack[i].worldClip = null;
                 stack[i] = null;
             }
-            count = 0;
+            count = retainedCount = 0;
             pointerListenerCount = 0;
             clearPointerCapture();
             paintOrder = new Layer[0];
+            orderDirty = false;
             spatialIndex.clear();
-            Arrays.fill(paintCandidates, null);
-            Arrays.fill(hitCandidates, null);
+            pinnedCount = 0;
+            // Active callbacks keep their own local array reference and clear
+            // it in finally; do not erase a snapshot still being traversed.
+            if (activePaintFrames == 0) Arrays.fill(paintCandidates, null);
+            if (activeHitQueries == 0) Arrays.fill(hitCandidates, null);
             paintCandidates = new Layer[0];
             hitCandidates = new Layer[0];
             pendingDamage.clear();
@@ -527,7 +1276,7 @@ public final class LayeredViewport extends Canvas {
     /** Bottom-to-top snapshot; changing this array cannot reorder the view. */
     public Layer[] getLayers() {
         checkWidget();
-        return paintOrder.clone();
+        return orderSnapshot().clone();
     }
 
     public long getOriginX() {
@@ -550,6 +1299,7 @@ public final class LayeredViewport extends Canvas {
         viewportRuntime.scrollTo((double) x, (double) y);
         if (!shiftBackBuffer(previousX, previousY)) redraw();
         placeControls();
+        syncNative();
     }
 
     public double getZoom() {
@@ -567,6 +1317,7 @@ public final class LayeredViewport extends Canvas {
         zoom = value;
         redraw();
         placeControls();
+        syncNative();
     }
 
     public Point toScreen(long worldX, long worldY) {
@@ -584,7 +1335,20 @@ public final class LayeredViewport extends Canvas {
     /** Topmost visible, unlocked layer, using a narrow two-axis spatial query. */
     public Layer hitTest(int deviceX, int deviceY) {
         checkWidget();
-        return queryHit(deviceX, deviceY, worldX(deviceX), worldY(deviceY), false);
+        return queryHit(deviceX, deviceY, false);
+    }
+
+    /**
+     * Topmost hittable layer accepted by {@code accept}, or null. As in Draw2D's
+     * ExclusionSearch, callers can omit a dragged/selected layer and target the
+     * layers beneath it without changing scene order or native pointer capture.
+     * Filtering occurs after the layer's own hit tester; a callback may reenter
+     * or mutate the scene, and candidates are rechecked before returning.
+     */
+    public Layer hitTest(int deviceX, int deviceY, Predicate<? super Layer> accept) {
+        checkWidget();
+        if (accept == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        return queryHit(deviceX, deviceY, false, accept);
     }
 
     private long worldX(int deviceX) {
@@ -595,35 +1359,68 @@ public final class LayeredViewport extends Canvas {
         return saturatedAdd(originY, floorLong(deviceY / zoom));
     }
 
-    private Layer queryHit(int deviceX, int deviceY, long worldX, long worldY,
-            boolean withPointerListener) {
+    private Layer queryHit(int deviceX, int deviceY, boolean withPointerListener) {
+        return queryHit(deviceX, deviceY, withPointerListener, null);
+    }
+
+    private Layer queryHit(int deviceX, int deviceY, boolean withPointerListener,
+            Predicate<? super Layer> accept) {
         if (!getClientArea().contains(deviceX, deviceY)) return null;
         ensureSpatialIndex();
-        int candidates = spatialIndex.query(worldX, worldY,
+        long worldX = worldX(deviceX), worldY = worldY(deviceY);
+        int found = spatialIndex.query(worldX, worldY,
                 saturatedAdd(worldX, 1), saturatedAdd(worldY, 1));
+        int candidates = found + pinnedCount;
         // Hit testers may re-enter the scene; capture handles before callbacks.
         Layer[] hits = activeHitQueries == 0
                 ? growHitCandidates(candidates) : new Layer[candidates];
+        int normal = 0, pinned = 0;
         for (int i = 0; i < candidates; i++) {
-            hits[i] = paintOrder[spatialIndex.resultAt(i)];
+            int a = normal < found ? spatialIndex.resultAt(normal) : Integer.MAX_VALUE;
+            int b = pinned < pinnedCount ? pinnedZ[pinned] : Integer.MAX_VALUE;
+            if (a < b) normal++;
+            else pinned++;
+            hits[i] = paintOrder[Math.min(a, b)];
         }
         activeHitQueries++;
         try {
             for (int i = candidates - 1; i >= 0; i--) {
+                if (isDisposed()) return null;
                 Layer layer = hits[i];
-                if (layer.removed || layer.locked || !layer.visible || layer.opacity == 0
+                worldX = layerX(layer, deviceX);
+                worldY = layerY(layer, deviceY);
+                if (!containsHit(layer, worldX, worldY)
                         || (withPointerListener && layer.pointerListener == null)) continue;
-                if ((layer.hitTester == null
-                        || layer.hitTester.contains(layer, worldX, worldY))
-                        && !layer.removed && !layer.locked && layer.visible
-                        && layer.opacity != 0
-                        && (!withPointerListener || layer.pointerListener != null)) return layer;
+                LayerHitTester tester = layer.hitTester;
+                boolean accepted = tester == null || tester.contains(layer, worldX, worldY);
+                if (isDisposed()) return null;
+                // Callbacks can remove, move, hide or lock their own target,
+                // or another candidate captured by this query.
+                if (accepted && containsHit(layer, layerX(layer, deviceX), layerY(layer, deviceY))
+                        && (!withPointerListener || layer.pointerListener != null)) {
+                    if (accept == null) return layer;
+                    boolean included = accept.test(layer);
+                    if (isDisposed()) return null;
+                    // User filtering may change visibility, world origin, native
+                    // pinning or this very layer. Never return stale geometry.
+                    if (included && containsHit(layer, layerX(layer, deviceX), layerY(layer, deviceY))
+                            && (!withPointerListener || layer.pointerListener != null)) return layer;
+                }
             }
             return null;
         } finally {
             Arrays.fill(hits, 0, candidates, null);
             activeHitQueries--;
         }
+    }
+
+    private static boolean containsHit(Layer layer, long worldX, long worldY) {
+        if (layer.removed || layer.locked || !layer.visible || layer.opacity == 0) return false;
+        if (worldX < layer.x || worldX >= layer.right
+                || worldY < layer.y || worldY >= layer.bottom) return false;
+        WorldBounds clip = layer.worldClip;
+        return clip == null || (worldX >= clip.x() && worldX < clip.x() + clip.width()
+                && worldY >= clip.y() && worldY < clip.y() + clip.height());
     }
 
     /** Current logical pointer capture, or null. The layer is never a native Control. */
@@ -650,10 +1447,10 @@ public final class LayeredViewport extends Canvas {
     private void dispatchPointer(Event event) {
         if (pointerListenerCount == 0 && capturedLayer == null) return;
         boolean byCapture = capturedLayer != null && event.type != SWT.MouseWheel;
-        long worldX = worldX(event.x), worldY = worldY(event.y);
         Layer layer = byCapture ? capturedLayer
-                : queryHit(event.x, event.y, worldX, worldY, true);
+                : queryHit(event.x, event.y, true);
         if (layer == null || layer.removed) return;
+        long worldX = layerX(layer, event.x), worldY = layerY(layer, event.y);
         LayerPointerListener listener = layer.pointerListener;
         if (listener == null) {
             if (byCapture) clearPointerCapture();
@@ -687,67 +1484,82 @@ public final class LayeredViewport extends Canvas {
      * the paint event's GC
      */
     private void paintLayers(GC gc) {
+        if (isDisposed() || gc.isDisposed()) return;
         Rectangle area = getClientArea();
+        if (activeBackingPaints != 0) {
+            // A callback can dispatch another paint. An Image supports only
+            // one selected GC, so defer that paint until this one releases it.
+            markDirty(area);
+            super.redraw();
+            return;
+        }
         Rectangle damage = intersect(gc.getClipping(), area);
         if (damage == null) return;
-        ensureBackBuffer(area);
-        int n = dirty.rectCount();
-        int required = Math.multiplyExact(n, 4);
-        int[] stale = staleDepth == 0 ? growStaleWork(required) : new int[required];
-        staleDepth++;
+        activeBackingPaints++;
         try {
-            int staleCount = 0;
-            for (int i = 0; i < n; i++) {
-                long x0 = Math.max((long) dirty.x(i), damage.x);
-                long y0 = Math.max((long) dirty.y(i), damage.y);
-                long x1 = Math.min((long) dirty.x(i) + dirty.width(i),
-                        (long) damage.x + damage.width);
-                long y1 = Math.min((long) dirty.y(i) + dirty.height(i),
-                        (long) damage.y + damage.height);
-                if (x1 <= x0 || y1 <= y0) continue;
-                int offset = staleCount++ * 4;
-                stale[offset] = (int) x0;
-                stale[offset + 1] = (int) y0;
-                stale[offset + 2] = (int) (x1 - x0);
-                stale[offset + 3] = (int) (y1 - y0);
-            }
-            if (staleCount > 0) {
-                // Consume the captured damage BEFORE running user painters.
-                // New invalidations triggered by those callbacks must survive
-                // and be recomposed in a later SWT paint event.
-                dirty.remove(damage.x, damage.y, damage.width, damage.height);
-                GC[] back = { null };
-                boolean complete = false;
-                try {
-                    back[0] = new GC(backBuffer);
-                    for (int i = 0; i < staleCount; i++) {
-                        int offset = i * 4;
-                        compose(back, new Rectangle(stale[offset], stale[offset + 1],
-                                stale[offset + 2], stale[offset + 3]));
-                    }
-                    complete = true;
-                } finally {
+            ensureBackBuffer(area);
+            int n = dirty.rectCount();
+            int required = Math.multiplyExact(n, 4);
+            int[] stale = staleDepth == 0 ? growStaleWork(required) : new int[required];
+            staleDepth++;
+            try {
+                int staleCount = 0;
+                for (int i = 0; i < n; i++) {
+                    long x0 = Math.max((long) dirty.x(i), damage.x);
+                    long y0 = Math.max((long) dirty.y(i), damage.y);
+                    long x1 = Math.min((long) dirty.x(i) + dirty.width(i),
+                            (long) damage.x + damage.width);
+                    long y1 = Math.min((long) dirty.y(i) + dirty.height(i),
+                            (long) damage.y + damage.height);
+                    if (x1 <= x0 || y1 <= y0) continue;
+                    int offset = staleCount++ * 4;
+                    stale[offset] = (int) x0;
+                    stale[offset + 1] = (int) y0;
+                    stale[offset + 2] = (int) (x1 - x0);
+                    stale[offset + 3] = (int) (y1 - y0);
+                }
+                if (staleCount > 0) {
+                    // Consume captured damage before callbacks; their new
+                    // invalidations belong to the next SWT paint event.
+                    dirty.remove(damage.x, damage.y, damage.width, damage.height);
+                    GC[] back = { null };
+                    boolean complete = false;
                     try {
-                        if (!complete && !isDisposed()) {
-                            // Rendering failed: do not drop any captured
-                            // damage just because it was consumed up front.
-                            for (int i = 0; i < staleCount; i++) {
-                                int offset = i * 4;
-                                dirty.add(stale[offset], stale[offset + 1],
-                                        stale[offset + 2], stale[offset + 3]);
-                            }
+                        back[0] = new GC(backBuffer);
+                        for (int i = 0; i < staleCount; i++) {
+                            int offset = i * 4;
+                            compose(back, new Rectangle(stale[offset], stale[offset + 1],
+                                    stale[offset + 2], stale[offset + 3]));
+                            if (isDisposed() || back[0].isDisposed()) return;
                         }
+                        complete = true;
                     } finally {
-                        if (back[0] != null && !back[0].isDisposed()) back[0].dispose();
+                        try {
+                            if (!complete && !isDisposed()) {
+                                for (int i = 0; i < staleCount; i++) {
+                                    int offset = i * 4;
+                                    dirty.add(stale[offset], stale[offset + 1],
+                                            stale[offset + 2], stale[offset + 3]);
+                                }
+                            }
+                        } finally {
+                            if (back[0] != null && !back[0].isDisposed()) back[0].dispose();
+                        }
                     }
                 }
-            }
-            if (!isDisposed()) {
-                gc.drawImage(backBuffer, damage.x, damage.y, damage.width, damage.height,
-                        damage.x, damage.y, damage.width, damage.height);
+                if (!isDisposed() && !gc.isDisposed()) {
+                    gc.drawImage(backBuffer, damage.x, damage.y, damage.width, damage.height,
+                            damage.x, damage.y, damage.width, damage.height);
+                }
+            } finally {
+                staleDepth--;
             }
         } finally {
-            staleDepth--;
+            activeBackingPaints--;
+            if (activeBackingPaints == 0) {
+                disposeRetiredComposites();
+                if (isDisposed()) disposeBackingImages();
+            }
         }
     }
 
@@ -775,35 +1587,41 @@ public final class LayeredViewport extends Canvas {
      * the layers above it are painted
      */
     private void compose(GC[] back, Rectangle damage) {
-        Layer[] frame = paintOrder;
-        int below = -1;
+        Layer[] frame = orderSnapshot();
+        Image below = null;
+        int from = 0;
         for (int z = 0; z < frame.length; z++) {
             Layer layer = frame[z];
             if (!layer.retained || layer.removed) continue;
-            refresh(layer, below, z, damage);
-            below = z;
+            below = refresh(layer, below, from, z + 1, damage, frame);
+            if (isDisposed() || back[0].isDisposed()) return;
+            from = z + 1;
         }
         back[0].setClipping(damage);
         start(back[0], below, damage);
-        composeLayers(back, backBuffer, damage, below + 1, frame.length);
-        back[0].setClipping((Rectangle) null);
+        composeLayers(back, backBuffer, damage, from, frame.length, frame);
+        if (!isDisposed() && !back[0].isDisposed()) back[0].setClipping((Rectangle) null);
     }
 
-    /* recomposes the stale pixels of retained layer {@code z} inside {@code damage}, from the composite below it */
-    private void refresh(Layer layer, int below, int z, Rectangle damage) {
+    /* recomposes a retained layer's stale pixels inside {@code damage}, from the captured composite below it */
+    private Image refresh(Layer layer, Image below, int from, int to, Rectangle damage, Layer[] frame) {
         Rectangle size = backBuffer.getBounds();
         if (layer.composite == null) {
             layer.composite = new Image(getDisplay(), size.width, size.height);
             layer.stale = new ViewportDamageRegion();
             layer.stale.add(0, 0, size.width, size.height);
         }
-        int n = layer.stale.rectCount();
-        if (n == 0) return;
-        int[] rects = new int[n * 4];
+        // Callbacks can remove this layer or release its cache. Keep the
+        // selected image and damage owner alive until this frame closes its GC.
+        Image target = layer.composite;
+        ViewportDamageRegion region = layer.stale;
+        int n = region.rectCount();
+        if (n == 0) return target;
+        int[] rects = new int[Math.multiplyExact(n, 4)];
         int k = 0;
         for (int i = 0; i < n; i++) {
-            Rectangle r = intersect(new Rectangle(layer.stale.x(i), layer.stale.y(i), layer.stale.width(i),
-                    layer.stale.height(i)), damage);
+            Rectangle r = intersect(new Rectangle(region.x(i), region.y(i), region.width(i),
+                    region.height(i)), damage);
             if (r == null) continue;
             rects[k * 4] = r.x;
             rects[k * 4 + 1] = r.y;
@@ -811,27 +1629,41 @@ public final class LayeredViewport extends Canvas {
             rects[k * 4 + 3] = r.height;
             k++;
         }
-        if (k == 0) return;
-        GC[] gc = { new GC(layer.composite) };
+        if (k == 0) return target;
+        region.remove(damage.x, damage.y, damage.width, damage.height);
+        GC[] gc = { null };
+        boolean complete = false;
         try {
+            gc[0] = new GC(target);
             for (int i = 0; i < k; i++) {
                 Rectangle r = new Rectangle(rects[i * 4], rects[i * 4 + 1], rects[i * 4 + 2], rects[i * 4 + 3]);
                 gc[0].setClipping(r);
                 start(gc[0], below, r);
-                composeLayers(gc, layer.composite, r, below + 1, z + 1);
+                composeLayers(gc, target, r, from, to, frame);
+                if (isDisposed() || gc[0].isDisposed()) return target;
             }
+            complete = true;
         } finally {
-            gc[0].dispose();
+            try {
+                if (!complete && !isDisposed() && layer.composite == target) {
+                    for (int i = 0; i < k; i++) {
+                        int offset = i * 4;
+                        region.add(rects[offset], rects[offset + 1], rects[offset + 2], rects[offset + 3]);
+                    }
+                }
+            } finally {
+                if (gc[0] != null && !gc[0].isDisposed()) gc[0].dispose();
+            }
         }
-        layer.stale.remove(damage.x, damage.y, damage.width, damage.height);
+        return target;
     }
 
     /* the pixels a composition starts from: the retained composite of layer {@code below}, or the background */
-    private void start(GC gc, int below, Rectangle r) {
-        if (below < 0) {
+    private void start(GC gc, Image below, Rectangle r) {
+        if (below == null) {
             drawBackground(gc, r.x, r.y, r.width, r.height);
         } else {
-            gc.drawImage(paintOrder[below].composite, r.x, r.y, r.width, r.height, r.x, r.y, r.width, r.height);
+            gc.drawImage(below, r.x, r.y, r.width, r.height, r.x, r.y, r.width, r.height);
         }
     }
 
@@ -839,59 +1671,74 @@ public final class LayeredViewport extends Canvas {
     /* the layers of Z indices {@code from} to {@code to - 1} the spatial index finds under {@code damage}, into
        {@code target} through {@code back[0]} */
     private void composeLayers(GC[] back, Image target, Rectangle damage, int from, int to) {
+        composeLayers(back, target, damage, from, to, orderSnapshot());
+    }
+
+    private void composeLayers(GC[] back, Image target, Rectangle damage, int from, int to, Layer[] frame) {
         int originalAlpha = back[0].getAlpha();
-        Rectangle originalClip = back[0].getClipping();
-        ensureSpatialIndex();
-        long x0 = saturatedAdd(originX, saturatedAdd(floorLong(damage.x / zoom), -1));
-        long y0 = saturatedAdd(originY, saturatedAdd(floorLong(damage.y / zoom), -1));
-        long x1 = saturatedAdd(originX, saturatedAdd(ceilLong(
-                ((double) damage.x + damage.width) / zoom), 1));
-        long y1 = saturatedAdd(originY, saturatedAdd(ceilLong(
-                ((double) damage.y + damage.height) / zoom), 1));
-        int selected = spatialIndex.query(x0, y0, x1, y1);
-        Layer[] candidates = activePaintFrames == 0
-                ? growPaintCandidates(selected) : new Layer[selected];
-        Layer[] frame = paintOrder;
-        int kept = 0;
-        for (int i = 0; i < selected; i++) {
-            int z = spatialIndex.resultAt(i);
-            if (z >= from && z < to) candidates[kept++] = frame[z];
+        Layer[] candidates;
+        int selected;
+        if (frame == paintOrder && !orderDirty) {
+            ensureSpatialIndex();
+            long x0 = saturatedAdd(originX, saturatedAdd(floorLong(damage.x / zoom), -1));
+            long y0 = saturatedAdd(originY, saturatedAdd(floorLong(damage.y / zoom), -1));
+            long x1 = saturatedAdd(originX, saturatedAdd(ceilLong(
+                    ((double) damage.x + damage.width) / zoom), 1));
+            long y1 = saturatedAdd(originY, saturatedAdd(ceilLong(
+                    ((double) damage.y + damage.height) / zoom), 1));
+            int found = spatialIndex.query(x0, y0, x1, y1), total = found + pinnedCount;
+            candidates = activePaintFrames == 0 ? growPaintCandidates(total) : new Layer[total];
+            selected = 0;
+            int normal = 0, pinned = 0;
+            for (int i = 0; i < total; i++) {
+                int a = normal < found ? spatialIndex.resultAt(normal) : Integer.MAX_VALUE;
+                int b = pinned < pinnedCount ? pinnedZ[pinned] : Integer.MAX_VALUE;
+                if (a < b) normal++;
+                else pinned++;
+                int z = Math.min(a, b);
+                if (z >= from && z < to) candidates[selected++] = frame[z];
+            }
+        } else {
+            // An earlier retained-cache painter changed the scene order. Its
+            // original frame still governs the remaining segments of this paint.
+            selected = to - from;
+            candidates = activePaintFrames == 0 ? growPaintCandidates(selected) : new Layer[selected];
+            System.arraycopy(frame, from, candidates, 0, selected);
         }
-        selected = kept;
         activePaintFrames++;
         try {
             for (int i = 0; i < selected; i++) {
-                if (isDisposed()) break;
+                if (isDisposed() || back[0].isDisposed()) break;
                 Layer layer = candidates[i];
-                if (layer.removed || !layer.visible || layer.opacity == 0) continue;
+                if (layer.removed || !layer.visible || layer.opacity == 0 || layer.nativeLayer != 0) continue;
                 Rectangle tile = projectedClip(layer, damage);
                 if (tile == null) continue;
+                if (layer.image != null && layer.blendMode != BLEND_NORMAL) {
+                    // the scope restores the clip and alpha the blend sets, as for every other layer
+                    try (ViewportGcProxy state = ViewportGcProxy.wrap(back[0])) {
+                        state.clip(tile).alpha(255);
+                        if (!layer.image.isDisposed()) paintBlended(back, layer, tile);
+                    }
+                    continue;
+                }
                 if (layer.image == null && layer.painter != null && layer.opacity < 255) {
-                    paintIsolated(back, target, layer, tile);
-                    back[0].setAlpha(originalAlpha);
-                    back[0].setClipping(originalClip);
+                    paintIsolated(back, target, layer, tile, originalAlpha);
                     continue;
                 }
                 GC gc = back[0];
-                gc.setClipping(tile);
-                gc.setAlpha(layer.opacity);
-                try {
+                try (ViewportGcProxy state = ViewportGcProxy.wrap(gc)) {
+                    state.clip(tile).alpha(combinedAlpha(originalAlpha, layer.opacity));
                     if (layer.image != null) {
                         if (!layer.image.isDisposed()) paintImage(gc, layer, tile);
                     } else if (layer.painter != null) {
                         layer.painter.paint(gc,
-                                new PaintContext(layer, tile, originX, originY, zoom));
+                                new PaintContext(layer, tile, layerOriginX(layer), layerOriginY(layer), zoom));
                     }
-                } finally {
-                    gc.setAlpha(originalAlpha);
-                    gc.setClipping(originalClip);
                 }
             }
         } finally {
             Arrays.fill(candidates, 0, selected, null);
             activePaintFrames--;
-            back[0].setAlpha(originalAlpha);
-            back[0].setClipping(originalClip);
         }
     }
 
@@ -914,10 +1761,53 @@ public final class LayeredViewport extends Canvas {
     }
 
     private void ensureSpatialIndex() {
+        orderSnapshot();
         if (spatialDirty) {
             spatialIndex.rebuild(spatialSource);
+            pinnedCount = 0;
+            for (int z = 0; z < paintOrder.length; z++) {
+                Layer layer = paintOrder[z];
+                if (!viewRelative(layer) || layer.removed || !layer.visible || layer.opacity == 0) continue;
+                if (pinnedCount == pinnedZ.length) pinnedZ = Arrays.copyOf(pinnedZ, 2 * pinnedCount);
+                pinnedZ[pinnedCount++] = z;
+            }
             spatialDirty = false;
         }
+    }
+
+    /* whether a pan moves the layer in world space: it is pinned or sticky */
+    private static boolean viewRelative(Layer layer) {
+        return layer.pinned != 0 || layer.sticky != 0;
+    }
+
+    /* the origin a layer is projected from on each axis */
+    private long layerOriginX(Layer layer) {
+        return layerOrigin(layer, SWT.HORIZONTAL, originX);
+    }
+
+    private long layerOriginY(Layer layer) {
+        return layerOrigin(layer, SWT.VERTICAL, originY);
+    }
+
+    /*
+     * the origin a layer is projected from on one axis when the view's origin there is {@code origin}: 0 where it is
+     * pinned; where it is sticky and stuck, the view's less how far the layer has been carried past its own place
+     */
+    private static long layerOrigin(Layer layer, int axis, long origin) {
+        if ((layer.pinned & axis) != 0) return 0;
+        if (layer.sticky != axis) return origin;
+        long start = axis == SWT.HORIZONTAL ? layer.x : layer.y, end = axis == SWT.HORIZONTAL ? layer.right : layer.bottom;
+        long stuck = Math.min(saturatedAdd(origin, layer.stickyInset), saturatedAdd(layer.stickyLimit, start - end));
+        return stuck > start ? saturatedAdd(origin, start - stuck) : origin;
+    }
+
+    /* a device point's world coordinates as a layer sees them */
+    private long layerX(Layer layer, int deviceX) {
+        return saturatedAdd(layerOriginX(layer), floorLong(deviceX / zoom));
+    }
+
+    private long layerY(Layer layer, int deviceY) {
+        return saturatedAdd(layerOriginY(layer), floorLong(deviceY / zoom));
     }
 
     private static long ceilLong(double value) {
@@ -930,36 +1820,104 @@ public final class LayeredViewport extends Canvas {
      * a translucent painter layer, as a group: painted onto a copy of the composite beneath it, which is then drawn
      * once over the store with the layer's opacity, so overlapping shapes of the layer do not darken each other
      */
-    private void paintIsolated(GC[] back, Image target, Layer layer, Rectangle tile) {
-        Rectangle size = backBuffer.getBounds();
+    private void paintIsolated(GC[] back, Image target, Layer layer, Rectangle tile, int originalAlpha) {
+        Rectangle size = target.getBounds();
         if (scratch == null) scratch = new Image(getDisplay(), size.width, size.height);
+        int opacity = combinedAlpha(originalAlpha, layer.opacity);
+        LayerPainter painter = layer.painter;
         back[0].dispose();
         GC copy = new GC(scratch);
         try {
             copy.drawImage(target, tile.x, tile.y, tile.width, tile.height, tile.x, tile.y, tile.width, tile.height);
             copy.setClipping(tile);
-            layer.painter.paint(copy, new PaintContext(layer, tile, originX, originY, zoom));
+            painter.paint(copy, new PaintContext(layer, tile, layerOriginX(layer), layerOriginY(layer), zoom));
         } finally {
             copy.dispose();
-            back[0] = new GC(target);
+            if (!isDisposed()) back[0] = new GC(target);
         }
-        back[0].setClipping(tile);
-        back[0].setAlpha(layer.opacity);
-        back[0].drawImage(scratch, tile.x, tile.y, tile.width, tile.height, tile.x, tile.y, tile.width, tile.height);
-        back[0].setAlpha(255);
+        if (isDisposed()) return;
+        try (ViewportGcProxy state = ViewportGcProxy.wrap(back[0])) {
+            state.clip(tile).alpha(opacity);
+            back[0].drawImage(scratch, tile.x, tile.y, tile.width, tile.height, tile.x, tile.y, tile.width, tile.height);
+        }
+    }
+
+    private static int combinedAlpha(int alpha, int opacity) {
+        return (alpha * opacity + 127) / 255;
+    }
+
+    /*
+     * a blended image layer: the pixels below the tile are read from the store, blended with the layer's (nearest
+     * source pixel, its alpha times the layer's opacity) by its mode, and written back once
+     */
+    private void paintBlended(GC[] back, Layer layer, Rectangle tile) {
+        if (tile.width <= 0 || tile.height <= 0) return;
+        if (layer.blendSource == null) layer.blendSource = layer.image.getImageData();
+        ImageData source = layer.blendSource;
+        long ox = layerOriginX(layer), oy = layerOriginY(layer);
+        double left = device(layer.x, ox), top = device(layer.y, oy);
+        double width = device(layer.right, ox) - left, height = device(layer.bottom, oy) - top;
+        if (!(width > 0) || !(height > 0) || source.width == 0 || source.height == 0) return;
+        Image under = new Image(getDisplay(), tile.width, tile.height);
+        try {
+            back[0].copyArea(under, tile.x, tile.y);
+            ImageData below = under.getImageData();
+            ImageDataArgb store = new ImageDataArgb(below); // whole-row conversion, no per-pixel RGB objects
+            ImageDataArgb sourceColors = new ImageDataArgb(source);
+            int rowsPerBatch = Math.max(1, BLEND_BATCH_PIXELS / tile.width);
+            int capacity = Math.min(rowsPerBatch, tile.height) * tile.width;
+            int[] dst = new int[capacity], src = new int[capacity];
+            for (int startRow = 0; startRow < tile.height; startRow += rowsPerBatch) {
+                int rows = Math.min(rowsPerBatch, tile.height - startRow);
+                for (int row = 0; row < rows; row++) {
+                    int j = startRow + row, base = row * tile.width;
+                    int sy = clipSource((tile.y + j + 0.5 - top) / height * source.height, source.height - 1, false);
+                    store.opaqueRow(j, dst, base);
+                    for (int i = 0; i < tile.width; i++) {
+                        int sx = clipSource((tile.x + i + 0.5 - left) / width * source.width, source.width - 1, false);
+                        int pixel = source.getPixel(sx, sy);
+                        int alpha = source.alphaData != null ? source.getAlpha(sx, sy) : source.alpha >= 0 ? source.alpha : 255;
+                        if (source.transparentPixel >= 0 && pixel == source.transparentPixel) alpha = 0;
+                        int rgb = sourceColors.rgb(pixel);
+                        src[base + i] = alpha << 24 | ((rgb >>> 16 & 0xFF) * alpha + 127) / 255 << 16
+                                | ((rgb >>> 8 & 0xFF) * alpha + 127) / 255 << 8
+                                | ((rgb & 0xFF) * alpha + 127) / 255;
+                    }
+                }
+                LayerArgbCompositor.composite(dst, 0, src, 0, rows * tile.width,
+                        layer.opacity, BLEND_MODES[layer.blendMode]);
+                for (int row = 0; row < rows; row++) {
+                    int j = startRow + row, base = row * tile.width;
+                    store.setOpaqueRow(j, dst, base);
+                }
+            }
+            Image blended = new Image(getDisplay(), below);
+            try {
+                back[0].setClipping(tile);
+                back[0].setAlpha(255);
+                back[0].drawImage(blended, tile.x, tile.y);
+            } finally {
+                blended.dispose();
+            }
+        } finally {
+            under.dispose();
+        }
     }
 
     private void paintImage(GC gc, Layer layer, Rectangle tile) {
-        Rectangle srcBounds = layer.image.getBounds();
-        if (srcBounds.width == 0 || srcBounds.height == 0) return;
+        long ox = layerOriginX(layer), oy = layerOriginY(layer);
+        paintImage(gc, layer.image, device(layer.x, ox), device(layer.y, oy),
+                device(layer.right, ox), device(layer.bottom, oy), tile);
+    }
 
-        double left = device(layer.x, originX);
-        double top = device(layer.y, originY);
-        double right = device(layer.right, originX);
-        double bottom = device(layer.bottom, originY);
+    /** Shared full-source mapping and clipped-source fallback for groups and ordinary layers. */
+    private void paintImage(GC gc, Image image, double left, double top,
+            double right, double bottom, Rectangle tile) {
+        Rectangle srcBounds = image.getBounds();
+        if (srcBounds.width == 0 || srcBounds.height == 0) return;
         double width = right - left;
         double height = bottom - top;
-        if (width <= 0 || height <= 0) return;
+        if (!(width > 0) || !(height > 0)) return;
 
         // Ordinary layers retain the complete source-to-destination mapping.
         // The clipped source path avoids enormous int destination coordinates.
@@ -972,7 +1930,7 @@ public final class LayeredViewport extends Canvas {
             int w = (int) (Math.ceil(right) - x);
             int h = (int) (Math.ceil(bottom) - y);
             if (w > 0 && h > 0) {
-                gc.drawImage(layer.image, srcBounds.x, srcBounds.y,
+                gc.drawImage(image, srcBounds.x, srcBounds.y,
                         srcBounds.width, srcBounds.height, x, y, w, h);
             }
             return;
@@ -986,25 +1944,29 @@ public final class LayeredViewport extends Canvas {
         int sy1 = clipSource(((double)tile.y + tile.height - top) / height
                 * srcBounds.height, srcBounds.height, true);
         if (sx1 > sx0 && sy1 > sy0) {
-            gc.drawImage(layer.image, srcBounds.x + sx0, srcBounds.y + sy0,
+            gc.drawImage(image, srcBounds.x + sx0, srcBounds.y + sy0,
                     sx1 - sx0, sy1 - sy0, tile.x, tile.y, tile.width, tile.height);
         }
     }
 
     private Rectangle projectedClip(Layer layer, Rectangle damage) {
-        Rectangle visible = projectedClip(layer.x, layer.y, layer.right, layer.bottom, damage);
+        return projectedClip(layer, layerOriginX(layer), layerOriginY(layer), damage);
+    }
+
+    private Rectangle projectedClip(Layer layer, long ox, long oy, Rectangle damage) {
+        Rectangle visible = projectedClip(layer.x, layer.y, layer.right, layer.bottom, ox, oy, damage);
         if (visible == null || layer.worldClip == null) return visible;
         WorldBounds clip = layer.worldClip;
         return projectedClip(clip.x(), clip.y(), clip.x() + clip.width(),
-                clip.y() + clip.height(), visible);
+                clip.y() + clip.height(), ox, oy, visible);
     }
 
     private Rectangle projectedClip(long worldX, long worldY, long worldRight,
-            long worldBottom, Rectangle damage) {
-        double left = device(worldX, originX);
-        double top = device(worldY, originY);
-        double right = device(worldRight, originX);
-        double bottom = device(worldBottom, originY);
+            long worldBottom, long ox, long oy, Rectangle damage) {
+        double left = device(worldX, ox);
+        double top = device(worldY, oy);
+        double right = device(worldRight, ox);
+        double bottom = device(worldBottom, oy);
         int x0 = (int) Math.max((double) damage.x, Math.floor(left));
         int y0 = (int) Math.max((double) damage.y, Math.floor(top));
         int x1 = (int) Math.min((double) damage.x + damage.width, Math.ceil(right));
@@ -1040,10 +2002,11 @@ public final class LayeredViewport extends Canvas {
     }
 
     private void invalidate(Layer layer) {
+        if (layer.nativeLayer != 0) return; // not in the store: the window system shows it
         if (!layer.visible || layer.opacity == 0) return;
         Rectangle bounds = projectedClip(layer, getClientArea());
         if (bounds == null) return;
-        markRetained(indexOf(layer), bounds);
+        if (retainedCount != 0) markRetained(indexOf(layer), bounds);
         if (batchDepth == 0) {
             damage(bounds.x, bounds.y, bounds.width, bounds.height);
         } else if (!fullDamage) {
@@ -1057,11 +2020,20 @@ public final class LayeredViewport extends Canvas {
     }
 
     private void publishOrder() {
-        paintOrder = Arrays.copyOf(stack, count);
+        orderDirty = true;
         spatialDirty = true;
     }
 
+    private Layer[] orderSnapshot() {
+        if (orderDirty) {
+            paintOrder = Arrays.copyOf(stack, count);
+            orderDirty = false;
+        }
+        return paintOrder;
+    }
+
     private int indexOf(Layer layer) {
+        if (count > 0 && stack[count - 1] == layer) return count - 1;
         for (int i = 0; i < count; i++) if (stack[i] == layer) return i;
         SWT.error(SWT.ERROR_INVALID_ARGUMENT);
         return -1;
@@ -1144,9 +2116,9 @@ public final class LayeredViewport extends Canvas {
 
     /* a layer of Z index {@code z} changed inside {@code area}: the composites that include it are stale there */
     private void markRetained(int z, Rectangle area) {
-        Layer[] frame = paintOrder;
-        for (int i = Math.max(0, z); i < frame.length; i++) {
-            if (frame[i].stale != null) frame[i].stale.add(area.x, area.y, area.width, area.height);
+        if (retainedCount == 0) return;
+        for (int i = Math.max(0, z); i < count; i++) {
+            if (stack[i].stale != null) stack[i].stale.add(area.x, area.y, area.width, area.height);
         }
     }
 
@@ -1172,6 +2144,32 @@ public final class LayeredViewport extends Canvas {
         redraw();
     }
 
+    private void retireComposite(Image image) {
+        if (activeBackingPaints == 0) {
+            image.dispose();
+            return;
+        }
+        if (retiredCompositeCount == retiredComposites.length) {
+            retiredComposites = Arrays.copyOf(retiredComposites, retiredCompositeCount * 2);
+        }
+        retiredComposites[retiredCompositeCount++] = image;
+    }
+
+    private void disposeRetiredComposites() {
+        for (int i = 0; i < retiredCompositeCount; i++) {
+            Image image = retiredComposites[i];
+            retiredComposites[i] = null;
+            if (!image.isDisposed()) image.dispose();
+        }
+        retiredCompositeCount = 0;
+    }
+
+    private void disposeBackingImages() {
+        if (backBuffer != null && !backBuffer.isDisposed()) backBuffer.dispose();
+        if (scratch != null && !scratch.isDisposed()) scratch.dispose();
+        backBuffer = scratch = null;
+    }
+
     /* the store matches the client area; a new size starts with every pixel dirty */
     private void ensureBackBuffer(Rectangle area) {
         int width = Math.max(1, area.width), height = Math.max(1, area.height);
@@ -1179,12 +2177,13 @@ public final class LayeredViewport extends Canvas {
             Rectangle size = backBuffer.getBounds();
             if (size.width == width && size.height == height) return;
             backBuffer.dispose();
+            backBuffer = null;
         }
         if (scratch != null) {
             scratch.dispose();
             scratch = null;
         }
-        for (Layer layer : paintOrder) layer.releaseComposite();
+        for (Layer layer : orderSnapshot()) layer.releaseComposite();
         backBuffer = new Image(getDisplay(), width, height);
         dirty.clear();
         dirty.add(0, 0, width, height);
@@ -1195,7 +2194,9 @@ public final class LayeredViewport extends Canvas {
      * that comes into view is dirty. Returns false when the whole view must be recomposed instead.
      */
     private boolean shiftBackBuffer(long previousX, long previousY) {
-        if (backBuffer == null) return false;
+        // A painter can pan the scene. Recompose after releasing the selected
+        // image GC rather than selecting the same backing image a second time.
+        if (activeBackingPaints != 0 || backBuffer == null) return false;
         // at zoom 1 a pan moves every layer by exactly the same whole number of pixels; other zooms recompose
         if (zoom != 1.0) return false;
         Rectangle size = backBuffer.getBounds();
@@ -1212,11 +2213,43 @@ public final class LayeredViewport extends Canvas {
                 || dy <= -(long) size.height || dy >= size.height) return false;
         int sx = (int) dx, sy = (int) dy;
         shiftStore(backBuffer, dirty, sx, sy, size);
-        for (Layer layer : paintOrder) {
+        for (Layer layer : orderSnapshot()) {
             if (layer.composite != null) shiftStore(layer.composite, layer.stale, sx, sy, size);
         }
+        repairPinned(previousX, previousY, sx, sy, size);
         super.redraw();
         return true;
+    }
+
+    /*
+     * after a blit by (sx, sy) from the origin (previousX, previousY): a pinned or sticky layer that did not move
+     * with the world has a ghost where the blit put its old pixels, and its own place shows what was under the
+     * ghost; both are recomposed
+     */
+    private void repairPinned(long previousX, long previousY, int sx, int sy, Rectangle size) {
+        Rectangle view = new Rectangle(0, 0, size.width, size.height);
+        Rectangle reach = new Rectangle(-Math.abs(sx), -Math.abs(sy), size.width + 2 * Math.abs(sx),
+                size.height + 2 * Math.abs(sy));
+        Layer[] frame = orderSnapshot();
+        for (int z = 0; z < frame.length; z++) {
+            Layer layer = frame[z];
+            if (!viewRelative(layer) || layer.removed || !layer.visible || layer.opacity == 0 || layer.nativeLayer != 0) continue;
+            Rectangle now = projectedClip(layer, reach);
+            Rectangle old = projectedClip(layer, layerOrigin(layer, SWT.HORIZONTAL, previousX),
+                    layerOrigin(layer, SWT.VERTICAL, previousY), reach);
+            Rectangle moved = old == null ? null : new Rectangle(old.x + sx, old.y + sy, old.width, old.height);
+            if (moved == null ? now == null : moved.equals(now)) continue; // it moved with everything else
+            Rectangle place = now == null ? null : intersect(now, view);
+            Rectangle ghost = moved == null ? null : intersect(moved, view);
+            if (place != null) {
+                dirty.add(place.x, place.y, place.width, place.height);
+                markRetained(z, place);
+            }
+            if (ghost != null) {
+                dirty.add(ghost.x, ghost.y, ghost.width, ghost.height);
+                markRetained(z, ghost);
+            }
+        }
     }
 
     /* moves a store's pixels by (sx, sy) and its dirty region with them; the band that comes into view is dirty */
@@ -1250,7 +2283,7 @@ public final class LayeredViewport extends Canvas {
 
     /* every control layer at its projected bounds */
     private void placeControls() {
-        for (Layer layer : paintOrder) placeControl(layer);
+        for (Layer layer : orderSnapshot()) placeControl(layer);
     }
 
     /*
@@ -1259,10 +2292,11 @@ public final class LayeredViewport extends Canvas {
      */
     private void placeControl(Layer layer) {
         Control control = layer.control;
-        if (layer.removed || control == null || control.isDisposed()) return;
+        if (isDisposed() || layer.removed || control == null || control.isDisposed()) return;
         Rectangle area = getClientArea();
-        double left = device(layer.x, originX), top = device(layer.y, originY);
-        double right = device(layer.right, originX), bottom = device(layer.bottom, originY);
+        long ox = layerOriginX(layer), oy = layerOriginY(layer);
+        double left = device(layer.x, ox), top = device(layer.y, oy);
+        double right = device(layer.right, ox), bottom = device(layer.bottom, oy);
         boolean shown = layer.visible && layer.opacity > 0 && right > area.x && left < (double) area.x + area.width
                 && bottom > area.y && top < (double) area.y + area.height;
         if (shown) {
@@ -1272,12 +2306,15 @@ public final class LayeredViewport extends Canvas {
             int y1 = clampPixel(Math.ceil(bottom), area.y, area.y + area.height + CONTROL_MARGIN);
             control.setBounds(x, y, x1 - x, y1 - y);
         }
+        // setBounds may dispatch application resize listeners.
+        if (isDisposed() || layer.removed || control.isDisposed() || layer.control != control) return;
         if (control.getVisible() != shown) control.setVisible(shown);
     }
 
     /* the native Z order of the control layers' controls follows the layers' order, bottom to top */
     private void orderControls() {
-        for (Layer layer : paintOrder) {
+        for (Layer layer : orderSnapshot()) {
+            if (isDisposed()) return;
             if (!layer.removed && layer.control != null && !layer.control.isDisposed()) layer.control.moveAbove(null);
         }
     }
@@ -1287,5 +2324,108 @@ public final class LayeredViewport extends Canvas {
 
     private static int clampPixel(double value, int low, int high) {
         return (int) Math.max(low, Math.min(high, value));
+    }
+
+    /* the native layer backend (null: none installed) and this viewport's composition, made on the first request */
+    private NativeLayers nativeBackend;
+    private long composition;
+    private boolean nativeTried;
+
+    private boolean nativeAvailable() {
+        if (!nativeTried) {
+            nativeTried = true;
+            nativeBackend = NativeLayers.platform();
+            if (nativeBackend != null) composition = nativeBackend.create(this);
+        }
+        return composition != 0;
+    }
+
+    /* an image drawn one to one (zoom 1, world size the image's size, no clip, 100% device zoom) with a backend */
+    private boolean nativeEligible(Layer layer) {
+        if (!layer.nativeRequested || layer.removed || layer.image == null || layer.image.isDisposed()) return false;
+        if (zoom != 1.0 || layer.worldClip != null || layer.blendMode != BLEND_NORMAL
+                || DPIUtil.getDeviceZoom() != 100) return false;
+        Rectangle size = layer.image.getBounds();
+        return layer.right - layer.x == size.width && layer.bottom - layer.y == size.height && nativeAvailable();
+    }
+
+    /*
+     * native layers are made or dropped as their eligibility changes (their pixels leave or join the store), then
+     * one native frame carries every native layer's order, offset, opacity and visibility
+     */
+    private void syncNative() {
+        if (!nativeTried) {
+            boolean requested = false;
+            for (Layer layer : paintOrder) requested |= layer.nativeRequested;
+            if (!requested) return;
+        }
+        for (Layer layer : paintOrder) {
+            boolean eligible = nativeEligible(layer);
+            if (eligible && layer.nativeLayer == 0) {
+                Rectangle size = layer.image.getBounds();
+                long handle = nativeBackend.addLayer(composition, size.width, size.height);
+                if (handle != 0 && nativeBackend.upload(handle, premultiplied(layer.image.getImageData())) == 0) {
+                    damageBounds(layer); // its pixels leave the store
+                    layer.nativeLayer = handle;
+                } else if (handle != 0) {
+                    nativeBackend.removeLayer(composition, handle);
+                }
+            } else if (!eligible && layer.nativeLayer != 0) {
+                dropNative(layer);
+            }
+        }
+        applyNative();
+    }
+
+    /* a layer stops being native: its native layer is freed and its pixels return to the store */
+    private void dropNative(Layer layer) {
+        if (layer.nativeLayer == 0) return;
+        nativeBackend.removeLayer(composition, layer.nativeLayer);
+        layer.nativeLayer = 0;
+        if (!layer.removed) damageBounds(layer);
+    }
+
+    private void damageBounds(Layer layer) {
+        Rectangle bounds = projectedClip(layer, getClientArea());
+        if (bounds != null) redraw(bounds.x, bounds.y, bounds.width, bounds.height, false);
+    }
+
+    /* one native frame: the native layers in Z order with their offset, opacity and visibility */
+    private boolean applyNative() {
+        if (composition == 0) return false;
+        int n = 0;
+        for (Layer layer : paintOrder) if (layer.nativeLayer != 0) n++;
+        long[] handles = new long[n];
+        float[] props = new float[n * 4];
+        int i = 0;
+        for (Layer layer : paintOrder) {
+            if (layer.nativeLayer == 0) continue;
+            handles[i] = layer.nativeLayer;
+            props[i * 4] = (float) device(layer.x, layerOriginX(layer));
+            props[i * 4 + 1] = (float) device(layer.y, layerOriginY(layer));
+            props[i * 4 + 2] = layer.opacity / 255f;
+            props[i * 4 + 3] = layer.visible && layer.opacity > 0 ? 1 : 0;
+            i++;
+        }
+        return nativeBackend.apply(composition, handles, props, n) == 0;
+    }
+
+    /* an image's pixels as premultiplied ARGB, row by row, with its alpha (alpha data, global alpha, transparent pixel) */
+    private static int[] premultiplied(ImageData data) {
+        int w = data.width, h = data.height;
+        int[] out = new int[w * h], pixels = new int[w];
+        byte[] alphas = new byte[w];
+        for (int y = 0; y < h; y++) {
+            data.getPixels(0, y, w, pixels, 0);
+            if (data.alphaData != null) data.getAlphas(0, y, w, alphas, 0);
+            for (int x = 0; x < w; x++) {
+                int a = data.alphaData != null ? alphas[x] & 0xFF : data.alpha >= 0 ? data.alpha : 255;
+                if (data.transparentPixel >= 0 && pixels[x] == data.transparentPixel) a = 0;
+                org.eclipse.swt.graphics.RGB rgb = data.palette.getRGB(pixels[x]);
+                out[y * w + x] = a << 24 | (rgb.red * a + 127) / 255 << 16 | (rgb.green * a + 127) / 255 << 8
+                        | (rgb.blue * a + 127) / 255;
+            }
+        }
+        return out;
     }
 }

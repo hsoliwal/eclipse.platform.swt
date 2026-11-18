@@ -34,6 +34,23 @@ public class Composite extends Scrollable {
 		super(parent, style, softwareScroll);
 	}
 	Composite(Display display, int style) { super(display, style); }
+
+	/** Returns SWT.NONE until a native mobile bevel backend is available. */
+	public int getBevelBorder() { checkWidget(); return SWT.NONE; }
+
+	/**
+	 * Explicit bevel API parity with desktop SWT. Android/iOS native border
+	 * implementations must not be implied by constructor shadow bits.
+	 */
+	public void setBevelBorder(int border) {
+		checkWidget();
+		if (border == SWT.NONE || border == SWT.SHADOW_NONE) return;
+		if (border != SWT.SHADOW_IN && border != SWT.SHADOW_OUT
+				&& border != SWT.SHADOW_ETCHED_IN && border != SWT.SHADOW_ETCHED_OUT) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+	}
 	@Override protected void checkSubclass() { }
 	void addChild(Control child) { if (childCount == children.length) children = Arrays.copyOf(children, childCount + 8); children[childCount++] = child; }
 	void removeChild(Control child) { for (int i = 0; i < childCount; i++) if (children[i] == child) { System.arraycopy(children, i + 1, children, i, --childCount - i); children[childCount] = null; break; } }

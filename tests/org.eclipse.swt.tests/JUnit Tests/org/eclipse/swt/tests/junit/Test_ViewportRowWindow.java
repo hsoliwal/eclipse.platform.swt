@@ -219,6 +219,7 @@ public class Test_ViewportRowWindow {
 		assertEquals(Long.MAX_VALUE, window.paintEndExclusive());
 		window.setViewport(Long.MAX_VALUE - 60, 0);
 		assertEmpty(window);
+		window.setLogicalCount(1000);
 		window.setViewport(500, 20);
 		window.setDirectionalOverscanRows(1, 30);
 		window.insert(0, 5);
@@ -227,6 +228,24 @@ public class Test_ViewportRowWindow {
 		window.remove(0, 5);
 		assertEquals(499, window.paintStart());
 		assertEquals(550, window.paintEndExclusive());
+	}
+
+	@Test
+	public void overflowingInsertionPreservesDirectionalWindow () {
+		RowWindow window = new RowWindow();
+		window.setLogicalCount(Long.MAX_VALUE);
+		window.setViewport(500, 20);
+		window.setDirectionalOverscanRows(1, 30);
+		long generation = window.generation();
+		assertThrows(ArithmeticException.class, () -> window.insert(0, 5));
+		assertEquals(Long.MAX_VALUE, window.logicalCount());
+		assertEquals(500, window.firstVisible());
+		assertEquals(20, window.visibleCount());
+		assertEquals(1, window.overscanBeforeRows());
+		assertEquals(30, window.overscanAfterRows());
+		assertEquals(499, window.paintStart());
+		assertEquals(550, window.paintEndExclusive());
+		assertEquals(generation, window.generation());
 	}
 
 	@Test

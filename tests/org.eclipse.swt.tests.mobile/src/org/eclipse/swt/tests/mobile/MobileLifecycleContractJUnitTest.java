@@ -627,6 +627,31 @@ public final class MobileLifecycleContractJUnitTest {
 		assertEquals(new org.eclipse.swt.graphics.Rectangle(5, 30, 20, 10), child.getBounds());
 		canvas.dispose();
 	}
+	@Test void nativeBorderReliefMaintainsOnePeerAndClientGeometry() {
+		Canvas canvas = canvas(shell);
+		long peer = platform.lastCreated;
+		int peers = platform.controls.size(), original = canvas.getBorderWidth();
+		assertEquals(SWT.DEFAULT, canvas.getBorderRelief());
+		assertThrows(IllegalArgumentException.class,
+				() -> canvas.setBorderRelief(SWT.BORDER | SWT.PUSH));
+		assertEquals(SWT.DEFAULT, platform.controls.get(peer).borderRelief);
+		for (int relief : new int[] {SWT.SHADOW_IN, SWT.SHADOW_OUT,
+				SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT}) {
+			canvas.setBorderRelief(relief);
+			assertEquals(relief, canvas.getBorderRelief());
+			assertEquals(relief, platform.controls.get(peer).borderRelief);
+			assertEquals(2, canvas.getBorderWidth());
+			assertEquals(peers, platform.controls.size(), "Native edge must not create another peer");
+		}
+		canvas.setBorderRelief(SWT.SHADOW_NONE);
+		assertEquals(0, canvas.getBorderWidth());
+		canvas.setBorderRelief(SWT.DEFAULT);
+		assertEquals(original, canvas.getBorderWidth());
+		assertEquals(SWT.DEFAULT, platform.controls.get(peer).borderRelief);
+		assertEquals(peers, platform.controls.size());
+		canvas.dispose();
+		assertFalse(platform.controls.containsKey(peer));
+	}
 	@Test void staleNativePeerCannotActivateADisposedWidget() {
 		Canvas canvas = canvas(shell);
 		long peer = platform.lastCreated;

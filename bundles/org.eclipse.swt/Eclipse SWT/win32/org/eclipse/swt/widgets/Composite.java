@@ -26,7 +26,7 @@ import org.eclipse.swt.internal.win32.*;
  * of containing other controls.
  * <dl>
  * <dt><b>Styles:</b></dt>
- * <dd>NO_BACKGROUND, NO_FOCUS, NO_MERGE_PAINTS, NO_REDRAW_RESIZE, NO_RADIO_GROUP, EMBEDDED, DOUBLE_BUFFERED</dd>
+ * <dd>NO_BACKGROUND, NO_FOCUS, NO_MERGE_PAINTS, NO_REDRAW_RESIZE, NO_RADIO_GROUP, EMBEDDED, DOUBLE_BUFFERED; SHADOW_IN, SHADOW_OUT, SHADOW_ETCHED_IN, SHADOW_ETCHED_OUT (native Win32 bezel hints for direct Composite and Canvas)</dd>
  * <dt><b>Events:</b></dt>
  * <dd>(none)</dd>
  * </dl>
@@ -58,6 +58,27 @@ public class Composite extends Scrollable {
 	int layoutCount, backgroundMode;
 
 	static final int TOOLTIP_LIMIT = 4096;
+	private int bevelBorder;
+
+	/*
+	 * Composite and Canvas constructor bits cannot encode a bevel: SWT style bits
+	 * are shared with unrelated styles (for example NO_SCROLL and SIMPLE).
+	 * A native bevel is only enabled explicitly after construction.
+	 */
+	private int nativeBevelEdge () {
+		if (getClass () != Composite.class && getClass () != Canvas.class) return 0;
+		/* Explicit Control relief temporarily takes precedence over our
+		 * existing bevel, without changing the stored bevel selection. */
+		int effective = nativeBorderReliefForPaint ();
+		if (effective == SWT.DEFAULT) effective = bevelBorder;
+		return switch (effective) {
+			case SWT.SHADOW_IN -> OS.EDGE_SUNKEN;
+			case SWT.SHADOW_OUT -> OS.EDGE_RAISED;
+			case SWT.SHADOW_ETCHED_IN -> OS.EDGE_ETCHED;
+			case SWT.SHADOW_ETCHED_OUT -> OS.EDGE_BUMP;
+			default -> 0;
+		};
+	}
 
 /**
  * Prevents uninitialized instances from being created outside the package.
@@ -99,6 +120,65 @@ Composite () {
  */
 public Composite (Composite parent, int style) {
 	super (parent, style);
+}
+
+/**
+ * Returns the explicitly selected native bevel, or {@link SWT#NONE}.
+ * Constructor style bits never select a bevel.
+ *
+ * @return a SHADOW_IN, SHADOW_OUT, SHADOW_ETCHED_IN, SHADOW_ETCHED_OUT or NONE value
+ */
+public int getBevelBorder () {
+	checkWidget ();
+	return bevelBorder;
+}
+
+/**
+ * Applies a native Windows non-client bevel to this Composite or Canvas.
+ * No constructor shadow bits are interpreted, because SWT reuses style bits.
+ * The original SWT.BORDER frame is restored when the bevel is cleared.
+ * Control.setBorderRelief temporarily overrides this bevel; a later
+ * setBevelBorder call takes precedence and resets that override.
+ *
+ * @param border one of SWT.NONE, SWT.SHADOW_NONE, SWT.SHADOW_IN,
+ * SWT.SHADOW_OUT, SWT.SHADOW_ETCHED_IN, or SWT.SHADOW_ETCHED_OUT
+ * @exception IllegalArgumentException if the value is invalid or this control
+ * is not a direct Composite or Canvas
+ * @exception SWTException if called after disposal or from a non-UI thread
+ */
+public void setBevelBorder (int border) {
+	checkWidget ();
+	if (border == SWT.SHADOW_NONE) border = SWT.NONE;
+	switch (border) {
+		case SWT.NONE, SWT.SHADOW_IN, SWT.SHADOW_OUT,
+				SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT -> { /* valid */ }
+		default -> error (SWT.ERROR_INVALID_ARGUMENT);
+	}
+	if (getClass () != Composite.class && getClass () != Canvas.class) {
+		error (SWT.ERROR_INVALID_ARGUMENT);
+	}
+	/* An explicit Composite bevel is the most recent request; drop any
+	 * Control-level override before modifying the native frame. */
+	if (nativeBorderReliefForPaint () != SWT.DEFAULT) setBorderRelief (SWT.DEFAULT);
+	if (bevelBorder == border) return;
+
+	long hwnd = borderHandle ();
+	int exStyle = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
+	int winStyle = OS.GetWindowLong (hwnd, OS.GWL_STYLE);
+	int nextExStyle = exStyle & ~OS.WS_EX_CLIENTEDGE;
+	int nextWinStyle = winStyle & ~OS.WS_BORDER;
+	if (border != SWT.NONE || ((style & SWT.BORDER) != 0 && !isUseWsBorder ())) {
+		nextExStyle |= OS.WS_EX_CLIENTEDGE;
+	} else if ((style & SWT.BORDER) != 0) {
+		nextWinStyle |= OS.WS_BORDER;
+	}
+
+	bevelBorder = border;
+	if (nextExStyle != exStyle) OS.SetWindowLong (hwnd, OS.GWL_EXSTYLE, nextExStyle);
+	if (nextWinStyle != winStyle) OS.SetWindowLong (hwnd, OS.GWL_STYLE, nextWinStyle);
+	OS.SetWindowPos (hwnd, 0, 0, 0, 0, 0, OS.SWP_FRAMECHANGED
+			| OS.SWP_NOACTIVATE | OS.SWP_NOMOVE | OS.SWP_NOSIZE | OS.SWP_NOZORDER);
+	requestLayout ();
 }
 
 Control [] _getChildren () {
@@ -1472,9 +1552,21 @@ void updateUIState () {
 }
 
 @Override
+int widgetExtStyle () {
+	int bits = super.widgetExtStyle ();
+	if (nativeBevelEdge () != 0) {
+		/* Reserve the native non-client edge, including when SWT.BORDER is absent. */
+		bits |= OS.WS_EX_CLIENTEDGE;
+	}
+	return bits;
+}
+
+@Override
 int widgetStyle () {
-	/* Force clipping of children by setting WS_CLIPCHILDREN */
-	return super.widgetStyle () | OS.WS_CLIPCHILDREN;
+	/* A bevel replaces WS_BORDER; combining it with SWT.BORDER must not double trim. */
+	int bits = super.widgetStyle () | OS.WS_CLIPCHILDREN;
+	if (nativeBevelEdge () != 0) bits &= ~OS.WS_BORDER;
+	return bits;
 }
 
 @Override
@@ -2031,6 +2123,34 @@ LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
         return result;
     }
 	long borderHandle = borderHandle ();
+	int edge = nativeBevelEdge ();
+	if (edge != 0 && hwnd == borderHandle) {
+		int extStyle = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
+		if ((extStyle & OS.WS_EX_CLIENTEDGE) != 0) {
+			int bits = OS.GetWindowLong (hwnd, OS.GWL_STYLE);
+			long code = (bits & (OS.WS_HSCROLL | OS.WS_VSCROLL)) != 0
+					? callWindowProc (hwnd, OS.WM_NCPAINT, wParam, lParam) : 0;
+			long hDC = OS.GetWindowDC (hwnd);
+			if (hDC != 0) {
+				try {
+					RECT rect = new RECT ();
+					OS.GetWindowRect (hwnd, rect);
+					rect.right -= rect.left;
+					rect.bottom -= rect.top;
+					rect.left = rect.top = 0;
+					int inset = getSystemMetrics (OS.SM_CXEDGE);
+					/* Draw only native non-client frame pixels. */
+					OS.ExcludeClipRect (hDC, inset, inset,
+							Math.max (inset, rect.right - inset),
+							Math.max (inset, rect.bottom - inset));
+					OS.DrawEdge (hDC, rect, edge, OS.BF_RECT);
+				} finally {
+					OS.ReleaseDC (hwnd, hDC);
+				}
+				return new LRESULT (code);
+			}
+		}
+	}
 	if ((state & CANVAS) != 0 || (hwnd == borderHandle && handle != borderHandle)) {
 		int bits1 = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
 		if ((bits1 & OS.WS_EX_CLIENTEDGE) != 0) {
