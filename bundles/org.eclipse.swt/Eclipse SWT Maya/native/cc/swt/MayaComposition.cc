@@ -20,6 +20,7 @@
 #include <vector>
 #include <unordered_set>
 #include "MayaCompositionChecks.h"
+#include "MayaCompositionDelta.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -45,6 +46,7 @@ std::unordered_set<Layer *> liveLayers;
 struct Layer {
     Composition *owner = nullptr;
     std::uint64_t seenFrame = 0;
+    swt_maya::CommittedLayerProperties committedProperties;
     IDCompositionVisual *visual = nullptr;
     IDCompositionSurface *surface = nullptr;
     IDCompositionEffectGroup *effect = nullptr;
@@ -59,6 +61,7 @@ struct Composition {
     IDCompositionVisual *root = nullptr;
     std::uint64_t frameSequence = 0;
     std::vector<Layer *> layers;
+    swt_maya::CompositionFrameDelta<Layer> frameDelta;
 };
 Composition *getComposition(jlong handle) {
     Composition *c = reinterpret_cast<Composition *>(handle);
@@ -191,17 +194,55 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
             return E_INVALIDARG;
         layer->seenFrame = generation;
     }
-    HRESULT hr = c->root->RemoveAllVisuals();
+    // The OS retains the previous visual tree. Build only a candidate visible order
+    // after validating all handles/properties; the last successful Commit owns truth.
+    c->frameDelta.begin();
+    for (jint i = 0; i < count; i++) {
+        if (p[static_cast<size_t>(i) * 4 + 3] != 0.0f) {
+            c->frameDelta.includeVisible(getLayer(order[i]));
+        }
+    }
+    const bool reorder = c->frameDelta.requiresRebuild();
+    bool changed = reorder;
+    HRESULT hr = reorder ? c->root->RemoveAllVisuals() : S_OK;
     for (jint i = 0; SUCCEEDED(hr) && i < count; i++) {
         Layer *layer = getLayer(order[i]);
         const jfloat *q = &p[static_cast<size_t>(i) * 4];
-        hr = layer->visual->SetOffsetX(q[0]);
-        if (SUCCEEDED(hr)) hr = layer->visual->SetOffsetY(q[1]);
-        if (SUCCEEDED(hr)) hr = layer->effect->SetOpacity(q[2]);
-        // with no reference visual, insertAbove FALSE adds on top of every sibling (TRUE would add at the bottom)
-        if (SUCCEEDED(hr) && q[3] != 0.0f) hr = c->root->AddVisual(layer->visual, FALSE, nullptr);
+        // A property-only frame never detaches and rebuilds the visual tree.
+        if (!layer->committedProperties.sameX(q[0])) {
+            changed = true;
+            hr = layer->visual->SetOffsetX(q[0]);
+        }
+        if (SUCCEEDED(hr) && !layer->committedProperties.sameY(q[1])) {
+            changed = true;
+            hr = layer->visual->SetOffsetY(q[1]);
+        }
+        if (SUCCEEDED(hr) && !layer->committedProperties.sameOpacity(q[2])) {
+            changed = true;
+            hr = layer->effect->SetOpacity(q[2]);
+        }
+        // Without a reference, insertAbove FALSE adds above the last sibling.
+        if (SUCCEEDED(hr) && reorder && q[3] != 0.0f)
+            hr = c->root->AddVisual(layer->visual, FALSE, nullptr);
     }
-    if (SUCCEEDED(hr)) hr = c->device->Commit();
+    // DirectComposition queues commands atomically only at Commit. A no-op frame
+    // needs neither an OS call nor a new transaction.
+    if (SUCCEEDED(hr) && changed) hr = c->device->Commit();
+    if (SUCCEEDED(hr)) {
+        if (reorder) c->frameDelta.accept(); // noexcept: no allocation after Commit
+        if (changed) {
+            for (jint i = 0; i < count; i++) {
+                Layer *layer = getLayer(order[i]);
+                const jfloat *q = &p[static_cast<size_t>(i) * 4];
+                layer->committedProperties.accept(q[0], q[1], q[2]);
+            }
+        }
+    } else {
+        // A failed pending native transaction cannot become the cache authority.
+        // The next call must replay all visual order and property assignments.
+        c->frameDelta.invalidate();
+        for (Layer *layer : c->layers) layer->committedProperties.invalidate();
+    }
     return hr;
 }
 
@@ -215,6 +256,8 @@ extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
             c->layers.erase(c->layers.begin() + i);
             c->root->RemoveVisual(layer->visual);
             c->device->Commit();
+            // The next frame rebuilds membership; never dereference a retired layer.
+            c->frameDelta.invalidate();
             destroy(layer);
             return;
         }
