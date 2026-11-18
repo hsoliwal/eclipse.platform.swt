@@ -55,7 +55,11 @@ jobs:
               -o /tmp/libmaya-packet-test.so
           javac --release 21 -Xlint:all -Werror -d /tmp/maya-packet-classes \
               'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaFramePacket.java' \
-              "$root/tests/java/org/eclipse/swt/internal/maya/MayaComposition.java" \
+              'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java' \
+              'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/NativeLayers.java' \
+              'bundles/org.eclipse.swt/Eclipse SWT Maya/win32/org/eclipse/swt/internal/render/MayaNativeLayers.java' \
+              "$root/tests/java/org/eclipse/swt/internal/maya/impl/Library.java" \
+              "$root/tests/java/org/eclipse/swt/widgets/Control.java" \
               "$root/tests/java/org/eclipse/swt/internal/maya/MayaFramePacketSmoke.java"
           java -Xcheck:jni -cp /tmp/maya-packet-classes \
               org.eclipse.swt.internal.maya.MayaFramePacketSmoke /tmp/libmaya-packet-test.so
