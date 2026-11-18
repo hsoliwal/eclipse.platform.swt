@@ -21,6 +21,7 @@ import org.eclipse.swt.internal.ViewportDamageRegion;
 import org.eclipse.swt.internal.ViewportRuntime;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 
 /**
  * An opt-in, painted Z-stack over a long-coordinate, zoomable XY viewport.
@@ -44,6 +45,13 @@ import org.eclipse.swt.widgets.Composite;
  * do not darken each other where they overlap. Non-normal blend modes,
  * arbitrary masks and native child-control composition are deliberately
  * outside this API.</p>
+ *
+ * <p>Control layers bring real widgets into the layered world: a native
+ * child control (a Text, a Button, any Nebula widget) placed at world bounds,
+ * moved and resized with every pan and zoom and shown only while its layer is
+ * visible and inside the view. The window system composites a child control
+ * above every painted layer; among control layers the Z order is the layers'
+ * order.</p>
  *
  * <p>The widget never disposes application-owned Images or a PaintEvent GC.
  * All API access follows SWT widget-thread and disposal rules.</p>
@@ -89,6 +97,8 @@ public final class LayeredViewport extends Canvas {
         private boolean visible = true;
         private boolean locked;
         private boolean removed;
+        /* a control layer's native child, placed at the layer's bounds; null for painted layers */
+        private Control control;
         /* retained: this layer's composite (it and everything below it) kept in its own image, with the pixels of
            that image that no longer match the layers */
         private boolean retained;
@@ -164,6 +174,7 @@ public final class LayeredViewport extends Canvas {
             bottom = newY + height;
             spatialDirty = true;
             invalidate(this);
+            placeControl(this);
         }
 
         public int getOpacity() {
@@ -180,6 +191,7 @@ public final class LayeredViewport extends Canvas {
             opacity = value;
             spatialDirty = true;
             invalidate(this);
+            placeControl(this);
         }
 
         public boolean isVisible() {
@@ -194,6 +206,7 @@ public final class LayeredViewport extends Canvas {
             visible = value;
             spatialDirty = true;
             invalidate(this);
+            placeControl(this);
         }
 
         /**
@@ -288,6 +301,7 @@ public final class LayeredViewport extends Canvas {
             stack[zIndex] = this;
             publishOrder();
             invalidate(this);
+            orderControls();
         }
 
         public void remove() {
@@ -298,6 +312,7 @@ public final class LayeredViewport extends Canvas {
             stack[--count] = null;
             removed = true;
             releaseComposite();
+            control = null; // the control stays the application's, where it was
             image = null;
             painter = null;
             hitTester = null;
@@ -369,6 +384,7 @@ public final class LayeredViewport extends Canvas {
         viewportRuntime.initializeOrigin(0, 0);
         dirty = new ViewportDamageRegion();
         addPaintListener(event -> paintLayers(event.gc));
+        addListener(SWT.Resize, event -> placeControls());
         addListener(SWT.Dispose, event -> {
             if (backBuffer != null) backBuffer.dispose();
             if (scratch != null) scratch.dispose();
@@ -408,6 +424,33 @@ public final class LayeredViewport extends Canvas {
         return append(name, x, y, size.width, size.height, image, null);
     }
 
+    /**
+     * Adds a layer that places a native control at world bounds: it moves and resizes with every pan and zoom,
+     * and is shown only while the layer is visible, its opacity above 0 and its bounds inside the view. The
+     * window system draws a child control above every painted layer (it cannot be blended); among control layers
+     * the Z order is the layers' order. The control must be a child of this viewport and stays the
+     * application's: removing the layer leaves it where it was and does not dispose it.
+     */
+    public Layer addControlLayer(String name, Control control, long x, long y, long width, long height) {
+        checkWidget();
+        if (name == null || control == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (control.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (control.getParent() != this) SWT.error(SWT.ERROR_INVALID_PARENT);
+        Layer layer = append(name, x, y, width, height, null, null);
+        layer.control = control;
+        placeControl(layer);
+        orderControls();
+        return layer;
+    }
+
+    /** The control of a control layer, or null for a painted layer. */
+    public Control getControl(Layer layer) {
+        checkWidget();
+        if (layer == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        layer.checked();
+        return layer.control;
+    }
+
     private Layer append(String name, long x, long y, long width,
             long height, Image image, LayerPainter painter) {
         validateBounds(x, y, width, height);
@@ -445,6 +488,7 @@ public final class LayeredViewport extends Canvas {
         originY = y;
         viewportRuntime.scrollTo((double) x, (double) y);
         if (!shiftBackBuffer(previousX, previousY)) redraw();
+        placeControls();
     }
 
     public double getZoom() {
@@ -461,6 +505,7 @@ public final class LayeredViewport extends Canvas {
         if (zoom == value) return;
         zoom = value;
         redraw();
+        placeControls();
     }
 
     public Point toScreen(long worldX, long worldY) {
@@ -1056,5 +1101,46 @@ public final class LayeredViewport extends Canvas {
         if (sx < 0) region.add(size.width + sx, 0, -sx, size.height);
         if (sy > 0) region.add(0, 0, size.width, sy);
         if (sy < 0) region.add(0, size.height + sy, size.width, -sy);
+    }
+
+    /* every control layer at its projected bounds */
+    private void placeControls() {
+        for (Layer layer : paintOrder) placeControl(layer);
+    }
+
+    /*
+     * a control layer's control at the layer's projected bounds, shown while the layer is visible, opaque at all and
+     * inside the view; coordinates far outside the view are clamped (the control is then clipped by the view anyway)
+     */
+    private void placeControl(Layer layer) {
+        Control control = layer.control;
+        if (layer.removed || control == null || control.isDisposed()) return;
+        Rectangle area = getClientArea();
+        double left = device(layer.x, originX), top = device(layer.y, originY);
+        double right = device(layer.right, originX), bottom = device(layer.bottom, originY);
+        boolean shown = layer.visible && layer.opacity > 0 && right > area.x && left < (double) area.x + area.width
+                && bottom > area.y && top < (double) area.y + area.height;
+        if (shown) {
+            int x = clampPixel(Math.floor(left), area.x - CONTROL_MARGIN, area.x + area.width);
+            int y = clampPixel(Math.floor(top), area.y - CONTROL_MARGIN, area.y + area.height);
+            int x1 = clampPixel(Math.ceil(right), area.x, area.x + area.width + CONTROL_MARGIN);
+            int y1 = clampPixel(Math.ceil(bottom), area.y, area.y + area.height + CONTROL_MARGIN);
+            control.setBounds(x, y, x1 - x, y1 - y);
+        }
+        if (control.getVisible() != shown) control.setVisible(shown);
+    }
+
+    /* the native Z order of the control layers' controls follows the layers' order, bottom to top */
+    private void orderControls() {
+        for (Layer layer : paintOrder) {
+            if (!layer.removed && layer.control != null && !layer.control.isDisposed()) layer.control.moveAbove(null);
+        }
+    }
+
+    /* how far outside the view a control's bounds may reach (a control larger than that is clamped to it) */
+    private static final int CONTROL_MARGIN = 1 << 14;
+
+    private static int clampPixel(double value, int low, int high) {
+        return (int) Math.max(low, Math.min(high, value));
     }
 }

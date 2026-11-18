@@ -358,6 +358,50 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertEquals(viewport.getDisplay().getSystemColor(SWT.COLOR_CYAN).getRGB(), rgb(pixels(), 150, 150));
     }
 
+    @Test
+    public void testAControlLayerFollowsPanZoomAndItsLayer() {
+        org.eclipse.swt.widgets.Button button = new org.eclipse.swt.widgets.Button(viewport, SWT.PUSH);
+        Layer layer = viewport.addControlLayer("button", button, 20, 30, 80, 24);
+        assertSame(button, viewport.getControl(layer));
+        assertEquals(new Rectangle(20, 30, 80, 24), button.getBounds());
+        viewport.setOrigin(10, 5);
+        assertEquals(new Rectangle(10, 25, 80, 24), button.getBounds(), "a pan moves the control");
+        viewport.setZoom(2.0);
+        assertEquals(new Rectangle(20, 50, 160, 48), button.getBounds(), "a zoom scales it");
+        layer.setWorldBounds(40, 30, 10, 10);
+        assertEquals(new Rectangle(60, 50, 20, 20), button.getBounds(), "the layer's bounds place it");
+        assertTrue(button.getVisible());
+        layer.setVisible(false);
+        assertFalse(button.getVisible(), "hidden with its layer");
+        layer.setVisible(true);
+        assertTrue(button.getVisible());
+        viewport.setOrigin(100000, 0);
+        assertFalse(button.getVisible(), "hidden outside the view");
+        viewport.setOrigin(10, 5);
+        assertTrue(button.getVisible());
+        layer.setOpacity(0);
+        assertFalse(button.getVisible(), "hidden at opacity 0");
+        layer.setOpacity(255);
+        assertSame(layer, viewport.hitTest(65, 55), "a control layer is hit like any layer");
+        layer.remove();
+        assertFalse(button.isDisposed(), "the control stays the application's");
+        viewport.setOrigin(0, 0);
+        assertEquals(new Rectangle(60, 50, 20, 20), button.getBounds(), "a removed layer no longer moves its control");
+        org.eclipse.swt.widgets.Button stranger = new org.eclipse.swt.widgets.Button(shell, SWT.PUSH);
+        assertThrows(IllegalArgumentException.class, () -> viewport.addControlLayer("x", stranger, 0, 0, 5, 5));
+    }
+
+    @Test
+    public void testControlLayersStackInLayerOrder() {
+        org.eclipse.swt.widgets.Button a = new org.eclipse.swt.widgets.Button(viewport, SWT.PUSH);
+        org.eclipse.swt.widgets.Button b = new org.eclipse.swt.widgets.Button(viewport, SWT.PUSH);
+        Layer lower = viewport.addControlLayer("a", a, 10, 10, 50, 30);
+        viewport.addControlLayer("b", b, 30, 20, 50, 30);
+        assertSame(b, viewport.getChildren()[0], "the upper layer's control is on top (children list the topmost first)");
+        lower.moveTo(1);
+        assertSame(a, viewport.getChildren()[0], "moving the layer up moves its control up");
+    }
+
     /* the pixels shown equal those of recomposing every layer at the current origin */
     private void assertSameAsAFullRecomposition() {
         ImageData shown = pixels();
