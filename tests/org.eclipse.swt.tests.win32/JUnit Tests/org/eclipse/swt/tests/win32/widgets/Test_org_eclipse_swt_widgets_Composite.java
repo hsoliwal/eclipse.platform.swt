@@ -22,6 +22,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -158,6 +159,27 @@ public class Test_org_eclipse_swt_widgets_Composite {
 					"Reset restores the last explicitly selected Composite bevel");
 		} finally {
 			control.dispose();
+		}
+	}
+
+	@Test
+	public void test_nativeOtherControlOutsetKeepsWindowEdge() {
+		Button button = new Button(shell, SWT.PUSH);
+		try {
+			button.setSize(96, 36);
+			int originalExStyle = OS.GetWindowLong(button.handle, OS.GWL_EXSTYLE);
+			button.setBorderRelief(SWT.SHADOW_OUT);
+			int raisedExStyle = OS.GetWindowLong(button.handle, OS.GWL_EXSTYLE);
+			assertTrue((raisedExStyle & OS.WS_EX_WINDOWEDGE) != 0,
+					"Non-Composite HWND must retain its original WINDOWEDGE path");
+			assertEquals(0, raisedExStyle & OS.WS_EX_CLIENTEDGE,
+					"Only exact direct Composite/Canvas use the GDI CLIENTEDGE painter");
+			button.setBorderRelief(SWT.DEFAULT);
+			int edgeMask = OS.WS_EX_CLIENTEDGE | OS.WS_EX_STATICEDGE | OS.WS_EX_WINDOWEDGE;
+			assertEquals(originalExStyle & edgeMask,
+					OS.GetWindowLong(button.handle, OS.GWL_EXSTYLE) & edgeMask);
+		} finally {
+			button.dispose();
 		}
 	}
 
