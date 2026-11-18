@@ -1456,4 +1456,93 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertSameAsAFullRecomposition();
         assertThrows(IllegalArgumentException.class, () -> column.setSticky(SWT.HORIZONTAL | SWT.VERTICAL, 0, 0));
     }
+
+    @Test
+    public void testLayerGroupHasAtomicZOrderAndLocalChildren() {
+        Layer below = viewport.addPaintLayer("below", 0, 0, 300, 240, (gc, ctx) -> { });
+        LayeredViewport.LayerGroup group = viewport.addLayerGroup("group", 30, 40, 100, 80);
+        LayeredViewport.LayerGroup.Child first = group.addPaintChild(
+                "first", 10, 10, 50, 40, (gc, ctx) -> { });
+        LayeredViewport.LayerGroup.Child second = group.addPaintChild(
+                "second", 15, 15, 25, 25, (gc, ctx) -> { });
+        assertEquals(2, group.getChildren().length);
+        assertSame(second, group.hitTestChild(50, 60));
+        assertSame(group.getLayer(), viewport.hitTest(50, 60));
+        assertEquals(1, group.getLayer().getZIndex());
+
+        first.moveTo(1);
+        assertEquals(1, first.getZIndex());
+        assertSame(first, group.hitTestChild(50, 60));
+        first.setLocked(true);
+        assertSame(second, group.hitTestChild(50, 60));
+        second.setVisible(false);
+        assertNull(group.hitTestChild(50, 60));
+        assertSame(below, viewport.hitTest(50, 60));
+        first.setLocked(false);
+        assertSame(first, group.hitTestChild(50, 60));
+        second.setVisible(true);
+
+        group.getLayer().setWorldBounds(130, 90, 100, 80);
+        assertNull(group.hitTestChild(50, 60));
+        assertSame(first, group.hitTestChild(150, 110));
+        assertSame(group.getLayer(), viewport.hitTest(150, 110));
+        group.getLayer().moveTo(0);
+        assertSame(below, viewport.hitTest(150, 110));
+        group.getLayer().moveTo(1);
+        assertSame(group.getLayer(), viewport.hitTest(150, 110));
+    }
+
+    @Test
+    public void testGroupChildrenHandlesAndClipping() {
+        LayeredViewport.LayerGroup group = viewport.addLayerGroup("group", 20, 20, 50, 50);
+        LayeredViewport.LayerGroup.Child outside = group.addPaintChild(
+                "outside", 60, 0, 10, 10, (gc, ctx) -> { });
+        assertNull(group.hitTestChild(85, 25), "a child cannot pick beyond its parent bounds");
+        LayeredViewport.LayerGroup.Child inside = group.addPaintChild(
+                "inside", 10, 15, 12, 12, (gc, ctx) -> { });
+        assertSame(inside, group.hitTestChild(35, 40));
+        inside.setHitTester((child, x, y) -> x >= 15);
+        assertNull(group.hitTestChild(33, 40));
+        assertSame(inside, group.hitTestChild(38, 40));
+        LayeredViewport.LayerGroup.Child[] snapshot = group.getChildren();
+        snapshot[0] = inside;
+        assertSame(outside, group.getChildren()[0]);
+        assertThrows(IllegalArgumentException.class, () -> inside.setLocalBounds(0, 0, -1, 10));
+
+        long id = inside.getId();
+        inside.remove();
+        assertThrows(IllegalArgumentException.class, inside::getId);
+        LayeredViewport.LayerGroup.Child newer = group.addPaintChild(
+                "new", 0, 0, 10, 10, (gc, ctx) -> { });
+        assertTrue(newer.getId() > id);
+        group.getLayer().remove();
+        assertThrows(IllegalArgumentException.class, newer::getId);
+    }
+
+    @Test
+    public void testGroupOpacityIsAppliedAfterItsChildrenOverlap() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        LayeredViewport.LayerGroup group = viewport.addLayerGroup("overlay", 0, 0, 140, 120);
+        group.addPaintChild("red", 0, 0, 100, 90, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_RED));
+            gc.fillRectangle(ctx.clip());
+        });
+        group.addPaintChild("blue", 25, 20, 80, 70, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLUE));
+            gc.fillRectangle(ctx.clip());
+        });
+        group.getLayer().setOpacity(128);
+        show();
+        ImageData shown = pixels();
+        RGB red = rgb(shown, 10, 10);
+        RGB blue = rgb(shown, 40, 40);
+        assertTrue(red.red > 250 && Math.abs(red.green - 127) <= 4 && Math.abs(red.blue - 127) <= 4,
+                "the group opacity halves red above white");
+        assertTrue(Math.abs(blue.red - 127) <= 4 && Math.abs(blue.green - 127) <= 4 && blue.blue > 250,
+                "the overlapping blue child replaces red before opacity is applied once");
+        assertEquals(system(SWT.COLOR_WHITE), rgb(shown, 130, 110));
+        group.getLayer().setOpacity(255);
+        viewport.update();
+        assertEquals(system(SWT.COLOR_BLUE), rgb(pixels(), 40, 40));
+    }
 }
