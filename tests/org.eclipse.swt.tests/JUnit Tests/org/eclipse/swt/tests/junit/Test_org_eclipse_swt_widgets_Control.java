@@ -1189,6 +1189,84 @@ public void test_NoExceptionsThrownInFillLayout () {
 }
 
 @Test
+public void test_borderStyleDelegatesToNativeReliefOwner() {
+    org.eclipse.swt.widgets.Composite control =
+            new org.eclipse.swt.widgets.Composite(shell, SWT.BORDER);
+    try {
+        assertEquals(SWT.DEFAULT, control.getBorderRelief());
+        assertEquals(SWT.DEFAULT, control.getBorderStyle());
+        assertEquals(SWT.NONE, control.getBevelBorder());
+        assertThrows(IllegalArgumentException.class,
+                () -> control.setBorderStyle(SWT.BORDER));
+        assertThrows(IllegalArgumentException.class,
+                () -> control.setBorderStyle(SWT.NONE));
+        assertEquals(SWT.DEFAULT, control.getBorderRelief());
+
+        if ("cocoa".equals(SWT.getPlatform())) {
+            // Cocoa's explicit native NSScrollView bezel is qualified by the
+            // original List test; an unbordered control still rejects relief.
+            org.eclipse.swt.widgets.List bezel =
+                    new org.eclipse.swt.widgets.List(shell, SWT.BORDER);
+            try {
+                bezel.setBorderStyle(SWT.SHADOW_OUT);
+                assertEquals(SWT.SHADOW_OUT, bezel.getBorderRelief());
+                assertEquals(SWT.SHADOW_OUT, bezel.getBorderStyle());
+                bezel.setBorderStyle(SWT.DEFAULT);
+                assertEquals(SWT.DEFAULT, bezel.getBorderStyle());
+            } finally {
+                bezel.dispose();
+            }
+            org.eclipse.swt.widgets.Composite unbordered =
+                    new org.eclipse.swt.widgets.Composite(shell, SWT.NONE);
+            try {
+                assertThrows(org.eclipse.swt.SWTError.class,
+                        () -> unbordered.setBorderStyle(SWT.SHADOW_OUT));
+                assertEquals(SWT.DEFAULT, unbordered.getBorderStyle());
+            } finally {
+                unbordered.dispose();
+            }
+        } else {
+            control.setBorderStyle(SWT.SHADOW_IN);
+            assertEquals(SWT.SHADOW_IN, control.getBorderRelief());
+            assertEquals(SWT.SHADOW_IN, control.getBorderStyle());
+
+            if ("win32".equals(SWT.getPlatform())) {
+                // The Control override and Composite fallback are distinct
+                // logical choices but share a single native HWND painter.
+                assertEquals(SWT.NONE, control.getBevelBorder());
+                control.setBevelBorder(SWT.SHADOW_OUT);
+                assertEquals(SWT.DEFAULT, control.getBorderStyle());
+                assertEquals(SWT.SHADOW_OUT, control.getBevelBorder());
+                control.setBorderRelief(SWT.SHADOW_ETCHED_IN);
+                assertEquals(SWT.SHADOW_ETCHED_IN, control.getBorderStyle());
+                assertEquals(SWT.SHADOW_OUT, control.getBevelBorder());
+                control.setBorderStyle(SWT.SHADOW_NONE);
+                assertEquals(SWT.SHADOW_NONE, control.getBorderRelief());
+                assertEquals(SWT.SHADOW_OUT, control.getBevelBorder());
+                control.setBorderStyle(SWT.DEFAULT);
+                assertEquals(SWT.SHADOW_OUT, control.getBevelBorder());
+                control.setBevelBorder(SWT.NONE);
+                assertEquals(SWT.DEFAULT, control.getBorderStyle());
+                assertEquals(SWT.NONE, control.getBevelBorder());
+            } else {
+                // GTK Composite's legacy bevel API aliases Control relief.
+                assertEquals(SWT.SHADOW_IN, control.getBevelBorder());
+                control.setBevelBorder(SWT.SHADOW_OUT);
+                assertEquals(SWT.SHADOW_OUT, control.getBorderStyle());
+                control.setBorderStyle(SWT.SHADOW_NONE);
+                assertEquals(SWT.SHADOW_NONE, control.getBorderRelief());
+                assertEquals(SWT.NONE, control.getBevelBorder());
+                control.setBorderStyle(SWT.DEFAULT);
+                assertEquals(SWT.DEFAULT, control.getBorderRelief());
+                assertEquals(SWT.NONE, control.getBevelBorder());
+            }
+        }
+    } finally {
+        control.dispose();
+    }
+}
+
+@Test
 public void test_nativeBorderRelief_contract() {
     Control control = new org.eclipse.swt.widgets.Composite(shell, SWT.NONE);
     try {

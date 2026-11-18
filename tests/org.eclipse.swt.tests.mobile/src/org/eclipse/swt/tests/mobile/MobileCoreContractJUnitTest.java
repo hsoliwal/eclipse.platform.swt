@@ -15,7 +15,6 @@
 package org.eclipse.swt.tests.mobile;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.SWTError;
 import org.eclipse.swt.internal.mobile.MobileRuntime;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -33,16 +32,31 @@ public final class MobileCoreContractJUnitTest {
 			try {
 				Shell shell = new Shell(display);
 				Composite composite = new Composite(shell, SWT.SHADOW_ETCHED_IN);
+				// SHADOW_ETCHED_IN aliases unrelated constructor bits on this
+				// widget. It must never select a native bevel implicitly.
 				assertEquals(SWT.NONE, composite.getBevelBorder());
+				assertEquals(SWT.DEFAULT, composite.getBorderRelief());
+				int originalWidth = composite.getBorderWidth();
+				int originalPeers = platform.controls.size();
 				composite.setBevelBorder(SWT.NONE);
 				composite.setBevelBorder(SWT.SHADOW_NONE);
 				assertEquals(SWT.NONE, composite.getBevelBorder());
 				assertThrows(IllegalArgumentException.class,
 						() -> composite.setBevelBorder(SWT.SHADOW_IN | SWT.SHADOW_OUT));
-				SWTError unsupported = assertThrows(SWTError.class,
-						() -> composite.setBevelBorder(SWT.SHADOW_IN));
-				assertEquals(SWT.ERROR_NOT_IMPLEMENTED, unsupported.code);
 				assertEquals(SWT.NONE, composite.getBevelBorder());
+				for (int relief : new int[] {SWT.SHADOW_IN, SWT.SHADOW_OUT,
+						SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT}) {
+					composite.setBevelBorder(relief);
+					assertEquals(relief, composite.getBevelBorder());
+					assertEquals(relief, composite.getBorderRelief());
+					assertEquals(originalPeers, platform.controls.size(),
+							"Native border must not create another peer");
+				}
+				composite.setBevelBorder(SWT.NONE);
+				assertEquals(SWT.DEFAULT, composite.getBorderRelief());
+				assertEquals(SWT.NONE, composite.getBevelBorder());
+				assertEquals(originalWidth, composite.getBorderWidth());
+				assertEquals(originalPeers, platform.controls.size());
 			} finally {
 				display.dispose();
 			}

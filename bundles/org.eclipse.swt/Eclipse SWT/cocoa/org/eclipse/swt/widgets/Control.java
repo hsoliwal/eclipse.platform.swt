@@ -1817,6 +1817,28 @@ public void setBorderRelief (int relief) {
 }
 
 /**
+ * Returns the same native border appearance as {@link #getBorderRelief()}.
+ * This is an API alias, not a separate border state or renderer.
+ *
+ * @return the existing native relief, or SWT.DEFAULT when unmodified
+ */
+public int getBorderStyle () {
+	return getBorderRelief ();
+}
+
+/**
+ * Selects the native border appearance through {@link #setBorderRelief(int)}.
+ * It preserves the receiver's original widget handle and native ownership,
+ * including platform-specific failure behavior and constructor style bits.
+ *
+ * @param style a relief value supported by setBorderRelief
+ */
+public void setBorderStyle (int style) {
+	setBorderRelief (style);
+}
+
+
+/**
  * Returns the receiver's border width in points.
  *
  * @return the border width

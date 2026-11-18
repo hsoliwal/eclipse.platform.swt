@@ -652,6 +652,26 @@ public final class MobileLifecycleContractJUnitTest {
 		canvas.dispose();
 		assertFalse(platform.controls.containsKey(peer));
 	}
+	@Test void compositeNativeBevelAliasesControlReliefWithoutPeerChurn() {
+		Composite c = new Composite(shell, SWT.BORDER);
+		int peers = platform.controls.size();
+		long peer = platform.lastCreated;
+		int width = c.getBorderWidth();
+		assertEquals(SWT.NONE, c.getBevelBorder());
+		c.setBevelBorder(SWT.SHADOW_IN);
+		assertEquals(SWT.SHADOW_IN, c.getBorderRelief());
+		assertEquals(SWT.SHADOW_IN, c.getBevelBorder());
+		assertEquals(SWT.SHADOW_IN, platform.controls.get(peer).borderRelief);
+		c.setBorderRelief(SWT.SHADOW_OUT);
+		assertEquals(SWT.SHADOW_OUT, c.getBevelBorder());
+		c.setBevelBorder(SWT.NONE);
+		assertEquals(SWT.DEFAULT, c.getBorderRelief());
+		assertEquals(width, c.getBorderWidth());
+		assertEquals(peers, platform.controls.size());
+		c.dispose();
+		assertFalse(platform.controls.containsKey(peer));
+	}
+
 	@Test void staleNativePeerCannotActivateADisposedWidget() {
 		Canvas canvas = canvas(shell);
 		long peer = platform.lastCreated;

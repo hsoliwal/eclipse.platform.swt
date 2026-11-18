@@ -58,20 +58,18 @@ public class Composite extends Scrollable {
 	int layoutCount, backgroundMode;
 
 	static final int TOOLTIP_LIMIT = 4096;
-	private int bevelBorder;
-
 	/*
-	 * Composite and Canvas constructor bits cannot encode a bevel: SWT style bits
-	 * are shared with unrelated styles (for example NO_SCROLL and SIMPLE).
-	 * A native bevel is only enabled explicitly after construction.
+	 * One mutable relief value lives in Control. Direct Composite and Canvas
+	 * retain the existing Win32 DrawEdge painter with no second style snapshot.
 	 */
+	@Override
+	boolean usesCompositeBevelPainter () {
+		return getClass () == Composite.class || getClass () == Canvas.class;
+	}
+
 	private int nativeBevelEdge () {
-		if (getClass () != Composite.class && getClass () != Canvas.class) return 0;
-		/* Explicit Control relief temporarily takes precedence over our
-		 * existing bevel, without changing the stored bevel selection. */
-		int effective = nativeBorderReliefForPaint ();
-		if (effective == SWT.DEFAULT) effective = bevelBorder;
-		return switch (effective) {
+		if (!usesCompositeBevelPainter ()) return 0;
+		return switch (effectiveBorderReliefForPaint ()) {
 			case SWT.SHADOW_IN -> OS.EDGE_SUNKEN;
 			case SWT.SHADOW_OUT -> OS.EDGE_RAISED;
 			case SWT.SHADOW_ETCHED_IN -> OS.EDGE_ETCHED;
@@ -130,55 +128,38 @@ public Composite (Composite parent, int style) {
  */
 public int getBevelBorder () {
 	checkWidget ();
-	return bevelBorder;
+	return compositeBevelState ();
 }
 
 /**
- * Applies a native Windows non-client bevel to this Composite or Canvas.
- * No constructor shadow bits are interpreted, because SWT reuses style bits.
- * The original SWT.BORDER frame is restored when the bevel is cleared.
- * Control.setBorderRelief temporarily overrides this bevel; a later
- * setBevelBorder call takes precedence and resets that override.
- *
- * @param border one of SWT.NONE, SWT.SHADOW_NONE, SWT.SHADOW_IN,
- * SWT.SHADOW_OUT, SWT.SHADOW_ETCHED_IN, or SWT.SHADOW_ETCHED_OUT
- * @exception IllegalArgumentException if the value is invalid or this control
- * is not a direct Composite or Canvas
- * @exception SWTException if called after disposal or from a non-UI thread
+ * One native HWND owner, two compatible logical choices:
+ * SWT.DEFAULT on the Control overlay restores the stored Composite bevel.
+ */
+@Override
+public void setBorderRelief (int relief) {
+	checkWidget ();
+	if (super.getBorderRelief () == relief) return;
+	super.setBorderRelief (relief);
+	if (!isDisposed ()) requestLayout ();
+}
+
+/**
+ * Keeps the original Composite/Canvas API with its accepted semantics.
+ * The bevel is a fallback value stored by Control; a later Control overlay
+ * temporarily overrides it until SWT.DEFAULT. No second HWND state exists.
  */
 public void setBevelBorder (int border) {
 	checkWidget ();
 	if (border == SWT.SHADOW_NONE) border = SWT.NONE;
-	switch (border) {
-		case SWT.NONE, SWT.SHADOW_IN, SWT.SHADOW_OUT,
-				SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT -> { /* valid */ }
-		default -> error (SWT.ERROR_INVALID_ARGUMENT);
+	if (border != SWT.NONE && border != SWT.SHADOW_IN
+			&& border != SWT.SHADOW_OUT && border != SWT.SHADOW_ETCHED_IN
+			&& border != SWT.SHADOW_ETCHED_OUT) {
+		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (getClass () != Composite.class && getClass () != Canvas.class) {
-		error (SWT.ERROR_INVALID_ARGUMENT);
-	}
-	/* An explicit Composite bevel is the most recent request; drop any
-	 * Control-level override before modifying the native frame. */
-	if (nativeBorderReliefForPaint () != SWT.DEFAULT) setBorderRelief (SWT.DEFAULT);
-	if (bevelBorder == border) return;
-
-	long hwnd = borderHandle ();
-	int exStyle = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
-	int winStyle = OS.GetWindowLong (hwnd, OS.GWL_STYLE);
-	int nextExStyle = exStyle & ~OS.WS_EX_CLIENTEDGE;
-	int nextWinStyle = winStyle & ~OS.WS_BORDER;
-	if (border != SWT.NONE || ((style & SWT.BORDER) != 0 && !isUseWsBorder ())) {
-		nextExStyle |= OS.WS_EX_CLIENTEDGE;
-	} else if ((style & SWT.BORDER) != 0) {
-		nextWinStyle |= OS.WS_BORDER;
-	}
-
-	bevelBorder = border;
-	if (nextExStyle != exStyle) OS.SetWindowLong (hwnd, OS.GWL_EXSTYLE, nextExStyle);
-	if (nextWinStyle != winStyle) OS.SetWindowLong (hwnd, OS.GWL_STYLE, nextWinStyle);
-	OS.SetWindowPos (hwnd, 0, 0, 0, 0, 0, OS.SWP_FRAMECHANGED
-			| OS.SWP_NOACTIVATE | OS.SWP_NOMOVE | OS.SWP_NOSIZE | OS.SWP_NOZORDER);
-	requestLayout ();
+	if (!usesCompositeBevelPainter ()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+	if (compositeBevelState () == border && super.getBorderRelief () == SWT.DEFAULT) return;
+	setCompositeBevelState(border);
+	if (!isDisposed ()) requestLayout ();
 }
 
 Control [] _getChildren () {
