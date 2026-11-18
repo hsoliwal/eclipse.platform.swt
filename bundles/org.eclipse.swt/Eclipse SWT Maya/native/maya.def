@@ -240,6 +240,7 @@ EXPORTS
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nUpload
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nUploadDirty
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nApply
+    Java_org_eclipse_swt_internal_maya_MayaComposition__1nApplyScene
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nFramePacketVersion
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nApplyPacked
     Java_org_eclipse_swt_internal_maya_MayaComposition__1nRemoveLayer
