@@ -1244,6 +1244,42 @@ public void test_nativeBorderRelief_win32_removesAndRestoresWSBorder() {
 }
 
 @Test
+public void test_nativeBorderRelief_cocoaNativeBezel() {
+    org.junit.jupiter.api.Assumptions.assumeTrue("cocoa".equals(SWT.getPlatform()));
+    org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List(shell, SWT.BORDER);
+    try {
+        list.setBounds(10, 10, 180, 110);
+        int originalWidth = list.getBorderWidth();
+        org.eclipse.swt.graphics.Rectangle client = list.getClientArea();
+        assertTrue(originalWidth > 0, "native bezel required");
+        for (int relief : new int[] {SWT.SHADOW_IN, SWT.SHADOW_OUT,
+                SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT}) {
+            list.setBorderRelief(relief);
+            assertEquals(relief, list.getBorderRelief());
+            assertEquals(originalWidth, list.getBorderWidth(), "native border trim unchanged");
+            assertEquals(client, list.getClientArea(), "native client coordinates unchanged");
+        }
+        list.setBorderRelief(SWT.DEFAULT);
+        assertEquals(SWT.DEFAULT, list.getBorderRelief());
+        assertEquals(originalWidth, list.getBorderWidth());
+        assertThrows(org.eclipse.swt.SWTError.class,
+                () -> list.setBorderRelief(SWT.SHADOW_NONE));
+        assertEquals(SWT.DEFAULT, list.getBorderRelief());
+    } finally {
+        list.dispose();
+    }
+    org.eclipse.swt.widgets.Composite unbordered =
+            new org.eclipse.swt.widgets.Composite(shell, SWT.NONE);
+    try {
+        assertThrows(org.eclipse.swt.SWTError.class,
+                () -> unbordered.setBorderRelief(SWT.SHADOW_OUT));
+        assertEquals(SWT.DEFAULT, unbordered.getBorderRelief());
+    } finally {
+        unbordered.dispose();
+    }
+}
+
+@Test
 public void test_nativeBorderRelief_gtkDeclarations() {
     assertTrue(org.eclipse.swt.internal.NativeBorderRelief
             .gtkDeclaration(SWT.SHADOW_IN).contains("inset"));
