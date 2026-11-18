@@ -42,6 +42,14 @@ int main() {
     assert(swt_maya::validPackedDirtyFrame(1, 1, 1, good, 1, 4));
     assert(!swt_maya::validPackedDirtyFrame(1, 1, 1, bad, 1, 4));
     assert(!swt_maya::validPackedDirtyFrame(1, 1, 1, good, 4097, 16388));
-    checks += 3;
+    // The UINT pitch is in BYTES, not pixels. Keep JNI and Java preflight
+    // aligned at the exact 4-byte/pixel 0xffffffff boundary.
+    const int largestGoodPitch[4] = {0, 0, 1'073'741'823, 1};
+    const int firstBadPitch[4] = {0, 0, 1'073'741'824, 1};
+    assert(swt_maya::validPackedDirtyFrame(1'073'741'823, 1, INT32_MAX,
+            largestGoodPitch, 1, 4));
+    assert(!swt_maya::validPackedDirtyFrame(1'073'741'824, 1, INT32_MAX,
+            firstBadPitch, 1, 4));
+    checks += 5;
     std::cout << "PASS " << checks << " packed native dirty-pixel checks\n";
 }
