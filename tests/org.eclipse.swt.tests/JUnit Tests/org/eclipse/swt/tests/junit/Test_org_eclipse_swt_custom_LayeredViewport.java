@@ -2000,7 +2000,7 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
                     "restoring the native frame restores the original viewport geometry");
             assertTrue(control.getVisible());
             assertEquals(1f, backend.lastProperties[3]);
-            assertSame(childLayer, viewport.getControl(childLayer),
+            assertSame(control, viewport.getControl(childLayer),
                     "native child ownership is unchanged");
         } finally {
             if (!viewport.isDisposed()) {
