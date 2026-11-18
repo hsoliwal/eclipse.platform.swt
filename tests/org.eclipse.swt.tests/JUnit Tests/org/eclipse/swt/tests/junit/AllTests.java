@@ -28,6 +28,7 @@ import org.junit.platform.suite.api.Suite;
 	Test_ItemBitSetMaximumPosition.class,
 	Test_LayerRectIndex.class,
 	Test_LayerArgbCompositor.class,
+	Test_ViewportLayerPosition.class,
 	Test_ViewportBounds.class,
 	Test_ViewportBoundsGtk.class,
 	Test_ViewportRowWindow.class,
