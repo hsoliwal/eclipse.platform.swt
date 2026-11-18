@@ -54,7 +54,6 @@ public final class LayerRectIndex {
 		if (rectangles == null) throw new IllegalArgumentException("bounds required");
 		int size = rectangles.size();
 		if (size < 0) throw new IllegalArgumentException("negative size");
-		ensureCapacity(size);
 		count = 0;
 		resultCount = 0;
 		for (int i = 0; i < size; i++) {
@@ -65,6 +64,7 @@ public final class LayerRectIndex {
 			long b = rectangles.bottom(i);
 			if (l > r || t > b) throw new IllegalArgumentException("inverted bounds at " + i);
 			if (l == r || t == b) continue;
+			if (count == left.length) ensureCapacity(count + 1);
 			int slot = count++;
 			left[slot] = l;
 			top[slot] = t;
@@ -168,6 +168,7 @@ public final class LayerRectIndex {
 	}
 
 	private void radixSort(int[] order, long[] keys, int length) {
+		if (length < 2) return;
 		int[] from = order, to = sortScratch;
 		for (int shift = 0; shift < Long.SIZE; shift += 8) {
 			Arrays.fill(frequencies, 0);
