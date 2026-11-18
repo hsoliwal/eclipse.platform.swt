@@ -111,6 +111,9 @@ public final class LayeredRibbon extends Composite {
         if (image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
         Layer layer = pages.addImageLayer(title, image, 0, 0);
         Tab tab = add(title, layer, null);
+        // Native admission walks the accepted paint-order snapshot. Refresh it
+        // after the append even when this new page is not selected yet.
+        pages.getLayers();
         layer.setNative(true);
         return tab;
     }

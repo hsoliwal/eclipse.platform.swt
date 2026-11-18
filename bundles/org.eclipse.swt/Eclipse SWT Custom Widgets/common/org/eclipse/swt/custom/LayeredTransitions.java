@@ -165,6 +165,14 @@ public final class LayeredTransitions {
             } finally {
                 if (!viewport.isDisposed()) viewport.endUpdate();
             }
+        } catch (RuntimeException | Error failedFrame) {
+            // A caller's resize/paint listener can throw while a native
+            // Control is moving. Never strand a motion with no live timer.
+            // Preserve that exception and suppress successful completions.
+            for (Motion motion : active.values()) motion.running = false;
+            active.clear();
+            Arrays.fill(completed, 0, done, null);
+            throw failedFrame;
         } finally {
             Arrays.fill(snapshot, 0, used, null);
             paintingFrame = false;
