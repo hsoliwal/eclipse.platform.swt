@@ -18,6 +18,8 @@
 #include <jni.h>
 #include <cstdint>
 #include <vector>
+#include <unordered_set>
+#include "MayaCompositionChecks.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -35,9 +37,14 @@ template <class T> void release(T *&p) {
 }
 
 struct Composition;
+struct Layer;
+// O(1) live-handle membership: never dereference an arbitrary jlong.
+std::unordered_set<Composition *> liveCompositions;
+std::unordered_set<Layer *> liveLayers;
 
 struct Layer {
     Composition *owner = nullptr;
+    std::uint64_t seenFrame = 0;
     IDCompositionVisual *visual = nullptr;
     IDCompositionSurface *surface = nullptr;
     IDCompositionEffectGroup *effect = nullptr;
@@ -50,10 +57,20 @@ struct Composition {
     IDCompositionDevice *device = nullptr;
     IDCompositionTarget *target = nullptr;
     IDCompositionVisual *root = nullptr;
+    std::uint64_t frameSequence = 0;
     std::vector<Layer *> layers;
 };
+Composition *getComposition(jlong handle) {
+    Composition *c = reinterpret_cast<Composition *>(handle);
+    return liveCompositions.find(c) == liveCompositions.end() ? nullptr : c;
+}
+Layer *getLayer(jlong handle) {
+    Layer *l = reinterpret_cast<Layer *>(handle);
+    return liveLayers.find(l) == liveLayers.end() ? nullptr : l;
+}
 
 void destroy(Layer *layer) {
+    liveLayers.erase(layer);
     release(layer->effect);
     release(layer->surface);
     release(layer->visual);
@@ -61,6 +78,7 @@ void destroy(Layer *layer) {
 }
 
 void destroy(Composition *c) {
+    liveCompositions.erase(c);
     for (Layer *layer : c->layers) destroy(layer);
     c->layers.clear();
     if (c->target) {
@@ -79,6 +97,7 @@ void destroy(Composition *c) {
 
 extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nCreate
   (JNIEnv *, jclass, jlong hwnd) {
+    if (!hwnd) return 0;
     Composition *c = new Composition();
     IDXGIDevice *dxgi = nullptr;
     bool ok = SUCCEEDED(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
@@ -94,13 +113,14 @@ extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaCompos
         destroy(c);
         return 0;
     }
+    liveCompositions.insert(c);
     return reinterpret_cast<jlong>(c);
 }
 
 extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nAddLayer
   (JNIEnv *, jclass, jlong composition, jint width, jint height) {
-    Composition *c = reinterpret_cast<Composition *>(composition);
-    if (!c || width <= 0 || height <= 0) return 0;
+    Composition *c = getComposition(composition);
+    if (!c || !swt_maya::validPixelSize(width, height)) return 0;
     Layer *layer = new Layer();
     layer->owner = c;
     layer->width = width;
@@ -116,6 +136,7 @@ extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaCompos
         return 0;
     }
     c->layers.push_back(layer);
+    liveLayers.insert(layer);
     return reinterpret_cast<jlong>(layer);
 }
 
@@ -123,12 +144,14 @@ extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaCompos
 // which is DXGI_FORMAT_B8G8R8A8); returns 0, or the failing HRESULT
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nUpload
   (JNIEnv *env, jclass, jlong layerHandle, jintArray pixels) {
-    Layer *layer = reinterpret_cast<Layer *>(layerHandle);
+    Layer *layer = getLayer(layerHandle);
     if (!layer || !pixels) return E_POINTER;
     jsize n = env->GetArrayLength(pixels);
-    if (n < static_cast<jsize>(layer->width) * layer->height) return E_INVALIDARG;
-    std::vector<jint> copy(static_cast<size_t>(layer->width) * layer->height);
-    env->GetIntArrayRegion(pixels, 0, static_cast<jsize>(copy.size()), copy.data());
+    if (!swt_maya::validPixelBuffer(layer->width, layer->height, n)) return E_INVALIDARG;
+    const jsize count = static_cast<jsize>(static_cast<std::uint64_t>(layer->width) * layer->height);
+    std::vector<jint> copy(static_cast<size_t>(count));
+    env->GetIntArrayRegion(pixels, 0, count, copy.data());
+    if (env->ExceptionCheck()) return E_FAIL;
     ID3D11Texture2D *texture = nullptr;
     POINT at;
     HRESULT hr = layer->surface->BeginDraw(nullptr, __uuidof(ID3D11Texture2D), reinterpret_cast<void **>(&texture), &at);
@@ -144,16 +167,33 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
 // hidden layers are detached; one Commit. Returns 0, or the failing HRESULT.
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nApply
   (JNIEnv *env, jclass, jlong composition, jlongArray layers, jfloatArray props, jint count) {
-    Composition *c = reinterpret_cast<Composition *>(composition);
-    if (!c || count < 0 || env->GetArrayLength(layers) < count || env->GetArrayLength(props) < count * 4) return E_INVALIDARG;
-    std::vector<jlong> order(count);
+    Composition *c = getComposition(composition);
+    if (!c || !layers || !props) return E_POINTER;
+    if (!swt_maya::validFrameArrays(count, env->GetArrayLength(layers), env->GetArrayLength(props)))
+        return E_INVALIDARG;
+    std::vector<jlong> order(static_cast<size_t>(count));
     std::vector<jfloat> p(static_cast<size_t>(count) * 4);
-    env->GetLongArrayRegion(layers, 0, count, order.data());
-    env->GetFloatArrayRegion(props, 0, count * 4, p.data());
+    if (count != 0) env->GetLongArrayRegion(layers, 0, count, order.data());
+    if (env->ExceptionCheck()) return E_FAIL;
+    if (count != 0) env->GetFloatArrayRegion(props, 0, count * 4, p.data());
+    if (env->ExceptionCheck()) return E_FAIL;
+    // Validate every handle and property before modifying the visible tree.
+    std::uint64_t generation = ++c->frameSequence;
+    if (generation == 0) {
+        for (Layer *layer : c->layers) layer->seenFrame = 0;
+        generation = ++c->frameSequence;
+    }
+    for (jint i = 0; i < count; i++) {
+        Layer *layer = getLayer(order[i]);
+        const jfloat *q = &p[static_cast<size_t>(i) * 4];
+        if (!layer || layer->owner != c || layer->seenFrame == generation ||
+                !swt_maya::validLayerProperties(q[0], q[1], q[2], q[3]))
+            return E_INVALIDARG;
+        layer->seenFrame = generation;
+    }
     HRESULT hr = c->root->RemoveAllVisuals();
     for (jint i = 0; SUCCEEDED(hr) && i < count; i++) {
-        Layer *layer = reinterpret_cast<Layer *>(order[i]);
-        if (!layer) continue;
+        Layer *layer = getLayer(order[i]);
         const jfloat *q = &p[static_cast<size_t>(i) * 4];
         hr = layer->visual->SetOffsetX(q[0]);
         if (SUCCEEDED(hr)) hr = layer->visual->SetOffsetY(q[1]);
@@ -167,9 +207,9 @@ extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
 
 extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nRemoveLayer
   (JNIEnv *, jclass, jlong composition, jlong layerHandle) {
-    Composition *c = reinterpret_cast<Composition *>(composition);
-    Layer *layer = reinterpret_cast<Layer *>(layerHandle);
-    if (!c || !layer) return;
+    Composition *c = getComposition(composition);
+    Layer *layer = getLayer(layerHandle);
+    if (!c || !layer || layer->owner != c) return;
     for (size_t i = 0; i < c->layers.size(); i++) {
         if (c->layers[i] == layer) {
             c->layers.erase(c->layers.begin() + i);
@@ -183,13 +223,13 @@ extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposi
 
 extern "C" JNIEXPORT jint JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nWaitForCommit
   (JNIEnv *, jclass, jlong composition) {
-    Composition *c = reinterpret_cast<Composition *>(composition);
+    Composition *c = getComposition(composition);
     return c ? c->device->WaitForCommitCompletion() : E_POINTER;
 }
 
 extern "C" JNIEXPORT void JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nDispose
   (JNIEnv *, jclass, jlong composition) {
-    Composition *c = reinterpret_cast<Composition *>(composition);
+    Composition *c = getComposition(composition);
     if (c) destroy(c);
 }
 
