@@ -73,6 +73,8 @@ public final class OS {
 	public static native void setBounds(long peer, int x, int y, int width, int height);
 	public static native void setVisible(long peer, boolean visible);
 	public static native void setEnabled(long peer, boolean enabled);
+	/** Same peer; native UIKit bevel and client insets. */
+	public static native void setBorderRelief(long peer, int relief);
 	public static native void setTitle(long peer, String title);
 	public static native String getClipboardText();
 	public static native void setClipboardText(String text);
