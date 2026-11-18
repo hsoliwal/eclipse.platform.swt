@@ -28,8 +28,15 @@ with the Skia release that Skija 0.116.3 was made with. The fragment `org.eclips
   - paints built from their (PaintKeys mask, ARGB) keys, and gradients and paths built in place;
   - text blobs looked up beforehand by the caller, in stream order.
   `OpStreamReplay.run` uses it. `-Dswt.m3canvas=false` keeps the command-by-command replay.
-- `sources.txt`: the 43 sources.
-- `maya.def`: the exports, which are `JNI_OnLoad`, `M3Canvas._nReplay` and the 233 Skija JNI functions reached by
+- `cc/swt/MayaComposition.cc`: SWT's own native source (Apache-2.0 OR EPL-2.0). Layers composited by the window system
+  above a window's own pixels (its backing store): on Windows DirectComposition (a D3D11 device, a composition device,
+  a topmost target for the window, one visual per layer with a premultiplied BGRA surface and an effect group for
+  opacity). Z order, offset, opacity and visibility are properties the system composites, so changing them repaints
+  nothing; `MayaComposition._nApply` carries every layer's properties in one call and commits once per frame. Other
+  platforms compile the same exports answering "not supported" (0); Android (ASurfaceControl) and Cocoa/UIKit
+  (CALayer) take their place there. Linked with `d3d11.lib` and `dcomp.lib`.
+- `sources.txt`: the 44 sources.
+- `maya.def`: the exports, which are `JNI_OnLoad`, `M3Canvas._nReplay`, the seven `MayaComposition` natives and the 233 Skija JNI functions reached by
   SWT's code and the Maya backend tests (com.synexia `docs/M3-SCALE/runs/20261117-skija-absorb/REACHABLE_NATIVES_WITH_TESTS.txt`, traced by
   `tools/skija_reach.py`). Production code alone reaches 209 of them.
 - `build_maya.py`: compiles with MSVC (C++17, `/MT`, Skija's own defines) against the prebuilt Skia release
