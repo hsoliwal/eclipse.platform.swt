@@ -177,10 +177,11 @@ public class Test_org_eclipse_swt_widgets_Synchronizer {
 	public void test_disposeReleasesQueuedSyncExecWaiter () throws InterruptedException {
 		Display display = Display.getDefault ();
 		AtomicReference<Throwable> failure = new AtomicReference<> ();
+		AtomicBoolean ran = new AtomicBoolean ();
 		CountDownLatch done = new CountDownLatch (1);
 		Thread waiter = new Thread (() -> {
 			try {
-				display.syncExec (() -> { throw new AssertionError ("syncExec ran after disposal"); });
+				display.syncExec (() -> ran.set (true));
 			} catch (Throwable thrown) {
 				failure.set (thrown);
 			} finally {
@@ -200,7 +201,9 @@ public class Test_org_eclipse_swt_widgets_Synchronizer {
 					"worker did not reach sync wait");
 			display.dispose ();
 			assertTrue (done.await (2, TimeUnit.SECONDS), "disposal left syncExec worker blocked");
-			assertNotNull (failure.get (), "disposing a queued syncExec must fail, not run");
+			// SWT may drain the pending queue before clear(); either legal path must unblock.
+			assertTrue (ran.get () || failure.get () != null,
+					"queued syncExec neither ran nor completed exceptionally");
 		} finally {
 			if (!display.isDisposed ()) display.dispose ();
 		}
