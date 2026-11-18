@@ -92,6 +92,34 @@ unmodified until the first explicit call to `setBorderRelief`.
   back to a flat line. Android/iOS native screenshot/instrumentation acceptance
   and regenerated `javac -h` JNI registration verification remain outstanding.
 
+## Follow-up: one owner for Composite/Canvas border APIs
+
+A separately accepted Composite API, `getBevelBorder()/setBevelBorder(int)`,
+arrived on the master branch after the original Control relief work was
+authored. It has a different default sentinel: `SWT.NONE` means no explicit
+Composite bevel while `SWT.DEFAULT` means no explicit Control relief.
+
+These interfaces now converge on a **single active native border**:
+
+- Win32 direct `Composite` and `Canvas` use their existing GDI
+  `DrawEdge` native painting for visible bevels; `setBorderRelief` delegates
+  to that same owner, and both getters report the active relief consistently.
+- `setBorderRelief(SWT.SHADOW_NONE)` can remove all native borders.
+  `setBevelBorder(SWT.NONE)` restores the pre-existing constructor border.
+  Transitions between the two forms clear the prior native override first.
+- On GTK3/GTK4 and Android/iOS, `setBevelBorder` is a compatibility alias
+  of the already-implemented `Control.setBorderRelief`. A single GTK CSS
+  provider or mobile view remains the rendering owner.
+- Desktop Cocoa still throws `SWT.ERROR_NOT_IMPLEMENTED` for non-default
+  visible relief; aliasing the API must **not** claim AppKit bevel rendering.
+- Subclasses keep their original behavior: Win32's `setBevelBorder` still
+  refuses non-direct `Composite/Canvas` subclasses; the inherited
+  `setBorderRelief` remains independently usable.
+
+This is a source-level convergence only. Native pixel/trim/focus/reentrancy and
+mixed-API round-trip JUnit tests still require execution on all applicable
+platforms. Do not promote either feature without the native release gates.
+
 ## Donor and convergence inventory
 
 Existing Win32 `OS.DrawEdge`, `Composite.wmNCPaint` and current master
