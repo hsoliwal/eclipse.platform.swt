@@ -58,6 +58,48 @@ inline float f32(const std::uint8_t *p) {
     return value;
 }
 
+// Index the already validated candidate layers, rather than sorting a second
+// array of copied native handles on every compositor frame. Hash entries are
+// 1-based layer indices (zero means empty), so the table has bounded 4-byte
+// slots and the original frame order remains authoritative.
+inline std::uint32_t handleBucket(std::uint64_t value) noexcept {
+    value ^= value >> 33;
+    value *= UINT64_C(0xff51afd7ed558ccd);
+    value ^= value >> 33;
+    value *= UINT64_C(0xc4ceb9fe1a85ec53);
+    return static_cast<std::uint32_t>(value ^ (value >> 33));
+}
+
+inline bool hasDuplicateHandles(const std::vector<Layer> &layers) {
+    const std::size_t count = layers.size();
+    if (count < 2) return false;
+    // MAX_LAYERS bounds the size, multiplication, power of two and indices.
+    std::size_t capacity = 2;
+    while (capacity < count * 2) capacity <<= 1;
+    std::vector<std::uint32_t> slots(capacity, 0);
+    const std::size_t mask = capacity - 1;
+    for (std::size_t i = 0; i < count; ++i) {
+        std::size_t slot = handleBucket(layers[i].handle) & mask;
+        unsigned probes = 0;
+        while (slots[slot] != 0) {
+            if (layers[slots[slot] - 1].handle == layers[i].handle) return true;
+            // A malicious packet may choose colliding native-handle bits.
+            // Preserve deterministic bounded worst-case work with a sorted
+            // fallback rather than accepting an unbounded probe chain.
+            if (++probes == 32) {
+                std::vector<std::uint64_t> ordered;
+                ordered.reserve(count);
+                for (const Layer &layer : layers) ordered.push_back(layer.handle);
+                std::sort(ordered.begin(), ordered.end());
+                return std::adjacent_find(ordered.begin(), ordered.end()) != ordered.end();
+            }
+            slot = (slot + 1) & mask;
+        }
+        slots[slot] = static_cast<std::uint32_t>(i + 1);
+    }
+    return false;
+}
+
 // Transactional parser: on failure the caller's previous Frame is unchanged.
 // Entire buffer size, offsets, visibility, opacity, opaque handles and duplicate
 // handles are checked *before* any platform compositor operation is attempted.
@@ -77,8 +119,6 @@ inline Result decode(const std::uint8_t *bytes, std::size_t length, Frame &outpu
     Frame candidate;
     candidate.sequence = u64(bytes + 16);
     candidate.layers.reserve(count);
-    std::vector<std::uint64_t> distinct;
-    distinct.reserve(count);
     for (std::uint32_t i = 0; i < count; i++) {
         const std::uint8_t *record = bytes + HEADER_BYTES + static_cast<std::size_t>(i) * RECORD_BYTES;
         Layer layer;
@@ -93,10 +133,8 @@ inline Result decode(const std::uint8_t *bytes, std::size_t length, Frame &outpu
         if (layer.visible > 1) return Result::BAD_VISIBILITY;
         if (u64(record + 24) != 0) return Result::BAD_RESERVED;
         candidate.layers.push_back(layer);
-        distinct.push_back(layer.handle);
     }
-    std::sort(distinct.begin(), distinct.end());
-    if (std::adjacent_find(distinct.begin(), distinct.end()) != distinct.end()) return Result::DUPLICATE_HANDLE;
+    if (hasDuplicateHandles(candidate.layers)) return Result::DUPLICATE_HANDLE;
     output = std::move(candidate);
     return Result::OK;
 }
