@@ -22,6 +22,7 @@ of existing Canvas, Composite, Control.moveAbove/moveBelow, or ScrolledComposite
 | zoom | 1/4096 through 4096, world-to-screen conversion |
 | Z | stable layer IDs, reorderable bottom-to-top array stack |
 | layers | painted callback or borrowed SWT Image |
+| world clip | optional additional rectangular clip for paint and picking |
 | visibility/lock | visible layers render; locked layers are skipped for picking |
 | alpha | 0..255; image compositing uses one image draw |
 | invalidation | old and new projected layer bounds; full damage for pan and zoom |
@@ -41,7 +42,7 @@ Overlapping painter primitives are therefore **not** an isolated
 Photoshop-style transparent group. No claim of complete Photoshop blending
 or pixel-perfect alpha is made.
 
-The visibility gate is rectangular. It avoids work for fully invisible
+The initial clipping region is world-space rectangular; arbitrary alpha masks and per-pixel clip masks are not implemented. The visibility gate is rectangular. It avoids work for fully invisible
 layers but does not yet spatially index millions of scattered layers. The
 Z-order storage is an array snapshot updated on structure changes, so paint
 iteration does not allocate a new layer array every frame.
