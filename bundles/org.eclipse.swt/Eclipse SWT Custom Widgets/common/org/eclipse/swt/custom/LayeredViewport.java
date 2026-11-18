@@ -2598,6 +2598,7 @@ public final class LayeredViewport extends Canvas {
     private float[] nativeProperties = new float[0];
     private boolean nativeSyncPending;
     private int nativeFrameDepth;
+    private boolean nativeRetrying;
 
     private boolean nativeAvailable() {
         if (!nativeTried) {
@@ -2606,6 +2607,58 @@ public final class LayeredViewport extends Canvas {
             if (nativeBackend != null) composition = nativeBackend.create(this);
         }
         return composition != 0;
+    }
+
+    /**
+     * Explicitly retries the native compositor after a failed frame has
+     * detached it and returned the layer pixels to SWT's painted backing
+     * store. An application can call this on the SWT UI thread after a
+     * driver/device reset, monitor change or another external recovery event.
+     *
+     * <p>No automatic retry timer or new native UI thread is introduced. A
+     * failed retry leaves normal software painting authoritative, without
+     * retrying again until the application requests it. The native backend
+     * owns all newly recreated OS device/surface objects; each previously
+     * requested and still eligible layer is uploaded from its borrowed
+     * Image using the original native submission path.</p>
+     *
+     * <p>Returns false if there is no requested native layer, the widget is
+     * inside a paint/update/native callback, the backend cannot create a
+     * composition, or frame submission fails again. Returns true if a native
+     * composition is available at return; a layer whose zoom, clipping or
+     * blend mode makes it ineligible may still be software painted. Inspect
+     * {@link Layer#isNative()} for an individual layer.</p>
+     *
+     * @return whether a native composition is available after the attempt
+     */
+    public boolean retryNativeComposition() {
+        checkWidget();
+        // Never re-enter create/dispose while a native frame, paint or model
+        // batch is active; those own the current layer snapshot.
+        if (nativeRetrying || nativeFrameDepth != 0 || activeBackingPaints != 0
+                || batchDepth != 0 || nativeRequestCount <= 0) return false;
+        if (composition != 0) return true;
+        NativeLayers backend = nativeBackend != null ? nativeBackend : NativeLayers.platform();
+        nativeTried = true; // failed attempts cannot enter an automatic loop
+        if (backend == null) return false;
+        nativeBackend = backend;
+        long candidate;
+        nativeRetrying = true;
+        try {
+            candidate = backend.create(this);
+        } finally {
+            nativeRetrying = false;
+        }
+        if (candidate == 0) return false;
+        // Native creation may dispatch user callbacks, including dispose or
+        // removing the final native request. Do not publish a stale owner.
+        if (isDisposed() || nativeRequestCount <= 0 || composition != 0) {
+            backend.dispose(candidate);
+            return false;
+        }
+        composition = candidate;
+        syncNative(); // uploads again; on failure reverts to software once
+        return !isDisposed() && composition == candidate;
     }
 
     /* an image drawn one to one (zoom 1, world size the image's size, no clip, 100% device zoom) with a backend */

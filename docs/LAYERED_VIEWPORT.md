@@ -263,3 +263,27 @@ Verification added: group Z-order and root translation, child pick/visibility/
 lock/snapshot identity, local clipping, and an SWT pixel oracle asserting
 that overlap is resolved before the GROUP opacity is applied. The native
 Tycho/GTK/Win32/Cocoa suites still need to run before promoting the feature.
+
+## Optional native device-loss containment (Win32 Maya)
+
+The native compositor is still **optional**. If the existing DirectComposition
+submission path fails, `LayeredViewport` detaches its native layers, disposes
+the failed composition and redraws those layer bounds through the original
+SWT painted backing store. There is no silent recursive GPU reinitialization.
+
+Applications that know their display/graphics device has recovered may call
+`viewport.retryNativeComposition()` explicitly from the SWT UI thread.
+The method refuses paint/native-frame/model-batch reentrancy, issues at most
+one creation attempt per call, then reuploads borrowed images via the same
+`NativeLayers` backend and returns whether the composition is available.
+If native recreation or frame commit fails, ordinary software painting remains
+authoritative; no automatic retry loop starts.
+
+The Windows Maya owner validates the DirectComposition device state before
+native uploads and every frame (even an unchanged-property frame). Lost
+devices report their HRESULT and force native scene-cache invalidation. That
+failure reaches the already established painted fallback.
+
+See [MAYA_DEVICE_LOSS_RECOVERY.md](MAYA_DEVICE_LOSS_RECOVERY.md) for the
+portable C++ health oracle, explicit recovery contract, native UI ownership,
+test coverage, and still-unexecuted Windows hardware release gates.

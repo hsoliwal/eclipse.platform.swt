@@ -1775,6 +1775,9 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         private final java.util.Map<Long, Integer> pixelsPerLayer = new java.util.HashMap<>();
         private long nextHandle = 100;
         private int additions, uploads, applications, removals, disposals;
+        private int creations;
+        private boolean allowCreate;
+        private long createdComposition = 1L;
         private int applyResult;
         private Runnable onApply;
         private long[] submittedHandleArray, lastHandles = new long[0];
@@ -1782,8 +1785,9 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
 
         @Override
         public long create(org.eclipse.swt.widgets.Control control) {
-            fail("the test installs an existing composition without a global backend");
-            return 0;
+            assertTrue(allowCreate, "unexpected native compositor creation");
+            creations++;
+            return createdComposition;
         }
 
         @Override
@@ -2128,6 +2132,93 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             if (!viewport.isDisposed()) layer.remove();
             gc.dispose();
             target.dispose();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeFailureNeedsExplicitRecoveryAndReuploadsEveryRequestedLayer()
+            throws ReflectiveOperationException {
+        viewport.setSize(32, 32);
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        Image image = nativeTestImage(8, 8, SWT.COLOR_RED);
+        Layer layer = viewport.addImageLayer("native recovery", image, 3, 4);
+        try {
+            assertTrue(layer.setNative(true));
+            assertEquals(1, backend.additions);
+            assertEquals(1, backend.uploads);
+            backend.applyResult = -1; // model a DXGI/DComp submit failure
+            layer.setOpacity(200);
+            assertFalse(layer.isNative());
+            assertEquals(1, backend.disposals);
+            assertEquals(0, backend.creations);
+            int before = backend.applications;
+            assertFalse(layer.setNative(true), "failure retains the software fallback");
+            assertEquals(before, backend.applications, "no automatic native retries");
+
+            // A transient device reset has ended: the application explicitly
+            // requests one new native composition on the SWT event thread.
+            backend.applyResult = 0;
+            backend.allowCreate = true;
+            backend.createdComposition = 0; // a still-unavailable graphics adapter
+            assertFalse(viewport.retryNativeComposition());
+            assertEquals(1, backend.creations);
+            assertEquals(1, backend.disposals);
+            backend.createdComposition = 1;
+            assertTrue(viewport.retryNativeComposition());
+            assertTrue(layer.isNative());
+            assertEquals(2, backend.creations, "zero-create attempt was not retried automatically");
+            assertEquals(2, backend.additions, "new compositor owns a fresh layer");
+            assertEquals(2, backend.uploads, "pixels come from the borrowed Image again");
+            assertEquals(1, backend.disposals, "the old compositor was released once");
+            assertTrue(viewport.retryNativeComposition(), "already healthy");
+            assertEquals(2, backend.creations, "a healthy compositor is not recreated");
+            assertFalse(image.isDisposed());
+
+            layer.setNative(false);
+            assertFalse(layer.isNative());
+            assertFalse(viewport.retryNativeComposition(), "no native requests remain");
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeRetryCannotReenterPaintOrNativeFrame() throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        Image image = nativeTestImage(8, 8, SWT.COLOR_GREEN);
+        Layer layer = viewport.addImageLayer("native reentrancy guard", image, 0, 0);
+        try {
+            assertTrue(layer.setNative(true));
+            backend.onApply = () -> assertFalse(viewport.retryNativeComposition(),
+                    "native callback cannot create/reuse compositor recursively");
+            layer.setOpacity(190);
+            assertEquals(0, backend.creations);
+            assertTrue(layer.isNative());
+            viewport.addPaintLayer("paint reentry probe", 0, 0, 16, 16,
+                    (gc, context) -> assertFalse(viewport.retryNativeComposition(),
+                            "a painter callback cannot recreate native resources"));
+            Image target = new Image(viewport.getDisplay(), 32, 32);
+            GC gc = new GC(target);
+            try {
+                paintInto(gc);
+            } finally {
+                gc.dispose();
+                target.dispose();
+            }
+            viewport.beginUpdate();
+            try {
+                assertFalse(viewport.retryNativeComposition(),
+                        "a batched model snapshot cannot reinitialize native resources");
+            } finally {
+                viewport.endUpdate();
+            }
+            assertTrue(layer.isNative());
+        } finally {
+            backend.onApply = null;
+            if (!viewport.isDisposed()) layer.remove();
             image.dispose();
         }
     }
