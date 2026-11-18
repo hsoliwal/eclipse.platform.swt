@@ -131,6 +131,29 @@ public final class ViewportDamageRegion {
 	}
 
 	/**
+	 * Marks a rectangle clean again, for a backing store that has just repainted it: every stored
+	 * rectangle loses its part inside the given one, so the stored rectangles stay disjoint and
+	 * {@link #area()} stays exact. A region that had collapsed to its bounding box keeps the rest of
+	 * that box (still an upper bound) and becomes exact again once it is empty. Empty rectangles are
+	 * ignored.
+	 */
+	public void remove (int x, int y, int width, int height) {
+		if (width <= 0 || height <= 0 || count == 0) return;
+		checkRange (x, y, width, height);
+		int outCount = 0;
+		for (int e = 0; e < count; e++) {
+			if ((outCount + 4) * 4 > workOut.length) workOut = Arrays.copyOf (workOut, workOut.length * 2);
+			outCount = split (rects, e * 4, x, y, width, height, outCount);
+		}
+		if (outCount * 4 > rects.length) rects = Arrays.copyOf (rects, Math.max (rects.length * 2, outCount * 4));
+		System.arraycopy (workOut, 0, rects, 0, outCount * 4);
+		count = outCount;
+		coalesce ();
+		if (count > maxRects) collapse ();
+		if (count == 0) overflowed = false;
+	}
+
+	/**
 	 * Records a block move: only the destination is damaged, the source is not. This is the RFB
 	 * CopyRect case and equals a blit scroll or a tile translate.
 	 */
