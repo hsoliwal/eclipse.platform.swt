@@ -77,3 +77,82 @@ goldens, platform parity, benchmark claims, or release qualification.
 Before promotion run the fork's recipe/replay, source and binary API diff,
 JDK 21 compilation, widget JUnit tests, native GTK/Win32/Cocoa tests,
 pixel comparisons (alpha and damage), and resource/disposal measurements.
+
+## Optimized candidate — SWT PR #479
+
+The follow-up branch adds a model-only index and guarded Java/JNI pixel atom.
+**It is still under draft review**, not a qualified released compositor.
+
+### Visibility and spatial lookup
+
+`org.eclipse.swt.internal.LayerRectIndex` stores five primitive arrays of
+rectangle bounds and an array of original Z positions. It creates two sorted
+start-coordinate orders (X and Y) using an eight-pass signed-long radix sort
+per axis, plus prefix maxima of the opposite ends.
+
+A query finds the first possible interval end and the first start beyond the
+query for each axis via binary search, chooses the smaller candidate interval,
+filters exact two-axis overlaps, then sorts selected original Z positions.
+Half-open boundaries and very large positive/negative world coordinates are
+preserved. In a sparse scene this avoids visiting every layer on each paint.
+Broad overlapping scenes can still require O(N) candidate work. Edits mark
+the index dirty and it is rebuilt lazily before the next query; repeated
+single-layer drags currently require a full rebuild when queried again.
+
+Painting and hit-testing capture candidate handles before invoking callbacks.
+Warm paint/hit buffers are cleared and reused; nested callback re-entry uses
+separate temporary storage to avoid overwriting the active traversal. This
+preserves ordering and guards against callback mutation, but does not claim
+all application callbacks are safe after widget disposal.
+
+### Damage batching
+
+The control reuses the existing `ViewportDamageRegion` (no new union
+algorithm) through `beginUpdate()` and `endUpdate()`. These calls may be
+nested and must be balanced in a `try/finally`. Changed visible device-pixel
+rectangles coalesce into a bounded region before redraw; for coordinates that
+exceed the region's supported bounds the batch falls back to full redraw.
+
+### CPU blend and optional JNI atom
+
+`org.eclipse.swt.internal.render.LayerArgbCompositor` provides deterministic
+integer premultiplied-ARGB scanline compositing in three modes:
+`SRC_OVER`, `MULTIPLY` and `SCREEN`. The paired
+`Eclipse SWT PI/common/library/swt_layerblend.c` implements the exact
+same integer operations as an **optional** JNI entry point.
+The JNI library is intentionally not built/loaded as part of standard SWT;
+its opt-in property and matching `swt-layerblend` native library are required.
+The standalone native kernel source has no platform binary in this PR.
+The native-library build, packaging and deployment matrix is still pending.
+
+This kernel is **not connected** to `LayeredViewport.paintLayers` yet.
+The current Canvas/GC path still only supports per-operation alpha for
+user painter callbacks. Multi-primitive isolated opacity, group blend,
+masked compositing and Skija saveLayer integration have not been implemented.
+
+### Pending high-value optimization directions
+
+1. **Mutable overlay index for dragging:** keep a bounded journal of edited
+   rectangles and periodically rebuild the packed baseline; avoid a global
+   sort for every mouse move while retaining exact draw/hit order
+2. **Spatial tile plan:** 256x256 demand tiles, clip-derived content residency,
+   dirty-tile bitset and scene-generation fences; do not materialize offscreen
+   layer bitmaps
+3. **Occlusion:** reverse-Z opaque coverage only where provably safe; never
+   cull transparent, filtered, blurred, destination-dependent blends
+4. **Render commands:** reuse `ViewportPaintGraph` for parent-owned grouped
+   command buffers and affine transforms; retain one GC/native control lifetime
+5. **Isolated groups:** route native `saveLayer/restore`, masked layers and
+   transfer blend modes through a version-pinned Skija backend or qualified
+   native Cocoa/GTK/Win32 platform bridge; keep the SWT immediate GC fallback
+6. **Pixel correctness:** reference CPU alpha and blend tests against actual
+   native Skia/SWT output at DPI 100/200%, fractional zoom, negative world
+   origins, overlapping clips, reentrant repaint, disposal and IME overlays
+7. **Memory and paint budget:** byte-accounted native tile LRU, per-control
+   retained scratch cap and separate heap/native/process measurements;
+   record slow cases, rather than claiming universal speedups
+
+Tests `Test_LayerRectIndex` and `Test_LayerArgbCompositor` are registered in
+`AllTests`; `Test_org_eclipse_swt_custom_LayeredViewport` is registered
+in `AllWidgetTests`. Source registration is **not execution proof**.
+The full Tycho/native matrix and canonical Synexia recipe handoff are pending.
