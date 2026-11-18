@@ -126,7 +126,37 @@ public Composite (Composite parent, int style) {
  */
 public int getBevelBorder () {
 	checkWidget ();
-	return bevelBorder;
+	if (bevelBorder != SWT.NONE) return bevelBorder;
+	int relief = super.getBorderRelief();
+	return relief == SWT.DEFAULT || relief == SWT.SHADOW_NONE ? SWT.NONE : relief;
+}
+
+/**
+ * Keeps the Control relief and the Win32 Composite/Canvas bevel APIs in one
+ * native HWND state. Direct Composite/Canvas retains the original native GDI
+ * DrawEdge rendering; subclasses use Control's existing platform implementation.
+ */
+@Override
+public int getBorderRelief () {
+	checkWidget ();
+	return bevelBorder != SWT.NONE ? bevelBorder : super.getBorderRelief();
+}
+
+@Override
+public void setBorderRelief (int relief) {
+	checkWidget ();
+	if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+	if (getClass () != Composite.class && getClass () != Canvas.class) {
+		super.setBorderRelief(relief);
+		return;
+	}
+	if (relief == SWT.DEFAULT || relief == SWT.SHADOW_NONE) {
+		if (bevelBorder != SWT.NONE) setBevelBorder(SWT.NONE);
+		if (super.getBorderRelief() != relief) super.setBorderRelief(relief);
+		return;
+	}
+	if (super.getBorderRelief() != SWT.DEFAULT) super.setBorderRelief(SWT.DEFAULT);
+	setBevelBorder(relief);
 }
 
 /**
@@ -151,6 +181,9 @@ public void setBevelBorder (int border) {
 	if (getClass () != Composite.class && getClass () != Canvas.class) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
+	// A previous SHADOW_NONE Control override must be cleared before applying
+	// the Composite/Canvas native GDI bevel. Both APIs share the same HWND.
+	if (super.getBorderRelief() != SWT.DEFAULT) super.setBorderRelief(SWT.DEFAULT);
 	if (bevelBorder == border) return;
 
 	long hwnd = borderHandle ();
