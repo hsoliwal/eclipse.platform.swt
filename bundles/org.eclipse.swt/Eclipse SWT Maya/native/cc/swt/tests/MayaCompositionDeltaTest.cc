@@ -106,6 +106,31 @@ int main() {
         ++checks;
     }
 
+    // Million-scale logical scenes are not constructed as OS visuals here.
+    // Exercise the production order planner with a bounded 100k-layer native
+    // snapshot and an extreme Z move, without quadratic comparisons.
+    std::vector<Layer> large(100000);
+    CompositionFrameDelta<Layer> many;
+    for (int replay = 0; replay < 12; ++replay) {
+        many.begin();
+        for (Layer &item : large) many.includeVisible(&item);
+        assert(many.requiresRebuild() == (replay == 0));
+        if (replay == 0) many.accept();
+    }
+    many.begin();
+    many.includeVisible(&large.back());
+    for (std::size_t i = 0; i + 1 < large.size(); ++i) {
+        many.includeVisible(&large[i]);
+    }
+    assert(many.requiresRebuild());
+    many.accept();
+    many.begin();
+    many.includeVisible(&large.back());
+    for (std::size_t i = 0; i + 1 < large.size(); ++i) {
+        many.includeVisible(&large[i]);
+    }
+    assert(!many.requiresRebuild());
+
     std::cout << "MayaCompositionDelta: " << checks
               << " deterministic differential assertions passed\n";
 }
