@@ -56,13 +56,13 @@ jobs:
             -fsanitize=address,undefined -fno-omit-frame-pointer \
             "$root/tests/MayaCompositionDeltaTest.cc" -o /tmp/maya-delta
           /tmp/maya-delta
-      - name: Typed native handles, forced allocator ABA and 100000 retire cycles
+      - name: Typed native handles, allocator ABA and concurrent Display issuance
         shell: bash
         run: |
           set -euo pipefail
           root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
           for compiler in g++ clang++; do
-            "$compiler" -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+            "$compiler" -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic -pthread \
               -fsanitize=address,undefined -fno-omit-frame-pointer \
               "$root/tests/MayaNativeHandleRegistryTest.cc" -o "/tmp/maya-token-${compiler}"
             ASAN_OPTIONS=detect_leaks=1 "/tmp/maya-token-${compiler}"
