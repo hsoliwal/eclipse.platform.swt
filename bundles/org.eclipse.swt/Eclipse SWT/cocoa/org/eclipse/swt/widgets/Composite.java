@@ -115,7 +115,7 @@ public int getBevelBorder () {
  * Passing SWT.NONE or SWT.SHADOW_NONE leaves the original border unchanged.
  *
  * @param border an SWT shadow style or SWT.NONE
- * @exception SWTException ERROR_NOT_IMPLEMENTED for a supported bevel style
+ * @exception SWTError ERROR_NOT_IMPLEMENTED for a supported bevel style
  */
 public void setBevelBorder (int border) {
 	checkWidget ();
