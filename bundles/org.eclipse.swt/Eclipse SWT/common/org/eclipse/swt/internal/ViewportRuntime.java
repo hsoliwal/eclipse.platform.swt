@@ -65,6 +65,612 @@ public final class ViewportRuntime {
 			long logicalContentWidth) {
 	}
 
+	/**
+	 * Widget-owned isolated raster layers, with stable integer identities and
+	 * back-to-front z ordering. Primitive columns hold state; only image pixels
+	 * and optional masks retain per-layer arrays. No native resource or per-layer
+	 * structural object is created. All operations are UI-thread confined by the
+	 * owning widget. Removed identities retain primitive tombstones until owner
+	 * disposal; their pixel and mask arrays are released immediately.
+	 *
+	 * <p>This raster plane is separate from retained vector-command replay. Each
+	 * input image is already flattened; source-over layer opacity is applied once.
+	 * Nested group opacity, native child controls, color profiles and perspective
+	 * are outside this model's contract.</p>
+	 *
+	 * @noreference This class is not intended to be referenced by clients.
+	 */
+	public static final class ImageLayers {
+
+		private static final int ROOT = 0;
+		private static final int NONE = -1;
+		private static final byte IMAGE_LAYER = 1;
+		private static final byte REMOVED = 0;
+		private static final byte HAS_CLIP = 1;
+		private static final byte IMAGE_HIDDEN = 1 << 1;
+		private static final byte IMAGE_INPUT_DISABLED = 1 << 2;
+		private static final byte PIXELS_OPAQUE = 1 << 3;
+		private static final byte MASK_OPAQUE = 1 << 4;
+		private static final byte INTEGER_TRANSLATION = 1 << 5;
+		private static final byte SOURCE_EMPTY = 1 << 6;
+		private static final int OPAQUE_TRANSLATION = PIXELS_OPAQUE | MASK_OPAQUE | INTEGER_TRANSLATION;
+
+		private byte [] kinds = new byte [16];
+		private byte [] flags = new byte [16];
+		private int [] nextSibling = new int [16];
+		private int [] previousSibling = new int [16];
+		private int [] zOrders = new int [16];
+		private int [] widths = new int [16];
+		private int [] heights = new int [16];
+		private int [][] pixels = new int [16][];
+		private byte [][] imageMasks = new byte [16][];
+		private int [] imageOpacities = new int [16];
+		private int [] imageClipX = new int [16];
+		private int [] imageClipY = new int [16];
+		private int [] imageClipWidth = new int [16];
+		private int [] imageClipHeight = new int [16];
+		private float [] transforms = new float [16 * 6];
+		private double [] imageInverses = new double [16 * 4];
+		private double [] imageBounds = new double [16 * 4];
+		private int first = NONE, last = NONE;
+		private int nodeCount = 1;
+		private int imageLayerCount;
+
+		/**
+		 * Adds an isolated raster layer to this widget-owned image plane. Pixels are
+		 * straight (unassociated) ARGB, in row-major order, and are copied. New layers
+		 * are visible, input enabled and fully opaque, with identity transform and
+		 * z-order zero. Equal z-order retains creation order.
+		 */
+		public int addImageLayer (int width, int height, int [] argb) {
+			int [] copy = copyImagePixels (width, height, argb);
+			int node = newImageLayer ();
+			widths [node] = width;
+			heights [node] = height;
+			pixels [node] = copy;
+			imageOpacities [node] = 255;
+			flags [node] |= MASK_OPAQUE;
+			updateImagePixelOpacity (node);
+			updateImageTransform (node);
+			imageLayerCount++;
+			return node;
+		}
+
+		/**
+		 * Replaces a layer's copied pixels. A size change removes its pixel mask;
+		 * z-order, transform, visibility, opacity and local clip remain unchanged.
+		 */
+		public void setImageLayerPixels (int node, int width, int height, int [] argb) {
+			requireImageLayer (node);
+			int [] copy = copyImagePixels (width, height, argb);
+			if (widths [node] != width || heights [node] != height) {
+				imageMasks [node] = null;
+				flags [node] |= MASK_OPAQUE;
+			}
+			widths [node] = width;
+			heights [node] = height;
+			pixels [node] = copy;
+			updateImagePixelOpacity (node);
+			updateImageBounds (node);
+		}
+
+		/** Releases copied pixels and mask; the removed identity is never reused. */
+		public void removeImageLayer (int node) {
+			requireImageLayer (node);
+			unlinkImageLayer (node);
+			pixels [node] = null;
+			imageMasks [node] = null;
+			kinds [node] = REMOVED;
+			Arrays.fill (transforms, node * 6, node * 6 + 6, 0);
+			Arrays.fill (imageInverses, node * 4, node * 4 + 4, 0);
+			Arrays.fill (imageBounds, node * 4, node * 4 + 4, 0);
+			flags [node] = 0;
+			imageOpacities [node] = 0;
+			imageLayerCount--;
+		}
+
+		/** Removes all layers while retaining invalid identities as primitive tombstones. */
+		public void clearImageLayers () {
+			for (int node = first; node != NONE;) {
+				int next = nextSibling [node];
+				if (kinds [node] == IMAGE_LAYER) removeImageLayer (node);
+				node = next;
+			}
+		}
+
+		public int imageLayerCount () {
+			return imageLayerCount;
+		}
+
+		/** Returns a caller-owned snapshot in back-to-front order, including hidden layers. */
+		public int [] imageLayers () {
+			int [] result = new int [imageLayerCount];
+			int offset = 0;
+			for (int node = first; node != NONE; node = nextSibling [node]) {
+				if (kinds [node] == IMAGE_LAYER) result [offset++] = node;
+			}
+			return result;
+		}
+
+		public void setImageLayerVisible (int node, boolean visible) {
+			requireImageLayer (node);
+			if (visible) flags [node] &= ~IMAGE_HIDDEN;
+			else flags [node] |= IMAGE_HIDDEN;
+		}
+
+		public boolean imageLayerVisible (int node) {
+			requireImageLayer (node);
+			return (flags [node] & IMAGE_HIDDEN) == 0;
+		}
+
+		/** Input transparency does not change the rendered image. */
+		public void setImageLayerInputEnabled (int node, boolean enabled) {
+			requireImageLayer (node);
+			if (enabled) flags [node] &= ~IMAGE_INPUT_DISABLED;
+			else flags [node] |= IMAGE_INPUT_DISABLED;
+		}
+
+		public boolean imageLayerInputEnabled (int node) {
+			requireImageLayer (node);
+			return (flags [node] & IMAGE_INPUT_DISABLED) == 0;
+		}
+
+		/** Sets opacity applied once to the isolated image, in the inclusive range 0..255. */
+		public void setImageLayerOpacity (int node, int alpha) {
+			requireImageLayer (node);
+			if (alpha < 0 || alpha > 255) throw new IllegalArgumentException ("invalid image opacity");
+			imageOpacities [node] = alpha;
+		}
+
+		public int imageLayerOpacity (int node) {
+			requireImageLayer (node);
+			return imageOpacities [node];
+		}
+
+		/** Copies an unsigned 8-bit mask, or removes the mask when null. */
+		public void setImageLayerMask (int node, byte [] mask) {
+			requireImageLayer (node);
+			if (mask != null && mask.length != pixels [node].length) {
+				throw new IllegalArgumentException ("image mask size mismatch");
+			}
+			byte [] copy = mask == null ? null : mask.clone ();
+			boolean opaque = true;
+			if (copy != null) {
+				for (byte alpha : copy) {
+					if ((alpha & 255) != 255) {
+						opaque = false;
+						break;
+					}
+				}
+			}
+			imageMasks [node] = copy;
+			if (opaque) flags [node] |= MASK_OPAQUE;
+			else flags [node] &= ~MASK_OPAQUE;
+		}
+
+		public boolean imageLayerHasMask (int node) {
+			requireImageLayer (node);
+			return imageMasks [node] != null;
+		}
+
+		/**
+		 * Copies six finite, invertible SWT-order affine elements
+		 * {m11, m12, m21, m22, dx, dy}. Reuses the layer's primitive transform slot.
+		 */
+		public void setImageLayerTransform (int node, float [] elements) {
+			requireImageLayer (node);
+			if (elements == null || elements.length != 6) {
+				throw new IllegalArgumentException ("invalid image transform elements");
+			}
+			for (float element : elements) {
+				if (!Float.isFinite (element)) throw new IllegalArgumentException ("non-finite image transform");
+			}
+			double determinant = (double)elements [0] * elements [3] - (double)elements [1] * elements [2];
+			if (!Double.isFinite (determinant) || determinant == 0d) {
+				throw new IllegalArgumentException ("non-invertible image transform");
+			}
+			System.arraycopy (elements, 0, transforms, node * 6, 6);
+			updateImageTransform (node);
+		}
+
+		/** Copies the transform into the first six caller-owned output elements. */
+		public void getImageLayerTransform (int node, float [] out) {
+			requireImageLayer (node);
+			if (out == null || out.length < 6) throw new IllegalArgumentException ("image transform output too small");
+			System.arraycopy (transforms, node * 6, out, 0, 6);
+		}
+
+		/**
+		 * Copies conservative clipped device bounds as {left, top, right, bottom}.
+		 * Visibility, opacity and input state do not alter these bounds. An empty
+		 * source clip returns four zeroes; extra output elements are untouched.
+		 * A nonempty extent that collapses at double precision is rounded outward
+		 * by one representable value so an invalidation caller can retain it.
+		 */
+		public void getImageLayerBounds (int node, double [] out) {
+			requireImageLayer (node);
+			if (out == null || out.length < 4) throw new IllegalArgumentException ("image bounds output too small");
+			System.arraycopy (imageBounds, node * 4, out, 0, 4);
+			if ((flags [node] & SOURCE_EMPTY) == 0) {
+				if (out [2] == out [0]) out [2] = Math.nextUp (out [2]);
+				if (out [3] == out [1]) out [3] = Math.nextUp (out [3]);
+			}
+		}
+
+		/** Sets a half-open rectangular clip in untransformed source-pixel coordinates. */
+		public void setImageLayerClip (int node, int x, int y, int width, int height) {
+			requireImageLayer (node);
+			if (width < 0 || height < 0) throw new IllegalArgumentException ("negative image clip");
+			imageClipX [node] = x;
+			imageClipY [node] = y;
+			imageClipWidth [node] = width;
+			imageClipHeight [node] = height;
+			flags [node] |= HAS_CLIP;
+			updateImageBounds (node);
+		}
+
+		public void clearImageLayerClip (int node) {
+			requireImageLayer (node);
+			flags [node] &= ~HAS_CLIP;
+			updateImageBounds (node);
+		}
+
+		public boolean imageLayerHasClip (int node) {
+			requireImageLayer (node);
+			return (flags [node] & HAS_CLIP) != 0;
+		}
+
+		public boolean imageLayerClipEquals (int node, int x, int y, int width, int height) {
+			requireImageLayer (node);
+			return (flags [node] & HAS_CLIP) != 0 && imageClipX [node] == x && imageClipY [node] == y
+					&& imageClipWidth [node] == width && imageClipHeight [node] == height;
+		}
+
+		/**
+		 * Finds the frontmost eligible image at the center of the specified device
+		 * pixel, or -1. Uses the same nearest-neighbor sample, local clip, mask and
+		 * rounded effective alpha as composition. Transparent or hidden pixels and
+		 * input-disabled layers do not intercept the point.
+		 */
+		public int imageLayerAt (int x, int y) {
+			return imageLayerAtCenter (x + 0.5d, y + 0.5d);
+		}
+
+		/** Fractional coordinates use the same +0.5 pixel-center convention. */
+		public int imageLayerAt (float x, float y) {
+			if (!Float.isFinite (x) || !Float.isFinite (y)) {
+				throw new IllegalArgumentException ("non-finite image point");
+			}
+			return imageLayerAtCenter ((double)x + 0.5d, (double)y + 0.5d);
+		}
+
+		private int imageLayerAtCenter (double x, double y) {
+			for (int node = last; node != NONE; node = previousSibling [node]) {
+				if (kinds [node] != IMAGE_LAYER
+						|| (flags [node] & (IMAGE_HIDDEN | IMAGE_INPUT_DISABLED | SOURCE_EMPTY)) != 0
+						|| imageOpacities [node] == 0) continue;
+				int bounds = node * 4;
+				// Keep the geometric rejection conservative at rounded affine edges.
+				if (x < Math.nextDown (imageBounds [bounds]) || x > Math.nextUp (imageBounds [bounds + 2])
+						|| y < Math.nextDown (imageBounds [bounds + 1]) || y > Math.nextUp (imageBounds [bounds + 3])) continue;
+				int pixel = imageSample (node, x, y);
+				if ((pixel >>> 24) != 0) return node;
+			}
+			return NONE;
+		}
+
+		/**
+		 * Composites the requested device-space tile into straight ARGB. The first
+		 * width*height output entries are cleared; any remaining output is untouched.
+		 * Layers use nearest-neighbor sampling and source-over in the supplied 8-bit
+		 * channel space, with rounded 8-bit alpha after each layer. This is raster
+		 * layer opacity, not opacity applied separately to individual drawing calls.
+		 * No native graphics object or viewport-sized scratch buffer is allocated.
+		 */
+		public void compositeImageLayers (int x, int y, int width, int height, int [] out) {
+			long count = (long)width * height;
+			if (width < 0 || height < 0 || count > Integer.MAX_VALUE
+					|| out == null || out.length < count) {
+				throw new IllegalArgumentException ("invalid image tile");
+			}
+			Arrays.fill (out, 0, (int)count, 0);
+			if (count == 0) return;
+			int start = first;
+			// An opaque translated layer discards every lower destination sample.
+			// Keep all surviving layers in back-to-front order: rounded 8-bit
+			// source-over is not interchangeable with front-to-back evaluation.
+			for (int node = last; node != NONE; node = previousSibling [node]) {
+				if ((flags [node] & (OPAQUE_TRANSLATION | IMAGE_HIDDEN)) != OPAQUE_TRANSLATION
+						|| imageOpacities [node] != 255) continue;
+				int bounds = node * 4;
+				if (imageBounds [bounds] <= x && imageBounds [bounds + 1] <= y
+						&& imageBounds [bounds + 2] >= (double)x + width
+						&& imageBounds [bounds + 3] >= (double)y + height) {
+					start = node;
+					break;
+				}
+			}
+			for (int node = start; node != NONE; node = nextSibling [node]) {
+				if (kinds [node] != IMAGE_LAYER || (flags [node] & IMAGE_HIDDEN) != 0
+						|| imageOpacities [node] == 0) continue;
+				compositeImageTile (node, x, y, width, height, out);
+			}
+		}
+
+		private void compositeImageTile (int node, int x, int y, int width, int height, int [] out) {
+			int bounds = node * 4;
+			if ((flags [node] & SOURCE_EMPTY) != 0) return;
+			int startX = Math.max (0, (int)Math.floor (imageBounds [bounds] - x));
+			int startY = Math.max (0, (int)Math.floor (imageBounds [bounds + 1] - y));
+			int endX = Math.min (width, (int)Math.ceil (imageBounds [bounds + 2] - x));
+			int endY = Math.min (height, (int)Math.ceil (imageBounds [bounds + 3] - y));
+			if (startX >= endX || startY >= endY) return;
+			if ((flags [node] & INTEGER_TRANSLATION) != 0) {
+				compositeTranslatedImage (node, x, y, width, startX, startY, endX, endY, out);
+				return;
+			}
+			for (int row = startY; row < endY; row++) {
+				int offset = row * width + startX;
+				for (int column = startX; column < endX; column++, offset++) {
+					int source = imageSample (node, (double)x + column + 0.5d, (double)y + row + 0.5d);
+					out [offset] = imageSourceOver (source, out [offset]);
+				}
+			}
+		}
+
+		private void compositeTranslatedImage (int node, int x, int y, int tileWidth,
+				int startX, int startY, int endX, int endY, int [] out) {
+			int transform = node * 6;
+			int sourceX = (int)((long)x + startX - (int)transforms [transform + 4]);
+			int sourceY = (int)((long)y + startY - (int)transforms [transform + 5]);
+			int sourceWidth = widths [node], length = endX - startX;
+			boolean opaque = imageOpacities [node] == 255
+					&& (flags [node] & (PIXELS_OPAQUE | MASK_OPAQUE)) == (PIXELS_OPAQUE | MASK_OPAQUE);
+			for (int row = startY; row < endY; row++) {
+				int source = (sourceY + row - startY) * sourceWidth + sourceX;
+				int destination = row * tileWidth + startX;
+				if (opaque) {
+					System.arraycopy (pixels [node], source, out, destination, length);
+				} else {
+					for (int column = 0; column < length; column++, source++, destination++) {
+						out [destination] = imageSourceOver (imagePixel (node, source), out [destination]);
+					}
+				}
+			}
+		}
+
+		private void updateImagePixelOpacity (int node) {
+			flags [node] |= PIXELS_OPAQUE;
+			for (int pixel : pixels [node]) {
+				if ((pixel >>> 24) != 255) {
+					flags [node] &= ~PIXELS_OPAQUE;
+					return;
+				}
+			}
+		}
+
+		/* Recompute derived geometry only when its source state changes. */
+		private void updateImageBounds (int node) {
+			double left = 0, top = 0, right = widths [node], bottom = heights [node];
+			if ((flags [node] & HAS_CLIP) != 0) {
+				left = Math.max (left, imageClipX [node]);
+				top = Math.max (top, imageClipY [node]);
+				right = Math.min (right, (long)imageClipX [node] + imageClipWidth [node]);
+				bottom = Math.min (bottom, (long)imageClipY [node] + imageClipHeight [node]);
+			}
+			int bounds = node * 4;
+			if (right <= left || bottom <= top) {
+				flags [node] |= SOURCE_EMPTY;
+				Arrays.fill (imageBounds, bounds, bounds + 4, 0);
+				return;
+			}
+			flags [node] &= ~SOURCE_EMPTY;
+			int offset = node * 6;
+			double a = transforms [offset], b = transforms [offset + 1];
+			double c = transforms [offset + 2], d = transforms [offset + 3];
+			double dx = transforms [offset + 4], dy = transforms [offset + 5];
+			double x1 = a * left + c * top + dx, x2 = a * right + c * top + dx;
+			double x3 = a * left + c * bottom + dx, x4 = a * right + c * bottom + dx;
+			double y1 = b * left + d * top + dy, y2 = b * right + d * top + dy;
+			double y3 = b * left + d * bottom + dy, y4 = b * right + d * bottom + dy;
+			imageBounds [bounds] = Math.min (Math.min (x1, x2), Math.min (x3, x4));
+			imageBounds [bounds + 1] = Math.min (Math.min (y1, y2), Math.min (y3, y4));
+			imageBounds [bounds + 2] = Math.max (Math.max (x1, x2), Math.max (x3, x4));
+			imageBounds [bounds + 3] = Math.max (Math.max (y1, y2), Math.max (y3, y4));
+		}
+
+		/* Finite float matrices can overflow a float determinant; use double arithmetic. */
+		private void updateImageTransform (int node) {
+			int offset = node * 6;
+			double a = transforms [offset], b = transforms [offset + 1];
+			double c = transforms [offset + 2], d = transforms [offset + 3];
+			double dx = transforms [offset + 4], dy = transforms [offset + 5];
+			double determinant = a * d - b * c;
+			int inverse = node * 4;
+			imageInverses [inverse] = d / determinant;
+			imageInverses [inverse + 1] = -b / determinant;
+			imageInverses [inverse + 2] = -c / determinant;
+			imageInverses [inverse + 3] = a / determinant;
+			if (a == 1 && b == 0 && c == 0 && d == 1
+					&& dx >= Integer.MIN_VALUE && dx <= Integer.MAX_VALUE && dx == Math.rint (dx)
+					&& dy >= Integer.MIN_VALUE && dy <= Integer.MAX_VALUE && dy == Math.rint (dy)) {
+				flags [node] |= INTEGER_TRANSLATION;
+			} else {
+				flags [node] &= ~INTEGER_TRANSLATION;
+			}
+			updateImageBounds (node);
+		}
+
+		private int imageSample (int node, double x, double y) {
+			int inverse = node * 4, transform = node * 6;
+			double dx = x - transforms [transform + 4], dy = y - transforms [transform + 5];
+			double localX = imageInverses [inverse] * dx + imageInverses [inverse + 2] * dy;
+			double localY = imageInverses [inverse + 1] * dx + imageInverses [inverse + 3] * dy;
+			if (!(localX >= 0 && localX < widths [node] && localY >= 0 && localY < heights [node])) return 0;
+			if ((flags [node] & HAS_CLIP) != 0
+					&& !(localX >= imageClipX [node]
+					&& localX < (long)imageClipX [node] + imageClipWidth [node]
+					&& localY >= imageClipY [node]
+					&& localY < (long)imageClipY [node] + imageClipHeight [node])) return 0;
+			int offset = (int)localY * widths [node] + (int)localX;
+			return imagePixel (node, offset);
+		}
+
+		private int imagePixel (int node, int offset) {
+			int pixel = pixels [node] [offset];
+			int alpha = pixel >>> 24;
+			byte [] mask = imageMasks [node];
+			alpha = mask == null ? (alpha * imageOpacities [node] + 127) / 255
+					: (alpha * imageOpacities [node] * (mask [offset] & 255) + 32512) / 65025;
+			return alpha == 0 ? 0 : (alpha << 24) | (pixel & 0x00ffffff);
+		}
+
+		private static int imageSourceOver (int source, int destination) {
+			int sourceAlpha = source >>> 24;
+			if (sourceAlpha == 0) return destination;
+			if (sourceAlpha == 255 || (destination >>> 24) == 0) return source;
+			int destinationAlpha = destination >>> 24;
+			int destinationWeight = destinationAlpha * (255 - sourceAlpha);
+			int sourceWeight = sourceAlpha * 255;
+			int alphaNumerator = sourceWeight + destinationWeight;
+			int alpha = (alphaNumerator + 127) / 255;
+			int red = imageBlendChannel (source >>> 16, destination >>> 16, sourceWeight, destinationWeight, alphaNumerator);
+			int green = imageBlendChannel (source >>> 8, destination >>> 8, sourceWeight, destinationWeight, alphaNumerator);
+			int blue = imageBlendChannel (source, destination, sourceWeight, destinationWeight, alphaNumerator);
+			return (alpha << 24) | (red << 16) | (green << 8) | blue;
+		}
+
+		private static int imageBlendChannel (int source, int destination, int sourceWeight,
+				int destinationWeight, int alphaNumerator) {
+			int numerator = (source & 255) * sourceWeight + (destination & 255) * destinationWeight;
+			return (numerator + alphaNumerator / 2) / alphaNumerator;
+		}
+
+		private static int [] copyImagePixels (int width, int height, int [] pixels) {
+			long count = (long)width * height;
+			if (width <= 0 || height <= 0 || count > Integer.MAX_VALUE
+					|| pixels == null || pixels.length != count) {
+				throw new IllegalArgumentException ("invalid image pixels");
+			}
+			return pixels.clone ();
+		}
+
+		private void requireImageLayer (int node) {
+			if (node <= ROOT || node >= nodeCount || kinds [node] != IMAGE_LAYER) {
+				throw new IllegalArgumentException ("invalid image layer");
+			}
+		}
+
+
+		/** Lower z paints first; equal z always retains creation order. */
+		public void setZOrder (int node, int zOrder) {
+			requireImageLayer (node);
+			if (zOrders [node] == zOrder) return;
+			unlinkImageLayer (node);
+			zOrders [node] = zOrder;
+			linkImageLayer (node);
+		}
+
+		public int zOrder (int node) {
+			requireImageLayer (node);
+			return zOrders [node];
+		}
+
+		private int newImageLayer () {
+			if (nodeCount >= Integer.MAX_VALUE / 6) {
+				throw new IllegalStateException ("image layer identities exhausted");
+			}
+			ensureImageCapacity (nodeCount + 1);
+			int node = nodeCount++;
+			kinds [node] = IMAGE_LAYER;
+			nextSibling [node] = previousSibling [node] = NONE;
+			transforms [node * 6] = transforms [node * 6 + 3] = 1;
+			linkImageLayer (node);
+			return node;
+		}
+
+		/* Array-linked stable ordering is shared with the retained paint graph's policy. */
+		private void linkImageLayer (int node) {
+			if (last == NONE || comesBefore (last, node)) {
+				previousSibling [node] = last;
+				if (last == NONE) first = node;
+				else nextSibling [last] = node;
+				last = node;
+				return;
+			}
+			int cursor = first;
+			while (cursor != NONE && comesBefore (cursor, node)) cursor = nextSibling [cursor];
+			if (cursor == NONE) {
+				previousSibling [node] = last;
+				if (last == NONE) first = node;
+				else nextSibling [last] = node;
+				last = node;
+				return;
+			}
+			int previous = previousSibling [cursor];
+			nextSibling [node] = cursor;
+			previousSibling [node] = previous;
+			previousSibling [cursor] = node;
+			if (previous == NONE) first = node;
+			else nextSibling [previous] = node;
+		}
+
+		private void unlinkImageLayer (int node) {
+			int previous = previousSibling [node], next = nextSibling [node];
+			if (previous == NONE) first = next;
+			else nextSibling [previous] = next;
+			if (next == NONE) last = previous;
+			else previousSibling [next] = previous;
+			previousSibling [node] = nextSibling [node] = NONE;
+		}
+
+		private boolean comesBefore (int left, int right) {
+			int order = Integer.compare (zOrders [left], zOrders [right]);
+			return order < 0 || (order == 0 && left < right);
+		}
+
+		private void ensureImageCapacity (int required) {
+			if (required <= kinds.length) return;
+			int next = (int)Math.min (Integer.MAX_VALUE / 6L, Math.max ((long)required, kinds.length * 2L));
+			// Reserve every column before publication so allocation failure cannot
+			// leave mismatched capacities or corrupt an already usable layer stack.
+			byte [] nextKinds = Arrays.copyOf (kinds, next);
+			byte [] nextFlags = Arrays.copyOf (flags, next);
+			int [] nextLinks = Arrays.copyOf (nextSibling, next);
+			int [] previousLinks = Arrays.copyOf (previousSibling, next);
+			int [] nextZOrders = Arrays.copyOf (zOrders, next);
+			int [] nextWidths = Arrays.copyOf (widths, next);
+			int [] nextHeights = Arrays.copyOf (heights, next);
+			int [][] nextPixels = Arrays.copyOf (pixels, next);
+			byte [][] nextMasks = Arrays.copyOf (imageMasks, next);
+			int [] nextOpacities = Arrays.copyOf (imageOpacities, next);
+			int [] nextClipX = Arrays.copyOf (imageClipX, next);
+			int [] nextClipY = Arrays.copyOf (imageClipY, next);
+			int [] nextClipWidth = Arrays.copyOf (imageClipWidth, next);
+			int [] nextClipHeight = Arrays.copyOf (imageClipHeight, next);
+			float [] nextTransforms = Arrays.copyOf (transforms, next * 6);
+			double [] nextInverses = Arrays.copyOf (imageInverses, next * 4);
+			double [] nextBounds = Arrays.copyOf (imageBounds, next * 4);
+			kinds = nextKinds;
+			flags = nextFlags;
+			nextSibling = nextLinks;
+			previousSibling = previousLinks;
+			zOrders = nextZOrders;
+			widths = nextWidths;
+			heights = nextHeights;
+			pixels = nextPixels;
+			imageMasks = nextMasks;
+			imageOpacities = nextOpacities;
+			imageClipX = nextClipX;
+			imageClipY = nextClipY;
+			imageClipWidth = nextClipWidth;
+			imageClipHeight = nextClipHeight;
+			transforms = nextTransforms;
+			imageInverses = nextInverses;
+			imageBounds = nextBounds;
+		}
+	}
+
 	public static final class RowWindow {
 		public static final int DEFAULT_OVERSCAN_ROWS = 8;
 

@@ -39,6 +39,9 @@ final class ContractPlatform implements MobilePlatform {
 	String clipboard = "";
 	long next = 1, lastCreated;
 	int connects, disconnects, openedGraphics, closedGraphics;
+	int createdImages, disposedImages, peakImages, imageDraws, presentations;
+	/** Deterministic transport failure, used to prove renderer cleanup paths. */
+	boolean failNextImageDraw;
 	boolean reportFocusChanges, queueNativeFocusAcknowledgements, rejectFocusRequests;
 	long focusedPeer, nativeFocusAfterRequest;
 	/** Whether this transport moves pixels inside an image (Graphics.copyArea), and how often it did. */
@@ -94,9 +97,16 @@ final class ContractPlatform implements MobilePlatform {
 		if(id!=0)sink.input(id,SWT.FocusIn,0,0,0,0,'\0',0,0,2);
 	}
 	@Override public void setAccessibility(long id,String label,int role,int state){Peer p=peer(id);p.label=label;p.role=role;p.state=state;}
-	@Override public void present(long id,long image){peer(id).frame=imagePixels(image);}
-	@Override public long createImage(int w,int h,int[] pixels){check();BufferedImage image=new BufferedImage(w,h,BufferedImage.TYPE_INT_ARGB);if(pixels!=null)image.setRGB(0,0,w,h,pixels,0,w);long id=next++;images.put(id,image);return id;}
-	@Override public void disposeImage(long id){bitmap(id);images.remove(id);}
+	@Override public void present(long id,long image){peer(id).frame=imagePixels(image);presentations++;}
+	@Override public long createImage(int w,int h,int[] pixels){
+		check();
+		BufferedImage image=new BufferedImage(w,h,BufferedImage.TYPE_INT_ARGB);
+		if(pixels!=null)image.setRGB(0,0,w,h,pixels,0,w);
+		long id=next++;images.put(id,image);createdImages++;
+		peakImages=Math.max(peakImages,images.size());
+		return id;
+	}
+	@Override public void disposeImage(long id){bitmap(id);images.remove(id);disposedImages++;}
 	@Override public int[] imagePixels(long id){BufferedImage image=bitmap(id);return image.getRGB(0,0,image.getWidth(),image.getHeight(),null,0,image.getWidth());}
 	@Override public int[] captureScreen(int x,int y,int w,int h){check();throw new UnsupportedOperationException("Contract fixture cannot provide OS screen-capture evidence");}
 	@Override public Graphics graphics(long id){BufferedImage image=bitmap(id);openedGraphics++;return new TestGraphics(image);}
@@ -133,7 +143,11 @@ final class ContractPlatform implements MobilePlatform {
 		private String[] lines(String text,int flags){return (flags&SWT.DRAW_DELIMITER)!=0?text.split("\n",-1):new String[]{text};}
 		@Override public void drawText(String text,int x,int y,int flags){int[] extent=textExtent(text,flags);if((flags&SWT.DRAW_TRANSPARENT)==0)fillRectangle(x,y,extent[0],extent[1]);color(false);java.awt.FontMetrics fm=g.getFontMetrics();int row=0;for(String line:lines(text,flags))g.drawString(line,x,y+fm.getAscent()+row++*fm.getHeight());}
 		@Override public boolean copyArea(int x,int y,int w,int h,int dx,int dy){if(!movePixels)return false;g.copyArea(x,y,w,h,dx,dy);pixelMoves++;return true;}
-		@Override public void drawImage(long image,int sx,int sy,int sw,int sh,int dx,int dy,int dw,int dh){color(false);g.drawImage(bitmap(image),dx,dy,dx+dw,dy+dh,sx,sy,sx+sw,sy+sh,null);}
+		@Override public void drawImage(long image,int sx,int sy,int sw,int sh,int dx,int dy,int dw,int dh){
+			color(false);imageDraws++;
+			if(failNextImageDraw){failNextImageDraw=false;throw new IllegalStateException("Injected image draw failure");}
+			g.drawImage(bitmap(image),dx,dy,dx+dw,dy+dh,sx,sy,sx+sw,sy+sh,null);
+		}
 		@Override public int[] textExtent(String text,int flags){drawing();java.awt.FontMetrics fm=g.getFontMetrics();int width=0;String[] lines=lines(text,flags);for(String line:lines)width=Math.max(width,fm.stringWidth(line));return new int[]{width,fm.getHeight()*lines.length};}
 		@Override public int[] fontMetrics(){drawing();java.awt.FontMetrics f=g.getFontMetrics();return new int[]{f.getAscent(),f.getDescent(),f.charWidth('n'),f.getLeading(),f.getHeight()};}
 		@Override public void close(){if(closed)return;drawing();g.dispose();closed=true;closedGraphics++;}
