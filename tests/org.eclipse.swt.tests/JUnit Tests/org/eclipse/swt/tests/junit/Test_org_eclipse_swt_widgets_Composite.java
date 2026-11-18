@@ -298,9 +298,9 @@ public void test_nativeReliefAndCompositeBevelShareOneOwner() {
 		assertEquals(SWT.NONE, local.getBevelBorder());
 		assertEquals(SWT.DEFAULT, local.getBorderRelief());
 		if ("cocoa".equals(SWT.getPlatform())) {
-			assertThrows(org.eclipse.swt.SWTError.class,
-					() -> local.setBevelBorder(SWT.SHADOW_IN));
-			assertEquals(SWT.NONE, local.getBevelBorder());
+			// Cocoa native NSScrollView bezel receives a separate real-widget
+			// test in Test_org_eclipse_swt_widgets_Control. Do not infer that
+			// all Cocoa Composite peers have equivalent native border trim.
 			return;
 		}
 		for (int relief : new int[] {SWT.SHADOW_IN, SWT.SHADOW_OUT,
