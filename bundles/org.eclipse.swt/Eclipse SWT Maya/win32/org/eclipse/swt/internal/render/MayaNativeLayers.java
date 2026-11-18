@@ -31,9 +31,32 @@ public final class MayaNativeLayers implements NativeLayers {
 			ThreadLocal.withInitial(MayaFramePacket.Encoder::new);
 	private long epoch;
 
+    // Explicit VM-wide opt-in. Zero keeps the previous unlimited behavior.
+    // Malformed or negative values must not silently become an unlimited cap.
+    private static final long MAX_NATIVE_SURFACE_BYTES = readSurfaceBudgetProperty();
+
+    private static long readSurfaceBudgetProperty() {
+        String value = System.getProperty("swt.maya.surfaceBudgetBytes");
+        if (value == null) return 0;
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException invalid) {
+            return -1;
+        }
+    }
+
+
 	@Override
 	public long create(Control control) {
-		return MayaComposition._nCreate(control.handle);
+        // Fail closed if an explicit budget is malformed. An old Maya DLL
+        // cannot satisfy a nonzero cap: retain SWT's painted fallback.
+        if (MAX_NATIVE_SURFACE_BYTES < 0) return 0;
+        long composition = MayaComposition._nCreate(control.handle);
+        if (composition == 0 || MAX_NATIVE_SURFACE_BYTES == 0) return composition;
+        if (MayaComposition.setSurfaceBudget(composition, MAX_NATIVE_SURFACE_BYTES) == 0)
+            return composition;
+        MayaComposition._nDispose(composition);
+        return 0;
 	}
 
 	@Override
