@@ -1217,6 +1217,8 @@ public void test_nativeBorderRelief_contract() {
         assertEquals(SWT.SHADOW_NONE, control.getBorderRelief());
         control.setBorderRelief(SWT.DEFAULT);
         assertEquals(SWT.DEFAULT, control.getBorderRelief());
+        assertEquals(originalBorderWidth, control.getBorderWidth(),
+                "Reset must restore the pre-existing border-width contract");
     } finally {
         control.dispose();
     }
