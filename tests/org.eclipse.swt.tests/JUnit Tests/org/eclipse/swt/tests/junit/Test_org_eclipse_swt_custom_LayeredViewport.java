@@ -2046,6 +2046,41 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testNativeZoomChangedReappliesViewportWithStableClientBounds()
+            throws ReflectiveOperationException {
+        viewport.setSize(100, 100);
+        Button control = new Button(viewport, SWT.PUSH);
+        Layer child = viewport.addControlLayer("zoom child", control, 20, 20, 40, 20);
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        Image image = nativeTestImage(8, 8, SWT.COLOR_RED);
+        Layer nativeLayer = viewport.addImageLayer("zoom native", image, 30, 30);
+        try {
+            assertTrue(nativeLayer.setNative(true));
+            Rectangle clientBefore = viewport.getClientArea();
+            Rectangle childBefore = control.getBounds();
+            int frames = backend.applications;
+            viewport.notifyListeners(SWT.ZoomChanged, new Event());
+            assertEquals(clientBefore, viewport.getClientArea(),
+                    "a synthetic DPI signal does not itself change logical native bounds");
+            assertEquals(childBefore, control.getBounds(),
+                    "native child remains at its logical projection");
+            assertTrue(backend.applications > frames,
+                    "a zoom event must reapply the native frame even with equal client bounds");
+            assertSame(control, viewport.getControl(child));
+            Field field = LayeredViewport.class.getDeclaredField("nativeClientGeometry");
+            field.setAccessible(true);
+            assertArrayEquals(new int[] {clientBefore.x, clientBefore.y,
+                    clientBefore.width, clientBefore.height}, (int[]) field.get(viewport));
+        } finally {
+            if (!viewport.isDisposed()) {
+                nativeLayer.remove();
+                child.remove();
+            }
+            image.dispose();
+        }
+    }
+
+    @Test
     public void testNativeCullingRespondsToViewportResize() throws ReflectiveOperationException {
         viewport.setSize(100, 100);
         RecordingNativeLayers backend = installRecordingNativeLayers();

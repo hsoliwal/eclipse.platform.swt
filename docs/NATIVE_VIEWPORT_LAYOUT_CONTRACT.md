@@ -54,6 +54,22 @@ The original `Test_org_eclipse_swt_custom_LayeredViewport` suite now has a
 border/client-area regression covering original native child identity,
 native-layer visibility and client clipping, no-op transitions, and reset.
 
+### Per-monitor DPI / zoom and native layout
+
+Logical client coordinates can remain unchanged during a native monitor zoom
+transition while the physical backing store, SWT child device bounds and
+native composition scale need a new frame. The original `LayeredViewport`
+therefore also listens for `SWT.ZoomChanged`: it invalidates the four-integer
+native-client geometry cache and resubmits the original Control placements
+and `NativeLayers.apply` frame, even when `getClientArea()` has exactly
+the same logical coordinates. This is not a substitute for actual native
+DPI-change integration tests at mixed monitor scales.
+
+The original `RecordingNativeLayers` JUnit now covers this explicit signal;
+it demonstrates a fresh native property frame without duplicating native
+child controls or changing their logical bounds. Pixel scaling/DirectComposition
+transform correctness remains an independent native qualification gate.
+
 ## Already implemented native facilities: use, do not duplicate
 
 | Platform | Native ownership | Existing / safe integration |
