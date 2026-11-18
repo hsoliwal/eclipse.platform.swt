@@ -181,6 +181,61 @@ public class Test_org_eclipse_swt_maya_Composition {
 	}
 
 	@Test
+	public void imageUploadAfterIdenticalFrameMustCommitSurfacePixels() {
+		long colored = layer(OPAQUE_RED);
+		long[] order = { colored };
+		float[] frame = { 20, 20, 1, 1 };
+		frame(order, frame);
+		assertEquals(RED, screen(30, 30));
+		int[] next = new int[SIZE * SIZE];
+		Arrays.fill(next, OPAQUE_BLUE);
+		assertEquals(0, MayaComposition._nUpload(colored, next));
+		frame(order, frame); // no property changed; EndDraw still requires Commit
+		assertEquals(BLUE, screen(30, 30), "surface content changed even when visual properties did not");
+		frame(order, frame); // identical and no pending upload remains a no-op
+		assertEquals(BLUE, screen(30, 30));
+	}
+
+	@Test
+	public void nativeSceneFrameAppliesAffineClipAndLegacyReset() {
+		long red = layer(OPAQUE_RED);
+		long[] handles = { red };
+		float[] scene = {
+				0, 0, 1, 1,
+				2, 0, 0, 1, 20, 20,
+				0, 0, 25, 60
+		};
+		assertEquals(MayaComposition.SCENE_FLOATS, scene.length);
+		int[] flags = { MayaComposition.SCENE_CLIP };
+		assertEquals(0, MayaComposition._nApplyScene(composition, handles, scene, flags, 1));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(RED, screen(30, 30));
+		assertEquals(WHITE, screen(80, 30), "local clip is transformed with the visual");
+
+		scene[12] = 60; // expand only the clip, not the image or native Z
+		assertEquals(0, MayaComposition._nApplyScene(composition, handles, scene, flags, 1));
+		assertEquals(0, MayaComposition._nWaitForCommit(composition));
+		pump(250);
+		assertEquals(RED, screen(80, 30));
+		assertEquals(0, MayaComposition._nApplyScene(composition, handles, scene, flags, 1));
+		assertEquals(0, MayaComposition._nApplyScene(composition, handles, scene, flags, 1));
+
+		float previous = scene[4];
+		scene[4] = Float.NaN;
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, handles, scene, flags, 1));
+		scene[4] = previous;
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, handles, scene,
+				new int[] { 2 }, 1), "unknown scene flags");
+		assertNotEquals(0, MayaComposition._nApplyScene(composition, handles, new float[13], flags, 1));
+		assertEquals(RED, screen(80, 30), "invalid requests retain the last committed pixels");
+
+		frame(handles, 20, 20, 1, 1); // old ABI must remove the affine matrix and clip
+		assertEquals(RED, screen(80, 30));
+		assertEquals(WHITE, screen(140, 30));
+	}
+
+	@Test
 	public void invalidArgumentsAreRefused() {
 		assertEquals(0, MayaComposition._nAddLayer(0, SIZE, SIZE));
 		assertEquals(0, MayaComposition._nAddLayer(composition, 0, SIZE));
