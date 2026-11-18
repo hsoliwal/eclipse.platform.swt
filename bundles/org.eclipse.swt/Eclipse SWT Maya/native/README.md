@@ -127,3 +127,22 @@ window handle input, composition GPU ownership, packet header, and native
 frame semantics stay unchanged. See `MayaNativeHandleRegistry.h` and its
 portable ASan/UBSan test; full Win32 Maya screenshot/disposal tests must pass
 before updating a packaged binary.
+
+## Optional per-composition native telemetry
+
+`MayaCompositionTelemetry.h` is an array-backed, per-composition C++17
+counter store (16 fixed slots). The original Maya owner increments counters
+at successful native layer creation/retirement, full and dirty
+`IDCompositionSurface::EndDraw` submissions, device-health probes,
+native frame submissions, successful or failed `IDCompositionDevice::Commit`,
+and suppressed no-op frames. The original packed/legacy frame owners remain
+unchanged; the optional `MayaComposition._nReadMetrics(long,long[])` symbol
+copies a single explicit read-only snapshot on demand.
+
+The Java compatibility helper returns null for previously packaged
+libraries without that new export. It does not create a native compositor
+or claim GPU presentation or FPS results. The metrics C++/JNI smoke has
+GCC/Clang sanitizer, Java 21 `-Xcheck:jni` and absent-export tests;
+the actual Win32 Maya/MSVC runtime still requires a rebuilt DLL, export
+closure, `AllMayaGcTests`, resource checks and measurements.
+See [MAYA_COMPOSITION_TELEMETRY.md](../../../docs/MAYA_COMPOSITION_TELEMETRY.md).
