@@ -6,6 +6,7 @@ package org.eclipse.swt.snippets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.LayeredViewport;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -19,12 +20,22 @@ public class SnippetLayeredViewport {
         shell.setLayout(new FillLayout());
         LayeredViewport view = new LayeredViewport(shell, SWT.BORDER);
         view.addPaintLayer("paper", 0, 0, 1200, 850, (gc, context) -> {
-            gc.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
-            gc.fillRectangle(context.clip());
+            Color before = gc.getBackground();
+            try {
+                gc.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
+                gc.fillRectangle(context.clip());
+            } finally {
+                gc.setBackground(before);
+            }
         });
         view.addPaintLayer("blue", 150, 110, 420, 270, (gc, context) -> {
-            gc.setBackground(display.getSystemColor(SWT.COLOR_BLUE));
-            gc.fillRectangle(context.clip());
+            Color before = gc.getBackground();
+            try {
+                gc.setBackground(display.getSystemColor(SWT.COLOR_BLUE));
+                gc.fillRectangle(context.clip());
+            } finally {
+                gc.setBackground(before);
+            }
         });
         LayeredViewport.Layer yellow = view.addPaintLayer(
                 "yellow", 260, 180, 400, 260, (gc, context) -> {
