@@ -19,7 +19,7 @@ import java.util.logging.*;
 import org.eclipse.swt.*;
 
 /**
- * The queue of a {@link Synchronizer} (brief rule 28, docs/m3/SYNCHRONIZER.md), a dispatcher in the manner of Swing's
+ * The queue retained by a display across {@link Synchronizer} replacements, a dispatcher in the manner of Swing's
  * <code>EventQueue</code>: one ring of slots per priority class (input, layout and paint, default, model patches,
  * idle), keyed coalescing (the latest runnable for a key replaces the queued one in place, like
  * <code>EventQueue.coalesceEvents</code>), model patches applied together once per frame tick followed by the
@@ -98,7 +98,9 @@ final class DispatchQueue {
 		}
 	}
 
-	private final Synchronizer owner;
+	private volatile Synchronizer owner;
+	/* A synchronizer prepared before installation may still have a posting caller in flight. */
+	private volatile DispatchQueue replacement;
 	private final Ring [] rings = new Ring [CLASSES];
 	/* keyed entries: open addressing (linear probing, backward-shift deletion) from key to class and sequence */
 	private Object [] keyTable = new Object [16];
@@ -106,7 +108,7 @@ final class DispatchQueue {
 	private long [] keySequences = new long [16];
 	private int keyCount;
 	/* frame ticks */
-	private boolean tickScheduled, tickWanted, frameDue, frameRequested;
+	private boolean tickScheduled, tickWanted, frameDue, frameRequested, frameRunning, frameApplying;
 	private long lastFrameNanos, generation;
 	private volatile FrameListener [] frameListeners = NO_LISTENERS;
 	private final Runnable tick = this::tickFired;
@@ -120,26 +122,34 @@ final class DispatchQueue {
 
 	/** Queues a runnable; a key already queued in the same class has its runnable replaced in place (no new slot). */
 	void add (int priority, Object key, Runnable runnable, SyncLock lock) {
-		boolean wake;
+		boolean wake = false;
+		DispatchQueue next;
 		synchronized (this) {
-			if (key != null) {
-				int at = findKey (key);
-				if (at >= 0 && keyClasses [at] == priority) {
-					Ring ring = rings [priority];
-					int slot = ring.slot (keySequences [at]);
-					if (slot >= 0) {
-						ring.runnables [slot] = runnable;
-						return;
+			next = replacement;
+			if (next == null) {
+				if (key != null) {
+					int at = findKey (key, priority);
+					if (at >= 0) {
+						Ring ring = rings [priority];
+						int slot = ring.slot (keySequences [at]);
+						if (slot >= 0) {
+							ring.runnables [slot] = runnable;
+							return;
+						}
 					}
 				}
+				wake = !hasWorkLocked ();
+				long sequence = rings [priority].append (runnable, lock, key);
+				if (key != null) putKey (key, priority, sequence);
+				if (priority == MODEL && !tickScheduled) {
+					tickWanted = true;
+					wake = true;
+				}
 			}
-			wake = !hasWorkLocked ();
-			long sequence = rings [priority].append (runnable, lock, key);
-			if (key != null) putKey (key, priority, sequence);
-			if (priority == MODEL && !tickScheduled) {
-				tickWanted = true;
-				wake = true;
-			}
+		}
+		if (next != null) {
+			next.add (priority, key, runnable, lock);
+			return;
 		}
 		if (wake) {
 			Display display = owner.display;
@@ -197,50 +207,77 @@ final class DispatchQueue {
 	/* ---- frames ---- */
 
 	void addFrameListener (FrameListener listener) {
+		DispatchQueue next;
 		synchronized (this) {
-			FrameListener [] old = frameListeners, grown = java.util.Arrays.copyOf (old, old.length + 1);
-			grown [old.length] = listener;
-			frameListeners = grown;
+			next = replacement;
+			if (next == null) {
+				FrameListener [] old = frameListeners, grown = java.util.Arrays.copyOf (old, old.length + 1);
+				grown [old.length] = listener;
+				frameListeners = grown;
+				return;
+			}
 		}
+		next.addFrameListener (listener);
 	}
 
 	void removeFrameListener (FrameListener listener) {
+		DispatchQueue next;
 		synchronized (this) {
-			FrameListener [] old = frameListeners;
-			for (int i = 0; i < old.length; i++) {
-				if (old [i] == listener) {
-					FrameListener [] shrunk = new FrameListener [old.length - 1];
-					System.arraycopy (old, 0, shrunk, 0, i);
-					System.arraycopy (old, i + 1, shrunk, i, old.length - i - 1);
-					frameListeners = shrunk;
-					return;
+			next = replacement;
+			if (next == null) {
+				FrameListener [] old = frameListeners;
+				for (int i = 0; i < old.length; i++) {
+					if (old [i] == listener) {
+						FrameListener [] shrunk = new FrameListener [old.length - 1];
+						System.arraycopy (old, 0, shrunk, 0, i);
+						System.arraycopy (old, i + 1, shrunk, i, old.length - i - 1);
+						frameListeners = shrunk;
+						return;
+					}
 				}
+				return;
 			}
 		}
+		next.removeFrameListener (listener);
 	}
 
 	void requestFrame () {
-		boolean wake;
+		boolean wake = false;
+		DispatchQueue next;
 		synchronized (this) {
-			frameRequested = true;
-			wake = !tickScheduled && !tickWanted;
-			tickWanted = true;
+			next = replacement;
+			if (next == null) {
+				frameRequested = true;
+				wake = !tickScheduled && !tickWanted;
+				tickWanted = true;
+			}
+		}
+		if (next != null) {
+			next.requestFrame ();
+			return;
 		}
 		Display display = owner.display;
 		if (wake && display != null) display.wakeThread ();
 	}
 
 	long generation () {
+		DispatchQueue next;
 		synchronized (this) {
-			return generation;
+			next = replacement;
+			if (next == null) return generation;
 		}
+		return next.generation ();
 	}
 
 	/* the frame timer fired (user-interface thread): the frame is due if anything is dirty */
 	private void tickFired () {
 		synchronized (this) {
+			if (replacement != null) return; // an installed queue's old timer was cancelled
 			tickScheduled = false;
-			if (rings [MODEL].size > 0 || frameRequested) frameDue = true;
+			if (rings [MODEL].size > 0 || frameRequested) {
+				if (frameRunning) tickWanted = true;
+				else frameDue = true;
+			}
 		}
 	}
 
@@ -257,17 +294,23 @@ final class DispatchQueue {
 
 	private boolean hasWorkLocked () {
 		return rings [INPUT].size + rings [LAYOUT].size + rings [DEFAULT].size + rings [IDLE].size > 0
-			|| frameDue && (rings [MODEL].size > 0 || frameRequested) || tickWanted && !tickScheduled;
+			|| frameRunning && rings [MODEL].size > 0
+			|| !frameRunning && (frameDue && (rings [MODEL].size > 0 || frameRequested) || tickWanted && !tickScheduled);
 	}
 
 	boolean isEmpty () {
+		DispatchQueue next;
 		synchronized (this) {
-			return !hasWorkLocked ();
+			next = replacement;
+			if (next == null) return !hasWorkLocked ();
 		}
+		return next.isEmpty ();
 	}
 
 	/** Stock runAsyncMessages: one message (or, with all, every message) in priority order; a due frame counts as one. */
 	boolean run (boolean all) {
+		DispatchQueue next = replacement;
+		if (next != null) return next.run (all);
 		boolean run = false;
 		do {
 			Runnable runnable;
@@ -275,16 +318,24 @@ final class DispatchQueue {
 			boolean frame = false, schedule = false;
 			int priority = -1;
 			synchronized (this) {
-				if (tickWanted && !tickScheduled) {
+				if (tickWanted && !tickScheduled && !frameRunning) {
 					tickWanted = false;
 					tickScheduled = true;
 					schedule = true;
 				}
 				for (int c = INPUT; c < CLASSES && priority < 0; c++) {
 					if (c == MODEL) {
-						if (frameDue) {
+						if (frameRunning && rings [MODEL].size > 0) {
+							// A nested event loop may need a model callback to finish. Only publication is deferred.
+							priority = MODEL;
+							if (!frameApplying) frameRequested = true;
+						} else if (frameDue && !frameRunning) {
 							frame = true;
 							priority = MODEL;
+							frameDue = false;
+							frameRequested = false;
+							frameRunning = true;
+							frameApplying = true;
 						}
 					} else if (rings [c].size > 0) {
 						priority = c;
@@ -323,8 +374,9 @@ final class DispatchQueue {
 
 	/* one queued message, exactly as the stock runAsyncMessages ran a RunnableLock */
 	private void runOne (Runnable runnable, SyncLock lock) {
-		Display display = owner.display;
-		owner.syncThread = lock == null ? null : lock.thread;
+		Synchronizer active = owner;
+		Display display = active.display;
+		active.syncThread = lock == null ? null : lock.thread;
 		display.sendPreEvent (SWT.None);
 		try {
 			if (runnable != null) {
@@ -342,6 +394,7 @@ final class DispatchQueue {
 		} finally {
 			Display current = owner.display;
 			if (current != null && !current.isDisposed ()) current.sendPostEvent (SWT.None);
+			active.syncThread = null;
 			owner.syncThread = null;
 			if (lock != null) {
 				synchronized (lock) {
@@ -354,68 +407,115 @@ final class DispatchQueue {
 
 	/* the model patches queued when the frame became due, then the frame listeners */
 	private void runFrame () {
-		int count;
+		long through;
 		synchronized (this) {
-			/* Consume this frame's request before applying its patches. A patch (or another
-			 * thread) may request a subsequent frame while the current one is running. */
-			frameDue = false;
-			frameRequested = false;
-			count = rings [MODEL].size;
+			through = rings [MODEL].first + rings [MODEL].size;
 		}
-		for (int i = 0; i < count; i++) {
-			Runnable runnable;
-			synchronized (this) {
-				Ring ring = rings [MODEL];
-				if (ring.size == 0) break;
-				int slot = ring.head;
-				runnable = ring.runnables [slot];
-				Object key = ring.keys [slot];
-				ring.runnables [slot] = null;
-				ring.keys [slot] = null;
-				ring.head = (slot + 1) % ring.runnables.length;
-				ring.size--;
-				long sequence = ring.first++;
-				if (key != null) removeKey (key, MODEL, sequence);
+		boolean applied = false;
+		try {
+			while (true) {
+				Runnable runnable;
+				synchronized (this) {
+					Ring ring = rings [MODEL];
+					if (ring.size == 0 || through - ring.first <= 0) break;
+					int slot = ring.head;
+					runnable = ring.runnables [slot];
+					Object key = ring.keys [slot];
+					ring.runnables [slot] = null;
+					ring.keys [slot] = null;
+					ring.head = (slot + 1) % ring.runnables.length;
+					ring.size--;
+					long sequence = ring.first++;
+					if (key != null) removeKey (key, MODEL, sequence);
+				}
+				runOne (runnable, null);
+				Display display = owner.display;
+				if (display == null || display.isDisposed ()) return;
 			}
-			runOne (runnable, null);
-		}
-		long frameGeneration;
-		synchronized (this) {
-			lastFrameNanos = System.nanoTime ();
-			frameGeneration = ++generation;
-			if (rings [MODEL].size > 0 || frameRequested) tickWanted = true;
-		}
-		Display display = owner.display;
-		for (FrameListener listener : frameListeners) {
-			if (display == null || display.isDisposed ()) return;
-			listener.frameApplied (display, frameGeneration);
+			long frameGeneration;
+			FrameListener [] listeners;
+			synchronized (this) {
+				lastFrameNanos = System.nanoTime ();
+				frameGeneration = ++generation;
+				listeners = frameListeners;
+				applied = true;
+				frameApplying = false;
+			}
+			for (FrameListener listener : listeners) {
+				Display display = owner.display;
+				if (display == null || display.isDisposed ()) return;
+				listener.frameApplied (display, frameGeneration);
+			}
+		} finally {
+			synchronized (this) {
+				frameRunning = false;
+				frameApplying = false;
+				// Requests posted while applying or notifying belong to the next frame.
+				if (owner.display != null) {
+					if (!applied) frameRequested = true;
+					if (rings [MODEL].size > 0 || frameRequested) tickWanted = true;
+				}
+			}
 		}
 	}
 
 	/* ---- moving and clearing ---- */
 
-	/** Moves every queued message to the front of the target's queue, class by class (stock moveAllEventsTo). */
-	void moveAllTo (DispatchQueue target) {
+	/**
+	 * Keeps the active display queue and appends the new synchronizer's pending messages, class by class. Retaining
+	 * this queue also retains an in-flight frame, its listeners, generations and timer. Both synchronizers subsequently
+	 * submit to it; a caller that already obtained the new synchronizer's old queue is forwarded here.
+	 */
+	void install (Synchronizer receiver) {
+		DispatchQueue current = current ();
+		if (current != this) {
+			current.install (receiver);
+			return;
+		}
+		DispatchQueue pending = receiver.queue.current ();
+		boolean cancelTick = false;
 		synchronized (this) {
-			synchronized (target) {
-				for (int c = 0; c < CLASSES; c++) {
-					Ring from = rings [c], to = target.rings [c];
-					Ring merged = new Ring ();
-					drainInto (from, merged);
-					drainInto (to, merged);
-					target.rings [c] = merged;
-					rings [c] = new Ring ();
+			synchronized (pending) {
+				if (pending != this) {
+					cancelTick = pending.tickScheduled;
+					boolean pendingFrame = pending.tickWanted || pending.tickScheduled || pending.frameDue
+						|| pending.frameRequested || pending.rings [MODEL].size > 0;
+					for (int c = 0; c < CLASSES; c++) {
+						drainInto (pending.rings [c], rings [c]);
+						pending.rings [c].clear ();
+					}
+					rebuildKeys ();
+					if (pending.frameListeners.length > 0) {
+						FrameListener [] combined = java.util.Arrays.copyOf (frameListeners,
+							frameListeners.length + pending.frameListeners.length);
+						System.arraycopy (pending.frameListeners, 0, combined, frameListeners.length, pending.frameListeners.length);
+						frameListeners = combined;
+					}
+					generation = Math.max (generation, pending.generation);
+					frameRequested |= pending.frameRequested;
+					if (pendingFrame) tickWanted = true;
+					pending.frameListeners = NO_LISTENERS;
+					java.util.Arrays.fill (pending.keyTable, null);
+					pending.keyCount = 0;
+					pending.tickScheduled = pending.tickWanted = pending.frameDue = pending.frameRequested = false;
+					pending.replacement = this;
 				}
-				target.rebuildKeys ();
-				keyTable = new Object [16];
-				keyClasses = new int [16];
-				keySequences = new long [16];
-				keyCount = 0;
-				if (tickWanted || tickScheduled) target.tickWanted = true;
+				receiver.syncThread = owner.syncThread;
+				owner = receiver;
+				receiver.queue = this;
 			}
 		}
-		Display display = target.owner.display;
-		if (display != null && !target.isEmpty ()) display.wakeThread ();
+		Display display = receiver.display;
+		if (display != null && !display.isDisposed ()) {
+			if (cancelTick) display.timerExec (-1, pending.tick);
+			if (!isEmpty ()) display.wakeThread ();
+		}
+	}
+
+	private DispatchQueue current () {
+		DispatchQueue current = this, next;
+		while ((next = current.replacement) != null) current = next;
+		return current;
 	}
 
 	private static void drainInto (Ring from, Ring to) {
@@ -444,24 +544,25 @@ final class DispatchQueue {
 			for (Ring ring : rings) ring.clear ();
 			java.util.Arrays.fill (keyTable, null);
 			keyCount = 0;
-			tickScheduled = tickWanted = frameDue = frameRequested = false;
+			frameListeners = NO_LISTENERS;
+			tickScheduled = tickWanted = frameDue = frameRequested = frameRunning = frameApplying = false;
 		}
 	}
 
 	/* ---- the key table ---- */
 
-	private int findKey (Object key) {
+	private int findKey (Object key, int priority) {
 		int mask = keyTable.length - 1;
-		for (int i = mix (key.hashCode ()) & mask; keyTable [i] != null; i = (i + 1) & mask) {
-			if (keyTable [i].equals (key)) return i;
+		for (int i = keyHash (key, priority) & mask; keyTable [i] != null; i = (i + 1) & mask) {
+			if (keyClasses [i] == priority && keyTable [i].equals (key)) return i;
 		}
 		return -1;
 	}
 
 	private void putKey (Object key, int priority, long sequence) {
 		if ((keyCount + 1) * 2 > keyTable.length) growKeys ();
-		int mask = keyTable.length - 1, i = mix (key.hashCode ()) & mask;
-		while (keyTable [i] != null && !keyTable [i].equals (key)) i = (i + 1) & mask;
+		int mask = keyTable.length - 1, i = keyHash (key, priority) & mask;
+		while (keyTable [i] != null && (keyClasses [i] != priority || !keyTable [i].equals (key))) i = (i + 1) & mask;
 		if (keyTable [i] == null) keyCount++;
 		keyTable [i] = key;
 		keyClasses [i] = priority;
@@ -470,13 +571,13 @@ final class DispatchQueue {
 
 	/* removes the key when it still maps to this entry (a later entry with the key replaced the mapping otherwise) */
 	private void removeKey (Object key, int priority, long sequence) {
-		int at = findKey (key);
+		int at = findKey (key, priority);
 		if (at < 0 || keyClasses [at] != priority || keySequences [at] != sequence) return;
 		int mask = keyTable.length - 1, hole = at;
 		keyTable [hole] = null;
 		keyCount--;
 		for (int i = (hole + 1) & mask; keyTable [i] != null; i = (i + 1) & mask) {
-			int home = mix (keyTable [i].hashCode ()) & mask;
+			int home = keyHash (keyTable [i], keyClasses [i]) & mask;
 			if (hole <= i ? home <= hole || home > i : home <= hole && home > i) {
 				keyTable [hole] = keyTable [i];
 				keyClasses [hole] = keyClasses [i];
@@ -503,5 +604,9 @@ final class DispatchQueue {
 	private static int mix (int hash) {
 		hash *= 0x9E3779B9;
 		return hash ^ (hash >>> 16);
+	}
+
+	private static int keyHash (Object key, int priority) {
+		return mix (31 * key.hashCode () + priority);
 	}
 }
