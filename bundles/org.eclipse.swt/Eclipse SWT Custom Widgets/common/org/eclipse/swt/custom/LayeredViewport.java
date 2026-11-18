@@ -140,8 +140,6 @@ public final class LayeredViewport extends Canvas {
         private WorldBounds worldClip;
         /* SWT.HORIZONTAL and/or SWT.VERTICAL: the axes on which the layer is measured from the view's origin */
         private int pinned;
-        /* Independent signed Q8 scroll rates: 256=normal, 128=half parallax,
-           0=fixed. Existing pinned/sticky flags take precedence per axis. */
         private int scrollRateX = ViewportRuntime.LayerPosition.SCROLL;
         private int scrollRateY = ViewportRuntime.LayerPosition.SCROLL;
         /* the axis (SWT.HORIZONTAL or SWT.VERTICAL) the layer sticks on, or 0; its inset from the view's leading
@@ -809,9 +807,13 @@ public final class LayeredViewport extends Canvas {
         // Hit testers may re-enter the scene; capture handles before callbacks.
         Layer[] hits = activeHitQueries == 0
                 ? growHitCandidates(candidates) : new Layer[candidates];
-        int[] cursor = new int[2];
+        int normal = 0, pinned = 0;
         for (int i = 0; i < candidates; i++) {
-            hits[i] = paintOrder[mergedZ(cursor, found)];
+            int a = normal < found ? spatialIndex.resultAt(normal) : Integer.MAX_VALUE;
+            int b = pinned < pinnedCount ? pinnedZ[pinned] : Integer.MAX_VALUE;
+            if (a < b) normal++;
+            else pinned++;
+            hits[i] = paintOrder[Math.min(a, b)];
         }
         activeHitQueries++;
         try {
@@ -827,7 +829,7 @@ public final class LayeredViewport extends Canvas {
                 if (isDisposed()) return null;
                 // Callbacks can remove, move, hide or lock their own target,
                 // or another candidate captured by this query.
-                if (accepted && containsHit(layer, worldX, worldY)
+                if (accepted && containsHit(layer, layerX(layer, deviceX), layerY(layer, deviceY))
                         && (!withPointerListener || layer.pointerListener != null)) return layer;
             }
             return null;
@@ -1103,9 +1105,13 @@ public final class LayeredViewport extends Canvas {
             int found = spatialIndex.query(x0, y0, x1, y1), total = found + pinnedCount;
             candidates = activePaintFrames == 0 ? growPaintCandidates(total) : new Layer[total];
             selected = 0;
-            int[] cursor = new int[2];
+            int normal = 0, pinned = 0;
             for (int i = 0; i < total; i++) {
-                int z = mergedZ(cursor, found);
+                int a = normal < found ? spatialIndex.resultAt(normal) : Integer.MAX_VALUE;
+                int b = pinned < pinnedCount ? pinnedZ[pinned] : Integer.MAX_VALUE;
+                if (a < b) normal++;
+                else pinned++;
+                int z = Math.min(a, b);
                 if (z >= from && z < to) candidates[selected++] = frame[z];
             }
         } else {
@@ -1183,20 +1189,6 @@ public final class LayeredViewport extends Canvas {
             }
             spatialDirty = false;
         }
-    }
-
-    /*
-     * the {@code at}-th Z index, ascending, of the last spatial query's {@code found} results merged with the pinned
-     * layers (no layer is in both)
-     */
-    private int mergedZ(int[] cursor, int found) {
-        int i = cursor[0], p = cursor[1];
-        if (p == pinnedCount || i < found && spatialIndex.resultAt(i) < pinnedZ[p]) {
-            cursor[0]++;
-            return spatialIndex.resultAt(i);
-        }
-        cursor[1]++;
-        return pinnedZ[p];
     }
 
     /* Whether a pan moves the layer differently from ordinary world scrolling. */
@@ -1657,10 +1649,13 @@ public final class LayeredViewport extends Canvas {
             if (moved == null ? now == null : moved.equals(now)) continue; // it moved with everything else
             Rectangle place = now == null ? null : intersect(now, view);
             Rectangle ghost = moved == null ? null : intersect(moved, view);
-            for (Rectangle r : new Rectangle[] { place, ghost }) {
-                if (r == null) continue;
-                dirty.add(r.x, r.y, r.width, r.height);
-                markRetained(z, r);
+            if (place != null) {
+                dirty.add(place.x, place.y, place.width, place.height);
+                markRetained(z, place);
+            }
+            if (ghost != null) {
+                dirty.add(ghost.x, ghost.y, ghost.width, ghost.height);
+                markRetained(z, ghost);
             }
         }
     }
