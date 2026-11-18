@@ -46,7 +46,11 @@ def checked_sources(root, entries, origin):
     for entry in entries:
         path = checked_path(root, entry["path"])
         actual = digest(path)
-        if entry.get("sha256") and actual != entry["sha256"]:
+        expected = entry.get("sha256")
+        if not isinstance(expected, str) or len(expected) != 64 or any(
+                c not in "0123456789abcdef" for c in expected):
+            raise ValueError(f"Unsealed {origin} source: {entry['path']}")
+        if actual != expected:
             raise ValueError(
                 f"Unchanged {origin} source drift: {entry['path']}\n"
                 f"expected {entry['sha256']}, observed {actual}. "

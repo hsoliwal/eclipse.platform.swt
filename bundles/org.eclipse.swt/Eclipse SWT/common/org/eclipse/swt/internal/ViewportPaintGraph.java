@@ -59,14 +59,16 @@ public final class ViewportPaintGraph {
 	private static final int ROOT = 0;
 	private static final int DETACHED = -2;
 	private static final int NONE = -1;
-	private static final byte TEXT_TRANSPARENT = 1;
-	private static final byte HAS_CLIP = 1 << 1;
-	private static final byte HAS_STROKE = 1 << 2;
-	private static final byte HAS_LAYER = 1 << 3;
-	private static final byte HAS_CULL_BOUNDS = 1 << 4;
-	private static final byte HIDDEN = 1 << 5;
-	private static final byte HAS_HIT_BOUNDS = 1 << 6;
-	private static final byte INPUT_TRANSPARENT = (byte)(1 << 7);
+	private static final short TEXT_TRANSPARENT = 1;
+	private static final short HAS_CLIP = 1 << 1;
+	private static final short HAS_STROKE = 1 << 2;
+	private static final short HAS_LAYER = 1 << 3;
+	private static final short HAS_CULL_BOUNDS = 1 << 4;
+	private static final short HIDDEN = 1 << 5;
+	private static final short HAS_HIT_BOUNDS = 1 << 6;
+	private static final short LOCKED = 1 << 7;
+	private static final short HAS_OPACITY = 1 << 8;
+	private static final short INPUT_TRANSPARENT = 1 << 9;
 
 	private byte [] kinds = new byte [16];
 	private int [] firstChild = new int [16];
@@ -78,6 +80,7 @@ public final class ViewportPaintGraph {
 	private int [] transformIds = new int [16];
 	private int [] layers = new int [16];
 	private int [] zOrders = new int [16];
+	private byte [] opacities = new byte [16];
 	private float [] clipX = new float [16];
 	private float [] clipY = new float [16];
 	private float [] clipWidth = new float [16];
@@ -106,14 +109,14 @@ public final class ViewportPaintGraph {
 	private int [] b = new int [16];
 	private int [] c = new int [16];
 	private int [] d = new int [16];
-	private byte [] flags = new byte [16];
-	private byte [] opacities = new byte [16];
+	private short [] flags = new short [16];
 	private Object [] payloads = new Object [16];
 	private int nodeCount = 1;
 	private int geometryNodeCount;
 	private int pathNodeCount;
 	private int imageNodeCount;
 	private int clipNodeCount;
+	private int opacityNodeCount;
 
 	private byte [] pathTypes = new byte [64];
 	private int pathTypeSize;
@@ -130,13 +133,99 @@ public final class ViewportPaintGraph {
 	private final float [] affineScratch = new float [6];
 	private final float [] boundsScratch = new float [4];
 	private final float [] hitPointScratch = new float [2];
+	private int [] ancestryScratch = new int [16];
 	private int [] hitStack = new int [16];
 	private boolean [] hitStackSiblings = new boolean [16];
 	private int [] hitNodes = new int [16];
 	private int [] hitInstances = new int [16];
 	private boolean [] hitSiblings = new boolean [16];
+	private int [] hitOpacities = new int [16];
 	private float [] hitTransforms = new float [16 * 6];
 	private final double [] hitPoint = new double [2];
+	private int [] reachSeen = new int [16];
+	private int [] reachStack = new int [16];
+	private int reachEpoch;
+	private ReplayStack replayStack;
+
+	/**
+	 * One graph-owned paint traversal workspace. It grows to the largest pending
+	 * depth, not the total number of retained nodes. Nested replay receives a
+	 * separate workspace; no GC or native resource is retained here.
+	 */
+	private static final class ReplayStack {
+		int [] nodes = new int [16];
+		Affine [] transforms = new Affine [16];
+		int [] layers = new int [16];
+		boolean [] hasLayers = new boolean [16];
+		int [] opacities = new int [16];
+		boolean [] siblings = new boolean [16];
+		Region [] clips = new Region [16];
+		final double [] clipVertices = new double [24];
+		final double [] clipScratch = new double [24];
+		Path [] paths = new Path [0];
+		int [] usedPathSlots = new int [16];
+		int usedPaths;
+		boolean inUse;
+
+		void ensureCapacity (int required) {
+			if (required <= nodes.length) return;
+			int capacity = Math.max (required, nodes.length * 2);
+			// Allocate every lane before replacing any owner reference.
+			int [] nextNodes = Arrays.copyOf (nodes, capacity);
+			Affine [] nextTransforms = Arrays.copyOf (transforms, capacity);
+			int [] nextLayers = Arrays.copyOf (layers, capacity);
+			boolean [] nextHasLayers = Arrays.copyOf (hasLayers, capacity);
+			int [] nextOpacities = Arrays.copyOf (opacities, capacity);
+			boolean [] nextSiblings = Arrays.copyOf (siblings, capacity);
+			Region [] nextClips = Arrays.copyOf (clips, capacity);
+			nodes = nextNodes;
+			transforms = nextTransforms;
+			layers = nextLayers;
+			hasLayers = nextHasLayers;
+			opacities = nextOpacities;
+			siblings = nextSiblings;
+			clips = nextClips;
+		}
+
+		void reservePath (int slot) {
+			if (slot >= paths.length) {
+				paths = Arrays.copyOf (paths, Math.max (slot + 1, Math.max (16, paths.length * 2)));
+			}
+			if (usedPaths == usedPathSlots.length) {
+				usedPathSlots = Arrays.copyOf (usedPathSlots, usedPathSlots.length * 2);
+			}
+		}
+
+		void releasePaths () {
+			Throwable failure = null;
+			for (int index = 0; index < usedPaths; index++) {
+				int slot = usedPathSlots [index];
+				Path path = paths [slot];
+				paths [slot] = null;
+				try {
+					if (path != null && !path.isDisposed ()) path.dispose ();
+				} catch (RuntimeException | Error thrown) {
+					if (failure == null) failure = thrown;
+					else failure.addSuppressed (thrown);
+				}
+			}
+			usedPaths = 0;
+			if (failure instanceof Error error) throw error;
+			if (failure instanceof RuntimeException error) throw error;
+		}
+	}
+
+	private ReplayStack borrowReplayStack () {
+		ReplayStack stack = replayStack;
+		if (stack == null) {
+			stack = new ReplayStack ();
+			replayStack = stack;
+		} else if (stack.inUse) {
+			stack = new ReplayStack ();
+		}
+		stack.inUse = true;
+		return stack;
+	}
 
 	public ViewportPaintGraph () {
 		Arrays.fill (firstChild, NONE);
@@ -268,7 +357,7 @@ public final class ViewportPaintGraph {
 				throw new IllegalArgumentException ("affine output too small");
 			}
 			float determinant = determinant ();
-			if (determinant == 0f) return false;
+			if (!Float.isFinite (determinant) || determinant == 0f) return false;
 			float px = x - dx;
 			float py = y - dy;
 			out [0] = (m22 * px - m21 * py) / determinant;
@@ -305,8 +394,9 @@ public final class ViewportPaintGraph {
 
 	public int group (int parent, Affine transform) {
 		requireGroup (parent);
+		int id = transformId (Objects.requireNonNull (transform, "transform"));
 		int node = newNode (GROUP, parent);
-		transformIds [node] = transformId (Objects.requireNonNull (transform, "transform"));
+		transformIds [node] = id;
 		return node;
 	}
 
@@ -332,6 +422,101 @@ public final class ViewportPaintGraph {
 	public void clearLayer (int group) {
 		requireGroup (group);
 		flags [group] &= ~HAS_LAYER;
+	}
+
+	/** Returns whether the owner and every ancestor are visible. */
+	public boolean isEffectivelyVisible (int node) {
+		requireVisibleOwner (node);
+		for (int current = node; current >= 0; current = parents [current]) {
+			if ((flags [current] & HIDDEN) != 0) return false;
+		}
+		return kinds [node] != INSTANCE || isEffectivelyVisible (targets [node]);
+	}
+
+	/**
+	 * Locks a layer against pointer selection. Locked layers still paint and may
+	 * be updated by internal rendering code; this is not widget disposal state.
+	 */
+	public void setLocked (int node, boolean locked) {
+		requireVisibleOwner (node);
+		if (locked) flags [node] |= LOCKED;
+		else flags [node] &= ~LOCKED;
+	}
+
+	/** Returns whether this layer or one of its owners is locked. */
+	public boolean isLocked (int node) {
+		requireVisibleOwner (node);
+		for (int current = node; current >= 0; current = parents [current]) {
+			if ((flags [current] & LOCKED) != 0) return true;
+		}
+		return kinds [node] == INSTANCE && isLocked (targets [node]);
+	}
+
+	/**
+	 * Sets per-command alpha inherited by groups, template instances and images.
+	 * A flattened image blends once at the accumulated alpha; overlapping child
+	 * commands in a group each blend individually. The owning widget remains
+	 * responsible for redraw and for any isolated offscreen group compositing.
+	 */
+	public void setOpacity (int node, int opacity) {
+		requireVisibleOwner (node);
+		if (opacity < 0 || opacity > 255) {
+			throw new IllegalArgumentException ("opacity must be in 0..255");
+		}
+		boolean hadOpacity = (flags [node] & HAS_OPACITY) != 0;
+		if (opacity == 255) {
+			flags [node] &= ~HAS_OPACITY;
+			if (hadOpacity) opacityNodeCount--;
+		} else {
+			opacities [node] = (byte)opacity;
+			flags [node] |= HAS_OPACITY;
+			if (!hadOpacity) opacityNodeCount++;
+		}
+	}
+
+	/** Returns the layer's local 0..255 opacity. */
+	public int opacity (int node) {
+		requireVisibleOwner (node);
+		return (flags [node] & HAS_OPACITY) == 0 ? 255 : opacities [node] & 0xff;
+	}
+
+	/** Returns alpha accumulated in root-to-child order. */
+	public int effectiveOpacity (int node) {
+		requireVisibleOwner (node);
+		int depth = 0;
+		for (int current = node; current >= 0; current = parents [current]) {
+			if (depth == ancestryScratch.length) {
+				ancestryScratch = Arrays.copyOf (ancestryScratch, depth * 2);
+			}
+			ancestryScratch [depth++] = current;
+		}
+		int alpha = 255;
+		while (depth != 0) {
+			int owner = ancestryScratch [--depth];
+			if ((flags [owner] & HAS_OPACITY) != 0) {
+				alpha = multiplyAlpha (alpha, opacities [owner] & 0xff);
+			}
+		}
+		if (kinds [node] == INSTANCE) {
+			alpha = multiplyAlpha (alpha, effectiveOpacity (targets [node]));
+		}
+		return alpha;
+	}
+
+	/** Geometry and clipping are tested separately from this input eligibility. */
+	public boolean isInteractive (int node) {
+		return isEffectivelyVisible (node) && !isLocked (node) && acceptsPointer (node) && effectiveOpacity (node) != 0;
+	}
+
+	private boolean acceptsPointer (int node) {
+		for (int current = node; current >= 0; current = parents [current]) {
+			if ((flags [current] & INPUT_TRANSPARENT) != 0) return false;
+		}
+		return kinds [node] != INSTANCE || acceptsPointer (targets [node]);
+	}
+
+	private static int multiplyAlpha (int first, int second) {
+		return (first * second + 127) / 255;
 	}
 
 	/**
@@ -378,7 +563,7 @@ public final class ViewportPaintGraph {
 			int entry = hitStack [--size];
 			if (entry < 0) {
 				int node = -entry - 1;
-				if (containsLocalPoint (
+				if (isInteractive (node) && containsLocalPoint (
 						node, rootX, rootY,
 						hitX [node], hitY [node], hitWidth [node], hitHeight [node])) {
 					return node;
@@ -389,7 +574,8 @@ public final class ViewportPaintGraph {
 			if (hitStackSiblings [size] && previousSibling [node] != NONE) {
 				hitStack [size++] = previousSibling [node];
 			}
-			if ((flags [node] & (HIDDEN | INPUT_TRANSPARENT)) != 0) continue;
+			if ((flags [node] & (HIDDEN | LOCKED | INPUT_TRANSPARENT)) != 0
+					|| ((flags [node] & HAS_OPACITY) != 0 && opacities [node] == 0)) continue;
 			if (kinds [node] == GROUP) {
 				if ((flags [node] & HAS_CLIP) != 0
 						&& !containsLocalPoint (
@@ -408,7 +594,8 @@ public final class ViewportPaintGraph {
 				}
 			} else if (kinds [node] == INSTANCE
 					&& (flags [node] & HAS_HIT_BOUNDS) != 0
-					&& (flags [targets [node]] & (HIDDEN | INPUT_TRANSPARENT)) == 0
+					&& isInteractive (node)
+					&& (flags [targets [node]] & INPUT_TRANSPARENT) == 0
 					&& containsLocalPoint (
 							node, rootX, rootY,
 							hitX [node], hitY [node], hitWidth [node], hitHeight [node])) {
@@ -517,24 +704,6 @@ public final class ViewportPaintGraph {
 		b [node] = y;
 	}
 
-	/**
-	 * Sets the opacity of one flattened image, from 0 (invisible) to 255 (opaque).
-	 * It multiplies the caller's GC alpha and the image's existing pixel alpha.
-	 * Group or per-command alpha is deliberately not substituted for layer opacity.
-	 */
-	public void setOpacity (int node, int opacity) {
-		requireImage (node);
-		if (opacity < 0 || opacity > 255) {
-			throw new IllegalArgumentException ("invalid image opacity");
-		}
-		opacities [node] = (byte)opacity;
-	}
-
-	public int opacity (int node) {
-		requireImage (node);
-		return Byte.toUnsignedInt (opacities [node]);
-	}
-
 	/** Hides or shows a node and its complete subtree, without changing z order. */
 	public void setVisible (int node, boolean visible) {
 		requireVisibleOwner (node);
@@ -594,6 +763,7 @@ public final class ViewportPaintGraph {
 		int size = 1;
 		hitNodes [0] = ROOT;
 		hitInstances [0] = NONE;
+		hitOpacities [0] = 255;
 		hitSiblings [0] = false;
 		Arrays.fill (hitTransforms, 0, 6, 0);
 		hitTransforms [0] = hitTransforms [3] = 1;
@@ -601,12 +771,15 @@ public final class ViewportPaintGraph {
 			int node = hitNodes [--size];
 			int instance = hitInstances [size];
 			int frame = size;
+			int alpha = hitOpacities [frame];
 			if (hitSiblings [frame] && previousSibling [node] != NONE) {
 				// Keep only the next sibling, with the parent's original mapping.
 				// Width does not grow the stack or delay the frontmost visit.
 				hitNodes [size++] = previousSibling [node];
 			}
-			if ((flags [node] & (HIDDEN | INPUT_TRANSPARENT)) != 0) continue;
+			if ((flags [node] & (HIDDEN | LOCKED | INPUT_TRANSPARENT)) != 0) continue;
+			if ((flags [node] & HAS_OPACITY) != 0) alpha = multiplyAlpha (alpha, opacities [node] & 0xff);
+			if (alpha == 0) continue;
 			if (kinds [node] != GROUP && kinds [node] != INSTANCE && kinds [node] != IMAGE) continue;
 			System.arraycopy (hitTransforms, frame * 6, affineScratch, 0, 6);
 			if (kinds [node] == GROUP || kinds [node] == INSTANCE) {
@@ -622,11 +795,12 @@ public final class ViewportPaintGraph {
 					ensureHitCapacity (size + 1);
 					hitNodes [size] = first;
 					hitInstances [size] = instance;
+					hitOpacities [size] = alpha;
 					hitSiblings [size] = kinds [node] == GROUP;
 					System.arraycopy (affineScratch, 0, hitTransforms, size * 6, 6);
 					size++;
 				}
-			} else if (kinds [node] == IMAGE && opacities [node] != 0
+			} else if (kinds [node] == IMAGE
 					&& !((Image)payloads [node]).isDisposed ()
 					&& inversePoint (affineScratch, rootX, rootY, hitPoint)
 					&& contains (hitPoint [0], hitPoint [1], a [node], b [node], c [node], d [node])) {
@@ -657,10 +831,12 @@ public final class ViewportPaintGraph {
 		int [] nodes = Arrays.copyOf (hitNodes, capacity);
 		int [] instances = Arrays.copyOf (hitInstances, capacity);
 		boolean [] siblings = Arrays.copyOf (hitSiblings, capacity);
+		int [] alphas = Arrays.copyOf (hitOpacities, capacity);
 		float [] mappings = Arrays.copyOf (hitTransforms, Math.multiplyExact (capacity, 6));
 		hitNodes = nodes;
 		hitInstances = instances;
 		hitSiblings = siblings;
+		hitOpacities = alphas;
 		hitTransforms = mappings;
 	}
 
@@ -836,7 +1012,7 @@ public final class ViewportPaintGraph {
 		rootTransform (node, affineScratch);
 		float determinant = affineScratch [0] * affineScratch [3]
 				- affineScratch [2] * affineScratch [1];
-        if (determinant == 0) {
+		if (!Float.isFinite (determinant) || determinant == 0) {
             return false;
         }
 		float px = x - affineScratch [4];
@@ -906,7 +1082,7 @@ public final class ViewportPaintGraph {
 		Objects.requireNonNull (data, "data");
 		byte [] types = Objects.requireNonNull (data.types, "data.types");
 		float [] points = Objects.requireNonNull (data.points, "data.points");
-		int expectedPoints = 0;
+		long expectedPoints = 0;
 		for (byte type : types) {
 			expectedPoints += switch (type) {
 				case org.eclipse.swt.SWT.PATH_MOVE_TO, org.eclipse.swt.SWT.PATH_LINE_TO -> 2;
@@ -938,24 +1114,31 @@ public final class ViewportPaintGraph {
             minX = minY = maxX = maxY = 0;
         }
 
+		int nextTypeSize;
+		int nextPointSize;
+		try {
+			nextTypeSize = Math.addExact (pathTypeSize, types.length);
+			nextPointSize = Math.addExact (pathPointSize, points.length);
+		} catch (ArithmeticException overflow) {
+			throw new IllegalArgumentException ("retained path storage exceeds integer capacity", overflow);
+		}
+		ensurePathTypeCapacity (nextTypeSize);
+		ensurePathPointCapacity (nextPointSize);
 		int node = newNode (kind, parent);
-		ensurePathTypeCapacity (pathTypeSize + types.length);
-		ensurePathPointCapacity (pathPointSize + points.length);
 		pathTypeOffsets [node] = pathTypeSize;
 		pathTypeCounts [node] = types.length;
 		System.arraycopy (types, 0, pathTypes, pathTypeSize, types.length);
-		pathTypeSize += types.length;
+		pathTypeSize = nextTypeSize;
 		pathPointOffsets [node] = pathPointSize;
 		pathPointCounts [node] = points.length;
 		System.arraycopy (points, 0, pathPoints, pathPointSize, points.length);
-		pathPointSize += points.length;
+		pathPointSize = nextPointSize;
 		pathMinX [node] = minX;
 		pathMinY [node] = minY;
 		pathMaxX [node] = maxX;
 		pathMaxY [node] = maxY;
-		// Path commands do not use the geometry a lane. Store a dense cache index
-		// so a few paths in a large scene do not allocate nodeCount references.
-		a [node] = pathNodeCount++;
+		// A path node's otherwise unused instance-target lane is its cache slot.
+		targets [node] = pathNodeCount++;
 		geometryNodeCount++;
 		return node;
 	}
@@ -972,9 +1155,10 @@ public final class ViewportPaintGraph {
 		if (wouldReach (template, parent)) {
 			throw new IllegalArgumentException ("paint graph cycle");
 		}
+		int id = transformId (Objects.requireNonNull (transform, "transform"));
 		int node = newNode (INSTANCE, parent);
 		targets [node] = template;
-		transformIds [node] = transformId (Objects.requireNonNull (transform, "transform"));
+		transformIds [node] = id;
 		return node;
 	}
 
@@ -1045,30 +1229,33 @@ public final class ViewportPaintGraph {
 			return new ReplayStats (0, 0, 0, 0);
 		}
 
-		int initialCapacity = 16;
-		int [] nodeStack = new int [initialCapacity];
-		Affine [] transformStack = new Affine [initialCapacity];
-		int [] layerStack = new int [initialCapacity];
-		boolean [] hasLayerStack = new boolean [initialCapacity];
-		boolean [] siblingStack = new boolean [initialCapacity];
-		Region [] clipStack = new Region [initialCapacity];
+		long strokeOutset = Math.max (1L, gc.getLineWidth ()) + 1;
+		boolean useClips = clip != null || clipNodeCount != 0;
+		boolean restoreBasic = (useClips || imageNodeCount != 0 || opacityNodeCount != 0) && !gc.getAdvanced ();
+		ReplayStack scratch = borrowReplayStack ();
+		int [] nodeStack = scratch.nodes;
+		Affine [] transformStack = scratch.transforms;
+		int [] layerStack = scratch.layers;
+		boolean [] hasLayerStack = scratch.hasLayers;
+		int [] opacityStack = scratch.opacities;
+		boolean [] siblingStack = scratch.siblings;
+		Region [] clipStack = scratch.clips;
 		int stackSize = 0;
 
 		nodeStack [stackSize] = start;
 		transformStack [stackSize] = initialTransform;
 		layerStack [stackSize] = 0;
+		opacityStack [stackSize] = 255;
+		siblingStack [stackSize] = false;
 		hasLayerStack [stackSize++] = false;
 
 		Transform saved = null;
 		Transform work = null;
-		Path [] replayPaths = pathNodeCount == 0 ? null : new Path [pathNodeCount];
 		Affine savedAffine = null;
 		Affine appliedGraphTransform = null;
 		boolean transformedGc = false;
-		boolean useClips = clip != null || clipNodeCount != 0;
-		double [] clipVertices = useClips ? new double [24] : null;
-		double [] clipScratch = useClips ? new double [24] : null;
-		boolean restoreBasic = (useClips || imageNodeCount != 0) && !gc.getAdvanced ();
+		double [] clipVertices = scratch.clipVertices;
+		double [] clipScratch = scratch.clipScratch;
 		boolean callerClipped = false;
 		boolean clipCaptured = false;
 		Region savedClip = null;
@@ -1078,12 +1265,9 @@ public final class ViewportPaintGraph {
 		int drawn = 0;
 		int culled = 0;
 		int transformSwitches = 0;
-		/*
-		 * One conservative envelope per replay.  It intentionally overestimates
-		 * fractional widths, caps/joins and antialiasing so clipping can never
-		 * remove a native GC pixel that would otherwise be visible.
-		 */
-		long strokeOutset = Math.max (1L, gc.getLineWidth ()) + 1;
+		int savedAlpha = -1;
+		int currentAlpha = -1;
+		/* Conservative stroke envelope and a reusable stack bounded by depth. */
 
 		try {
 			if (useClips || restoreBasic) {
@@ -1121,13 +1305,17 @@ public final class ViewportPaintGraph {
 				Affine transform = transformStack [stackSize];
 				int inheritedLayer = layerStack [stackSize];
 				boolean hasInheritedLayer = hasLayerStack [stackSize];
+				int alpha = opacityStack [stackSize];
 				if (siblingStack [stackSize] && nextSibling [node] != NONE) {
 					// Retain the continuation in place, before entering this subtree.
 					nodeStack [stackSize++] = nextSibling [node];
 				}
 				visited++;
-				if ((flags [node] & HIDDEN) != 0
-						|| (kinds [node] == IMAGE && opacities [node] == 0)) continue;
+				if ((flags [node] & HIDDEN) != 0) continue;
+				if ((flags [node] & HAS_OPACITY) != 0) {
+					alpha = multiplyAlpha (alpha, opacities [node] & 0xff);
+				}
+				if (alpha == 0) continue;
 
 				switch (kinds [node]) {
 					case GROUP -> {
@@ -1146,12 +1334,14 @@ public final class ViewportPaintGraph {
 						Region nextClip = inheritedClip;
 						if ((flags [node] & HAS_CLIP) != 0) {
 							if (stackSize == nodeStack.length) {
-								nodeStack = Arrays.copyOf (nodeStack, nodeStack.length * 2);
-								transformStack = Arrays.copyOf (transformStack, transformStack.length * 2);
-								layerStack = Arrays.copyOf (layerStack, layerStack.length * 2);
-								hasLayerStack = Arrays.copyOf (hasLayerStack, hasLayerStack.length * 2);
-								siblingStack = Arrays.copyOf (siblingStack, siblingStack.length * 2);
-								clipStack = Arrays.copyOf (clipStack, clipStack.length * 2);
+								scratch.ensureCapacity (stackSize + 1);
+								nodeStack = scratch.nodes;
+								transformStack = scratch.transforms;
+								layerStack = scratch.layers;
+								hasLayerStack = scratch.hasLayers;
+								opacityStack = scratch.opacities;
+								siblingStack = scratch.siblings;
+								clipStack = scratch.clips;
 							}
 							nextClip = intersectClip (inheritedClip, savedAffine.compose (next),
 									clipX [node], clipY [node], clipWidth [node], clipHeight [node],
@@ -1169,37 +1359,46 @@ public final class ViewportPaintGraph {
 						int child = firstChild [node];
 						if (child != NONE) {
 							if (stackSize == nodeStack.length) {
-								nodeStack = Arrays.copyOf (nodeStack, nodeStack.length * 2);
-								transformStack = Arrays.copyOf (transformStack, transformStack.length * 2);
-								layerStack = Arrays.copyOf (layerStack, layerStack.length * 2);
-								hasLayerStack = Arrays.copyOf (hasLayerStack, hasLayerStack.length * 2);
-								siblingStack = Arrays.copyOf (siblingStack, siblingStack.length * 2);
-								clipStack = Arrays.copyOf (clipStack, clipStack.length * 2);
+								scratch.ensureCapacity (stackSize + 1);
+								nodeStack = scratch.nodes;
+								transformStack = scratch.transforms;
+								layerStack = scratch.layers;
+								hasLayerStack = scratch.hasLayers;
+								opacityStack = scratch.opacities;
+								siblingStack = scratch.siblings;
+								clipStack = scratch.clips;
 							}
 							nodeStack [stackSize] = child;
 							transformStack [stackSize] = next;
 							layerStack [stackSize] = nextLayer;
 							clipStack [stackSize] = nextClip;
 							siblingStack [stackSize] = true;
-							hasLayerStack [stackSize++] = hasNextLayer;
+							hasLayerStack [stackSize] = hasNextLayer;
+							opacityStack [stackSize++] = alpha;
 						}
 					}
 					case INSTANCE -> {
-						Affine next = transform.compose (transform (transformIds [node]));
+						Affine next = transform;
+						if (transformIds [node] != 0) {
+							next = transform.compose (transform (transformIds [node]));
+						}
 						if (stackSize == nodeStack.length) {
-							nodeStack = Arrays.copyOf (nodeStack, nodeStack.length * 2);
-							transformStack = Arrays.copyOf (transformStack, transformStack.length * 2);
-							layerStack = Arrays.copyOf (layerStack, layerStack.length * 2);
-							hasLayerStack = Arrays.copyOf (hasLayerStack, hasLayerStack.length * 2);
-							siblingStack = Arrays.copyOf (siblingStack, siblingStack.length * 2);
-								clipStack = Arrays.copyOf (clipStack, clipStack.length * 2);
+							scratch.ensureCapacity (stackSize + 1);
+							nodeStack = scratch.nodes;
+							transformStack = scratch.transforms;
+							layerStack = scratch.layers;
+							hasLayerStack = scratch.hasLayers;
+							opacityStack = scratch.opacities;
+							siblingStack = scratch.siblings;
+							clipStack = scratch.clips;
 						}
 						nodeStack [stackSize] = targets [node];
 						transformStack [stackSize] = next;
 						layerStack [stackSize] = inheritedLayer;
 						clipStack [stackSize] = inheritedClip;
 						siblingStack [stackSize] = false;
-						hasLayerStack [stackSize++] = hasInheritedLayer;
+						hasLayerStack [stackSize] = hasInheritedLayer;
+						opacityStack [stackSize++] = alpha;
 					}
 					default -> {
 						if (filterLayer && (!hasInheritedLayer || inheritedLayer != requestedLayer)) {
@@ -1220,6 +1419,14 @@ public final class ViewportPaintGraph {
 							appliedGraphTransform = null;
 							transformSwitches += 2;
 						}
+						if (alpha != 255 || savedAlpha != -1) {
+							if (savedAlpha == -1) currentAlpha = savedAlpha = gc.getAlpha ();
+							int targetAlpha = multiplyAlpha (savedAlpha, alpha);
+							if (currentAlpha != targetAlpha) {
+								gc.setAlpha (targetAlpha);
+								currentAlpha = targetAlpha;
+							}
+						}
 						boolean pathCommand = kinds [node] == DRAW_PATH || kinds [node] == FILL_PATH;
 						boolean directPath = pathCommand && transform.isIdentity ();
 						boolean fast = transform.isIntegralTranslation () && !pathCommand;
@@ -1229,7 +1436,7 @@ public final class ViewportPaintGraph {
 								transformedGc = false;
 								transformSwitches++;
 							}
-							drawRaw (gc, node, 0, 0, replayPaths);
+							drawRaw (gc, node, 0, 0, scratch);
 						} else if (!fast) {
 							if (saved == null) {
 								saved = new Transform (gc.getDevice ());
@@ -1259,14 +1466,14 @@ public final class ViewportPaintGraph {
 								appliedGraphTransform = transform;
 								transformSwitches++;
 							}
-							drawRaw (gc, node, 0, 0, replayPaths);
+							drawRaw (gc, node, 0, 0, scratch);
 						} else {
 							if (transformedGc) {
 								gc.setTransform (saved.isIdentity () ? null : saved);
 								transformedGc = false;
 								transformSwitches++;
 							}
-							drawRaw (gc, node, Math.round (transform.dx), Math.round (transform.dy), replayPaths);
+							drawRaw (gc, node, Math.round (transform.dx), Math.round (transform.dy), scratch);
 						}
 						drawn++;
 					}
@@ -1274,40 +1481,68 @@ public final class ViewportPaintGraph {
 			}
 		} finally {
 			try {
-				if (saved != null && !gc.isDisposed ()) {
-					if (clipCaptured) {
-						gc.setTransform (null);
-						try {
-							gc.setClipping (callerClipped ? savedClip : null);
-						} finally {
-							gc.setTransform (saved.isIdentity () ? null : saved);
-						}
-					} else if (transformedGc) {
-						gc.setTransform (saved.isIdentity () ? null : saved);
+				try {
+					if (savedAlpha != -1 && currentAlpha != savedAlpha && !gc.isDisposed ()) {
+						gc.setAlpha (savedAlpha);
 					}
-					if (restoreBasic && gc.getAdvanced ()) {
-						// Disabling advanced mode resets clipping on Win32.
-						gc.setAdvanced (false);
-						gc.setClipping (callerClipped ? savedClip : null);
+				} finally {
+					try {
+						if (saved != null && !gc.isDisposed ()) {
+							if (clipCaptured) {
+								gc.setTransform (null);
+								try {
+									gc.setClipping (callerClipped ? savedClip : null);
+								} finally {
+									gc.setTransform (saved.isIdentity () ? null : saved);
+								}
+							} else if (transformedGc) {
+								gc.setTransform (saved.isIdentity () ? null : saved);
+							}
+							if (restoreBasic && gc.getAdvanced ()) {
+								gc.setAdvanced (false);
+								gc.setClipping (callerClipped ? savedClip : null);
+							}
+						}
+					} finally {
+						try {
+							releaseReplayRegions (nodeStack, clipStack, stackSize, viewportClip, savedClip);
+						} finally {
+							try {
+								if (work != null) work.dispose ();
+							} finally {
+								if (saved != null) saved.dispose ();
+							}
+						}
 					}
 				}
 			} finally {
-				for (int i = 0; i < stackSize; i++) {
-					if (nodeStack [i] == NONE && clipStack [i] != null
-							&& !clipStack [i].isDisposed ()) clipStack [i].dispose ();
-				}
-				if (viewportClip != null) viewportClip.dispose ();
-				if (savedClip != null) savedClip.dispose ();
-				if (work != null) work.dispose ();
-				if (saved != null) saved.dispose ();
-				if (replayPaths != null) {
-					for (Path replayPath : replayPaths) {
-						if (replayPath != null && !replayPath.isDisposed ()) replayPath.dispose ();
-					}
+				try {
+					scratch.releasePaths ();
+				} finally {
+					Arrays.fill (scratch.transforms, null);
+					Arrays.fill (scratch.clips, null);
+					scratch.inUse = false;
 				}
 			}
 		}
 		return new ReplayStats (visited, drawn, culled, transformSwitches);
+	}
+
+	private static void releaseReplayRegions (int [] nodes, Region [] clips, int size,
+			Region viewportClip, Region savedClip) {
+		Throwable failure = null;
+		for (int index = 0; index < size + 2; index++) {
+			Region region = index < size ? (nodes [index] == NONE ? clips [index] : null)
+					: index == size ? viewportClip : savedClip;
+			try {
+				if (region != null && !region.isDisposed ()) region.dispose ();
+			} catch (RuntimeException | Error thrown) {
+				if (failure == null) failure = thrown;
+				else failure.addSuppressed (thrown);
+			}
+		}
+		if (failure instanceof Error error) throw error;
+		if (failure instanceof RuntimeException error) throw error;
 	}
 
 	/** Intersects a transformed rectangle with a device-anchored parent region. */
@@ -1386,7 +1621,7 @@ public final class ViewportPaintGraph {
 		return written;
 	}
 
-	private void drawRaw (GC gc, int node, int dx, int dy, Path [] replayPaths) {
+	private void drawRaw (GC gc, int node, int dx, int dy, ReplayStack scratch) {
 		switch (kinds [node]) {
 			case LINE -> gc.drawLine (a [node] + dx, b [node] + dy, c [node] + dx, d [node] + dy);
 			case DRAW_RECT -> gc.drawRectangle (a [node] + dx, b [node] + dy, c [node], d [node]);
@@ -1396,30 +1631,23 @@ public final class ViewportPaintGraph {
 				if (image.isDisposed () || image.getDevice () != gc.getDevice ()) {
 					throw new IllegalArgumentException ("image is disposed or belongs to another device");
 				}
-				int alpha = gc.getAlpha ();
-				int effective = (alpha * Byte.toUnsignedInt (opacities [node]) + 127) / 255;
-				try {
-					if (effective != alpha) gc.setAlpha (effective);
-					gc.drawImage (image, Math.addExact (a [node], dx), Math.addExact (b [node], dy));
-				} finally {
-					if (effective != alpha && !gc.isDisposed ()) gc.setAlpha (alpha);
-				}
+				gc.drawImage (image, Math.addExact (a [node], dx), Math.addExact (b [node], dy));
 			}
 			case TEXT -> gc.drawText (
 					(String)payloads [node], a [node] + dx, b [node] + dy,
 					(flags [node] & TEXT_TRANSPARENT) != 0);
-			case DRAW_PATH -> gc.drawPath (replayPath (gc, node, replayPaths));
-			case FILL_PATH -> gc.fillPath (replayPath (gc, node, replayPaths));
+			case DRAW_PATH -> gc.drawPath (replayPath (gc, node, scratch));
+			case FILL_PATH -> gc.fillPath (replayPath (gc, node, scratch));
 			default -> throw new IllegalStateException ("not a paint command");
 		}
 	}
 
-	private Path replayPath (GC gc, int node, Path [] replayPaths) {
-		int index = a [node];
-		Path path = replayPaths [index];
-        if (path != null) {
-            return path;
-        }
+	private Path replayPath (GC gc, int node, ReplayStack scratch) {
+		int slot = targets [node];
+		Path path = slot < scratch.paths.length ? scratch.paths [slot] : null;
+		if (path != null) return path;
+		// Reserve Java lanes before creating a new native Path.
+		scratch.reservePath (slot);
 		PathData data = new PathData ();
 		int typeOffset = pathTypeOffsets [node];
 		int typeCount = pathTypeCounts [node];
@@ -1427,7 +1655,10 @@ public final class ViewportPaintGraph {
 		int pointOffset = pathPointOffsets [node];
 		int pointCount = pathPointCounts [node];
 		data.points = Arrays.copyOfRange (pathPoints, pointOffset, pointOffset + pointCount);
-		return replayPaths [index] = new Path (gc.getDevice (), data);
+		path = new Path (gc.getDevice (), data);
+		scratch.paths [slot] = path;
+		scratch.usedPathSlots [scratch.usedPaths++] = slot;
+		return path;
 	}
 
 	private boolean outsideBounds (
@@ -1529,17 +1760,22 @@ public final class ViewportPaintGraph {
 
 	private void linkChild (int parent, int child) {
 		int tail = lastChild [parent];
-		// Newly appended equal-z nodes are already after the tail. Avoid an
-		// O(siblingCount) scan for every insertion while building a flat scene.
-		int cursor = tail == NONE || comesBefore (tail, child) ? NONE : firstChild [parent];
+		if (tail == NONE) {
+			firstChild [parent] = lastChild [parent] = child;
+			return;
+		}
+		// The dominant construction case appends at equal/increasing Z in O(1).
+		if (comesBefore (tail, child)) {
+			nextSibling [tail] = child;
+			previousSibling [child] = tail;
+			lastChild [parent] = child;
+			return;
+		}
+		int cursor = firstChild [parent];
 		while (cursor != NONE && comesBefore (cursor, child)) {
 			cursor = nextSibling [cursor];
 		}
 		if (cursor == NONE) {
-			if (tail == NONE) {
-				firstChild [parent] = lastChild [parent] = child;
-				return;
-			}
 			nextSibling [tail] = child;
 			previousSibling [child] = tail;
 			lastChild [parent] = child;
@@ -1579,33 +1815,40 @@ public final class ViewportPaintGraph {
 	}
 
 	private boolean wouldReach (int start, int wanted) {
-        if (start == wanted) {
-            return true;
-        }
-		boolean [] seen = new boolean [nodeCount];
-		int [] stack = new int [Math.max (16, nodeCount)];
+		if (start == wanted) return true;
+		// Detached templates can only target other detached templates; no edge
+		// can point back into the root-attached graph.
+		for (int parent = wanted; parent != NONE; parent = parents [parent]) {
+			if (parent == ROOT) return false;
+			if (parents [parent] == DETACHED) break;
+		}
+		if (reachSeen.length < nodeCount) {
+			reachSeen = Arrays.copyOf (reachSeen, Math.max (nodeCount, reachSeen.length * 2));
+		}
+		int epoch = ++reachEpoch;
+		if (epoch == 0) {
+			Arrays.fill (reachSeen, 0);
+			epoch = ++reachEpoch;
+		}
 		int size = 0;
-		stack [size++] = start;
+		reachStack [size++] = start;
+		reachSeen [start] = epoch;
 		while (size != 0) {
-			int node = stack [--size];
-            if (node == wanted) {
-                return true;
-            }
-            if (seen [node]) {
-                continue;
-            }
-			seen [node] = true;
-			for (int child = firstChild [node]; child != NONE; child = nextSibling [child]) {
-                if (size == stack.length) {
-                    stack = Arrays.copyOf(stack, stack.length * 2);
-                }
-				stack [size++] = child;
-				if (kinds [child] == INSTANCE) {
-                    if (size == stack.length) {
-                        stack = Arrays.copyOf(stack, stack.length * 2);
-                    }
-					stack [size++] = targets [child];
+			int node = reachStack [--size];
+			if (node == wanted) return true;
+			if (kinds [node] == INSTANCE) {
+				int target = targets [node];
+				if (reachSeen [target] != epoch) {
+					if (size == reachStack.length) reachStack = Arrays.copyOf (reachStack, size * 2);
+					reachSeen [target] = epoch;
+					reachStack [size++] = target;
 				}
+			}
+			for (int child = firstChild [node]; child != NONE; child = nextSibling [child]) {
+				if (reachSeen [child] == epoch) continue;
+				if (size == reachStack.length) reachStack = Arrays.copyOf (reachStack, size * 2);
+				reachSeen [child] = epoch;
+				reachStack [size++] = child;
 			}
 		}
 		return false;
@@ -1766,6 +2009,7 @@ public final class ViewportPaintGraph {
 		transformIds = Arrays.copyOf (transformIds, next);
 		layers = Arrays.copyOf (layers, next);
 		zOrders = Arrays.copyOf (zOrders, next);
+		opacities = Arrays.copyOf (opacities, next);
 		clipX = Arrays.copyOf (clipX, next);
 		clipY = Arrays.copyOf (clipY, next);
 		clipWidth = Arrays.copyOf (clipWidth, next);
@@ -1795,7 +2039,6 @@ public final class ViewportPaintGraph {
 		c = Arrays.copyOf (c, next);
 		d = Arrays.copyOf (d, next);
 		flags = Arrays.copyOf (flags, next);
-		opacities = Arrays.copyOf (opacities, next);
 		payloads = Arrays.copyOf (payloads, next);
 	}
 

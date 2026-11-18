@@ -49,12 +49,12 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_custom_BusyIndicator.class, //
 		Test_org_eclipse_swt_custom_CCombo.class, //
 		Test_org_eclipse_swt_custom_CLabel.class, //
+		Test_org_eclipse_swt_custom_LayeredViewport.class, //
 		Test_org_eclipse_swt_custom_CTabFolder.class, //
 		Test_org_eclipse_swt_custom_CTabFolder_SameColour.class, //
 		Test_org_eclipse_swt_custom_SameFontAndColour.class, //
 		Test_org_eclipse_swt_custom_CTabItem.class, //
 		Test_org_eclipse_swt_custom_ExtendedModifyListener.class, //
-		Test_org_eclipse_swt_custom_LayeredViewport.class, //
 		Test_org_eclipse_swt_custom_LineBackgroundListener.class, //
 		Test_org_eclipse_swt_custom_LineStyleListener.class, //
 		Test_org_eclipse_swt_custom_StyleRange.class, //
@@ -74,6 +74,8 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_custom_TextChangeListener.class, //
 		Test_org_eclipse_swt_custom_VerifyKeyListener.class, //
 		Test_org_eclipse_swt_widgets_Button.class, //
+		Test_CanvasLayerXor.class, //
+		Test_CanvasLayers.class, //
 		Test_org_eclipse_swt_widgets_Canvas.class, //
 		Test_org_eclipse_swt_widgets_Caret.class, //
 		Test_org_eclipse_swt_widgets_ColorDialog.class, //

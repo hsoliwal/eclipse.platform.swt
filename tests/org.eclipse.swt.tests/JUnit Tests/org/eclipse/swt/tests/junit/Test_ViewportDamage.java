@@ -43,6 +43,14 @@ public class Test_ViewportDamage {
 			}
 		}
 
+		void remove(int x, int y, int w, int h) {
+			for (int j = Math.max(y, ORIGIN); j < Math.min(y + h, ORIGIN + SIZE); j++) {
+				for (int i = Math.max(x, ORIGIN); i < Math.min(x + w, ORIGIN + SIZE); i++) {
+					px[(j - ORIGIN) * SIZE + (i - ORIGIN)] = false;
+				}
+			}
+		}
+
 		long count() {
 			long n = 0;
 			for (boolean b : px) if (b) n++;
@@ -495,5 +503,45 @@ public class Test_ViewportDamage {
 		assertEquals(2, region.copyCount());
 		assertEquals(60, region.copiedPixels());
 		assertEquals(34, region.area());
+	}
+
+	@Test
+	public void removeKeepsTheRegionExactAgainstAPixelOracle() {
+		Random random = new Random(18);
+		for (int round = 0; round < 200; round++) {
+			ViewportDamageRegion region = new ViewportDamageRegion(1024);
+			Bitmap oracle = new Bitmap();
+			for (int step = 0; step < 12; step++) {
+				int x = ORIGIN + random.nextInt(SIZE - 20), y = ORIGIN + random.nextInt(SIZE - 20);
+				int w = 1 + random.nextInt(20), h = 1 + random.nextInt(20);
+				if (random.nextInt(3) == 0) {
+					region.remove(x, y, w, h);
+					oracle.remove(x, y, w, h);
+				} else {
+					region.add(x, y, w, h);
+					oracle.add(x, y, w, h);
+				}
+				assertEquals(oracle.count(), region.area(), "round " + round + " step " + step);
+				for (int i = 0; i < region.rectCount(); i++) {
+					assertTrue(oracle.covers(region.x(i), region.y(i), region.width(i), region.height(i)));
+				}
+			}
+		}
+	}
+
+	@Test
+	public void removeFromACollapsedRegionKeepsAnUpperBoundUntilEmpty() {
+		ViewportDamageRegion region = new ViewportDamageRegion(1);
+		region.add(0, 0, 10, 10);
+		region.add(20, 20, 10, 10);
+		assertTrue(region.overflowed());
+		region.remove(0, 0, 15, 30);
+		assertTrue(region.overflowed());
+		assertEquals(15 * 30, region.area());
+		region.remove(-5, -5, 0, 40);
+		assertEquals(15 * 30, region.area(), "an empty rectangle removes nothing");
+		region.remove(0, 0, 30, 30);
+		assertTrue(region.isEmpty());
+		assertFalse(region.overflowed(), "an empty region is exact again");
 	}
 }
