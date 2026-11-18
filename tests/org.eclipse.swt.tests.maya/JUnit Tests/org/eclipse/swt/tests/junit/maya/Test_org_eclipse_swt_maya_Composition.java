@@ -11,6 +11,7 @@ package org.eclipse.swt.tests.junit.maya;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.util.Arrays;
 
@@ -182,6 +183,14 @@ public class Test_org_eclipse_swt_maya_Composition {
 
 	@Test
 	public void packedDirtyUpdatesOnlySpecifiedNativePixels() {
+		// The installed Maya binary may predate the optional _nUploadDirty export.
+		// Ordinary suites preserve legacy compatibility, while release qualification
+		// explicitly sets -Dswt.maya.dirty.required=true and cannot skip this gate.
+		int abiProbe = MayaComposition.uploadDirty(0, new int[0], new int[0], 0);
+		if (Boolean.getBoolean("swt.maya.dirty.required")) {
+			assertNotEquals(-1, abiProbe, "required Maya dirty JNI ABI is missing");
+		}
+		assumeTrue(abiProbe != -1, "optional native dirty-upload ABI is unavailable");
 		long red = layer(OPAQUE_RED); // initializes the whole native surface
 		frame(new long[] { red }, 20, 20, 1, 1);
 		assertEquals(RED, screen(24, 24)); // first commit before dirty-only frame
