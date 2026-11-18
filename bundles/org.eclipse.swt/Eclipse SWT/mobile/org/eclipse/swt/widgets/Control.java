@@ -329,6 +329,19 @@ public abstract class Control extends Widget implements Drawable {
 		} finally { gc.setBackground(savedBackground); gc.setClipping(savedClip); }
 		return true;
 	}
+	/** Draw one clipped two-tone ring into an existing GC without allocating a wrapper widget. */
+	private static void printBorderRing(GC gc, int x, int y, int width, int height,
+			int inset, Color topLeft, Color bottomRight) {
+		int l = x + inset, t = y + inset;
+		int w = Math.max(0, width - inset * 2), h = Math.max(0, height - inset * 2);
+		if (w <= 0 || h <= 0) return;
+		gc.setBackground(topLeft);
+		gc.fillRectangle(l, t, w, 1);
+		if (h > 1) gc.fillRectangle(l, t + 1, 1, h - 1);
+		gc.setBackground(bottomRight);
+		if (w > 1) gc.fillRectangle(l + 1, t + h - 1, w - 1, 1);
+		if (w > 1 && h > 2) gc.fillRectangle(l + w - 1, t + 1, 1, h - 2);
+	}
 	@Override public long internal_new_GC(GCData data) {
 		checkWidget(); data.device = display; data.control = this; data.image = ensureImage(); return data.image.internal_handle();
 	}
