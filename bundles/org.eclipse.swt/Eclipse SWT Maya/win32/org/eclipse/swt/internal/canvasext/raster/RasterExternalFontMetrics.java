@@ -35,6 +35,7 @@ public class RasterExternalFontMetrics implements IExternalFontMetrics {
 	}
 
 	@Override
+	@Deprecated
 	public int getAverageCharWidth() {
 		return (int) Math.ceil(sc.autoScaleDown(m.getAvgCharWidth()));
 	}

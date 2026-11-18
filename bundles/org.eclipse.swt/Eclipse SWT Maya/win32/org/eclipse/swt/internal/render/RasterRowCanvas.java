@@ -222,7 +222,7 @@ public final class RasterRowCanvas implements BufferCanvas {
 			/* text smoothing as the system's (ClearType subpixel order, or grayscale), read when a surface is made */
 			surface = Surface.makeRenderTarget (gpu.context, false, info, 0, SurfaceOrigin.TOP_LEFT, FontSmoothing.surfaceProps ());
 		} else {
-			surface = Surface.makeRasterDirect (info, bits, width * 4L, FontSmoothing.surfaceProps ());
+			surface = Surface.wrapPixels (info, bits, width * 4L, FontSmoothing.surfaceProps ());
 		}
 		canvas = surface.getCanvas ();
 		canvasPtr = org.eclipse.swt.internal.maya.impl.Native.getPtr (canvas);

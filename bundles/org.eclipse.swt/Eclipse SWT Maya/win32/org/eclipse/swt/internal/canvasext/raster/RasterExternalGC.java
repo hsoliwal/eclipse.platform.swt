@@ -111,6 +111,7 @@ public class RasterExternalGC implements IExternalGC {
 	}
 	private final DpiScalerUtil dpiScalerUtil;
 
+	@SuppressWarnings("this-escape") // the paint manager and the clip keep this GC; nothing subclasses it
 	public RasterExternalGC(IRasterCanvasExtension exst, int style) {
 		this.drawable = exst.getDrawable();
 		device = exst.getDevice();

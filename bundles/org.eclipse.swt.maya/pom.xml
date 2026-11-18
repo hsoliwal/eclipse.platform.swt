@@ -9,6 +9,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding><maven.compiler.release>21</maven.compiler.release>
     <maya.sourceDirectory>${project.basedir}/../org.eclipse.swt/Eclipse SWT GPU/win32</maya.sourceDirectory>
     <!-- the Skija Java classes SWT needs, absorbed under their upstream packages (Eclipse SWT Maya/README.md) -->
+    <!-- the backend: the raster GC, the canvas with its retained back buffer and damage, the drawn rows; SWT loads it by
+         class name (RowBackends.SKIA_CANVAS_FACTORY), so it must ship in this fragment -->
+    <maya.backendDirectory>${project.basedir}/../org.eclipse.swt/Eclipse SWT Maya/win32</maya.backendDirectory>
     <maya.javaDirectory>${project.basedir}/../org.eclipse.swt/Eclipse SWT Maya/common</maya.javaDirectory>
     <maya.buildDirectory>${project.basedir}/target</maya.buildDirectory>
     <maya.finalName>${project.artifactId}-${project.version}</maya.finalName>
@@ -43,7 +46,9 @@
     <plugins>
       <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.1</version>
         <configuration><release>21</release><proc>none</proc><compilerArgs><arg>-Xlint:all</arg><arg>-Werror</arg></compilerArgs>
-          <includes><include>org/eclipse/swt/internal/gpu/OpStreamReplay.java</include><include>org/eclipse/swt/internal/gpu/GlPlaneBackend.java</include><include>org/eclipse/swt/internal/gpu/GpuTarget.java</include></includes>
+          <compileSourceRoots><compileSourceRoot>${maya.sourceDirectory}</compileSourceRoot><compileSourceRoot>${maya.backendDirectory}</compileSourceRoot></compileSourceRoots>
+          <includes><include>org/eclipse/swt/internal/gpu/OpStreamReplay.java</include><include>org/eclipse/swt/internal/gpu/GlPlaneBackend.java</include><include>org/eclipse/swt/internal/gpu/GpuTarget.java</include>
+            <include>org/eclipse/swt/internal/canvasext/raster/*.java</include><include>org/eclipse/swt/internal/render/*.java</include></includes>
         </configuration>
         <executions>
           <!-- maya's Java classes first, without the GPU sources' lint gate (third-party code); the GPU sources then
@@ -60,7 +65,8 @@
       </plugin>
       <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version>
         <configuration><archive><manifestFile>${maya.manifest}</manifestFile></archive>
-          <includes><include>org/eclipse/swt/internal/gpu/**</include><include>org/eclipse/swt/internal/maya/**</include><include>META-INF/**</include></includes>
+          <includes><include>org/eclipse/swt/internal/gpu/**</include><include>org/eclipse/swt/internal/maya/**</include>
+            <include>org/eclipse/swt/internal/canvasext/raster/**</include><include>org/eclipse/swt/internal/render/**</include><include>META-INF/**</include></includes>
         </configuration>
       </plugin>
     </plugins>
