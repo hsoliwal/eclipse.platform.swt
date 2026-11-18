@@ -299,6 +299,20 @@ public final class AndroidPlatform implements MobilePlatform {
 		});
 	}
 	@Override public void setVisible(long peer, boolean value) { checkThread(); ui(() -> { controls.get(peer).setVisibility(value ? View.VISIBLE : View.INVISIBLE); return null; }); }
+	@Override public void setBorderRelief(long peer, int relief) {
+		checkThread();
+		if (!org.eclipse.swt.internal.NativeBorderRelief.isValid(relief)) throw new IllegalArgumentException("Invalid native relief");
+		ui(() -> {
+			PeerView view = controls.get(peer);
+			if (view.borderRelief != relief) {
+				view.borderRelief = relief;
+				view.releaseSnapshot();
+				view.requestLayout();
+				view.invalidate();
+			}
+			return null;
+		});
+	}
 	@Override public void setEnabled(long peer, boolean value) {
 		checkThread();
 		ui(() -> {
@@ -470,6 +484,7 @@ public final class AndroidPlatform implements MobilePlatform {
 		int textLimit = Integer.MAX_VALUE;
 		final long parent;
 		int logicalX, logicalY, logicalWidth, logicalHeight;
+		int borderRelief = SWT.DEFAULT;
 		int role, accessibleState;
 		boolean fillViewport;
 		Bitmap front;
@@ -578,7 +593,13 @@ public final class AndroidPlatform implements MobilePlatform {
 			}
 			return new ViewGroup.LayoutParams(physical(logicalWidth), physical(logicalHeight));
 		}
-		private int borderWidth() { return (style & SWT.BORDER) == 0 ? 0 : 1; }
+		private int borderWidth() {
+			return switch (borderRelief) {
+				case SWT.SHADOW_NONE -> 0;
+				case SWT.DEFAULT -> (style & SWT.BORDER) == 0 ? 0 : 1;
+				default -> 2;
+			};
+		}
 		private void releaseEmptyClientSnapshot() {
 			int border = borderWidth();
 			if (logicalWidth <= border * 2 || logicalHeight <= border * 2) releaseSnapshot();
@@ -588,14 +609,16 @@ public final class AndroidPlatform implements MobilePlatform {
 		}
 		@Override protected void onMeasure(int width, int height) {
 			int measuredWidth = MeasureSpec.getSize(width), measuredHeight = MeasureSpec.getSize(height);
-			if (borderWidth() != 0) {
-				// Round the client endpoints independently; symmetric rounded
-				// borders remove an extra pixel at fractional display densities.
-				int left = Math.min(measuredWidth, physical(1));
-				int top = Math.min(measuredHeight, physical(1));
-				int right = Math.max(0, measuredWidth - physical(Math.max(0, logical(measuredWidth) - 1)));
-				int bottom = Math.max(0, measuredHeight - physical(Math.max(0, logical(measuredHeight) - 1)));
-				setPadding(left, top, right, bottom);
+			int border = borderWidth();
+			if (border != 0) {
+				// Round client endpoints independently, including fractional density.
+				int left = Math.min(measuredWidth, physical(border));
+				int top = Math.min(measuredHeight, physical(border));
+				int right = Math.max(0, measuredWidth - physical(Math.max(0, logical(measuredWidth) - border)));
+				int bottom = Math.max(0, measuredHeight - physical(Math.max(0, logical(measuredHeight) - border)));
+				setPadding(left, top, Math.min(right, measuredWidth), Math.min(bottom, measuredHeight));
+			} else {
+				setPadding(0, 0, 0, 0);
 			}
 			setMeasuredDimension(measuredWidth, measuredHeight);
 			for (int i = 0; i < getChildCount(); i++) {
@@ -623,13 +646,41 @@ public final class AndroidPlatform implements MobilePlatform {
 			int right = Math.max(left, getWidth() - getPaddingRight());
 			int bottom = Math.max(top, getHeight() - getPaddingBottom());
 			if (borderWidth() != 0) {
-				canvas.drawRect(0, 0, getWidth(), top, borderPaint);
-				canvas.drawRect(0, bottom, getWidth(), getHeight(), borderPaint);
-				canvas.drawRect(0, top, left, bottom, borderPaint);
-				canvas.drawRect(right, top, getWidth(), bottom, borderPaint);
+				if (borderRelief == SWT.DEFAULT) {
+					borderPaint.setColor(0xff808080);
+					canvas.drawRect(0, 0, getWidth(), top, borderPaint);
+					canvas.drawRect(0, bottom, getWidth(), getHeight(), borderPaint);
+					canvas.drawRect(0, top, left, bottom, borderPaint);
+					canvas.drawRect(right, top, getWidth(), bottom, borderPaint);
+				} else {
+					int scheme = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+					boolean darkTheme = scheme == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+					int light = darkTheme ? 0xff888888 : 0xffeeeeee;
+					int dark = darkTheme ? 0xff202020 : 0xff505050;
+					boolean raised = borderRelief == SWT.SHADOW_OUT || borderRelief == SWT.SHADOW_ETCHED_OUT;
+					int step = Math.max(1, physical(1));
+					paintReliefRing(canvas, 0, step, raised ? light : dark, raised ? dark : light);
+					if (borderWidth() > 1) {
+						boolean etched = borderRelief == SWT.SHADOW_ETCHED_IN || borderRelief == SWT.SHADOW_ETCHED_OUT;
+						paintReliefRing(canvas, step, Math.max(1, physical(2) - step),
+								(raised ^ etched) ? light : dark, (raised ^ etched) ? dark : light);
+					}
+				}
 			}
 			if (right > left && bottom > top && front != null && !front.isRecycled())
 				canvas.drawBitmap(front, null, new Rect(left, top, right, bottom), null);
+		}
+		private void paintReliefRing(Canvas canvas, int inset, int thickness, int topLeft, int bottomRight) {
+			int l = Math.max(0, inset), t = Math.max(0, inset);
+			int r = Math.max(l, getWidth() - inset), b = Math.max(t, getHeight() - inset);
+			if (l >= r || t >= b) return;
+			int h = Math.min(thickness, b - t), w = Math.min(thickness, r - l);
+			borderPaint.setColor(topLeft);
+			canvas.drawRect(l, t, r, t + h, borderPaint);
+			canvas.drawRect(l, t + h, l + w, b, borderPaint);
+			borderPaint.setColor(bottomRight);
+			canvas.drawRect(l + w, b - h, r, b, borderPaint);
+			canvas.drawRect(r - w, t + h, r, b - h, borderPaint);
 		}
 		@Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 			super.onSizeChanged(w, h, oldw, oldh);

@@ -48,6 +48,11 @@ public final class OS {
 		ACTION_DECREMENT = MobilePlatform.ACTION_DECREMENT;
 	public static final int NO_FOCUS = SWT.NO_FOCUS;
 	public static final int BORDER = SWT.BORDER;
+	// Native CoreGraphics border relief; generated -h constants match SWT's values.
+	public static final int DEFAULT = SWT.DEFAULT, SHADOW_NONE = SWT.SHADOW_NONE;
+	public static final int SHADOW_IN = SWT.SHADOW_IN, SHADOW_OUT = SWT.SHADOW_OUT;
+	public static final int SHADOW_ETCHED_IN = SWT.SHADOW_ETCHED_IN,
+		SHADOW_ETCHED_OUT = SWT.SHADOW_ETCHED_OUT;
 	public static final int TEXT = MobilePlatform.TEXT;
 	public static final int MULTI = SWT.MULTI, PASSWORD = SWT.PASSWORD;
 	public static final int DEFAULT_SELECTION = SWT.DefaultSelection;
@@ -73,6 +78,8 @@ public final class OS {
 	public static native void setBounds(long peer, int x, int y, int width, int height);
 	public static native void setVisible(long peer, boolean visible);
 	public static native void setEnabled(long peer, boolean enabled);
+	/** Same peer; native UIKit bevel and client insets. */
+	public static native void setBorderRelief(long peer, int relief);
 	public static native void setTitle(long peer, String title);
 	public static native String getClipboardText();
 	public static native void setClipboardText(String text);

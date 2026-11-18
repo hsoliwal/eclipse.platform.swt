@@ -16,8 +16,9 @@ package org.eclipse.swt.widgets;
 
 /**
  * Told once per frame tick of a display's {@link Synchronizer}, on the user-interface thread, after the model patches
- * of the frame (the runnables posted with {@link Synchronizer#MODEL} priority) were applied (brief rule 28,
- * docs/m3/SYNCHRONIZER.md). Drawn planes publish their snapshots for the render thread here.
+ * of the frame (the runnables posted with {@link Synchronizer#MODEL} priority) were applied. Drawn planes publish
+ * their completed snapshots for the render thread here. Backend computation belongs to worker threads; the
+ * patches and this notification run on the display's user-interface thread.
  *
  * @see Synchronizer#addFrameListener(FrameListener)
  * @since 3.136

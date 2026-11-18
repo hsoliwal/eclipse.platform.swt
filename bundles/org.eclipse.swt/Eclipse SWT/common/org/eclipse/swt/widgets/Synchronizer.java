@@ -37,10 +37,10 @@ import org.eclipse.swt.graphics.*;
 public class Synchronizer {
 	Display display;
 	/* rule 28: the dispatcher (rings per priority class, keyed coalescing, frame ticks, reused syncExec locks) */
-	final DispatchQueue queue = new DispatchQueue (this);
+	volatile DispatchQueue queue;
 
 	/**
-	 * Priority classes of {@link #asyncExec(int, Object, Runnable)}, highest first (docs/m3/SYNCHRONIZER.md): input,
+	 * Priority classes of {@link #asyncExec(int, Object, Runnable)}, highest first: input,
 	 * layout and paint, the default class (plain <code>asyncExec</code> and <code>syncExec</code>, first in, first
 	 * out), model patches (applied together once per frame tick, then the {@link FrameListener}s), idle.
 	 *
@@ -61,8 +61,10 @@ public class Synchronizer {
  *
  * @param display the display to create the synchronizer on
  */
+@SuppressWarnings ("this-escape") // DispatchQueue only records its owner; construction neither publishes nor invokes it.
 public Synchronizer (Display display) {
 	this.display = display;
+	queue = new DispatchQueue (this);
 }
 
 /**
@@ -72,8 +74,8 @@ public Synchronizer (Display display) {
  * @param toReceiveTheEvents the synchronizer that will receive the events
  */
 void moveAllEventsTo (Synchronizer toReceiveTheEvents) {
-	// inserted at the beginning of the target's queue, class by class, for backward compatibility
-	queue.moveAllTo (toReceiveTheEvents.queue);
+	// The retained display queue keeps old messages before the receiver's, including an active frame.
+	queue.install (toReceiveTheEvents);
 }
 
 /**
@@ -172,7 +174,7 @@ protected void syncExec (Runnable runnable) {
  * Causes the <code>run()</code> method of the runnable to be invoked by the user-interface thread at the next
  * reasonable opportunity, coalesced by key: while a runnable posted with an equal key is still queued, it is replaced
  * in place by this one (like <code>EventQueue.coalesceEvents</code>). Runs in the default class, with the plain
- * <code>asyncExec</code> runnables (docs/m3/SYNCHRONIZER.md).
+ * <code>asyncExec</code> runnables.
  *
  * @param key the coalescing key (compared with <code>equals</code>), or <code>null</code> for none
  * @param runnable code to run on the user-interface thread
@@ -192,7 +194,12 @@ public void asyncExec (Object key, Runnable runnable) {
  * Causes the <code>run()</code> method of the runnable to be invoked by the user-interface thread in the given
  * priority class: {@link #INPUT} and {@link #LAYOUT} before the default class, {@link #MODEL} together once per frame
  * tick (then the {@link FrameListener}s), {@link #IDLE} when nothing else is queued. A runnable posted with a key equal
- * to one still queued in the same class replaces it in place (docs/m3/SYNCHRONIZER.md).
+ * to one still queued in the same class replaces it in place. Keys in different classes are independent.
+ * <p>
+ * Every class executes on the user-interface thread. Compute backend state on a worker and use {@link #MODEL}
+ * to apply its completed presentation update. Arbitrary application callbacks and dependent deltas must not be
+ * discarded as though they were replaceable snapshots.
+ * </p>
  *
  * @param priority one of {@link #INPUT}, {@link #LAYOUT}, {@link #DEFAULT}, {@link #MODEL}, {@link #IDLE}
  * @param key the coalescing key (compared with <code>equals</code>), or <code>null</code> for none
@@ -213,6 +220,8 @@ public void asyncExec (int priority, Object key, Runnable runnable) {
 
 /**
  * Adds a listener told once per frame tick, on the user-interface thread, after the frame's model patches ran.
+ * Listeners and the display's frame generation survive replacement of its synchronizer. Nested event dispatch
+ * during a patch or listener does not publish another frame until the current frame notification finishes.
  *
  * @param listener the listener
  *

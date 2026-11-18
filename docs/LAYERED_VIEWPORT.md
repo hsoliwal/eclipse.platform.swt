@@ -77,9 +77,39 @@ pixels.
 A layer above a pinned one in Z still paints over it (a tooltip or a drag image
 over the header), and hit testing follows the same order.
 
+Natively: a pinned or sticky image layer made native (`Layer.setNative(true)`) is
+a DirectComposition visual whose offset the pan does not change on its pinned
+axis, while the visuals of the rows move under it. The window system moves them;
+nothing is painted (`Test_org_eclipse_swt_maya_NativeLayers`, the pinned header
+read from the screen through vertical and horizontal pans).
+
 Next for this family: per-layer scroll ratios (parallax, a timeline's coarse and
 fine bands), sticky on both axes at once, and frozen planes as `ViewportRuntime`
 FROZEN and HEADER roles.
+
+## Editor and workbench widgets as layers
+
+Eclipse and NetBeans already have these widgets, each built as its own shell, a
+control or a custom paint. As layers they become one Z stack over one backing
+store: an overlay over the text, pinned or sticky planes over the scrolling
+lines, or native visuals. Donors (classes checked to exist):
+
+| Widget | Layers | Donor |
+| --- | --- | --- |
+| content assist (completion popup, its details) | a list and a details layer above the text, placed at the caret in world space, native controls when focus and IME matter | Eclipse `org.eclipse.jface.text.contentassist.ContentAssistant` (eclipse.platform.ui b5dd3381a5, blob b676e022db); NetBeans `org.netbeans.modules.editor.completion.CompletionImpl` (apache/netbeans 3c68d472ff, blob 3e57307767) |
+| find and replace overlay | a layer pinned on both axes at the editor's top right, its fields native control layers | Eclipse `org.eclipse.ui.internal.findandreplace.overlay.FindReplaceOverlay` (blob 1163b37d5c); NetBeans `org.netbeans.modules.editor.search.SearchBar` (blob 03e2dac3e6) |
+| sticky scroll (the enclosing class and method lines stay on top) | sticky layers, one per enclosing scope, each limited by its scope's end | Eclipse `org.eclipse.ui.internal.texteditor.stickyscroll.StickyScrollingControl` (blob 24653bde4c) |
+| breadcrumbs | a bar pinned vertically above the text | Eclipse JDT `org.eclipse.jdt.internal.ui.javaeditor.breadcrumb.EditorBreadcrumb` (eclipse.jdt.ui b1252a6fa4, blob fec0a0d96f) |
+| folding | a gutter pinned horizontally (the fold marks) over lines whose layers hide and move | Eclipse `org.eclipse.jface.text.source.projection.ProjectionViewer` (blob ee0a1303f8); NetBeans `org.netbeans.api.editor.fold.FoldHierarchy` (blob 13d3788bb6) |
+| quick access / search field | a layer pinned on both axes above the workbench | Eclipse `org.eclipse.ui.internal.quickaccess.SearchField` (blob 6190370d58) |
+| slide in, slide out, fade, page flip | a layer whose offset or opacity is animated; natively the compositor animates the visual with no repaint | Nebula `org.eclipse.nebula.effects.stw` (SlideTransition, FadeTransition, CubicRotationTransition, TransitionManager) |
+| tabbed ribbon, collapsible groups, shelves | the tab strip pinned vertically, each tab's group a layer shown or hidden (slid in), popups above | Nebula `collapsiblebuttons`, `pshelf`, `pgroup`, `nebulatoolbar` (no ribbon in Nebula: a gap) |
+| carousel | slides as layers moved by one offset | Nebula `carousel` |
+
+Next for this family: animated layer offsets and opacity (slide in and out, fade)
+with an easing atom after the Nebula transitions, painted layers damaged per frame
+and native layers moved by the compositor (DirectComposition animations, Core
+Animation, ASurfaceControl transactions).
 
 ## Next implementation boundaries
 
@@ -216,3 +246,82 @@ and reused after warming. Nested paint work gets separate temporary space.
 This does **not** claim native UI reentrancy or disposal behavior has been
 qualified for all SWT backends; focused native visual tests and the canonical
 source-sealed Synexia result-only handoff are still required.
+
+
+## Composited layer groups (follow-up)
+
+A group is represented by one existing painter Layer in the parent Z-stack,
+with an array-backed, independently reorderable set of local painted or raster
+children. The group root is the sole top-level layer, so moving it in Z is
+atomic and it needs no native child controls. The root's world bounds define
+the group's local origin and clip. Changing those bounds moves every child
+together; each child stores relative bounds.
+
+~~~java
+LayeredViewport.LayerGroup group =
+    viewport.addLayerGroup("Annotations", 100, 200, 800, 600);
+
+group.addPaintChild("labels", 10, 10, 200, 100, (gc, ctx) -> {
+    Point at = ctx.toScreen(10, 10);
+    gc.drawText("Important", at.x, at.y);
+});
+group.addImageChild("raster", borrowedImage, 200, 100);
+
+group.getLayer().setOpacity(160); // completed group's alpha, not each child
+group.getLayer().setPinned(SWT.VERTICAL);
+group.getLayer().moveTo(viewport.getLayers().length - 1);
+~~~
+
+GroupPaintContext reports group-to-device coordinates consistent with
+pinned and sticky root layers. group.hitTestChild(x,y) returns the topmost
+visible, unlocked child. The parent Layer exposes the usual pointer listener
+and can use the child query to route events. Group children are not SWT
+Controls and do not own SWT Images; removing children invalidates stable
+handles but never disposes borrowed images.
+
+The current implementation is one group level and supports isolated GROUP
+opacity through the existing paintIsolated backing-store path. Children paint
+normally within the group. They do not independently expose blend modes,
+opacity, transforms, arbitrary alpha masks or native widgets. A group is
+repainted only when its parent scene is damaged. Child traversal uses an array snapshot for up to 32 children, then the existing
+LayerRectIndex with group-local bounds for paint and pick queries. Sparse group
+views reject offscreen children without scanning every child; overlapping
+rectangles can still require linear work.
+A child content change must use its setters or call
+group.getLayer().redraw() explicitly. Existing retained composites may cache
+the final group image but no per-group spatial index or tile LRU exists yet.
+
+Limitations: setBlendMode on a painter root still follows normal painter
+blending; non-normal grouped blending and pass-through groups require a later
+compositor pass. Group children do not participate in native window-system Z,
+focus, accessibility, or IME themselves. OS child Controls should continue
+to use addControlLayer.
+
+Verification added: group Z-order and root translation, child pick/visibility/
+lock/snapshot identity, local clipping, and an SWT pixel oracle asserting
+that overlap is resolved before the GROUP opacity is applied. The native
+Tycho/GTK/Win32/Cocoa suites still need to run before promoting the feature.
+
+## Optional native device-loss containment (Win32 Maya)
+
+The native compositor is still **optional**. If the existing DirectComposition
+submission path fails, `LayeredViewport` detaches its native layers, disposes
+the failed composition and redraws those layer bounds through the original
+SWT painted backing store. There is no silent recursive GPU reinitialization.
+
+Applications that know their display/graphics device has recovered may call
+`viewport.retryNativeComposition()` explicitly from the SWT UI thread.
+The method refuses paint/native-frame/model-batch reentrancy, issues at most
+one creation attempt per call, then reuploads borrowed images via the same
+`NativeLayers` backend and returns whether the composition is available.
+If native recreation or frame commit fails, ordinary software painting remains
+authoritative; no automatic retry loop starts.
+
+The Windows Maya owner validates the DirectComposition device state before
+native uploads and every frame (even an unchanged-property frame). Lost
+devices report their HRESULT and force native scene-cache invalidation. That
+failure reaches the already established painted fallback.
+
+See [MAYA_DEVICE_LOSS_RECOVERY.md](MAYA_DEVICE_LOSS_RECOVERY.md) for the
+portable C++ health oracle, explicit recovery contract, native UI ownership,
+test coverage, and still-unexecuted Windows hardware release gates.
