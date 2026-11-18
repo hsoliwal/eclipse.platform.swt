@@ -18,7 +18,7 @@
 #include <jni.h>
 #include <cstdint>
 #include <vector>
-#include <unordered_set>
+#include "MayaNativeHandleRegistry.h"
 #include "MayaCompositionChecks.h"
 #include "MayaCompositionDelta.h"
 #include "MayaCompositionDirty.h"
@@ -45,11 +45,13 @@ template <class T> void release(T *&p) {
 
 struct Composition;
 struct Layer;
-// O(1) live-handle membership: never dereference an arbitrary jlong.
-std::unordered_set<Composition *> liveCompositions;
-std::unordered_set<Layer *> liveLayers;
+// Stable typed handles, not allocator addresses: a freed native object's
+// pointer can be reused, but its retired Java token never can.
+swt_maya::TokenRegistry<Composition, 0x31> liveCompositions;
+swt_maya::TokenRegistry<Layer, 0x32> liveLayers;
 
 struct Layer {
+    jlong token = 0;
     Composition *owner = nullptr;
     std::uint64_t seenFrame = 0;
     swt_maya::CommittedLayerProperties committedProperties;
@@ -61,6 +63,7 @@ struct Layer {
 };
 
 struct Composition {
+    jlong token = 0;
     ID3D11Device *d3d = nullptr;
     ID3D11DeviceContext *context = nullptr;
     IDCompositionDevice *device = nullptr;
@@ -72,16 +75,14 @@ struct Composition {
     bool pendingSurfaceCommit = false;
 };
 Composition *getComposition(jlong handle) {
-    Composition *c = reinterpret_cast<Composition *>(handle);
-    return liveCompositions.find(c) == liveCompositions.end() ? nullptr : c;
+    return liveCompositions.get(static_cast<std::uint64_t>(handle));
 }
 Layer *getLayer(jlong handle) {
-    Layer *l = reinterpret_cast<Layer *>(handle);
-    return liveLayers.find(l) == liveLayers.end() ? nullptr : l;
+    return liveLayers.get(static_cast<std::uint64_t>(handle));
 }
 
 void destroy(Layer *layer) {
-    liveLayers.erase(layer);
+    liveLayers.retire(static_cast<std::uint64_t>(layer->token), layer);
     release(layer->effect);
     release(layer->surface);
     release(layer->visual);
@@ -89,7 +90,7 @@ void destroy(Layer *layer) {
 }
 
 void destroy(Composition *c) {
-    liveCompositions.erase(c);
+    liveCompositions.retire(static_cast<std::uint64_t>(c->token), c);
     for (Layer *layer : c->layers) destroy(layer);
     c->layers.clear();
     if (c->target) {
@@ -109,7 +110,8 @@ void destroy(Composition *c) {
 extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nCreate
   (JNIEnv *, jclass, jlong hwnd) {
     if (!hwnd) return 0;
-    Composition *c = new Composition();
+    Composition *c = new (std::nothrow) Composition();
+    if (!c) return 0;
     IDXGIDevice *dxgi = nullptr;
     bool ok = SUCCEEDED(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
                       nullptr, 0, D3D11_SDK_VERSION, &c->d3d, nullptr, &c->context))
@@ -124,15 +126,26 @@ extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaCompos
         destroy(c);
         return 0;
     }
-    liveCompositions.insert(c);
-    return reinterpret_cast<jlong>(c);
+    try {
+        const std::uint64_t token = liveCompositions.admit(c);
+        if (token == 0) {
+            destroy(c);
+            return 0;
+        }
+        c->token = static_cast<jlong>(token);
+        return c->token;
+    } catch (const std::bad_alloc &) {
+        destroy(c);
+        return 0;
+    }
 }
 
 extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaComposition__1nAddLayer
   (JNIEnv *, jclass, jlong composition, jint width, jint height) {
     Composition *c = getComposition(composition);
     if (!c || !swt_maya::validPixelSize(width, height)) return 0;
-    Layer *layer = new Layer();
+    Layer *layer = new (std::nothrow) Layer();
+    if (!layer) return 0;
     layer->owner = c;
     layer->width = width;
     layer->height = height;
@@ -146,9 +159,23 @@ extern "C" JNIEXPORT jlong JNICALL Java_org_eclipse_swt_internal_maya_MayaCompos
         destroy(layer);
         return 0;
     }
-    c->layers.push_back(layer);
-    liveLayers.insert(layer);
-    return reinterpret_cast<jlong>(layer);
+    try {
+        c->layers.push_back(layer);
+        const std::uint64_t token = liveLayers.admit(layer);
+        if (token == 0) {
+            c->layers.pop_back();
+            destroy(layer);
+            return 0;
+        }
+        layer->token = static_cast<jlong>(token);
+        return layer->token;
+    } catch (const std::bad_alloc &) {
+        // push_back or registry insertion may fail independently. Retire
+        // only a successful append and release every acquired COM object.
+        if (!c->layers.empty() && c->layers.back() == layer) c->layers.pop_back();
+        destroy(layer);
+        return 0;
+    }
 }
 
 // the layer's pixels: width * height premultiplied ARGB ints, row by row (an int's bytes in memory are B, G, R, A,
