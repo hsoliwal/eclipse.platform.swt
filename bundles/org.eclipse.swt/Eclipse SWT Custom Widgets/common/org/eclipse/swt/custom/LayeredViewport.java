@@ -424,6 +424,9 @@ public final class LayeredViewport extends Canvas {
     // borrow independent arrays rather than corrupt an active outer scan.
     private int[] staleWork = new int[64];
     private int staleDepth;
+    // Main and retained stores move sequentially on the SWT UI thread.
+    // Share one growable primitive rectangle lane across those stores.
+    private int[] movedWork = new int[64];
 
     public LayeredViewport(Composite parent, int style) {
         super(parent, style | SWT.DOUBLE_BUFFERED);
@@ -755,6 +758,15 @@ public final class LayeredViewport extends Canvas {
             staleWork = Arrays.copyOf(staleWork, capacity);
         }
         return staleWork;
+    }
+
+    private int[] growMovedWork(int required) {
+        if (movedWork.length < required) {
+            int capacity = movedWork.length;
+            while (capacity < required) capacity += Math.max(64, capacity >>> 1);
+            movedWork = Arrays.copyOf(movedWork, capacity);
+        }
+        return movedWork;
     }
 
     /*
@@ -1194,7 +1206,10 @@ public final class LayeredViewport extends Canvas {
         } catch (ArithmeticException overflow) {
             return false;
         }
-        if (Math.abs(dx) >= size.width || Math.abs(dy) >= size.height) return false;
+        // abs(Long.MIN_VALUE) is negative: reject out-of-view pans before
+        // narrowing a signed-long delta to an int pixel translation.
+        if (dx <= -(long) size.width || dx >= size.width
+                || dy <= -(long) size.height || dy >= size.height) return false;
         int sx = (int) dx, sy = (int) dy;
         shiftStore(backBuffer, dirty, sx, sy, size);
         for (Layer layer : paintOrder) {
@@ -1205,7 +1220,7 @@ public final class LayeredViewport extends Canvas {
     }
 
     /* moves a store's pixels by (sx, sy) and its dirty region with them; the band that comes into view is dirty */
-    private static void shiftStore(Image store, ViewportDamageRegion region, int sx, int sy, Rectangle size) {
+    private void shiftStore(Image store, ViewportDamageRegion region, int sx, int sy, Rectangle size) {
         GC gc = new GC(store);
         try {
             gc.copyArea(Math.max(0, -sx), Math.max(0, -sy), size.width - Math.abs(sx), size.height - Math.abs(sy),
@@ -1214,7 +1229,7 @@ public final class LayeredViewport extends Canvas {
             gc.dispose();
         }
         int n = region.rectCount();
-        int[] moved = new int[n * 4];
+        int[] moved = growMovedWork(Math.multiplyExact(n, 4));
         for (int i = 0; i < n; i++) {
             moved[i * 4] = region.x(i) + sx;
             moved[i * 4 + 1] = region.y(i) + sy;

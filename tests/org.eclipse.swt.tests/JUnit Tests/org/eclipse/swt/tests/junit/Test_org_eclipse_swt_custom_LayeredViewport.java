@@ -572,4 +572,23 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertSame(back, backEvents.get(0).layer());
         assertEquals(large + 10, backEvents.get(0).worldX());
     }
+
+    @Test
+    public void testLongMinimumPanDoesNotReuseRetainedPixels() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        viewport.setOrigin(-1, 0);
+        Layer scene = viewport.addPaintLayer("old-world", -1, 0, 150, 150, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
+            gc.fillRectangle(ctx.clip());
+        });
+        scene.setRetained(true);
+        show();
+        assertEquals(new RGB(0, 0, 0), rgb(pixels(), 10, 10));
+        // -1 - Long.MAX_VALUE is exactly Long.MIN_VALUE without subtraction
+        // overflow. An abs-based guard wrongly admits a 0px store translation.
+        viewport.setOrigin(Long.MAX_VALUE, 0);
+        viewport.update();
+        SwtTestUtil.processEvents();
+        assertEquals(new RGB(255, 255, 255), rgb(pixels(), 10, 10));
+    }
 }
