@@ -286,6 +286,61 @@ public class Test_org_eclipse_swt_maya_Composition {
 	}
 
 	@Test
+	public void staleNativeHandlesCannotAliasRecycledCompositorObjects() {
+		long oldComposition = composition;
+		long oldLayer = layer(OPAQUE_RED);
+		frame(new long[] { oldLayer }, 20, 20, 1, 1);
+		MayaComposition._nRemoveLayer(composition, oldLayer);
+		assertNotEquals(0, MayaComposition._nUpload(oldLayer, new int[SIZE * SIZE]),
+				"removed token can never address a later native layer");
+		long replacementLayer = layer(OPAQUE_BLUE);
+		assertNotEquals(oldLayer, replacementLayer,
+				"fresh native memory may reuse an address, but never the token");
+		frame(new long[] { replacementLayer }, 20, 20, 1, 1);
+		assertEquals(BLUE, screen(30, 30));
+		assertNotEquals(0, MayaComposition._nApply(composition,
+				new long[] { oldLayer }, new float[] { 20, 20, 1, 1 }, 1));
+		// The versioned packed transport uses the same native token registry.
+		// A retired layer remains invalid after the allocator creates a new one.
+		int packetVersion = -1;
+		try {
+			packetVersion = MayaComposition._nFramePacketVersion();
+		} catch (UnsatisfiedLinkError oldMayaBinary) {
+			// Optional ABI: the ordinary legacy tests still run.
+		}
+		if (packetVersion == MayaFramePacket.VERSION) {
+			ByteBuffer staleFrame = new MayaFramePacket.Encoder().encode(
+					new long[] { oldLayer }, new float[] { 20, 20, 1, 1 }, 1, 8L);
+			assertNotEquals(0, MayaComposition._nApplyPacked(
+					composition, staleFrame, staleFrame.remaining()));
+			assertEquals(BLUE, screen(30, 30), "stale packed handle did not change committed pixels");
+		}
+		// Tokens are type-tagged. A layer token is never a composition,
+		// and a composition token is never a layer.
+		assertEquals(0, MayaComposition._nAddLayer(replacementLayer, SIZE, SIZE));
+		assertNotEquals(0, MayaComposition._nUpload(oldComposition, new int[SIZE * SIZE]));
+		assertNotEquals(0, MayaComposition._nApply(composition,
+				new long[] { oldComposition }, new float[] { 20, 20, 1, 1 }, 1));
+		assertEquals(BLUE, screen(30, 30), "invalid tokens preserve committed pixels");
+
+		MayaComposition._nDispose(composition);
+		composition = 0;
+		assertEquals(0, MayaComposition._nAddLayer(oldComposition, SIZE, SIZE),
+				"disposed composition token is permanently retired");
+		composition = MayaComposition._nCreate(shell.handle);
+		assertNotEquals(0, composition);
+		assertNotEquals(oldComposition, composition);
+		assertEquals(0, MayaComposition._nAddLayer(oldComposition, SIZE, SIZE));
+		long newLayer = layer(OPAQUE_RED);
+		assertNotEquals(oldLayer, newLayer);
+		assertNotEquals(replacementLayer, newLayer);
+		frame(new long[] { newLayer }, 25, 25, 1, 1);
+		assertEquals(RED, screen(30, 30));
+		assertNotEquals(0, MayaComposition._nUpload(replacementLayer, new int[SIZE * SIZE]),
+				"old composition's layer cannot access a new native composition");
+	}
+
+	@Test
 	public void invalidArgumentsAreRefused() {
 		assertEquals(0, MayaComposition._nAddLayer(0, SIZE, SIZE));
 		assertEquals(0, MayaComposition._nAddLayer(composition, 0, SIZE));

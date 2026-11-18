@@ -14,7 +14,8 @@ package org.eclipse.swt.internal;
  * Implemented by an optional backend (maya's {@code org.eclipse.swt.internal.render.MayaNativeLayers}), found by
  * class name; {@link #platform()} is null where no backend is installed.
  * <p>
- * Handles are native pointers, 0 meaning "none". Pixels are premultiplied ARGB ints, row by row.
+ * Handles are opaque, typed, non-reused native tokens on Windows (not addresses);
+ * zero means "none". Pixels are premultiplied ARGB ints, row by row.
  * </p>
  *
  * @noreference This interface is not intended to be referenced by clients.

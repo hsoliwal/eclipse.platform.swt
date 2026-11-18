@@ -17,7 +17,8 @@ import org.eclipse.swt.internal.maya.impl.Library;
  * layer. Z order, offset, opacity and visibility are properties the system composites; changing them repaints
  * nothing. One {@link #_nApply} per frame carries every layer's properties and commits once.
  * <p>
- * Handles are native pointers; 0 means "not created" (or not supported on this platform: the same exports exist in
+ * Handles are opaque, typed non-reused tokens, never raw C++ addresses on Windows;
+ * 0 means "not created" (or not supported on this platform: the same exports exist in
  * every maya build). Pixels are premultiplied ARGB ints, row by row. Not thread safe: the UI thread owns a
  * composition.
  * </p>

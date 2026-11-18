@@ -9,6 +9,8 @@ on:
       - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_NativeLayers.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaNativeHandleRegistry.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaNativeHandleRegistryTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionDeltaTest.cc'
       - '.github/workflows/maya-native-safety.yml'
@@ -21,6 +23,8 @@ on:
       - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_NativeLayers.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionChecks.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionDelta.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaNativeHandleRegistry.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaNativeHandleRegistryTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionDeltaTest.cc'
       - '.github/workflows/maya-native-safety.yml'
@@ -52,6 +56,17 @@ jobs:
             -fsanitize=address,undefined -fno-omit-frame-pointer \
             "$root/tests/MayaCompositionDeltaTest.cc" -o /tmp/maya-delta
           /tmp/maya-delta
+      - name: Typed native handles, forced allocator ABA and 100000 retire cycles
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          for compiler in g++ clang++; do
+            "$compiler" -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+              -fsanitize=address,undefined -fno-omit-frame-pointer \
+              "$root/tests/MayaNativeHandleRegistryTest.cc" -o "/tmp/maya-token-${compiler}"
+            ASAN_OPTIONS=detect_leaks=1 "/tmp/maya-token-${compiler}"
+          done
       - name: Compile non-Windows JNI stub exports
         shell: bash
         run: |
