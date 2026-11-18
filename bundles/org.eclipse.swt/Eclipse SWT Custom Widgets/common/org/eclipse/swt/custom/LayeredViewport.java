@@ -89,6 +89,11 @@ public final class LayeredViewport extends Canvas {
         private boolean visible = true;
         private boolean locked;
         private boolean removed;
+        /* retained: this layer's composite (it and everything below it) kept in its own image, with the pixels of
+           that image that no longer match the layers */
+        private boolean retained;
+        private Image composite;
+        private ViewportDamageRegion stale;
         private Image image;
         private LayerPainter painter;
         private LayerHitTester hitTester;
@@ -191,6 +196,44 @@ public final class LayeredViewport extends Canvas {
             invalidate(this);
         }
 
+        /**
+         * Whether the composite of this layer and every layer below it is kept in an image of its own,
+         * Photoshop's "flatten below" kept as a cache.
+         */
+        public boolean isRetained() {
+            checked();
+            return retained;
+        }
+
+        /**
+         * Keeps the composite of this layer and every layer below it in an image of the view's size, so that
+         * a change above this layer is recomposed from that image instead of repainting the layers beneath:
+         * a heavy base (a map, a document, a chart) under light layers that change often (markers, carets,
+         * a crosshair). The pixels shown do not change.
+         */
+        public void setRetained(boolean value) {
+            checked();
+            if (retained == value) return;
+            retained = value;
+            releaseComposite();
+        }
+
+        /**
+         * The layer's own content changed (its painter would now paint something else): its pixels are
+         * recomposed at the next paint, from the retained composite below it where there is one. Layers below
+         * it are not repainted.
+         */
+        public void redraw() {
+            checked();
+            invalidate(this);
+        }
+
+        private void releaseComposite() {
+            if (composite != null) composite.dispose();
+            composite = null;
+            stale = null;
+        }
+
         public boolean isLocked() {
             checked();
             return locked;
@@ -254,6 +297,7 @@ public final class LayeredViewport extends Canvas {
             System.arraycopy(stack, index + 1, stack, index, count - index - 1);
             stack[--count] = null;
             removed = true;
+            releaseComposite();
             image = null;
             painter = null;
             hitTester = null;
@@ -331,6 +375,7 @@ public final class LayeredViewport extends Canvas {
             backBuffer = scratch = null;
             for (int i = 0; i < count; i++) {
                 stack[i].removed = true;
+                stack[i].releaseComposite();
                 stack[i].image = null;
                 stack[i].painter = null;
                 stack[i].hitTester = null;
@@ -537,16 +582,76 @@ public final class LayeredViewport extends Canvas {
         return staleWork;
     }
 
-    /* the background, then every visible layer bottom to top, into the store's pixels inside {@code damage} */
+    /*
+     * the store's pixels inside {@code damage}: the retained composites are brought up to date there, bottom to
+     * top, each from the one below it; the store then starts from the topmost one (or the background) and only
+     * the layers above it are painted
+     */
     private void compose(GC[] back, Rectangle damage) {
+        Layer[] frame = paintOrder;
+        int below = -1;
+        for (int z = 0; z < frame.length; z++) {
+            Layer layer = frame[z];
+            if (!layer.retained || layer.removed) continue;
+            refresh(layer, below, z, damage);
+            below = z;
+        }
         back[0].setClipping(damage);
-        drawBackground(back[0], damage.x, damage.y, damage.width, damage.height);
-        composeLayers(back, damage);
+        start(back[0], below, damage);
+        composeLayers(back, backBuffer, damage, below + 1, frame.length);
         back[0].setClipping((Rectangle) null);
     }
 
+    /* recomposes the stale pixels of retained layer {@code z} inside {@code damage}, from the composite below it */
+    private void refresh(Layer layer, int below, int z, Rectangle damage) {
+        Rectangle size = backBuffer.getBounds();
+        if (layer.composite == null) {
+            layer.composite = new Image(getDisplay(), size.width, size.height);
+            layer.stale = new ViewportDamageRegion();
+            layer.stale.add(0, 0, size.width, size.height);
+        }
+        int n = layer.stale.rectCount();
+        if (n == 0) return;
+        int[] rects = new int[n * 4];
+        int k = 0;
+        for (int i = 0; i < n; i++) {
+            Rectangle r = intersect(new Rectangle(layer.stale.x(i), layer.stale.y(i), layer.stale.width(i),
+                    layer.stale.height(i)), damage);
+            if (r == null) continue;
+            rects[k * 4] = r.x;
+            rects[k * 4 + 1] = r.y;
+            rects[k * 4 + 2] = r.width;
+            rects[k * 4 + 3] = r.height;
+            k++;
+        }
+        if (k == 0) return;
+        GC[] gc = { new GC(layer.composite) };
+        try {
+            for (int i = 0; i < k; i++) {
+                Rectangle r = new Rectangle(rects[i * 4], rects[i * 4 + 1], rects[i * 4 + 2], rects[i * 4 + 3]);
+                gc[0].setClipping(r);
+                start(gc[0], below, r);
+                composeLayers(gc, layer.composite, r, below + 1, z + 1);
+            }
+        } finally {
+            gc[0].dispose();
+        }
+        layer.stale.remove(damage.x, damage.y, damage.width, damage.height);
+    }
+
+    /* the pixels a composition starts from: the retained composite of layer {@code below}, or the background */
+    private void start(GC gc, int below, Rectangle r) {
+        if (below < 0) {
+            drawBackground(gc, r.x, r.y, r.width, r.height);
+        } else {
+            gc.drawImage(paintOrder[below].composite, r.x, r.y, r.width, r.height, r.x, r.y, r.width, r.height);
+        }
+    }
+
     /* the layers the spatial index finds under {@code damage}, bottom to top, into the store's GC */
-    private void composeLayers(GC[] back, Rectangle damage) {
+    /* the layers of Z indices {@code from} to {@code to - 1} the spatial index finds under {@code damage}, into
+       {@code target} through {@code back[0]} */
+    private void composeLayers(GC[] back, Image target, Rectangle damage, int from, int to) {
         int originalAlpha = back[0].getAlpha();
         Rectangle originalClip = back[0].getClipping();
         ensureSpatialIndex();
@@ -560,9 +665,12 @@ public final class LayeredViewport extends Canvas {
         Layer[] candidates = activePaintFrames == 0
                 ? growPaintCandidates(selected) : new Layer[selected];
         Layer[] frame = paintOrder;
+        int kept = 0;
         for (int i = 0; i < selected; i++) {
-            candidates[i] = frame[spatialIndex.resultAt(i)];
+            int z = spatialIndex.resultAt(i);
+            if (z >= from && z < to) candidates[kept++] = frame[z];
         }
+        selected = kept;
         activePaintFrames++;
         try {
             for (int i = 0; i < selected; i++) {
@@ -572,7 +680,7 @@ public final class LayeredViewport extends Canvas {
                 Rectangle tile = projectedClip(layer, damage);
                 if (tile == null) continue;
                 if (layer.image == null && layer.painter != null && layer.opacity < 255) {
-                    paintIsolated(back, layer, tile);
+                    paintIsolated(back, target, layer, tile);
                     back[0].setAlpha(originalAlpha);
                     back[0].setClipping(originalClip);
                     continue;
@@ -635,18 +743,18 @@ public final class LayeredViewport extends Canvas {
      * a translucent painter layer, as a group: painted onto a copy of the composite beneath it, which is then drawn
      * once over the store with the layer's opacity, so overlapping shapes of the layer do not darken each other
      */
-    private void paintIsolated(GC[] back, Layer layer, Rectangle tile) {
+    private void paintIsolated(GC[] back, Image target, Layer layer, Rectangle tile) {
         Rectangle size = backBuffer.getBounds();
         if (scratch == null) scratch = new Image(getDisplay(), size.width, size.height);
         back[0].dispose();
         GC copy = new GC(scratch);
         try {
-            copy.drawImage(backBuffer, tile.x, tile.y, tile.width, tile.height, tile.x, tile.y, tile.width, tile.height);
+            copy.drawImage(target, tile.x, tile.y, tile.width, tile.height, tile.x, tile.y, tile.width, tile.height);
             copy.setClipping(tile);
             layer.painter.paint(copy, new PaintContext(layer, tile, originX, originY, zoom));
         } finally {
             copy.dispose();
-            back[0] = new GC(backBuffer);
+            back[0] = new GC(target);
         }
         back[0].setClipping(tile);
         back[0].setAlpha(layer.opacity);
@@ -735,8 +843,9 @@ public final class LayeredViewport extends Canvas {
             redraw();
         } else {
             for (int i = 0; i < pendingDamage.rectCount(); i++) {
-                redraw(pendingDamage.x(i), pendingDamage.y(i),
-                        pendingDamage.width(i), pendingDamage.height(i), false);
+                // the retained composites were marked when each layer changed
+                damage(pendingDamage.x(i), pendingDamage.y(i),
+                        pendingDamage.width(i), pendingDamage.height(i));
             }
         }
         pendingDamage.clear();
@@ -747,8 +856,9 @@ public final class LayeredViewport extends Canvas {
         if (!layer.visible || layer.opacity == 0) return;
         Rectangle bounds = projectedClip(layer, getClientArea());
         if (bounds == null) return;
+        markRetained(indexOf(layer), bounds);
         if (batchDepth == 0) {
-            redraw(bounds.x, bounds.y, bounds.width, bounds.height, false);
+            damage(bounds.x, bounds.y, bounds.width, bounds.height);
         } else if (!fullDamage) {
             try {
                 pendingDamage.add(bounds.x, bounds.y, bounds.width, bounds.height);
@@ -836,10 +946,43 @@ public final class LayeredViewport extends Canvas {
         markDirty(new Rectangle(x, y, width, height));
     }
 
+    /* the area may show anything new: the store and every retained composite are dirty there */
     private void markDirty(Rectangle area) {
         if (dirty == null || backBuffer == null) return; // the first paint composes everything
         Rectangle visible = intersect(area, getClientArea());
+        if (visible == null) return;
+        dirty.add(visible.x, visible.y, visible.width, visible.height);
+        markRetained(0, visible);
+    }
+
+    /* a layer of Z index {@code z} changed inside {@code area}: the composites that include it are stale there */
+    private void markRetained(int z, Rectangle area) {
+        Layer[] frame = paintOrder;
+        for (int i = Math.max(0, z); i < frame.length; i++) {
+            if (frame[i].stale != null) frame[i].stale.add(area.x, area.y, area.width, area.height);
+        }
+    }
+
+    /* the screen and the store are damaged inside the rectangle (the retained composites are marked by the caller) */
+    private void damage(int x, int y, int width, int height) {
+        super.redraw(x, y, width, height, false);
+        if (dirty == null || backBuffer == null) return;
+        Rectangle visible = intersect(new Rectangle(x, y, width, height), getClientArea());
         if (visible != null) dirty.add(visible.x, visible.y, visible.width, visible.height);
+    }
+
+    /** The background under the layers changes: every pixel is recomposed. */
+    @Override
+    public void setBackground(org.eclipse.swt.graphics.Color color) {
+        super.setBackground(color);
+        redraw();
+    }
+
+    /** The background under the layers changes: every pixel is recomposed. */
+    @Override
+    public void setBackgroundImage(Image image) {
+        super.setBackgroundImage(image);
+        redraw();
     }
 
     /* the store matches the client area; a new size starts with every pixel dirty */
@@ -854,6 +997,7 @@ public final class LayeredViewport extends Canvas {
             scratch.dispose();
             scratch = null;
         }
+        for (Layer layer : paintOrder) layer.releaseComposite();
         backBuffer = new Image(getDisplay(), width, height);
         dirty.clear();
         dirty.add(0, 0, width, height);
@@ -877,32 +1021,40 @@ public final class LayeredViewport extends Canvas {
         }
         if (Math.abs(dx) >= size.width || Math.abs(dy) >= size.height) return false;
         int sx = (int) dx, sy = (int) dy;
-        GC gc = new GC(backBuffer);
+        shiftStore(backBuffer, dirty, sx, sy, size);
+        for (Layer layer : paintOrder) {
+            if (layer.composite != null) shiftStore(layer.composite, layer.stale, sx, sy, size);
+        }
+        super.redraw();
+        return true;
+    }
+
+    /* moves a store's pixels by (sx, sy) and its dirty region with them; the band that comes into view is dirty */
+    private static void shiftStore(Image store, ViewportDamageRegion region, int sx, int sy, Rectangle size) {
+        GC gc = new GC(store);
         try {
             gc.copyArea(Math.max(0, -sx), Math.max(0, -sy), size.width - Math.abs(sx), size.height - Math.abs(sy),
                     Math.max(0, sx), Math.max(0, sy));
         } finally {
             gc.dispose();
         }
-        int n = dirty.rectCount();
+        int n = region.rectCount();
         int[] moved = new int[n * 4];
         for (int i = 0; i < n; i++) {
-            moved[i * 4] = dirty.x(i) + sx;
-            moved[i * 4 + 1] = dirty.y(i) + sy;
-            moved[i * 4 + 2] = dirty.width(i);
-            moved[i * 4 + 3] = dirty.height(i);
+            moved[i * 4] = region.x(i) + sx;
+            moved[i * 4 + 1] = region.y(i) + sy;
+            moved[i * 4 + 2] = region.width(i);
+            moved[i * 4 + 3] = region.height(i);
         }
-        dirty.clear();
+        region.clear();
         Rectangle view = new Rectangle(0, 0, size.width, size.height);
         for (int i = 0; i < n; i++) {
             Rectangle r = intersect(new Rectangle(moved[i * 4], moved[i * 4 + 1], moved[i * 4 + 2], moved[i * 4 + 3]), view);
-            if (r != null) dirty.add(r.x, r.y, r.width, r.height);
+            if (r != null) region.add(r.x, r.y, r.width, r.height);
         }
-        if (sx > 0) dirty.add(0, 0, sx, size.height);
-        if (sx < 0) dirty.add(size.width + sx, 0, -sx, size.height);
-        if (sy > 0) dirty.add(0, 0, size.width, sy);
-        if (sy < 0) dirty.add(0, size.height + sy, size.width, -sy);
-        super.redraw();
-        return true;
+        if (sx > 0) region.add(0, 0, sx, size.height);
+        if (sx < 0) region.add(size.width + sx, 0, -sx, size.height);
+        if (sy > 0) region.add(0, 0, size.width, sy);
+        if (sy < 0) region.add(0, size.height + sy, size.width, -sy);
     }
 }
