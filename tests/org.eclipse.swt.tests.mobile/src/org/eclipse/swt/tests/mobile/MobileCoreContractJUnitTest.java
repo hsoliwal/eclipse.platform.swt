@@ -15,7 +15,6 @@
 package org.eclipse.swt.tests.mobile;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.SWTError;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -25,22 +24,41 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Executed Surefire/JUnit5 entrypoints; these tests do not qualify a mobile OS. */
 public final class MobileCoreContractJUnitTest {
 	@Test void explicitBevelApiDoesNotAliasMobileConstructorStyles() {
+		ContractPlatform platform = new ContractPlatform();
+		org.eclipse.swt.internal.mobile.MobileRuntime.install(platform);
 		Display display = new Display();
 		try {
 			Shell shell = new Shell(display);
 			Composite composite = new Composite(shell, SWT.SHADOW_ETCHED_IN);
+			long peer = platform.lastCreated;
+			int peers = platform.controls.size(), initialWidth = composite.getBorderWidth();
 			assertEquals(SWT.NONE, composite.getBevelBorder());
-			composite.setBevelBorder(SWT.NONE);
-			composite.setBevelBorder(SWT.SHADOW_NONE);
-			assertEquals(SWT.NONE, composite.getBevelBorder());
+			assertEquals(SWT.DEFAULT, composite.getBorderRelief());
 			assertThrows(IllegalArgumentException.class,
 					() -> composite.setBevelBorder(SWT.SHADOW_IN | SWT.SHADOW_OUT));
-			SWTError unsupported = assertThrows(SWTError.class,
-					() -> composite.setBevelBorder(SWT.SHADOW_IN));
-			assertEquals(SWT.ERROR_NOT_IMPLEMENTED, unsupported.code);
+			for (int border : new int[] {SWT.SHADOW_IN, SWT.SHADOW_OUT,
+					SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT}) {
+				composite.setBevelBorder(border);
+				assertEquals(border, composite.getBevelBorder());
+				assertEquals(border, composite.getBorderRelief());
+				assertEquals(border, platform.controls.get(peer).borderRelief);
+				assertEquals(2, composite.getBorderWidth());
+				assertEquals(peers, platform.controls.size(), "No additional OS peer");
+			}
+			composite.setBorderRelief(SWT.SHADOW_IN);
+			assertEquals(SWT.SHADOW_IN, composite.getBevelBorder());
+			composite.setBorderRelief(SWT.SHADOW_NONE);
 			assertEquals(SWT.NONE, composite.getBevelBorder());
+			assertEquals(0, composite.getBorderWidth());
+			composite.setBevelBorder(SWT.NONE);
+			assertEquals(SWT.DEFAULT, composite.getBorderRelief());
+			assertEquals(initialWidth, composite.getBorderWidth());
+			composite.setBevelBorder(SWT.SHADOW_NONE);
+			assertEquals(SWT.DEFAULT, composite.getBorderRelief());
+			assertEquals(peers, platform.controls.size());
 		} finally {
-			display.dispose();
+			try { if (!display.isDisposed()) display.dispose(); }
+			finally { org.eclipse.swt.internal.mobile.MobileRuntime.uninstall(platform); }
 		}
 	}
 

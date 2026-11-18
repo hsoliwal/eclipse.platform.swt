@@ -35,8 +35,11 @@ public class Composite extends Scrollable {
 	}
 	Composite(Display display, int style) { super(display, style); }
 
-	/** Returns SWT.NONE until a native mobile bevel backend is available. */
-	public int getBevelBorder() { checkWidget(); return SWT.NONE; }
+	/** Reports the existing Control native relief through Composite's bevel API. */
+	public int getBevelBorder() {
+		int relief = getBorderRelief();
+		return relief == SWT.DEFAULT || relief == SWT.SHADOW_NONE ? SWT.NONE : relief;
+	}
 
 	/**
 	 * Explicit bevel API parity with desktop SWT. Android/iOS native border
@@ -44,12 +47,17 @@ public class Composite extends Scrollable {
 	 */
 	public void setBevelBorder(int border) {
 		checkWidget();
-		if (border == SWT.NONE || border == SWT.SHADOW_NONE) return;
+		if (border == SWT.NONE || border == SWT.SHADOW_NONE) {
+			setBorderRelief(SWT.DEFAULT);
+			return;
+		}
 		if (border != SWT.SHADOW_IN && border != SWT.SHADOW_OUT
 				&& border != SWT.SHADOW_ETCHED_IN && border != SWT.SHADOW_ETCHED_OUT) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
-		SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+		// Reuse the actual Android/UIKit peer already installed by Control.
+		// Third-party transports without a native edge fail closed there.
+		setBorderRelief(border);
 	}
 	@Override protected void checkSubclass() { }
 	void addChild(Control child) { if (childCount == children.length) children = Arrays.copyOf(children, childCount + 8); children[childCount++] = child; }
