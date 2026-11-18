@@ -251,6 +251,41 @@ public void test_bug2162_transparentStyle() {
 	shell.open();
 }
 
+
+@Test
+public void test_nativeReliefAndCompositeBevelShareOneOwner() {
+	Composite local = new Composite(shell, SWT.BORDER);
+	try {
+		assertEquals(SWT.NONE, local.getBevelBorder());
+		assertEquals(SWT.DEFAULT, local.getBorderRelief());
+		if ("cocoa".equals(SWT.getPlatform())) {
+			assertThrows(org.eclipse.swt.SWTError.class,
+					() -> local.setBevelBorder(SWT.SHADOW_IN));
+			assertEquals(SWT.NONE, local.getBevelBorder());
+			return;
+		}
+		for (int relief : new int[] {SWT.SHADOW_IN, SWT.SHADOW_OUT,
+				SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT}) {
+			local.setBevelBorder(relief);
+			assertEquals(relief, local.getBorderRelief());
+			local.setBorderRelief(relief);
+			assertEquals(relief, local.getBevelBorder());
+		}
+		local.setBorderRelief(SWT.SHADOW_NONE);
+		assertEquals(SWT.NONE, local.getBevelBorder());
+		assertEquals(0, local.getBorderWidth());
+		local.setBevelBorder(SWT.SHADOW_OUT);
+		assertEquals(SWT.SHADOW_OUT, local.getBorderRelief());
+		local.setBevelBorder(SWT.NONE);
+		assertEquals(SWT.DEFAULT, local.getBorderRelief());
+		assertEquals(SWT.NONE, local.getBevelBorder());
+		assertThrows(IllegalArgumentException.class,
+				() -> local.setBevelBorder(SWT.BORDER));
+	} finally {
+		local.dispose();
+	}
+}
+
 protected Composite getElementExpectedToHaveFocusAfterSetFocusOnParent(Composite visibleChild) {
 	return visibleChild;
 }
