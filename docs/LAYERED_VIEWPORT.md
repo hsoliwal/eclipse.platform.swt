@@ -77,9 +77,39 @@ pixels.
 A layer above a pinned one in Z still paints over it (a tooltip or a drag image
 over the header), and hit testing follows the same order.
 
+Natively: a pinned or sticky image layer made native (`Layer.setNative(true)`) is
+a DirectComposition visual whose offset the pan does not change on its pinned
+axis, while the visuals of the rows move under it. The window system moves them;
+nothing is painted (`Test_org_eclipse_swt_maya_NativeLayers`, the pinned header
+read from the screen through vertical and horizontal pans).
+
 Next for this family: per-layer scroll ratios (parallax, a timeline's coarse and
 fine bands), sticky on both axes at once, and frozen planes as `ViewportRuntime`
 FROZEN and HEADER roles.
+
+## Editor and workbench widgets as layers
+
+Eclipse and NetBeans already have these widgets, each built as its own shell, a
+control or a custom paint. As layers they become one Z stack over one backing
+store: an overlay over the text, pinned or sticky planes over the scrolling
+lines, or native visuals. Donors (classes checked to exist):
+
+| Widget | Layers | Donor |
+| --- | --- | --- |
+| content assist (completion popup, its details) | a list and a details layer above the text, placed at the caret in world space, native controls when focus and IME matter | Eclipse `org.eclipse.jface.text.contentassist.ContentAssistant` (eclipse.platform.ui b5dd3381a5, blob b676e022db); NetBeans `org.netbeans.modules.editor.completion.CompletionImpl` (apache/netbeans 3c68d472ff, blob 3e57307767) |
+| find and replace overlay | a layer pinned on both axes at the editor's top right, its fields native control layers | Eclipse `org.eclipse.ui.internal.findandreplace.overlay.FindReplaceOverlay` (blob 1163b37d5c); NetBeans `org.netbeans.modules.editor.search.SearchBar` (blob 03e2dac3e6) |
+| sticky scroll (the enclosing class and method lines stay on top) | sticky layers, one per enclosing scope, each limited by its scope's end | Eclipse `org.eclipse.ui.internal.texteditor.stickyscroll.StickyScrollingControl` (blob 24653bde4c) |
+| breadcrumbs | a bar pinned vertically above the text | Eclipse JDT `org.eclipse.jdt.internal.ui.javaeditor.breadcrumb.EditorBreadcrumb` (eclipse.jdt.ui b1252a6fa4, blob fec0a0d96f) |
+| folding | a gutter pinned horizontally (the fold marks) over lines whose layers hide and move | Eclipse `org.eclipse.jface.text.source.projection.ProjectionViewer` (blob ee0a1303f8); NetBeans `org.netbeans.api.editor.fold.FoldHierarchy` (blob 13d3788bb6) |
+| quick access / search field | a layer pinned on both axes above the workbench | Eclipse `org.eclipse.ui.internal.quickaccess.SearchField` (blob 6190370d58) |
+| slide in, slide out, fade, page flip | a layer whose offset or opacity is animated; natively the compositor animates the visual with no repaint | Nebula `org.eclipse.nebula.effects.stw` (SlideTransition, FadeTransition, CubicRotationTransition, TransitionManager) |
+| tabbed ribbon, collapsible groups, shelves | the tab strip pinned vertically, each tab's group a layer shown or hidden (slid in), popups above | Nebula `collapsiblebuttons`, `pshelf`, `pgroup`, `nebulatoolbar` (no ribbon in Nebula: a gap) |
+| carousel | slides as layers moved by one offset | Nebula `carousel` |
+
+Next for this family: animated layer offsets and opacity (slide in and out, fade)
+with an easing atom after the Nebula transitions, painted layers damaged per frame
+and native layers moved by the compositor (DirectComposition animations, Core
+Animation, ASurfaceControl transactions).
 
 ## Next implementation boundaries
 
