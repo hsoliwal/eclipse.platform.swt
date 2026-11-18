@@ -60,11 +60,20 @@ jobs:
               'bundles/org.eclipse.swt/Eclipse SWT Maya/win32/org/eclipse/swt/internal/render/MayaNativeLayers.java' \
               "$root/tests/java/org/eclipse/swt/internal/maya/impl/Library.java" \
               "$root/tests/java/org/eclipse/swt/widgets/Control.java" \
-              "$root/tests/java/org/eclipse/swt/internal/maya/MayaFramePacketSmoke.java"
+              "$root/tests/java/org/eclipse/swt/internal/maya/MayaFramePacketSmoke.java" \
+              "$root/tests/java/org/eclipse/swt/internal/maya/MayaFrameFallbackSmoke.java"
           java -Xcheck:jni -Dswt.maya.packedFrame=true -cp /tmp/maya-packet-classes \
               org.eclipse.swt.internal.maya.MayaFramePacketSmoke /tmp/libmaya-packet-test.so
           nm -D /tmp/libmaya-packet-test.so |
               grep -q 'Java_org_eclipse_swt_internal_maya_MayaComposition__1nApplyPacked'
+          ${{ matrix.compiler }} -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -fPIC -shared \
+              -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+              "$root/tests/MayaFrameLegacyStub.cc" -o /tmp/libmaya-legacy-test.so
+          if nm -D /tmp/libmaya-legacy-test.so | grep -q '_1nFramePacketVersion'; then
+              echo "legacy library accidentally includes new JNI symbols" >&2; exit 1
+          fi
+          java -Xcheck:jni -Dswt.maya.packedFrame=true -cp /tmp/maya-packet-classes \
+              org.eclipse.swt.internal.maya.MayaFrameFallbackSmoke /tmp/libmaya-legacy-test.so
       - name: Original Maya non-Windows stub and new packet entrypoints link together
         shell: bash
         run: |
