@@ -96,5 +96,10 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         layer.setHitTester((candidate, worldX, worldY) -> worldX >= 50);
         assertNull(viewport.hitTest(12, 12));
         assertSame(layer, viewport.hitTest(60, 12));
+        layer.setWorldClip(new WorldBounds(60, 0, 10, 25));
+        assertNull(viewport.hitTest(55, 12));
+        assertSame(layer, viewport.hitTest(65, 12));
+        layer.setWorldClip(null);
+        assertSame(layer, viewport.hitTest(65, 12));
     }
 }
