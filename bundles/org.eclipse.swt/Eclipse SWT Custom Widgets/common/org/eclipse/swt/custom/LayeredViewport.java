@@ -259,7 +259,12 @@ public final class LayeredViewport extends Canvas {
         @Override public int size() { return paintOrder.length; }
         @Override public boolean active(int at) {
             Layer layer = paintOrder[at];
-            return !layer.removed && layer.visible && layer.opacity != 0;
+            if (layer.removed || !layer.visible || layer.opacity == 0) return false;
+            WorldBounds clip = layer.worldClip;
+            return clip == null || (Math.max(layer.x, clip.x()) <
+                    Math.min(layer.right, clip.x() + clip.width()) &&
+                    Math.max(layer.y, clip.y()) <
+                    Math.min(layer.bottom, clip.y() + clip.height()));
         }
         @Override public long left(int at) {
             Layer l = paintOrder[at];
@@ -282,10 +287,12 @@ public final class LayeredViewport extends Canvas {
     };
     private final ViewportDamageRegion pendingDamage = new ViewportDamageRegion();
     private Layer[] paintCandidates = new Layer[16];
+    private Layer[] hitCandidates = new Layer[16];
     private boolean spatialDirty = true;
     private boolean fullDamage;
     private int batchDepth;
     private int activePaintFrames;
+    private int activeHitQueries;
     private int count;
     private long nextId = 1;
     private long originX, originY;
@@ -308,7 +315,9 @@ public final class LayeredViewport extends Canvas {
             paintOrder = new Layer[0];
             spatialIndex.clear();
             Arrays.fill(paintCandidates, null);
+            Arrays.fill(hitCandidates, null);
             paintCandidates = new Layer[0];
+            hitCandidates = new Layer[0];
             pendingDamage.clear();
         });
     }
@@ -402,18 +411,25 @@ public final class LayeredViewport extends Canvas {
         ensureSpatialIndex();
         int candidates = spatialIndex.query(point.x, point.y,
                 saturatedAdd(point.x, 1), saturatedAdd(point.y, 1));
-        // Hit testers may re-enter the scene. Capture handles before callbacks.
-        Layer[] hits = new Layer[candidates];
+        // Hit testers may re-enter the scene; capture handles before callbacks.
+        Layer[] hits = activeHitQueries == 0
+                ? growHitCandidates(candidates) : new Layer[candidates];
         for (int i = 0; i < candidates; i++) {
             hits[i] = paintOrder[spatialIndex.resultAt(i)];
         }
-        for (int i = candidates - 1; i >= 0; i--) {
-            Layer layer = hits[i];
-            if (layer.removed || layer.locked || !layer.visible || layer.opacity == 0) continue;
-            if (layer.hitTester == null
-                    || layer.hitTester.contains(layer, point.x, point.y)) return layer;
+        activeHitQueries++;
+        try {
+            for (int i = candidates - 1; i >= 0; i--) {
+                Layer layer = hits[i];
+                if (layer.removed || layer.locked || !layer.visible || layer.opacity == 0) continue;
+                if (layer.hitTester == null
+                        || layer.hitTester.contains(layer, point.x, point.y)) return layer;
+            }
+            return null;
+        } finally {
+            Arrays.fill(hits, 0, candidates, null);
+            activeHitQueries--;
         }
-        return null;
     }
 
     private void paintLayers(GC gc) {
@@ -472,6 +488,15 @@ public final class LayeredViewport extends Canvas {
             paintCandidates = Arrays.copyOf(paintCandidates, capacity);
         }
         return paintCandidates;
+    }
+
+    private Layer[] growHitCandidates(int selected) {
+        if (selected > hitCandidates.length) {
+            int capacity = hitCandidates.length;
+            while (capacity < selected) capacity = capacity + Math.max(16, capacity >>> 1);
+            hitCandidates = Arrays.copyOf(hitCandidates, capacity);
+        }
+        return hitCandidates;
     }
 
     private void ensureSpatialIndex() {
