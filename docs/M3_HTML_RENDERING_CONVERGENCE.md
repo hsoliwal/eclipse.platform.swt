@@ -94,6 +94,65 @@ runtime or native pixel pass. The new CI job validates the portable source
 and Linux JNI stub. Win32 Maya/Java 21 `-Xcheck:jni` and screen pixels
 must pass before promotion. iOS/Android support is still NOT IMPLEMENTED.
 
+## 2026 native-compositor modernization and incremental DirectComposition leaf
+
+The optimization target is **work crossing the native boundary**, not a larger
+number of JNI exports. Preserve SWT `Widget`, `Control`, `Display`,
+layout, UI-thread, focus/IME, accessibility, resources and public signatures.
+`NativeLayers.apply` remains synchronous and counted; it transports primitive
+handles and four validated float properties per layer. No critical Java
+array pin survives an OS call. A renderer that cannot satisfy pixel, Z,
+clipping and lifecycle equivalence must use the existing SWT backing store.
+
+**Windows native leaf — same seven Maya JNI exports:** the current
+`MayaComposition._nApply` removes every DirectComposition visual, sets all
+three visual properties and rebuilds the entire sibling tree on every frame.
+DirectComposition already retains the visual tree and atomically commits edits.
+Retain the last successfully committed visible order and the last applied
+offset/opacity per layer. Prevalidate the entire input before mutations.
+If visible membership/Z order changes, rebuild the visual sibling list;
+otherwise leave the sibling tree intact. Apply only changed properties, and
+skip the native `Commit` on a completely identical frame. A failed COM call
+or failed commit invalidates the cache; the next successful admission must
+rebuild the complete tree and property values. Removing a layer invalidates
+the order snapshot. Native properties are cached **only after success**;
+failure must never turn an uncommitted attempted frame into authoritative
+state. The production header implementing these decisions has a portable
+C++17 deterministic regression test.
+
+**Other OS adapters are separate admission leaves, not aliases to Windows:**
+
+| Backend | Native scene/fence primitive | Required admission |
+| --- | --- | --- |
+| Cocoa/macOS and UIKit/iOS | `CALayer`, `CAMetalLayer`, `CATransaction` | `NSView`/UIKit peer lifetime, main-thread order, layer parentage, texture synchronization, IME and accessibility |
+| Android 29+ | `ASurfaceControl`, `ASurfaceTransaction`, `AHardwareBuffer` | existing SWT Android View host, API checks, buffer usage, acquire/release fences and surface recreation |
+| GTK4 / Linux | GSK `GskRenderNode` / `GtkSnapshot`, Vulkan/OpenGL as negotiated | original GTK4 native widget lifecycle, X11/Wayland clipping, scale, theme, input and release |
+| GTK3 / unsupported | existing Cairo/GC and retained SWT backing surface | deterministic CPU fallback and regression parity |
+| Windows | existing DirectComposition/D3D11 Maya owner | native contract tests, bounds, device loss, pixel and resource budgets |
+
+Native composition commands should be batched per frame; native resources
+owned and released by their originating compositor. On Java 21, the FFM API
+is **preview**, not a universally available replacement for SWT JNI.
+FFM experimentation belongs behind optional capability negotiation and
+independent Java-version, layout, ABI and crash-recovery gates. Do not change
+the Java 21 product baseline or assume Android/iOS ship the same JVM.
+
+Further bounded native leaves: visible-rectangle dirty upload instead of
+whole-image copies; texture residency/eviction with fence-safe reuse;
+composition group isolation and transforms; GPU color-space/HDR negotiation;
+direct memory/arena lifetime audits; batched text shaping and glyph atlas
+updates; input event/coalescing paths where UI thread semantics remain exact.
+Use measured Java/JNI/native transfer, calls per frame, CPU, GPU memory,
+RSS, handles, p50/p95/p99 latency and screenshot oracles. Algorithmic donors
+are range queries, sparse masks, interval indexes, retained DAG diffing and
+bounded allocation, with independent source and license review.
+
+**This leaf does not implement mobile CALayer/ASurfaceControl/GSK adapters
+or complete HTML/CSS; it changes only DirectComposition transaction work.
+Keep the PR draft until a real Windows Maya build and native pixel/JNI tests
+have executed, and until the overlapping in-flight #503 C++ receiver is
+diff-reconciled.**
+
 ## Required PR gates
 
 - Source-sealed Synexia recipe (pre/post SHA-256, fixed point, drift refusal),
