@@ -1585,4 +1585,49 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertEquals("blue header", group.hitTestChild(10, 10).getName());
         assertEquals(system(SWT.COLOR_BLUE), rgb(pixels(), 10, 10));
     }
+
+    @Test
+    public void testGroupRasterChildZoomAndBorrowedImageOwnership() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Image raster = new Image(viewport.getDisplay(), 8, 8);
+        try {
+            GC brush = new GC(raster);
+            try {
+                brush.setBackground(brush.getDevice().getSystemColor(SWT.COLOR_GREEN));
+                brush.fillRectangle(0, 0, 8, 8);
+            } finally {
+                brush.dispose();
+            }
+            LayeredViewport.LayerGroup group = viewport.addLayerGroup("raster", 20, 30, 100, 100);
+            LayeredViewport.LayerGroup.Child child = group.addImageChild("borrowed", raster, 10, 10);
+            assertSame(child, group.hitTestChild(31, 41));
+            show();
+            assertEquals(system(SWT.COLOR_GREEN), rgb(pixels(), 31, 41));
+            viewport.setZoom(2.0);
+            viewport.update();
+            assertSame(child, group.hitTestChild(61, 81));
+            assertEquals(system(SWT.COLOR_GREEN), rgb(pixels(), 61, 81));
+            group.getLayer().setWorldClip(new WorldBounds(0, 0, 30, 30));
+            viewport.update();
+            assertEquals(system(SWT.COLOR_WHITE), rgb(pixels(), 61, 81));
+            group.getLayer().setWorldClip(null);
+            group.getLayer().remove();
+            assertFalse(raster.isDisposed(), "group only borrows Image data");
+        } finally {
+            raster.dispose();
+        }
+    }
+
+    @Test
+    public void testGroupLocalCoordinatesAtLargeWorldOrigins() {
+        long large = 1L << 55;
+        viewport.setOrigin(large, large);
+        LayeredViewport.LayerGroup group =
+                viewport.addLayerGroup("huge", large + 10, large + 15, 60, 60);
+        LayeredViewport.LayerGroup.Child child = group.addPaintChild(
+                "near", 5, 5, 20, 20, (gc, ctx) -> { });
+        assertSame(group.getLayer(), viewport.hitTest(16, 21));
+        assertSame(child, group.hitTestChild(16, 21));
+        assertNull(group.hitTestChild(14, 19));
+    }
 }
