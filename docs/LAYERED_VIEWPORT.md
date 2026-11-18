@@ -150,3 +150,45 @@ and reused after warming. Nested paint work gets separate temporary space.
 This does **not** claim native UI reentrancy or disposal behavior has been
 qualified for all SWT backends; focused native visual tests and the canonical
 source-sealed Synexia result-only handoff are still required.
+
+## General layer coordinate policies (candidate — 2026-11-18)
+
+Pinning is one member of a larger family of positioning behaviors. The shared
+`ViewportRuntime.LayerPosition` provides **geometry only**, not a new scene
+graph, extra native Tree header or independent renderer. It composes with
+existing `ViewportPaintGraph`, `ViewportRuntime.ImageLayers`, Canvas
+retained/native layers, and the platform-owned Tree/TreeColumn header.
+
+| Policy | Scroll factor Q8 | Anchor | Example |
+| --- | --- | --- | --- |
+| Normal content | X=256, Y=256 | start/start | long Tree rows, canvas content |
+| Fixed overlay | X=0, Y=0 | start/start | toolbar, floating search |
+| Fixed right/bottom | X=0, Y=0 | end/end | minimap, status bubble |
+| Header | X=256, Y=0 | start/start | native Tree columns |
+| Frozen first column | X=0, Y=256 | start/start | spreadsheet row labels |
+| Parallax | X/Y=128 | start/start | scroll-rate-dependent background |
+| Reverse parallax | negative Q8 | center/center | effects, navigational rulers |
+| Sticky start/end | X/Y=256 | start or end | section/group header, footer |
+
+`LayerPosition.coordinate` implements scroll factors from -16x through +16x
+in exact 1/256 units, viewport anchoring, and sticky edge clamps. The common
+path uses checked 64-bit arithmetic with **no allocations**; arithmetic
+overflow uses an exact BigInteger fallback. `LayerPosition.clip` writes
+half-open intersections into caller-owned `int[4]` scratch.
+
+`ViewportRuntime.PinnedPlanes` is a four-region specialization for BODY,
+HEADER, FROZEN and CORNER, including distinct X/Y invalidation masks.
+Its native Tree mapping has no additional native HWND/GTK widget/NSView,
+and its geometry projection is expressed through the general positioning
+kernel. Native header controls remain the original platform owners.
+
+**Important limits:** the fixed/sticky/parallax policy is currently a shared
+model primitive. Automatic assignment of arbitrary policies to all Canvas,
+Tree, Table and Nebula layers, sticky section ownership/push-off, independent
+input/accessibility routing, and all-platform rendering remain **pending**.
+Do not confuse geometry-kernel availability with finished widgets.
+
+The source JUnit `Test_ViewportLayerPosition` is registered in `AllTests`.
+A standalone OpenJDK 21 model comparison exercised 200,000 exact
+BigInteger cases; separate pinned-plane testing exercised 200,000
+rectangle comparisons. This is not full SWT GUI/pixel/JNI proof.
