@@ -1337,4 +1337,81 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             assertSameAsAFullRecomposition();
         }
     }
+
+    @Test
+    public void testAGroupHeaderSticksUnderTheColumnHeaderUntilTheNextGroupPushesItAway() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer rows = viewport.addPaintLayer("rows", 0, 0, 4000, 4000, (gc, ctx) -> {
+            Rectangle clip = ctx.clip();
+            for (int y = clip.y; y < clip.y + clip.height; y++) {
+                boolean blue = Math.floorMod(ctx.originY() + y, 20) < 10;
+                gc.setForeground(gc.getDevice().getSystemColor(blue ? SWT.COLOR_BLUE : SWT.COLOR_WHITE));
+                gc.drawLine(clip.x, y, clip.x + clip.width - 1, y);
+            }
+        });
+        // group A spans world y 100 to 300, group B 300 to 600; each header is 16 high and sticks 20 below the top
+        Layer a = solid("group A", 0, 100, 200, 16, SWT.COLOR_YELLOW);
+        a.setSticky(SWT.VERTICAL, 20, 300);
+        Layer b = solid("group B", 0, 300, 200, 16, SWT.COLOR_GREEN);
+        b.setSticky(SWT.VERTICAL, 20, 600);
+        solid("columns", 0, 0, 200, 20, SWT.COLOR_RED).setPinned(SWT.VERTICAL);
+        assertEquals(SWT.VERTICAL, a.getSticky());
+        show();
+        RGB yellow = system(SWT.COLOR_YELLOW), green = system(SWT.COLOR_GREEN), red = system(SWT.COLOR_RED);
+        // origin, then the device y expected of A's and B's top (A pushed up by B and under the column header;
+        // at 90 A is stuck, at 70 it is not: the pan between them unsticks it with its ghost in view)
+        int[][] steps = { { 0, 100, 300 }, { 50, 50, 250 }, { 150, 20, 150 }, { 270, 14, 30 }, { 400, -116, 20 },
+                { 380, -96, 20 }, { 90, 20, 210 }, { 70, 30, 230 }, { 150, 20, 150 } };
+        for (int[] step : steps) {
+            viewport.setOrigin(0, step[0]);
+            viewport.update();
+            ImageData shown = pixels();
+            String at = " at origin " + step[0];
+            assertEquals(red, rgb(shown, 100, 5), "the column header stays on top" + at);
+            if (step[1] + 15 >= 20) assertEquals(yellow, rgb(shown, 100, step[1] + 15), "A's last line" + at);
+            if (step[1] + 15 >= 20) assertEquals(yellow, rgb(shown, 2, step[1] + 15), "A sticks only vertically" + at);
+            if (step[2] < 240) assertEquals(green, rgb(shown, 100, step[2]), "B's first line" + at);
+            if (step[1] > 20) assertNotEquals(yellow, rgb(shown, 100, step[1] - 1), "above A" + at);
+            assertSameAsAFullRecomposition();
+        }
+        // hit testing and pointer events keep A's own world coordinates while it is stuck
+        assertSame(a, viewport.hitTest(100, 25));
+        List<LayerPointerEvent> events = new ArrayList<>();
+        a.setPointerListener(events::add);
+        rows.setPointerListener(events::add);
+        pointer(SWT.MouseMove, 100, 25, 0);
+        assertSame(a, events.get(0).layer());
+        assertEquals(105, events.get(0).worldY(), "stuck at origin 150 + 20: A's line 5 is under device line 25");
+        pointer(SWT.MouseMove, 100, 60, 0);
+        assertSame(rows, events.get(1).layer());
+        assertEquals(210, events.get(1).worldY());
+    }
+
+    @Test
+    public void testAStickyColumnAndItsArguments() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer column = solid("column", 100, 0, 30, 200, SWT.COLOR_MAGENTA);
+        column.setSticky(SWT.HORIZONTAL, 0, 1000);
+        show();
+        viewport.setOrigin(150, 0);
+        viewport.update();
+        assertEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 5, 50), "stuck at the left edge");
+        assertNotEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 35, 50));
+        assertSameAsAFullRecomposition();
+        viewport.setOrigin(140, 0);
+        viewport.update();
+        viewport.setOrigin(90, 0); // unstuck by a pan wider than the column: its ghost lands beside it
+        viewport.update();
+        assertEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 15, 50));
+        assertSameAsAFullRecomposition();
+        viewport.setOrigin(1000, 0);
+        viewport.update();
+        assertNotEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 5, 50), "pushed out past its limit");
+        column.setSticky(SWT.NONE, 0, 0);
+        viewport.setOrigin(150, 0);
+        viewport.update();
+        assertNotEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 5, 50), "no longer sticky: at world x 100");
+        assertSameAsAFullRecomposition();
+        assertThrows(IllegalArgumentException.class, () -> column.setSticky(SWT.HORIZONTAL | SWT.VERTICAL, 0, 0));
+    }
 }

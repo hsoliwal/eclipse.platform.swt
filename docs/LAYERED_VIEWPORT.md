@@ -32,6 +32,7 @@ of existing Canvas, Composite, Control.moveAbove/moveBelow, or ScrolledComposite
 | retained layers | `Layer.setRetained(true)` keeps the composite of that layer and everything below it in an image of its own with its own dirty region (Photoshop's flatten-below kept as a cache): a change above it is recomposed from that image and the layers beneath are not repainted; a paint brings the retained composites up to date bottom to top, each from the one below it; `Layer.redraw()` declares a layer's own content changed |
 | invalidation | a layer change dirties the store and the retained composites at or above its Z index (batched changes keep that precision); old and new projected layer bounds, `redraw()`, zoom: their pixels become dirty; a whole-pixel pan at zoom 1 moves the retained pixels (and the dirty region) and dirties only the band that comes into view; other pans recompose the view |
 | pinned layers | `Layer.setPinned(SWT.HORIZONTAL / SWT.VERTICAL / both / SWT.NONE)`: on a pinned axis the layer's world coordinates are measured from the view's origin, so a pan along that axis leaves it in place while the layers under and over it move; zoom still applies. Its bounds, clip, painter `PaintContext` origin, hit tester and pointer events use those view-relative coordinates; a pinned control layer's control and a pinned native layer stay put too. Pinned layers are kept out of the world-space rectangle index (a pan would move them in it) and merged by Z into each paint and hit query, so a pan never rebuilds the index; a whole-pixel pan still blits the store, and only each pinned layer's place and its blitted ghost are recomposed (in the store and in the retained composites at or above it) |
+| sticky layers | `Layer.setSticky(axis, inset, limit)`, CSS `position: sticky` on one axis: the layer moves with the world until its leading edge comes within `inset` world units of the view's leading edge, stays there while the view pans on, and moves with the world again once its trailing edge reaches `limit` (the end of its group). It is projected from a per-layer origin (the view's less how far it has been carried), so like a pinned layer it keeps its own world coordinates for painting, clipping and picking, stays out of the rectangle index, and after a blit pan only its place and its ghost are recomposed |
 | virtualization | offscreen layer painting culled by the GC dirty clip |
 | hit testing | topmost bounding rectangle, optional application hit tester |
 | resource contract | borrowed images and paint GCs never disposed by viewport |
@@ -70,14 +71,15 @@ pixels.
 | map or diagram with a legend, a scale bar, a minimap | the map (retained), the overlays (world), the legend and the minimap pinned on both axes |
 | editor gutter | the text (world) under line numbers and folding marks pinned horizontally |
 | HUD, toasts, a floating toolbar | content (world) under layers pinned on both axes; a native control layer for real buttons |
+| grouped tree or list (mail, a file manager by date, contacts by letter) | rows (world), each group's header sticky vertically with the group's end as its limit, under the column header pinned vertically: a group header sticks under the column header while its group scrolls by and the next group's header pushes it away |
+| timeline, Gantt chart | lanes (world), lane labels sticky or pinned horizontally, the time axis pinned vertically, today's marker (world) |
 
 A layer above a pinned one in Z still paints over it (a tooltip or a drag image
 over the header), and hit testing follows the same order.
 
-Next for this family: sticky layers (CSS `position: sticky`, a group header that
-scrolls with its rows until it reaches the top, then pins until its group has
-scrolled past), per-layer scroll ratios (parallax, a timeline's coarse and fine
-bands) and frozen planes as `ViewportRuntime` FROZEN and HEADER roles.
+Next for this family: per-layer scroll ratios (parallax, a timeline's coarse and
+fine bands), sticky on both axes at once, and frozen planes as `ViewportRuntime`
+FROZEN and HEADER roles.
 
 ## Next implementation boundaries
 

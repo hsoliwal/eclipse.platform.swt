@@ -140,6 +140,10 @@ public final class LayeredViewport extends Canvas {
         private WorldBounds worldClip;
         /* SWT.HORIZONTAL and/or SWT.VERTICAL: the axes on which the layer is measured from the view's origin */
         private int pinned;
+        /* the axis (SWT.HORIZONTAL or SWT.VERTICAL) the layer sticks on, or 0; its inset from the view's leading
+           edge and the world coordinate its trailing edge does not pass */
+        private int sticky;
+        private long stickyInset, stickyLimit;
 
         private Layer(long id, String name, long x, long y,
                 long width, long height, Image image, LayerPainter painter) {
@@ -232,6 +236,34 @@ public final class LayeredViewport extends Canvas {
             if (pinned == value) return;
             invalidate(this);
             pinned = value;
+            spatialDirty = true;
+            invalidate(this);
+            placeControl(this);
+            syncNative();
+        }
+
+        /** The axis this layer is sticky on ({@link SWT#HORIZONTAL} or {@link SWT#VERTICAL}), or {@link SWT#NONE}. */
+        public int getSticky() {
+            checked();
+            return sticky;
+        }
+
+        /**
+         * Makes the layer sticky on one axis, like CSS {@code position: sticky}: it moves with the world until its
+         * leading edge comes within {@code inset} world units of the view's leading edge, stays there while the view
+         * pans on, and moves with the world again once its trailing edge reaches {@code limit}, the end of its
+         * group. A tree's or a list's group header sticks under the column header while its group scrolls by and is
+         * then pushed away by the next group's header. {@link SWT#NONE} ends it. Like a pinned layer, its bounds,
+         * clip, painter context, hit tester and pointer events keep its own world coordinates; a pinned axis wins.
+         */
+        public void setSticky(int axis, long inset, long limit) {
+            checked();
+            if (axis != SWT.NONE && axis != SWT.HORIZONTAL && axis != SWT.VERTICAL) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (sticky == axis && stickyInset == inset && stickyLimit == limit) return;
+            invalidate(this);
+            sticky = axis;
+            stickyInset = inset;
+            stickyLimit = limit;
             spatialDirty = true;
             invalidate(this);
             placeControl(this);
@@ -492,8 +524,8 @@ public final class LayeredViewport extends Canvas {
         @Override public int size() { return paintOrder.length; }
         @Override public boolean active(int at) {
             Layer layer = paintOrder[at];
-            // pinned layers are found through pinnedZ: a pan moves them in world space
-            if (layer.removed || !layer.visible || layer.opacity == 0 || layer.pinned != 0) return false;
+            // pinned and sticky layers are found through pinnedZ: a pan moves them in world space
+            if (layer.removed || !layer.visible || layer.opacity == 0 || viewRelative(layer)) return false;
             WorldBounds clip = layer.worldClip;
             return clip == null || (Math.max(layer.x, clip.x()) <
                     Math.min(layer.right, clip.x() + clip.width()) &&
@@ -522,7 +554,7 @@ public final class LayeredViewport extends Canvas {
     private final ViewportDamageRegion pendingDamage = new ViewportDamageRegion();
     private Layer[] paintCandidates = new Layer[16];
     private Layer[] hitCandidates = new Layer[16];
-    /* the Z indices, ascending, of the shown pinned layers, collected with the spatial index */
+    /* the Z indices, ascending, of the shown pinned and sticky layers, collected with the spatial index */
     private int[] pinnedZ = new int[4];
     private int pinnedCount;
     private boolean spatialDirty = true;
@@ -1105,7 +1137,7 @@ public final class LayeredViewport extends Canvas {
             pinnedCount = 0;
             for (int z = 0; z < paintOrder.length; z++) {
                 Layer layer = paintOrder[z];
-                if (layer.pinned == 0 || layer.removed || !layer.visible || layer.opacity == 0) continue;
+                if (!viewRelative(layer) || layer.removed || !layer.visible || layer.opacity == 0) continue;
                 if (pinnedCount == pinnedZ.length) pinnedZ = Arrays.copyOf(pinnedZ, 2 * pinnedCount);
                 pinnedZ[pinnedCount++] = z;
             }
@@ -1127,13 +1159,30 @@ public final class LayeredViewport extends Canvas {
         return pinnedZ[p];
     }
 
-    /* the origin a layer is projected from on each axis: the view's, or 0 where the layer is pinned */
+    /* whether a pan moves the layer in world space: it is pinned or sticky */
+    private static boolean viewRelative(Layer layer) {
+        return layer.pinned != 0 || layer.sticky != 0;
+    }
+
+    /* the origin a layer is projected from on each axis */
     private long layerOriginX(Layer layer) {
-        return (layer.pinned & SWT.HORIZONTAL) != 0 ? 0 : originX;
+        return layerOrigin(layer, SWT.HORIZONTAL, originX);
     }
 
     private long layerOriginY(Layer layer) {
-        return (layer.pinned & SWT.VERTICAL) != 0 ? 0 : originY;
+        return layerOrigin(layer, SWT.VERTICAL, originY);
+    }
+
+    /*
+     * the origin a layer is projected from on one axis when the view's origin there is {@code origin}: 0 where it is
+     * pinned; where it is sticky and stuck, the view's less how far the layer has been carried past its own place
+     */
+    private static long layerOrigin(Layer layer, int axis, long origin) {
+        if ((layer.pinned & axis) != 0) return 0;
+        if (layer.sticky != axis) return origin;
+        long start = axis == SWT.HORIZONTAL ? layer.x : layer.y, end = axis == SWT.HORIZONTAL ? layer.right : layer.bottom;
+        long stuck = Math.min(saturatedAdd(origin, layer.stickyInset), saturatedAdd(layer.stickyLimit, start - end));
+        return stuck > start ? saturatedAdd(origin, start - stuck) : origin;
     }
 
     /* a device point's world coordinates as a layer sees them */
@@ -1273,7 +1322,10 @@ public final class LayeredViewport extends Canvas {
     }
 
     private Rectangle projectedClip(Layer layer, Rectangle damage) {
-        long ox = layerOriginX(layer), oy = layerOriginY(layer);
+        return projectedClip(layer, layerOriginX(layer), layerOriginY(layer), damage);
+    }
+
+    private Rectangle projectedClip(Layer layer, long ox, long oy, Rectangle damage) {
         Rectangle visible = projectedClip(layer.x, layer.y, layer.right, layer.bottom, ox, oy, damage);
         if (visible == null || layer.worldClip == null) return visible;
         WorldBounds clip = layer.worldClip;
@@ -1533,29 +1585,31 @@ public final class LayeredViewport extends Canvas {
         for (Layer layer : orderSnapshot()) {
             if (layer.composite != null) shiftStore(layer.composite, layer.stale, sx, sy, size);
         }
-        repairPinned(sx, sy, size);
+        repairPinned(previousX, previousY, sx, sy, size);
         super.redraw();
         return true;
     }
 
     /*
-     * after a blit by (sx, sy): a pinned layer did not move on its pinned axes, so the store shows a ghost of it
-     * shifted by the pan there, and its own place shows what was under the ghost; both are recomposed
+     * after a blit by (sx, sy) from the origin (previousX, previousY): a pinned or sticky layer that did not move
+     * with the world has a ghost where the blit put its old pixels, and its own place shows what was under the
+     * ghost; both are recomposed
      */
-    private void repairPinned(int sx, int sy, Rectangle size) {
+    private void repairPinned(long previousX, long previousY, int sx, int sy, Rectangle size) {
         Rectangle view = new Rectangle(0, 0, size.width, size.height);
         Rectangle reach = new Rectangle(-Math.abs(sx), -Math.abs(sy), size.width + 2 * Math.abs(sx),
                 size.height + 2 * Math.abs(sy));
         Layer[] frame = orderSnapshot();
         for (int z = 0; z < frame.length; z++) {
             Layer layer = frame[z];
-            if (layer.pinned == 0 || layer.removed || !layer.visible || layer.opacity == 0 || layer.nativeLayer != 0) continue;
-            int gx = (layer.pinned & SWT.HORIZONTAL) != 0 ? sx : 0, gy = (layer.pinned & SWT.VERTICAL) != 0 ? sy : 0;
-            if (gx == 0 && gy == 0) continue; // the pan was along its free axes: it moved with everything else
+            if (!viewRelative(layer) || layer.removed || !layer.visible || layer.opacity == 0 || layer.nativeLayer != 0) continue;
             Rectangle now = projectedClip(layer, reach);
-            if (now == null) continue;
-            Rectangle place = intersect(now, view);
-            Rectangle ghost = intersect(new Rectangle(now.x + gx, now.y + gy, now.width, now.height), view);
+            Rectangle old = projectedClip(layer, layerOrigin(layer, SWT.HORIZONTAL, previousX),
+                    layerOrigin(layer, SWT.VERTICAL, previousY), reach);
+            Rectangle moved = old == null ? null : new Rectangle(old.x + sx, old.y + sy, old.width, old.height);
+            if (moved == null ? now == null : moved.equals(now)) continue; // it moved with everything else
+            Rectangle place = now == null ? null : intersect(now, view);
+            Rectangle ghost = moved == null ? null : intersect(moved, view);
             for (Rectangle r : new Rectangle[] { place, ghost }) {
                 if (r == null) continue;
                 dirty.add(r.x, r.y, r.width, r.height);
