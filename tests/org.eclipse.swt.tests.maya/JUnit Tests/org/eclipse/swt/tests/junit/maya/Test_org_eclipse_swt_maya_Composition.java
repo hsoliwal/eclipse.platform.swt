@@ -191,6 +191,10 @@ public class Test_org_eclipse_swt_maya_Composition {
 		assertNotEquals(0, MayaComposition._nUpload(red, new int[SIZE]), "too few pixels");
 		assertNotEquals(0, MayaComposition._nUpload(0, new int[SIZE * SIZE]));
 		assertNotEquals(0, MayaComposition._nApply(composition, new long[] { red }, new float[2], 1), "too few properties");
+		assertNotEquals(0, MayaComposition._nApply(composition, null, new float[0], 0), "null handles");
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[0], null, 0), "null properties");
+		assertNotEquals(0, MayaComposition._nApply(composition, new long[0], new float[0],
+				Integer.MAX_VALUE), "the property count must never overflow");
 		assertNotEquals(0, MayaComposition._nApply(0, new long[0], new float[0], 0));
 	}
 }
