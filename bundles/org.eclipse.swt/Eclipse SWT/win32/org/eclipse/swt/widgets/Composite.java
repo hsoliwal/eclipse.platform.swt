@@ -26,7 +26,7 @@ import org.eclipse.swt.internal.win32.*;
  * of containing other controls.
  * <dl>
  * <dt><b>Styles:</b></dt>
- * <dd>NO_BACKGROUND, NO_FOCUS, NO_MERGE_PAINTS, NO_REDRAW_RESIZE, NO_RADIO_GROUP, EMBEDDED, DOUBLE_BUFFERED</dd>
+ * <dd>NO_BACKGROUND, NO_FOCUS, NO_MERGE_PAINTS, NO_REDRAW_RESIZE, NO_RADIO_GROUP, EMBEDDED, DOUBLE_BUFFERED; SHADOW_IN, SHADOW_OUT, SHADOW_ETCHED_IN, SHADOW_ETCHED_OUT (native Win32 bezel hints for direct Composite and Canvas)</dd>
  * <dt><b>Events:</b></dt>
  * <dd>(none)</dd>
  * </dl>
@@ -58,6 +58,26 @@ public class Composite extends Scrollable {
 	int layoutCount, backgroundMode;
 
 	static final int TOOLTIP_LIMIT = 4096;
+	private static final int BEVEL_MASK = SWT.SHADOW_IN | SWT.SHADOW_OUT
+			| SWT.SHADOW_ETCHED_IN | SWT.SHADOW_ETCHED_OUT;
+
+	/*
+	 * These shadow bits overlap style bits on other widgets. Limit the opt-in
+	 * native bevel to ordinary Composite and Canvas; subclasses preserve their
+	 * existing independent interpretation of the bits.
+	 */
+	private int nativeBevelEdge () {
+		if (getClass () != Composite.class && getClass () != Canvas.class) return 0;
+		int shadow = style & BEVEL_MASK;
+		if (Integer.bitCount (shadow) != 1) return 0;
+		return switch (shadow) {
+			case SWT.SHADOW_IN -> OS.EDGE_SUNKEN;
+			case SWT.SHADOW_OUT -> OS.EDGE_RAISED;
+			case SWT.SHADOW_ETCHED_IN -> OS.EDGE_ETCHED;
+			case SWT.SHADOW_ETCHED_OUT -> OS.EDGE_BUMP;
+			default -> 0;
+		};
+	}
 
 /**
  * Prevents uninitialized instances from being created outside the package.
@@ -1472,9 +1492,21 @@ void updateUIState () {
 }
 
 @Override
+int widgetExtStyle () {
+	int bits = super.widgetExtStyle ();
+	if (nativeBevelEdge () != 0) {
+		/* Reserve the native non-client edge, including when SWT.BORDER is absent. */
+		bits |= OS.WS_EX_CLIENTEDGE;
+	}
+	return bits;
+}
+
+@Override
 int widgetStyle () {
-	/* Force clipping of children by setting WS_CLIPCHILDREN */
-	return super.widgetStyle () | OS.WS_CLIPCHILDREN;
+	/* A bevel replaces WS_BORDER; combining it with SWT.BORDER must not double trim. */
+	int bits = super.widgetStyle () | OS.WS_CLIPCHILDREN;
+	if (nativeBevelEdge () != 0) bits &= ~OS.WS_BORDER;
+	return bits;
 }
 
 @Override
@@ -2031,6 +2063,31 @@ LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
         return result;
     }
 	long borderHandle = borderHandle ();
+	int edge = nativeBevelEdge ();
+	if (edge != 0 && hwnd == borderHandle) {
+		int extStyle = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
+		if ((extStyle & OS.WS_EX_CLIENTEDGE) != 0) {
+			long hDC = OS.GetWindowDC (hwnd);
+			if (hDC != 0) {
+				int bits = OS.GetWindowLong (hwnd, OS.GWL_STYLE);
+				long code = (bits & (OS.WS_HSCROLL | OS.WS_VSCROLL)) != 0
+						? callWindowProc (hwnd, OS.WM_NCPAINT, wParam, lParam) : 0;
+				RECT rect = new RECT ();
+				OS.GetWindowRect (hwnd, rect);
+				rect.right -= rect.left;
+				rect.bottom -= rect.top;
+				rect.left = rect.top = 0;
+				int inset = getSystemMetrics (OS.SM_CXEDGE);
+				/* DrawEdge is a native GDI frame operation; do not touch client pixels. */
+				OS.ExcludeClipRect (hDC, inset, inset,
+						Math.max (inset, rect.right - inset),
+						Math.max (inset, rect.bottom - inset));
+				OS.DrawEdge (hDC, rect, edge, OS.BF_RECT);
+				OS.ReleaseDC (hwnd, hDC);
+				return new LRESULT (code);
+			}
+		}
+	}
 	if ((state & CANVAS) != 0 || (hwnd == borderHandle && handle != borderHandle)) {
 		int bits1 = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
 		if ((bits1 & OS.WS_EX_CLIENTEDGE) != 0) {

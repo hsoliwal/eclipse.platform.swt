@@ -10,6 +10,7 @@
 package org.eclipse.swt.custom;
 
 import java.util.Arrays;
+import java.util.function.Predicate;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
@@ -109,6 +110,486 @@ public final class LayeredViewport extends Canvas {
         void handle(LayerPointerEvent event);
     }
 
+
+    /** A paint callback for a child of a composited layer group. */
+    @FunctionalInterface
+    public interface GroupPainter {
+        void paint(GC gc, GroupPaintContext context);
+    }
+
+    /** Hit testing for a group child; coordinates are relative to its group. */
+    @FunctionalInterface
+    public interface GroupHitTester {
+        boolean contains(LayerGroup.Child child, long localX, long localY);
+    }
+
+    /**
+     * Painting coordinates for a group child. Children use group-local
+     * world units; a pinned or sticky root is projected consistently with
+     * the parent layer. The callback may only use the borrowed GC in scope.
+     */
+    public record GroupPaintContext(LayerGroup.Child child, Rectangle clip,
+            double groupPixelX, double groupPixelY, double zoom) {
+        public Point toScreen(long localX, long localY) {
+            return new Point(saturatedPixel(groupPixelX + localX * zoom),
+                    saturatedPixel(groupPixelY + localY * zoom));
+        }
+    }
+
+    /**
+     * A single, reorderable Z item containing multiple painters and images.
+     *
+     * <p>The whole group is one ordinary painted {@link Layer}; setting the
+     * root's opacity uses the existing isolated painter composition. Thus
+     * overlapping child shapes receive group opacity once, and moving the
+     * root moves the children without changing their local bounds. Children
+     * are logical handles, never SWT native Controls.</p>
+     *
+     * <p>For predictable composition the first implementation is one level
+     * deep: each child paints normally inside the group's clipping bounds.
+     * Per-child opacity, nested blend groups and arbitrary masks require
+     * separate intermediate surfaces and are not advertised here.</p>
+     */
+    public final class LayerGroup {
+        private Layer root;
+        private Child[] children = new Child[8];
+        private Child[] order = new Child[0];
+        private int size;
+        private long nextChildId = 1;
+        private boolean orderDirty;
+        private boolean spatialDirty = true;
+        private final LayerRectIndex spatialIndex = new LayerRectIndex();
+        private final LayerRectIndex.Bounds spatialSource = new LayerRectIndex.Bounds() {
+            @Override public int size() { return order.length; }
+            @Override public boolean active(int at) {
+                Child c = order[at];
+                return !c.removed && c.visible;
+            }
+            @Override public long left(int at) { return order[at].x; }
+            @Override public long top(int at) { return order[at].y; }
+            @Override public long right(int at) { return order[at].right; }
+            @Override public long bottom(int at) { return order[at].bottom; }
+        };
+        private Child[] paintCandidates = new Child[16];
+        private Child[] hitCandidates = new Child[16];
+        private int activeGroupPaints;
+        private int activeChildHits;
+
+        /** Stable group-local handle; bounds are relative to the root. */
+        public final class Child {
+            private final long id;
+            private String name;
+            private long x, y, right, bottom;
+            private boolean visible = true;
+            private boolean locked;
+            private boolean removed;
+            private Image image;
+            private GroupPainter painter;
+            private GroupHitTester hitTester;
+
+            private Child(long id, String name, long x, long y, long width,
+                    long height, Image image, GroupPainter painter) {
+                this.id = id;
+                this.name = name;
+                this.x = x;
+                this.y = y;
+                right = x + width;
+                bottom = y + height;
+                this.image = image;
+                this.painter = painter;
+            }
+
+            private void checked() {
+                LayerGroup.this.checked();
+                if (removed) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+
+            public long getId() {
+                checked();
+                return id;
+            }
+
+            public String getName() {
+                checked();
+                return name;
+            }
+
+            public void setName(String value) {
+                checked();
+                if (value == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+                name = value;
+            }
+
+            /** Bounds relative to the layer group's origin. */
+            public WorldBounds getLocalBounds() {
+                checked();
+                return new WorldBounds(x, y, right - x, bottom - y);
+            }
+
+            public void setLocalBounds(long localX, long localY, long width, long height) {
+                checked();
+                validateBounds(localX, localY, width, height);
+                if (x == localX && y == localY
+                        && right == localX + width && bottom == localY + height) return;
+                root.redraw();
+                x = localX;
+                y = localY;
+                right = localX + width;
+                bottom = localY + height;
+                spatialDirty = true;
+            }
+
+            public boolean isVisible() {
+                checked();
+                return visible;
+            }
+
+            public void setVisible(boolean value) {
+                checked();
+                if (visible == value) return;
+                visible = value;
+                spatialDirty = true;
+                root.redraw();
+            }
+
+            public boolean isLocked() {
+                checked();
+                return locked;
+            }
+
+            /** Locking excludes picking but does not change painting. */
+            public void setLocked(boolean value) {
+                checked();
+                locked = value;
+            }
+
+            public void setImage(Image value) {
+                checked();
+                if (value != null && value.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+                image = value;
+                painter = null;
+                root.redraw();
+            }
+
+            public void setPainter(GroupPainter value) {
+                checked();
+                painter = value;
+                image = null;
+                root.redraw();
+            }
+
+            public void setHitTester(GroupHitTester value) {
+                checked();
+                hitTester = value;
+            }
+
+            public int getZIndex() {
+                checked();
+                return indexOf(this);
+            }
+
+            /** Group-local Z order; the entire group remains one parent Z item. */
+            public void moveTo(int z) {
+                checked();
+                if (z < 0 || z >= size) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+                int previous = indexOf(this);
+                if (previous == z) return;
+                if (previous < z) {
+                    System.arraycopy(children, previous + 1, children, previous, z - previous);
+                } else {
+                    System.arraycopy(children, z, children, z + 1, previous - z);
+                }
+                children[z] = this;
+                orderDirty = true;
+                root.redraw();
+            }
+
+            /** Does not dispose caller-owned images. */
+            public void remove() {
+                checked();
+                int at = indexOf(this);
+                System.arraycopy(children, at + 1, children, at, size - at - 1);
+                children[--size] = null;
+                removed = true;
+                image = null;
+                painter = null;
+                hitTester = null;
+                orderDirty = true;
+                root.redraw();
+            }
+        }
+
+        private void checked() {
+            LayeredViewport.this.checkWidget();
+            root.checked();
+        }
+
+        /** The group's parent Z-stack item; use it for opacity, clip and pan pinning. */
+        public Layer getLayer() {
+            checked();
+            return root;
+        }
+
+        public Child addPaintChild(String name, long localX, long localY,
+                long width, long height, GroupPainter painter) {
+            checked();
+            if (name == null || painter == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            return appendChild(name, localX, localY, width, height, null, painter);
+        }
+
+        public Child addImageChild(String name, Image image, long localX, long localY) {
+            checked();
+            if (name == null || image == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            if (image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            Rectangle bounds = image.getBounds();
+            return appendChild(name, localX, localY, bounds.width, bounds.height, image, null);
+        }
+
+        private Child appendChild(String name, long localX, long localY,
+                long width, long height, Image image, GroupPainter painter) {
+            validateBounds(localX, localY, width, height);
+            if (nextChildId == Long.MAX_VALUE) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (size == children.length) children = Arrays.copyOf(children, size * 2);
+            Child child = new Child(nextChildId++, name, localX, localY, width, height, image, painter);
+            children[size++] = child;
+            orderDirty = true;
+            root.redraw();
+            return child;
+        }
+
+        /** Bottom-to-top immutable-by-caller snapshot of child handles. */
+        public Child[] getChildren() {
+            checked();
+            return orderSnapshot().clone();
+        }
+
+        private Child[] orderSnapshot() {
+            if (orderDirty) {
+                order = Arrays.copyOf(children, size);
+                orderDirty = false;
+                spatialDirty = true;
+            }
+            return order;
+        }
+
+        private int indexOf(Child child) {
+            for (int i = 0; i < size; i++) if (children[i] == child) return i;
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            return -1;
+        }
+
+        private boolean containsAny(long worldX, long worldY) {
+            return findChild(worldX - root.x, worldY - root.y) != null;
+        }
+
+        /**
+         * Topmost visible unlocked child at a widget pixel, or null.
+         * The parent layer's own bounds, clip, visibility and lock apply.
+         */
+        public Child hitTestChild(int deviceX, int deviceY) {
+            return queryChildHit(deviceX, deviceY, null);
+        }
+
+        /**
+         * Exclusion/acceptance search for editor drop targets and selection handles.
+         * The predicate is invoked front-to-back only for hittable children and may
+         * mutate the scene; a rejected child never changes its Z order or capture.
+         * Unlike a native SWT Control, a group child is only a logical object.
+         */
+        public Child hitTestChild(int deviceX, int deviceY, Predicate<? super Child> accept) {
+            if (accept == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+            return queryChildHit(deviceX, deviceY, accept);
+        }
+
+        private Child queryChildHit(int deviceX, int deviceY, Predicate<? super Child> accept) {
+            checked();
+            if (!getClientArea().contains(deviceX, deviceY)) return null;
+            long x = layerX(root, deviceX), y = layerY(root, deviceY);
+            if (!containsHit(root, x, y)) return null;
+            return findChild(x - root.x, y - root.y, accept, deviceX, deviceY);
+        }
+
+        private void ensureChildIndex() {
+            orderSnapshot();
+            if (spatialDirty) {
+                spatialIndex.rebuild(spatialSource);
+                spatialDirty = false;
+            }
+        }
+
+        private Child[] growPaintCandidates(int selected) {
+            if (paintCandidates.length < selected) {
+                paintCandidates = Arrays.copyOf(paintCandidates, selected);
+            }
+            return paintCandidates;
+        }
+
+        private Child[] growHitCandidates(int selected) {
+            if (hitCandidates.length < selected) {
+                hitCandidates = Arrays.copyOf(hitCandidates, selected);
+            }
+            return hitCandidates;
+        }
+
+        private Child findChild(long x, long y) {
+            return findChild(x, y, null, 0, 0);
+        }
+
+        private Child findChild(long x, long y, Predicate<? super Child> accept,
+                int deviceX, int deviceY) {
+            Child[] frame = orderSnapshot();
+            int selected;
+            Child[] candidates;
+            if (frame.length <= 32) {
+                selected = frame.length;
+                candidates = activeChildHits == 0 ? growHitCandidates(selected) : new Child[selected];
+                System.arraycopy(frame, 0, candidates, 0, selected);
+            } else {
+                ensureChildIndex();
+                int found = spatialIndex.query(x, y, saturatedAdd(x, 1), saturatedAdd(y, 1));
+                selected = found;
+                candidates = activeChildHits == 0 ? growHitCandidates(selected) : new Child[selected];
+                for (int k = 0; k < selected; k++) candidates[k] = frame[spatialIndex.resultAt(k)];
+            }
+            activeChildHits++;
+            try {
+                for (int k = selected - 1; k >= 0; k--) {
+                    if (isDisposed()) return null;
+                    Child c = candidates[k];
+                    if (!candidate(c, x, y)) continue;
+                    GroupHitTester tester = c.hitTester;
+                    boolean accepted = tester == null || tester.contains(c, x, y);
+                    if (isDisposed()) return null;
+                    if (accepted && candidate(c, x, y)) {
+                        if (accept == null) return c;
+                        boolean included = accept.test(c);
+                        if (isDisposed()) return null;
+                        // The callback can move its parent, remove the child or
+                        // change a pinned axis. Recheck in current device space.
+                        if (included) {
+                            long currentX = layerX(root, deviceX), currentY = layerY(root, deviceY);
+                            if (containsHit(root, currentX, currentY)
+                                    && candidate(c, currentX - root.x, currentY - root.y)) return c;
+                        }
+                    }
+                }
+                return null;
+            } finally {
+                Arrays.fill(candidates, 0, selected, null);
+                activeChildHits--;
+            }
+        }
+
+        private boolean candidate(Child c, long x, long y) {
+            return !c.removed && c.visible && !c.locked
+                    && x >= c.x && x < c.right && y >= c.y && y < c.bottom;
+        }
+
+        private void paint(GC gc, PaintContext context) {
+            Child[] frame = orderSnapshot();
+            double baseX = device(root.x, context.originX());
+            double baseY = device(root.y, context.originY());
+            Rectangle damage = context.clip();
+            int selected;
+            Child[] candidates;
+            if (frame.length <= 32) {
+                selected = frame.length;
+                candidates = activeGroupPaints == 0 ? growPaintCandidates(selected) : new Child[selected];
+                System.arraycopy(frame, 0, candidates, 0, selected);
+            } else {
+                // The existing primitive spatial index is reused in group-local
+                // coordinates. The padding keeps fractional zoom conservative.
+                ensureChildIndex();
+                double scale = context.zoom();
+                long x0 = saturatedAdd(floorLong((damage.x - baseX) / scale), -1);
+                long y0 = saturatedAdd(floorLong((damage.y - baseY) / scale), -1);
+                long x1 = saturatedAdd(ceilLong(((double) damage.x + damage.width - baseX) / scale), 1);
+                long y1 = saturatedAdd(ceilLong(((double) damage.y + damage.height - baseY) / scale), 1);
+                selected = spatialIndex.query(x0, y0, x1, y1);
+                candidates = activeGroupPaints == 0 ? growPaintCandidates(selected) : new Child[selected];
+                for (int i = 0; i < selected; i++) candidates[i] = frame[spatialIndex.resultAt(i)];
+            }
+            activeGroupPaints++;
+            try {
+                for (int i = 0; i < selected; i++) {
+                    if (isDisposed() || gc.isDisposed()) return;
+                    Child child = candidates[i];
+                    if (child.removed || !child.visible) continue;
+                    Rectangle tile = clipChild(child, baseX, baseY, damage, context.zoom());
+                    if (tile == null) continue;
+                    try (ViewportGcProxy state = ViewportGcProxy.wrap(gc)) {
+                        state.clip(tile);
+                        if (child.image != null) {
+                            if (!child.image.isDisposed()) {
+                                double left = baseX + child.x * context.zoom();
+                                double top = baseY + child.y * context.zoom();
+                                double right = baseX + child.right * context.zoom();
+                                double bottom = baseY + child.bottom * context.zoom();
+                                paintImage(gc, child.image, left, top, right, bottom, tile);
+                            }
+                        } else if (child.painter != null) {
+                            child.painter.paint(gc, new GroupPaintContext(
+                                    child, tile, baseX, baseY, context.zoom()));
+                        }
+                    }
+                }
+            } finally {
+                Arrays.fill(candidates, 0, selected, null);
+                activeGroupPaints--;
+            }
+        }
+
+        private void releaseChildren() {
+            for (int i = 0; i < size; i++) {
+                Child child = children[i];
+                child.removed = true;
+                child.image = null;
+                child.painter = null;
+                child.hitTester = null;
+                children[i] = null;
+            }
+            size = 0;
+            order = new Child[0];
+            spatialIndex.clear();
+            if (activeGroupPaints == 0) Arrays.fill(paintCandidates, null);
+            if (activeChildHits == 0) Arrays.fill(hitCandidates, null);
+            paintCandidates = new Child[0];
+            hitCandidates = new Child[0];
+            spatialDirty = true;
+            orderDirty = false;
+        }
+
+        private Rectangle clipChild(Child child, double baseX, double baseY,
+                Rectangle damage, double scale) {
+            // Child bounds are group-local. Root clipping is already imposed
+            // by the parent compositor; clip the child again, in device pixels.
+            double left = baseX + child.x * scale;
+            double top = baseY + child.y * scale;
+            double right = baseX + child.right * scale;
+            double bottom = baseY + child.bottom * scale;
+            int x0 = (int) Math.max((double) damage.x, Math.floor(left));
+            int y0 = (int) Math.max((double) damage.y, Math.floor(top));
+            int x1 = (int) Math.min((double) damage.x + damage.width, Math.ceil(right));
+            int y1 = (int) Math.min((double) damage.y + damage.height, Math.ceil(bottom));
+            return x1 > x0 && y1 > y0 ? new Rectangle(x0, y0, x1 - x0, y1 - y0) : null;
+        }
+    }
+
+    /**
+     * Creates one painted Z item with its own ordered logical children.
+     * Its opacity is isolated by the existing parent compositor, and its
+     * local children move when the root world bounds are repositioned.
+     */
+    public LayerGroup addLayerGroup(String name, long x, long y, long width, long height) {
+        checkWidget();
+        if (name == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        LayerGroup group = new LayerGroup();
+        group.root = append(name, x, y, width, height, null, group::paint);
+        group.root.childGroup = group;
+        group.root.setHitTester((layer, worldX, worldY) -> group.containsAny(worldX, worldY));
+        return group;
+    }
+
     /**
      * Stable logical handle. Removing the layer invalidates this handle,
      * but it does not dispose an Image supplied by its application.
@@ -138,6 +619,7 @@ public final class LayeredViewport extends Canvas {
         private LayerPainter painter;
         private LayerHitTester hitTester;
         private LayerPointerListener pointerListener;
+        private LayerGroup childGroup;
         private WorldBounds worldClip;
         /* SWT.HORIZONTAL and/or SWT.VERTICAL: the axes on which the layer is measured from the view's origin */
         private int pinned;
@@ -347,7 +829,6 @@ public final class LayeredViewport extends Canvas {
             invalidate(this);
         }
 
-
         /**
          * Updates only an image-local dirty rectangle on a compatible native
          * DirectComposition layer. An older maya DLL, missing native backend or
@@ -378,8 +859,7 @@ public final class LayeredViewport extends Canvas {
                 }
                 if (nativeBackend.uploadDirty(nativeLayer, packed,
                         new int[] { x, y, width, height }, 1) == 0) {
-                    applyNative(); // EndDraw alone is not a visible compositor Commit.
-                    return;
+                    if (applyNative()) return; // dirty-only frames also require a successful Commit
                 }
             }
             redraw();
@@ -536,6 +1016,10 @@ public final class LayeredViewport extends Canvas {
             hitTester = null;
             pointerListener = null;
             worldClip = null;
+            if (childGroup != null) {
+                childGroup.releaseChildren();
+                childGroup = null;
+            }
             publishOrder();
         }
     }
@@ -553,6 +1037,8 @@ public final class LayeredViewport extends Canvas {
 
     private static final double MIN_ZOOM = 1.0 / 4096.0;
     private static final double MAX_ZOOM = 4096.0;
+    /* Native raster blending amortizes JNI over several rows without retaining a full tile of int arrays. */
+    private static final int BLEND_BATCH_PIXELS = 16_384;
 
     private final ViewportRuntime viewportRuntime = new ViewportRuntime();
     private Layer[] stack = new Layer[8];
@@ -645,6 +1131,8 @@ public final class LayeredViewport extends Canvas {
             if (activeBackingPaints == 0) disposeBackingImages();
             for (int i = 0; i < count; i++) {
                 stack[i].removed = true;
+                if (stack[i].childGroup != null) stack[i].childGroup.releaseChildren();
+                stack[i].childGroup = null;
                 stack[i].releaseComposite();
                 stack[i].control = null;
                 stack[i].image = null;
@@ -790,6 +1278,19 @@ public final class LayeredViewport extends Canvas {
         return queryHit(deviceX, deviceY, false);
     }
 
+    /**
+     * Topmost hittable layer accepted by {@code accept}, or null. As in Draw2D's
+     * ExclusionSearch, callers can omit a dragged/selected layer and target the
+     * layers beneath it without changing scene order or native pointer capture.
+     * Filtering occurs after the layer's own hit tester; a callback may reenter
+     * or mutate the scene, and candidates are rechecked before returning.
+     */
+    public Layer hitTest(int deviceX, int deviceY, Predicate<? super Layer> accept) {
+        checkWidget();
+        if (accept == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        return queryHit(deviceX, deviceY, false, accept);
+    }
+
     private long worldX(int deviceX) {
         return saturatedAdd(originX, floorLong(deviceX / zoom));
     }
@@ -799,6 +1300,11 @@ public final class LayeredViewport extends Canvas {
     }
 
     private Layer queryHit(int deviceX, int deviceY, boolean withPointerListener) {
+        return queryHit(deviceX, deviceY, withPointerListener, null);
+    }
+
+    private Layer queryHit(int deviceX, int deviceY, boolean withPointerListener,
+            Predicate<? super Layer> accept) {
         if (!getClientArea().contains(deviceX, deviceY)) return null;
         ensureSpatialIndex();
         long worldX = worldX(deviceX), worldY = worldY(deviceY);
@@ -831,7 +1337,15 @@ public final class LayeredViewport extends Canvas {
                 // Callbacks can remove, move, hide or lock their own target,
                 // or another candidate captured by this query.
                 if (accepted && containsHit(layer, layerX(layer, deviceX), layerY(layer, deviceY))
-                        && (!withPointerListener || layer.pointerListener != null)) return layer;
+                        && (!withPointerListener || layer.pointerListener != null)) {
+                    if (accept == null) return layer;
+                    boolean included = accept.test(layer);
+                    if (isDisposed()) return null;
+                    // User filtering may change visibility, world origin, native
+                    // pinning or this very layer. Never return stale geometry.
+                    if (included && containsHit(layer, layerX(layer, deviceX), layerY(layer, deviceY))
+                            && (!withPointerListener || layer.pointerListener != null)) return layer;
+                }
             }
             return null;
         } finally {
@@ -1268,6 +1782,7 @@ public final class LayeredViewport extends Canvas {
      * source pixel, its alpha times the layer's opacity) by its mode, and written back once
      */
     private void paintBlended(GC[] back, Layer layer, Rectangle tile) {
+        if (tile.width <= 0 || tile.height <= 0) return;
         if (layer.blendSource == null) layer.blendSource = layer.image.getImageData();
         ImageData source = layer.blendSource;
         long ox = layerOriginX(layer), oy = layerOriginY(layer);
@@ -1278,22 +1793,34 @@ public final class LayeredViewport extends Canvas {
         try {
             back[0].copyArea(under, tile.x, tile.y);
             ImageData below = under.getImageData();
-            ImageDataArgb store = new ImageDataArgb(below); // whole rows, no object per pixel
-            int[] dst = new int[tile.width], src = new int[tile.width];
-            for (int j = 0; j < tile.height; j++) {
-                int sy = clipSource((tile.y + j + 0.5 - top) / height * source.height, source.height - 1, false);
-                for (int i = 0; i < tile.width; i++) {
-                    int sx = clipSource((tile.x + i + 0.5 - left) / width * source.width, source.width - 1, false);
-                    int pixel = source.getPixel(sx, sy);
-                    int alpha = source.alphaData != null ? source.getAlpha(sx, sy) : source.alpha >= 0 ? source.alpha : 255;
-                    if (source.transparentPixel >= 0 && pixel == source.transparentPixel) alpha = 0;
-                    org.eclipse.swt.graphics.RGB s = source.palette.getRGB(pixel);
-                    src[i] = alpha << 24 | (s.red * alpha + 127) / 255 << 16 | (s.green * alpha + 127) / 255 << 8
-                            | (s.blue * alpha + 127) / 255;
+            ImageDataArgb store = new ImageDataArgb(below); // whole-row conversion, no per-pixel RGB objects
+            ImageDataArgb sourceColors = new ImageDataArgb(source);
+            int rowsPerBatch = Math.max(1, BLEND_BATCH_PIXELS / tile.width);
+            int capacity = Math.min(rowsPerBatch, tile.height) * tile.width;
+            int[] dst = new int[capacity], src = new int[capacity];
+            for (int startRow = 0; startRow < tile.height; startRow += rowsPerBatch) {
+                int rows = Math.min(rowsPerBatch, tile.height - startRow);
+                for (int row = 0; row < rows; row++) {
+                    int j = startRow + row, base = row * tile.width;
+                    int sy = clipSource((tile.y + j + 0.5 - top) / height * source.height, source.height - 1, false);
+                    store.opaqueRow(j, dst, base);
+                    for (int i = 0; i < tile.width; i++) {
+                        int sx = clipSource((tile.x + i + 0.5 - left) / width * source.width, source.width - 1, false);
+                        int pixel = source.getPixel(sx, sy);
+                        int alpha = source.alphaData != null ? source.getAlpha(sx, sy) : source.alpha >= 0 ? source.alpha : 255;
+                        if (source.transparentPixel >= 0 && pixel == source.transparentPixel) alpha = 0;
+                        int rgb = sourceColors.rgb(pixel);
+                        src[base + i] = alpha << 24 | ((rgb >>> 16 & 0xFF) * alpha + 127) / 255 << 16
+                                | ((rgb >>> 8 & 0xFF) * alpha + 127) / 255 << 8
+                                | ((rgb & 0xFF) * alpha + 127) / 255;
+                    }
                 }
-                store.opaqueRow(j, dst, 0); // the store is opaque
-                LayerArgbCompositor.composite(dst, 0, src, 0, tile.width, layer.opacity, BLEND_MODES[layer.blendMode]);
-                store.setOpaqueRow(j, dst, 0);
+                LayerArgbCompositor.composite(dst, 0, src, 0, rows * tile.width,
+                        layer.opacity, BLEND_MODES[layer.blendMode]);
+                for (int row = 0; row < rows; row++) {
+                    int j = startRow + row, base = row * tile.width;
+                    store.setOpaqueRow(j, dst, base);
+                }
             }
             Image blended = new Image(getDisplay(), below);
             try {
@@ -1309,17 +1836,19 @@ public final class LayeredViewport extends Canvas {
     }
 
     private void paintImage(GC gc, Layer layer, Rectangle tile) {
-        Rectangle srcBounds = layer.image.getBounds();
-        if (srcBounds.width == 0 || srcBounds.height == 0) return;
-
         long ox = layerOriginX(layer), oy = layerOriginY(layer);
-        double left = device(layer.x, ox);
-        double top = device(layer.y, oy);
-        double right = device(layer.right, ox);
-        double bottom = device(layer.bottom, oy);
+        paintImage(gc, layer.image, device(layer.x, ox), device(layer.y, oy),
+                device(layer.right, ox), device(layer.bottom, oy), tile);
+    }
+
+    /** Shared full-source mapping and clipped-source fallback for groups and ordinary layers. */
+    private void paintImage(GC gc, Image image, double left, double top,
+            double right, double bottom, Rectangle tile) {
+        Rectangle srcBounds = image.getBounds();
+        if (srcBounds.width == 0 || srcBounds.height == 0) return;
         double width = right - left;
         double height = bottom - top;
-        if (width <= 0 || height <= 0) return;
+        if (!(width > 0) || !(height > 0)) return;
 
         // Ordinary layers retain the complete source-to-destination mapping.
         // The clipped source path avoids enormous int destination coordinates.
@@ -1332,7 +1861,7 @@ public final class LayeredViewport extends Canvas {
             int w = (int) (Math.ceil(right) - x);
             int h = (int) (Math.ceil(bottom) - y);
             if (w > 0 && h > 0) {
-                gc.drawImage(layer.image, srcBounds.x, srcBounds.y,
+                gc.drawImage(image, srcBounds.x, srcBounds.y,
                         srcBounds.width, srcBounds.height, x, y, w, h);
             }
             return;
@@ -1346,7 +1875,7 @@ public final class LayeredViewport extends Canvas {
         int sy1 = clipSource(((double)tile.y + tile.height - top) / height
                 * srcBounds.height, srcBounds.height, true);
         if (sx1 > sx0 && sy1 > sy0) {
-            gc.drawImage(layer.image, srcBounds.x + sx0, srcBounds.y + sy0,
+            gc.drawImage(image, srcBounds.x + sx0, srcBounds.y + sy0,
                     sx1 - sx0, sy1 - sy0, tile.x, tile.y, tile.width, tile.height);
         }
     }
@@ -1790,8 +2319,8 @@ public final class LayeredViewport extends Canvas {
     }
 
     /* one native frame: the native layers in Z order with their offset, opacity and visibility */
-    private void applyNative() {
-        if (composition == 0) return;
+    private boolean applyNative() {
+        if (composition == 0) return false;
         int n = 0;
         for (Layer layer : paintOrder) if (layer.nativeLayer != 0) n++;
         long[] handles = new long[n];
@@ -1806,7 +2335,7 @@ public final class LayeredViewport extends Canvas {
             props[i * 4 + 3] = layer.visible && layer.opacity > 0 ? 1 : 0;
             i++;
         }
-        nativeBackend.apply(composition, handles, props, n);
+        return nativeBackend.apply(composition, handles, props, n) == 0;
     }
 
     /* an image's pixels as premultiplied ARGB, row by row, with its alpha (alpha data, global alpha, transparent pixel) */

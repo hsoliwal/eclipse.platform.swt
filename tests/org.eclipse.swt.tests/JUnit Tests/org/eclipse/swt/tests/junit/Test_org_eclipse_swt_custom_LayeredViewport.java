@@ -74,6 +74,74 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testFilteredHitSearchUsesFrontmostAcceptedLayerWithoutChangingOrder() {
+        Layer bottom = viewport.addPaintLayer("bottom", 0, 0, 100, 100, (gc, ctx) -> { });
+        Layer middle = viewport.addPaintLayer("middle", 0, 0, 100, 100, (gc, ctx) -> { });
+        Layer top = viewport.addPaintLayer("top", 0, 0, 100, 100, (gc, ctx) -> { });
+        List<Layer> visited = new ArrayList<>();
+        assertSame(top, viewport.hitTest(10, 10));
+        assertSame(middle, viewport.hitTest(10, 10, candidate -> {
+            visited.add(candidate);
+            return candidate != top;
+        }));
+        assertEquals(List.of(top, middle), visited, "frontmost first; stop at first accepted");
+        assertSame(top, viewport.hitTest(10, 10), "filter must not mutate normal hit priority");
+        assertNull(viewport.hitTest(10, 10, candidate -> false));
+        assertSame(bottom, viewport.hitTest(10, 10, candidate -> candidate == bottom));
+        assertThrows(IllegalArgumentException.class, () -> viewport.hitTest(10, 10, null));
+
+        top.setHitTester((candidate, x, y) -> false);
+        visited.clear();
+        assertSame(middle, viewport.hitTest(10, 10, candidate -> {
+            visited.add(candidate);
+            return true;
+        }));
+        assertEquals(List.of(middle), visited, "non-hittable front layers never reach the predicate");
+        assertNull(viewport.hitTest(500, 500, candidate -> {
+            fail("outside client area must not invoke accept");
+            return true;
+        }));
+    }
+
+    @Test
+    public void testFilteredHitSearchPreservesReentrantCandidateSnapshot() {
+        Layer bottom = viewport.addPaintLayer("bottom", 0, 0, 200, 200, (gc, ctx) -> { });
+        Layer top = viewport.addPaintLayer("top", 0, 0, 200, 200, (gc, ctx) -> { });
+        int[] calls = {0};
+        assertSame(bottom, viewport.hitTest(10, 10, candidate -> {
+            if (candidate == top) {
+                calls[0]++;
+                assertSame(top, viewport.hitTest(10, 10), "nested unfiltered query sees same scene");
+                top.setVisible(false);
+            }
+            return true;
+        }));
+        assertEquals(1, calls[0]);
+        assertSame(bottom, viewport.hitTest(10, 10));
+    }
+
+    @Test
+    public void testGroupChildExclusionSearchAndMutationRevalidation() {
+        LayeredViewport.LayerGroup group = viewport.addLayerGroup("diagram", 0, 0, 100, 100);
+        LayeredViewport.LayerGroup.Child bottom = group.addPaintChild("shape", 0, 0, 60, 60, (gc, ctx) -> { });
+        LayeredViewport.LayerGroup.Child top = group.addPaintChild("dragged", 0, 0, 60, 60, (gc, ctx) -> { });
+        assertSame(top, group.hitTestChild(10, 10));
+        assertSame(bottom, group.hitTestChild(10, 10, candidate -> candidate != top));
+        assertNull(group.hitTestChild(10, 10, candidate -> false));
+        assertThrows(IllegalArgumentException.class, () -> group.hitTestChild(10, 10, null));
+        assertSame(bottom, group.hitTestChild(10, 10, candidate -> {
+            if (candidate == top) top.setLocked(true);
+            return true;
+        }));
+        assertSame(bottom, group.hitTestChild(10, 10));
+        top.setLocked(false);
+        assertNull(group.hitTestChild(10, 10, candidate -> {
+            if (candidate == top) group.getLayer().setWorldBounds(200, 200, 100, 100);
+            return true;
+        }), "a moved parent must not yield stale hits from its former position");
+    }
+
+    @Test
     public void testSnapshotAndRemovedIdentity() {
         Layer first = viewport.addPaintLayer("first", 0, 0, 20, 20, (gc, ctx) -> { });
         Layer second = viewport.addPaintLayer("second", 0, 0, 20, 20, (gc, ctx) -> { });
@@ -504,6 +572,34 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         } finally {
             red.dispose();
             white.dispose();
+        }
+    }
+
+    @Test
+    public void testLargeBlendedTileCrossesNativeBatchBoundaryWithoutSeams() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Image red = solidImage(SWT.COLOR_RED, 180), blue = solidImage(SWT.COLOR_BLUE, 180);
+        try {
+            viewport.addImageLayer("base", blue, 0, 0);
+            Layer upper = viewport.addImageLayer("blend", red, 0, 0);
+            upper.setBlendMode(LayeredViewport.BLEND_MULTIPLY);
+            show();
+            ImageData shown = pixels();
+            // 180 * 180 pixels: the bounded 16K JNI batch is crossed at row 91.
+            for (int y : new int[] { 0, 89, 90, 91, 92, 179 }) {
+                assertEquals(new RGB(0, 0, 0), rgb(shown, 20, y), "multiply at row " + y);
+            }
+            assertEquals(new RGB(255, 255, 255), rgb(shown, 200, 200));
+            upper.setBlendMode(LayeredViewport.BLEND_SCREEN);
+            viewport.update();
+            shown = pixels();
+            for (int y : new int[] { 0, 90, 91, 179 }) {
+                assertEquals(new RGB(255, 0, 255), rgb(shown, 170, y), "screen at row " + y);
+            }
+            assertSameAsAFullRecomposition();
+        } finally {
+            red.dispose();
+            blue.dispose();
         }
     }
 
@@ -1455,5 +1551,179 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertNotEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), 5, 50), "no longer sticky: at world x 100");
         assertSameAsAFullRecomposition();
         assertThrows(IllegalArgumentException.class, () -> column.setSticky(SWT.HORIZONTAL | SWT.VERTICAL, 0, 0));
+    }
+
+    @Test
+    public void testLayerGroupHasAtomicZOrderAndLocalChildren() {
+        Layer below = viewport.addPaintLayer("below", 0, 0, 300, 240, (gc, ctx) -> { });
+        LayeredViewport.LayerGroup group = viewport.addLayerGroup("group", 30, 40, 100, 80);
+        LayeredViewport.LayerGroup.Child first = group.addPaintChild(
+                "first", 10, 10, 50, 40, (gc, ctx) -> { });
+        LayeredViewport.LayerGroup.Child second = group.addPaintChild(
+                "second", 15, 15, 25, 25, (gc, ctx) -> { });
+        assertEquals(2, group.getChildren().length);
+        assertSame(second, group.hitTestChild(50, 60));
+        assertSame(group.getLayer(), viewport.hitTest(50, 60));
+        assertEquals(1, group.getLayer().getZIndex());
+
+        first.moveTo(1);
+        assertEquals(1, first.getZIndex());
+        assertSame(first, group.hitTestChild(50, 60));
+        first.setLocked(true);
+        assertSame(second, group.hitTestChild(50, 60));
+        second.setVisible(false);
+        assertNull(group.hitTestChild(50, 60));
+        assertSame(below, viewport.hitTest(50, 60));
+        first.setLocked(false);
+        assertSame(first, group.hitTestChild(50, 60));
+        second.setVisible(true);
+
+        group.getLayer().setWorldBounds(130, 90, 100, 80);
+        assertNull(group.hitTestChild(50, 60));
+        assertSame(first, group.hitTestChild(150, 110));
+        assertSame(group.getLayer(), viewport.hitTest(150, 110));
+        group.getLayer().moveTo(0);
+        assertSame(below, viewport.hitTest(150, 110));
+        group.getLayer().moveTo(1);
+        assertSame(group.getLayer(), viewport.hitTest(150, 110));
+    }
+
+    @Test
+    public void testGroupChildrenHandlesAndClipping() {
+        LayeredViewport.LayerGroup group = viewport.addLayerGroup("group", 20, 20, 50, 50);
+        LayeredViewport.LayerGroup.Child outside = group.addPaintChild(
+                "outside", 60, 0, 10, 10, (gc, ctx) -> { });
+        assertNull(group.hitTestChild(85, 25), "a child cannot pick beyond its parent bounds");
+        LayeredViewport.LayerGroup.Child inside = group.addPaintChild(
+                "inside", 10, 15, 12, 12, (gc, ctx) -> { });
+        assertSame(inside, group.hitTestChild(35, 40));
+        inside.setHitTester((child, x, y) -> x >= 15);
+        assertNull(group.hitTestChild(33, 40));
+        assertSame(inside, group.hitTestChild(38, 40));
+        LayeredViewport.LayerGroup.Child[] snapshot = group.getChildren();
+        snapshot[0] = inside;
+        assertSame(outside, group.getChildren()[0]);
+        assertThrows(IllegalArgumentException.class, () -> inside.setLocalBounds(0, 0, -1, 10));
+
+        long id = inside.getId();
+        inside.remove();
+        assertThrows(IllegalArgumentException.class, inside::getId);
+        LayeredViewport.LayerGroup.Child newer = group.addPaintChild(
+                "new", 0, 0, 10, 10, (gc, ctx) -> { });
+        assertTrue(newer.getId() > id);
+        group.getLayer().remove();
+        assertThrows(IllegalArgumentException.class, newer::getId);
+    }
+
+    @Test
+    public void testGroupOpacityIsAppliedAfterItsChildrenOverlap() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        LayeredViewport.LayerGroup group = viewport.addLayerGroup("overlay", 0, 0, 140, 120);
+        group.addPaintChild("red", 0, 0, 100, 90, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_RED));
+            gc.fillRectangle(ctx.clip());
+        });
+        group.addPaintChild("blue", 25, 20, 80, 70, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLUE));
+            gc.fillRectangle(ctx.clip());
+        });
+        group.getLayer().setOpacity(128);
+        show();
+        ImageData shown = pixels();
+        RGB red = rgb(shown, 10, 10);
+        RGB blue = rgb(shown, 40, 40);
+        assertTrue(red.red > 250 && Math.abs(red.green - 127) <= 4 && Math.abs(red.blue - 127) <= 4,
+                "the group opacity halves red above white");
+        assertTrue(Math.abs(blue.red - 127) <= 4 && Math.abs(blue.green - 127) <= 4 && blue.blue > 250,
+                "the overlapping blue child replaces red before opacity is applied once");
+        assertEquals(system(SWT.COLOR_WHITE), rgb(shown, 130, 110));
+        group.getLayer().setOpacity(255);
+        viewport.update();
+        assertEquals(system(SWT.COLOR_BLUE), rgb(pixels(), 40, 40));
+    }
+
+    @Test
+    public void testLayerGroupIndexAndReentrantHitTest() {
+        LayeredViewport.LayerGroup group = viewport.addLayerGroup("many", 0, 0, 250, 100);
+        for (int i = 0; i < 64; i++) {
+            group.addPaintChild("small-" + i, i * 3, 20, 2, 6, (gc, ctx) -> { });
+        }
+        LayeredViewport.LayerGroup.Child over = group.addPaintChild(
+                "over", 10, 10, 60, 30, (gc, ctx) -> { });
+        assertSame(over, group.hitTestChild(16, 23));
+        // A hit-test callback may move itself: recheck captured candidates
+        // instead of returning a stale hit or corrupting the packed Z array.
+        over.setHitTester((child, x, y) -> {
+            over.setLocalBounds(100, 40, 20, 20);
+            assertNotSame(over, group.hitTestChild(16, 23));
+            return true;
+        });
+        LayeredViewport.LayerGroup.Child found = group.hitTestChild(16, 23);
+        assertNotNull(found);
+        assertNotSame(over, found);
+        assertEquals("small-5", found.getName());
+        assertSame(over, group.hitTestChild(110, 45));
+    }
+
+    @Test
+    public void testPinnedLayerGroupAndChildPainting() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        LayeredViewport.LayerGroup group = viewport.addLayerGroup("header", 0, 0, 150, 30);
+        group.addPaintChild("blue header", 0, 0, 150, 30, (gc, ctx) -> {
+            gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_BLUE));
+            gc.fillRectangle(ctx.clip());
+        });
+        group.getLayer().setPinned(SWT.VERTICAL);
+        show();
+        viewport.setOrigin(0, 200);
+        viewport.update();
+        assertSame(group.getLayer(), viewport.hitTest(10, 10));
+        assertEquals("blue header", group.hitTestChild(10, 10).getName());
+        assertEquals(system(SWT.COLOR_BLUE), rgb(pixels(), 10, 10));
+    }
+
+    @Test
+    public void testGroupRasterChildZoomAndBorrowedImageOwnership() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Image raster = new Image(viewport.getDisplay(), 8, 8);
+        try {
+            GC brush = new GC(raster);
+            try {
+                brush.setBackground(brush.getDevice().getSystemColor(SWT.COLOR_GREEN));
+                brush.fillRectangle(0, 0, 8, 8);
+            } finally {
+                brush.dispose();
+            }
+            LayeredViewport.LayerGroup group = viewport.addLayerGroup("raster", 20, 30, 100, 100);
+            LayeredViewport.LayerGroup.Child child = group.addImageChild("borrowed", raster, 10, 10);
+            assertSame(child, group.hitTestChild(31, 41));
+            show();
+            assertEquals(system(SWT.COLOR_GREEN), rgb(pixels(), 31, 41));
+            viewport.setZoom(2.0);
+            viewport.update();
+            assertSame(child, group.hitTestChild(61, 81));
+            assertEquals(system(SWT.COLOR_GREEN), rgb(pixels(), 61, 81));
+            group.getLayer().setWorldClip(new WorldBounds(0, 0, 30, 30));
+            viewport.update();
+            assertEquals(system(SWT.COLOR_WHITE), rgb(pixels(), 61, 81));
+            group.getLayer().setWorldClip(null);
+            group.getLayer().remove();
+            assertFalse(raster.isDisposed(), "group only borrows Image data");
+        } finally {
+            raster.dispose();
+        }
+    }
+
+    @Test
+    public void testGroupLocalCoordinatesAtLargeWorldOrigins() {
+        long large = 1L << 55;
+        viewport.setOrigin(large, large);
+        LayeredViewport.LayerGroup group =
+                viewport.addLayerGroup("huge", large + 10, large + 15, 60, 60);
+        LayeredViewport.LayerGroup.Child child = group.addPaintChild(
+                "near", 5, 5, 20, 20, (gc, ctx) -> { });
+        assertSame(group.getLayer(), viewport.hitTest(16, 21));
+        assertSame(child, group.hitTestChild(16, 21));
+        assertNull(group.hitTestChild(14, 19));
     }
 }

@@ -42,3 +42,4 @@ skottie/interop.cc
 svg/interop.cc
 swt/M3Canvas.cc
 swt/MayaComposition.cc
+swt/MayaFramePacket.cc

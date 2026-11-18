@@ -14,6 +14,7 @@
 package org.eclipse.swt.tests.junit;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -61,6 +62,30 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
     for (int style : cases) {
         composite = new Composite(shell, style);
     }
+}
+
+@Test
+public void test_nativeBevelBorderStyles() {
+	if (!SwtTestUtil.isWindows) return;
+	Composite plain = new Composite(shell, SWT.NONE);
+	assertEquals(0, plain.getBorderWidth());
+	Composite defaultBorder = new Composite(shell, SWT.BORDER);
+	assertTrue(defaultBorder.getBorderWidth() > 0);
+	for (int shadow : new int[] {SWT.SHADOW_IN, SWT.SHADOW_OUT,
+			SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT}) {
+		Composite bevel = new Composite(shell, shadow);
+		Composite combined = new Composite(shell, shadow | SWT.BORDER);
+		bevel.setSize(80, 40);
+		combined.setSize(80, 40);
+		assertTrue(bevel.getBorderWidth() > 0, "native border must reserve client trim");
+		assertEquals(bevel.getBorderWidth(), combined.getBorderWidth(),
+				"SWT.BORDER combined with a bevel must not double the native trim");
+		assertTrue(bevel.getClientArea().width < bevel.getSize().x);
+		bevel.dispose();
+		combined.dispose();
+	}
+	defaultBorder.dispose();
+	plain.dispose();
 }
 
 @Test

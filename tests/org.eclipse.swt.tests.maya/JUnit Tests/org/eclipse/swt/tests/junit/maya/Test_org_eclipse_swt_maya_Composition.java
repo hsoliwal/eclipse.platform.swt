@@ -150,10 +150,41 @@ public class Test_org_eclipse_swt_maya_Composition {
 		assertEquals(WHITE, screen(30, 30), "disposing removes every layer from the window");
 	}
 
+	@Test
+	public void identicalAndPropertyOnlyFramesPreserveNativePresentation() {
+		long red = layer(OPAQUE_RED), blue = layer(OPAQUE_BLUE);
+		long[] order = { red, blue };
+		float[] props = { 20, 20, 1, 1, 60, 60, 0.5f, 1 };
+		frame(order, props);
+		assertNear(new RGB(128, 0, 127), screen(80, 80));
+		for (int i = 0; i < 3; i++) {
+			frame(order, props); // identical frames: no native visual edits required
+			assertNear(new RGB(128, 0, 127), screen(80, 80));
+		}
+		props[6] = 1; // opacity changes, without changing visible order
+		frame(order, props);
+		assertEquals(BLUE, screen(80, 80));
+		props[4] = 110; // translate the same native visual
+		frame(order, props);
+		assertEquals(RED, screen(80, 80));
+		assertEquals(BLUE, screen(140, 140));
+		props[3] = 0; // visible membership now changes
+		frame(order, props);
+		assertEquals(WHITE, screen(30, 30));
+		props[3] = 1;
+		frame(order, props);
+		assertEquals(RED, screen(30, 30));
+		MayaComposition._nRemoveLayer(composition, blue);
+		frame(new long[] { red }, 20, 20, 1, 1);
+		assertEquals(WHITE, screen(140, 140), "removal invalidates the cached scene order");
+		assertEquals(RED, screen(30, 30));
+	}
 
 	@Test
 	public void packedDirtyUpdatesOnlySpecifiedNativePixels() {
 		long red = layer(OPAQUE_RED); // initializes the whole native surface
+		frame(new long[] { red }, 20, 20, 1, 1);
+		assertEquals(RED, screen(24, 24)); // first commit before dirty-only frame
 		int[] patches = new int[16 + 9];
 		Arrays.fill(patches, 0, 16, OPAQUE_BLUE);
 		Arrays.fill(patches, 16, 25, 0xFF00FF00);

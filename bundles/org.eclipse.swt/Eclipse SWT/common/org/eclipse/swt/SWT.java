@@ -1703,6 +1703,7 @@ public class SWT {
 	 * <ul>
 	 * <li><code>Label</code></li>
 	 * <li><code>Group</code></li>
+	 * <li><code>Composite</code> and <code>Canvas</code> (Win32 native bevel)</li>
 	 * </ul>
 	 */
 	public static final int SHADOW_IN = 1 << 2;
@@ -1715,26 +1716,29 @@ public class SWT {
 	 * <li><code>Label</code></li>
 	 * <li><code>Group</code></li>
 	 * <li><code>ToolBar</code></li>
+	 * <li><code>Composite</code> and <code>Canvas</code> (Win32 native bevel)</li>
 	 * </ul>
 	 */
 	public static final int SHADOW_OUT = 1 << 3;
 
 	/**
 	 * Style constant for shadow etched in behavior (value is 1&lt;&lt;4).
-	 * <br>Note that this is a <em>HINT</em>. It is currently ignored on all platforms.
+	 * <br>Note that this is a <em>HINT</em>; platform support varies.
 	 * <p><b>Used By:</b></p>
 	 * <ul>
 	 * <li><code>Group</code></li>
+	 * <li><code>Composite</code> and <code>Canvas</code> (Win32 native bevel)</li>
 	 * </ul>
 	 */
 	public static final int SHADOW_ETCHED_IN = 1 << 4;
 
 	/**
 	 * Style constant for shadow etched out behavior (value is 1&lt;&lt;6).
-	 * <br>Note that this is a <em>HINT</em>. It is currently ignored on all platforms.
+	 * <br>Note that this is a <em>HINT</em>; platform support varies.
 	 * <p><b>Used By:</b></p>
 	 * <ul>
 	 * <li><code>Group</code></li>
+	 * <li><code>Composite</code> and <code>Canvas</code> (Win32 native bevel)</li>
 	 * </ul>
 	 */
 	public static final int SHADOW_ETCHED_OUT = 1 << 6;

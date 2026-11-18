@@ -98,6 +98,7 @@ public class OS extends C {
 	public static final int BDR_SUNKENINNER = 0x0008;
 	public static final int BF_RIGHT = 0x0004;
 	public static final int BF_BOTTOM = 0x0008;
+	public static final int BF_RECT = 0x000F;
 	public static final int BITSPIXEL = 0xc;
 	public static final int BI_BITFIELDS = 3;
 	public static final int BI_RGB = 0;
@@ -338,8 +339,10 @@ public class OS extends C {
 	public static final int EBP_HEADERBACKGROUND = 1;
 	public static final int EC_LEFTMARGIN = 0x1;
 	public static final int EC_RIGHTMARGIN = 0x2;
-	public static final int EDGE_SUNKEN = 10;
-	public static final int EDGE_ETCHED = 6;
+	public static final int EDGE_RAISED = 0x0005;
+	public static final int EDGE_ETCHED = 0x0006;
+	public static final int EDGE_BUMP = 0x0009;
+	public static final int EDGE_SUNKEN = 0x000A;
 	public static final int EM_CANUNDO = 0xc6;
 	public static final int EM_CHARFROMPOS = 0xd7;
 	public static final int EM_GETFIRSTVISIBLELINE = 0xce;
