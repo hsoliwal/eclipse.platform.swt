@@ -2112,7 +2112,8 @@ private void drawNativeBevelRing (long hwnd, long hDC, int edge) {
 LRESULT wmPrint (long hwnd, long wParam, long lParam) {
 	int edge = nativeBevelEdge ();
 	if (edge == 0 || (lParam & OS.PRF_NONCLIENT) == 0 || hwnd != borderHandle ()
-			|| (OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE) & OS.WS_EX_CLIENTEDGE) == 0) {
+			|| (OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE) & OS.WS_EX_CLIENTEDGE) == 0
+			|| ((lParam & OS.PRF_CHECKVISIBLE) != 0 && !OS.IsWindowVisible (hwnd))) {
 		return super.wmPrint (hwnd, wParam, lParam);
 	}
 	int originalDC = OS.SaveDC (wParam);

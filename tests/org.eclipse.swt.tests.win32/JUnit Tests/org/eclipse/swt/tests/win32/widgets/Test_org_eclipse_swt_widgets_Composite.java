@@ -255,6 +255,52 @@ public class Test_org_eclipse_swt_widgets_Composite {
 		return (colorRef & 0xff) + ((colorRef >>> 8) & 0xff) + ((colorRef >>> 16) & 0xff);
 	}
 
+
+	/**
+	 * PRF_CHECKVISIBLE must suppress the custom native bevel for a hidden
+	 * HWND, just as it suppresses the default Windows non-client paint.
+	 */
+	@Test
+	public void test_nativeReliefPrintingRespectsPRFCheckVisible() {
+		Composite control = new Composite(shell, SWT.BORDER);
+		try {
+			control.setBounds(12, 12, 120, 68);
+			shell.setSize(260, 180);
+			shell.open();
+			control.setBevelBorder(SWT.SHADOW_OUT);
+			assertTrue(OS.IsWindowVisible(control.handle));
+			Image image = new Image(display, 144, 80);
+			GC gc = new GC(image);
+			try {
+				gc.setBackground(display.getSystemColor(SWT.COLOR_MAGENTA));
+				gc.fillRectangle(image.getBounds());
+				int sentinel = OS.GetPixel(gc.handle, 60, 0);
+				var originalClip = gc.getClipping();
+				assertTrue(sentinel != -1);
+				control.setVisible(false);
+				assertFalse(OS.IsWindowVisible(control.handle));
+				OS.SendMessage(control.handle, OS.WM_PRINT, gc.handle,
+						OS.PRF_NONCLIENT | OS.PRF_CHECKVISIBLE);
+				assertEquals(sentinel, OS.GetPixel(gc.handle, 60, 0),
+						"PRF_CHECKVISIBLE must not paint a hidden native bevel");
+				assertEquals(originalClip, gc.getClipping());
+
+				control.setVisible(true);
+				assertTrue(OS.IsWindowVisible(control.handle));
+				OS.SendMessage(control.handle, OS.WM_PRINT, gc.handle,
+						OS.PRF_NONCLIENT | OS.PRF_CHECKVISIBLE);
+				assertTrue(OS.GetPixel(gc.handle, 60, 0) != sentinel,
+						"The visible native window must print its raised bevel");
+				assertEquals(originalClip, gc.getClipping());
+			} finally {
+				gc.dispose();
+				image.dispose();
+			}
+		} finally {
+			control.dispose();
+		}
+	}
+
 	private static boolean isComposited(Control control) {
 		return (OS.GetWindowLong(control.handle, OS.GWL_EXSTYLE) & OS.WS_EX_COMPOSITED) != 0;
 	}

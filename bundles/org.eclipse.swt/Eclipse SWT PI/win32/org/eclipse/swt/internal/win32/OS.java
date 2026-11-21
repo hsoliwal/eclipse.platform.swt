@@ -958,6 +958,7 @@ public class OS extends C {
 	public static final int PM_QS_SENDMESSAGE = QS_SENDMESSAGE << 16;
 	public static final int PM_REMOVE = 0x1;
 	public static final String PROGRESS_CLASS = "msctls_progress32"; //$NON-NLS-1$
+	public static final int PRF_CHECKVISIBLE = 0x1;
 	public static final int PRF_CHILDREN = 16;
 	public static final int PRF_CLIENT = 0x4;
 	public static final int PRF_ERASEBKGND = 0x8;
