@@ -325,3 +325,25 @@ failure reaches the already established painted fallback.
 See [MAYA_DEVICE_LOSS_RECOVERY.md](MAYA_DEVICE_LOSS_RECOVERY.md) for the
 portable C++ health oracle, explicit recovery contract, native UI ownership,
 test coverage, and still-unexecuted Windows hardware release gates.
+
+## Optional native viewport-residency window
+
+`LayeredViewport.setNativeResidencyOverscanPixels(int)` enables
+viewport-aware admission of **native image surfaces**. Default `-1`
+preserves the previous unrestricted membership. Value `0` admits
+only overlapping client-space native images; positive values prefetch
+within the specified SWT client-pixel margin and retain live surfaces
+up to twice that margin to avoid allocation churn.
+
+This policy runs before the optional Maya composition is requested.
+Offscreen or clipped-out images keep the same logical layers and
+borrowed SWT Images, but do not consume native surface quota.
+On re-entry the original native backend recreates and reuploads their
+pixels. Fixed/pinned/sticky world projection and source-local clips
+are respected; native Control widgets, Z ordering, event-thread
+ownership and the software-painted fallback stay unchanged.
+
+The standalone deterministic Java geometry test passes 200,000
+cases, while actual SWT/Win32 native pixel and graphics-memory
+qualification remains pending. For details, limits and test scope,
+see [MAYA_NATIVE_VIEWPORT_RESIDENCY.md](MAYA_NATIVE_VIEWPORT_RESIDENCY.md).
