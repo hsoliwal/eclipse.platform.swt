@@ -9,6 +9,7 @@
 package org.eclipse.swt.internal.render;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.eclipse.swt.internal.NativeLayers;
 import org.eclipse.swt.internal.maya.MayaComposition;
@@ -29,7 +30,10 @@ public final class MayaNativeLayers implements NativeLayers {
 	private static volatile int packetSupport; // 0 unknown, 1 supported, -1 missing
 	private static final ThreadLocal<MayaFramePacket.Encoder> ENCODER =
 			ThreadLocal.withInitial(MayaFramePacket.Encoder::new);
-	private long epoch;
+	// A NativeLayers backend is a VM-wide singleton, shared by SWT Display threads.
+	// Preserve one unique packet sequence across those threads without sharing
+	// an Encoder or changing the optional packed frame's wire format.
+	private final AtomicLong epoch = new AtomicLong();
 
     // Explicit VM-wide opt-in. Zero keeps the previous unlimited behavior.
     // Malformed or negative values must not silently become an unlimited cap.
@@ -87,7 +91,7 @@ public final class MayaNativeLayers implements NativeLayers {
 					packetSupport = MayaComposition._nFramePacketVersion() == MayaFramePacket.VERSION ? 1 : -1;
 				}
 				if (packetSupport == 1) {
-					ByteBuffer packet = ENCODER.get().encode(layers, props, count, ++epoch);
+					ByteBuffer packet = ENCODER.get().encode(layers, props, count, epoch.incrementAndGet());
 					return MayaComposition._nApplyPacked(composition, packet, packet.remaining());
 				}
 			} catch (UnsatisfiedLinkError olderMayaBinary) {
