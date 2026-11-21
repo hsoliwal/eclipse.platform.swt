@@ -22,6 +22,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.internal.win32.RECT;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Display;
@@ -181,6 +182,77 @@ public class Test_org_eclipse_swt_widgets_Composite {
 		} finally {
 			button.dispose();
 		}
+	}
+
+
+	/**
+	 * WM_PRINT receives a caller HDC, not a window DC. Verify actual
+	 * GDI border pixels, no client-pixel damage and a restored caller clip.
+	 */
+	@Test
+	public void test_nativeReliefPrintingMatchesBevelAndPreservesCallerDC() {
+		for (Composite control : new Composite[] {
+				new Composite(shell, SWT.BORDER),
+				new Canvas(shell, SWT.BORDER) }) {
+			try {
+				control.setSize(160, 92);
+				control.setBevelBorder(SWT.SHADOW_OUT);
+				int[] raised = printNativeReliefSamples(control);
+				assertTrue(raised[0] > raised[1],
+						"Raised WM_PRINT bevel must have a lighter top than bottom");
+
+				control.setBorderRelief(SWT.SHADOW_IN);
+				assertEquals(SWT.SHADOW_OUT, control.getBevelBorder(),
+						"Control overlay must preserve the saved Composite bevel");
+				int[] sunken = printNativeReliefSamples(control);
+				assertTrue(sunken[0] < sunken[1],
+						"Sunken WM_PRINT bevel must have a darker top than bottom");
+
+				control.setBorderRelief(SWT.DEFAULT);
+				assertEquals(SWT.SHADOW_OUT, control.getBevelBorder());
+				int[] restored = printNativeReliefSamples(control);
+				assertTrue(restored[0] > restored[1],
+						"DEFAULT must restore saved raised bevel in WM_PRINT");
+				control.setBevelBorder(SWT.NONE);
+				assertEquals(SWT.NONE, control.getBevelBorder());
+				assertEquals(SWT.DEFAULT, control.getBorderRelief());
+			} finally {
+				control.dispose();
+			}
+		}
+	}
+
+	private static int[] printNativeReliefSamples(Composite control) {
+		RECT rect = new RECT();
+		assertTrue(OS.GetWindowRect(control.handle, rect));
+		int width = rect.right - rect.left, height = rect.bottom - rect.top;
+		assertTrue(width > 8 && height > 8);
+		Image image = new Image(display, width + 4, height + 4);
+		GC gc = new GC(image);
+		try {
+			gc.setBackground(display.getSystemColor(SWT.COLOR_MAGENTA));
+			gc.fillRectangle(image.getBounds());
+			int centerX = width / 2, centerY = height / 2;
+			int clientBefore = OS.GetPixel(gc.handle, centerX, centerY);
+			assertTrue(clientBefore != -1, "Offscreen GDI client is addressable");
+			var clipBefore = gc.getClipping();
+			OS.SendMessage(control.handle, OS.WM_PRINT, gc.handle, OS.PRF_NONCLIENT);
+			assertEquals(clipBefore, gc.getClipping(), "WM_PRINT changed the caller clip");
+			assertEquals(clientBefore, OS.GetPixel(gc.handle, centerX, centerY),
+					"Relief must not paint into client pixels");
+			return new int[] {
+					brightness(OS.GetPixel(gc.handle, centerX, 0)),
+					brightness(OS.GetPixel(gc.handle, centerX, height - 1))
+			};
+		} finally {
+			gc.dispose();
+			image.dispose();
+		}
+	}
+
+	private static int brightness(int colorRef) {
+		assertTrue(colorRef != -1, "Border samples must lie inside the HDC");
+		return (colorRef & 0xff) + ((colorRef >>> 8) & 0xff) + ((colorRef >>> 16) & 0xff);
 	}
 
 	private static boolean isComposited(Control control) {
