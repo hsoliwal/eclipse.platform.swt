@@ -2054,6 +2054,79 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testNativeResidencyDisabledByDefaultAndExplicitlyReclaimed()
+            throws ReflectiveOperationException {
+        viewport.setSize(300, 240);
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        Image image = nativeTestImage(10, 10, SWT.COLOR_RED);
+        Layer far = viewport.addImageLayer("old unrestricted native membership", image, 2000, 20);
+        try {
+            assertEquals(-1, viewport.getNativeResidencyOverscanPixels());
+            assertTrue(far.setNative(true), "default preserves prior offscreen-native behavior");
+            assertEquals(1, backend.additions);
+            assertEquals(1, backend.uploads);
+            assertEquals(0, backend.removals);
+            viewport.setNativeResidencyOverscanPixels(12);
+            assertEquals(12, viewport.getNativeResidencyOverscanPixels());
+            assertFalse(far.isNative(), "out-of-view image releases native surface");
+            assertEquals(1, backend.removals);
+            assertEquals(0, backend.pixelsPerLayer.size());
+            int idle = backend.applications;
+            viewport.setNativeResidencyOverscanPixels(12);
+            assertEquals(idle, backend.applications, "same admission policy is a no-op");
+            viewport.setNativeResidencyOverscanPixels(-1);
+            assertTrue(far.isNative(), "disabling policy restores original native membership");
+            assertEquals(2, backend.additions);
+            assertEquals(2, backend.uploads, "released surface reuploads borrowed Image");
+            assertFalse(image.isDisposed());
+        } finally {
+            if (!viewport.isDisposed()) far.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeResidencyHysteresisAcrossPanAndVisibility()
+            throws ReflectiveOperationException {
+        viewport.setSize(300, 240);
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        viewport.setNativeResidencyOverscanPixels(12);
+        Image image = nativeTestImage(10, 10, SWT.COLOR_BLUE);
+        Layer near = viewport.addImageLayer("scrolling native overscan", image, 320, 20);
+        try {
+            long logicalId = near.getId();
+            assertFalse(near.setNative(true), "20 pixels beyond viewport exceeds 12px admission");
+            assertEquals(0, backend.additions, "no native surface for distant layer");
+            assertEquals(0, backend.uploads);
+            viewport.setOrigin(10, 0);
+            assertTrue(near.isNative(), "10px outside viewport is prefetched");
+            assertEquals(1, backend.additions);
+            assertEquals(1, backend.uploads);
+            viewport.setOrigin(0, 0);
+            assertTrue(near.isNative(), "retain within 24px release distance");
+            assertEquals(0, backend.removals);
+            viewport.setOrigin(-10, 0);
+            assertFalse(near.isNative(), "release at 30px beyond viewport");
+            assertEquals(1, backend.removals);
+            viewport.setOrigin(10, 0);
+            assertTrue(near.isNative(), "re-entering generates one fresh native surface");
+            assertEquals(2, backend.additions);
+            assertEquals(2, backend.uploads);
+            near.setVisible(false);
+            assertFalse(near.isNative(), "invisible images no longer occupy native surfaces");
+            assertEquals(2, backend.removals);
+            near.setVisible(true);
+            assertTrue(near.isNative(), "visible image becomes native again in overscan");
+            assertEquals(3, backend.additions);
+            assertEquals(logicalId, near.getId(), "logical image layer identity is unchanged");
+            assertFalse(image.isDisposed(), "native owner never disposes borrowed Image");
+        } finally {
+            if (!viewport.isDisposed()) near.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
     public void testNativeSceneFeaturesAreAdmittedIndividually() throws ReflectiveOperationException {
         RecordingNativeLayers backend = installRecordingNativeLayers();
         backend.supported = NativeLayers.AFFINE_2D;
