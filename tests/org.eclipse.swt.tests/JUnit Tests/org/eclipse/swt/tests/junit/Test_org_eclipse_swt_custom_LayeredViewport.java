@@ -2062,6 +2062,12 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         Layer far = viewport.addImageLayer("old unrestricted native membership", image, 2000, 20);
         try {
             assertEquals(-1, viewport.getNativeResidencyOverscanPixels());
+            assertThrows(IllegalArgumentException.class,
+                    () -> viewport.setNativeResidencyOverscanPixels(-2));
+            assertThrows(IllegalArgumentException.class,
+                    () -> viewport.setNativeResidencyOverscanPixels((1 << 20) + 1));
+            assertEquals(-1, viewport.getNativeResidencyOverscanPixels(),
+                    "rejected configuration never mutates the policy");
             assertTrue(far.setNative(true), "default preserves prior offscreen-native behavior");
             assertEquals(1, backend.additions);
             assertEquals(1, backend.uploads);
