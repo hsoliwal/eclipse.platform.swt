@@ -2127,6 +2127,43 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testNativeResidencyUsesPinnedProjectionClipsAndExtremeLongPans()
+            throws ReflectiveOperationException {
+        viewport.setSize(100, 80);
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        viewport.setNativeResidencyOverscanPixels(8);
+        Image image = nativeTestImage(20, 20, SWT.COLOR_GREEN);
+        Layer layer = viewport.addImageLayer("pinned native residency", image, 130, 10);
+        try {
+            layer.setPinned(SWT.HORIZONTAL);
+            assertFalse(layer.setNative(true), "pinned image is 30px offscreen");
+            viewport.setOrigin(120, 0);
+            assertFalse(layer.isNative(), "horizontal pin prevents pan-based admission");
+            assertEquals(0, backend.additions);
+
+            layer.setPinned(0); // ordinary world projection: now at client x=10
+            assertTrue(layer.isNative());
+            assertEquals(1, backend.additions);
+            layer.setWorldClip(new WorldBounds(1000, 10, 10, 10));
+            assertFalse(layer.isNative(), "disjoint world clip excludes native residency");
+            assertEquals(1, backend.removals);
+            layer.setWorldClip(null);
+            assertTrue(layer.isNative(), "restored visible projection is readmitted");
+            assertEquals(2, backend.additions);
+
+            viewport.setOrigin(Long.MAX_VALUE, 0);
+            assertFalse(layer.isNative(), "extreme signed-long pan cannot overflow into view");
+            viewport.setOrigin(120, 0);
+            assertTrue(layer.isNative(), "native surface can return after extreme pan");
+            assertEquals(3, backend.uploads, "reentry restores borrowed source pixels");
+            assertFalse(image.isDisposed());
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
     public void testNativeSceneFeaturesAreAdmittedIndividually() throws ReflectiveOperationException {
         RecordingNativeLayers backend = installRecordingNativeLayers();
         backend.supported = NativeLayers.AFFINE_2D;
