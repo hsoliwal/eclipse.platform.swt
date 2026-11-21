@@ -2112,9 +2112,13 @@ private void drawNativeBevelRing (long hwnd, long hDC, int edge) {
 LRESULT wmPrint (long hwnd, long wParam, long lParam) {
 	int edge = nativeBevelEdge ();
 	if (edge == 0 || (lParam & OS.PRF_NONCLIENT) == 0 || hwnd != borderHandle ()
-			|| (OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE) & OS.WS_EX_CLIENTEDGE) == 0
-			|| ((lParam & OS.PRF_CHECKVISIBLE) != 0 && !OS.IsWindowVisible (hwnd))) {
+			|| (OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE) & OS.WS_EX_CLIENTEDGE) == 0) {
 		return super.wmPrint (hwnd, wParam, lParam);
+	}
+	/* Widget.wmPrint draws a themed border even when DefWindowProc skips a
+	 * hidden HWND. Consume WM_PRINT before that inherited paint as well. */
+	if ((lParam & OS.PRF_CHECKVISIBLE) != 0 && !OS.IsWindowVisible (hwnd)) {
+		return LRESULT.ZERO;
 	}
 	int originalDC = OS.SaveDC (wParam);
 	if (originalDC == 0) return super.wmPrint (hwnd, wParam, lParam);
