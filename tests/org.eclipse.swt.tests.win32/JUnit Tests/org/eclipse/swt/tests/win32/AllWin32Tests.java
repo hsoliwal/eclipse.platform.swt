@@ -80,7 +80,10 @@ class NativeRegionBatchWin32Tests {
 	@org.junit.jupiter.api.Test
 	void viewportBatchPreservesDisjointRegion() {
 		if ("true".equals(System.getenv("SWT_NATIVE_REGION_BATCH_REQUIRED"))) {
-			org.junit.jupiter.api.Assertions.assertTrue(Boolean.getBoolean("swt.win32.nativeRegionBatch"));
+			org.junit.jupiter.api.Assertions.assertTrue(Boolean.getBoolean("swt.win32.nativeRegionBatch"),
+					"native batch must be enabled in the actual test JVM");
+			org.junit.jupiter.api.Assertions.assertTrue(Boolean.getBoolean("swt.win32.nativeRegionBatch.required"),
+					"native batch failure must be fatal in the actual test JVM");
 		}
 		org.eclipse.swt.widgets.Shell shell = new org.eclipse.swt.widgets.Shell(
 				org.eclipse.swt.widgets.Display.getDefault());

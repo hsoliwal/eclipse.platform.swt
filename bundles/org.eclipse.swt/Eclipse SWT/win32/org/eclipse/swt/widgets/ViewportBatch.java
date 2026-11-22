@@ -252,7 +252,11 @@ final class ViewportBatch {
 			values [k++] = region.height (i);
 		}
 		try {
-			return OS.RedrawWindowRegions (c.handle, values, count, flags);
+			boolean submitted = OS.RedrawWindowRegions (c.handle, values, count, flags);
+			if (!submitted && NATIVE_REGION_BATCH_REQUIRED) {
+				throw new IllegalStateException ("required Win32 native damage batch failed");
+			}
+			return submitted;
 		} catch (UnsatisfiedLinkError oldNativeBinary) {
 			if (NATIVE_REGION_BATCH_REQUIRED) throw oldNativeBinary;
 			nativeRegionBatchUnavailable = true;
