@@ -23,6 +23,7 @@ import org.eclipse.swt.custom.LayeredViewport.WorldPoint;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.Color;
@@ -32,6 +33,7 @@ import org.eclipse.swt.graphics.Pattern;
 import org.eclipse.swt.graphics.Region;
 import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.internal.NativeLayers;
+import org.eclipse.swt.internal.render.LayerArgbCompositor;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
 import org.junit.jupiter.api.BeforeEach;
@@ -704,6 +706,91 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         } finally {
             red.dispose();
             white.dispose();
+        }
+    }
+
+    @Test
+    public void testMaskCoverageModesAndPremultipliedCompositor() {
+        assertEquals(255, LayerArgbCompositor.maskCoverage(255, 0xFFFFFF, LayeredViewport.MASK_ALPHA));
+        assertEquals(0, LayerArgbCompositor.maskCoverage(255, 0xFFFFFF, LayeredViewport.MASK_INVERTED_ALPHA));
+        assertEquals(0, LayerArgbCompositor.maskCoverage(0, 0xFFFFFF, LayeredViewport.MASK_LUMINANCE));
+        assertEquals(0, LayerArgbCompositor.maskCoverage(0, 0xFFFFFF, LayeredViewport.MASK_INVERTED_LUMINANCE));
+        assertEquals(255, LayerArgbCompositor.maskCoverage(255, 0, LayeredViewport.MASK_INVERTED_LUMINANCE));
+        assertEquals(128, LayerArgbCompositor.maskCoverage(255, 0x808080, LayeredViewport.MASK_LUMINANCE));
+        assertEquals(127, LayerArgbCompositor.maskCoverage(255, 0x808080, LayeredViewport.MASK_INVERTED_LUMINANCE));
+        for (int alpha = 0; alpha <= 255; alpha++) {
+            for (int grey = 0; grey <= 255; grey++) {
+                int rgb = grey * 0x010101;
+                int luminance = LayerArgbCompositor.maskCoverage(alpha, rgb, LayeredViewport.MASK_LUMINANCE);
+                int inverse = LayerArgbCompositor.maskCoverage(alpha, rgb, LayeredViewport.MASK_INVERTED_LUMINANCE);
+                assertEquals(alpha, luminance + inverse, "luminance mask partitions this alpha");
+            }
+        }
+        assertThrows(IllegalArgumentException.class, () -> LayerArgbCompositor.maskCoverage(-1, 0, 0));
+        assertThrows(IllegalArgumentException.class, () -> LayerArgbCompositor.maskCoverage(256, 0, 0));
+        assertThrows(IllegalArgumentException.class, () -> LayerArgbCompositor.maskCoverage(255, 0, 4));
+        int[] dst = { 0xFFFFFFFF }, src = { 0xFFFF0000 };
+        byte[] half = { (byte) 128 };
+        LayerArgbCompositor.compositeMasked(dst, 0, src, 0, half, 0, 1, 255,
+                LayerArgbCompositor.Mode.SRC_OVER);
+        assertEquals(0xFFFF7F7F, dst[0], "masked source-over red on opaque white");
+    }
+
+    @Test
+    public void testRasterLayerMaskAlphaLuminanceAndBorrowedOwnership() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        PaletteData palette = new PaletteData(0xFF0000, 0xFF00, 0xFF);
+        ImageData alpha = new ImageData(4, 1, 24, palette);
+        for (int x = 0; x < 4; x++) alpha.setPixel(x, 0, 0xFFFFFF);
+        alpha.setAlpha(0, 0, 255);
+        alpha.setAlpha(1, 0, 128);
+        alpha.setAlpha(2, 0, 0);
+        alpha.setAlpha(3, 0, 255);
+        ImageData grey = new ImageData(2, 1, 24, palette);
+        grey.setPixel(0, 0, 0);
+        grey.setPixel(1, 0, 0xFFFFFF);
+        Image foregroundImage = solidImage(SWT.COLOR_RED, 40);
+        Image alphaMask = new Image(viewport.getDisplay(), alpha);
+        Image greyMask = new Image(viewport.getDisplay(), grey);
+        Layer foreground = viewport.addImageLayer("masked", foregroundImage, 20, 20);
+        try {
+            assertEquals(LayeredViewport.MASK_ALPHA, foreground.getMaskMode());
+            foreground.setMask(alphaMask);
+            assertSame(alphaMask, foreground.getMask());
+            assertThrows(IllegalArgumentException.class, () -> foreground.setMaskMode(-1));
+            assertThrows(IllegalArgumentException.class, () -> foreground.setMaskMode(4));
+            Layer painter = viewport.addPaintLayer("unmasked painter", 100, 100, 20, 20, (gc, ctx) -> { });
+            assertThrows(IllegalArgumentException.class, () -> painter.setMask(alphaMask));
+            painter.remove();
+            show();
+            assertEquals(system(SWT.COLOR_RED), rgb(pixels(), 25, 30));
+            RGB half = rgb(pixels(), 35, 30);
+            assertEquals(255, half.red);
+            assertTrue(Math.abs(half.green - 127) <= 4 && Math.abs(half.blue - 127) <= 4);
+            assertEquals(system(SWT.COLOR_WHITE), rgb(pixels(), 45, 30));
+            paintAfter(() -> foreground.setMaskMode(LayeredViewport.MASK_INVERTED_ALPHA));
+            assertEquals(system(SWT.COLOR_WHITE), rgb(pixels(), 25, 30));
+            assertEquals(system(SWT.COLOR_RED), rgb(pixels(), 45, 30));
+            paintAfter(() -> {
+                foreground.setMask(greyMask);
+                foreground.setMaskMode(LayeredViewport.MASK_LUMINANCE);
+            });
+            assertEquals(system(SWT.COLOR_WHITE), rgb(pixels(), 25, 30));
+            assertEquals(system(SWT.COLOR_RED), rgb(pixels(), 55, 30));
+            paintAfter(() -> foreground.setMaskMode(LayeredViewport.MASK_INVERTED_LUMINANCE));
+            assertEquals(system(SWT.COLOR_RED), rgb(pixels(), 25, 30));
+            assertEquals(system(SWT.COLOR_WHITE), rgb(pixels(), 55, 30));
+            assertSameAsAFullRecomposition();
+            paintAfter(() -> foreground.setMask(null));
+            assertEquals(system(SWT.COLOR_RED), rgb(pixels(), 25, 30));
+            assertEquals(system(SWT.COLOR_RED), rgb(pixels(), 55, 30));
+            assertFalse(alphaMask.isDisposed(), "the caller owns the alpha mask");
+            assertFalse(greyMask.isDisposed(), "the caller owns the luminance mask");
+        } finally {
+            if (!viewport.isDisposed()) foreground.remove();
+            foregroundImage.dispose();
+            alphaMask.dispose();
+            greyMask.dispose();
         }
     }
 
@@ -2076,6 +2163,27 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         } finally {
             if (!viewport.isDisposed()) layer.remove();
             image.dispose();
+        }
+    }
+
+    @Test
+    public void testMaskedRasterCannotBypassSoftwareThroughNativeScene() throws ReflectiveOperationException {
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        backend.supported = NativeLayers.AFFINE_2D | NativeLayers.LOCAL_RECT_CLIP;
+        Image image = nativeTestImage(40, 30, SWT.COLOR_RED);
+        Image mask = nativeTestImage(2, 2, SWT.COLOR_WHITE);
+        Layer layer = viewport.addImageLayer("native mask gate", image, 10, 20);
+        try {
+            assertTrue(layer.setNative(true));
+            layer.setMask(mask);
+            assertFalse(layer.isNative(), "native composition has no agreed mask capability");
+            assertSame(mask, layer.getMask());
+            layer.setMask(null);
+            assertTrue(layer.isNative(), "removing the mask restores the old eligible image path");
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+            mask.dispose();
         }
     }
 

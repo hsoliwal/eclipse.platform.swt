@@ -142,6 +142,23 @@ public final class LayerArgbCompositor {
 
 	private static int mul255(int x, int y) { return (x * y + 127) / 255; }
 
+	/**
+	 * GSK-compatible raster mask coverage, without any native or widget allocation.
+	 * Modes: 0 alpha, 1 inverted alpha, 2 luminance times alpha,
+	 * 3 inverted luminance times alpha. RGB channels are straight, not premultiplied.
+	 * Luminance uses fixed-point Rec.709 weights; the two luminance modes sum
+	 * to the supplied alpha (within the integer rounding rule).
+	 */
+	public static int maskCoverage(int maskAlpha, int rgb, int mode) {
+		if (maskAlpha < 0 || maskAlpha > 255 || mode < 0 || mode > 3)
+			throw new IllegalArgumentException("invalid layer mask coverage");
+		if (mode == 0) return maskAlpha;
+		if (mode == 1) return 255 - maskAlpha;
+		int r = (rgb >>> 16) & 255, g = (rgb >>> 8) & 255, b = rgb & 255;
+		int luminance = (13933 * r + 46871 * g + 4732 * b + 32768) >>> 16;
+		return mul255(maskAlpha, mode == 2 ? luminance : 255 - luminance);
+	}
+
 	/* one premultiplied channel of a separable W3C mode: cs (1 - da) + cd (1 - sa) + sa da B(cd / da, cs / sa) */
 	private static int separable(Mode mode, int sc, int sa, int dc, int da) {
 		int base = mul255(sc, 255 - da) + mul255(dc, 255 - sa);
