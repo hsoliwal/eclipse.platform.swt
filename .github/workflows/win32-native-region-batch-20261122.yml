@@ -74,7 +74,7 @@ jobs:
                   for event in ('failure', 'error', 'skipped'):
                       if case.find(event) is not None:
                           raise SystemExit('Unqualified Win32 native test '+str((file,key,event)))
-          required = {'nativeUnionAndInvalidInput', 'viewportBatchPreservesDisjointRegion'}
+          required = {'nativeUnionAndInvalidInput', 'viewportBatchPreservesDisjointRegion', 'malformedNativeRequestsAreAtomic'}
           if set(counts) != required or any(count != 1 for count in counts.values()):
               raise SystemExit('Exact Win32 native test identities required: '+str(counts))
           print('Actual Win32 one-call update-region tests: 2/2 executed and passed')

@@ -117,4 +117,53 @@ class NativeRegionBatchWin32Tests {
 			shell.dispose();
 		}
 	}
+	@org.junit.jupiter.api.Test
+	void malformedNativeRequestsAreAtomic() {
+		org.eclipse.swt.widgets.Shell shell = new org.eclipse.swt.widgets.Shell(
+				org.eclipse.swt.widgets.Display.getDefault());
+		try {
+			org.eclipse.swt.widgets.Canvas canvas = new org.eclipse.swt.widgets.Canvas(shell, org.eclipse.swt.SWT.NONE);
+			canvas.setBounds(0, 0, 360, 250);
+			shell.setSize(430, 330);
+			shell.open();
+			canvas.update();
+			long hwnd = canvas.handle;
+			org.junit.jupiter.api.Assertions.assertTrue(org.eclipse.swt.internal.win32.OS.ValidateRect(hwnd, null));
+			int[] good = {8, 12, 16, 14, 220, 160, 18, 16};
+			int[][] malformed = {
+					{8, 12, 0, 14, 220, 160, 18, 16},
+					{8, 12, -1, 14, 220, 160, 18, 16},
+					{Integer.MAX_VALUE, 12, 2, 14, 220, 160, 18, 16},
+					{8, Integer.MAX_VALUE, 16, 14, 220, 160, 18, 16}
+			};
+			long rgn = org.eclipse.swt.internal.win32.OS.CreateRectRgn(0, 0, 0, 0);
+			org.junit.jupiter.api.Assertions.assertTrue(rgn != 0);
+			try {
+				for (int[] invalid : malformed) {
+					org.junit.jupiter.api.Assertions.assertFalse(org.eclipse.swt.internal.win32.OS.RedrawWindowRegions(
+							hwnd, invalid, 2, org.eclipse.swt.internal.win32.OS.RDW_INVALIDATE));
+				}
+				org.junit.jupiter.api.Assertions.assertFalse(org.eclipse.swt.internal.win32.OS.RedrawWindowRegions(
+						hwnd, null, 2, org.eclipse.swt.internal.win32.OS.RDW_INVALIDATE));
+				org.junit.jupiter.api.Assertions.assertFalse(org.eclipse.swt.internal.win32.OS.RedrawWindowRegions(
+						hwnd, good, 1, org.eclipse.swt.internal.win32.OS.RDW_INVALIDATE));
+				org.junit.jupiter.api.Assertions.assertFalse(org.eclipse.swt.internal.win32.OS.RedrawWindowRegions(
+						hwnd, good, 65, org.eclipse.swt.internal.win32.OS.RDW_INVALIDATE));
+				org.junit.jupiter.api.Assertions.assertFalse(org.eclipse.swt.internal.win32.OS.RedrawWindowRegions(
+						hwnd, good, 3, org.eclipse.swt.internal.win32.OS.RDW_INVALIDATE));
+				org.junit.jupiter.api.Assertions.assertFalse(org.eclipse.swt.internal.win32.OS.RedrawWindowRegions(
+						hwnd, good, 2, 0));
+				org.junit.jupiter.api.Assertions.assertFalse(org.eclipse.swt.internal.win32.OS.RedrawWindowRegions(
+						hwnd, good, 2, org.eclipse.swt.internal.win32.OS.RDW_INVALIDATE | 0x40000000));
+				org.junit.jupiter.api.Assertions.assertEquals(org.eclipse.swt.internal.win32.OS.NULLREGION,
+						org.eclipse.swt.internal.win32.OS.GetUpdateRgn(hwnd, rgn, false),
+						"Rejected native region batches must never modify the HWND update region");
+			} finally {
+				org.eclipse.swt.internal.win32.OS.DeleteObject(rgn);
+			}
+		} finally {
+			shell.dispose();
+		}
+	}
+
 }
