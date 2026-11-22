@@ -1,0 +1,88 @@
+name: Win32 one-call native region batch qualification
+
+on:
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT PI/win32/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/win32/**'
+      - 'tests/org.eclipse.swt.tests.win32/**'
+      - '.github/workflows/win32-native-region-batch-20261122.yml'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  win32-native-region:
+    runs-on: windows-latest
+    timeout-minutes: 55
+    permissions:
+      contents: read
+    env:
+      SWT_NATIVE_REGION_BATCH_REQUIRED: 'true'
+      JAVA_TOOL_OPTIONS: '-Dswt.win32.nativeRegionBatch=true -Dswt.win32.nativeRegionBatch.required=true'
+    steps:
+      - name: Checkout SWT product
+        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v5.0.0
+        with:
+          fetch-depth: 0
+          lfs: false
+          persist-credentials: false
+      - name: Set up Java21
+        uses: actions/setup-java@de5a937a1dc73fbc1a67d7d1aa4bebc1082f3190 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: '21.0.13+9'
+          cache: maven
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@12eb41b233df95d49b0c11fc1b5bc8312e5d4ce0 # v5.1
+        with:
+          maven-version: 3.9.16
+      - name: Regenerate JNI glue and refuse stale generated changes
+        shell: bash
+        run: |
+          mvn -B --non-recursive -Pjni-generator exec:exec@run-jni-generator
+          git diff --exit-code -- 'bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/os.c' 'bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/os_stats.c' 'bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/os_stats.h'
+      - name: Build original product and rebuilt Win32 native DLL; execute tests
+        shell: bash
+        run: >-
+          mvn --batch-mode -V -e --threads 1C
+          '-Dnative=win32.win32.x86_64'
+          -DforkCount=1
+          -DskipNativeTests=false
+          -DfailIfNoTests=false
+          -Dtycho.baseline.replace=none
+          --fail-at-end clean install
+      - name: Admit actual Win32 native suite case identities
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          reports = Path('tests/org.eclipse.swt.tests.win32/target/surefire-reports')
+          documents = sorted(reports.glob('TEST-*.xml'))
+          if not documents:
+              raise SystemExit('No Win32 suite reports were produced')
+          counts = {}
+          for file in documents:
+              node = ET.parse(file).getroot()
+              for case in node.iter('testcase'):
+                  if case.attrib.get('classname') != 'org.eclipse.swt.tests.win32.NativeRegionBatchWin32Tests':
+                      continue
+                  key = case.attrib.get('name', '')
+                  counts[key] = counts.get(key, 0) + 1
+                  for event in ('failure', 'error', 'skipped'):
+                      if case.find(event) is not None:
+                          raise SystemExit('Unqualified Win32 native test '+str((file,key,event)))
+          required = {'nativeUnionAndInvalidInput', 'viewportBatchPreservesDisjointRegion'}
+          if set(counts) != required or any(count != 1 for count in counts.values()):
+              raise SystemExit('Exact Win32 native test identities required: '+str(counts))
+          print('Actual Win32 one-call update-region tests: 2/2 executed and passed')
+          PY
+      - name: Retain raw Windows native JUnit reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: win32-native-region-batch-java21-reports
+          if-no-files-found: warn
+          path: tests/org.eclipse.swt.tests.win32/target/surefire-reports/*.xml
