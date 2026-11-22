@@ -2654,6 +2654,12 @@ LRESULT wmPrint (long hwnd, long wParam, long lParam) {
 	if ((lParam & OS.PRF_NONCLIENT) != 0) {
 		int bits = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
 		if ((bits & OS.WS_EX_CLIENTEDGE) != 0) {
+			/* The native procedure honors PRF_CHECKVISIBLE; the SWT theme
+			 * border painted below otherwise leaks into a hidden HWND's
+			 * caller-provided printing HDC. */
+			if ((lParam & OS.PRF_CHECKVISIBLE) != 0 && !OS.IsWindowVisible (hwnd)) {
+				return LRESULT.ZERO;
+			}
 			long code = callWindowProc (hwnd, OS.WM_PRINT, wParam, lParam);
 			RECT rect = new RECT ();
 			OS.GetWindowRect (hwnd, rect);
