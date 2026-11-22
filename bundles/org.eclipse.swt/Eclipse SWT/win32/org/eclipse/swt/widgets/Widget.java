@@ -2660,19 +2660,45 @@ LRESULT wmPrint (long hwnd, long wParam, long lParam) {
 			if ((lParam & OS.PRF_CHECKVISIBLE) != 0 && !OS.IsWindowVisible (hwnd)) {
 				return LRESULT.ZERO;
 			}
-			long code = callWindowProc (hwnd, OS.WM_PRINT, wParam, lParam);
-			RECT rect = new RECT ();
-			OS.GetWindowRect (hwnd, rect);
-			rect.right -= rect.left;
-			rect.bottom -= rect.top;
-			rect.left = rect.top = 0;
-			int border = getSystemMetrics (OS.SM_CXEDGE);
-			OS.ExcludeClipRect (wParam, border, border, rect.right - border, rect.bottom - border);
-			OS.DrawThemeBackground(display.hEditTheme(nativeZoom), wParam, OS.EP_EDITTEXT, OS.ETS_NORMAL, rect, null);
-			return new LRESULT (code);
+			return printThemedNonclientFrame (hwnd, wParam, lParam);
 		}
 	}
 	return null;
+}
+
+/**
+ * Prints the existing themed Win32 non-client edge and restores the caller's
+ * HDC state. The native window procedure runs first, as before. The theme
+ * overlay is skipped if SaveDC fails or native frame geometry is unavailable.
+ * SWT's theme overlay runs only after a successful SaveDC and the paired
+ * RestoreDC; the native window procedure still receives the original HDC.
+ */
+private LRESULT printThemedNonclientFrame (long hwnd, long hDC, long flags) {
+	int savedDC = OS.SaveDC (hDC);
+	try {
+		long code = callWindowProc (hwnd, OS.WM_PRINT, hDC, flags);
+		if (savedDC != 0) {
+			RECT rect = new RECT ();
+			if (OS.GetWindowRect (hwnd, rect)) {
+				int width = rect.right - rect.left;
+				int height = rect.bottom - rect.top;
+				if (width > 0 && height > 0) {
+					rect.left = rect.top = 0;
+					rect.right = width;
+					rect.bottom = height;
+					int border = Math.max (0, getSystemMetrics (OS.SM_CXEDGE));
+					OS.ExcludeClipRect (hDC, border, border,
+							Math.max (border, width - border),
+							Math.max (border, height - border));
+					OS.DrawThemeBackground (display.hEditTheme (nativeZoom), hDC,
+							OS.EP_EDITTEXT, OS.ETS_NORMAL, rect, null);
+				}
+			}
+		}
+		return new LRESULT (code);
+	} finally {
+		if (savedDC != 0) OS.RestoreDC (hDC, savedDC);
+	}
 }
 
 LRESULT wmRButtonDblClk (long hwnd, long wParam, long lParam) {
