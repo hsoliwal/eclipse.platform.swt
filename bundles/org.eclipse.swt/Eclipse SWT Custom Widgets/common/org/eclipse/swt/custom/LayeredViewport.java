@@ -686,6 +686,7 @@ public final class LayeredViewport extends Canvas {
      */
     public final class Layer {
         private final long id;
+        // Maintained by structural edits; hot-path invalidation never scans stack.
         private int zIndex = -1;
         private String name;
         private long x, y, right, bottom;
