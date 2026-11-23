@@ -2179,71 +2179,94 @@ public final class LayeredViewport extends Canvas {
         double width = device(layer.right, ox, layerScaleX(layer)) - left, height = device(layer.bottom, oy, layerScaleY(layer)) - top;
         if (!(width > 0) || !(height > 0) || source.width == 0 || source.height == 0
                 || maskData != null && (maskData.width == 0 || maskData.height == 0)) return;
-        Image under = new Image(getDisplay(), tile.width, tile.height);
-        try {
-            back[0].copyArea(under, tile.x, tile.y);
-            ImageData below = under.getImageData();
-            ImageDataArgb store = new ImageDataArgb(below); // whole-row conversion, no per-pixel RGB objects
-            ImageDataArgb sourceColors = new ImageDataArgb(source);
-            ImageDataArgb maskColors = maskData != null && maskMode >= MASK_LUMINANCE
-                    ? new ImageDataArgb(maskData) : null;
-            int rowsPerBatch = Math.max(1, BLEND_BATCH_PIXELS / tile.width);
-            int capacity = Math.min(rowsPerBatch, tile.height) * tile.width;
-            int[] dst = new int[capacity], src = new int[capacity];
-            byte[] cover = maskData == null ? null : new byte[capacity];
-            for (int startRow = 0; startRow < tile.height; startRow += rowsPerBatch) {
-                int rows = Math.min(rowsPerBatch, tile.height - startRow);
-                for (int row = 0; row < rows; row++) {
-                    int j = startRow + row, base = row * tile.width;
-                    int sy = clipSource((tile.y + j + 0.5 - top) / height * source.height, source.height - 1, false);
-                    int my = maskData == null ? 0 : clipSource(
-                            (tile.y + j + 0.5 - top) / height * maskData.height, maskData.height - 1, false);
-                    store.opaqueRow(j, dst, base);
-                    for (int i = 0; i < tile.width; i++) {
-                        int sx = clipSource((tile.x + i + 0.5 - left) / width * source.width, source.width - 1, false);
-                        int pixel = source.getPixel(sx, sy);
-                        int alpha = source.alphaData != null ? source.getAlpha(sx, sy) : source.alpha >= 0 ? source.alpha : 255;
-                        if (source.transparentPixel >= 0 && pixel == source.transparentPixel) alpha = 0;
-                        int rgb = sourceColors.rgb(pixel);
-                        src[base + i] = alpha << 24 | ((rgb >>> 16 & 0xFF) * alpha + 127) / 255 << 16
-                                | ((rgb >>> 8 & 0xFF) * alpha + 127) / 255 << 8
-                                | ((rgb & 0xFF) * alpha + 127) / 255;
-                        if (maskData != null) {
-                            int mx = clipSource((tile.x + i + 0.5 - left) / width
-                                    * maskData.width, maskData.width - 1, false);
-                            int maskPixel = maskData.getPixel(mx, my);
-                            int maskAlpha = maskData.alphaData != null ? maskData.getAlpha(mx, my)
-                                    : maskData.alpha >= 0 ? maskData.alpha : 255;
-                            if (maskData.transparentPixel >= 0 && maskPixel == maskData.transparentPixel) {
-                                maskAlpha = 0;
+
+        // GEGL-style bounded region work: a 16K pixel CPU lane must not still
+        // require viewport-sized temporary native Images and ImageData copies.
+        // Each source/destination sample uses absolute device coordinates;
+        // partitioning is therefore pixel-identical to one large damage tile.
+        int bandWidth = Math.min(tile.width, BLEND_BATCH_PIXELS);
+        int bandRows = Math.min(tile.height, Math.max(1, BLEND_BATCH_PIXELS / bandWidth));
+        int capacity = Math.multiplyExact(bandWidth, bandRows);
+        int[] dst = new int[capacity], src = new int[capacity];
+        byte[] cover = maskData == null ? null : new byte[capacity];
+        ImageDataArgb sourceColors = new ImageDataArgb(source);
+        ImageDataArgb maskColors = maskData != null && maskMode >= MASK_LUMINANCE
+                ? new ImageDataArgb(maskData) : null;
+
+        for (int startY = 0; startY < tile.height;) {
+            int rows = Math.min(bandRows, tile.height - startY);
+            for (int startX = 0; startX < tile.width;) {
+                int columns = Math.min(bandWidth, tile.width - startX);
+                int screenX = tile.x + startX, screenY = tile.y + startY;
+                // The input and output SWT Images are each <= BLEND_BATCH_PIXELS
+                // pixels, including when the viewport is wider than that limit.
+                Image under = new Image(getDisplay(), columns, rows);
+                try {
+                    back[0].copyArea(under, screenX, screenY);
+                    ImageData below = under.getImageData();
+                    ImageDataArgb store = new ImageDataArgb(below);
+                    for (int row = 0; row < rows; row++) {
+                        int screenRow = screenY + row, base = row * columns;
+                        int sy = clipSource((screenRow + 0.5 - top) / height
+                                * source.height, source.height - 1, false);
+                        int my = maskData == null ? 0 : clipSource(
+                                (screenRow + 0.5 - top) / height * maskData.height,
+                                maskData.height - 1, false);
+                        store.opaqueRow(row, dst, base);
+                        for (int column = 0; column < columns; column++) {
+                            int screenColumn = screenX + column;
+                            int sx = clipSource((screenColumn + 0.5 - left) / width
+                                    * source.width, source.width - 1, false);
+                            int pixel = source.getPixel(sx, sy);
+                            int alpha = source.alphaData != null ? source.getAlpha(sx, sy)
+                                    : source.alpha >= 0 ? source.alpha : 255;
+                            if (source.transparentPixel >= 0 && pixel == source.transparentPixel) alpha = 0;
+                            int rgb = sourceColors.rgb(pixel);
+                            src[base + column] = alpha << 24 | ((rgb >>> 16 & 0xFF) * alpha + 127) / 255 << 16
+                                    | ((rgb >>> 8 & 0xFF) * alpha + 127) / 255 << 8
+                                    | ((rgb & 0xFF) * alpha + 127) / 255;
+                            if (maskData != null) {
+                                int mx = clipSource((screenColumn + 0.5 - left) / width
+                                        * maskData.width, maskData.width - 1, false);
+                                int maskPixel = maskData.getPixel(mx, my);
+                                int maskAlpha = maskData.alphaData != null ? maskData.getAlpha(mx, my)
+                                        : maskData.alpha >= 0 ? maskData.alpha : 255;
+                                if (maskData.transparentPixel >= 0 && maskPixel == maskData.transparentPixel) {
+                                    maskAlpha = 0;
+                                }
+                                int maskRgb = maskColors == null ? 0 : maskColors.rgb(maskPixel);
+                                cover[base + column] = (byte) LayerArgbCompositor.maskCoverage(
+                                        maskAlpha, maskRgb, maskMode);
                             }
-                            int maskRgb = maskColors == null ? 0 : maskColors.rgb(maskPixel);
-                            cover[base + i] = (byte) LayerArgbCompositor.maskCoverage(maskAlpha, maskRgb, maskMode);
                         }
                     }
+                    int pixels = rows * columns;
+                    if (cover == null) {
+                        LayerArgbCompositor.composite(dst, 0, src, 0, pixels,
+                                layer.opacity, BLEND_MODES[layer.blendMode]);
+                    } else {
+                        LayerArgbCompositor.compositeMasked(dst, 0, src, 0, cover, 0, pixels,
+                                layer.opacity, BLEND_MODES[layer.blendMode]);
+                    }
+                    for (int row = 0; row < rows; row++) {
+                        store.setOpaqueRow(row, dst, row * columns);
+                    }
+                    Image blended = new Image(getDisplay(), below);
+                    try {
+                        back[0].setClipping(tile);
+                        back[0].setAlpha(255);
+                        back[0].drawImage(blended, screenX, screenY);
+                    } finally {
+                        blended.dispose();
+                    }
+                } finally {
+                    under.dispose();
                 }
-                if (cover == null) {
-                    LayerArgbCompositor.composite(dst, 0, src, 0, rows * tile.width,
-                            layer.opacity, BLEND_MODES[layer.blendMode]);
-                } else {
-                    LayerArgbCompositor.compositeMasked(dst, 0, src, 0, cover, 0, rows * tile.width,
-                            layer.opacity, BLEND_MODES[layer.blendMode]);
-                }
-                for (int row = 0; row < rows; row++) {
-                    int j = startRow + row, base = row * tile.width;
-                    store.setOpaqueRow(j, dst, base);
-                }
+                // Advance by the actual final-band width to avoid int overflow
+                // when the device rectangle reaches Integer.MAX_VALUE.
+                startX += columns;
             }
-            Image blended = new Image(getDisplay(), below);
-            try {
-                back[0].setClipping(tile);
-                back[0].setAlpha(255);
-                back[0].drawImage(blended, tile.x, tile.y);
-            } finally {
-                blended.dispose();
-            }
-        } finally {
-            under.dispose();
+            startY += rows;
         }
     }
 

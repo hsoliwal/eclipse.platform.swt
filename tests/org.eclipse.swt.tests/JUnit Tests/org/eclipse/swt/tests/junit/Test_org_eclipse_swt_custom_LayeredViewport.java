@@ -795,6 +795,61 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testMaskedBlendRecomposesAcrossBoundedRasterBands() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Image blue = solidImage(SWT.COLOR_BLUE, 280), red = solidImage(SWT.COLOR_RED, 280);
+        PaletteData palette = new PaletteData(0xFF0000, 0xFF00, 0xFF);
+        ImageData coverage = new ImageData(3, 1, 24, palette);
+        for (int x = 0; x < 3; x++) coverage.setPixel(x, 0, 0xFFFFFF);
+        coverage.setAlpha(0, 0, 0);
+        coverage.setAlpha(1, 0, 128);
+        coverage.setAlpha(2, 0, 255);
+        Image mask = new Image(viewport.getDisplay(), coverage);
+        Layer ground = viewport.addImageLayer("blue below", blue, 0, 0);
+        Layer top = viewport.addImageLayer("masked red", red, 0, 0);
+        try {
+            top.setMask(mask);
+            top.setBlendMode(LayeredViewport.BLEND_MULTIPLY);
+            top.setRetained(true);
+            show();
+            // A 280-wide dirty tile splits after each 58 rows (16,384/280).
+            for (int y : new int[] { 0, 57, 58, 115, 116, 173, 174, 231 }) {
+                ImageData data = pixels();
+                assertEquals(new RGB(0, 0, 255), rgb(data, 20, y),
+                        "uncovered blue near tile band y=" + y);
+                RGB half = rgb(data, 140, y);
+                assertEquals(0, half.red);
+                assertEquals(0, half.green);
+                assertTrue(Math.abs(half.blue - 127) <= 3,
+                        "half coverage near tile band y=" + y + ": " + half);
+                assertEquals(new RGB(0, 0, 0), rgb(data, 260, y),
+                        "red multiplied with blue near tile band y=" + y);
+            }
+            assertSameAsAFullRecomposition();
+            paintAfter(() -> top.setMaskMode(LayeredViewport.MASK_INVERTED_ALPHA));
+            ImageData inverse = pixels();
+            assertEquals(new RGB(0, 0, 0), rgb(inverse, 20, 173));
+            assertEquals(new RGB(0, 0, 255), rgb(inverse, 260, 173));
+            assertSameAsAFullRecomposition();
+            paintAfter(() -> top.setBlendMode(LayeredViewport.BLEND_SCREEN));
+            ImageData screen = pixels();
+            assertEquals(new RGB(255, 0, 255), rgb(screen, 20, 174));
+            assertEquals(new RGB(0, 0, 255), rgb(screen, 260, 174));
+            panAndPaint(10, 2);
+            assertSameAsAFullRecomposition();
+            assertFalse(mask.isDisposed(), "SWT does not own a borrowed raster mask");
+        } finally {
+            if (!viewport.isDisposed()) {
+                top.remove();
+                ground.remove();
+            }
+            blue.dispose();
+            red.dispose();
+            mask.dispose();
+        }
+    }
+
+    @Test
     public void testLargeBlendedTileCrossesNativeBatchBoundaryWithoutSeams() {
         viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
         Image red = solidImage(SWT.COLOR_RED, 180), blue = solidImage(SWT.COLOR_BLUE, 180);
