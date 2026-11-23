@@ -600,6 +600,77 @@ public class Test_ViewportImageLayers {
 		assertThrows (IllegalArgumentException.class, () -> graph.imageLayerClipEquals (layer, 0, 0, 1, 1));
 	}
 
+
+	@Test
+	public void test_rowStridedBackingStoreMatchesOriginalAffineMaskedRaster () {
+		ImageLayers graph = new ImageLayers ();
+		graph.addImageLayer (4, 3, new int [] {
+			RED, GREEN, BLUE, WHITE,
+			WHITE, BLUE, GREEN, RED,
+			BLUE, RED, WHITE, GREEN
+		});
+		int top = graph.addImageLayer (3, 2,
+				new int [] {0x80ff0000, GREEN, BLUE, 0x6040ff80, WHITE, 0});
+		graph.setImageLayerMask (top, new byte [] {(byte)255, 0, (byte)128,
+				(byte)200, 33, (byte)255});
+		graph.setImageLayerOpacity (top, 173);
+		graph.setImageLayerTransform (top, affine (1, 0.25f, -0.5f, 1, 1, -1));
+		graph.setImageLayerClip (top, 0, 0, 3, 2);
+		Random random = new Random (0x5eed7203);
+		for (int trial = 0; trial < 192; trial++) {
+			int x = random.nextInt (13) - 6, y = random.nextInt (13) - 6;
+			int w = random.nextInt (17) + 1, h = random.nextInt (13) + 1;
+			int stride = w + random.nextInt (9), offset = random.nextInt (8);
+			int [] flat = new int [w * h];
+			graph.compositeImageLayers (x, y, w, h, flat);
+			int [] actual = new int [offset + (h - 1) * stride + w + 8];
+			Arrays.fill (actual, 0x5a7eb034);
+			int [] expected = actual.clone ();
+			for (int row = 0; row < h; row++) {
+				System.arraycopy (flat, row * w, expected, offset + row * stride, w);
+			}
+			graph.compositeImageLayers (x, y, w, h, actual, offset, stride);
+			assertArrayEquals (expected, actual,
+					"affine and masked output must preserve destination padding, trial " + trial);
+		}
+	}
+
+	@Test
+	public void test_rowStridedOutputRejectsInvalidBoundsWithoutMutation () {
+		ImageLayers graph = new ImageLayers ();
+		graph.addImageLayer (2, 2, new int [] {RED, GREEN, BLUE, WHITE});
+		int [] output = new int [15];
+		Arrays.fill (output, 73);
+		int [] before = output.clone ();
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.compositeImageLayers (0, 0, 2, 2, output, -1, 3));
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.compositeImageLayers (0, 0, 2, 2, output, 0, 1));
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.compositeImageLayers (0, 0, 2, 2, output, 10, 4));
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.compositeImageLayers (0, 0, 2, 2, output, 0, Integer.MAX_VALUE));
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.compositeImageLayers (0, 0, -1, 2, output, 0, 0));
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.compositeImageLayers (0, 0, Integer.MAX_VALUE, 2, output, 0, Integer.MAX_VALUE));
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.compositeImageLayers (0, 0, 2, 2, null, 0, 2));
+		assertArrayEquals (before, output, "all geometry must be validated before changing the backing");
+		graph.compositeImageLayers (0, 0, 0, 0, output, output.length, 0);
+		graph.compositeImageLayers (0, 0, 0, 3, output, output.length, 7);
+		graph.compositeImageLayers (0, 0, 0, Integer.MAX_VALUE, output,
+				output.length, Integer.MAX_VALUE);
+		graph.compositeImageLayers (0, 0, Integer.MAX_VALUE, 0, output,
+				output.length, Integer.MAX_VALUE);
+		graph.compositeImageLayers (0, 0, 0, Integer.MAX_VALUE, new int [0], 0, Integer.MAX_VALUE);
+		graph.compositeImageLayers (0, 0, 0, Integer.MAX_VALUE, new int [0]);
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.compositeImageLayers (0, 0, 0, 3, output,
+						output.length + 1, Integer.MAX_VALUE));
+		assertArrayEquals (before, output,
+				"a zero-area tile must never inspect nonexistent rows or clear padding");
+	}
 	private static int [] filledPixels (int size, int color) {
 		int [] result = new int [size];
 		Arrays.fill (result, color);
