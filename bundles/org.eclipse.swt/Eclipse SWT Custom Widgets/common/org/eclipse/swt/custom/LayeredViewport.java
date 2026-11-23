@@ -56,8 +56,8 @@ import org.eclipse.swt.widgets.Shell;
  * its alpha, and a painter layer below 255 is painted onto a copy of the
  * composite beneath it which is then blended once, so the layer's own shapes
  * do not darken each other where they overlap. Image layers also support the
- * separable blend modes below. Arbitrary masks and native child-control
- * composition are outside this API.</p>
+ * separable blend modes below. Image layers can use alpha/luminance raster
+ * masks; vector-painter, group and native-control masking remain outside this API.</p>
  *
  * <p>Control layers bring real widgets into the layered world: a native
  * child control (a Text, a Button, any Nebula widget) placed at world bounds,
@@ -703,6 +703,10 @@ public final class LayeredViewport extends Canvas {
         /* the blend mode (BLEND_*) and, for a blended image layer, its pixels read once (null until needed) */
         private int blendMode = BLEND_NORMAL;
         private ImageData blendSource;
+        /* Borrowed raster coverage, sampled in the layer's projected bounds. Re-read on redraw. */
+        private Image mask;
+        private ImageData maskSource;
+        private int maskMode = MASK_ALPHA;
         /* retained: this layer's composite (it and everything below it) kept in its own image, with the pixels of
            that image that no longer match the layers */
         private boolean retained;
@@ -962,6 +966,7 @@ public final class LayeredViewport extends Canvas {
         public void redraw() {
             checked();
             blendSource = null; // the image's pixels may have changed
+            maskSource = null; // a borrowed mask's pixels may also have changed
             if (nativeLayer != 0) {
                 // a native layer's pixels are the window system's: send them again
                 dropNative(this);
@@ -1119,6 +1124,44 @@ public final class LayeredViewport extends Canvas {
             return blendMode;
         }
 
+        /**
+         * Non-destructive image-layer coverage. The borrowed mask is never disposed by SWT.
+         * It is stretched to this layer's world bounds and only damaged viewport pixels are sampled.
+         * Raster masks are not yet supported for painters, layer groups or native controls.
+         * After changing pixels of the same mask Image, call {@link #redraw()} to refresh its snapshot.
+         */
+        public void setMask(Image value) {
+            checked();
+            if (value != null && value.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (value != null && (image == null || control != null)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (mask == value) return;
+            invalidate(this);
+            mask = value;
+            maskSource = null;
+            invalidate(this);
+            syncNative();
+        }
+
+        public Image getMask() {
+            checked();
+            return mask;
+        }
+
+        /** One of MASK_ALPHA, MASK_INVERTED_ALPHA, MASK_LUMINANCE or MASK_INVERTED_LUMINANCE. */
+        public void setMaskMode(int value) {
+            checked();
+            if (value < MASK_ALPHA || value > MASK_INVERTED_LUMINANCE) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (maskMode == value) return;
+            if (mask != null) invalidate(this);
+            maskMode = value;
+            if (mask != null) invalidate(this);
+        }
+
+        public int getMaskMode() {
+            checked();
+            return maskMode;
+        }
+
         public boolean isLocked() {
             checked();
             return locked;
@@ -1139,6 +1182,7 @@ public final class LayeredViewport extends Canvas {
             image = value;
             painter = null;
             blendSource = null;
+            maskSource = null;
             invalidate(this);
             dropNative(this); // new pixels
             syncNative();
@@ -1149,6 +1193,8 @@ public final class LayeredViewport extends Canvas {
             invalidate(this);
             painter = value;
             image = null;
+            mask = null; // an image coverage mask never silently affects a replacement painter
+            maskSource = null;
             invalidate(this);
             syncNative();
         }
@@ -1223,6 +1269,8 @@ public final class LayeredViewport extends Canvas {
             dropNative(this);
             control = null; // the control stays the application's, where it was
             image = null;
+            mask = null;
+            maskSource = null;
             painter = null;
             hitTester = null;
             pointerListener = null;
@@ -1239,6 +1287,10 @@ public final class LayeredViewport extends Canvas {
      * Blend modes of a layer ({@link Layer#setBlendMode(int)}): normal, then the separable modes of W3C Compositing
      * and Blending Level 1 (the layer modes of GIMP, Inkscape and Photoshop).
      */
+    /** Raster mask modes parallel GTK/GSK: alpha, inverted alpha, luminance and inverted luminance. */
+    public static final int MASK_ALPHA = 0, MASK_INVERTED_ALPHA = 1,
+            MASK_LUMINANCE = 2, MASK_INVERTED_LUMINANCE = 3;
+
     public static final int BLEND_NORMAL = 0, BLEND_MULTIPLY = 1, BLEND_SCREEN = 2, BLEND_OVERLAY = 3,
             BLEND_DARKEN = 4, BLEND_LIGHTEN = 5, BLEND_COLOR_DODGE = 6, BLEND_COLOR_BURN = 7,
             BLEND_HARD_LIGHT = 8, BLEND_SOFT_LIGHT = 9, BLEND_DIFFERENCE = 10, BLEND_EXCLUSION = 11;
@@ -1366,6 +1418,8 @@ public final class LayeredViewport extends Canvas {
                 stack[i].releaseComposite();
                 stack[i].control = null;
                 stack[i].image = null;
+                stack[i].mask = null;
+                stack[i].maskSource = null;
                 stack[i].painter = null;
                 stack[i].hitTester = null;
                 stack[i].pointerListener = null;
@@ -1970,11 +2024,13 @@ public final class LayeredViewport extends Canvas {
                 if (layer.removed || !layer.visible || layer.opacity == 0 || layer.nativeLayer != 0) continue;
                 Rectangle tile = projectedClip(layer, damage);
                 if (tile == null) continue;
-                if (layer.image != null && layer.blendMode != BLEND_NORMAL) {
-                    // the scope restores the clip and alpha the blend sets, as for every other layer
+                if (layer.image != null && (layer.blendMode != BLEND_NORMAL || layer.mask != null)) {
+                    // Masks reuse the existing bounded premultiplied scanline compositor.
                     try (ViewportGcProxy state = ViewportGcProxy.wrap(back[0])) {
                         state.clip(tile).alpha(255);
-                        if (!layer.image.isDisposed()) paintBlended(back, layer, tile);
+                        if (!layer.image.isDisposed() && (layer.mask == null || !layer.mask.isDisposed())) {
+                            paintBlended(back, layer, tile);
+                        }
                     }
                     continue;
                 }
@@ -2114,53 +2170,103 @@ public final class LayeredViewport extends Canvas {
         if (tile.width <= 0 || tile.height <= 0) return;
         if (layer.blendSource == null) layer.blendSource = layer.image.getImageData();
         ImageData source = layer.blendSource;
+        Image mask = layer.mask;
+        if (mask != null && layer.maskSource == null) layer.maskSource = mask.getImageData();
+        ImageData maskData = mask == null ? null : layer.maskSource;
+        int maskMode = layer.maskMode;
         long ox = layerOriginX(layer), oy = layerOriginY(layer);
         double left = device(layer.x, ox, layerScaleX(layer)), top = device(layer.y, oy, layerScaleY(layer));
         double width = device(layer.right, ox, layerScaleX(layer)) - left, height = device(layer.bottom, oy, layerScaleY(layer)) - top;
-        if (!(width > 0) || !(height > 0) || source.width == 0 || source.height == 0) return;
-        Image under = new Image(getDisplay(), tile.width, tile.height);
-        try {
-            back[0].copyArea(under, tile.x, tile.y);
-            ImageData below = under.getImageData();
-            ImageDataArgb store = new ImageDataArgb(below); // whole-row conversion, no per-pixel RGB objects
-            ImageDataArgb sourceColors = new ImageDataArgb(source);
-            int rowsPerBatch = Math.max(1, BLEND_BATCH_PIXELS / tile.width);
-            int capacity = Math.min(rowsPerBatch, tile.height) * tile.width;
-            int[] dst = new int[capacity], src = new int[capacity];
-            for (int startRow = 0; startRow < tile.height; startRow += rowsPerBatch) {
-                int rows = Math.min(rowsPerBatch, tile.height - startRow);
-                for (int row = 0; row < rows; row++) {
-                    int j = startRow + row, base = row * tile.width;
-                    int sy = clipSource((tile.y + j + 0.5 - top) / height * source.height, source.height - 1, false);
-                    store.opaqueRow(j, dst, base);
-                    for (int i = 0; i < tile.width; i++) {
-                        int sx = clipSource((tile.x + i + 0.5 - left) / width * source.width, source.width - 1, false);
-                        int pixel = source.getPixel(sx, sy);
-                        int alpha = source.alphaData != null ? source.getAlpha(sx, sy) : source.alpha >= 0 ? source.alpha : 255;
-                        if (source.transparentPixel >= 0 && pixel == source.transparentPixel) alpha = 0;
-                        int rgb = sourceColors.rgb(pixel);
-                        src[base + i] = alpha << 24 | ((rgb >>> 16 & 0xFF) * alpha + 127) / 255 << 16
-                                | ((rgb >>> 8 & 0xFF) * alpha + 127) / 255 << 8
-                                | ((rgb & 0xFF) * alpha + 127) / 255;
+        if (!(width > 0) || !(height > 0) || source.width == 0 || source.height == 0
+                || maskData != null && (maskData.width == 0 || maskData.height == 0)) return;
+
+        // GEGL-style bounded region work: a 16K pixel CPU lane must not still
+        // require viewport-sized temporary native Images and ImageData copies.
+        // Each source/destination sample uses absolute device coordinates;
+        // partitioning is therefore pixel-identical to one large damage tile.
+        int bandWidth = Math.min(tile.width, BLEND_BATCH_PIXELS);
+        int bandRows = Math.min(tile.height, Math.max(1, BLEND_BATCH_PIXELS / bandWidth));
+        int capacity = Math.multiplyExact(bandWidth, bandRows);
+        int[] dst = new int[capacity], src = new int[capacity];
+        byte[] cover = maskData == null ? null : new byte[capacity];
+        ImageDataArgb sourceColors = new ImageDataArgb(source);
+        ImageDataArgb maskColors = maskData != null && maskMode >= MASK_LUMINANCE
+                ? new ImageDataArgb(maskData) : null;
+
+        for (int startY = 0; startY < tile.height;) {
+            int rows = Math.min(bandRows, tile.height - startY);
+            for (int startX = 0; startX < tile.width;) {
+                int columns = Math.min(bandWidth, tile.width - startX);
+                int screenX = tile.x + startX, screenY = tile.y + startY;
+                // The input and output SWT Images are each <= BLEND_BATCH_PIXELS
+                // pixels, including when the viewport is wider than that limit.
+                Image under = new Image(getDisplay(), columns, rows);
+                try {
+                    back[0].copyArea(under, screenX, screenY);
+                    ImageData below = under.getImageData();
+                    ImageDataArgb store = new ImageDataArgb(below);
+                    for (int row = 0; row < rows; row++) {
+                        int screenRow = screenY + row, base = row * columns;
+                        int sy = clipSource((screenRow + 0.5 - top) / height
+                                * source.height, source.height - 1, false);
+                        int my = maskData == null ? 0 : clipSource(
+                                (screenRow + 0.5 - top) / height * maskData.height,
+                                maskData.height - 1, false);
+                        store.opaqueRow(row, dst, base);
+                        for (int column = 0; column < columns; column++) {
+                            int screenColumn = screenX + column;
+                            int sx = clipSource((screenColumn + 0.5 - left) / width
+                                    * source.width, source.width - 1, false);
+                            int pixel = source.getPixel(sx, sy);
+                            int alpha = source.alphaData != null ? source.getAlpha(sx, sy)
+                                    : source.alpha >= 0 ? source.alpha : 255;
+                            if (source.transparentPixel >= 0 && pixel == source.transparentPixel) alpha = 0;
+                            int rgb = sourceColors.rgb(pixel);
+                            src[base + column] = alpha << 24 | ((rgb >>> 16 & 0xFF) * alpha + 127) / 255 << 16
+                                    | ((rgb >>> 8 & 0xFF) * alpha + 127) / 255 << 8
+                                    | ((rgb & 0xFF) * alpha + 127) / 255;
+                            if (maskData != null) {
+                                int mx = clipSource((screenColumn + 0.5 - left) / width
+                                        * maskData.width, maskData.width - 1, false);
+                                int maskPixel = maskData.getPixel(mx, my);
+                                int maskAlpha = maskData.alphaData != null ? maskData.getAlpha(mx, my)
+                                        : maskData.alpha >= 0 ? maskData.alpha : 255;
+                                if (maskData.transparentPixel >= 0 && maskPixel == maskData.transparentPixel) {
+                                    maskAlpha = 0;
+                                }
+                                int maskRgb = maskColors == null ? 0 : maskColors.rgb(maskPixel);
+                                cover[base + column] = (byte) LayerArgbCompositor.maskCoverage(
+                                        maskAlpha, maskRgb, maskMode);
+                            }
+                        }
                     }
+                    int pixels = rows * columns;
+                    if (cover == null) {
+                        LayerArgbCompositor.composite(dst, 0, src, 0, pixels,
+                                layer.opacity, BLEND_MODES[layer.blendMode]);
+                    } else {
+                        LayerArgbCompositor.compositeMasked(dst, 0, src, 0, cover, 0, pixels,
+                                layer.opacity, BLEND_MODES[layer.blendMode]);
+                    }
+                    for (int row = 0; row < rows; row++) {
+                        store.setOpaqueRow(row, dst, row * columns);
+                    }
+                    Image blended = new Image(getDisplay(), below);
+                    try {
+                        back[0].setClipping(tile);
+                        back[0].setAlpha(255);
+                        back[0].drawImage(blended, screenX, screenY);
+                    } finally {
+                        blended.dispose();
+                    }
+                } finally {
+                    under.dispose();
                 }
-                LayerArgbCompositor.composite(dst, 0, src, 0, rows * tile.width,
-                        layer.opacity, BLEND_MODES[layer.blendMode]);
-                for (int row = 0; row < rows; row++) {
-                    int j = startRow + row, base = row * tile.width;
-                    store.setOpaqueRow(j, dst, base);
-                }
+                // Advance by the actual final-band width to avoid int overflow
+                // when the device rectangle reaches Integer.MAX_VALUE.
+                startX += columns;
             }
-            Image blended = new Image(getDisplay(), below);
-            try {
-                back[0].setClipping(tile);
-                back[0].setAlpha(255);
-                back[0].drawImage(blended, tile.x, tile.y);
-            } finally {
-                blended.dispose();
-            }
-        } finally {
-            under.dispose();
+            startY += rows;
         }
     }
 
@@ -2812,10 +2918,12 @@ public final class LayeredViewport extends Canvas {
        a backend class can load. The unchanged legacy path remains the fallback. */
     private boolean nativeEligible(Layer layer, double pixelScale, Rectangle area) {
         if (isDisposed() || layer.nativePreparing || !layer.nativeRequested || layer.removed
-                || layer.image == null || layer.image.isDisposed() || layer.blendMode != BLEND_NORMAL) return false;
+                || layer.image == null || layer.image.isDisposed() || layer.blendMode != BLEND_NORMAL
+                || layer.mask != null) return false;
         if (!nativeWithinResidency(layer, area)) return false;
         if (!nativeAvailable() || layer.removed || !layer.nativeRequested
-                || layer.image == null || layer.image.isDisposed() || layer.blendMode != BLEND_NORMAL) return false;
+                || layer.image == null || layer.image.isDisposed() || layer.blendMode != BLEND_NORMAL
+                || layer.mask != null) return false;
         int width = layer.nativePixelWidth, height = layer.nativePixelHeight;
         if (layer.nativeLayer == 0) {
             Rectangle size = layer.image.getBounds();
@@ -2890,7 +2998,7 @@ public final class LayeredViewport extends Canvas {
 
     private boolean nativeOwnerCurrent(Layer layer, Image image, NativeLayers backend, long owner) {
         return !isDisposed() && composition == owner && nativeBackend == backend && !layer.removed
-                && layer.nativeRequested && layer.image == image && !image.isDisposed();
+                && layer.nativeRequested && layer.image == image && layer.mask == null && !image.isDisposed();
     }
 
     /* a layer stops being native: its native layer is freed and its pixels return to the store */
