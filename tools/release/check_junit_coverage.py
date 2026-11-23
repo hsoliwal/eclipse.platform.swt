@@ -13,6 +13,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 REQUIRED = ("Test_ItemBitSetDifferential", "Test_ItemBitSetMaximumPosition")
+# Keep receipt keys stable, but admit only the actual SWT test-class identities.
+REQUIRED_CLASSES = {"org.eclipse.swt.tests.junit." + name: name for name in REQUIRED}
 
 
 def audit(reports_root: Path) -> dict:
@@ -33,7 +35,7 @@ def audit(reports_root: Path) -> dict:
             if case.tag.rsplit("}", 1)[-1] != "testcase":
                 continue
             full_name = case.get("classname", "").strip()
-            name = full_name.rsplit(".", 1)[-1]
+            required_name = REQUIRED_CLASSES.get(full_name)
             kinds = {child.tag.rsplit("}", 1)[-1] for child in case}
             status = ("failed" if kinds & {"failure", "error"} else
                       "skipped" if "skipped" in kinds else "passed")
@@ -42,8 +44,8 @@ def audit(reports_root: Path) -> dict:
                 counters = observed.setdefault(
                     full_name, {"passed": 0, "failed": 0, "skipped": 0})
                 counters[status] += 1
-            if name in counts:
-                counts[name][status] += 1
+            if required_name is not None:
+                counts[required_name][status] += 1
     valid = bool(reports) and not errors and all(
         stats["passed"] > 0 and stats["failed"] == 0 and stats["skipped"] == 0
         for stats in counts.values()
