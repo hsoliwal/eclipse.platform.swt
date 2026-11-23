@@ -20,6 +20,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Region;
 import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.internal.win32.OS;
 import org.eclipse.swt.internal.win32.RECT;
@@ -293,6 +294,100 @@ public class Test_org_eclipse_swt_widgets_Composite {
 						"The visible native window must print its raised bevel");
 				assertEquals(originalClip, gc.getClipping());
 			} finally {
+				gc.dispose();
+				image.dispose();
+			}
+		} finally {
+			control.dispose();
+		}
+	}
+
+	/**
+	 * Even without a custom Composite bevel, SWT's inherited themed
+	 * WS_EX_CLIENTEDGE print pass must respect PRF_CHECKVISIBLE.
+	 */
+	@Test
+	public void test_hiddenThemedClientEdgeRespectsPRFCheckVisible() {
+		Composite control = new Composite(shell, SWT.BORDER);
+		try {
+			control.setBounds(12, 12, 120, 68);
+			shell.setSize(260, 180);
+			shell.open();
+			assertEquals(SWT.NONE, control.getBevelBorder());
+			assertEquals(SWT.DEFAULT, control.getBorderRelief());
+			assertTrue((OS.GetWindowLong(control.handle, OS.GWL_EXSTYLE)
+					& OS.WS_EX_CLIENTEDGE) != 0, "Native themed client edge required");
+			Image image = new Image(display, 144, 80);
+			GC gc = new GC(image);
+			try {
+				gc.setBackground(display.getSystemColor(SWT.COLOR_MAGENTA));
+				gc.fillRectangle(image.getBounds());
+				int sentinel = OS.GetPixel(gc.handle, 60, 0);
+				var beforeClip = gc.getClipping();
+				assertTrue(sentinel != -1);
+				control.setVisible(false);
+				assertFalse(OS.IsWindowVisible(control.handle));
+				OS.SendMessage(control.handle, OS.WM_PRINT, gc.handle,
+						OS.PRF_NONCLIENT | OS.PRF_CHECKVISIBLE);
+				assertEquals(sentinel, OS.GetPixel(gc.handle, 60, 0),
+						"Hidden default theme border must not modify print pixels");
+				assertEquals(beforeClip, gc.getClipping(),
+						"Hidden themed WM_PRINT must preserve caller clip");
+				control.setVisible(true);
+				assertTrue(OS.IsWindowVisible(control.handle));
+				OS.SendMessage(control.handle, OS.WM_PRINT, gc.handle,
+						OS.PRF_NONCLIENT | OS.PRF_CHECKVISIBLE);
+				assertTrue(OS.GetPixel(gc.handle, 60, 0) != sentinel,
+						"Visible native themed border must still be printed");
+			} finally {
+				gc.dispose();
+				image.dispose();
+			}
+		} finally {
+			control.dispose();
+		}
+	}
+
+	/**
+	 * The inherited Win32 themed WM_PRINT path must restore the caller's
+	 * HDC clipping region for a visible, ordinarily bordered control. The
+	 * old ExcludeClipRect implementation removed the center clip permanently.
+	 */
+	@Test
+	public void test_visibleThemedClientEdgeRestoresCallerHdcClip() {
+		Composite control = new Composite(shell, SWT.BORDER);
+		try {
+			control.setBounds(12, 12, 120, 68);
+			shell.setSize(260, 180);
+			shell.open();
+			assertEquals(SWT.NONE, control.getBevelBorder());
+			assertEquals(SWT.DEFAULT, control.getBorderRelief());
+			assertTrue(OS.IsWindowVisible(control.handle));
+			assertTrue((OS.GetWindowLong(control.handle, OS.GWL_EXSTYLE)
+					& OS.WS_EX_CLIENTEDGE) != 0);
+			Image image = new Image(display, 144, 80);
+			GC gc = new GC(image);
+			Region before = new Region(display);
+			Region after = new Region(display);
+			try {
+				gc.getClipping(before);
+				assertTrue(before.contains(60, 40), "Caller center is initially clipped in");
+				var originalClip = gc.getClipping();
+				gc.setBackground(display.getSystemColor(SWT.COLOR_MAGENTA));
+				gc.fillRectangle(image.getBounds());
+				int sentinel = OS.GetPixel(gc.handle, 60, 0);
+				assertTrue(sentinel != -1);
+				OS.SendMessage(control.handle, OS.WM_PRINT, gc.handle,
+						OS.PRF_NONCLIENT | OS.PRF_CHECKVISIBLE);
+				gc.getClipping(after);
+				assertTrue(after.contains(60, 40),
+						"Native themed frame must not exclude caller's client clip");
+				assertEquals(originalClip, gc.getClipping());
+				assertTrue(OS.GetPixel(gc.handle, 60, 0) != sentinel,
+						"Visible themed non-client border must still print");
+			} finally {
+				after.dispose();
+				before.dispose();
 				gc.dispose();
 				image.dispose();
 			}
