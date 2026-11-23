@@ -61,13 +61,25 @@ inline float f32(const std::uint8_t *p) {
 // Index the already validated candidate layers, rather than sorting a second
 // array of copied native handles on every compositor frame. Hash entries are
 // 1-based layer indices (zero means empty), so the table has bounded 4-byte
-// slots and the original frame order remains authoritative.
-inline std::uint32_t handleBucket(std::uint64_t value) noexcept {
+// slots and the original frame order remains authoritative. Use double hashing
+// to avoid clustering at the maximum legal frame size (65,536 layers).
+// A full-width avalanche hash supplies an independently odd double-hash
+// stride; at 50% occupancy this avoids primary clustering under linear probes.
+// The odd stride visits every slot of the power-of-two index table.
+inline std::uint64_t handleHash(std::uint64_t value) noexcept {
     value ^= value >> 33;
     value *= UINT64_C(0xff51afd7ed558ccd);
     value ^= value >> 33;
     value *= UINT64_C(0xc4ceb9fe1a85ec53);
-    return static_cast<std::uint32_t>(value ^ (value >> 33));
+    return value ^ (value >> 33);
+}
+
+inline std::uint32_t handleBucket(std::uint64_t value) noexcept {
+    return static_cast<std::uint32_t>(handleHash(value));
+}
+
+inline std::uint32_t handleStride(std::uint64_t value) noexcept {
+    return static_cast<std::uint32_t>(handleHash(value) >> 32) | 1U;
 }
 
 inline bool hasDuplicateHandles(const std::vector<Layer> &layers) {
@@ -79,11 +91,13 @@ inline bool hasDuplicateHandles(const std::vector<Layer> &layers) {
     std::vector<std::uint32_t> slots(capacity, 0);
     const std::size_t mask = capacity - 1;
     for (std::size_t i = 0; i < count; ++i) {
-        std::size_t slot = handleBucket(layers[i].handle) & mask;
+        const std::uint64_t hash = handleHash(layers[i].handle);
+        std::size_t slot = static_cast<std::size_t>(hash) & mask;
+        const std::size_t step = (static_cast<std::size_t>(hash >> 32) | 1U) & mask;
         unsigned probes = 0;
         while (slots[slot] != 0) {
             if (layers[slots[slot] - 1].handle == layers[i].handle) return true;
-            // A malicious packet may choose colliding native-handle bits.
+            // A malicious packet may choose colliding (slot, stride) pairs.
             // Preserve deterministic bounded worst-case work with a sorted
             // fallback rather than accepting an unbounded probe chain.
             if (++probes == 32) {
@@ -93,7 +107,7 @@ inline bool hasDuplicateHandles(const std::vector<Layer> &layers) {
                 std::sort(ordered.begin(), ordered.end());
                 return std::adjacent_find(ordered.begin(), ordered.end()) != ordered.end();
             }
-            slot = (slot + 1) & mask;
+            slot = (slot + step) & mask;
         }
         slots[slot] = static_cast<std::uint32_t>(i + 1);
     }

@@ -15,6 +15,7 @@
 #include "swt.h"
 #include "os_structs.h"
 #include "os_stats.h"
+#include <stdint.h>
 
 #define OS_NATIVE(func) Java_org_eclipse_swt_internal_win32_OS_##func
 
@@ -441,5 +442,49 @@ JNIEXPORT jlong JNICALL OS_NATIVE(DPI_1AWARENESS_1CONTEXT_1UNAWARE_1GDISCALED)
 	#endif
 	OS_NATIVE_EXIT(env, that, DPI_1AWARENESS_1CONTEXT_1UNAWARE_1GDISCALED_FUNC);
 	return rc;
+}
+#endif
+
+/* Optional private Win32 update-region batch. JNIGenerator owns os.c. */
+#ifndef NO_RedrawWindowRegions
+JNIEXPORT jboolean JNICALL OS_NATIVE(RedrawWindowRegions)
+    (JNIEnv *env, jclass that, jlong hwnd, jintArray regions, jint count, jint flags)
+{
+    enum { MAX_RECTS = 64, STRIDE = 4 };
+    jint rects[MAX_RECTS * STRIDE];
+    HRGN aggregate = NULL, one = NULL;
+    jboolean ok = JNI_FALSE;
+    int i;
+    (void)that;
+    if (!hwnd || !regions || count < 2 || count > MAX_RECTS) return JNI_FALSE;
+    if (!(flags & RDW_INVALIDATE) ||
+            (flags & ~(RDW_INVALIDATE | RDW_ALLCHILDREN))) return JNI_FALSE;
+    if ((*env)->GetArrayLength(env, regions) < count * STRIDE) return JNI_FALSE;
+    (*env)->GetIntArrayRegion(env, regions, 0, count * STRIDE, rects);
+    if ((*env)->ExceptionCheck(env)) return JNI_FALSE;
+    for (i = 0; i < count; i++) {
+        int k = i * STRIDE;
+        int64_t right = (int64_t)rects[k] + rects[k + 2];
+        int64_t bottom = (int64_t)rects[k + 1] + rects[k + 3];
+        if (rects[k + 2] <= 0 || rects[k + 3] <= 0 ||
+                right > INT32_MAX || bottom > INT32_MAX) return JNI_FALSE;
+    }
+    aggregate = CreateRectRgn(0, 0, 0, 0);
+    if (!aggregate) goto release;
+    one = CreateRectRgn(0, 0, 0, 0);
+    if (!one) goto release;
+    for (i = 0; i < count; i++) {
+        int k = i * STRIDE, left = rects[k], top = rects[k + 1];
+        int right = (int)((int64_t)left + rects[k + 2]);
+        int bottom = (int)((int64_t)top + rects[k + 3]);
+        if (!SetRectRgn(one, left, top, right, bottom)) goto release;
+        if (CombineRgn(aggregate, aggregate, one, RGN_OR) == ERROR) goto release;
+    }
+    ok = RedrawWindow((HWND)(intptr_t)hwnd, NULL, aggregate, (unsigned int)flags)
+            ? JNI_TRUE : JNI_FALSE;
+release:
+    if (one) DeleteObject(one);
+    if (aggregate) DeleteObject(aggregate);
+    return ok;
 }
 #endif

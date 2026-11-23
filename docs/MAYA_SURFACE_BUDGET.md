@@ -119,3 +119,19 @@ DirectComposition virtual surfaces can realize and trim smaller parts
 of a large logical surface, but they require a **separate tested
 implementation**. This quota patch deliberately does not claim to
 provide surface caching, eviction or GPU paging.
+
+## Optional viewport-driven surface admission
+
+The logical BGRA allocation quota is per-composition, but does not
+choose which images are currently worth allocating. The companion
+`LayeredViewport.setNativeResidencyOverscanPixels(int)` policy
+uses existing SWT projected bounds to avoid native
+`CreateSurface` for far-offscreen native image requests, then
+retires those surfaces when they pass an optional hysteresis radius.
+
+`-1` preserves original behavior, `0` means exact viewport
+membership, positive values give one-radius prefetch/two-radius
+retention. The original `MayaSurfaceBudget` still provides the
+separate hard **logical** budget guard. Neither feature measures or
+limits actual GPU residency, and neither is a virtual-surface cache.
+See [MAYA_NATIVE_VIEWPORT_RESIDENCY.md](MAYA_NATIVE_VIEWPORT_RESIDENCY.md).

@@ -162,6 +162,53 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testCachedZPositionAcrossReorderInsertionAndRemoval() {
+        List<Layer> expected = new ArrayList<>();
+        for (int i = 0; i < 32; i++) {
+            expected.add(viewport.addPaintLayer("layer " + i,
+                    0, 0, 100, 100, (gc, ctx) -> { }));
+        }
+        java.util.Random random = new java.util.Random(87123L);
+        for (int iteration = 0; iteration < 256; iteration++) {
+            if (iteration % 17 == 0) {
+                Layer cached = expected.get(random.nextInt(expected.size()));
+                cached.setRetained(!cached.isRetained());
+            }
+            int from = random.nextInt(expected.size());
+            int to = random.nextInt(expected.size());
+            Layer moved = expected.remove(from);
+            expected.add(to, moved);
+            moved.moveTo(to);
+            moved.setWorldBounds(1 + iteration % 2, 0, 100, 100);
+            moved.setWorldBounds(0, 0, 100, 100);
+            Layer[] ordered = viewport.getLayers();
+            for (int i = 0; i < ordered.length; i++) {
+                assertSame(expected.get(i), ordered[i]);
+                assertEquals(i, ordered[i].getZIndex(), "Z cache after move " + iteration);
+            }
+            assertSame(expected.getLast(), viewport.hitTest(10, 10));
+        }
+
+        Layer appended = viewport.addPaintLayer("after reorders",
+                0, 0, 100, 100, (gc, ctx) -> { });
+        expected.add(appended);
+        assertEquals(expected.size() - 1, appended.getZIndex());
+        for (int i = 0; i < 12; i++) {
+            int position = random.nextInt(expected.size());
+            Layer removed = expected.remove(position);
+            removed.remove();
+            assertThrows(IllegalArgumentException.class, removed::getZIndex);
+            Layer[] ordered = viewport.getLayers();
+            assertEquals(expected.size(), ordered.length);
+            for (int z = 0; z < ordered.length; z++) {
+                assertSame(expected.get(z), ordered[z]);
+                assertEquals(z, ordered[z].getZIndex(), "Z cache after removal");
+            }
+        }
+        assertSame(expected.getLast(), viewport.hitTest(10, 10));
+    }
+
+    @Test
     public void testLongCoordinatesAndWorldProjection() {
         long large = 1L << 55;
         viewport.setOrigin(large, large);
@@ -2291,6 +2338,122 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             gc.dispose();
         }
         return image;
+    }
+
+    @Test
+    public void testNativeResidencyDisabledByDefaultAndExplicitlyReclaimed()
+            throws ReflectiveOperationException {
+        viewport.setSize(300, 240);
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        Image image = nativeTestImage(10, 10, SWT.COLOR_RED);
+        Layer far = viewport.addImageLayer("old unrestricted native membership", image, 2000, 20);
+        try {
+            assertEquals(-1, viewport.getNativeResidencyOverscanPixels());
+            assertThrows(IllegalArgumentException.class,
+                    () -> viewport.setNativeResidencyOverscanPixels(-2));
+            assertThrows(IllegalArgumentException.class,
+                    () -> viewport.setNativeResidencyOverscanPixels((1 << 20) + 1));
+            assertEquals(-1, viewport.getNativeResidencyOverscanPixels(),
+                    "rejected configuration never mutates the policy");
+            assertTrue(far.setNative(true), "default preserves prior offscreen-native behavior");
+            assertEquals(1, backend.additions);
+            assertEquals(1, backend.uploads);
+            assertEquals(0, backend.removals);
+            viewport.setNativeResidencyOverscanPixels(12);
+            assertEquals(12, viewport.getNativeResidencyOverscanPixels());
+            assertFalse(far.isNative(), "out-of-view image releases native surface");
+            assertEquals(1, backend.removals);
+            assertEquals(0, backend.pixelsPerLayer.size());
+            int idle = backend.applications;
+            viewport.setNativeResidencyOverscanPixels(12);
+            assertEquals(idle, backend.applications, "same admission policy is a no-op");
+            viewport.setNativeResidencyOverscanPixels(-1);
+            assertTrue(far.isNative(), "disabling policy restores original native membership");
+            assertEquals(2, backend.additions);
+            assertEquals(2, backend.uploads, "released surface reuploads borrowed Image");
+            assertFalse(image.isDisposed());
+        } finally {
+            if (!viewport.isDisposed()) far.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeResidencyHysteresisAcrossPanAndVisibility()
+            throws ReflectiveOperationException {
+        viewport.setSize(300, 240);
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        viewport.setNativeResidencyOverscanPixels(12);
+        Image image = nativeTestImage(10, 10, SWT.COLOR_BLUE);
+        Layer near = viewport.addImageLayer("scrolling native overscan", image, 320, 20);
+        try {
+            long logicalId = near.getId();
+            assertFalse(near.setNative(true), "20 pixels beyond viewport exceeds 12px admission");
+            assertEquals(0, backend.additions, "no native surface for distant layer");
+            assertEquals(0, backend.uploads);
+            viewport.setOrigin(10, 0);
+            assertTrue(near.isNative(), "10px outside viewport is prefetched");
+            assertEquals(1, backend.additions);
+            assertEquals(1, backend.uploads);
+            viewport.setOrigin(0, 0);
+            assertTrue(near.isNative(), "retain within 24px release distance");
+            assertEquals(0, backend.removals);
+            viewport.setOrigin(-10, 0);
+            assertFalse(near.isNative(), "release at 30px beyond viewport");
+            assertEquals(1, backend.removals);
+            viewport.setOrigin(10, 0);
+            assertTrue(near.isNative(), "re-entering generates one fresh native surface");
+            assertEquals(2, backend.additions);
+            assertEquals(2, backend.uploads);
+            near.setVisible(false);
+            assertFalse(near.isNative(), "invisible images no longer occupy native surfaces");
+            assertEquals(2, backend.removals);
+            near.setVisible(true);
+            assertTrue(near.isNative(), "visible image becomes native again in overscan");
+            assertEquals(3, backend.additions);
+            assertEquals(logicalId, near.getId(), "logical image layer identity is unchanged");
+            assertFalse(image.isDisposed(), "native owner never disposes borrowed Image");
+        } finally {
+            if (!viewport.isDisposed()) near.remove();
+            image.dispose();
+        }
+    }
+
+    @Test
+    public void testNativeResidencyUsesPinnedProjectionClipsAndExtremeLongPans()
+            throws ReflectiveOperationException {
+        viewport.setSize(100, 80);
+        RecordingNativeLayers backend = installRecordingNativeLayers();
+        viewport.setNativeResidencyOverscanPixels(8);
+        Image image = nativeTestImage(20, 20, SWT.COLOR_GREEN);
+        Layer layer = viewport.addImageLayer("pinned native residency", image, 130, 10);
+        try {
+            layer.setPinned(SWT.HORIZONTAL);
+            assertFalse(layer.setNative(true), "pinned image is 30px offscreen");
+            viewport.setOrigin(120, 0);
+            assertFalse(layer.isNative(), "horizontal pin prevents pan-based admission");
+            assertEquals(0, backend.additions);
+
+            layer.setPinned(0); // ordinary world projection: now at client x=10
+            assertTrue(layer.isNative());
+            assertEquals(1, backend.additions);
+            layer.setWorldClip(new WorldBounds(1000, 10, 10, 10));
+            assertFalse(layer.isNative(), "disjoint world clip excludes native residency");
+            assertEquals(1, backend.removals);
+            layer.setWorldClip(null);
+            assertTrue(layer.isNative(), "restored visible projection is readmitted");
+            assertEquals(2, backend.additions);
+
+            viewport.setOrigin(Long.MAX_VALUE, 0);
+            assertFalse(layer.isNative(), "extreme signed-long pan cannot overflow into view");
+            viewport.setOrigin(120, 0);
+            assertTrue(layer.isNative(), "native surface can return after extreme pan");
+            assertEquals(3, backend.uploads, "reentry restores borrowed source pixels");
+            assertFalse(image.isDisposed());
+        } finally {
+            if (!viewport.isDisposed()) layer.remove();
+            image.dispose();
+        }
     }
 
     @Test

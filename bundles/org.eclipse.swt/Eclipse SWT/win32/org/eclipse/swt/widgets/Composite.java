@@ -2085,6 +2085,60 @@ LRESULT WM_UPDATEUISTATE (long wParam, long lParam) {
 	return result;
 }
 
+
+/**
+ * Draw only the original Win32 non-client edge ring. The screen path owns
+ * GetWindowDC/ReleaseDC; WM_PRINT owns its supplied HDC and SaveDC lifetime.
+ */
+private void drawNativeBevelRing (long hwnd, long hDC, int edge) {
+	RECT rect = new RECT ();
+	if (!OS.GetWindowRect (hwnd, rect)) return;
+	rect.right -= rect.left;
+	rect.bottom -= rect.top;
+	rect.left = rect.top = 0;
+	int inset = getSystemMetrics (OS.SM_CXEDGE);
+	OS.ExcludeClipRect (hDC, inset, inset,
+			Math.max (inset, rect.right - inset),
+			Math.max (inset, rect.bottom - inset));
+	OS.DrawEdge (hDC, rect, edge, OS.BF_RECT);
+}
+
+/**
+ * WM_PRINT must use the same relief kernel as WM_NCPAINT. Widget.wmPrint
+ * paints a regular themed edit border; save and restore its native DC changes
+ * before painting only the explicit native non-client bevel.
+ */
+@Override
+LRESULT wmPrint (long hwnd, long wParam, long lParam) {
+	int edge = nativeBevelEdge ();
+	if (edge == 0 || (lParam & OS.PRF_NONCLIENT) == 0 || hwnd != borderHandle ()
+			|| (OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE) & OS.WS_EX_CLIENTEDGE) == 0) {
+		return super.wmPrint (hwnd, wParam, lParam);
+	}
+	/* Widget.wmPrint draws a themed border even when DefWindowProc skips a
+	 * hidden HWND. Consume WM_PRINT before that inherited paint as well. */
+	if ((lParam & OS.PRF_CHECKVISIBLE) != 0 && !OS.IsWindowVisible (hwnd)) {
+		return LRESULT.ZERO;
+	}
+	int originalDC = OS.SaveDC (wParam);
+	if (originalDC == 0) return super.wmPrint (hwnd, wParam, lParam);
+	LRESULT result;
+	try {
+		result = super.wmPrint (hwnd, wParam, lParam);
+	} finally {
+		OS.RestoreDC (wParam, originalDC);
+	}
+	if (isDisposed ()) return result;
+	int printDC = OS.SaveDC (wParam);
+	if (printDC == 0) return result;
+	try {
+		drawNativeBevelRing (hwnd, wParam, edge);
+	} finally {
+		OS.RestoreDC (wParam, printDC);
+	}
+	return result;
+}
+
 @Override
 LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
 	LRESULT result = super.wmNCPaint (hwnd, wParam, lParam);
@@ -2102,18 +2156,7 @@ LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
 			long hDC = OS.GetWindowDC (hwnd);
 			if (hDC != 0) {
 				try {
-					RECT rect = new RECT ();
-					if (OS.GetWindowRect (hwnd, rect)) {
-						rect.right -= rect.left;
-						rect.bottom -= rect.top;
-						rect.left = rect.top = 0;
-						int inset = getSystemMetrics (OS.SM_CXEDGE);
-						/* Draw only native non-client frame pixels. */
-						OS.ExcludeClipRect (hDC, inset, inset,
-								Math.max (inset, rect.right - inset),
-								Math.max (inset, rect.bottom - inset));
-						OS.DrawEdge (hDC, rect, edge, OS.BF_RECT);
-					}
+					drawNativeBevelRing (hwnd, hDC, edge);
 				} finally {
 					OS.ReleaseDC (hwnd, hDC);
 				}

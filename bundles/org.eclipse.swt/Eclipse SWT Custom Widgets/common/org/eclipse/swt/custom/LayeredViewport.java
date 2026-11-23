@@ -686,6 +686,7 @@ public final class LayeredViewport extends Canvas {
      */
     public final class Layer {
         private final long id;
+        // Maintained by structural edits; hot-path invalidation never scans stack.
         private int zIndex = -1;
         private String name;
         private long x, y, right, bottom;
@@ -2812,6 +2813,9 @@ public final class LayeredViewport extends Canvas {
     private boolean nativeSyncPending;
     private int nativeFrameDepth;
     private boolean nativeRetrying;
+    // -1 preserves the original native membership behavior. An optional
+    // nonnegative overscan virtualizes native surface residency by viewport.
+    private int nativeResidencyOverscanPixels = NativeResidencyWindow.DISABLED;
 
     private boolean nativeAvailable() {
         if (isDisposed()) return false;
@@ -2904,6 +2908,70 @@ public final class LayeredViewport extends Canvas {
         return !isDisposed() && composition == candidate;
     }
 
+    /**
+     * Configures the viewport's optional native surface-residency window,
+     * in SWT client-coordinate pixels. The default `-1` preserves all
+     * existing native image-layer membership, even offscreen. With `0`,
+     * only currently visible native image layers are materialized.
+     * A positive value prefetches within that overscan distance and retains
+     * already-native layers up to twice the distance to avoid churn when a
+     * layer crosses the scrolling edge.
+     *
+     * <p>Only Maya/NativeLayers image surfaces are controlled; the logical
+     * layer, borrowed SWT Image, child native Controls, paint order,
+     * hit testing and accessibility do not change. A culled layer keeps
+     * its `setNative(true)` request but `isNative()` is false until
+     * it becomes resident again. Native pixels are uploaded from the Image
+     * when re-entering. This is an admission policy, not a GPU cache.</p>
+     *
+     * @param pixels -1 to disable residency culling, or 0 through
+     *               1,048,576 for viewport-relative overscan
+     */
+    public void setNativeResidencyOverscanPixels(int pixels) {
+        checkWidget();
+        if (pixels < NativeResidencyWindow.DISABLED
+                || pixels > NativeResidencyWindow.MAX_OVERSCAN) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (nativeResidencyOverscanPixels == pixels) return;
+        nativeResidencyOverscanPixels = pixels;
+        syncNative();
+    }
+
+    /** Returns -1 for the compatibility/default unrestricted policy. */
+    public int getNativeResidencyOverscanPixels() {
+        checkWidget();
+        return nativeResidencyOverscanPixels;
+    }
+
+    /*
+     * Pure projected client-space membership. Compute it BEFORE asking
+     * whether Maya is available so a far-offscreen layer cannot create
+     * a GPU composition or consume the logical surface budget.
+     * World clips are intersected before projecting; neither rectangle
+     * objects nor new JNI buffers are allocated per admission.
+     */
+    private boolean nativeWithinResidency(Layer layer, Rectangle area) {
+        int overscan = nativeResidencyOverscanPixels;
+        if (overscan == NativeResidencyWindow.DISABLED) return true;
+        long left = layer.x, top = layer.y, right = layer.right, bottom = layer.bottom;
+        if (layer.worldClip != null) {
+            WorldBounds clip = layer.worldClip;
+            left = Math.max(left, clip.x());
+            top = Math.max(top, clip.y());
+            right = Math.min(right, clip.x() + clip.width());
+            bottom = Math.min(bottom, clip.y() + clip.height());
+        }
+        long ox = layerOriginX(layer), oy = layerOriginY(layer);
+        return NativeResidencyWindow.admits(overscan, layer.nativeLayer != 0,
+                area.x, area.y, area.width, area.height,
+                device(left, ox, layerScaleX(layer)),
+                device(top, oy, layerScaleY(layer)),
+                device(right, ox, layerScaleX(layer)),
+                device(bottom, oy, layerScaleY(layer)),
+                layer.visible && layer.opacity > 0);
+    }
+
     /* Shell DPI is local to this window; SWT autoscale policy determines how
        its logical Control coordinates map to native client pixels. ImageData
        remains the canonical 100% raster, including for dirty subregions. */
@@ -2928,6 +2996,7 @@ public final class LayeredViewport extends Canvas {
         if (isDisposed() || layer.nativePreparing || !layer.nativeRequested || layer.removed
                 || layer.image == null || layer.image.isDisposed() || layer.blendMode != BLEND_NORMAL
                 || layer.mask != null) return false;
+        if (!nativeWithinResidency(layer, area)) return false;
         if (!nativeAvailable() || layer.removed || !layer.nativeRequested
                 || layer.image == null || layer.image.isDisposed() || layer.blendMode != BLEND_NORMAL
                 || layer.mask != null) return false;

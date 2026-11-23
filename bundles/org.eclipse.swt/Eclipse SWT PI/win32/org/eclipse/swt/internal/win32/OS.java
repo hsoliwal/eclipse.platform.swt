@@ -958,6 +958,7 @@ public class OS extends C {
 	public static final int PM_QS_SENDMESSAGE = QS_SENDMESSAGE << 16;
 	public static final int PM_REMOVE = 0x1;
 	public static final String PROGRESS_CLASS = "msctls_progress32"; //$NON-NLS-1$
+	public static final int PRF_CHECKVISIBLE = 0x1;
 	public static final int PRF_CHILDREN = 16;
 	public static final int PRF_CLIENT = 0x4;
 	public static final int PRF_ERASEBKGND = 0x8;
@@ -3657,6 +3658,11 @@ public static final native boolean RectInRegion (long hrgn, RECT lprc);
  * @param hrgnUpdate cast=(HRGN)
  */
 public static final native boolean RedrawWindow (long hWnd, RECT lprcUpdate, long hrgnUpdate, int flags);
+/**
+ * Optional copied and validated native Win32 update-region transaction.
+ * @method flags=no_gen
+ */
+public static final native boolean RedrawWindowRegions (long hWnd, int [] rectangles, int count, int flags);
 /** @param hKey cast=(HKEY) */
 public static final native int RegCloseKey (long hKey);
 /**

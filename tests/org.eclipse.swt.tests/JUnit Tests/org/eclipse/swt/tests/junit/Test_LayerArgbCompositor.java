@@ -260,4 +260,71 @@ public class Test_LayerArgbCompositor {
 			}
 		}
 	}
+
+	@Test
+	public void stridedMaskedTilesPreservePaddingAndAliasedSourceSnapshots() {
+		Random random = new Random(0x726f772d6d61736bL);
+		for (Mode mode : Mode.values()) {
+			for (int opacity : new int[] { 0, 1, 128, 255 }) {
+				int width = 11, height = 5, stride = 19, maskStride = 17;
+				for (int shift : new int[] {-2 * stride, -stride, -3, 0, 3, stride, 2 * stride}) {
+					int dOff = Math.max(0, shift) + 3, sOff = Math.max(0, -shift) + 3;
+					int[] original = new int[Math.max(dOff, sOff) + height * stride + 8];
+					byte[] mask = new byte[3 + height * maskStride + 8];
+					for (int i = 0; i < original.length; i++) original[i] = premulColor(random);
+					random.nextBytes(mask);
+					int[] expected = original.clone(), actual = original.clone();
+					for (int row = 0; row < height; row++) {
+						int d = dOff + row * stride, s = sOff + row * stride;
+						int[] oldDst = Arrays.copyOfRange(original, d, d + width);
+						int[] oldSrc = Arrays.copyOfRange(original, s, s + width);
+						LayerArgbCompositor.compositeMasked(oldDst, 0, oldSrc, 0, mask,
+								3 + row * maskStride, width, opacity, mode);
+						System.arraycopy(oldDst, 0, expected, d, width);
+					}
+					LayerArgbCompositor.compositeMaskedRows(actual, dOff, stride, actual, sOff,
+							stride, mask, 3, maskStride, width, height, opacity, mode);
+					assertArrayEquals(expected, actual, mode + " opacity " + opacity + " shift " + shift);
+				}
+			}
+		}
+	}
+
+	@Test
+	public void stridedMaskedTilesDifferentRowPitchesAndPreflightRefusal() {
+		int[] src = new int[100], original = new int[100];
+		byte[] mask = new byte[100];
+		Random random = new Random(0x5A5A);
+		for (int i = 0; i < src.length; i++) {
+			src[i] = premulColor(random);
+			original[i] = premulColor(random);
+			mask[i] = (byte) random.nextInt(256);
+		}
+		int[] expected = original.clone(), actual = original.clone();
+		for (int row = 0; row < 4; row++) {
+			int[] d = Arrays.copyOfRange(original, 2 + row * 17, 2 + row * 17 + 9);
+			int[] s = Arrays.copyOfRange(src, 4 + row * 15, 4 + row * 15 + 9);
+			LayerArgbCompositor.compositeMasked(d, 0, s, 0, mask, 3 + row * 13,
+					9, 192, Mode.SCREEN);
+			System.arraycopy(d, 0, expected, 2 + row * 17, 9);
+		}
+		LayerArgbCompositor.compositeMaskedRows(actual, 2, 17, src, 4, 15, mask,
+				3, 13, 9, 4, 192, Mode.SCREEN);
+		assertArrayEquals(expected, actual);
+		int[] before = actual.clone();
+		assertThrows(IndexOutOfBoundsException.class, () -> LayerArgbCompositor.compositeMaskedRows(
+				actual, 2, 8, src, 4, 15, mask, 3, 13, 9, 4, 192, Mode.SCREEN));
+		assertThrows(IndexOutOfBoundsException.class, () -> LayerArgbCompositor.compositeMaskedRows(
+				actual, 2, Integer.MAX_VALUE, src, 4, 15, mask, 3, 13, 9, 4, 192, Mode.SCREEN));
+		assertThrows(IllegalArgumentException.class, () -> LayerArgbCompositor.compositeMaskedRows(
+				actual, 2, 17, actual, 4, 15, mask, 3, 13, 9, 4, 192, Mode.SCREEN));
+		assertThrows(IllegalArgumentException.class, () -> LayerArgbCompositor.compositeMaskedRows(
+				actual, 2, 17, src, 4, 15, mask, 3, 13, 9, 4, 256, Mode.SCREEN));
+		assertThrows(NullPointerException.class, () -> LayerArgbCompositor.compositeMaskedRows(
+				actual, 2, 17, src, 4, 15, null, 3, 13, 9, 4, 192, Mode.SCREEN));
+		assertArrayEquals(before, actual, "all invalid geometry must be refused before mutation");
+		LayerArgbCompositor.compositeMaskedRows(actual, 0, 0, src, 0, 0, mask, 0, 0,
+				0, 0, 192, Mode.SCREEN);
+		assertArrayEquals(before, actual, "an empty tile must not change padding or pixels");
+	}
 }
