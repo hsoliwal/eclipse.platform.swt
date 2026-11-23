@@ -686,6 +686,7 @@ public final class LayeredViewport extends Canvas {
      */
     public final class Layer {
         private final long id;
+        // Maintained by structural edits; hot-path invalidation never scans stack.
         private int zIndex = -1;
         private String name;
         private long x, y, right, bottom;
@@ -707,6 +708,8 @@ public final class LayeredViewport extends Canvas {
         private Image mask;
         private ImageData maskSource;
         private int maskMode = MASK_ALPHA;
+        /* Opt-in only: historical geometric hit and pointer routing are the default. */
+        private boolean paintedHitTesting;
         /* retained: this layer's composite (it and everything below it) kept in its own image, with the pixels of
            that image that no longer match the layers */
         private boolean retained;
@@ -720,6 +723,10 @@ public final class LayeredViewport extends Canvas {
         private WorldBounds worldClip;
         /* SWT.HORIZONTAL and/or SWT.VERTICAL: the axes on which the layer is measured from the view's origin */
         private int pinned;
+        /* per-axis scroll multipliers in exact 1/256 units (256 follows the world); a fixed, pinned or
+           sticky axis takes precedence */
+        private int scrollRateX = ViewportRuntime.LayerPosition.SCROLL;
+        private int scrollRateY = ViewportRuntime.LayerPosition.SCROLL;
         /* fixed axes ignore both pan and zoom; pinned axes ignore pan but retain zoom */
         private int fixed;
         /* the axis (SWT.HORIZONTAL or SWT.VERTICAL) the layer sticks on, or 0; its inset from the view's leading
@@ -818,6 +825,42 @@ public final class LayeredViewport extends Canvas {
             if (pinned == value) return;
             invalidate(this);
             pinned = value;
+            spatialDirty = true;
+            invalidate(this);
+            placeControl(this);
+            syncNative();
+        }
+
+        /** Horizontal scroll multiplier in exact 1/256 units; 256 is ordinary scrolling. */
+        public int getScrollRateX() {
+            checked();
+            return scrollRateX;
+        }
+
+        /** Vertical scroll multiplier in exact 1/256 units; 256 is ordinary scrolling. */
+        public int getScrollRateY() {
+            checked();
+            return scrollRateY;
+        }
+
+        /**
+         * Independent per-axis scroll multipliers from -4096 to 4096.
+         * 256 follows the body, 128 moves at half speed, zero fixes an axis,
+         * and negative rates move in reverse. A fixed, pinned or sticky axis
+         * takes precedence until the corresponding policy is cleared. The existing
+         * view-relative Z lane preserves order without a world-index rebuild
+         * on every pan, even between native control and painter layers.
+         */
+        public void setScrollRates(int horizontalQ8, int verticalQ8) {
+            checked();
+            if (horizontalQ8 < -4096 || horizontalQ8 > 4096
+                    || verticalQ8 < -4096 || verticalQ8 > 4096) {
+                SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (scrollRateX == horizontalQ8 && scrollRateY == verticalQ8) return;
+            invalidate(this);
+            scrollRateX = horizontalQ8;
+            scrollRateY = verticalQ8;
             spatialDirty = true;
             invalidate(this);
             placeControl(this);
@@ -1160,6 +1203,28 @@ public final class LayeredViewport extends Canvas {
         public int getMaskMode() {
             checked();
             return maskMode;
+        }
+
+        /**
+         * Opt into source-alpha and raster-mask aware hit testing for this image
+         * layer. By default hit testing remains geometric, including transparent
+         * image pixels. Painted layers without an image retain their previous
+         * geometric or user-supplied hit tester semantics.
+         *
+         * <p>When enabled, the same projected pixel-center sampling and rounded
+         * effective source opacity as compositing decide whether the layer
+         * intercepts input. A zero-alpha pixel passes to lower layers. Borrowed
+         * images must be redrawn after in-place edits to refresh their snapshots.
+         * No new native Control or event dispatch thread is created.</p>
+         */
+        public void setPaintedHitTesting(boolean value) {
+            checked();
+            paintedHitTesting = value;
+        }
+
+        public boolean isPaintedHitTesting() {
+            checked();
+            return paintedHitTesting;
         }
 
         public boolean isLocked() {
@@ -1701,6 +1766,7 @@ public final class LayeredViewport extends Canvas {
                 worldX = layerX(layer, deviceX);
                 worldY = layerY(layer, deviceY);
                 if (!containsHit(layer, worldX, worldY)
+                        || !paintedPixelHit(layer, deviceX, deviceY)
                         || (withPointerListener && layer.pointerListener == null)) continue;
                 LayerHitTester tester = layer.hitTester;
                 boolean accepted = tester == null || tester.contains(layer, worldX, worldY);
@@ -1708,6 +1774,7 @@ public final class LayeredViewport extends Canvas {
                 // Callbacks can remove, move, hide or lock their own target,
                 // or another candidate captured by this query.
                 if (accepted && containsHit(layer, layerX(layer, deviceX), layerY(layer, deviceY))
+                        && paintedPixelHit(layer, deviceX, deviceY)
                         && (!withPointerListener || layer.pointerListener != null)) {
                     if (accept == null) return layer;
                     boolean included = accept.test(layer);
@@ -1715,6 +1782,7 @@ public final class LayeredViewport extends Canvas {
                     // User filtering may change visibility, world origin, native
                     // pinning or this very layer. Never return stale geometry.
                     if (included && containsHit(layer, layerX(layer, deviceX), layerY(layer, deviceY))
+                            && paintedPixelHit(layer, deviceX, deviceY)
                             && (!withPointerListener || layer.pointerListener != null)) return layer;
                 }
             }
@@ -1732,6 +1800,54 @@ public final class LayeredViewport extends Canvas {
         WorldBounds clip = layer.worldClip;
         return clip == null || (worldX >= clip.x() && worldX < clip.x() + clip.width()
                 && worldY >= clip.y() && worldY < clip.y() + clip.height());
+    }
+
+    /*
+     * A picking-only, allocation-minimal sampling atom. It shares the lazy
+     * ImageData source snapshots with paintBlended (invalidated by Layer.redraw)
+     * and uses the exact source/mask pixel-center projection that paints use.
+     * The default geometric path returns before any ImageData read.
+     */
+    private boolean paintedPixelHit(Layer layer, int deviceX, int deviceY) {
+        if (!layer.paintedHitTesting || layer.image == null) return true;
+        if (layer.image.isDisposed() || layer.mask != null && layer.mask.isDisposed()) return false;
+        if (layer.blendSource == null) layer.blendSource = layer.image.getImageData();
+        ImageData source = layer.blendSource;
+        if (source.width == 0 || source.height == 0) return false;
+        long ox = layerOriginX(layer), oy = layerOriginY(layer);
+        double left = device(layer.x, ox, layerScaleX(layer));
+        double top = device(layer.y, oy, layerScaleY(layer));
+        double width = device(layer.right, ox, layerScaleX(layer)) - left;
+        double height = device(layer.bottom, oy, layerScaleY(layer)) - top;
+        if (!(width > 0) || !(height > 0)) return false;
+        int sx = clipSource((deviceX + 0.5 - left) / width * source.width, source.width - 1, false);
+        int sy = clipSource((deviceY + 0.5 - top) / height * source.height, source.height - 1, false);
+        int sourcePixel = source.getPixel(sx, sy);
+        int sourceAlpha = source.alphaData != null ? source.getAlpha(sx, sy)
+                : source.alpha >= 0 ? source.alpha : 255;
+        if (source.transparentPixel >= 0 && sourcePixel == source.transparentPixel) return false;
+        if (sourceAlpha == 0) return false;
+
+        int coverage = 255;
+        if (layer.mask != null) {
+            if (layer.maskSource == null) layer.maskSource = layer.mask.getImageData();
+            ImageData mask = layer.maskSource;
+            if (mask.width == 0 || mask.height == 0) return false;
+            int mx = clipSource((deviceX + 0.5 - left) / width * mask.width, mask.width - 1, false);
+            int my = clipSource((deviceY + 0.5 - top) / height * mask.height, mask.height - 1, false);
+            int maskPixel = mask.getPixel(mx, my);
+            int maskAlpha = mask.alphaData != null ? mask.getAlpha(mx, my)
+                    : mask.alpha >= 0 ? mask.alpha : 255;
+            if (mask.transparentPixel >= 0 && maskPixel == mask.transparentPixel) maskAlpha = 0;
+            int rgb = 0;
+            if (layer.maskMode >= MASK_LUMINANCE) {
+                var color = mask.palette.getRGB(maskPixel); // only one RGB object per hit, not a row array
+                rgb = color.red << 16 | color.green << 8 | color.blue;
+            }
+            coverage = LayerArgbCompositor.maskCoverage(maskAlpha, rgb, layer.maskMode);
+        }
+        int effectiveOpacity = (layer.opacity * coverage + 127) / 255;
+        return (sourceAlpha * effectiveOpacity + 127) / 255 > 0;
     }
 
     /** Current logical pointer capture, or null. The layer is never a native Control. */
@@ -2088,9 +2204,12 @@ public final class LayeredViewport extends Canvas {
         }
     }
 
-    /* whether a pan moves the layer in world space: it is pinned or sticky */
+    /* whether a pan moves the layer differently from ordinary world scrolling: it is fixed, pinned,
+       sticky or has a non-default scroll rate */
     private static boolean viewRelative(Layer layer) {
-        return layer.fixed != 0 || layer.pinned != 0 || layer.sticky != 0;
+        return layer.fixed != 0 || layer.pinned != 0 || layer.sticky != 0
+                || layer.scrollRateX != ViewportRuntime.LayerPosition.SCROLL
+                || layer.scrollRateY != ViewportRuntime.LayerPosition.SCROLL;
     }
 
     /* the origin a layer is projected from on each axis */
@@ -2108,7 +2227,11 @@ public final class LayeredViewport extends Canvas {
      */
     private static long layerOrigin(Layer layer, int axis, long origin) {
         if (((layer.fixed | layer.pinned) & axis) != 0) return 0;
-        if (layer.sticky != axis) return origin;
+        if (layer.sticky != axis) {
+            // exact Q8 scroll rate; 256 (the default) returns origin unchanged
+            return ViewportRuntime.LayerPosition.scrollOffset(origin,
+                    axis == SWT.HORIZONTAL ? layer.scrollRateX : layer.scrollRateY);
+        }
         long start = axis == SWT.HORIZONTAL ? layer.x : layer.y, end = axis == SWT.HORIZONTAL ? layer.right : layer.bottom;
         long stuck = Math.min(saturatedAdd(origin, layer.stickyInset), saturatedAdd(layer.stickyLimit, start - end));
         return stuck > start ? saturatedAddSubtract(origin, start, stuck) : origin;

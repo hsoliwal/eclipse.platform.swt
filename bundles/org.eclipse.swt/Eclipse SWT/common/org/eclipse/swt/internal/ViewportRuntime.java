@@ -368,13 +368,39 @@ public final class ViewportRuntime {
 		 * No native graphics object or viewport-sized scratch buffer is allocated.
 		 */
 		public void compositeImageLayers (int x, int y, int width, int height, int [] out) {
+			compositeImageLayers (x, y, width, height, out, 0, width);
+		}
+
+		/**
+		 * Composites directly into a caller-owned, row-strided ARGB backing array,
+		 * without a temporary contiguous copy. Only the addressed tile rows are
+		 * cleared and painted; surrounding data, row padding and suffix survive.
+		 * All geometry and output bounds are validated before any mutation.
+		 *
+		 * @param outOffset first destination pixel in {@code out}
+		 * @param outStride distance in ints between consecutive output rows
+		 */
+		public void compositeImageLayers (int x, int y, int width, int height, int [] out,
+				int outOffset, int outStride) {
 			long count = (long)width * height;
 			if (width < 0 || height < 0 || count > Integer.MAX_VALUE
-					|| out == null || out.length < count) {
+					|| out == null || outOffset < 0 || outOffset > out.length
+					|| outStride < width) {
 				throw new IllegalArgumentException ("invalid image tile");
 			}
-			Arrays.fill (out, 0, (int)count, 0);
+			// Zero-area rectangles never address a pixel: preserve the original
+			// packed method's no-op, even for an extreme hypothetical row span.
 			if (count == 0) return;
+			long end = (long)outOffset + ((long)height - 1) * outStride + width;
+			if (end > out.length) throw new IllegalArgumentException ("invalid image tile");
+			if (outStride == width) {
+				Arrays.fill (out, outOffset, outOffset + (int)count, 0);
+			} else {
+				for (int row = 0; row < height; row++) {
+					int at = outOffset + row * outStride;
+					Arrays.fill (out, at, at + width, 0);
+				}
+			}
 			int start = first;
 			// An opaque translated layer discards every lower destination sample.
 			// Keep all surviving layers in back-to-front order: rounded 8-bit
@@ -393,11 +419,12 @@ public final class ViewportRuntime {
 			for (int node = start; node != NONE; node = nextSibling [node]) {
 				if (kinds [node] != IMAGE_LAYER || (flags [node] & IMAGE_HIDDEN) != 0
 						|| imageOpacities [node] == 0) continue;
-				compositeImageTile (node, x, y, width, height, out);
+				compositeImageTile (node, x, y, width, height, out, outOffset, outStride);
 			}
 		}
 
-		private void compositeImageTile (int node, int x, int y, int width, int height, int [] out) {
+		private void compositeImageTile (int node, int x, int y, int width, int height, int [] out,
+				int outOffset, int outStride) {
 			int bounds = node * 4;
 			if ((flags [node] & SOURCE_EMPTY) != 0) return;
 			int startX = Math.max (0, (int)Math.floor (imageBounds [bounds] - x));
@@ -406,11 +433,11 @@ public final class ViewportRuntime {
 			int endY = Math.min (height, (int)Math.ceil (imageBounds [bounds + 3] - y));
 			if (startX >= endX || startY >= endY) return;
 			if ((flags [node] & INTEGER_TRANSLATION) != 0) {
-				compositeTranslatedImage (node, x, y, width, startX, startY, endX, endY, out);
+				compositeTranslatedImage (node, x, y, outOffset, outStride, startX, startY, endX, endY, out);
 				return;
 			}
 			for (int row = startY; row < endY; row++) {
-				int offset = row * width + startX;
+				int offset = outOffset + row * outStride + startX;
 				for (int column = startX; column < endX; column++, offset++) {
 					int source = imageSample (node, (double)x + column + 0.5d, (double)y + row + 0.5d);
 					out [offset] = imageSourceOver (source, out [offset]);
@@ -418,7 +445,7 @@ public final class ViewportRuntime {
 			}
 		}
 
-		private void compositeTranslatedImage (int node, int x, int y, int tileWidth,
+		private void compositeTranslatedImage (int node, int x, int y, int outOffset, int outStride,
 				int startX, int startY, int endX, int endY, int [] out) {
 			int transform = node * 6;
 			int sourceX = (int)((long)x + startX - (int)transforms [transform + 4]);
@@ -428,7 +455,7 @@ public final class ViewportRuntime {
 					&& (flags [node] & (PIXELS_OPAQUE | MASK_OPAQUE)) == (PIXELS_OPAQUE | MASK_OPAQUE);
 			for (int row = startY; row < endY; row++) {
 				int source = (sourceY + row - startY) * sourceWidth + sourceX;
-				int destination = row * tileWidth + startX;
+				int destination = outOffset + row * outStride + startX;
 				if (opaque) {
 					System.arraycopy (pixels [node], source, out, destination, length);
 				} else {
@@ -1222,6 +1249,337 @@ public final class ViewportRuntime {
 			if (start < 0 || endExclusive < start || endExclusive > logicalCount) {
 				throw new IllegalArgumentException ("range outside logical model");
 			}
+		}
+	}
+
+
+
+	/**
+	 * Stateless coordinate policy for flowing, pinned, anchored, parallax and
+	 * sticky viewport layers. It owns neither native widgets nor scene nodes.
+	 * The common path uses no allocations; only extreme 64-bit intermediate
+	 * overflow falls back to exact BigInteger arithmetic.
+	 *
+	 * <p>The policy can be held in primitive columns in a retained graph,
+	 * with no per-row structural allocation. This projection deliberately
+	 * does not replace native TreeColumn headers or SWT input lifecycles.</p>
+	 */
+	public static final class LayerPosition {
+		public static final int FIXED = 0;
+		public static final int SCROLL = 256;
+		public static final int PARALLAX_HALF = 128;
+		public static final int ANCHOR_START = 0;
+		public static final int ANCHOR_CENTER = 1;
+		public static final int ANCHOR_END = 2;
+		public static final int STICK_NONE = 0;
+		public static final int STICK_START = 1;
+		public static final int STICK_END = 2;
+		private static final int MAX_RATE = 4096;
+		private static final java.math.BigInteger LONG_MAX =
+				java.math.BigInteger.valueOf(Long.MAX_VALUE);
+		private static final java.math.BigInteger LONG_MIN =
+				java.math.BigInteger.valueOf(Long.MIN_VALUE);
+
+		private LayerPosition () { }
+
+		/**
+		 * Maps one world coordinate to device-pixel space relative to a viewport.
+		 * A rate of 256 follows the full scroll origin; 0 is fixed; 128 is 50%
+		 * parallax; a negative factor moves oppositely. ANCHOR_END attaches the
+		 * far edge to the viewport edge, useful for a floating minimap/footer.
+		 * STICK_START/END clamps a layer to an edge, but does not decide when
+		 * a section loses ownership of its sticky layer.
+		 *
+		 * @param position layer offset from the anchor
+		 * @param extent nonnegative layer extent along this axis
+		 * @param origin logical scroll origin
+		 * @param viewportExtent viewport device-pixel length
+		 * @param rateQ8 scroll multiplier in 1/256 steps (-4096..4096)
+		 * @param anchor ANCHOR_START, ANCHOR_CENTER or ANCHOR_END
+		 * @param sticky STICK_NONE, STICK_START or STICK_END
+		 * @param inset nonnegative edge inset used only by sticky modes
+		 */
+		public static long coordinate (long position, long extent, long origin,
+				int viewportExtent, int rateQ8, int anchor, int sticky, int inset) {
+			if (extent < 0 || viewportExtent < 0 || rateQ8 < -MAX_RATE
+					|| rateQ8 > MAX_RATE || anchor < ANCHOR_START
+					|| anchor > ANCHOR_END || sticky < STICK_NONE
+					|| sticky > STICK_END || inset < 0) {
+				throw new IllegalArgumentException ("invalid layer positioning policy");
+			}
+			long span = (long) viewportExtent - extent;
+			long anchorOffset = switch (anchor) {
+				case ANCHOR_START -> 0L;
+				case ANCHOR_CENTER -> Math.floorDiv (span, 2L);
+				case ANCHOR_END -> span;
+				default -> throw new AssertionError (anchor);
+			};
+			long mapped;
+			try {
+				long scaled = Math.addExact (
+						Math.multiplyExact (origin / SCROLL, (long) rateQ8),
+						Math.floorDiv ((origin % SCROLL) * (long) rateQ8, SCROLL));
+				mapped = Math.subtractExact (Math.addExact (position, anchorOffset), scaled);
+			} catch (ArithmeticException overflow) {
+				java.math.BigInteger scaled = java.math.BigInteger.valueOf (origin)
+						.multiply (java.math.BigInteger.valueOf (rateQ8)).shiftRight (8);
+				java.math.BigInteger exact = java.math.BigInteger.valueOf (position)
+						.add (java.math.BigInteger.valueOf (anchorOffset)).subtract (scaled);
+				if (exact.compareTo (LONG_MAX) > 0) mapped = Long.MAX_VALUE;
+				else if (exact.compareTo (LONG_MIN) < 0) mapped = Long.MIN_VALUE;
+				else mapped = exact.longValue ();
+			}
+			return switch (sticky) {
+				case STICK_NONE -> mapped;
+				case STICK_START -> Math.max (mapped, (long) inset);
+				case STICK_END -> Math.min (mapped,
+						saturatedSubtract ((long) viewportExtent - extent, inset));
+				default -> throw new AssertionError (sticky);
+			};
+		}
+
+		/**
+		 * Signed Q8 scroll displacement (logical coordinates), with floor rounding
+		 * for fractional and negative motion. Ordinary frames allocate nothing;
+		 * the rare overflowing calculation uses an exact saturated slow path.
+		 */
+		public static long scrollOffset (long origin, int rateQ8) {
+			if (rateQ8 < -MAX_RATE || rateQ8 > MAX_RATE) {
+				throw new IllegalArgumentException ("scroll multiplier out of range");
+			}
+			try {
+				return Math.addExact (
+						Math.multiplyExact (origin / SCROLL, (long) rateQ8),
+						Math.floorDiv ((origin % SCROLL) * (long) rateQ8, SCROLL));
+			} catch (ArithmeticException overflow) {
+				java.math.BigInteger scaled = java.math.BigInteger.valueOf (origin)
+						.multiply (java.math.BigInteger.valueOf (rateQ8)).shiftRight (8);
+				if (scaled.compareTo (LONG_MAX) > 0) return Long.MAX_VALUE;
+				if (scaled.compareTo (LONG_MIN) < 0) return Long.MIN_VALUE;
+				return scaled.longValue ();
+			}
+		}
+
+		/** Whether a changed scroll axis can move a layer with these Q8 factors. */
+		public static boolean movesWithScroll (int xRateQ8, int yRateQ8,
+				boolean horizontalChanged, boolean verticalChanged) {
+			if (xRateQ8 < -MAX_RATE || xRateQ8 > MAX_RATE
+					|| yRateQ8 < -MAX_RATE || yRateQ8 > MAX_RATE) {
+				throw new IllegalArgumentException ("scroll multiplier out of range");
+			}
+			return (horizontalChanged && xRateQ8 != 0)
+					|| (verticalChanged && yRateQ8 != 0);
+		}
+
+		/**
+		 * Clips projected half-open bounds to the viewport. Returns visibility,
+		 * writing x, y, width, height into caller-owned four-int scratch.
+		 * No Rectangle/GC/native object is created.
+		 */
+		public static boolean clip (long x, long y, long width, long height,
+				int viewportWidth, int viewportHeight, int [] out) {
+			if (out == null || out.length < 4) {
+				throw new IllegalArgumentException ("need four output ints");
+			}
+			if (width < 0 || height < 0 || viewportWidth < 0 || viewportHeight < 0) {
+				throw new IllegalArgumentException ("invalid layer bounds");
+			}
+			long x0 = Math.max (0L, x);
+			long y0 = Math.max (0L, y);
+			long x1 = Math.min (viewportWidth, saturatedAdd (x, width));
+			long y1 = Math.min (viewportHeight, saturatedAdd (y, height));
+			if (x0 >= x1 || y0 >= y1) {
+				out [0] = out [1] = out [2] = out [3] = 0;
+				return false;
+			}
+			out [0] = (int) x0;
+			out [1] = (int) y0;
+			out [2] = (int) (x1 - x0);
+			out [3] = (int) (y1 - y0);
+			return true;
+		}
+
+		private static long saturatedAdd (long a, long b) {
+			long value = a + b;
+			if (((a ^ value) & (b ^ value)) < 0) {
+				return b > 0 ? Long.MAX_VALUE : Long.MIN_VALUE;
+			}
+			return value;
+		}
+
+		private static long saturatedSubtract (long a, long b) {
+			long value = a - b;
+			if (((a ^ b) & (a ^ value)) < 0) {
+				return a >= 0 ? Long.MAX_VALUE : Long.MIN_VALUE;
+			}
+			return value;
+		}
+	}
+
+	/**
+	 * Primitive, four-plane viewport projection used by native Trees, grids,
+	 * tables and future layered controls. A fixed header remains above the
+	 * vertically scrolling body; a frozen left region remains above the
+	 * horizontally scrolling body. The corner is fixed on both axes.
+	 *
+	 * <p>Geometry is in device pixels; scroll origin and logical rectangles use
+	 * signed long coordinates. Every clip/query writes into caller-owned int[4],
+	 * avoiding native handles, Rectangle allocation, and per-row scene nodes.
+	 * This model does not replace SWT's native TreeColumn header or input
+	 * routing, and does not change existing viewport scroll dirty masks.</p>
+	 */
+	public static final class PinnedPlanes {
+		public static final int BODY = ViewportRuntime.BODY;
+		public static final int HEADER = ViewportRuntime.HEADER;
+		public static final int FROZEN = ViewportRuntime.FROZEN;
+		/** The top-left intersection has no scrolling dependency. */
+		public static final int CORNER = 1 << 8;
+
+		private int width, height, headerHeight, frozenWidth;
+		private long originX, originY, generation;
+
+		public PinnedPlanes (int width, int height, int headerHeight, int frozenWidth) {
+			configure (width, height, headerHeight, frozenWidth);
+		}
+
+		/**
+		 * The top strip and left strip may be empty. Rejected changes leave the
+		 * previous geometry intact.
+		 */
+		public void configure (int width, int height, int headerHeight, int frozenWidth) {
+			if (width < 0 || height < 0 || headerHeight < 0 || headerHeight > height
+					|| frozenWidth < 0 || frozenWidth > width) {
+				throw new IllegalArgumentException ("invalid pinned viewport geometry");
+			}
+			if (this.width == width && this.height == height
+					&& this.headerHeight == headerHeight && this.frozenWidth == frozenWidth) return;
+			this.width = width;
+			this.height = height;
+			this.headerHeight = headerHeight;
+			this.frozenWidth = frozenWidth;
+			generation++;
+		}
+
+		/** Scroll only planes attached to the changed axes; never invalidate the corner. */
+		public int scrollTo (long x, long y) {
+			boolean horizontal = x != originX, vertical = y != originY;
+			if (!horizontal && !vertical) return 0;
+			originX = x;
+			originY = y;
+			generation++;
+			int dirty = 0;
+			if (horizontal) {
+				if (width > frozenWidth && height > headerHeight) dirty |= BODY;
+				if (width > frozenWidth && headerHeight > 0) dirty |= HEADER;
+			}
+			if (vertical) {
+				if (width > frozenWidth && height > headerHeight) dirty |= BODY;
+				if (frozenWidth > 0 && height > headerHeight) dirty |= FROZEN;
+			}
+			return dirty;
+		}
+
+		public long originX () { return originX; }
+		public long originY () { return originY; }
+		public long generation () { return generation; }
+
+		/**
+		 * Routes an interior pixel to its topmost fixed plane. Native editors,
+		 * focus, IME and accessible peers must be dispatched before this model.
+		 * Returns zero for a point outside the viewport.
+		 */
+		public int planeAt (int pixelX, int pixelY) {
+			if (pixelX < 0 || pixelY < 0 || pixelX >= width || pixelY >= height) return 0;
+			if (pixelY < headerHeight) return pixelX < frozenWidth ? CORNER : HEADER;
+			return pixelX < frozenWidth ? FROZEN : BODY;
+		}
+
+		/** Writes device-pixel x,y,width,height of a plane into caller-owned scratch. */
+		public boolean clip (int plane, int [] out) {
+			checkScratch (out);
+			int x0, y0, x1, y1;
+			switch (plane) {
+				case BODY -> {
+					x0 = frozenWidth; y0 = headerHeight; x1 = width; y1 = height;
+				}
+				case HEADER -> {
+					x0 = frozenWidth; y0 = 0; x1 = width; y1 = headerHeight;
+				}
+				case FROZEN -> {
+					x0 = 0; y0 = headerHeight; x1 = frozenWidth; y1 = height;
+				}
+				case CORNER -> {
+					x0 = 0; y0 = 0; x1 = frozenWidth; y1 = headerHeight;
+				}
+				default -> throw new IllegalArgumentException ("unknown viewport plane");
+			}
+			out [0] = x0;
+			out [1] = y0;
+			out [2] = x1 - x0;
+			out [3] = y1 - y0;
+			return x0 < x1 && y0 < y1;
+		}
+
+		/**
+		 * Projects a half-open logical rectangle to its plane and intersects its
+		 * visible clip. BODY and HEADER scroll horizontally, BODY and FROZEN
+		 * scroll vertically. Body rows are relative to the area under HEADER.
+		 * Offscreen content is not materialized, and all intermediate arithmetic
+		 * saturates before narrowing to device-pixel ints.
+		 */
+		public boolean project (int plane, long x, long y, long width, long height, int [] out) {
+			checkScratch (out);
+			if (width < 0 || height < 0 || (width > 0 && x > Long.MAX_VALUE - width)
+					|| (height > 0 && y > Long.MAX_VALUE - height)) {
+				throw new IllegalArgumentException ("invalid logical bounds");
+			}
+			if (!clip (plane, out) || width == 0 || height == 0) {
+				out [2] = out [3] = 0;
+				return false;
+			}
+			int left = out [0], top = out [1];
+			int right = left + out [2], bottom = top + out [3];
+			boolean horizontal = plane == BODY || plane == HEADER;
+			boolean vertical = plane == BODY || plane == FROZEN;
+			long sx = LayerPosition.coordinate (x, width, originX, this.width,
+					horizontal ? LayerPosition.SCROLL : LayerPosition.FIXED,
+					LayerPosition.ANCHOR_START, LayerPosition.STICK_NONE, 0);
+			long sy = LayerPosition.coordinate (y, height, originY, this.height,
+					vertical ? LayerPosition.SCROLL : LayerPosition.FIXED,
+					LayerPosition.ANCHOR_START, LayerPosition.STICK_NONE, 0);
+			if (vertical) sy = saturatingAdd (sy, headerHeight);
+			long ex = saturatingAdd (sx, width), ey = saturatingAdd (sy, height);
+			long x0 = Math.max ((long)left, sx), y0 = Math.max ((long)top, sy);
+			long x1 = Math.min ((long)right, ex), y1 = Math.min ((long)bottom, ey);
+			if (x0 >= x1 || y0 >= y1) {
+				out [2] = out [3] = 0;
+				return false;
+			}
+			out [0] = (int)x0; out [1] = (int)y0;
+			out [2] = (int)(x1 - x0); out [3] = (int)(y1 - y0);
+			return true;
+		}
+
+		private static void checkScratch (int [] out) {
+			if (out == null || out.length < 4) {
+				throw new IllegalArgumentException ("need four output ints");
+			}
+		}
+
+		private static long saturatingAdd (long a, long b) {
+			long value = a + b;
+			if (((a ^ value) & (b ^ value)) < 0) {
+				return b >= 0 ? Long.MAX_VALUE : Long.MIN_VALUE;
+			}
+			return value;
+		}
+
+		private static long saturatingSubtract (long a, long b) {
+			long value = a - b;
+			if (((a ^ b) & (a ^ value)) < 0) {
+				return a >= 0 ? Long.MAX_VALUE : Long.MIN_VALUE;
+			}
+			return value;
 		}
 	}
 

@@ -881,15 +881,15 @@
   "contractSources": [
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/ContractPlatform.java",
-      "sha256": "39672cd8acf172a62a2051b71e8b51e3f90fc9fdaabe44d45a31514952a26cea"
+      "sha256": "b90eceb5ee486f3f8620cbfef4cfb1388091731cafb3236cc7c990ed3266a53b"
     },
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCoreContractTest.java",
-      "sha256": "72f1908ba8d279cedc36e508b0a5caa05ea2e57f0a0b78028231d4952c1829dc"
+      "sha256": "c3c6ab0cb093871ad34b68ee3fd8b77e3bcaca675a41f7ffe2b19d15c9edaaa4"
     },
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCoreContractJUnitTest.java",
-      "sha256": "5f2d9a7d7b4a65ddc0d81349947c2e5d081adf56ee13459f9495a4b08280acea"
+      "sha256": "55842d493f87fd1b4dce279ca69546953d20d191cdf18eefd2b8c6c47ccb9408"
     },
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileListContractTest.java",

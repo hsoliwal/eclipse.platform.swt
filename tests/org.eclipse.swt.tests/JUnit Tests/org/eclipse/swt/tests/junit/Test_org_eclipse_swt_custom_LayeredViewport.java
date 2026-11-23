@@ -162,6 +162,53 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testCachedZPositionAcrossReorderInsertionAndRemoval() {
+        List<Layer> expected = new ArrayList<>();
+        for (int i = 0; i < 32; i++) {
+            expected.add(viewport.addPaintLayer("layer " + i,
+                    0, 0, 100, 100, (gc, ctx) -> { }));
+        }
+        java.util.Random random = new java.util.Random(87123L);
+        for (int iteration = 0; iteration < 256; iteration++) {
+            if (iteration % 17 == 0) {
+                Layer cached = expected.get(random.nextInt(expected.size()));
+                cached.setRetained(!cached.isRetained());
+            }
+            int from = random.nextInt(expected.size());
+            int to = random.nextInt(expected.size());
+            Layer moved = expected.remove(from);
+            expected.add(to, moved);
+            moved.moveTo(to);
+            moved.setWorldBounds(1 + iteration % 2, 0, 100, 100);
+            moved.setWorldBounds(0, 0, 100, 100);
+            Layer[] ordered = viewport.getLayers();
+            for (int i = 0; i < ordered.length; i++) {
+                assertSame(expected.get(i), ordered[i]);
+                assertEquals(i, ordered[i].getZIndex(), "Z cache after move " + iteration);
+            }
+            assertSame(expected.getLast(), viewport.hitTest(10, 10));
+        }
+
+        Layer appended = viewport.addPaintLayer("after reorders",
+                0, 0, 100, 100, (gc, ctx) -> { });
+        expected.add(appended);
+        assertEquals(expected.size() - 1, appended.getZIndex());
+        for (int i = 0; i < 12; i++) {
+            int position = random.nextInt(expected.size());
+            Layer removed = expected.remove(position);
+            removed.remove();
+            assertThrows(IllegalArgumentException.class, removed::getZIndex);
+            Layer[] ordered = viewport.getLayers();
+            assertEquals(expected.size(), ordered.length);
+            for (int z = 0; z < ordered.length; z++) {
+                assertSame(expected.get(z), ordered[z]);
+                assertEquals(z, ordered[z].getZIndex(), "Z cache after removal");
+            }
+        }
+        assertSame(expected.getLast(), viewport.hitTest(10, 10));
+    }
+
+    @Test
     public void testLongCoordinatesAndWorldProjection() {
         long large = 1L << 55;
         viewport.setOrigin(large, large);
@@ -791,6 +838,104 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             foregroundImage.dispose();
             alphaMask.dispose();
             greyMask.dispose();
+        }
+    }
+
+    @Test
+    public void testPaintedImageHitTestingDefaultsToGeometryAndOptionallyUsesSourceAndMask() {
+        Layer bottom = viewport.addPaintLayer("behind image", 0, 0, 200, 200, (gc, ctx) -> { });
+        PaletteData palette = new PaletteData(0xFF0000, 0xFF00, 0xFF);
+        ImageData imageData = new ImageData(3, 1, 24, palette);
+        for (int x = 0; x < 3; x++) imageData.setPixel(x, 0, 0xFF0000);
+        imageData.setAlpha(0, 0, 255);
+        imageData.setAlpha(1, 0, 0);
+        imageData.setAlpha(2, 0, 255);
+        ImageData alphaCoverage = new ImageData(3, 1, 24, palette);
+        for (int x = 0; x < 3; x++) alphaCoverage.setPixel(x, 0, 0xFFFFFF);
+        alphaCoverage.setAlpha(0, 0, 255);
+        alphaCoverage.setAlpha(1, 0, 255);
+        alphaCoverage.setAlpha(2, 0, 0);
+        ImageData luminanceCoverage = new ImageData(3, 1, 24, palette);
+        luminanceCoverage.setPixel(0, 0, 0x000000);
+        luminanceCoverage.setPixel(1, 0, 0x808080);
+        luminanceCoverage.setPixel(2, 0, 0xFFFFFF);
+        for (int x = 0; x < 3; x++) luminanceCoverage.setAlpha(x, 0, 255);
+        Image image = new Image(viewport.getDisplay(), imageData);
+        Image alphaMask = new Image(viewport.getDisplay(), alphaCoverage);
+        Image luminanceMask = new Image(viewport.getDisplay(), luminanceCoverage);
+        Layer top = viewport.addImageLayer("painted hit", image, 20, 20);
+        top.setWorldBounds(20, 20, 60, 30);
+        try {
+            top.setMask(alphaMask);
+            assertFalse(top.isPaintedHitTesting(), "geometric hits are the historical default");
+            assertSame(top, viewport.hitTest(25, 25));
+            assertSame(top, viewport.hitTest(45, 25), "even transparent source pixels formerly hit");
+            assertSame(top, viewport.hitTest(75, 25), "even transparent masked pixels formerly hit");
+            top.setPaintedHitTesting(true);
+            assertTrue(top.isPaintedHitTesting());
+            assertSame(top, viewport.hitTest(25, 25));
+            assertSame(bottom, viewport.hitTest(45, 25), "zero source alpha passes through");
+            assertSame(bottom, viewport.hitTest(75, 25), "zero mask alpha passes through");
+            top.setMaskMode(LayeredViewport.MASK_INVERTED_ALPHA);
+            assertSame(bottom, viewport.hitTest(25, 25), "inverse alpha rejects the opaque mask side");
+            assertSame(top, viewport.hitTest(75, 25), "inverse alpha accepts transparent mask side");
+            top.setMask(luminanceMask);
+            top.setMaskMode(LayeredViewport.MASK_LUMINANCE);
+            assertSame(bottom, viewport.hitTest(25, 25), "black luminance rejects");
+            assertSame(top, viewport.hitTest(75, 25), "white luminance accepts");
+            top.setMaskMode(LayeredViewport.MASK_INVERTED_LUMINANCE);
+            assertSame(top, viewport.hitTest(25, 25), "inverted black luminance accepts");
+            assertSame(bottom, viewport.hitTest(75, 25), "inverted white luminance rejects");
+            top.setMask(null);
+            assertSame(bottom, viewport.hitTest(45, 25), "source alpha applies even without a mask");
+            assertSame(top, viewport.hitTest(75, 25));
+            top.setPaintedHitTesting(false);
+            assertSame(top, viewport.hitTest(45, 25), "opt-out restores geometric interception");
+            assertFalse(image.isDisposed(), "the caller owns the borrowed source image");
+            assertFalse(alphaMask.isDisposed(), "the caller owns the borrowed alpha mask");
+            assertFalse(luminanceMask.isDisposed(), "the caller owns the borrowed luminance mask");
+        } finally {
+            if (!viewport.isDisposed()) { top.remove(); bottom.remove(); }
+            image.dispose();
+            alphaMask.dispose();
+            luminanceMask.dispose();
+        }
+    }
+
+    @Test
+    public void testPaintedHitTesterAndFilterRecheckMaskAfterCallbacks() {
+        Layer bottom = viewport.addPaintLayer("under", 0, 0, 200, 200, (gc, ctx) -> { });
+        Image topImage = solidImage(SWT.COLOR_RED, 40);
+        PaletteData palette = new PaletteData(0xFF0000, 0xFF00, 0xFF);
+        ImageData data = new ImageData(2, 1, 24, palette);
+        for (int x = 0; x < 2; x++) data.setPixel(x, 0, 0xFFFFFF);
+        data.setAlpha(0, 0, 255);
+        data.setAlpha(1, 0, 0);
+        Image mask = new Image(viewport.getDisplay(), data);
+        Layer top = viewport.addImageLayer("top", topImage, 20, 20);
+        try {
+            top.setMask(mask);
+            top.setMaskMode(LayeredViewport.MASK_INVERTED_ALPHA);
+            top.setPaintedHitTesting(true);
+            assertSame(top, viewport.hitTest(50, 25), "right mask half is painted in inverse mode");
+            top.setHitTester((layer, worldX, worldY) -> {
+                top.setMaskMode(LayeredViewport.MASK_ALPHA);
+                return true;
+            });
+            assertSame(bottom, viewport.hitTest(50, 25),
+                    "a hit tester that hides its pixel must not return a stale layer");
+            top.setHitTester(null);
+            top.setMaskMode(LayeredViewport.MASK_INVERTED_ALPHA);
+            assertSame(bottom, viewport.hitTest(50, 25, candidate -> {
+                if (candidate == top) top.setMaskMode(LayeredViewport.MASK_ALPHA);
+                return true;
+            }), "an exclusion predicate that changes coverage must also be rechecked");
+            top.setPaintedHitTesting(false);
+            assertSame(top, viewport.hitTest(50, 25), "old geometric behavior is restored");
+        } finally {
+            if (!viewport.isDisposed()) { top.remove(); bottom.remove(); }
+            topImage.dispose();
+            mask.dispose();
         }
     }
 
@@ -3665,5 +3810,60 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
             return true;
         }), "child filters recheck the parent's current per-axis projection");
         assertEquals(1, root.getZIndex(), "filtering never changes the live Z rank");
+    }
+
+    @Test
+    public void testParallaxPlanesKeepPaintHitAndPointerOrderAcrossBlitPans() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer rows = solid("body", 0, 0, 4000, 4000, SWT.COLOR_BLUE);
+        Layer parallax = solid("parallax", 140, 40, 40, 40, SWT.COLOR_MAGENTA);
+        parallax.setScrollRates(128, 128);
+        Layer header = solid("header", 0, 0, 300, 20, SWT.COLOR_RED);
+        header.setPinned(SWT.VERTICAL);
+        show();
+        assertEquals(128, parallax.getScrollRateX());
+        assertEquals(128, parallax.getScrollRateY());
+        for (int[] origin : new int[][] {{0, 0}, {20, 20}, {60, 40},
+                {80, 30}, {0, 0}}) {
+            panAndPaint(origin[0], origin[1]);
+            int x = 145 - origin[0] / 2;
+            int y = 45 - origin[1] / 2;
+            assertEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), x, y),
+                    "parallax layer at origin " + origin[0] + "," + origin[1]);
+            assertEquals(system(SWT.COLOR_RED), rgb(pixels(), 20, 5),
+                    "pinned header stays above independently scrolling body");
+            assertSame(parallax, viewport.hitTest(x, y));
+            assertSame(header, viewport.hitTest(20, 5));
+            assertSameAsAFullRecomposition();
+        }
+        List<LayerPointerEvent> events = new ArrayList<>();
+        parallax.setPointerListener(events::add);
+        viewport.setOrigin(60, 40);
+        viewport.update();
+        pointer(SWT.MouseMove, 115, 25, 0);
+        assertFalse(events.isEmpty(), "parallax layer receives routed pointer event");
+        assertEquals(145, events.get(0).worldX());
+        assertEquals(45, events.get(0).worldY());
+        assertSame(parallax, events.get(0).layer());
+        assertSame(rows, viewport.hitTest(100, 80));
+    }
+
+    @Test
+    public void testScrollRatesReverseFixedAndPinnedPrecedence() {
+        Layer layer = solid("effect", 140, 40, 40, 40, SWT.COLOR_MAGENTA);
+        assertEquals(256, layer.getScrollRateX());
+        assertEquals(256, layer.getScrollRateY());
+        assertThrows(IllegalArgumentException.class, () -> layer.setScrollRates(4097, 256));
+        assertThrows(IllegalArgumentException.class, () -> layer.setScrollRates(0, -4097));
+        assertEquals(256, layer.getScrollRateX());
+        layer.setScrollRates(0, -256);
+        viewport.setOrigin(10, 20);
+        assertSame(layer, viewport.hitTest(145, 65), "fixed X and reverse Y");
+        layer.setPinned(SWT.VERTICAL);
+        assertSame(layer, viewport.hitTest(145, 45), "native pin overrides reverse Y");
+        layer.setPinned(SWT.NONE);
+        assertSame(layer, viewport.hitTest(145, 65), "rate reactivates after unpin");
+        layer.setScrollRates(256, 256);
+        assertSame(layer, viewport.hitTest(135, 25), "ordinary world scrolling restored");
     }
 }
