@@ -383,13 +383,16 @@ public final class ViewportRuntime {
 		public void compositeImageLayers (int x, int y, int width, int height, int [] out,
 				int outOffset, int outStride) {
 			long count = (long)width * height;
-			long lastRow = Math.max (0, (long)height - 1);
-			long end = (long)outOffset + lastRow * outStride + (height == 0 ? 0 : width);
 			if (width < 0 || height < 0 || count > Integer.MAX_VALUE
-					|| out == null || outOffset < 0 || outStride < width
-					|| end > out.length) {
+					|| out == null || outOffset < 0 || outOffset > out.length
+					|| outStride < width) {
 				throw new IllegalArgumentException ("invalid image tile");
 			}
+			// Zero-area rectangles never address a pixel: preserve the original
+			// packed method's no-op, even for an extreme hypothetical row span.
+			if (count == 0) return;
+			long end = (long)outOffset + ((long)height - 1) * outStride + width;
+			if (end > out.length) throw new IllegalArgumentException ("invalid image tile");
 			if (outStride == width) {
 				Arrays.fill (out, outOffset, outOffset + (int)count, 0);
 			} else {
@@ -398,7 +401,6 @@ public final class ViewportRuntime {
 					Arrays.fill (out, at, at + width, 0);
 				}
 			}
-			if (count == 0) return;
 			int start = first;
 			// An opaque translated layer discards every lower destination sample.
 			// Keep all surviving layers in back-to-front order: rounded 8-bit

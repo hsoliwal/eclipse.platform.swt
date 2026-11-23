@@ -658,7 +658,18 @@ public class Test_ViewportImageLayers {
 				() -> graph.compositeImageLayers (0, 0, 2, 2, null, 0, 2));
 		assertArrayEquals (before, output, "all geometry must be validated before changing the backing");
 		graph.compositeImageLayers (0, 0, 0, 0, output, output.length, 0);
-		assertArrayEquals (before, output, "a zero-area tile must not clear padding");
+		graph.compositeImageLayers (0, 0, 0, 3, output, output.length, 7);
+		graph.compositeImageLayers (0, 0, 0, Integer.MAX_VALUE, output,
+				output.length, Integer.MAX_VALUE);
+		graph.compositeImageLayers (0, 0, Integer.MAX_VALUE, 0, output,
+				output.length, Integer.MAX_VALUE);
+		graph.compositeImageLayers (0, 0, 0, Integer.MAX_VALUE, new int [0], 0, Integer.MAX_VALUE);
+		graph.compositeImageLayers (0, 0, 0, Integer.MAX_VALUE, new int [0]);
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.compositeImageLayers (0, 0, 0, 3, output,
+						output.length + 1, Integer.MAX_VALUE));
+		assertArrayEquals (before, output,
+				"a zero-area tile must never inspect nonexistent rows or clear padding");
 	}
 	private static int [] filledPixels (int size, int color) {
 		int [] result = new int [size];
