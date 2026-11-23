@@ -242,6 +242,16 @@ int getBorderWidthInPixels () {
 	}
 	return border;
 }
+
+/**
+ * The existing GtkScrolledWindow is the frame owner, not its inner content
+ * widget. Fall back to Control when this Scrollable has no scrolled peer.
+ */
+@Override
+long borderHandle () {
+    return scrolledHandle != 0 ? scrolledHandle : super.borderHandle();
+}
+
 /**
  * Returns a rectangle which describes the area of the
  * receiver which is capable of displaying data (that is,

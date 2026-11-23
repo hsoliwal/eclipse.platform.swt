@@ -368,13 +368,39 @@ public final class ViewportRuntime {
 		 * No native graphics object or viewport-sized scratch buffer is allocated.
 		 */
 		public void compositeImageLayers (int x, int y, int width, int height, int [] out) {
+			compositeImageLayers (x, y, width, height, out, 0, width);
+		}
+
+		/**
+		 * Composites directly into a caller-owned, row-strided ARGB backing array,
+		 * without a temporary contiguous copy. Only the addressed tile rows are
+		 * cleared and painted; surrounding data, row padding and suffix survive.
+		 * All geometry and output bounds are validated before any mutation.
+		 *
+		 * @param outOffset first destination pixel in {@code out}
+		 * @param outStride distance in ints between consecutive output rows
+		 */
+		public void compositeImageLayers (int x, int y, int width, int height, int [] out,
+				int outOffset, int outStride) {
 			long count = (long)width * height;
 			if (width < 0 || height < 0 || count > Integer.MAX_VALUE
-					|| out == null || out.length < count) {
+					|| out == null || outOffset < 0 || outOffset > out.length
+					|| outStride < width) {
 				throw new IllegalArgumentException ("invalid image tile");
 			}
-			Arrays.fill (out, 0, (int)count, 0);
+			// Zero-area rectangles never address a pixel: preserve the original
+			// packed method's no-op, even for an extreme hypothetical row span.
 			if (count == 0) return;
+			long end = (long)outOffset + ((long)height - 1) * outStride + width;
+			if (end > out.length) throw new IllegalArgumentException ("invalid image tile");
+			if (outStride == width) {
+				Arrays.fill (out, outOffset, outOffset + (int)count, 0);
+			} else {
+				for (int row = 0; row < height; row++) {
+					int at = outOffset + row * outStride;
+					Arrays.fill (out, at, at + width, 0);
+				}
+			}
 			int start = first;
 			// An opaque translated layer discards every lower destination sample.
 			// Keep all surviving layers in back-to-front order: rounded 8-bit
@@ -393,11 +419,12 @@ public final class ViewportRuntime {
 			for (int node = start; node != NONE; node = nextSibling [node]) {
 				if (kinds [node] != IMAGE_LAYER || (flags [node] & IMAGE_HIDDEN) != 0
 						|| imageOpacities [node] == 0) continue;
-				compositeImageTile (node, x, y, width, height, out);
+				compositeImageTile (node, x, y, width, height, out, outOffset, outStride);
 			}
 		}
 
-		private void compositeImageTile (int node, int x, int y, int width, int height, int [] out) {
+		private void compositeImageTile (int node, int x, int y, int width, int height, int [] out,
+				int outOffset, int outStride) {
 			int bounds = node * 4;
 			if ((flags [node] & SOURCE_EMPTY) != 0) return;
 			int startX = Math.max (0, (int)Math.floor (imageBounds [bounds] - x));
@@ -406,11 +433,11 @@ public final class ViewportRuntime {
 			int endY = Math.min (height, (int)Math.ceil (imageBounds [bounds + 3] - y));
 			if (startX >= endX || startY >= endY) return;
 			if ((flags [node] & INTEGER_TRANSLATION) != 0) {
-				compositeTranslatedImage (node, x, y, width, startX, startY, endX, endY, out);
+				compositeTranslatedImage (node, x, y, outOffset, outStride, startX, startY, endX, endY, out);
 				return;
 			}
 			for (int row = startY; row < endY; row++) {
-				int offset = row * width + startX;
+				int offset = outOffset + row * outStride + startX;
 				for (int column = startX; column < endX; column++, offset++) {
 					int source = imageSample (node, (double)x + column + 0.5d, (double)y + row + 0.5d);
 					out [offset] = imageSourceOver (source, out [offset]);
@@ -418,7 +445,7 @@ public final class ViewportRuntime {
 			}
 		}
 
-		private void compositeTranslatedImage (int node, int x, int y, int tileWidth,
+		private void compositeTranslatedImage (int node, int x, int y, int outOffset, int outStride,
 				int startX, int startY, int endX, int endY, int [] out) {
 			int transform = node * 6;
 			int sourceX = (int)((long)x + startX - (int)transforms [transform + 4]);
@@ -428,7 +455,7 @@ public final class ViewportRuntime {
 					&& (flags [node] & (PIXELS_OPAQUE | MASK_OPAQUE)) == (PIXELS_OPAQUE | MASK_OPAQUE);
 			for (int row = startY; row < endY; row++) {
 				int source = (sourceY + row - startY) * sourceWidth + sourceX;
-				int destination = row * tileWidth + startX;
+				int destination = outOffset + row * outStride + startX;
 				if (opaque) {
 					System.arraycopy (pixels [node], source, out, destination, length);
 				} else {

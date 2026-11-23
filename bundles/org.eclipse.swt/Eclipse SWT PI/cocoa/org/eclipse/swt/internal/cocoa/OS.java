@@ -166,6 +166,42 @@ public class OS extends C {
     /** 14.0 selector */
     public static final long sel_setClipsToBounds_ = Selector.sel_setClipsToBounds_.value;
 
+	/* Core Animation layer backing and explicit transactions. */
+	public static final long class_CATransaction = objc_getClass("CATransaction");
+	public static final long sel_CGColor = Selector.sel_CGColor.value;
+	public static final long sel_addSublayer_ = Selector.sel_addSublayer_.value;
+	public static final long sel_anchorPoint = Selector.sel_anchorPoint.value;
+	public static final long sel_animationDuration = Selector.sel_animationDuration.value;
+	public static final long sel_begin = Selector.sel_begin.value;
+	public static final long sel_borderColor = Selector.sel_borderColor.value;
+	public static final long sel_commit = Selector.sel_commit.value;
+	public static final long sel_contents = Selector.sel_contents.value;
+	public static final long sel_contentsScale = Selector.sel_contentsScale.value;
+	public static final long sel_cornerRadius = Selector.sel_cornerRadius.value;
+	public static final long sel_disableActions = Selector.sel_disableActions.value;
+	public static final long sel_mask = Selector.sel_mask.value;
+	public static final long sel_masksToBounds = Selector.sel_masksToBounds.value;
+	public static final long sel_position = Selector.sel_position.value;
+	public static final long sel_removeFromSuperlayer = Selector.sel_removeFromSuperlayer.value;
+	public static final long sel_separatorColor = Selector.sel_separatorColor.value;
+	public static final long sel_setAnchorPoint_ = Selector.sel_setAnchorPoint_.value;
+	public static final long sel_setAnimationDuration_ = Selector.sel_setAnimationDuration_.value;
+	public static final long sel_setBorderColor_ = Selector.sel_setBorderColor_.value;
+	public static final long sel_setBounds_ = Selector.sel_setBounds_.value;
+	public static final long sel_setContentsScale_ = Selector.sel_setContentsScale_.value;
+	public static final long sel_setContents_ = Selector.sel_setContents_.value;
+	public static final long sel_setCornerRadius_ = Selector.sel_setCornerRadius_.value;
+	public static final long sel_setDisableActions_ = Selector.sel_setDisableActions_.value;
+	public static final long sel_setMask_ = Selector.sel_setMask_.value;
+	public static final long sel_setMasksToBounds_ = Selector.sel_setMasksToBounds_.value;
+	public static final long sel_setPosition_ = Selector.sel_setPosition_.value;
+	public static final long sel_setWantsLayer_ = Selector.sel_setWantsLayer_.value;
+	public static final long sel_setZPosition_ = Selector.sel_setZPosition_.value;
+	public static final long sel_sublayers = Selector.sel_sublayers.value;
+	public static final long sel_superlayer = Selector.sel_superlayer.value;
+	public static final long sel_wantsLayer = Selector.sel_wantsLayer.value;
+	public static final long sel_zPosition = Selector.sel_zPosition.value;
+
 	/* AWT application delegate. Remove these when JavaRuntimeSupport.framework has bridgesupport generated for it. */
 	public static final long class_JRSAppKitAWT = objc_getClass("JRSAppKitAWT");
 	public static final long sel_awtAppDelegate = Selector.sel_awtAppDelegate.value;
