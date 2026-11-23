@@ -36,6 +36,13 @@ on:
       - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_Composition.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionDeltaTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameDirect.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFramePacket.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameView.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/java/org/eclipse/swt/internal/maya/impl/Library.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/java/org/eclipse/swt/widgets/Control.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaFramePacket.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/NativeLayers.java'
       - '.github/workflows/maya-native-safety.yml'
   push:
     branches: [ master ]
@@ -73,6 +80,13 @@ on:
       - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_Composition.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionDeltaTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameDirect.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFramePacket.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameView.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/java/org/eclipse/swt/internal/maya/impl/Library.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/java/org/eclipse/swt/widgets/Control.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaFramePacket.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/NativeLayers.java'
       - '.github/workflows/maya-native-safety.yml'
 
 jobs:
@@ -179,6 +193,7 @@ jobs:
           mkdir -p /tmp/maya-budget-classes
           javac --release 21 -Xlint:all -Werror -d /tmp/maya-budget-classes \
               'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java' \
+              'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaFramePacket.java' \
               'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/NativeLayers.java' \
               'bundles/org.eclipse.swt/Eclipse SWT Maya/win32/org/eclipse/swt/internal/render/MayaNativeLayers.java' \
               "$root/tests/java/org/eclipse/swt/internal/maya/impl/Library.java" \
@@ -253,11 +268,11 @@ jobs:
           set -euo pipefail
           root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
           for compiler in g++ clang++; do
-            for source in MayaUploadBoundsProof.cc MayaDirtyPixelScratchStress.cc; do
-              output="/tmp/maya-scratch-${compiler}-${source%.cc}"
+            for source in '../../tests/MayaUploadBoundsProof.cc' 'tests/MayaDirtyPixelScratchStress.cc'; do
+              output="/tmp/maya-scratch-${compiler}-$(basename "${source%.cc}")"
               "$compiler" -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic -pthread \
                 -fsanitize=address,undefined -fno-omit-frame-pointer -I"$root" \
-                "$root/tests/$source" -o "$output"
+                "$root/$source" -o "$output"
               ASAN_OPTIONS=detect_leaks=1 "$output"
             done
           done
@@ -293,8 +308,9 @@ jobs:
           if (-not $installation) { throw 'MSVC installation not found' }
           $vcvars = Join-Path $installation 'VC\Auxiliary\Build\vcvars64.bat'
           $root = 'bundles\org.eclipse.swt\Eclipse SWT Maya\native\cc\swt'
-          foreach ($sourceName in @('MayaUploadBoundsProof.cc', 'MayaDirtyPixelScratchStress.cc')) {
-            $source = Join-Path (Join-Path $root 'tests') $sourceName
+          foreach ($sourcePath in @('..\..\tests\MayaUploadBoundsProof.cc', 'tests\MayaDirtyPixelScratchStress.cc')) {
+            $source = Join-Path $root $sourcePath
+            $sourceName = Split-Path -Leaf $source
             $output = Join-Path $env:RUNNER_TEMP ($sourceName + '.exe')
             $command = 'call "' + $vcvars + '" && cl /nologo /std:c++17 /EHsc /W3 /WX /I"' + $root + '" "' + $source + '" /Fe"' + $output + '"'
             & cmd.exe /D /S /C $command
