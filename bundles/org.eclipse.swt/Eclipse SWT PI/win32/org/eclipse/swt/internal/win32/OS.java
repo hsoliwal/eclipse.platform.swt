@@ -3657,6 +3657,11 @@ public static final native boolean RectInRegion (long hrgn, RECT lprc);
  * @param hrgnUpdate cast=(HRGN)
  */
 public static final native boolean RedrawWindow (long hWnd, RECT lprcUpdate, long hrgnUpdate, int flags);
+/**
+ * Optional copied and validated native Win32 update-region transaction.
+ * @method flags=no_gen
+ */
+public static final native boolean RedrawWindowRegions (long hWnd, int [] rectangles, int count, int flags);
 /** @param hKey cast=(HKEY) */
 public static final native int RegCloseKey (long hKey);
 /**
