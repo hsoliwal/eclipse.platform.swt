@@ -1092,6 +1092,8 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
 	LRESULT result = super.wmNCPaint (hwnd, wParam, lParam);
 	if (result != null) return result;
+	/* An explicit Control relief owns the frame; skip the custom-colour border. */
+	if (nativeBorderReliefForPaint () != SWT.DEFAULT) return result;
 	if (!useCustomColors () || (OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE) & OS.WS_EX_CLIENTEDGE) == 0) return result;
 	long hDC = OS.GetWindowDC (hwnd);
 	paintBorder (hwnd, hDC);
@@ -1101,6 +1103,7 @@ LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
 
 @Override
 LRESULT wmPrint (long hwnd, long wParam, long lParam) {
+	if (nativeBorderReliefForPaint () != SWT.DEFAULT) return super.wmPrint (hwnd, wParam, lParam);
 	if ((lParam & OS.PRF_NONCLIENT) == 0 || !useCustomColors () || (OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE) & OS.WS_EX_CLIENTEDGE) == 0) {
 		return super.wmPrint (hwnd, wParam, lParam);
 	}

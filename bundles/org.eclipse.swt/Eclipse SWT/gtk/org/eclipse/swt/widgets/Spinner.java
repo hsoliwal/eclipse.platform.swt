@@ -451,6 +451,14 @@ int getBorderWidthInPixels () {
 }
 
 /**
+ * The GtkSpinButton itself owns the visible entry frame.
+ */
+@Override
+long borderHandle () {
+	return handle;
+}
+
+/**
  * Returns the amount that the receiver's value will be
  * modified by when the up/down arrows are pressed.
  *

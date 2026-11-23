@@ -1530,6 +1530,8 @@ LRESULT WM_WINDOWPOSCHANGING (long wParam, long lParam) {
 
 @Override
 LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
+	/* An explicit Control relief owns the frame; skip the custom-colour border. */
+	if (nativeBorderReliefForPaint () != SWT.DEFAULT) return super.wmNCPaint (hwnd, wParam, lParam);
 	if (hwnd == handle && hasCustomBorder ()) {
 		long hDC = OS.GetWindowDC (hwnd);
 		drawCustomBorder (hDC);
@@ -1541,6 +1543,7 @@ LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
 
 @Override
 LRESULT wmPrint (long hwnd, long wParam, long lParam) {
+	if (nativeBorderReliefForPaint () != SWT.DEFAULT) return super.wmPrint (hwnd, wParam, lParam);
 	if (hwnd == handle && hasCustomBorder () && (lParam & OS.PRF_NONCLIENT) != 0) {
 		long code = callWindowProc (hwnd, OS.WM_PRINT, wParam, lParam);
 		drawCustomBorder (wParam);
