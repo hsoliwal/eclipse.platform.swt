@@ -28,6 +28,8 @@ on:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaNativeHandleRegistry.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaNativeHandleRegistryTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionScene.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/NativeResidencyWindow.java'
+      - 'tests/org.eclipse.swt.tests/native/org/eclipse/swt/custom/NativeResidencyWindowProof.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionSceneTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def'
@@ -63,6 +65,8 @@ on:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaNativeHandleRegistry.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaNativeHandleRegistryTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionScene.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/NativeResidencyWindow.java'
+      - 'tests/org.eclipse.swt.tests/native/org/eclipse/swt/custom/NativeResidencyWindowProof.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionSceneTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def'
@@ -80,6 +84,17 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Java 21 viewport-residency admission and hysteresis oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/maya-native-residency"
+          mkdir -p "$out"
+          javac --release 21 -Xlint:all -Werror -d "$out" \
+            'bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/NativeResidencyWindow.java' \
+            'tests/org.eclipse.swt.tests/native/org/eclipse/swt/custom/NativeResidencyWindowProof.java'
+          java -cp "$out" org.eclipse.swt.custom.NativeResidencyWindowProof
+
       - name: C++17 native checks with sanitizers
         shell: bash
         run: |
