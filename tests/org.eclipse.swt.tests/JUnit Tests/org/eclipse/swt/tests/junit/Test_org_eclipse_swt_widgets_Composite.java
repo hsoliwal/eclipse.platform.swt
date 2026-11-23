@@ -170,6 +170,94 @@ public void test_nativeBevelBorderStyles() {
 }
 
 @Test
+public void test_nativeBorderReliefExplicitAndReset() {
+	Composite child = new Composite(shell, SWT.BORDER);
+	try {
+		int originalWidth = child.getBorderWidth();
+		assertEquals(SWT.DEFAULT, child.getBorderRelief());
+		assertThrows(IllegalArgumentException.class,
+				() -> child.setBorderRelief(SWT.PUSH | SWT.BORDER));
+		assertEquals(SWT.DEFAULT, child.getBorderRelief());
+		if ("cocoa".equals(SWT.getPlatform())) {
+			// Cocoa (master) draws relief over an existing NSScrollView bezel, which a
+			// bordered Composite has; SHADOW_NONE is the value it refuses explicitly.
+			org.eclipse.swt.SWTError unsupported = assertThrows(
+					org.eclipse.swt.SWTError.class, () -> child.setBorderRelief(SWT.SHADOW_NONE));
+			assertEquals(SWT.ERROR_NOT_IMPLEMENTED, unsupported.code);
+			assertEquals(SWT.DEFAULT, child.getBorderRelief());
+			return;
+		}
+		child.setSize(96, 48);
+		for (int relief : new int[] { SWT.SHADOW_IN, SWT.SHADOW_OUT,
+				SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT }) {
+			child.setBorderRelief(relief);
+			assertEquals(relief, child.getBorderRelief());
+			assertTrue(child.getBorderWidth() > 0, "visible native relief must reserve trim");
+		}
+		child.setBorderRelief(SWT.SHADOW_NONE);
+		assertEquals(SWT.SHADOW_NONE, child.getBorderRelief());
+		child.setBorderRelief(SWT.DEFAULT);
+		assertEquals(SWT.DEFAULT, child.getBorderRelief());
+		assertEquals(originalWidth, child.getBorderWidth());
+		child.setBorderRelief(SWT.DEFAULT); // no-op, including native frame
+	} finally {
+		child.dispose();
+	}
+}
+
+@Test
+public void test_nativeBorderReliefWin32ConstructorPrecedence() {
+	if (!SwtTestUtil.isWindows) return;
+	Composite child = new Composite(shell, SWT.SHADOW_IN | SWT.BORDER);
+	try {
+		child.setSize(100, 60);
+		int originalWidth = child.getBorderWidth();
+		child.setBorderRelief(SWT.SHADOW_OUT);
+		assertEquals(SWT.SHADOW_OUT, child.getBorderRelief());
+		assertTrue(child.getBorderWidth() > 0);
+		child.setBorderRelief(SWT.SHADOW_ETCHED_IN);
+		child.setBorderRelief(SWT.SHADOW_ETCHED_OUT);
+		child.setBorderRelief(SWT.SHADOW_NONE);
+		child.setBorderRelief(SWT.DEFAULT);
+		assertEquals(originalWidth, child.getBorderWidth());
+		assertEquals(SWT.SHADOW_IN, child.getStyle() & SWT.SHADOW_IN);
+	} finally {
+		child.dispose();
+	}
+}
+
+@Test
+public void test_nativeBorderReliefGtkGroupShadowOverride() {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+	org.eclipse.swt.widgets.Group child =
+			new org.eclipse.swt.widgets.Group(shell, SWT.SHADOW_IN);
+	try {
+		child.setSize(120, 70);
+		child.setBorderRelief(SWT.SHADOW_OUT);
+		assertEquals(SWT.SHADOW_OUT, child.getBorderRelief());
+		assertTrue(child.getBorderWidth() > 0, "explicit Group relief must have visible trim");
+		child.setBackground(shell.getBackground());
+		child.setForeground(shell.getForeground());
+		assertEquals(SWT.SHADOW_OUT, child.getBorderRelief(),
+				"foreground/background CSS must not discard native border CSS");
+		child.setBorderRelief(SWT.DEFAULT);
+		assertEquals(SWT.DEFAULT, child.getBorderRelief());
+	} finally {
+		child.dispose();
+	}
+}
+
+@Test
+public void test_nativeBorderReliefGtkStyleMapping() {
+	assertTrue(org.eclipse.swt.internal.NativeBorderRelief.gtkDeclaration(SWT.SHADOW_IN).contains("inset"));
+	assertTrue(org.eclipse.swt.internal.NativeBorderRelief.gtkDeclaration(SWT.SHADOW_OUT).contains("outset"));
+	assertTrue(org.eclipse.swt.internal.NativeBorderRelief.gtkDeclaration(SWT.SHADOW_ETCHED_IN).contains("groove"));
+	assertTrue(org.eclipse.swt.internal.NativeBorderRelief.gtkDeclaration(SWT.SHADOW_ETCHED_OUT).contains("ridge"));
+	assertEquals("", org.eclipse.swt.internal.NativeBorderRelief.gtkDeclaration(SWT.DEFAULT));
+	assertFalse(org.eclipse.swt.internal.NativeBorderRelief.isValid(SWT.BORDER));
+}
+
+@Test
 public void test_getChildren() {
 	assertArrayEquals(new Control[]{}, composite.getChildren());
 	Composite c1 = new Composite(composite, 0);

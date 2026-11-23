@@ -1,0 +1,93 @@
+# Native Control border relief
+
+> **Reconciled with `master` (2026-11-23).** The canonical implementation of
+> this API is the one already on `master`, documented in
+> [M3_NATIVE_CONTROL_BORDERS.md](M3_NATIVE_CONTROL_BORDERS.md);
+> `getBorderStyle()`/`setBorderStyle(int)` are aliases of
+> `getBorderRelief()`/`setBorderRelief(int)`. The backend table below
+> reflects that implementation.
+
+This is an **opt-in** extension of the existing SWT native widgets. It builds
+on the original platform `Control`, on merged GTK4 `Group` shadow styles
+(PR #515), and on Win32 `Composite`/`Canvas` native bevels (PR #516).
+There is no replacement Canvas, extra native peer, or parallel compositor.
+The original `SWT.BORDER`, control class/constructor style bits, and
+`LayeredViewport`/Maya ownership remain unchanged when no override is used.
+
+## API and precedence
+
+```java
+control.setBorderRelief(SWT.SHADOW_IN);         // sunken / inset
+control.setBorderRelief(SWT.SHADOW_OUT);        // raised / outset
+control.setBorderRelief(SWT.SHADOW_ETCHED_IN);  // etched inward
+control.setBorderRelief(SWT.SHADOW_ETCHED_OUT); // etched outward
+control.setBorderRelief(SWT.SHADOW_NONE);       // no additional native relief
+control.setBorderRelief(SWT.DEFAULT);           // restore original native border
+int relief = control.getBorderRelief();         // initially SWT.DEFAULT
+```
+
+These are **method values**, not universal constructor-style flags.
+The existing `SWT.SHADOW_*` bit values collide with unrelated widget style
+bits. Only the direct `Composite`/`Canvas` constructor shadows introduced
+in PR #516 are interpreted as such; other constructor styles are untouched.
+
+When `getBorderRelief() == SWT.DEFAULT`, the original per-widget rendering
+and trim remain unchanged. A nondefault setter value takes precedence over
+direct `Composite`/`Canvas` constructor relief and GTK4 `Group`
+shadow CSS. Resetting to `SWT.DEFAULT` restores the original native
+style and its paint path. `SHADOW_NONE` removes the *supplemental relief*;
+the independent `WS_BORDER` or other originally specified border form may
+still remain. The constructor's `style` and `getStyle()` do not change.
+
+Invalid method values throw `ERROR_INVALID_ARGUMENT` before any native
+change. An unsupported platform/peer throws `ERROR_NOT_IMPLEMENTED` before
+changing the requested relief. Methods observe SWT UI-thread and disposal
+contracts. Restoring default is idempotent.
+
+## Native backend
+
+| Backend | Native mechanism | Limit |
+| --- | --- | --- |
+| Win32 | Existing HWND and `OS.DrawEdge` JNI binding; preserve original extended edge bits; reserve original system metrics for nonclient trim; use nonclient invalidation for visual transitions | Non-client etched drawing requires the receiver's actual HWND to own its border; otherwise fail explicitly |
+| GTK3/4 | Existing `GtkCssProvider` binding, attached to the style context of the border-owning widget (`borderHandle()`, e.g. the `GtkScrolledWindow`) after any constructor `Group` shadow provider; CSS inset/outset/groove/ridge; Control-level trim reported as two pixels | GTK3/4 theme, zoom, padding, client allocation, and GTK4 4.10+ deprecated-style-context API require native pixel proofs |
+| Cocoa | Two-tone AppKit bands painted over the existing `NSScrollView` bezel after AppKit paints it; trim, client area and input unchanged | `SHADOW_NONE`, controls without a bezel scroll view, and etched styles on a bezel thinner than two points fail with `ERROR_NOT_IMPLEMENTED` |
+| Android/iOS preview | The existing peer draws two-tone relief through `MobilePlatform.setBorderRelief` (`AndroidPlatform.PeerView`, `SWTUIKitView`) | A transport without that operation keeps its default border and fails closed with `ERROR_NOT_IMPLEMENTED`; device evidence still pending |
+
+All backend state is per-Control. GTK border CSS is separate from the
+existing foreground/background CSS provider. Window handles, accessibility
+nodes, focus, event identity, stacking, clipping and native widget lifetime
+remain owned by the original SWT classes. The system color palette is used
+for Win32 GDI edge shading rather than hard-coded colors.
+
+## Performance invariants
+
+- No native call or allocation for controls which never request an override.
+- No redundant setter work for the same value.
+- No per-pixel JNI calls; Win32 edge drawing stays one bounded native draw.
+- A same-geometry transition still invalidates the nonclient **frame**,
+  not just the client pixels. Additional client damage is not required merely
+  to recolor a border.
+- Native border changes must never reorder Maya/DirectComposition layers.
+
+## Qualification and release hold
+
+This document is an implementation contract, **not evidence of runtime
+qualification**. Before merge/release, require:
+
+1. Deterministic patch/readback, pre/post content hashes and fixed-point replay;
+   verify no unrelated path changed and no autogenerated JNI file was edited.
+2. Java 21/25 Tycho compile, JUnit registration/execution, Javadoc/API check.
+3. Win32 screenshot/pixel comparison for four reliefs, reset, `SWT.BORDER`,
+   constructor shadow plus explicit setter, `SHADOW_NONE`, RTL,
+   scrollbars, focus, disposal, dark/high-contrast themes, and 100/125/150/200%
+   display zoom.
+4. GTK3/GTK4 real style-context CSS pixels, per-edge border metrics,
+   `computeTrim`/`getClientArea` inverse checks, `Group` priority,
+   default restoration, foreground/background CSS updates and lifetime.
+5. Native ABI/`-Xcheck:jni`, Maya layered viewport and existing widget
+   tests, cross-platform GUI verification; isolated Cocoa and mobile native
+   implementation PRs before claiming support on those platforms.
+
+A failed or unavailable gate remains **PENDING**, never PASS.
+No force merge, branch override, or modification of legacy SWT default
+behavior is authorized by this feature.

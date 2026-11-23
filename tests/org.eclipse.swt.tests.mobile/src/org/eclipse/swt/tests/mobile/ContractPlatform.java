@@ -71,7 +71,13 @@ final class ContractPlatform implements MobilePlatform {
 	@Override public void setBounds(long id,int x,int y,int w,int h){Peer p=peer(id);p.x=x;p.y=y;p.width=w;p.height=h;}
 	@Override public void setVisible(long id,boolean visible){peer(id).visible=visible;}
 	@Override public void setEnabled(long id,boolean enabled){peer(id).enabled=enabled;}
-	@Override public void setBorderRelief(long id,int relief){peer(id).borderRelief=relief;}
+	/* true models a transport without native relief: MobilePlatform's default refusal */
+	boolean refuseBorderRelief;
+	@Override public void setBorderRelief(long id,int relief){
+		if(refuseBorderRelief&&relief!=SWT.DEFAULT)
+			throw new UnsupportedOperationException("Native border relief unavailable on this mobile transport");
+		peer(id).borderRelief=relief;
+	}
 	@Override public void setTitle(long id,String title){peer(id).title=title;}
 	@Override public String getClipboardText(){check();return clipboard;}
 	@Override public void setClipboardText(String text){check();clipboard=java.util.Objects.requireNonNull(text);}

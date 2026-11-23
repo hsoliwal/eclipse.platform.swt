@@ -461,6 +461,44 @@ public final class MobileCoreContractTest {
 		} finally { try { display.dispose(); } finally { MobileRuntime.uninstall(platform); } }
 	}
 
+	static void testNativeBorderReliefFailClosed() {
+		ContractPlatform platform = new ContractPlatform();
+		// master's mobile Control delegates relief to the transport; this contract
+		// covers a transport without it (MobilePlatform.setBorderRelief's default).
+		platform.refuseBorderRelief = true;
+		MobileRuntime.install(platform);
+		Display display = new Display();
+		try {
+			Shell shell = new Shell(display);
+			Composite control = new Composite(shell, SWT.BORDER);
+			int original = control.getBorderWidth();
+			require(control.getBorderRelief() == SWT.DEFAULT, "Mobile relief defaults to platform border");
+			control.setBorderRelief(SWT.DEFAULT);
+			for (int relief : new int[] { SWT.SHADOW_NONE, SWT.SHADOW_IN,
+					SWT.SHADOW_OUT, SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT }) {
+				try {
+					control.setBorderRelief(relief);
+					throw new AssertionError("Mobile relief must not claim an unimplemented native bezel");
+				} catch (org.eclipse.swt.SWTError unsupported) {
+					require(unsupported.code == SWT.ERROR_NOT_IMPLEMENTED,
+							"Mobile native relief fails with ERROR_NOT_IMPLEMENTED");
+				}
+			}
+			try {
+				control.setBorderRelief(SWT.PUSH | SWT.BORDER);
+				throw new AssertionError("Invalid relief must be rejected");
+			} catch (IllegalArgumentException expected) {
+				// The original peer is unchanged.
+			}
+			require(control.getBorderRelief() == SWT.DEFAULT
+					&& control.getBorderWidth() == original,
+					"Mobile fail-closed relief preserves native trim");
+		} finally {
+			if (!display.isDisposed()) display.dispose();
+			MobileRuntime.uninstall(platform);
+		}
+	}
+
 	static void testBorderClientGeometryAndPainting() {
 		ContractPlatform platform = new ContractPlatform(); MobileRuntime.install(platform); Display display = new Display();
 		try {

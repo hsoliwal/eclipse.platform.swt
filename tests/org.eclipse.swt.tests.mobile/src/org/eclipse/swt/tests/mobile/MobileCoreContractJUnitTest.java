@@ -119,6 +119,9 @@ public final class MobileCoreContractJUnitTest {
 	@Test void equivalentDefaultFontLocalesHaveOneValueIdentity() {
 		MobileCoreContractTest.testFontDataDefaultLocaleNormalization();
 	}
+	@Test void nativeBorderReliefFailsClosedWithoutPeerMutation() {
+		MobileCoreContractTest.testNativeBorderReliefFailClosed();
+	}
 	@Test void bordersAlignClientCoordinatesImagesAndPrinting() {
 		MobileCoreContractTest.testBorderClientGeometryAndPainting();
 	}
