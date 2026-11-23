@@ -707,6 +707,8 @@ public final class LayeredViewport extends Canvas {
         private Image mask;
         private ImageData maskSource;
         private int maskMode = MASK_ALPHA;
+        /* Opt-in only: historical geometric hit and pointer routing are the default. */
+        private boolean paintedHitTesting;
         /* retained: this layer's composite (it and everything below it) kept in its own image, with the pixels of
            that image that no longer match the layers */
         private boolean retained;
@@ -1160,6 +1162,28 @@ public final class LayeredViewport extends Canvas {
         public int getMaskMode() {
             checked();
             return maskMode;
+        }
+
+        /**
+         * Opt into source-alpha and raster-mask aware hit testing for this image
+         * layer. By default hit testing remains geometric, including transparent
+         * image pixels. Painted layers without an image retain their previous
+         * geometric or user-supplied hit tester semantics.
+         *
+         * <p>When enabled, the same projected pixel-center sampling and rounded
+         * effective source opacity as compositing decide whether the layer
+         * intercepts input. A zero-alpha pixel passes to lower layers. Borrowed
+         * images must be redrawn after in-place edits to refresh their snapshots.
+         * No new native Control or event dispatch thread is created.</p>
+         */
+        public void setPaintedHitTesting(boolean value) {
+            checked();
+            paintedHitTesting = value;
+        }
+
+        public boolean isPaintedHitTesting() {
+            checked();
+            return paintedHitTesting;
         }
 
         public boolean isLocked() {
@@ -1701,6 +1725,7 @@ public final class LayeredViewport extends Canvas {
                 worldX = layerX(layer, deviceX);
                 worldY = layerY(layer, deviceY);
                 if (!containsHit(layer, worldX, worldY)
+                        || !paintedPixelHit(layer, deviceX, deviceY)
                         || (withPointerListener && layer.pointerListener == null)) continue;
                 LayerHitTester tester = layer.hitTester;
                 boolean accepted = tester == null || tester.contains(layer, worldX, worldY);
@@ -1708,6 +1733,7 @@ public final class LayeredViewport extends Canvas {
                 // Callbacks can remove, move, hide or lock their own target,
                 // or another candidate captured by this query.
                 if (accepted && containsHit(layer, layerX(layer, deviceX), layerY(layer, deviceY))
+                        && paintedPixelHit(layer, deviceX, deviceY)
                         && (!withPointerListener || layer.pointerListener != null)) {
                     if (accept == null) return layer;
                     boolean included = accept.test(layer);
@@ -1715,6 +1741,7 @@ public final class LayeredViewport extends Canvas {
                     // User filtering may change visibility, world origin, native
                     // pinning or this very layer. Never return stale geometry.
                     if (included && containsHit(layer, layerX(layer, deviceX), layerY(layer, deviceY))
+                            && paintedPixelHit(layer, deviceX, deviceY)
                             && (!withPointerListener || layer.pointerListener != null)) return layer;
                 }
             }
@@ -1732,6 +1759,54 @@ public final class LayeredViewport extends Canvas {
         WorldBounds clip = layer.worldClip;
         return clip == null || (worldX >= clip.x() && worldX < clip.x() + clip.width()
                 && worldY >= clip.y() && worldY < clip.y() + clip.height());
+    }
+
+    /*
+     * A picking-only, allocation-minimal sampling atom. It shares the lazy
+     * ImageData source snapshots with paintBlended (invalidated by Layer.redraw)
+     * and uses the exact source/mask pixel-center projection that paints use.
+     * The default geometric path returns before any ImageData read.
+     */
+    private boolean paintedPixelHit(Layer layer, int deviceX, int deviceY) {
+        if (!layer.paintedHitTesting || layer.image == null) return true;
+        if (layer.image.isDisposed() || layer.mask != null && layer.mask.isDisposed()) return false;
+        if (layer.blendSource == null) layer.blendSource = layer.image.getImageData();
+        ImageData source = layer.blendSource;
+        if (source.width == 0 || source.height == 0) return false;
+        long ox = layerOriginX(layer), oy = layerOriginY(layer);
+        double left = device(layer.x, ox, layerScaleX(layer));
+        double top = device(layer.y, oy, layerScaleY(layer));
+        double width = device(layer.right, ox, layerScaleX(layer)) - left;
+        double height = device(layer.bottom, oy, layerScaleY(layer)) - top;
+        if (!(width > 0) || !(height > 0)) return false;
+        int sx = clipSource((deviceX + 0.5 - left) / width * source.width, source.width - 1, false);
+        int sy = clipSource((deviceY + 0.5 - top) / height * source.height, source.height - 1, false);
+        int sourcePixel = source.getPixel(sx, sy);
+        int sourceAlpha = source.alphaData != null ? source.getAlpha(sx, sy)
+                : source.alpha >= 0 ? source.alpha : 255;
+        if (source.transparentPixel >= 0 && sourcePixel == source.transparentPixel) return false;
+        if (sourceAlpha == 0) return false;
+
+        int coverage = 255;
+        if (layer.mask != null) {
+            if (layer.maskSource == null) layer.maskSource = layer.mask.getImageData();
+            ImageData mask = layer.maskSource;
+            if (mask.width == 0 || mask.height == 0) return false;
+            int mx = clipSource((deviceX + 0.5 - left) / width * mask.width, mask.width - 1, false);
+            int my = clipSource((deviceY + 0.5 - top) / height * mask.height, mask.height - 1, false);
+            int maskPixel = mask.getPixel(mx, my);
+            int maskAlpha = mask.alphaData != null ? mask.getAlpha(mx, my)
+                    : mask.alpha >= 0 ? mask.alpha : 255;
+            if (mask.transparentPixel >= 0 && maskPixel == mask.transparentPixel) maskAlpha = 0;
+            int rgb = 0;
+            if (layer.maskMode >= MASK_LUMINANCE) {
+                var color = mask.palette.getRGB(maskPixel); // only one RGB object per hit, not a row array
+                rgb = color.red << 16 | color.green << 8 | color.blue;
+            }
+            coverage = LayerArgbCompositor.maskCoverage(maskAlpha, rgb, layer.maskMode);
+        }
+        int effectiveOpacity = (layer.opacity * coverage + 127) / 255;
+        return (sourceAlpha * effectiveOpacity + 127) / 255 > 0;
     }
 
     /** Current logical pointer capture, or null. The layer is never a native Control. */
