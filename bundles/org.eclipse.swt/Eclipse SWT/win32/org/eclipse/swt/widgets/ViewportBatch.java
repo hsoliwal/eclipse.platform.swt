@@ -43,6 +43,9 @@ import org.eclipse.swt.internal.win32.*;
 final class ViewportBatch {
 	static final int DEPTH_MASK = 0xFF;
 	static final int FLAG_ALL_CHILDREN = 1;
+	private static final boolean NATIVE_REGION_BATCH = Boolean.getBoolean ("swt.win32.nativeRegionBatch");
+	private static final boolean NATIVE_REGION_BATCH_REQUIRED = Boolean.getBoolean ("swt.win32.nativeRegionBatch.required");
+	private static volatile boolean nativeRegionBatchUnavailable;
 
 	private ViewportBatch () {
 	}
@@ -224,7 +227,7 @@ final class ViewportBatch {
 		int flags = OS.RDW_INVALIDATE | (allChildren ? OS.RDW_ALLCHILDREN : 0);
 		if (region.overflowed ()) {
 			OS.RedrawWindow (c.handle, null, 0, flags);
-		} else {
+		} else if (!flushNativeRegionBatch (c, region, flags)) {
 			RECT rect = c.display.boxClient;
 			for (int i = 0; i < region.rectCount (); i++) {
 				OS.SetRect (rect, region.x (i), region.y (i), region.x (i) + region.width (i), region.y (i) + region.height (i));
@@ -232,6 +235,33 @@ final class ViewportBatch {
 			}
 		}
 		region.clear ();
+	}
+
+	/** Optional one-call native invalidation; never changes the original fallback. */
+	private static boolean flushNativeRegionBatch (Control c, ViewportDamageRegion region, int flags) {
+		int count = region.rectCount ();
+		if (!NATIVE_REGION_BATCH || nativeRegionBatchUnavailable || count < 2 || count > 64) return false;
+		Display d = c.display;
+		int required = count * 4;
+		if (d.damageData.length < required) d.damageData = new int [required];
+		int [] values = d.damageData;
+		for (int i = 0, k = 0; i < count; i++) {
+			values [k++] = region.x (i);
+			values [k++] = region.y (i);
+			values [k++] = region.width (i);
+			values [k++] = region.height (i);
+		}
+		try {
+			boolean submitted = OS.RedrawWindowRegions (c.handle, values, count, flags);
+			if (!submitted && NATIVE_REGION_BATCH_REQUIRED) {
+				throw new IllegalStateException ("required Win32 native damage batch failed");
+			}
+			return submitted;
+		} catch (UnsatisfiedLinkError oldNativeBinary) {
+			if (NATIVE_REGION_BATCH_REQUIRED) throw oldNativeBinary;
+			nativeRegionBatchUnavailable = true;
+			return false;
+		}
 	}
 
 	static ViewportDamageRegion viewportDamage (Control c) {

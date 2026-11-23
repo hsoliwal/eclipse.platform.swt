@@ -96,6 +96,33 @@ public final class ImageDataArgb {
 		}
 	}
 
+
+	/**
+	 * A premultiplied pixel span without constructing or converting the rest of
+	 * the image. It uses the same palette, alpha and transparent-pixel rules as
+	 * premultipliedRow; source and target ranges are validated before mutation.
+	 */
+	public void premultipliedSpan(int y, int x, int length, int[] out, int offset) {
+		if (out == null || y < 0 || y >= data.height || x < 0 || length < 0
+				|| x > data.width || length > data.width - x
+				|| offset < 0 || offset > out.length || length > out.length - offset) {
+			throw new IllegalArgumentException("invalid premultiplied pixel span");
+		}
+		if (length == 0) return;
+		data.getPixels(x, y, length, pixels, 0);
+		boolean perPixel = data.alphaData != null;
+		if (perPixel) data.getAlphas(x, y, length, alphas, 0);
+		int global = data.alpha >= 0 ? data.alpha : 255;
+		int transparent = data.transparentPixel;
+		for (int i = 0; i < length; i++) {
+			int pixel = pixels[i], alpha = perPixel ? alphas[i] & 0xFF : global;
+			if (transparent >= 0 && pixel == transparent) alpha = 0;
+			int color = rgb(pixel);
+			out[offset + i] = alpha << 24 | mul255(color >>> 16 & 0xFF, alpha) << 16
+					| mul255(color >>> 8 & 0xFF, alpha) << 8 | mul255(color & 0xFF, alpha);
+		}
+	}
+
 	/** Row {@code y}'s colours as opaque ARGB (0xFFRRGGBB) into {@code out} from {@code offset}. */
 	public void opaqueRow(int y, int[] out, int offset) {
 		int w = data.width;

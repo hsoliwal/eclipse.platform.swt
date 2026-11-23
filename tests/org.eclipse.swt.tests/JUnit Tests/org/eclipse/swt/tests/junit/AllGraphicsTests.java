@@ -29,6 +29,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_graphics_Font.class, //
 		Test_org_eclipse_swt_graphics_FontData.class, //
 		Test_org_eclipse_swt_graphics_FontMetrics.class, //
+		Test_org_eclipse_swt_graphics_BorderPainter.class, //
 		Test_org_eclipse_swt_graphics_GC.class, //
 		Test_org_eclipse_swt_graphics_Image.class, //
 		Test_org_eclipse_swt_graphics_ImageData.class, //

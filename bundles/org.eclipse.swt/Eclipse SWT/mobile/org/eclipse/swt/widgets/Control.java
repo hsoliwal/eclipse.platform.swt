@@ -18,6 +18,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.ExceptionStash;
+import org.eclipse.swt.internal.NativeBorderRelief;
 import org.eclipse.swt.internal.mobile.MobilePlatform;
 
 /** One SWT control owns one native view, its bounds, and its drawing image. */
@@ -34,6 +35,7 @@ public abstract class Control extends Widget implements Drawable {
 	private Font font;
 	private Object layoutData;
 	private String toolTipText;
+	private int nativeBorderRelief = SWT.DEFAULT;
 
 	public Control(Composite parent, int style) {
 		super(parent, style); this.parent = parent;
@@ -99,22 +101,45 @@ public abstract class Control extends Widget implements Drawable {
 	public void setLocation(Point p) { if (p == null) SWT.error(SWT.ERROR_NULL_ARGUMENT); setLocation(p.x, p.y); }
 	public void setSize(int width, int height) { setBounds(bounds.x, bounds.y, width, height); }
 	public void setSize(Point p) { if (p == null) SWT.error(SWT.ERROR_NULL_ARGUMENT); setSize(p.x, p.y); }
-/** Returns SWT.DEFAULT until this mobile peer supports native relief. */
-	public int getBorderRelief() { checkWidget(); return SWT.DEFAULT; }
-
+	/** Returns SWT.DEFAULT until an explicit native relief override is requested. */
+	public int getBorderRelief() { checkWidget(); return nativeBorderRelief; }
 	/**
-	 * Validates the cross-platform relief API without claiming native mobile
-	 * bevel drawing before Android and iOS peers implement and qualify it.
+	 * Changes the border of this control's existing native peer. Native geometry,
+	 * snapshots and input transforms remain owned by the platform Control.
 	 */
 	public void setBorderRelief(int relief) {
 		checkWidget();
-		boolean valid = relief == SWT.DEFAULT || relief == SWT.SHADOW_NONE
-				|| relief == SWT.SHADOW_IN || relief == SWT.SHADOW_OUT
-				|| relief == SWT.SHADOW_ETCHED_IN || relief == SWT.SHADOW_ETCHED_OUT;
-		if (!valid) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-		if (relief != SWT.DEFAULT) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+		if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		if (relief == nativeBorderRelief) return;
+		int oldWidth = getBorderWidth();
+		try { display.internal_platform().setBorderRelief(peer, relief); }
+		catch (UnsupportedOperationException unsupported) {
+			SWT.error(SWT.ERROR_NOT_IMPLEMENTED, unsupported);
+		}
+		nativeBorderRelief = relief;
+		if (oldWidth != getBorderWidth()) {
+			Image previous = image; image = null; damage = null;
+			if (previous != null) previous.internal_disposeWhenUnused();
+			if (this instanceof Composite composite) composite.layout(true);
+			if (!disposed && parent != null && !parent.isDisposed()) parent.layout(new Control[] { this });
+		}
+		if (!disposed) redrawAll();
 	}
-	public int getBorderWidth() { checkWidget(); return (style & SWT.BORDER) == 0 ? 0 : 1; }
+
+	/** Alias for getBorderRelief: the original mobile peer owns one border state. */
+	public int getBorderStyle() { return getBorderRelief(); }
+
+	/** Delegates to the existing native MobilePlatform border-relief operation. */
+	public void setBorderStyle(int style) { setBorderRelief(style); }
+
+	public int getBorderWidth() {
+		checkWidget();
+		return switch (nativeBorderRelief) {
+			case SWT.SHADOW_NONE -> 0;
+			case SWT.DEFAULT -> (style & SWT.BORDER) == 0 ? 0 : 1;
+			default -> 2;
+		};
+	}
 	private Rectangle clientBounds() {
 		int trim = getBorderWidth() * 2;
 		return new Rectangle(0, 0, Math.max(0, bounds.width - trim), Math.max(0, bounds.height - trim));
@@ -285,12 +310,21 @@ public abstract class Control extends Widget implements Drawable {
 		try {
 			gc.setClipping(savedClip.intersection(new Rectangle(x, y, bounds.width, bounds.height)));
 			if (border != 0) {
-				gc.setBackground(display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
-				gc.fillRectangle(x, y, bounds.width, 1);
-				if (bounds.height > 1) gc.fillRectangle(x, y + bounds.height - 1, bounds.width, 1);
-				if (bounds.height > 2) {
-					gc.fillRectangle(x, y + 1, 1, bounds.height - 2);
-					if (bounds.width > 1) gc.fillRectangle(x + bounds.width - 1, y + 1, 1, bounds.height - 2);
+				Color light = display.getSystemColor(SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW);
+				Color dark = display.getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
+				if (nativeBorderRelief == SWT.DEFAULT) {
+					printBorderRing(gc, x, y, bounds.width, bounds.height, 0,
+							display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW),
+							display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
+				} else {
+					boolean raised = nativeBorderRelief == SWT.SHADOW_OUT
+							|| nativeBorderRelief == SWT.SHADOW_ETCHED_OUT;
+					boolean etched = nativeBorderRelief == SWT.SHADOW_ETCHED_IN
+							|| nativeBorderRelief == SWT.SHADOW_ETCHED_OUT;
+					printBorderRing(gc, x, y, bounds.width, bounds.height, 0,
+							raised ? light : dark, raised ? dark : light);
+					printBorderRing(gc, x, y, bounds.width, bounds.height, 1,
+							(raised ^ etched) ? light : dark, (raised ^ etched) ? dark : light);
 				}
 			}
 			int clientX = Math.addExact(x, border), clientY = Math.addExact(y, border);
@@ -301,6 +335,19 @@ public abstract class Control extends Widget implements Drawable {
 			}
 		} finally { gc.setBackground(savedBackground); gc.setClipping(savedClip); }
 		return true;
+	}
+	/** Draw one clipped two-tone ring into an existing GC without allocating a wrapper widget. */
+	private static void printBorderRing(GC gc, int x, int y, int width, int height,
+			int inset, Color topLeft, Color bottomRight) {
+		int l = x + inset, t = y + inset;
+		int w = Math.max(0, width - inset * 2), h = Math.max(0, height - inset * 2);
+		if (w <= 0 || h <= 0) return;
+		gc.setBackground(topLeft);
+		gc.fillRectangle(l, t, w, 1);
+		if (h > 1) gc.fillRectangle(l, t + 1, 1, h - 1);
+		gc.setBackground(bottomRight);
+		if (w > 1) gc.fillRectangle(l + 1, t + h - 1, w - 1, 1);
+		if (w > 1 && h > 2) gc.fillRectangle(l + w - 1, t + 1, 1, h - 2);
 	}
 	@Override public long internal_new_GC(GCData data) {
 		checkWidget(); data.device = display; data.control = this; data.image = ensureImage(); return data.image.internal_handle();

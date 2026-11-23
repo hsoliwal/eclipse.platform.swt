@@ -11,8 +11,8 @@ package org.eclipse.swt.internal;
 import org.eclipse.swt.SWT;
 
 /**
- * Values and CSS declaration for the optional SWT native border-relief hint.
- * The native peer, painter and lifecycle remain owned by each platform Control.
+ * Shared input contract for the opt-in native Control border relief.
+ * All rendering and native handle ownership remain in each platform's Control.
  */
 public final class NativeBorderRelief {
     private NativeBorderRelief() {
@@ -29,8 +29,8 @@ public final class NativeBorderRelief {
     }
 
     /**
-     * CSS for a widget-scoped provider, not a theme-global rule.
-     * SWT.DEFAULT deliberately contributes no declaration.
+     * Per-widget, theme-overriding GTK declaration; never a global CSS rule.
+     * A default relief supplies no rule and restores the original GTK theme.
      */
     public static String gtkDeclaration(int relief) {
         return switch (relief) {

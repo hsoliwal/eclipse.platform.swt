@@ -67,6 +67,24 @@ int main() {
     b = packet(3); put32(b, 32 + 20, 2); wrong(b, Result::BAD_VISIBILITY);
     b = packet(3); put64(b, 32 + 24, 1); wrong(b, Result::BAD_RESERVED);
     b = packet(3); put64(b, 32 + RECORD_BYTES, 1); wrong(b, Result::DUPLICATE_HANDLE);
+    // Adversarial double-hash collision: all 40 opaque handles share both
+    // the initial bucket and odd stride at capacity 128. The 33rd probe
+    // exercises the original sorted fallback, not an unbounded search.
+    std::vector<std::uint64_t> colliding;
+    for (std::uint64_t handle = 1; colliding.size() < 40; ++handle) {
+        if ((handleBucket(handle) & 127U) == 0 &&
+                (handleStride(handle) & 127U) == 1) colliding.push_back(handle);
+    }
+    b = packet(40);
+    for (std::size_t i = 0; i < colliding.size(); ++i) {
+        put64(b, HEADER_BYTES + i * RECORD_BYTES, colliding[i]);
+    }
+    assert(decode(b.data(), b.size(), frame) == Result::OK);
+    put64(b, HEADER_BYTES + 39 * RECORD_BYTES, colliding.front());
+    wrong(b, Result::DUPLICATE_HANDLE);
+    // A malformed record still takes precedence over duplicate detection.
+    put64(b, HEADER_BYTES + RECORD_BYTES + 24, 7);
+    wrong(b, Result::BAD_RESERVED);
     b = packet(3); assert(decode(b.data(), 8, frame) == Result::SHORT_HEADER);
     assert(decode(nullptr, 32, frame) == Result::NULL_DATA);
 
@@ -77,6 +95,18 @@ int main() {
     // Boundary at the exact agreed maximum.
     b = packet(MAX_LAYERS);
     assert(decode(b.data(), b.size(), frame) == Result::OK && frame.layers.size() == MAX_LAYERS);
+    put64(b, HEADER_BYTES + (static_cast<std::size_t>(MAX_LAYERS) - 1) * RECORD_BYTES, 1);
+    wrong(b, Result::DUPLICATE_HANDLE);
+    // Max-size high-bit, widely spaced handle pattern triggered the former
+    // linear-probing fallback on otherwise distinct handles. It must remain
+    // a valid frame with no additional native handle assumptions.
+    b = packet(MAX_LAYERS);
+    for (std::uint32_t i = 0; i < MAX_LAYERS; ++i) {
+        put64(b, HEADER_BYTES + static_cast<std::size_t>(i) * RECORD_BYTES,
+                0x8000000000000001ULL + static_cast<std::uint64_t>(i)
+                * UINT64_C(0x9e3779b97f4a7c15));
+    }
+    assert(decode(b.data(), b.size(), frame) == Result::OK);
 
     std::mt19937_64 random(0x3e9b127aU);
     for (int trial = 0; trial < 10000; trial++) {

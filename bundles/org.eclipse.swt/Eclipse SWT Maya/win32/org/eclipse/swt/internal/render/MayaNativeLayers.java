@@ -9,6 +9,7 @@
 package org.eclipse.swt.internal.render;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.eclipse.swt.internal.NativeLayers;
 import org.eclipse.swt.internal.maya.MayaComposition;
@@ -21,17 +22,45 @@ import org.eclipse.swt.widgets.Control;
  */
 public final class MayaNativeLayers implements NativeLayers {
 
-	// Off by default: the v1 bridge decodes, validates and invokes the old
-	// compositor path, so it is NOT a zero-copy performance optimization.
+	// Off by default: v1 decodes into a native Frame and applies it directly
+	// through the legacy compositor transaction owner, without staging JNI
+	// arrays. Direct-buffer encoding/decoding still copies bytes; no speedup
+	// or true end-to-end zero-copy transport is claimed.
 	private static final boolean PACKED_FRAME = Boolean.getBoolean("swt.maya.packedFrame");
 	private static volatile int packetSupport; // 0 unknown, 1 supported, -1 missing
 	private static final ThreadLocal<MayaFramePacket.Encoder> ENCODER =
 			ThreadLocal.withInitial(MayaFramePacket.Encoder::new);
-	private long epoch;
+	// A NativeLayers backend is a VM-wide singleton, shared by SWT Display threads.
+	// Preserve one unique packet sequence across those threads without sharing
+	// an Encoder or changing the optional packed frame's wire format.
+	private final AtomicLong epoch = new AtomicLong();
+
+    // Explicit VM-wide opt-in. Zero keeps the previous unlimited behavior.
+    // Malformed or negative values must not silently become an unlimited cap.
+    private static final long MAX_NATIVE_SURFACE_BYTES = readSurfaceBudgetProperty();
+
+    private static long readSurfaceBudgetProperty() {
+        String value = System.getProperty("swt.maya.surfaceBudgetBytes");
+        if (value == null) return 0;
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException invalid) {
+            return -1;
+        }
+    }
+
 
 	@Override
 	public long create(Control control) {
-		return MayaComposition._nCreate(control.handle);
+        // Fail closed if an explicit budget is malformed. An old Maya DLL
+        // cannot satisfy a nonzero cap: retain SWT's painted fallback.
+        if (MAX_NATIVE_SURFACE_BYTES < 0) return 0;
+        long composition = MayaComposition._nCreate(control.handle);
+        if (composition == 0 || MAX_NATIVE_SURFACE_BYTES == 0) return composition;
+        if (MayaComposition.setSurfaceBudget(composition, MAX_NATIVE_SURFACE_BYTES) == 0)
+            return composition;
+        MayaComposition._nDispose(composition);
+        return 0;
 	}
 
 	@Override
@@ -40,8 +69,18 @@ public final class MayaNativeLayers implements NativeLayers {
 	}
 
 	@Override
+	public long capabilities(long composition) {
+		return MayaComposition.capabilities(composition);
+	}
+
+	@Override
 	public int upload(long layer, int[] premultipliedArgb) {
 		return MayaComposition._nUpload(layer, premultipliedArgb);
+	}
+
+	@Override
+	public int uploadDirty(long layer, int[] packedArgb, int[] regions, int count) {
+		return MayaComposition.uploadDirty(layer, packedArgb, regions, count);
 	}
 
 	@Override
@@ -52,7 +91,7 @@ public final class MayaNativeLayers implements NativeLayers {
 					packetSupport = MayaComposition._nFramePacketVersion() == MayaFramePacket.VERSION ? 1 : -1;
 				}
 				if (packetSupport == 1) {
-					ByteBuffer packet = ENCODER.get().encode(layers, props, count, ++epoch);
+					ByteBuffer packet = ENCODER.get().encode(layers, props, count, epoch.incrementAndGet());
 					return MayaComposition._nApplyPacked(composition, packet, packet.remaining());
 				}
 			} catch (UnsatisfiedLinkError olderMayaBinary) {
@@ -61,6 +100,11 @@ public final class MayaNativeLayers implements NativeLayers {
 			}
 		}
 		return MayaComposition._nApply(composition, layers, props, count);
+	}
+
+	@Override
+	public int applyScene(long composition, long[] layers, float[] packed, int[] flags, int count) {
+		return MayaComposition.applyScene(composition, layers, packed, flags, count);
 	}
 
 	@Override

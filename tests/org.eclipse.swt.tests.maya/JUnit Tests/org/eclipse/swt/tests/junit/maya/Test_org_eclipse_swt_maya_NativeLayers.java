@@ -9,6 +9,8 @@
 package org.eclipse.swt.tests.junit.maya;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -19,8 +21,10 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.internal.maya.MayaComposition;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.jupiter.api.AfterEach;
@@ -29,8 +33,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * LayeredViewport image layers composited by the window system through maya (DirectComposition): opacity,
- * visibility and Z order change without the viewport repainting; a zoom other than 1 paints the layer again.
- * Pixels are read from the screen.
+ * visibility and Z order change without the viewport repainting. Optional affine/clip native support preserves
+ * native image layers while zooming; older libraries retain the painted fallback. Pixels are read from the screen.
  */
 public class Test_org_eclipse_swt_maya_NativeLayers {
 
@@ -105,6 +109,22 @@ public class Test_org_eclipse_swt_maya_NativeLayers {
 				&& Math.abs(expected.blue - actual.blue) <= 2, "expected " + expected + ", was " + actual);
 	}
 
+	private boolean sceneSupported() {
+		// Probe a separate Shell target; the viewport continues to own its target.
+		long probe = MayaComposition._nCreate(shell.handle);
+		assertNotEquals(0, probe, "capability probe needs a live native composition");
+		try {
+			long required = MayaComposition.CAP_AFFINE_2D | MayaComposition.CAP_LOCAL_RECT_CLIP;
+			boolean available = (MayaComposition.capabilities(probe) & required) == required;
+			if (Boolean.getBoolean("swt.maya.scene.required")) {
+				assertTrue(available, "required native affine/clip scene ABI is missing");
+			}
+			return available;
+		} finally {
+			MayaComposition._nDispose(probe);
+		}
+	}
+
 	@Test
 	public void nativeImageLayersChangeWithoutRepaintingTheViewport() {
 		Layer below = viewport.addImageLayer("red", red, 20, 20);
@@ -131,10 +151,22 @@ public class Test_org_eclipse_swt_maya_NativeLayers {
 	}
 
 	@Test
-	public void aZoomPaintsTheLayerAgainAndAPanMovesIt() {
+	public void newlyAddedImageCanBecomeNativeBeforeTheNextPaint() {
+		shell.open();
+		pump(250);
+		// The first paint published an empty stack. The append marks the order dirty.
+		Layer added = viewport.addImageLayer("new layer", red, 20, 20);
+		assertTrue(added.setNative(true), "native activation must publish the freshly appended layer");
+		pump(300);
+		assertEquals(RED, screen(25, 25));
+	}
+
+	@Test
+	public void aPanAndZoomPreserveNativeOrPaintedLayerPixels() {
 		Layer layer = viewport.addImageLayer("red", red, 20, 20);
 		shell.open();
 		pump(250);
+		boolean affineScene = sceneSupported();
 		assertTrue(layer.setNative(true));
 		viewport.setOrigin(-30, 0);
 		pump(300);
@@ -142,8 +174,8 @@ public class Test_org_eclipse_swt_maya_NativeLayers {
 		assertEquals(WHITE, screen(25, 25));
 		viewport.setZoom(2);
 		pump(300);
-		assertFalse(layer.isNative(), "at zoom 2 the image is not drawn one to one: painted");
-		assertEquals(RED, screen(150, 50), "painted at twice the size");
+		assertEquals(affineScene, layer.isNative(), "zoom uses advertised affine support or the old painted fallback");
+		assertEquals(RED, screen(150, 50), "presented at twice the size");
 		viewport.setZoom(1);
 		pump(300);
 		assertTrue(layer.isNative(), "native again at zoom 1");
@@ -152,6 +184,130 @@ public class Test_org_eclipse_swt_maya_NativeLayers {
 		pump(300);
 		assertFalse(layer.isNative());
 		assertEquals(RED, screen(55, 25), "painted again, in the same place");
+	}
+
+	@Test
+	public void nativeViewportScaleAndWorldClipMatchThePaintedFallback() {
+		Layer layer = viewport.addImageLayer("scaled clipped image", red, 20, 20);
+		shell.open();
+		pump(250);
+		assumeTrue(sceneSupported(), "optional native affine/clip scene ABI is not packaged");
+		assertTrue(layer.setNative(true));
+		viewport.setZoom(2);
+		layer.setWorldClip(new LayeredViewport.WorldBounds(25, 25, 10, 10));
+		pump(300);
+		assertTrue(layer.isNative(), "the existing image layer consumes native affine and clip capabilities");
+		assertEquals(RED, screen(55, 55));
+		assertEquals(WHITE, screen(45, 55));
+		assertEquals(WHITE, screen(75, 55));
+		layer.setNative(false);
+		pump(300);
+		assertFalse(layer.isNative());
+		assertEquals(RED, screen(55, 55), "painted fallback has the same clipped interior");
+		assertEquals(WHITE, screen(45, 55));
+		assertEquals(WHITE, screen(75, 55));
+		assertFalse(red.isDisposed(), "native presentation never takes ownership of the caller Image");
+		assertTrue(layer.setNative(true));
+		viewport.setZoom(1);
+		pump(300);
+		assertEquals(RED, screen(30, 30));
+		assertEquals(WHITE, screen(50, 30));
+		layer.setWorldClip(null); // ordinary legacy apply must clear the previous native local clip
+		pump(300);
+		assertTrue(layer.isNative());
+		assertEquals(RED, screen(50, 30));
+	}
+
+	@Test
+	public void nativeScaledPixelBoundaryAndPanMatchOpaquePaintedImage() {
+		GC ink = new GC(red);
+		try {
+			ink.setBackground(display.getSystemColor(SWT.COLOR_BLUE));
+			ink.fillRectangle(20, 0, 20, 40);
+		} finally {
+			ink.dispose();
+		}
+		Layer layer = viewport.addImageLayer("contrasting source pixels", red, 20, 20);
+		shell.open();
+		pump(250);
+		assumeTrue(sceneSupported(), "optional native affine/clip scene ABI is not packaged");
+		viewport.setZoom(2);
+		pump(300);
+		assertFalse(layer.isNative());
+		assertEquals(RED, screen(79, 60), "last red pixel of the opaque painted image");
+		assertEquals(BLUE, screen(80, 60), "first blue pixel of the opaque painted image");
+		assertTrue(layer.setNative(true));
+		pump(300);
+		assertEquals(RED, screen(79, 60), "native nearest sampling must not blend the source boundary");
+		assertEquals(BLUE, screen(80, 60));
+		viewport.setOrigin(5, 0); // same scale and clip; only the physical client origin changes
+		pump(300);
+		assertTrue(layer.isNative());
+		assertEquals(RED, screen(69, 60), "a scene pan updates its folded matrix translation");
+		assertEquals(BLUE, screen(70, 60));
+		layer.setNative(false);
+		pump(300);
+		assertEquals(RED, screen(69, 60));
+		assertEquals(BLUE, screen(70, 60));
+		assertFalse(red.isDisposed(), "the original layer still references the caller's image");
+	}
+
+
+	@Test
+	public void partialNativeImageRedrawChangesOnlyOneRectangle() {
+		Layer layer = viewport.addImageLayer("partially dirty", red, 20, 20);
+		shell.open();
+		pump(250);
+		assertTrue(layer.setNative(true));
+		pump(300);
+		assertEquals(RED, screen(25, 25));
+		long identity = layer.getId();
+		GC ink = new GC(red);
+		try {
+			ink.setBackground(display.getSystemColor(SWT.COLOR_BLUE));
+			ink.fillRectangle(7, 8, 6, 5);
+		} finally {
+			ink.dispose();
+		}
+		paints = 0;
+		layer.redraw(new Rectangle(7, 8, 6, 5));
+		pump(300);
+		assertEquals(BLUE, screen(29, 30), "native changed region");
+		assertEquals(RED, screen(25, 25), "outside dirty region retained");
+		assertEquals(identity, layer.getId(), "stable logical layer identity");
+		assertTrue(layer.isNative());
+		assertEquals(0, paints, "native dirty pixels need no SWT Canvas paint");
+	}
+
+	@Test
+	public void batchedNativeImageDamageUsesTwoRectsAndOneCommit() {
+		int probe = MayaComposition.uploadDirty(0, new int[0], new int[0], 0);
+		if (Boolean.getBoolean("swt.maya.dirty.required")) {
+			assertNotEquals(-1, probe, "required native dirty upload ABI is missing");
+		}
+		assumeTrue(probe != -1, "native dirty image ABI not yet packaged");
+		Layer layer = viewport.addImageLayer("two changed regions", red, 20, 20);
+		shell.open();
+		pump(250);
+		assertTrue(layer.setNative(true));
+		pump(300);
+		GC ink = new GC(red);
+		try {
+			ink.setBackground(display.getSystemColor(SWT.COLOR_BLUE));
+			ink.fillRectangle(4, 5, 5, 4);
+			ink.setBackground(display.getSystemColor(SWT.COLOR_GREEN));
+			ink.fillRectangle(23, 24, 6, 4);
+		} finally {
+			ink.dispose();
+		}
+		paints = 0;
+		layer.redrawRegions(new Rectangle(4, 5, 5, 4), new Rectangle(23, 24, 6, 4));
+		pump(300);
+		assertEquals(BLUE, screen(25, 26), "first rectangle");
+		assertEquals(new RGB(0, 255, 0), screen(46, 46), "second rectangle");
+		assertEquals(RED, screen(35, 35), "pixels between rectangles preserved");
+		assertTrue(layer.isNative());
+		assertEquals(0, paints, "CPU-staged native changes never require a Canvas repaint");
 	}
 
 	@Test

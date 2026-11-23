@@ -58,20 +58,24 @@ public class Composite extends Scrollable {
 	int layoutCount, backgroundMode;
 
 	static final int TOOLTIP_LIMIT = 4096;
-	private static final int BEVEL_MASK = SWT.SHADOW_IN | SWT.SHADOW_OUT
-			| SWT.SHADOW_ETCHED_IN | SWT.SHADOW_ETCHED_OUT;
-
 	/*
-	 * These shadow bits overlap style bits on other widgets. Limit the opt-in
-	 * native bevel to ordinary Composite and Canvas; subclasses preserve their
-	 * existing independent interpretation of the bits.
+	 * One mutable relief value lives in Control. Direct Composite and Canvas
+	 * retain the existing Win32 DrawEdge painter with no second style snapshot.
 	 */
+	@Override
+	boolean usesCompositeBevelPainter () {
+		return getClass () == Composite.class || getClass () == Canvas.class;
+	}
+
 	private int nativeBevelEdge () {
-		if (getClass () != Composite.class && getClass () != Canvas.class) return 0;
-		int requested = requestedBorderRelief ();
-		if (requested != SWT.DEFAULT) return edgeForRelief (requested);
-		int shadow = style & BEVEL_MASK;
-		return Integer.bitCount (shadow) == 1 ? edgeForRelief (shadow) : 0;
+		if (!usesCompositeBevelPainter ()) return 0;
+		return switch (effectiveBorderReliefForPaint ()) {
+			case SWT.SHADOW_IN -> OS.EDGE_SUNKEN;
+			case SWT.SHADOW_OUT -> OS.EDGE_RAISED;
+			case SWT.SHADOW_ETCHED_IN -> OS.EDGE_ETCHED;
+			case SWT.SHADOW_ETCHED_OUT -> OS.EDGE_BUMP;
+			default -> 0;
+		};
 	}
 
 /**
@@ -114,6 +118,36 @@ Composite () {
  */
 public Composite (Composite parent, int style) {
 	super (parent, style);
+}
+
+/**
+ * Returns the explicitly selected native bevel, or {@link SWT#NONE}.
+ * Constructor style bits never select a bevel.
+ *
+ * @return a SHADOW_IN, SHADOW_OUT, SHADOW_ETCHED_IN, SHADOW_ETCHED_OUT or NONE value
+ */
+public int getBevelBorder () {
+	checkWidget ();
+	return compositeBevelState ();
+}
+
+/**
+ * Keeps the original Composite/Canvas API with its accepted semantics.
+ * The bevel is a fallback value stored by Control; a later Control overlay
+ * temporarily overrides it until SWT.DEFAULT. No second HWND state exists.
+ */
+public void setBevelBorder (int border) {
+	checkWidget ();
+	if (border == SWT.SHADOW_NONE) border = SWT.NONE;
+	if (border != SWT.NONE && border != SWT.SHADOW_IN
+			&& border != SWT.SHADOW_OUT && border != SWT.SHADOW_ETCHED_IN
+			&& border != SWT.SHADOW_ETCHED_OUT) {
+		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+	}
+	if (!usesCompositeBevelPainter ()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+	if (compositeBevelState () == border && super.getBorderRelief () == SWT.DEFAULT) return;
+	// Control recomputes trim, non-client damage and layout only when needed.
+	setCompositeBevelState(border);
 }
 
 Control [] _getChildren () {
@@ -2051,6 +2085,60 @@ LRESULT WM_UPDATEUISTATE (long wParam, long lParam) {
 	return result;
 }
 
+
+/**
+ * Draw only the original Win32 non-client edge ring. The screen path owns
+ * GetWindowDC/ReleaseDC; WM_PRINT owns its supplied HDC and SaveDC lifetime.
+ */
+private void drawNativeBevelRing (long hwnd, long hDC, int edge) {
+	RECT rect = new RECT ();
+	if (!OS.GetWindowRect (hwnd, rect)) return;
+	rect.right -= rect.left;
+	rect.bottom -= rect.top;
+	rect.left = rect.top = 0;
+	int inset = getSystemMetrics (OS.SM_CXEDGE);
+	OS.ExcludeClipRect (hDC, inset, inset,
+			Math.max (inset, rect.right - inset),
+			Math.max (inset, rect.bottom - inset));
+	OS.DrawEdge (hDC, rect, edge, OS.BF_RECT);
+}
+
+/**
+ * WM_PRINT must use the same relief kernel as WM_NCPAINT. Widget.wmPrint
+ * paints a regular themed edit border; save and restore its native DC changes
+ * before painting only the explicit native non-client bevel.
+ */
+@Override
+LRESULT wmPrint (long hwnd, long wParam, long lParam) {
+	int edge = nativeBevelEdge ();
+	if (edge == 0 || (lParam & OS.PRF_NONCLIENT) == 0 || hwnd != borderHandle ()
+			|| (OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE) & OS.WS_EX_CLIENTEDGE) == 0) {
+		return super.wmPrint (hwnd, wParam, lParam);
+	}
+	/* Widget.wmPrint draws a themed border even when DefWindowProc skips a
+	 * hidden HWND. Consume WM_PRINT before that inherited paint as well. */
+	if ((lParam & OS.PRF_CHECKVISIBLE) != 0 && !OS.IsWindowVisible (hwnd)) {
+		return LRESULT.ZERO;
+	}
+	int originalDC = OS.SaveDC (wParam);
+	if (originalDC == 0) return super.wmPrint (hwnd, wParam, lParam);
+	LRESULT result;
+	try {
+		result = super.wmPrint (hwnd, wParam, lParam);
+	} finally {
+		OS.RestoreDC (wParam, originalDC);
+	}
+	if (isDisposed ()) return result;
+	int printDC = OS.SaveDC (wParam);
+	if (printDC == 0) return result;
+	try {
+		drawNativeBevelRing (hwnd, wParam, edge);
+	} finally {
+		OS.RestoreDC (wParam, printDC);
+	}
+	return result;
+}
+
 @Override
 LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
 	LRESULT result = super.wmNCPaint (hwnd, wParam, lParam);
@@ -2062,23 +2150,16 @@ LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
 	if (edge != 0 && hwnd == borderHandle) {
 		int extStyle = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
 		if ((extStyle & OS.WS_EX_CLIENTEDGE) != 0) {
+			int bits = OS.GetWindowLong (hwnd, OS.GWL_STYLE);
+			long code = (bits & (OS.WS_HSCROLL | OS.WS_VSCROLL)) != 0
+					? callWindowProc (hwnd, OS.WM_NCPAINT, wParam, lParam) : 0;
 			long hDC = OS.GetWindowDC (hwnd);
 			if (hDC != 0) {
-				int bits = OS.GetWindowLong (hwnd, OS.GWL_STYLE);
-				long code = (bits & (OS.WS_HSCROLL | OS.WS_VSCROLL)) != 0
-						? callWindowProc (hwnd, OS.WM_NCPAINT, wParam, lParam) : 0;
-				RECT rect = new RECT ();
-				OS.GetWindowRect (hwnd, rect);
-				rect.right -= rect.left;
-				rect.bottom -= rect.top;
-				rect.left = rect.top = 0;
-				int inset = getSystemMetrics (OS.SM_CXEDGE);
-				/* DrawEdge is a native GDI frame operation; do not touch client pixels. */
-				OS.ExcludeClipRect (hDC, inset, inset,
-						Math.max (inset, rect.right - inset),
-						Math.max (inset, rect.bottom - inset));
-				OS.DrawEdge (hDC, rect, edge, OS.BF_RECT);
-				OS.ReleaseDC (hwnd, hDC);
+				try {
+					drawNativeBevelRing (hwnd, hDC, edge);
+				} finally {
+					OS.ReleaseDC (hwnd, hDC);
+				}
 				return new LRESULT (code);
 			}
 		}
@@ -2092,15 +2173,24 @@ LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
 				code = callWindowProc (hwnd, OS.WM_NCPAINT, wParam, lParam);
 			}
 			long hDC = OS.GetWindowDC (hwnd);
-			RECT rect = new RECT ();
-			OS.GetWindowRect (hwnd, rect);
-			rect.right -= rect.left;
-			rect.bottom -= rect.top;
-			rect.left = rect.top = 0;
-			int border = getSystemMetrics (OS.SM_CXEDGE);
-			OS.ExcludeClipRect (hDC, border, border, rect.right - border, rect.bottom - border);
-			OS.DrawThemeBackground(display.hEditTheme(nativeZoom), hDC, OS.EP_EDITTEXT, OS.ETS_NORMAL, rect, null);
-			OS.ReleaseDC (hwnd, hDC);
+			if (hDC != 0) {
+				try {
+					RECT rect = new RECT ();
+					if (OS.GetWindowRect (hwnd, rect)) {
+						rect.right -= rect.left;
+						rect.bottom -= rect.top;
+						rect.left = rect.top = 0;
+						int border = getSystemMetrics (OS.SM_CXEDGE);
+						OS.ExcludeClipRect (hDC, border, border,
+								Math.max (border, rect.right - border),
+								Math.max (border, rect.bottom - border));
+						OS.DrawThemeBackground(display.hEditTheme(nativeZoom), hDC,
+								OS.EP_EDITTEXT, OS.ETS_NORMAL, rect, null);
+					}
+				} finally {
+					OS.ReleaseDC (hwnd, hDC);
+				}
+			}
 			return new LRESULT (code);
 		}
 	}

@@ -463,6 +463,9 @@ public final class MobileCoreContractTest {
 
 	static void testNativeBorderReliefFailClosed() {
 		ContractPlatform platform = new ContractPlatform();
+		// master's mobile Control delegates relief to the transport; this contract
+		// covers a transport without it (MobilePlatform.setBorderRelief's default).
+		platform.refuseBorderRelief = true;
 		MobileRuntime.install(platform);
 		Display display = new Display();
 		try {

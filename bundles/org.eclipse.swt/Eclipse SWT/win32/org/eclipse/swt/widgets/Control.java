@@ -87,9 +87,11 @@ public abstract class Control extends Widget implements Drawable {
 	/* Retained planes: GPU_RETAINED in retainedBits (a mask bit set at creation) and the frame driver */
 	int retainedBits;
 	RetainedFrame retainedFrame;
-	/* Optional relief on the existing border HWND, never a replacement peer. */
+	/* Optional native edge, owned by the existing HWND (not a child Canvas). */
 	private int nativeBorderRelief = SWT.DEFAULT;
+	private int savedCompositeBevel = SWT.NONE;
 	private int originalNativeBorderEdges;
+	private int originalNativeBorderStyle;
 	private boolean nativeBorderReliefSaved;
 
 	/**
@@ -1277,71 +1279,122 @@ int getBackgroundPixel () {
 }
 
 /**
- * Returns this Control's optional native relief. SWT.DEFAULT means that
- * the original native border and constructor decoration remain active.
- *
- * @return the requested SWT.SHADOW_* relief or SWT.DEFAULT
+ * Returns the opt-in native relief for this control, or SWT.DEFAULT when no
+ * explicit relief has been requested. Does not modify SWT.BORDER.
  */
 public int getBorderRelief () {
 	checkWidget ();
 	return nativeBorderRelief;
 }
 
-/**
- * Selects an opt-in native relief on the original border HWND. The
- * constructor style and SWT.BORDER remain unchanged. The two etched
- * variants require the SWT paint callback to own the border HWND.
- *
- * @param relief SWT.DEFAULT, SWT.SHADOW_NONE, SWT.SHADOW_IN,
- *     SWT.SHADOW_OUT, SWT.SHADOW_ETCHED_IN or SWT.SHADOW_ETCHED_OUT
- */
-public void setBorderRelief (int relief) {
-	checkWidget ();
-	if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (relief == nativeBorderRelief) return;
-	long hwnd = borderHandle ();
-	if (hwnd == 0) SWT.error(SWT.ERROR_NO_HANDLES);
-	if (NativeBorderRelief.isEtched(relief) && hwnd != handle) {
-		SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
-	}
-	int mask = OS.WS_EX_CLIENTEDGE | OS.WS_EX_STATICEDGE | OS.WS_EX_WINDOWEDGE;
-	int oldStyle = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
-	if (!nativeBorderReliefSaved) {
-		originalNativeBorderEdges = oldStyle & mask;
-		nativeBorderReliefSaved = true;
-	}
-	int selected = switch (relief) {
-		case SWT.DEFAULT -> originalNativeBorderEdges;
-		case SWT.SHADOW_NONE -> 0;
-		case SWT.SHADOW_OUT -> hwnd == handle ? OS.WS_EX_CLIENTEDGE : OS.WS_EX_WINDOWEDGE;
-		default -> OS.WS_EX_CLIENTEDGE;
-	};
-	int newStyle = (oldStyle & ~mask) | selected;
-	/* Reentrant non-client messages observe the updated edge policy. */
-	nativeBorderRelief = relief;
-	if (newStyle != oldStyle) {
-		OS.SetWindowLong (hwnd, OS.GWL_EXSTYLE, newStyle);
-		OS.SetWindowPos (hwnd, 0, 0, 0, 0, 0,
-				OS.SWP_NOMOVE | OS.SWP_NOSIZE | OS.SWP_NOZORDER
-				| OS.SWP_NOACTIVATE | OS.SWP_FRAMECHANGED);
-	}
-	/* CLIENT-only invalidation misses etched-to-etched transitions. */
-	OS.RedrawWindow (hwnd, null, 0, OS.RDW_INVALIDATE | OS.RDW_FRAME);
+/* Package-owned state for native painting. The public getter checks SWT's
+ * widget/thread contract; the painter can be invoked during construction. */
+int effectiveBorderReliefForPaint () {
+	return nativeBorderRelief == SWT.DEFAULT ? savedCompositeBevel : nativeBorderRelief;
 }
 
-/* Internal: Composite/Canvas constructor shadows use this same edge mapping. */
-int requestedBorderRelief () {
+/* A prior explicitly chosen Composite bezel must survive SWT.DEFAULT on the
+ * Control property. The two logical choices share this one Control owner. */
+/**
+ * Preserve the pre-existing package-private access used by merged Win32
+ * consumers to inspect the explicit Control overlay during native callbacks.
+ * The effective border may instead be the saved Composite bevel.
+ */
+int nativeBorderReliefForPaint () {
 	return nativeBorderRelief;
 }
 
-static int edgeForRelief (int relief) {
-	return switch (relief) {
-		case SWT.SHADOW_IN -> OS.EDGE_SUNKEN;
-		case SWT.SHADOW_OUT -> OS.EDGE_RAISED;
-		case SWT.SHADOW_ETCHED_IN -> OS.EDGE_ETCHED;
-		case SWT.SHADOW_ETCHED_OUT -> OS.EDGE_BUMP;
-		default -> 0;
+int compositeBevelState () {
+	return savedCompositeBevel;
+}
+
+boolean usesCompositeBevelPainter () {
+	return false;
+}
+
+/** Sets the explicit Control overlay without discarding the previous bevel. */
+public void setBorderRelief (int relief) {
+	checkWidget ();
+	if (!NativeBorderRelief.isValid(relief)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+	setNativeBorderSelection(relief, savedCompositeBevel);
+}
+
+/**
+ * Returns the current Control relief override. On direct Composite/Canvas the
+ * stored Composite bevel may remain underneath a SWT.DEFAULT relief.
+ * No second border state or native painter is created by this API.
+ */
+public int getBorderStyle () {
+	return getBorderRelief ();
+}
+
+/**
+ * Selects an explicit Control relief override through the incumbent native
+ * owner. SWT.DEFAULT removes the overlay and reveals a saved Composite bevel;
+ * SWT.SHADOW_NONE explicitly suppresses it. Constructor bits are unchanged.
+ */
+public void setBorderStyle (int style) {
+	setBorderRelief (style);
+}
+
+/** Native owner transition for Composite.setBevelBorder: the latest Composite
+ * request resets the transient Control override but retains its bevel choice. */
+void setCompositeBevelState (int bevel) {
+	checkWidget ();
+	if (bevel != SWT.NONE && (bevel == SWT.SHADOW_NONE
+			|| !NativeBorderRelief.isValid(bevel) || bevel == SWT.DEFAULT)) {
+		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+	}
+	setNativeBorderSelection(SWT.DEFAULT, bevel);
+}
+
+private void setNativeBorderSelection (int relief, int bevel) {
+	if (nativeBorderRelief == relief && savedCompositeBevel == bevel) return;
+	int effective = relief == SWT.DEFAULT ? bevel : relief;
+	long hwnd = borderHandle ();
+	if (NativeBorderRelief.isEtched(effective)
+			&& hwnd != handle && !usesCompositeBevelPainter()) {
+		SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+	}
+	int mask = OS.WS_EX_CLIENTEDGE | OS.WS_EX_WINDOWEDGE | OS.WS_EX_STATICEDGE;
+	int nativeEx = OS.GetWindowLong(hwnd, OS.GWL_EXSTYLE);
+	int nativeStyle = OS.GetWindowLong(hwnd, OS.GWL_STYLE);
+	int previousBorderWidth = getBorderWidthInPixels();
+	if (!nativeBorderReliefSaved) {
+		originalNativeBorderEdges = nativeEx & mask;
+		originalNativeBorderStyle = nativeStyle & OS.WS_BORDER;
+		nativeBorderReliefSaved = true;
+	}
+	boolean original = effective == SWT.NONE || effective == SWT.DEFAULT;
+	int selected = switch (effective) {
+		case SWT.SHADOW_IN, SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT -> OS.WS_EX_CLIENTEDGE;
+		case SWT.SHADOW_OUT -> usesCompositeBevelPainter()
+				? OS.WS_EX_CLIENTEDGE : OS.WS_EX_WINDOWEDGE;
+		case SWT.SHADOW_NONE -> 0;
+		default -> originalNativeBorderEdges;
 	};
+	int newEx = (nativeEx & ~mask) | selected;
+	int newStyle = (nativeStyle & ~OS.WS_BORDER)
+			| (original ? originalNativeBorderStyle : 0);
+	/* WM_NCPAINT may be entered synchronously by SetWindowPos; install the
+	 * effective state before the native style change. */
+	nativeBorderRelief = relief;
+	savedCompositeBevel = bevel;
+	if (newEx != nativeEx) OS.SetWindowLong(hwnd, OS.GWL_EXSTYLE, newEx);
+	if (newStyle != nativeStyle) OS.SetWindowLong(hwnd, OS.GWL_STYLE, newStyle);
+	if (newEx != nativeEx || newStyle != nativeStyle) {
+		OS.SetWindowPos(hwnd, 0, 0, 0, 0, 0,
+				OS.SWP_NOMOVE | OS.SWP_NOSIZE | OS.SWP_NOZORDER
+						| OS.SWP_NOACTIVATE | OS.SWP_FRAMECHANGED);
+	}
+	if (!isDisposed()) {
+		// An etched-in -> etched-out transition keeps the same native EXSTYLE.
+		// InvalidateRect only requests client pixels; request the native frame.
+		OS.RedrawWindow(hwnd, null, 0, OS.RDW_INVALIDATE | OS.RDW_FRAME);
+		if (!isDisposed() && previousBorderWidth != getBorderWidthInPixels()) {
+			requestLayout();
+		}
+	}
 }
 
 /**
@@ -1368,6 +1421,7 @@ int getBorderWidthInPixels () {
     if ((bits1 & OS.WS_EX_STATICEDGE) != 0) {
         return getSystemMetrics(OS.SM_CXBORDER);
     }
+    // Keep pre-existing WS_EX_WINDOWEDGE reporting unchanged unless explicitly opted in.
     if (nativeBorderRelief == SWT.SHADOW_OUT && (bits1 & OS.WS_EX_WINDOWEDGE) != 0) {
         return getSystemMetrics(OS.SM_CXEDGE);
     }
@@ -6503,32 +6557,33 @@ LRESULT WM_NCLBUTTONDOWN (long wParam, long lParam) {
 }
 
 LRESULT WM_NCPAINT (long wParam, long lParam) {
-	LRESULT result = wmNCPaint (handle, wParam, lParam);
-	int edge = edgeForRelief (nativeBorderRelief);
-	if (edge == 0 || borderHandle () != handle
-			|| getClass () == Composite.class || getClass () == Canvas.class) {
-		return result;
-	}
-	/* Call the original native class for scrollbars and ordinary non-client
-	 * details, then replace only the relief ring on the same HWND. */
-	if (result == null) result = new LRESULT (callWindowProc (handle, OS.WM_NCPAINT, wParam, lParam));
-	if (isDisposed ()) return result;
-	long dc = OS.GetWindowDC (handle);
+	LRESULT result = wmNCPaint(handle, wParam, lParam);
+	// Direct Composite/Canvas has already completed the native GDI bevel.
+	// Other controls retain the Control-level etched path even if their
+	// own non-client callback returned a handled result.
+	if ((result != null && usesCompositeBevelPainter()) || isDisposed()
+			|| !NativeBorderRelief.isEtched(effectiveBorderReliefForPaint())
+			|| borderHandle() != handle) return result;
+	// Let the original class paint its frame before replacing only the bevel pixels.
+	if (result == null) result = new LRESULT(callWindowProc(handle, OS.WM_NCPAINT, wParam, lParam));
+	if (isDisposed()) return result;
+	long dc = OS.GetWindowDC(handle);
 	if (dc != 0) {
 		try {
-			RECT rect = new RECT ();
-			if (OS.GetWindowRect (handle, rect)) {
+			RECT rect = new RECT();
+			if (OS.GetWindowRect(handle, rect)) {
 				rect.right -= rect.left;
 				rect.bottom -= rect.top;
 				rect.left = rect.top = 0;
-				int inset = getSystemMetrics (OS.SM_CXEDGE);
-				OS.ExcludeClipRect (dc, inset, inset,
-						Math.max (inset, rect.right - inset),
-						Math.max (inset, rect.bottom - inset));
-				OS.DrawEdge (dc, rect, edge, OS.BF_RECT);
+				int inset = Math.max(0, getBorderWidthInPixels());
+				if (inset > 0 && rect.right > inset * 2 && rect.bottom > inset * 2) {
+					OS.ExcludeClipRect(dc, inset, inset, rect.right - inset, rect.bottom - inset);
+				}
+				OS.DrawEdge(dc, rect, effectiveBorderReliefForPaint() == SWT.SHADOW_ETCHED_IN
+						? OS.EDGE_ETCHED : OS.EDGE_BUMP, OS.BF_RECT);
 			}
 		} finally {
-			OS.ReleaseDC (handle, dc);
+			OS.ReleaseDC(handle, dc);
 		}
 	}
 	return result;

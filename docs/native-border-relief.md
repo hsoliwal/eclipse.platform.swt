@@ -1,5 +1,12 @@
 # Native Control border relief
 
+> **Reconciled with `master` (2026-11-23).** The canonical implementation of
+> this API is the one already on `master`, documented in
+> [M3_NATIVE_CONTROL_BORDERS.md](M3_NATIVE_CONTROL_BORDERS.md);
+> `getBorderStyle()`/`setBorderStyle(int)` are aliases of
+> `getBorderRelief()`/`setBorderRelief(int)`. The backend table below
+> reflects that implementation.
+
 This is an **opt-in** extension of the existing SWT native widgets. It builds
 on the original platform `Control`, on merged GTK4 `Group` shadow styles
 (PR #515), and on Win32 `Composite`/`Canvas` native bevels (PR #516).
@@ -42,9 +49,9 @@ contracts. Restoring default is idempotent.
 | Backend | Native mechanism | Limit |
 | --- | --- | --- |
 | Win32 | Existing HWND and `OS.DrawEdge` JNI binding; preserve original extended edge bits; reserve original system metrics for nonclient trim; use nonclient invalidation for visual transitions | Non-client etched drawing requires the receiver's actual HWND to own its border; otherwise fail explicitly |
-| GTK3/4 | Existing `GtkCssProvider` binding, attached to the widget's own style context at a priority above its constructor `Group` shadow; CSS inset/outset/groove/ridge; border width read back from native `GtkBorder` metrics | GTK3/4 theme, zoom, padding, client allocation, and GTK4 4.10+ deprecated-style-context API require native pixel proofs |
-| Cocoa | API signature and validated fail-closed behavior | A flat `CALayer` stroke is not a two-tone native bezel; no forged visual equivalence |
-| Android/iOS preview | API signature and validated fail-closed behavior | No native relief until individual Android/iOS peer adapters and device evidence exist |
+| GTK3/4 | Existing `GtkCssProvider` binding, attached to the style context of the border-owning widget (`borderHandle()`, e.g. the `GtkScrolledWindow`) after any constructor `Group` shadow provider; CSS inset/outset/groove/ridge; Control-level trim reported as two pixels | GTK3/4 theme, zoom, padding, client allocation, and GTK4 4.10+ deprecated-style-context API require native pixel proofs |
+| Cocoa | Two-tone AppKit bands painted over the existing `NSScrollView` bezel after AppKit paints it; trim, client area and input unchanged | `SHADOW_NONE`, controls without a bezel scroll view, and etched styles on a bezel thinner than two points fail with `ERROR_NOT_IMPLEMENTED` |
+| Android/iOS preview | The existing peer draws two-tone relief through `MobilePlatform.setBorderRelief` (`AndroidPlatform.PeerView`, `SWTUIKitView`) | A transport without that operation keeps its default border and fails closed with `ERROR_NOT_IMPLEMENTED`; device evidence still pending |
 
 All backend state is per-Control. GTK border CSS is separate from the
 existing foreground/background CSS provider. Window handles, accessibility

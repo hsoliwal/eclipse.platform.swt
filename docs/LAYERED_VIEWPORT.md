@@ -167,6 +167,44 @@ CALayer on cocoa and iOS, ASurfaceControl on Android; the Java composite above
 stays the reference implementation every native route is compared with pixel by
 pixel.
 
+
+## Native composition frame scratch contract
+
+The native image-layer route shares a bounded, UI-thread-owned frame transport
+between the existing `LayeredViewport` and the optional maya compositor.
+For a frame with `count` native layers, `apply` reads exactly `count`
+layer handles and `4 * count` properties in bottom-to-top order. Scratch
+arrays **may have more capacity than count**; their unused suffix has no
+semantic meaning and must never be read by a native backend.
+
+The viewport owns Java primitive-array scratch; the native `Composition`
+owns its own typed copied-in scratch. Both may reuse capacity after warm-up,
+must use the active prefix only, and must not retain app-owned images or
+published paint callbacks. All frame submission stays on the SWT UI thread.
+The JNI bridge performs one synchronous copy-in of each active array prefix,
+without holding the Java heap pinned while the OS compositor works; it does
+not add a JNI call per layer. Native state is destroyed with its composition.
+An excessive layer count or invalid frame sizes must fail safely rather than
+allow overflowing native array bounds.
+
+Layer structural mutations publish their Z order lazily. Native activation
+must discover requests in the authoritative stack and take its current
+order snapshot before composing the first frame; a newly appended image
+must not disappear until an unrelated paint or getLayers call.
+
+A native backend call may reenter its viewport. The outer call's arrays and
+the C++ composition's active prefix must remain immutable until that call
+returns. Nested invocations receive temporary private input lanes, while
+the ordinary (non-nested) hot path reuses composition-owned capacity.
+Every recursion-depth increment must have a matching decrement, including
+exceptional exits in Java. This remains distinct from native resource
+lifetime and callback ownership.
+
+This is an allocation-efficiency contract, **not** a claim of zero native
+allocations, O(1) Z composition, cross-platform GPU acceleration, or HTML/CSS
+layout conformance. DirectComposition remains the only active native layer
+backend. Native pixel parity and platform tests remain release gates.
+
 ## Verification
 
 The accompanying JUnit test exercises ordering, stable IDs, remove,
@@ -263,3 +301,100 @@ Verification added: group Z-order and root translation, child pick/visibility/
 lock/snapshot identity, local clipping, and an SWT pixel oracle asserting
 that overlap is resolved before the GROUP opacity is applied. The native
 Tycho/GTK/Win32/Cocoa suites still need to run before promoting the feature.
+
+## Optional native device-loss containment (Win32 Maya)
+
+The native compositor is still **optional**. If the existing DirectComposition
+submission path fails, `LayeredViewport` detaches its native layers, disposes
+the failed composition and redraws those layer bounds through the original
+SWT painted backing store. There is no silent recursive GPU reinitialization.
+
+Applications that know their display/graphics device has recovered may call
+`viewport.retryNativeComposition()` explicitly from the SWT UI thread.
+The method refuses paint/native-frame/model-batch reentrancy, issues at most
+one creation attempt per call, then reuploads borrowed images via the same
+`NativeLayers` backend and returns whether the composition is available.
+If native recreation or frame commit fails, ordinary software painting remains
+authoritative; no automatic retry loop starts.
+
+The Windows Maya owner validates the DirectComposition device state before
+native uploads and every frame (even an unchanged-property frame). Lost
+devices report their HRESULT and force native scene-cache invalidation. That
+failure reaches the already established painted fallback.
+
+See [MAYA_DEVICE_LOSS_RECOVERY.md](MAYA_DEVICE_LOSS_RECOVERY.md) for the
+portable C++ health oracle, explicit recovery contract, native UI ownership,
+test coverage, and still-unexecuted Windows hardware release gates.
+
+## Optional native viewport-residency window
+
+`LayeredViewport.setNativeResidencyOverscanPixels(int)` enables
+viewport-aware admission of **native image surfaces**. Default `-1`
+preserves the previous unrestricted membership. Value `0` admits
+only overlapping client-space native images; positive values prefetch
+within the specified SWT client-pixel margin and retain live surfaces
+up to twice that margin to avoid allocation churn.
+
+This policy runs before the optional Maya composition is requested.
+Offscreen or clipped-out images keep the same logical layers and
+borrowed SWT Images, but do not consume native surface quota.
+On re-entry the original native backend recreates and reuploads their
+pixels. Fixed/pinned/sticky world projection and source-local clips
+are respected; native Control widgets, Z ordering, event-thread
+ownership and the software-painted fallback stay unchanged.
+
+The standalone deterministic Java geometry test passes 200,000
+cases, while actual SWT/Win32 native pixel and graphics-memory
+qualification remains pending. For details, limits and test scope,
+see [MAYA_NATIVE_VIEWPORT_RESIDENCY.md](MAYA_NATIVE_VIEWPORT_RESIDENCY.md).
+
+## General layer coordinate policies (candidate — 2026-11-18)
+
+Pinning is one member of a larger family of positioning behaviors. The shared
+`ViewportRuntime.LayerPosition` provides **geometry only**, not a new scene
+graph, extra native Tree header or independent renderer. It composes with
+existing `ViewportPaintGraph`, `ViewportRuntime.ImageLayers`, Canvas
+retained/native layers, and the platform-owned Tree/TreeColumn header.
+
+| Policy | Scroll factor Q8 | Anchor | Example |
+| --- | --- | --- | --- |
+| Normal content | X=256, Y=256 | start/start | long Tree rows, canvas content |
+| Fixed overlay | X=0, Y=0 | start/start | toolbar, floating search |
+| Fixed right/bottom | X=0, Y=0 | end/end | minimap, status bubble |
+| Header | X=256, Y=0 | start/start | native Tree columns |
+| Frozen first column | X=0, Y=256 | start/start | spreadsheet row labels |
+| Parallax | X/Y=128 | start/start | scroll-rate-dependent background |
+| Reverse parallax | negative Q8 | center/center | effects, navigational rulers |
+| Sticky start/end | X/Y=256 | start or end | section/group header, footer |
+
+`LayerPosition.coordinate` implements scroll factors from -16x through +16x
+in exact 1/256 units, viewport anchoring, and sticky edge clamps. The common
+path uses checked 64-bit arithmetic with **no allocations**; arithmetic
+overflow uses an exact BigInteger fallback. `LayerPosition.clip` writes
+half-open intersections into caller-owned `int[4]` scratch.
+
+`ViewportRuntime.PinnedPlanes` is a four-region specialization for BODY,
+HEADER, FROZEN and CORNER, including distinct X/Y invalidation masks.
+Its native Tree mapping has no additional native HWND/GTK widget/NSView,
+and its geometry projection is expressed through the general positioning
+kernel. Native header controls remain the original platform owners.
+
+**Current candidate integration:** `LayeredViewport.Layer.setScrollRates(xQ8,
+yQ8)` uses the exact shared scroll-offset kernel. It places independently
+scrolling/parallax layers in the existing viewport-relative Z lane, preserving
+paint and input order without reindexing the entire normal world on pan.
+Fixed, pinned and sticky axes take precedence. The retained backing store's existing
+ghost-pixel repair covers differential motion and its regression pixel tests
+include half-parallax, zero, reverse and native pin priority.
+
+**Important limits:** the arbitrary viewport-edge anchors and generic sticky
+clamps are presently shared model primitives; platform-native Tree headers
+still use their existing peers. Automatic policy adoption across all Canvas,
+Tree, Table, Nebula and Swing widgets, sticky-section ownership, full
+accessibility/IME mapping, and all-platform native pixel verification remain
+**pending**. Source presence is not native release qualification.
+
+The source JUnit `Test_ViewportLayerPosition` is registered in `AllTests`.
+A standalone OpenJDK 21 model comparison exercised 200,000 exact
+BigInteger cases; separate pinned-plane testing exercised 200,000
+rectangle comparisons. This is not full SWT GUI/pixel/JNI proof.
