@@ -347,3 +347,54 @@ The standalone deterministic Java geometry test passes 200,000
 cases, while actual SWT/Win32 native pixel and graphics-memory
 qualification remains pending. For details, limits and test scope,
 see [MAYA_NATIVE_VIEWPORT_RESIDENCY.md](MAYA_NATIVE_VIEWPORT_RESIDENCY.md).
+
+## General layer coordinate policies (candidate — 2026-11-18)
+
+Pinning is one member of a larger family of positioning behaviors. The shared
+`ViewportRuntime.LayerPosition` provides **geometry only**, not a new scene
+graph, extra native Tree header or independent renderer. It composes with
+existing `ViewportPaintGraph`, `ViewportRuntime.ImageLayers`, Canvas
+retained/native layers, and the platform-owned Tree/TreeColumn header.
+
+| Policy | Scroll factor Q8 | Anchor | Example |
+| --- | --- | --- | --- |
+| Normal content | X=256, Y=256 | start/start | long Tree rows, canvas content |
+| Fixed overlay | X=0, Y=0 | start/start | toolbar, floating search |
+| Fixed right/bottom | X=0, Y=0 | end/end | minimap, status bubble |
+| Header | X=256, Y=0 | start/start | native Tree columns |
+| Frozen first column | X=0, Y=256 | start/start | spreadsheet row labels |
+| Parallax | X/Y=128 | start/start | scroll-rate-dependent background |
+| Reverse parallax | negative Q8 | center/center | effects, navigational rulers |
+| Sticky start/end | X/Y=256 | start or end | section/group header, footer |
+
+`LayerPosition.coordinate` implements scroll factors from -16x through +16x
+in exact 1/256 units, viewport anchoring, and sticky edge clamps. The common
+path uses checked 64-bit arithmetic with **no allocations**; arithmetic
+overflow uses an exact BigInteger fallback. `LayerPosition.clip` writes
+half-open intersections into caller-owned `int[4]` scratch.
+
+`ViewportRuntime.PinnedPlanes` is a four-region specialization for BODY,
+HEADER, FROZEN and CORNER, including distinct X/Y invalidation masks.
+Its native Tree mapping has no additional native HWND/GTK widget/NSView,
+and its geometry projection is expressed through the general positioning
+kernel. Native header controls remain the original platform owners.
+
+**Current candidate integration:** `LayeredViewport.Layer.setScrollRates(xQ8,
+yQ8)` uses the exact shared scroll-offset kernel. It places independently
+scrolling/parallax layers in the existing viewport-relative Z lane, preserving
+paint and input order without reindexing the entire normal world on pan.
+Fixed, pinned and sticky axes take precedence. The retained backing store's existing
+ghost-pixel repair covers differential motion and its regression pixel tests
+include half-parallax, zero, reverse and native pin priority.
+
+**Important limits:** the arbitrary viewport-edge anchors and generic sticky
+clamps are presently shared model primitives; platform-native Tree headers
+still use their existing peers. Automatic policy adoption across all Canvas,
+Tree, Table, Nebula and Swing widgets, sticky-section ownership, full
+accessibility/IME mapping, and all-platform native pixel verification remain
+**pending**. Source presence is not native release qualification.
+
+The source JUnit `Test_ViewportLayerPosition` is registered in `AllTests`.
+A standalone OpenJDK 21 model comparison exercised 200,000 exact
+BigInteger cases; separate pinned-plane testing exercised 200,000
+rectangle comparisons. This is not full SWT GUI/pixel/JNI proof.

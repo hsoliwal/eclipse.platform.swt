@@ -3811,4 +3811,59 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         }), "child filters recheck the parent's current per-axis projection");
         assertEquals(1, root.getZIndex(), "filtering never changes the live Z rank");
     }
+
+    @Test
+    public void testParallaxPlanesKeepPaintHitAndPointerOrderAcrossBlitPans() {
+        viewport.setBackground(viewport.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        Layer rows = solid("body", 0, 0, 4000, 4000, SWT.COLOR_BLUE);
+        Layer parallax = solid("parallax", 140, 40, 40, 40, SWT.COLOR_MAGENTA);
+        parallax.setScrollRates(128, 128);
+        Layer header = solid("header", 0, 0, 300, 20, SWT.COLOR_RED);
+        header.setPinned(SWT.VERTICAL);
+        show();
+        assertEquals(128, parallax.getScrollRateX());
+        assertEquals(128, parallax.getScrollRateY());
+        for (int[] origin : new int[][] {{0, 0}, {20, 20}, {60, 40},
+                {80, 30}, {0, 0}}) {
+            panAndPaint(origin[0], origin[1]);
+            int x = 145 - origin[0] / 2;
+            int y = 45 - origin[1] / 2;
+            assertEquals(system(SWT.COLOR_MAGENTA), rgb(pixels(), x, y),
+                    "parallax layer at origin " + origin[0] + "," + origin[1]);
+            assertEquals(system(SWT.COLOR_RED), rgb(pixels(), 20, 5),
+                    "pinned header stays above independently scrolling body");
+            assertSame(parallax, viewport.hitTest(x, y));
+            assertSame(header, viewport.hitTest(20, 5));
+            assertSameAsAFullRecomposition();
+        }
+        List<LayerPointerEvent> events = new ArrayList<>();
+        parallax.setPointerListener(events::add);
+        viewport.setOrigin(60, 40);
+        viewport.update();
+        pointer(SWT.MouseMove, 115, 25, 0);
+        assertFalse(events.isEmpty(), "parallax layer receives routed pointer event");
+        assertEquals(145, events.get(0).worldX());
+        assertEquals(45, events.get(0).worldY());
+        assertSame(parallax, events.get(0).layer());
+        assertSame(rows, viewport.hitTest(100, 80));
+    }
+
+    @Test
+    public void testScrollRatesReverseFixedAndPinnedPrecedence() {
+        Layer layer = solid("effect", 140, 40, 40, 40, SWT.COLOR_MAGENTA);
+        assertEquals(256, layer.getScrollRateX());
+        assertEquals(256, layer.getScrollRateY());
+        assertThrows(IllegalArgumentException.class, () -> layer.setScrollRates(4097, 256));
+        assertThrows(IllegalArgumentException.class, () -> layer.setScrollRates(0, -4097));
+        assertEquals(256, layer.getScrollRateX());
+        layer.setScrollRates(0, -256);
+        viewport.setOrigin(10, 20);
+        assertSame(layer, viewport.hitTest(145, 65), "fixed X and reverse Y");
+        layer.setPinned(SWT.VERTICAL);
+        assertSame(layer, viewport.hitTest(145, 45), "native pin overrides reverse Y");
+        layer.setPinned(SWT.NONE);
+        assertSame(layer, viewport.hitTest(145, 65), "rate reactivates after unpin");
+        layer.setScrollRates(256, 256);
+        assertSame(layer, viewport.hitTest(135, 25), "ordinary world scrolling restored");
+    }
 }

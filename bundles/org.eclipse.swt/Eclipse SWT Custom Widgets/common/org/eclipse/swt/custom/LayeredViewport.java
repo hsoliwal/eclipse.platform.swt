@@ -723,6 +723,10 @@ public final class LayeredViewport extends Canvas {
         private WorldBounds worldClip;
         /* SWT.HORIZONTAL and/or SWT.VERTICAL: the axes on which the layer is measured from the view's origin */
         private int pinned;
+        /* per-axis scroll multipliers in exact 1/256 units (256 follows the world); a fixed, pinned or
+           sticky axis takes precedence */
+        private int scrollRateX = ViewportRuntime.LayerPosition.SCROLL;
+        private int scrollRateY = ViewportRuntime.LayerPosition.SCROLL;
         /* fixed axes ignore both pan and zoom; pinned axes ignore pan but retain zoom */
         private int fixed;
         /* the axis (SWT.HORIZONTAL or SWT.VERTICAL) the layer sticks on, or 0; its inset from the view's leading
@@ -821,6 +825,42 @@ public final class LayeredViewport extends Canvas {
             if (pinned == value) return;
             invalidate(this);
             pinned = value;
+            spatialDirty = true;
+            invalidate(this);
+            placeControl(this);
+            syncNative();
+        }
+
+        /** Horizontal scroll multiplier in exact 1/256 units; 256 is ordinary scrolling. */
+        public int getScrollRateX() {
+            checked();
+            return scrollRateX;
+        }
+
+        /** Vertical scroll multiplier in exact 1/256 units; 256 is ordinary scrolling. */
+        public int getScrollRateY() {
+            checked();
+            return scrollRateY;
+        }
+
+        /**
+         * Independent per-axis scroll multipliers from -4096 to 4096.
+         * 256 follows the body, 128 moves at half speed, zero fixes an axis,
+         * and negative rates move in reverse. A fixed, pinned or sticky axis
+         * takes precedence until the corresponding policy is cleared. The existing
+         * view-relative Z lane preserves order without a world-index rebuild
+         * on every pan, even between native control and painter layers.
+         */
+        public void setScrollRates(int horizontalQ8, int verticalQ8) {
+            checked();
+            if (horizontalQ8 < -4096 || horizontalQ8 > 4096
+                    || verticalQ8 < -4096 || verticalQ8 > 4096) {
+                SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (scrollRateX == horizontalQ8 && scrollRateY == verticalQ8) return;
+            invalidate(this);
+            scrollRateX = horizontalQ8;
+            scrollRateY = verticalQ8;
             spatialDirty = true;
             invalidate(this);
             placeControl(this);
@@ -2164,9 +2204,12 @@ public final class LayeredViewport extends Canvas {
         }
     }
 
-    /* whether a pan moves the layer in world space: it is pinned or sticky */
+    /* whether a pan moves the layer differently from ordinary world scrolling: it is fixed, pinned,
+       sticky or has a non-default scroll rate */
     private static boolean viewRelative(Layer layer) {
-        return layer.fixed != 0 || layer.pinned != 0 || layer.sticky != 0;
+        return layer.fixed != 0 || layer.pinned != 0 || layer.sticky != 0
+                || layer.scrollRateX != ViewportRuntime.LayerPosition.SCROLL
+                || layer.scrollRateY != ViewportRuntime.LayerPosition.SCROLL;
     }
 
     /* the origin a layer is projected from on each axis */
@@ -2184,7 +2227,11 @@ public final class LayeredViewport extends Canvas {
      */
     private static long layerOrigin(Layer layer, int axis, long origin) {
         if (((layer.fixed | layer.pinned) & axis) != 0) return 0;
-        if (layer.sticky != axis) return origin;
+        if (layer.sticky != axis) {
+            // exact Q8 scroll rate; 256 (the default) returns origin unchanged
+            return ViewportRuntime.LayerPosition.scrollOffset(origin,
+                    axis == SWT.HORIZONTAL ? layer.scrollRateX : layer.scrollRateY);
+        }
         long start = axis == SWT.HORIZONTAL ? layer.x : layer.y, end = axis == SWT.HORIZONTAL ? layer.right : layer.bottom;
         long stuck = Math.min(saturatedAdd(origin, layer.stickyInset), saturatedAdd(layer.stickyLimit, start - end));
         return stuck > start ? saturatedAddSubtract(origin, start, stuck) : origin;

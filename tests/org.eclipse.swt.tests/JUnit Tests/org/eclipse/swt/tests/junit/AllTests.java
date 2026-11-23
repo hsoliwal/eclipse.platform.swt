@@ -28,6 +28,7 @@ import org.junit.platform.suite.api.Suite;
 	Test_ItemBitSetMaximumPosition.class,
 	Test_LayerRectIndex.class,
 	Test_LayerArgbCompositor.class,
+	Test_ViewportLayerPosition.class,
 	Test_ViewportImageLayers.class, // parent-owned image-plane stride and affine/mask contracts
 	Test_ViewportBounds.class,
 	Test_ViewportBoundsGtk.class,
