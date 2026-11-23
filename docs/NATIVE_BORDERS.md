@@ -19,11 +19,15 @@ panel.setBorderRelief(SWT.DEFAULT);    // Restore the original platform edge.
 `setBorderRelief(int)`. There is one relief state and one renderer per
 platform.
 
-The full contract is in [M3_NATIVE_CONTROL_BORDERS.md](M3_NATIVE_CONTROL_BORDERS.md),
-including how the Win32 relief interacts with
-`Composite.setBevelBorder(int)` and what `SWT.DEFAULT` restores. This page
-keeps the user-facing notes of SWT #534 that hold under that contract, and
-documents the Win32 and GTK frame-owner details added together with it.
+The full contract is in [native-border-relief.md](native-border-relief.md),
+which is reconciled with master's code, including what `SWT.DEFAULT` and
+`SWT.SHADOW_NONE` do and each backend's limits. The Win32 interaction with
+`Composite.setBevelBorder(int)` is described in the Win32 sections of
+[M3_NATIVE_CONTROL_BORDERS.md](M3_NATIVE_CONTROL_BORDERS.md); that file's
+Cocoa notes are out of date, and the Cocoa row below follows master's code.
+This page keeps the user-facing notes of SWT #534 that hold under that
+contract, and documents the Win32 and GTK frame-owner details added together
+with it.
 
 ## Method values, not constructor styles
 
