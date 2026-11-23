@@ -104,6 +104,69 @@ public final class LayerArgbCompositor {
 		}
 	}
 
+	/**
+	 * Composites a rectangular, row-strided tile through its unsigned byte mask.
+	 * The three row strides are measured in array elements, not bytes (the mask
+	 * uses bytes). No pixel arrays or temporary image rows are allocated here.
+	 * The operation uses the same fixed-point arithmetic and optional JNI path
+	 * as {@link #compositeMasked(int[], int, int[], int, byte[], int, int, int, Mode)}.
+	 *
+	 * <p>The three row spans must fit completely inside their arrays, and each
+	 * stride must be at least {@code width}; all validation completes before the
+	 * first destination write. The source may equal the destination only when
+	 * their strides agree. In that case row traversal also protects shifted,
+	 * overlapping source and destination rectangles, in either direction.
+	 * Other shared-array strides are rejected rather than silently corrupting
+	 * another row. Empty rectangles are valid no-ops subject to valid offsets.</p>
+	 *
+	 * @param dst destination premultiplied ARGB pixels
+	 * @param dstOffset first destination pixel
+	 * @param dstStride distance between consecutive destination row starts
+	 * @param src source premultiplied ARGB pixels
+	 * @param srcOffset first source pixel
+	 * @param srcStride distance between consecutive source row starts
+	 * @param mask per-pixel unsigned coverage, zero through 255
+	 * @param maskOffset first mask pixel
+	 * @param maskStride distance between consecutive mask row starts
+	 * @param width number of pixels per row
+	 * @param height number of rows
+	 * @param opacity global alpha in the range 0..255
+	 * @param mode separable blend mode or source-over
+	 */
+	public static void compositeMaskedRows(int[] dst, int dstOffset, int dstStride,
+			int[] src, int srcOffset, int srcStride, byte[] mask, int maskOffset,
+			int maskStride, int width, int height, int opacity, Mode mode) {
+		Objects.requireNonNull(dst, "destination");
+		Objects.requireNonNull(src, "source");
+		Objects.requireNonNull(mask, "mask");
+		Objects.requireNonNull(mode, "mode");
+		if (opacity < 0 || opacity > 255) throw new IllegalArgumentException("opacity outside 0..255");
+		if (width < 0 || height < 0 || dstStride < width || srcStride < width || maskStride < width
+				|| dstOffset < 0 || srcOffset < 0 || maskOffset < 0) {
+			throw new IndexOutOfBoundsException("invalid masked tile geometry");
+		}
+		long lastRow = Math.max(0, (long) height - 1);
+		long dstEnd = (long) dstOffset + lastRow * dstStride + (height == 0 ? 0 : width);
+		long srcEnd = (long) srcOffset + lastRow * srcStride + (height == 0 ? 0 : width);
+		long maskEnd = (long) maskOffset + lastRow * maskStride + (height == 0 ? 0 : width);
+		if (dstEnd > dst.length || srcEnd > src.length || maskEnd > mask.length) {
+			throw new IndexOutOfBoundsException("masked tile outside backing arrays");
+		}
+		if (dst == src && dstStride != srcStride) {
+			throw new IllegalArgumentException("aliased tile row strides differ");
+		}
+		if (width == 0 || height == 0 || opacity == 0) return;
+		// Equivalent to memmove for shared, equally strided pixel lanes:
+		// when destination starts above source, traverse higher rows first.
+		boolean backwards = dst == src && dstOffset > srcOffset;
+		for (int k = 0; k < height; k++) {
+			int row = backwards ? height - 1 - k : k;
+			compositeMasked(dst, dstOffset + row * dstStride,
+					src, srcOffset + row * srcStride,
+					mask, maskOffset + row * maskStride, width, opacity, mode);
+		}
+	}
+
 	/** One premultiplied pixel of {@code mode} at {@code opacity}: the Java atom both scanline paths share. */
 	private static int blendPixel(int s, int d, int opacity, Mode mode) {
 		int sa = mul255(s >>> 24, opacity);
