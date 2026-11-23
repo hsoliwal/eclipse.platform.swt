@@ -98,6 +98,34 @@ public Composite (Composite parent, int style) {
 	super (parent, style);
 }
 
+/**
+ * Returns the bevel style selected on this original native Control owner.
+ * SWT.NONE means no explicit relief is currently active.
+ */
+public int getBevelBorder () {
+	checkWidget ();
+	int relief = getBorderRelief ();
+	return relief == SWT.DEFAULT || relief == SWT.SHADOW_NONE ? SWT.NONE : relief;
+}
+
+/**
+ * Compatibility alias for Control.setBorderRelief; never allocates a new
+ * NSView, GtkWidget, renderer or border provider.
+ * Unsupported platform-native modes fail through the original Control API.
+ */
+public void setBevelBorder (int border) {
+	checkWidget ();
+	if (border == SWT.NONE || border == SWT.SHADOW_NONE) {
+		setBorderRelief (SWT.DEFAULT);
+		return;
+	}
+	if (border != SWT.SHADOW_IN && border != SWT.SHADOW_OUT
+			&& border != SWT.SHADOW_ETCHED_IN && border != SWT.SHADOW_ETCHED_OUT) {
+		error (SWT.ERROR_INVALID_ARGUMENT);
+	}
+	setBorderRelief (border);
+}
+
 Control [] _getChildren () {
 	NSView nsClipView = contentView();
     if (nsClipView == null) {

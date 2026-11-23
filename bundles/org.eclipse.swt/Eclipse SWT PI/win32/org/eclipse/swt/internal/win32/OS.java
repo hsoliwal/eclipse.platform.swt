@@ -98,6 +98,7 @@ public class OS extends C {
 	public static final int BDR_SUNKENINNER = 0x0008;
 	public static final int BF_RIGHT = 0x0004;
 	public static final int BF_BOTTOM = 0x0008;
+	public static final int BF_RECT = 0x000F;
 	public static final int BITSPIXEL = 0xc;
 	public static final int BI_BITFIELDS = 3;
 	public static final int BI_RGB = 0;
@@ -338,8 +339,10 @@ public class OS extends C {
 	public static final int EBP_HEADERBACKGROUND = 1;
 	public static final int EC_LEFTMARGIN = 0x1;
 	public static final int EC_RIGHTMARGIN = 0x2;
-	public static final int EDGE_SUNKEN = 10;
-	public static final int EDGE_ETCHED = 6;
+	public static final int EDGE_RAISED = 0x0005;
+	public static final int EDGE_ETCHED = 0x0006;
+	public static final int EDGE_BUMP = 0x0009;
+	public static final int EDGE_SUNKEN = 0x000A;
 	public static final int EM_CANUNDO = 0xc6;
 	public static final int EM_CHARFROMPOS = 0xd7;
 	public static final int EM_GETFIRSTVISIBLELINE = 0xce;
@@ -955,6 +958,7 @@ public class OS extends C {
 	public static final int PM_QS_SENDMESSAGE = QS_SENDMESSAGE << 16;
 	public static final int PM_REMOVE = 0x1;
 	public static final String PROGRESS_CLASS = "msctls_progress32"; //$NON-NLS-1$
+	public static final int PRF_CHECKVISIBLE = 0x1;
 	public static final int PRF_CHILDREN = 16;
 	public static final int PRF_CLIENT = 0x4;
 	public static final int PRF_ERASEBKGND = 0x8;
@@ -1645,6 +1649,7 @@ public class OS extends C {
 	public static final int WS_EX_RIGHT = 0x00001000;
 	public static final int WS_EX_RTLREADING = 0x00002000;
 	public static final int WS_EX_STATICEDGE = 0x20000;
+	public static final int WS_EX_WINDOWEDGE = 0x100;
 	public static final int WS_EX_TOOLWINDOW = 0x80;
 	public static final int WS_EX_TOPMOST = 0x8;
 	public static final int WS_EX_TRANSPARENT = 0x20;
@@ -3653,6 +3658,11 @@ public static final native boolean RectInRegion (long hrgn, RECT lprc);
  * @param hrgnUpdate cast=(HRGN)
  */
 public static final native boolean RedrawWindow (long hWnd, RECT lprcUpdate, long hrgnUpdate, int flags);
+/**
+ * Optional copied and validated native Win32 update-region transaction.
+ * @method flags=no_gen
+ */
+public static final native boolean RedrawWindowRegions (long hWnd, int [] rectangles, int count, int flags);
 /** @param hKey cast=(HKEY) */
 public static final native int RegCloseKey (long hKey);
 /**

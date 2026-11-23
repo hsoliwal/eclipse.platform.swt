@@ -27,6 +27,18 @@ public NSScrollView(id id) {
 	super(id);
 }
 
+/**
+ * Returns this scroll view's native border kind using existing objc_msgSend JNI.
+ * Register the selector lazily once, after the Cocoa runtime is available.
+ */
+public long borderType() {
+    return OS.objc_msgSend(this.id, BorderTypeSelector.VALUE);
+}
+
+private static final class BorderTypeSelector {
+    static final long VALUE = OS.sel_registerName("borderType");
+}
+
 public NSSize contentSize() {
 	NSSize result = new NSSize();
 	OS.objc_msgSend_stret(result, this.id, OS.sel_contentSize);

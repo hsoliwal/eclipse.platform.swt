@@ -1,0 +1,175 @@
+name: Maya packet ABI (portable + JNI)
+
+on:
+  pull_request:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFramePacket*'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameDirect.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameView.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionScene.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/NativeLayers.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/sources.txt'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/Maya*'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/win32/org/eclipse/swt/internal/render/MayaNativeLayers.java'
+      - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_Composition.java'
+      - '.github/workflows/maya-packet-abi.yml'
+  push:
+    branches: [ master ]
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFramePacket*'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameDirect.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameView.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaCompositionScene.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/NativeLayers.java'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/**'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/sources.txt'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def'
+      - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_Composition.java'
+      - '.github/workflows/maya-packet-abi.yml'
+
+jobs:
+  linux-abi:
+    name: Linux JDK ${{ matrix.jdk }} / ${{ matrix.compiler }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: ['21', '25']
+        compiler: ['g++', 'clang++']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.jdk }}
+      - name: Portable C++17 validator with sanitizers
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          ${{ matrix.compiler }} -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+              -fsanitize=address,undefined -fno-omit-frame-pointer \
+              "$root/tests/MayaFramePacketTest.cc" -o /tmp/swt-maya-packet-test
+          /tmp/swt-maya-packet-test
+      - name: Indexed frame views (legacy and packed) under sanitizers
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          ${{ matrix.compiler }} -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+              -fsanitize=address,undefined -fno-omit-frame-pointer -I"$root" \
+              "$root/tests/MayaFrameViewTest.cc" -o /tmp/maya-frame-views
+          /tmp/maya-frame-views
+      - name: Scene affine and clip validation under sanitizers
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          ${{ matrix.compiler }} -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+              -fsanitize=address,undefined -fno-omit-frame-pointer -I"$root" \
+              "$root/tests/MayaCompositionSceneTest.cc" -o /tmp/maya-scene-validation
+          /tmp/maya-scene-validation
+      - name: JNI bridge and Java 21 cross-language transport smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          mkdir -p /tmp/maya-packet-classes /tmp/maya-native-headers
+          ${{ matrix.compiler }} -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -fPIC -shared \
+              -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+              "$root/MayaFramePacket.cc" "$root/tests/MayaFramePacketStub.cc" \
+              -o /tmp/libmaya-packet-test.so
+          javac --release 21 -Xlint:all -Werror -h /tmp/maya-native-headers -d /tmp/maya-packet-classes \
+              'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaFramePacket.java' \
+              'bundles/org.eclipse.swt/Eclipse SWT Maya/common/org/eclipse/swt/internal/maya/MayaComposition.java' \
+              'bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/NativeLayers.java' \
+              'bundles/org.eclipse.swt/Eclipse SWT Maya/win32/org/eclipse/swt/internal/render/MayaNativeLayers.java' \
+              "$root/tests/java/org/eclipse/swt/internal/maya/impl/Library.java" \
+              "$root/tests/java/org/eclipse/swt/widgets/Control.java" \
+              "$root/tests/java/org/eclipse/swt/internal/maya/MayaFramePacketSmoke.java" \
+              "$root/tests/java/org/eclipse/swt/internal/maya/MayaFrameFallbackSmoke.java" \
+              "$root/tests/java/org/eclipse/swt/internal/maya/MayaSceneStubSmoke.java"
+          java -Xcheck:jni -Dswt.maya.packedFrame=true -cp /tmp/maya-packet-classes \
+              org.eclipse.swt.internal.maya.MayaFramePacketSmoke /tmp/libmaya-packet-test.so
+          nm -D /tmp/libmaya-packet-test.so |
+              grep -q 'Java_org_eclipse_swt_internal_maya_MayaComposition__1nApplyPacked'
+          ${{ matrix.compiler }} -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -fPIC -shared \
+              -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+              "$root/tests/MayaFrameLegacyStub.cc" -o /tmp/libmaya-legacy-test.so
+          if nm -D /tmp/libmaya-legacy-test.so | grep -q '_1nFramePacketVersion'; then
+              echo "legacy library accidentally includes new JNI symbols" >&2; exit 1
+          fi
+          java -Xcheck:jni -Dswt.maya.packedFrame=true -cp /tmp/maya-packet-classes \
+              org.eclipse.swt.internal.maya.MayaFrameFallbackSmoke /tmp/libmaya-legacy-test.so
+      - name: Original Maya non-Windows stub and new packet entrypoints link together
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          ${{ matrix.compiler }} -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -fPIC -shared \
+              -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+              "$root/MayaComposition.cc" "$root/MayaFramePacket.cc" \
+              -o /tmp/libmaya-composition-packet-stubs.so
+          nm -D /tmp/libmaya-composition-packet-stubs.so |
+              grep -q 'Java_org_eclipse_swt_internal_maya_MayaComposition__1nFramePacketVersion'
+          java -Xcheck:jni -cp /tmp/maya-packet-classes \
+              org.eclipse.swt.internal.maya.MayaSceneStubSmoke /tmp/libmaya-composition-packet-stubs.so
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+          prefix = 'Java_org_eclipse_swt_internal_maya_MayaComposition_'
+          pattern = prefix + r'[A-Za-z0-9_]+'
+          header_text = Path('/tmp/maya-native-headers/org_eclipse_swt_internal_maya_MayaComposition.h').read_text()
+          header = set(re.findall(pattern, header_text))
+          exports = set(re.findall(pattern, Path('bundles/org.eclipse.swt/Eclipse SWT Maya/native/maya.def').read_text()))
+          linked = set(re.findall(pattern, subprocess.check_output(['nm', '-D', '/tmp/libmaya-composition-packet-stubs.so'], text=True)))
+          expected_descriptors = {
+              '_nCreate': '(J)J', '_nAddLayer': '(JII)J', '_nUpload': '(J[I)I',
+              '_nUploadDirty': '(J[I[II)I', '_nApply': '(J[J[FI)I',
+              '_nFramePacketVersion': '()I', '_nApplyPacked': '(JLjava/nio/ByteBuffer;I)I',
+              '_nRemoveLayer': '(JJ)V', '_nWaitForCommit': '(J)I', '_nDispose': '(J)V',
+              '_nCapabilities': '(J)J', '_nApplyScene': '(J[J[F[II)I',
+              '_nReadMetrics': '(J[J)I',
+          }
+          descriptors = re.findall(r'Method:\s+(\S+)\s+\*\s+Signature:\s+(\S+)', header_text)
+          assert len(descriptors) == 13 and dict(descriptors) == expected_descriptors, descriptors
+          assert len(header) == 13, header
+          assert header == exports == linked, (header ^ exports, header ^ linked)
+          print('Exact Java descriptors/header/export/linked JNI symbol closure: 13')
+          PY
+
+  windows-compile:
+    name: MSVC original DirectComposition transaction / JDK ${{ matrix.jdk }}
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: ['21', '25']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.jdk }}
+      - name: Compile original DirectComposition transaction and packed JNI with MSVC
+        shell: pwsh
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          $installation = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $installation) { throw 'MSVC installation not found' }
+          $vcvars = Join-Path $installation 'VC\Auxiliary\Build\vcvars64.bat'
+          $root = 'bundles\org.eclipse.swt\Eclipse SWT Maya\native\cc\swt'
+          $jni = Join-Path $env:JAVA_HOME 'include'
+          $win = Join-Path $jni 'win32'
+          foreach ($source in @('MayaFramePacket.cc', 'MayaComposition.cc')) {
+            $output = Join-Path $env:RUNNER_TEMP ($source + '.obj')
+            $command = 'call "' + $vcvars + '" && cl /nologo /std:c++17 /EHsc /W3 /WX /c /I"' + $jni +
+                   '" /I"' + $win + '" "' + (Join-Path $root $source) + '" /Fo"' + $output + '"'
+            & cmd.exe /D /S /C $command
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            if (-not (Test-Path $output)) { throw 'MSVC missing compiled object for ' + $source }
+          }

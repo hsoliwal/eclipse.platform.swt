@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10,6 +10,7 @@
  *
  * Contributors:
  *    IBM Corporation - initial API and implementation
+ *    Tobias Melcher - native layer backing binding
  *******************************************************************************/
 package org.eclipse.swt.internal.cocoa;
 
@@ -276,6 +277,10 @@ public void setToolTip(NSString toolTip) {
 	OS.objc_msgSend(this.id, OS.sel_setToolTip_, toolTip != null ? toolTip.id : 0);
 }
 
+public void setWantsLayer(boolean wantsLayer) {
+	OS.objc_msgSend(this.id, OS.sel_setWantsLayer_, wantsLayer);
+}
+
 public void setWantsRestingTouches(boolean wantsRestingTouches) {
 	OS.objc_msgSend(this.id, OS.sel_setWantsRestingTouches_, wantsRestingTouches);
 }
@@ -328,6 +333,10 @@ public NSRect visibleRect() {
 public NSWindow window() {
 	long result = OS.objc_msgSend(this.id, OS.sel_window);
 	return result != 0 ? new NSWindow(result) : null;
+}
+
+public boolean wantsLayer() {
+	return OS.objc_msgSend_bool(this.id, OS.sel_wantsLayer);
 }
 
 }

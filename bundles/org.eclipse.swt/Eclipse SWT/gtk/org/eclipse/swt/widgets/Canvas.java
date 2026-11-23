@@ -487,17 +487,21 @@ public void scroll (int destX, int destY, int x, int y, int width, int height, b
 		hBarHandle = GTK.gtk_scrolled_window_get_hscrollbar (scrolledHandle);
 		vBarHandle = GTK.gtk_scrolled_window_get_vscrollbar (scrolledHandle);
 	}
-	GtkRequisition requisition = new GtkRequisition();
-	if (hBarHandle != 0) {
-		gtk_widget_get_preferred_size (hBarHandle, requisition);
-		if (requisition.height > 0) {
-			srcRect.y = y - requisition.height;
+	boolean overlayScrollbars = (hBarHandle != 0 || vBarHandle != 0)
+			&& (getScrollbarsMode() & SWT.SCROLLBAR_OVERLAY) != 0;
+	if (overlayScrollbars) {
+		GtkRequisition requisition = new GtkRequisition();
+		if (hBarHandle != 0) {
+			gtk_widget_get_preferred_size (hBarHandle, requisition);
+			if (requisition.height > 0) {
+				srcRect.y = y - requisition.height;
+			}
 		}
-	}
-	if (vBarHandle != 0) {
-		gtk_widget_get_preferred_size (vBarHandle, requisition);
-		if (requisition.width > 0) {
-			srcRect.x = x - requisition.width;
+		if (vBarHandle != 0) {
+			gtk_widget_get_preferred_size (vBarHandle, requisition);
+			if (requisition.width > 0) {
+				srcRect.x = x - requisition.width;
+			}
 		}
 	}
 	srcRect.width = width;
@@ -586,10 +590,13 @@ public void scroll (int destX, int destY, int x, int y, int width, int height, b
         caret.setFocus();
     }
 	/*
-	 * Due to overlay drawing of scrollbars current method of scrolling leaves scrollbar and notifiers for them inside the canvas
-	 * after scroll. Fix is to redraw once done.
+	 * Overlay scrollbars and their notifiers can be copied into the canvas while
+	 * scrolling. Retain the full redraw workaround only when overlays are active;
+	 * otherwise the invalidated exposed regions above are sufficient.
 	 */
-	redraw(false);
+	if (overlayScrollbars) {
+		redraw(false);
+	}
 }
 
 @Override

@@ -627,6 +627,51 @@ public final class MobileLifecycleContractJUnitTest {
 		assertEquals(new org.eclipse.swt.graphics.Rectangle(5, 30, 20, 10), child.getBounds());
 		canvas.dispose();
 	}
+	@Test void nativeBorderReliefMaintainsOnePeerAndClientGeometry() {
+		Canvas canvas = canvas(shell);
+		long peer = platform.lastCreated;
+		int peers = platform.controls.size(), original = canvas.getBorderWidth();
+		assertEquals(SWT.DEFAULT, canvas.getBorderRelief());
+		assertThrows(IllegalArgumentException.class,
+				() -> canvas.setBorderRelief(SWT.BORDER | SWT.PUSH));
+		assertEquals(SWT.DEFAULT, platform.controls.get(peer).borderRelief);
+		for (int relief : new int[] {SWT.SHADOW_IN, SWT.SHADOW_OUT,
+				SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT}) {
+			canvas.setBorderRelief(relief);
+			assertEquals(relief, canvas.getBorderRelief());
+			assertEquals(relief, platform.controls.get(peer).borderRelief);
+			assertEquals(2, canvas.getBorderWidth());
+			assertEquals(peers, platform.controls.size(), "Native edge must not create another peer");
+		}
+		canvas.setBorderRelief(SWT.SHADOW_NONE);
+		assertEquals(0, canvas.getBorderWidth());
+		canvas.setBorderRelief(SWT.DEFAULT);
+		assertEquals(original, canvas.getBorderWidth());
+		assertEquals(SWT.DEFAULT, platform.controls.get(peer).borderRelief);
+		assertEquals(peers, platform.controls.size());
+		canvas.dispose();
+		assertFalse(platform.controls.containsKey(peer));
+	}
+	@Test void compositeNativeBevelAliasesControlReliefWithoutPeerChurn() {
+		Composite c = new Composite(shell, SWT.BORDER);
+		int peers = platform.controls.size();
+		long peer = platform.lastCreated;
+		int width = c.getBorderWidth();
+		assertEquals(SWT.NONE, c.getBevelBorder());
+		c.setBevelBorder(SWT.SHADOW_IN);
+		assertEquals(SWT.SHADOW_IN, c.getBorderRelief());
+		assertEquals(SWT.SHADOW_IN, c.getBevelBorder());
+		assertEquals(SWT.SHADOW_IN, platform.controls.get(peer).borderRelief);
+		c.setBorderRelief(SWT.SHADOW_OUT);
+		assertEquals(SWT.SHADOW_OUT, c.getBevelBorder());
+		c.setBevelBorder(SWT.NONE);
+		assertEquals(SWT.DEFAULT, c.getBorderRelief());
+		assertEquals(width, c.getBorderWidth());
+		assertEquals(peers, platform.controls.size());
+		c.dispose();
+		assertFalse(platform.controls.containsKey(peer));
+	}
+
 	@Test void staleNativePeerCannotActivateADisposedWidget() {
 		Canvas canvas = canvas(shell);
 		long peer = platform.lastCreated;

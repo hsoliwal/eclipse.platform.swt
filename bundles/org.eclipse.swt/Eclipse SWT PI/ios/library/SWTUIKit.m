@@ -296,32 +296,66 @@ static jint swtKeyState(jint type, jint code, UIKeyModifierFlags modifiers) {
 	return state;
 }
 
-static CGFloat swtBorderWidth(jint style) { return (style & SWT(BORDER)) != 0 ? 1 : 0; }
+static CGFloat swtBorderWidth(jint style, jint relief) {
+	if (relief == SWT(DEFAULT)) return (style & SWT(BORDER)) != 0 ? 1 : 0;
+	if (relief == SWT(SHADOW_NONE)) return 0;
+	return 2;
+}
 
-static CGRect swtClientBounds(CGRect bounds, jint style) {
-	CGFloat border = swtBorderWidth(style);
+static CGRect swtClientBounds(CGRect bounds, jint style, jint relief) {
+	CGFloat border = swtBorderWidth(style, relief);
 	return CGRectMake(bounds.origin.x + border, bounds.origin.y + border,
 		MAX(0, bounds.size.width - border * 2), MAX(0, bounds.size.height - border * 2));
 }
 
-static CGPoint swtClientPoint(CGPoint point, jint style) {
-	CGFloat border = swtBorderWidth(style);
+static CGPoint swtClientPoint(CGPoint point, jint style, jint relief) {
+	CGFloat border = swtBorderWidth(style, relief);
 	return CGPointMake(point.x - border, point.y - border);
 }
 
-static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
-	CGFloat border = swtBorderWidth(style), width = bounds.size.width, height = bounds.size.height;
+/* Native CoreGraphics two-tone edge, no extra UIView or CALayer. */
+static void swtBorderRing(CGContextRef gc, CGFloat width, CGFloat height, CGFloat inset,
+		CGColorRef topLeft, CGColorRef bottomRight) {
+	CGFloat left = inset, top = inset;
+	CGFloat right = width - inset, bottom = height - inset;
+	if (right <= left || bottom <= top) return;
+	CGFloat edgeX = MIN(1, right - left), edgeY = MIN(1, bottom - top);
+	CGContextSetFillColorWithColor(gc, topLeft);
+	CGContextFillRect(gc, CGRectMake(left, top, right - left, edgeY));
+	CGContextFillRect(gc, CGRectMake(left, top + edgeY, edgeX, MAX(0, bottom - top - edgeY)));
+	CGContextSetFillColorWithColor(gc, bottomRight);
+	CGContextFillRect(gc, CGRectMake(left + edgeX, bottom - edgeY,
+			MAX(0, right - left - edgeX), edgeY));
+	CGContextFillRect(gc, CGRectMake(right - edgeX, top + edgeY,
+			edgeX, MAX(0, bottom - top - edgeY)));
+}
+
+static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style, jint relief) {
+	CGFloat border = swtBorderWidth(style, relief), width = bounds.size.width, height = bounds.size.height;
 	if (border == 0 || width <= 0 || height <= 0) return;
-	CGFloat top = MIN(border, height), bottom = MAX(top, height - border);
-	CGFloat left = MIN(border, width), right = MAX(left, width - border);
 	CGContextSaveGState(context);
 	CGContextTranslateCTM(context, bounds.origin.x, bounds.origin.y);
 	CGContextSetShouldAntialias(context, NO);
-	CGContextSetRGBFillColor(context, 128 / 255.0, 128 / 255.0, 128 / 255.0, 1);
-	CGContextFillRect(context, CGRectMake(0, 0, width, top));
-	CGContextFillRect(context, CGRectMake(0, bottom, width, height - bottom));
-	CGContextFillRect(context, CGRectMake(0, top, left, bottom - top));
-	CGContextFillRect(context, CGRectMake(right, top, width - right, bottom - top));
+	if (relief == SWT(DEFAULT)) {
+		/* Preserve original SWT.BORDER grey line, unchanged. */
+		CGFloat top = MIN(border, height), bottom = MAX(top, height - border);
+		CGFloat left = MIN(border, width), right = MAX(left, width - border);
+		CGContextSetRGBFillColor(context, 128 / 255.0, 128 / 255.0, 128 / 255.0, 1);
+		CGContextFillRect(context, CGRectMake(0, 0, width, top));
+		CGContextFillRect(context, CGRectMake(0, bottom, width, height - bottom));
+		CGContextFillRect(context, CGRectMake(0, top, left, bottom - top));
+		CGContextFillRect(context, CGRectMake(right, top, width - right, bottom - top));
+	} else {
+		UIColor *highlight = [UIColor secondarySystemBackgroundColor];
+		UIColor *shadow = [UIColor tertiaryLabelColor];
+		BOOL raised = relief == SWT(SHADOW_OUT) || relief == SWT(SHADOW_ETCHED_OUT);
+		BOOL etched = relief == SWT(SHADOW_ETCHED_IN) || relief == SWT(SHADOW_ETCHED_OUT);
+		CGColorRef topLeft = raised ? highlight.CGColor : shadow.CGColor;
+		CGColorRef bottomRight = raised ? shadow.CGColor : highlight.CGColor;
+		swtBorderRing(context, width, height, 0, topLeft, bottomRight);
+		swtBorderRing(context, width, height, 1, etched ? bottomRight : topLeft,
+				etched ? topLeft : bottomRight);
+	}
 	CGContextRestoreGState(context);
 }
 
@@ -330,6 +364,7 @@ static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
 @property(nonatomic) jlong owner;
 @property(nonatomic) jint kind;
 @property(nonatomic) jint style;
+@property(nonatomic) jint borderRelief;
 @property(nonatomic) jint accessibilityRole;
 @property(nonatomic, strong) UIView *clientView;
 @property(nonatomic, strong) UIView *nativeEditor;
@@ -350,6 +385,7 @@ static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
 		self.contentMode = UIViewContentModeRedraw;
 		self.multipleTouchEnabled = YES;
 		self.enabled = YES;
+		self.borderRelief = SWT(DEFAULT);
 		self.hidden = YES;
 		_clientView = [[UIView alloc] initWithFrame:self.bounds];
 		_clientView.clipsToBounds = YES;
@@ -451,7 +487,7 @@ static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
 - (void)setSnapshot:(CGImageRef)value {
 	/* Native resize may precede the queued Java Resize callback. A late paint
 	 * must not recreate retained storage for an empty native client. */
-	if (value != NULL && CGRectIsEmpty(swtClientBounds(self.bounds, _style))) value = NULL;
+	if (value != NULL && CGRectIsEmpty(swtClientBounds(self.bounds, _style, _borderRelief))) value = NULL;
 	if (value != NULL) CGImageRetain(value);
 	if (_snapshot != NULL) CGImageRelease(_snapshot);
 	_snapshot = value;
@@ -461,8 +497,8 @@ static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
 	(void)rect;
 	if (_disposed) return;
 	CGContextRef gc = UIGraphicsGetCurrentContext();
-	swtDrawBorder(gc, self.bounds, _style);
-	CGRect client = swtClientBounds(self.bounds, _style);
+	swtDrawBorder(gc, self.bounds, _style, _borderRelief);
+	CGRect client = swtClientBounds(self.bounds, _style, _borderRelief);
 	if (_snapshot == NULL || CGRectIsEmpty(client)) return;
 	CGContextSaveGState(gc);
 	CGContextTranslateCTM(gc, client.origin.x, client.origin.y + client.size.height);
@@ -473,7 +509,7 @@ static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
 }
 - (void)layoutSubviews {
 	[super layoutSubviews];
-	CGRect client = swtClientBounds(self.bounds, _style);
+	CGRect client = swtClientBounds(self.bounds, _style, _borderRelief);
 	_clientView.frame = client;
 	if (_nativeEditor != nil) _nativeEditor.frame = _clientView.bounds;
 	if (CGRectIsEmpty(client)) self.snapshot = NULL;
@@ -511,18 +547,18 @@ static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
 	_primaryTouch = touches.anyObject;
 	if (_primaryTouch == nil) return;
 	[self becomeFirstResponder];
-	CGPoint point = swtClientPoint([_primaryTouch locationInView:self], _style);
+	CGPoint point = swtClientPoint([_primaryTouch locationInView:self], _style, _borderRelief);
 	swtSendInput(_peer, SWT(MOUSE_ENTER), point, 0, 0, 0, 0, 0, event.timestamp);
 	swtSendInput(_peer, SWT(MOUSE_DOWN), point, 1, 0, 0, 0, (jint)_primaryTouch.tapCount, event.timestamp);
 }
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
 	if (!_disposed && _primaryTouch != nil && [touches containsObject:_primaryTouch]) {
-		swtSendInput(_peer, SWT(MOUSE_MOVE), swtClientPoint([_primaryTouch locationInView:self], _style), 0, 0, 0, SWT(BUTTON1), 0, event.timestamp);
+		swtSendInput(_peer, SWT(MOUSE_MOVE), swtClientPoint([_primaryTouch locationInView:self], _style, _borderRelief), 0, 0, 0, SWT(BUTTON1), 0, event.timestamp);
 	}
 }
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
 	if (_disposed || _primaryTouch == nil || ![touches containsObject:_primaryTouch]) return;
-	CGPoint point = swtClientPoint([_primaryTouch locationInView:self], _style);
+	CGPoint point = swtClientPoint([_primaryTouch locationInView:self], _style, _borderRelief);
 	jint count = (jint)_primaryTouch.tapCount;
 	_primaryTouch = nil;
 	swtSendInput(_peer, SWT(MOUSE_UP), point, 1, 0, 0, SWT(BUTTON1), count, event.timestamp);
@@ -530,7 +566,7 @@ static void swtDrawBorder(CGContextRef context, CGRect bounds, jint style) {
 }
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
 	if (_disposed || _primaryTouch == nil || ![touches containsObject:_primaryTouch]) return;
-	CGPoint point = swtClientPoint([_primaryTouch locationInView:self], _style);
+	CGPoint point = swtClientPoint([_primaryTouch locationInView:self], _style, _borderRelief);
 	_primaryTouch = nil;
 	/* A cancelled gesture must not activate an original widget's MouseUp handler. */
 	swtSendInput(_peer, SWT(MOUSE_EXIT), point, 0, 0, 0, 0, 0, event.timestamp);
@@ -825,10 +861,31 @@ JNIEXPORT void JNICALL JNI(setBounds)(JNI_ARGS, jlong peer, jint x, jint y, jint
 				&& width == (jint)floor(swtRoot.bounds.size.width) && height == (jint)floor(swtRoot.bounds.size.height);
 			view.autoresizingMask = fillViewport ? UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight : UIViewAutoresizingNone;
 			view.frame = CGRectMake(x, y, width, height);
-			if (CGRectIsEmpty(swtClientBounds(view.bounds, view.style))) view.snapshot = NULL;
+			if (CGRectIsEmpty(swtClientBounds(view.bounds, view.style, view.borderRelief))) view.snapshot = NULL;
 		});
 	}
 }
+JNIEXPORT void JNICALL JNI(setBorderRelief)(JNI_ARGS, jlong peer, jint relief) {
+	@autoreleasepool {
+		if (!swtOnDisplayThread(env)) return;
+		if (relief != SWT(DEFAULT) && relief != SWT(SHADOW_NONE)
+				&& relief != SWT(SHADOW_IN) && relief != SWT(SHADOW_OUT)
+				&& relief != SWT(SHADOW_ETCHED_IN) && relief != SWT(SHADOW_ETCHED_OUT)) {
+			swtThrow(env, "java/lang/IllegalArgumentException", "Invalid native border relief");
+			return;
+		}
+		swtUI(env, ^{
+			SWTUIKitView *view = swtView(peer);
+			if (view.borderRelief == relief) return;
+			view.borderRelief = relief;
+			/* Previous raster was sized for a different native client. */
+			view.snapshot = NULL;
+			[view setNeedsLayout];
+			[view setNeedsDisplay];
+		});
+	}
+}
+
 JNIEXPORT void JNICALL JNI(setVisible)(JNI_ARGS, jlong peer, jboolean visible) {
 	@autoreleasepool {
 		if (!swtOnDisplayThread(env)) return;
@@ -1498,6 +1555,7 @@ static JNINativeMethod swtMethods[] = {
 	{"setBounds", "(JIIII)V", (void *)JNI(setBounds)},
 	{"setVisible", "(JZ)V", (void *)JNI(setVisible)},
 	{"setEnabled", "(JZ)V", (void *)JNI(setEnabled)},
+	{"setBorderRelief", "(JI)V", (void *)JNI(setBorderRelief)},
 	{"setTitle", "(JLjava/lang/String;)V", (void *)JNI(setTitle)},
 	{"textContent", "(JLjava/lang/String;IIZILjava/lang/String;)V", (void *)JNI(textContent)},
 	{"getClipboardText", "()Ljava/lang/String;", (void *)JNI(getClipboardText)},

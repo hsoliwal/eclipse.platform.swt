@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10,6 +10,7 @@
  *
  * Contributors:
  *    IBM Corporation - initial API and implementation
+ *    Tobias Melcher - Core Graphics and separator color bindings
  *******************************************************************************/
 package org.eclipse.swt.internal.cocoa;
 
@@ -25,6 +26,10 @@ public NSColor(long id) {
 
 public NSColor(id id) {
 	super(id);
+}
+
+public long /*CGColorRef*/ CGColor() {
+	return OS.objc_msgSend(this.id, OS.sel_CGColor);
 }
 
 public double alphaComponent() {
@@ -148,6 +153,11 @@ public static NSColor selectedTextBackgroundColor() {
 
 public static NSColor selectedTextColor() {
 	long result = OS.objc_msgSend(OS.class_NSColor, OS.sel_selectedTextColor);
+	return result != 0 ? new NSColor(result) : null;
+}
+
+public static NSColor separatorColor() {
+	long result = OS.objc_msgSend(OS.class_NSColor, OS.sel_separatorColor);
 	return result != 0 ? new NSColor(result) : null;
 }
 

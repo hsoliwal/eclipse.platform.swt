@@ -1,0 +1,54 @@
+name: Maya native handle JNI lifetime
+
+on:
+  pull_request:
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaNativeHandleRegistry.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaNativeHandleJniStub.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/java/org/eclipse/swt/internal/maya/MayaNativeHandleJniSmoke.java'
+      - '.github/workflows/maya-native-handle-jni.yml'
+  push:
+    branches: [ master ]
+    paths:
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaNativeHandleRegistry.h'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaNativeHandleJniStub.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/java/org/eclipse/swt/internal/maya/MayaNativeHandleJniSmoke.java'
+      - '.github/workflows/maya-native-handle-jni.yml'
+
+jobs:
+  linux-jni-lifetime:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: [ '21', '25' ]
+        compiler: [ 'g++', 'clang++' ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: \${{ matrix.jdk }}
+      - name: Compile the exact test JNI library and generate Java 21 native headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          mkdir -p "$RUNNER_TEMP/maya-classes" "$RUNNER_TEMP/maya-jni-headers"
+          \${{ matrix.compiler }} -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -fPIC -shared \
+              -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+              "$root/tests/MayaNativeHandleJniStub.cc" \
+              -o "$RUNNER_TEMP/libmaya_native_handle_test.so"
+          javac --release 21 -Xlint:all -Werror \
+              -h "$RUNNER_TEMP/maya-jni-headers" -d "$RUNNER_TEMP/maya-classes" \
+              "$root/tests/java/org/eclipse/swt/internal/maya/MayaNativeHandleJniSmoke.java"
+          test -s "$RUNNER_TEMP/maya-jni-headers/org_eclipse_swt_internal_maya_MayaNativeHandleJniSmoke.h"
+          nm -D "$RUNNER_TEMP/libmaya_native_handle_test.so" |
+              grep -q Java_org_eclipse_swt_internal_maya_MayaNativeHandleJniSmoke_issueLayer
+      - name: Java to native stale-token ABA regression with checked JNI
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -Xcheck:jni -cp "$RUNNER_TEMP/maya-classes" \
+              org.eclipse.swt.internal.maya.MayaNativeHandleJniSmoke \
+              "$RUNNER_TEMP/libmaya_native_handle_test.so"

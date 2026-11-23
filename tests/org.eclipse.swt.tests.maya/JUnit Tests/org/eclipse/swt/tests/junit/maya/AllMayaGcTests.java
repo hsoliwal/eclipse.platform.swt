@@ -5,6 +5,8 @@ import org.junit.platform.suite.api.Suite;
 
 @Suite
 @SelectClasses({ Test_org_eclipse_swt_maya_MayaLibrary.class, //
+		Test_org_eclipse_swt_maya_Composition.class, //
+		Test_org_eclipse_swt_maya_NativeLayers.class, //
 		org.eclipse.swt.internal.gpu.Test_org_eclipse_swt_maya_M3Canvas.class, //
 		org.eclipse.swt.internal.canvasext.raster.Test_org_eclipse_swt_maya_TextLayoutDraw.class, //
 		Test_org_eclipse_swt_maya_RectangleConverter.class, //
@@ -30,6 +32,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_maya_CanvasCoverage.class, //
 		Test_org_eclipse_swt_maya_CanvasDamage.class, //
 		Test_org_eclipse_swt_maya_StrokeState.class, //
+		Test_org_eclipse_swt_maya_ClipTransformState.class, //
 		Test_org_eclipse_swt_maya_CompositeCoverage.class, //
 
 })
