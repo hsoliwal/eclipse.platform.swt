@@ -39,9 +39,10 @@ These properties are independent from widget-level Group shadow styles.
 - **Cocoa:** two-tone relief is drawn only over an existing `NSScrollView`
   bezel. On any other frame a visible relief fails with
   `SWT.ERROR_NOT_IMPLEMENTED` before any state changes. Line numbers below
-  refer to
-  `bundles/org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/widgets/Control.java`
-  at master `c269ea222f1b`:
+  refer to files in
+  `bundles/org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/widgets/` at
+  master `c269ea222f1b`. A line number without a file name is in
+  `Control.java`:
   - `setBorderRelief` (L1788-1819) accepts `SHADOW_IN`, `SHADOW_OUT`,
     `SHADOW_ETCHED_IN` and `SHADOW_ETCHED_OUT` only on a `Scrollable` created
     with `SWT.BORDER` (L1800-1803) whose `scrollView` has the
@@ -59,14 +60,35 @@ These properties are independent from widget-level Group shadow styles.
   - `SWT.SHADOW_NONE` is always refused (L1792): this API cannot remove the
     native bezel. `SWT.DEFAULT` always succeeds and repaints the plain bezel
     (L1793-1799).
-  - Frames that can take relief: a bordered `Composite`/`Canvas`
-    (`Composite.java` L339-349) and bordered `Table`, `Tree`, `List`,
-    multi-line `Text` and non-`SWT.SMOOTH` `ToolBar`. Refused: controls
-    without `SWT.BORDER`, a `SWT.SMOOTH` `ToolBar` (an `NSToolbar`),
-    single-line `Text` (an `NSTextField` with no `scrollView`), `Link`
-    (a `Control`, not a `Scrollable`, even though its bordered peer is an
-    `NSScrollView` bezel), and any other control whose `scrollView` is
-    missing or does not have the `NSBezelBorder` type.
+  - Frames that can take relief are `Scrollable`s created with `SWT.BORDER`
+    whose `scrollView` gets the `NSBezelBorder` type. These include a
+    `Composite`/`Canvas` (`Composite.java` L339-350), `Table` (`Table.java`
+    L669), `Tree` (`Tree.java` L914), `List` (`List.java` L335), multi-line
+    `Text` (`Text.java` L556-564) and a `ToolBar` built with the public
+    constructor (`ToolBar.java` L291-298).
+  - The `SWT.SMOOTH` style bit does not decide whether a `ToolBar` takes
+    relief. The public constructor passes `internal = false` (`ToolBar.java`
+    L92-97), so `normalizeStyle` clears `SWT.SMOOTH` (`ToolBar.java`
+    L177-179) before the handle exists. So
+    `new ToolBar(parent, SWT.SMOOTH | SWT.BORDER)` gets the same bezel
+    `NSScrollView` as `new ToolBar(parent, SWT.BORDER)` and accepts relief.
+    The only `NSToolbar`-backed `ToolBar` comes from `Shell.getToolBar()`,
+    which creates it internally with `SWT.HORIZONTAL | SWT.SMOOTH` and no
+    `SWT.BORDER` (`Shell.java` L1336-1344). Its `createHandle` adopts the
+    window's `NSToolbarView` as its view, creates no `scrollView`, and then
+    clears `SWT.SMOOTH` from its style (`ToolBar.java` L259-288). It is
+    refused because it has no `SWT.BORDER` (L1800-1803). If the Shell's
+    window already has a toolbar, `normalizeStyle` clears `SWT.SMOOTH` for
+    this internal `ToolBar` as well (`ToolBar.java` L186-194). The result is
+    a borderless `ToolBar` without a `scrollView`, refused for the same
+    reason.
+  - Refused: controls without `SWT.BORDER` (L1800-1803), the
+    `Shell.getToolBar()` toolbar described above, single-line `Text` (an
+    `NSTextField` with no `scrollView`, `Text.java` L520-555), `Link` (it
+    extends `Control`, not `Scrollable`, at `Link.java` L45, so L1800-1803
+    refuses it even though its bordered peer is an `NSScrollView` bezel at
+    `Link.java` L188), and any other control whose `scrollView` is missing
+    or does not have the `NSBezelBorder` type (L1804-1807).
 - **Android:** the original `AndroidPlatform.PeerView` performs two-tone native
   inset/outset/groove/ridge drawing in `onDraw`, with two logical-pixel trim,
   density-rounded view padding and UI-thread native peer updates. The default
