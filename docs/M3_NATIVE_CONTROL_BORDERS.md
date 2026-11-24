@@ -188,7 +188,7 @@ merged Win32 compatibility contract (SWT #532):
   `SWT.SHADOW_NONE` to `SWT.DEFAULT`. So a bordered `Composite`/`Canvas`
   gets the same relief painted over its `NSScrollView` bezel, and a
   borderless one still throws `SWT.ERROR_NOT_IMPLEMENTED`. `getBevelBorder`
-  (L105-109) reports `SWT.NONE` for `SWT.DEFAULT`. The alias adds no AppKit
+  (`Composite.java` L105-109) reports `SWT.NONE` for `SWT.DEFAULT`. The alias adds no AppKit
   border type: the relief is SWT-painted bands over the existing bezel.
 - Subclasses keep their original behavior: Win32's `setBevelBorder` still
   refuses non-direct `Composite/Canvas` subclasses; the inherited
