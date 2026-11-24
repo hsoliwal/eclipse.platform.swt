@@ -1320,8 +1320,9 @@ void internalLayout (boolean changed) {
 	int width = rect.width;
 	int height = rect.height;
 	Point arrowSize = arrow.computeSize (SWT.DEFAULT, height, changed);
-	text.setBounds (0, 0, width - arrowSize.x, height);
-	arrow.setBounds (width - arrowSize.x, 0, arrowSize.x, arrowSize.y);
+	// The client area need not start at 0,0 (e.g. inside an explicit GTK border relief).
+	text.setBounds (rect.x, rect.y, width - arrowSize.x, height);
+	arrow.setBounds (rect.x + width - arrowSize.x, rect.y, arrowSize.x, arrowSize.y);
 }
 void listEvent (Event event) {
 	switch (event.type) {

@@ -127,19 +127,13 @@ Rectangle computeTrimInPixels (int x, int y, int width, int height) {
     if (scrolledHandle != 0) {
         border += gtk_container_get_border_width_or_margin(scrolledHandle);
     }
+	border += reliefClientTrimInPixels ();
 	int trimX = x - border, trimY = y - border;
 	int trimWidth = width + (border * 2), trimHeight = height + (border * 2);
 	trimHeight += hScrollBarWidth ();
 	trimWidth  += vScrollBarWidth ();
 	if (scrolledHandle != 0) {
-		boolean hasFrame;
-		if (GTK.GTK4) {
-			hasFrame = GTK4.gtk_scrolled_window_get_has_frame(scrolledHandle);
-		} else {
-			hasFrame = GTK3.gtk_scrolled_window_get_shadow_type (scrolledHandle) != GTK.GTK_SHADOW_NONE;
-		}
-
-		if (hasFrame) {
+		if (hasScrolledFrame ()) {
 			Point thickness = getThickness (scrolledHandle);
 			int xthickness = thickness.x;
 			int ythickness = thickness.y;
@@ -227,20 +221,50 @@ int getBorderWidthInPixels () {
     if (fixedHandle != 0) {
         border += gtk_container_get_border_width_or_margin(fixedHandle);
     }
+	boolean hasFrame = false;
 	if (scrolledHandle != 0) {
 		border += gtk_container_get_border_width_or_margin (scrolledHandle);
 
-		boolean hasFrame;
-		if (GTK.GTK4) {
-			hasFrame = GTK4.gtk_scrolled_window_get_has_frame(scrolledHandle);
-		} else {
-			hasFrame = GTK3.gtk_scrolled_window_get_shadow_type (scrolledHandle) != GTK.GTK_SHADOW_NONE;
-		}
+		hasFrame = hasScrolledFrame ();
 		if (hasFrame) {
 			border += getThickness (scrolledHandle).x;
 		}
 	}
+	/*
+	 * An explicit relief is CSS on borderHandle(). The thickness of a framed
+	 * GtkScrolledWindow above already measures that CSS border; every other
+	 * border owner (a frameless scrolled window, GtkFrame, SwtFixed, ...)
+	 * contributes its native relief width here.
+	 */
+	if (!hasFrame) {
+		border += nativeBorderReliefInPixels ();
+	}
 	return border;
+}
+
+/**
+ * Returns whether the scrolled-window peer draws its native frame
+ * (GTK3 shadow type, GTK4 has-frame).
+ */
+boolean hasScrolledFrame () {
+	if (scrolledHandle == 0) return false;
+	if (GTK.GTK4) {
+		return GTK4.gtk_scrolled_window_get_has_frame(scrolledHandle);
+	}
+	return GTK3.gtk_scrolled_window_get_shadow_type (scrolledHandle) != GTK.GTK_SHADOW_NONE;
+}
+
+/**
+ * Returns the part of an explicit relief's native trim that lies outside the
+ * client area and therefore belongs in computeTrim. GtkScrolledWindow's CSS
+ * box reserves its border whether or not it has a frame (a framed window's
+ * thickness is added by computeTrim already), so a frameless scrolled peer
+ * adds the relief width. Other border owners keep the relief inside the
+ * native allocation that getClientArea reports.
+ */
+int reliefClientTrimInPixels () {
+	if (scrolledHandle == 0 || !hasVisibleBorderRelief () || hasScrolledFrame ()) return 0;
+	return nativeBorderReliefInPixels ();
 }
 
 /**

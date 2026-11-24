@@ -342,7 +342,7 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
     if (hHint != SWT.DEFAULT) {
         height = hHint;
     }
-	int borderWidth = getBorderWidthInPixels ();
+	int borderWidth = getBorderWidthInPixels () - reliefInMeasuredSizeInPixels ();
 
 	if (prefferedSize == null && isDateWithDropDownButton ()) {
 		prefferedSize = new Point (width + 2*borderWidth, height+ 2*borderWidth);
@@ -350,6 +350,21 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	} else {
 		return new Point (width + 2*borderWidth, height+ 2*borderWidth);
 	}
+}
+
+/**
+ * Returns the part of getBorderWidth (an explicit relief, CSS on borderHandle())
+ * that the native size measured by computeSize already contains, so it is not
+ * added twice. That is the case when the measured widget is the relief owner
+ * and sizes its CSS box: the GTK3 GtkSpinButton of a DATE or TIME, and every
+ * GTK4 widget. GTK3 GtkCalendar sizes itself with padding only, and a drop-down
+ * DATE measures its entry rather than the GtkBox that owns the relief, so both
+ * keep adding it.
+ */
+int reliefInMeasuredSizeInPixels () {
+	long measured = isCalendar () ? containerHandle : GTK.GTK4 ? handle : textEntryHandle;
+	if (borderHandle () != measured || (!GTK.GTK4 && isCalendar ())) return 0;
+	return nativeBorderReliefInPixels ();
 }
 
 @Override

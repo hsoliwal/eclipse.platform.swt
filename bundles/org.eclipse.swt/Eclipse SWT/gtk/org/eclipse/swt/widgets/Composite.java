@@ -990,9 +990,110 @@ Rectangle getClientAreaInPixels () {
 		GTK.gtk_widget_get_allocation (clientHandle, allocation);
 		int width = (state & ZERO_WIDTH) != 0 ? 0 : allocation.width;
 		int height = (state & ZERO_HEIGHT) != 0 ? 0 : allocation.height;
+		int relief = swtFixedReliefInPixels ();
+		if (relief > 0) {
+			// The painted relief is trim: keep the client area inside it, as computeTrim does.
+			return new Rectangle (relief, relief, Math.max (0, width - 2 * relief),
+					Math.max (0, height - 2 * relief));
+		}
 		return new Rectangle (0, 0, width, height);
 	}
 	return super.getClientAreaInPixels();
+}
+
+/**
+ * Returns the native relief trim that this Composite itself paints and keeps
+ * out of its client area, or 0. GTK3's SwtFixed is a plain GtkContainer
+ * without a CSS box, so GTK neither draws nor allocates the CSS border that
+ * {@link #setBorderRelief(int)} gives it; GtkFrame, GtkScrolledWindow and
+ * every GTK4 widget do both natively and return 0 here. For the SwtFixed
+ * owner the width is the same native CSS border metric that
+ * {@link #getBorderWidth()} reports, and the border is drawn with
+ * gtk_render_frame from that widget's own style context.
+ */
+int swtFixedReliefInPixels () {
+	if (!hasVisibleBorderRelief () || !isSwtFixedReliefOwner ()) return 0;
+	return nativeBorderReliefInPixels ();
+}
+
+/**
+ * Returns whether an explicit relief on this Composite is drawn and reserved
+ * by SWT, i.e. its border owner is the GTK3 SwtFixed handle that is also its
+ * client handle. Independent of the current relief value.
+ */
+boolean isSwtFixedReliefOwner () {
+	if (GTK.GTK4 || (state & CANVAS) == 0) return false;
+	if (scrolledHandle != 0 || handle == 0 || clientHandle () != handle || borderHandle () != handle) return false;
+	return OS.G_OBJECT_TYPE (handle) == display.gtk_fixed_get_type ();
+}
+
+@Override
+int reliefClientTrimInPixels () {
+	return scrolledHandle == 0 ? swtFixedReliefInPixels () : super.reliefClientTrimInPixels ();
+}
+
+@Override
+void borderReliefTrimChanged () {
+	super.borderReliefTrimChanged ();
+	if (isSwtFixedReliefOwner ()) {
+		/*
+		 * SWT moved the client area with the trim. As win32 does when a native
+		 * edge changes the client area (WM_SIZE), tell the receiver, so widgets
+		 * that lay out or measure on Resize (CCombo, StyledText, ...) follow it.
+		 */
+		sendEvent (SWT.Resize);
+		if (isDisposed ()) return;
+	}
+	// Lay the children out inside the new client area.
+	if (layout != null) {
+		markLayout (false, false);
+		updateLayout (false);
+	}
+}
+
+/**
+ * Paints the GTK3 SwtFixed relief border last: after the receiver's
+ * background and SWT.Paint (run before the children) and after GTK has drawn
+ * the children, so neither client painting nor a child that ignores the
+ * client area origin can cover or erase it. The frame comes from the
+ * widget's own style context, as GTK renders a CSS border.
+ */
+void drawSwtFixedRelief (long cairo) {
+	if ((state & OBSCURED) != 0 || swtFixedReliefInPixels () <= 0) return;
+	GtkAllocation allocation = new GtkAllocation ();
+	GTK.gtk_widget_get_allocation (handle, allocation);
+	int width = (state & ZERO_WIDTH) != 0 ? 0 : allocation.width;
+	int height = (state & ZERO_HEIGHT) != 0 ? 0 : allocation.height;
+	if (width <= 0 || height <= 0) return;
+	if (drawRegion && regionHandle != 0) {
+		// Only the visible shape set by setRegion shows the frame. No region is allocated here.
+		GDK.gdk_cairo_region (cairo, regionHandle);
+		Cairo.cairo_clip (cairo);
+	}
+	GTK.gtk_render_frame (GTK.gtk_widget_get_style_context (handle), cairo, 0, 0, width, height);
+}
+
+@Override
+long windowProc (long handle, long arg0, long user_data) {
+	// DRAW is connected after GTK's own handler, i.e. after the children are drawn.
+	if ((int) user_data != DRAW || handle != this.handle || !hasVisibleBorderRelief ()) {
+		return super.windowProc (handle, arg0, user_data);
+	}
+	/*
+	 * The inherited DRAW path may repaint a setRegion() control and leave the cairo
+	 * clipped to the hidden area outside the region; the frame needs the original clip.
+	 */
+	Cairo.cairo_save (arg0);
+	long result;
+	try {
+		result = super.windowProc (handle, arg0, user_data);
+	} finally {
+		Cairo.cairo_restore (arg0);
+	}
+	if (!isDisposed ()) {
+		drawSwtFixedRelief (arg0);
+	}
+	return result;
 }
 
 /**
