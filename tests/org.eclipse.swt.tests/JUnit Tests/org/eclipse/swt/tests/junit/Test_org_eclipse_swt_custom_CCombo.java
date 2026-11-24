@@ -903,4 +903,55 @@ public void test_setAlignment() {
 	assertEquals(SWT.LEFT, ccombo.getAlignment());
 	assertEquals("Center", ccombo.getText());
 }
+
+/**
+ * GTK3 paints and reserves an explicit relief of an unbordered CCombo itself
+ * (its SwtFixed handle has no CSS box): the text and arrow must stay inside
+ * the client area, and neither they nor client painting may cover the frame.
+ */
+@Test
+public void test_nativeBorderReliefGtk3KeepsChildrenInsideTheFrame() {
+	if (!SwtTestUtil.isGTK3()) return;
+	CCombo combo = new CCombo(shell, SWT.NONE);
+	Color fill = new Color(0, 160, 0);
+	try {
+		combo.setBackground(fill);
+		combo.setText("relief");
+		combo.setBounds(10, 10, 160, 34);
+		shell.open();
+		org.eclipse.swt.graphics.Rectangle original = combo.getClientArea();
+		combo.setBorderRelief(SWT.SHADOW_IN);
+		int border = combo.getBorderWidth();
+		assertTrue(border > 0, "visible relief needs native trim");
+		org.eclipse.swt.graphics.Rectangle client = combo.getClientArea();
+		assertEquals(new org.eclipse.swt.graphics.Rectangle(original.x + border, original.y + border,
+				original.width - 2 * border, original.height - 2 * border), client,
+				"the client area lies inside the relief trim");
+		for (Control child : combo.getChildren()) {
+			org.eclipse.swt.graphics.Rectangle bounds = child.getBounds();
+			assertTrue(bounds.x >= client.x && bounds.y >= client.y
+					&& bounds.x + bounds.width <= client.x + client.width
+					&& bounds.y + bounds.height <= client.y + client.height,
+					child + " at " + bounds + " lies outside the client area " + client);
+		}
+		org.eclipse.swt.graphics.ImageData pixels = ViewportDifferential.render(combo);
+		Point size = combo.getSize();
+		int[][] frame = { { 0, size.y / 2 }, { size.x - 1, size.y / 2 }, { size.x / 2, 0 }, { size.x / 2, size.y - 1 } };
+		for (int[] p : frame) {
+			assertNotEquals(fill.getRGB(), pixels.palette.getRGB(pixels.getPixel(p[0], p[1])),
+					"the relief frame must stay visible over the children at " + p[0] + "," + p[1]);
+		}
+		combo.setBorderRelief(SWT.DEFAULT);
+		assertEquals(original, combo.getClientArea(), "reset restores the client area");
+		for (Control child : combo.getChildren()) {
+			org.eclipse.swt.graphics.Rectangle bounds = child.getBounds();
+			assertTrue(bounds.x >= original.x && bounds.y >= original.y
+					&& bounds.x + bounds.width <= original.x + original.width
+					&& bounds.y + bounds.height <= original.y + original.height,
+					child + " at " + bounds + " lies outside the client area " + original);
+		}
+	} finally {
+		combo.dispose();
+	}
+}
 }

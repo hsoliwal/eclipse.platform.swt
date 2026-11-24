@@ -584,11 +584,6 @@ long gtk_draw (long widget, long cairo) {
 	if (backgroundImage == null) {
 		GTK.gtk_render_background(context, cairo, 0, 0, width, height);
 	}
-	if (widget == handle && swtFixedReliefInPixels () > 0) {
-		// GTK3 SwtFixed has no CSS box: paint the relief border GTK computed for it,
-		// in GTK's own order (background, border, then content and children).
-		GTK.gtk_render_frame(context, cairo, 0, 0, width, height);
-	}
     // If fixClipHandle is set: iterate through the children of widget
     // and set their clips to be that of their allocation
     if (widget == fixClipHandle) {
@@ -1017,10 +1012,19 @@ Rectangle getClientAreaInPixels () {
  * gtk_render_frame from that widget's own style context.
  */
 int swtFixedReliefInPixels () {
-	if (GTK.GTK4 || !hasVisibleBorderRelief () || (state & CANVAS) == 0) return 0;
-	if (scrolledHandle != 0 || handle == 0 || clientHandle () != handle || borderHandle () != handle) return 0;
-	if (OS.G_OBJECT_TYPE (handle) != display.gtk_fixed_get_type ()) return 0;
+	if (!hasVisibleBorderRelief () || !isSwtFixedReliefOwner ()) return 0;
 	return nativeBorderReliefInPixels ();
+}
+
+/**
+ * Returns whether an explicit relief on this Composite is drawn and reserved
+ * by SWT, i.e. its border owner is the GTK3 SwtFixed handle that is also its
+ * client handle. Independent of the current relief value.
+ */
+boolean isSwtFixedReliefOwner () {
+	if (GTK.GTK4 || (state & CANVAS) == 0) return false;
+	if (scrolledHandle != 0 || handle == 0 || clientHandle () != handle || borderHandle () != handle) return false;
+	return OS.G_OBJECT_TYPE (handle) == display.gtk_fixed_get_type ();
 }
 
 @Override
@@ -1031,11 +1035,50 @@ int reliefClientTrimInPixels () {
 @Override
 void borderReliefTrimChanged () {
 	super.borderReliefTrimChanged ();
-	// The client area moved with the trim; lay the children out inside it again.
+	if (isSwtFixedReliefOwner ()) {
+		/*
+		 * SWT moved the client area with the trim. As win32 does when a native
+		 * edge changes the client area (WM_SIZE), tell the receiver, so widgets
+		 * that lay out or measure on Resize (CCombo, StyledText, ...) follow it.
+		 */
+		sendEvent (SWT.Resize);
+		if (isDisposed ()) return;
+	}
+	// Lay the children out inside the new client area.
 	if (layout != null) {
 		markLayout (false, false);
 		updateLayout (false);
 	}
+}
+
+/**
+ * Paints the GTK3 SwtFixed relief border last: after the receiver's
+ * background and SWT.Paint (run before the children) and after GTK has drawn
+ * the children, so neither client painting nor a child that ignores the
+ * client area origin can cover or erase it. The frame comes from the
+ * widget's own style context, as GTK renders a CSS border.
+ */
+void drawSwtFixedRelief (long cairo) {
+	if ((state & OBSCURED) != 0 || swtFixedReliefInPixels () <= 0) return;
+	GtkAllocation allocation = new GtkAllocation ();
+	GTK.gtk_widget_get_allocation (handle, allocation);
+	int width = (state & ZERO_WIDTH) != 0 ? 0 : allocation.width;
+	int height = (state & ZERO_HEIGHT) != 0 ? 0 : allocation.height;
+	if (width <= 0 || height <= 0) return;
+	if (drawRegion) {
+		cairoClipRegion (cairo);
+	}
+	GTK.gtk_render_frame (GTK.gtk_widget_get_style_context (handle), cairo, 0, 0, width, height);
+}
+
+@Override
+long windowProc (long handle, long arg0, long user_data) {
+	long result = super.windowProc (handle, arg0, user_data);
+	// DRAW is connected after GTK's own handler, i.e. after the children are drawn.
+	if ((int) user_data == DRAW && handle == this.handle && !isDisposed ()) {
+		drawSwtFixedRelief (arg0);
+	}
+	return result;
 }
 
 /**

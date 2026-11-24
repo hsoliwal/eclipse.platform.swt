@@ -741,5 +741,25 @@ public void test_consistency_DragDetect () {
 	consistencyEvent(5, 5, 15, 15, ConsistencyUtility.MOUSE_DRAG);
 }
 
+/**
+ * GTK counts an explicit relief in the native size of the spin button (and,
+ * on GTK4, of every DateTime owner); computeSize must not add it a second
+ * time. With relief the preferred size may grow by at most the native border
+ * on each side, and reset restores it exactly.
+ */
+@Test
+public void test_nativeBorderReliefGtkComputeSizeCountsTheBorderOnce() {
+	if (!SwtTestUtil.isGTK) return;
+	org.eclipse.swt.graphics.Point plain = datetime.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+	datetime.setBorderRelief(SWT.SHADOW_IN);
+	int border = datetime.getBorderWidth();
+	org.eclipse.swt.graphics.Point relief = datetime.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+	datetime.setBorderRelief(SWT.DEFAULT);
+	assertTrue(border > 0, "visible relief needs native trim");
+	assertTrue(relief.x <= plain.x + 2 * border && relief.y <= plain.y + 2 * border,
+			"relief may add at most its native border once: " + plain + " -> " + relief + ", border " + border);
+	assertEquals(plain, datetime.computeSize(SWT.DEFAULT, SWT.DEFAULT, true), "reset restores the preferred size");
+}
+
 
 }
