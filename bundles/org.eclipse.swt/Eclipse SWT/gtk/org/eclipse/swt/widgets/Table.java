@@ -117,6 +117,8 @@ public class Table extends Composite {
 	int pagePaintAnswers;
 	/* getItemHeight measures the first row through the cell data functions: not a paint of that row */
 	boolean pageMeasuring;
+	/* Widest page-source row of a table without columns measured since the last settle (applied when the queue drains). */
+	int pageWidest;
 	TableColumn [] columns;
 	TableItem currentItem;
 	TableColumn sortColumn;
@@ -1952,6 +1954,14 @@ VirtualPageHost pageSourceHost () {
 		@Override
 		public void pageSourceChildrenLoading (Item parent, boolean loading) {
 		}
+
+		@Override
+		public void pageSourceSettled () {
+			if (pageWidest > 0 && !isDisposed ()) {
+				applyPageScrollWidth (pageWidest);
+				pageWidest = 0;
+			}
+		}
 	};
 }
 
@@ -2009,16 +2019,54 @@ boolean pageRowShown (long path) {
 	return row.y + row.height > 0 && row.y < visible.height;
 }
 
-/* A block arrived: its rows are asked again (facades) and drawn again (rows without a facade). */
+/*
+ * A block arrived: its rows are asked again (facades) and drawn again (rows without a facade). In a table
+ * without columns, column 0 is fixed width and grows only through setScrollWidth, which the rows drawn
+ * without a facade never reach: their loaded widths are measured here, as calculateWidth measures a row,
+ * and the widest is applied once the source's queue drains (pageSourceSettled).
+ */
 void refreshPageRows (int start, int end) {
 	if (virtualItems == null || isDisposed ()) return;
 	end = Math.min (end, itemCount - 1);
 	if (start < 0 || start > end) return;
+	if (columnCount == 0 && currentItem == null && usesVirtualNativeModel ()) {
+		long column = GTK.gtk_tree_view_get_column (handle, 0);
+		long iter = column == 0 ? 0 : OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+		if (iter != 0) {
+			boolean measuring = pageMeasuring;
+			pageMeasuring = true;
+			try {
+				for (int i = start; i <= end; i++) {
+					if (pageSource.rowText (i, 0) == null) continue;
+					if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, i)) break;
+					pageWidest = Math.max (pageWidest, calculateWidth (column, iter));
+				}
+			} finally {
+				pageMeasuring = measuring;
+				OS.g_free (iter);
+			}
+		}
+	}
 	for (int i = start; i <= end; i++) {
 		TableItem item = virtualItems.get (i);
 		if (item != null && item != currentItem && !item.isDisposed ()) item.setCachedState (false);
 	}
 	if (currentItem == null) GTK.gtk_widget_queue_draw (handle);
+}
+
+/* Same arithmetic as setScrollWidth (long, TableItem) for a measured row width; maxWidth also feeds computeSize. */
+void applyPageScrollWidth (int width) {
+	if (columnCount != 0) return;
+	long column = GTK.gtk_tree_view_get_column (handle, 0);
+	if (column == 0) return;
+	if (usesBoundedHorizontalView ()) {
+		if (maxWidth < width) { maxWidth = width; virtualColumnsChanged (); }
+		return;
+	}
+	if (maxWidth < width) maxWidth = width;
+	if (GTK.gtk_tree_view_column_get_fixed_width (column) < width) {
+		GTK.gtk_tree_view_column_set_fixed_width (column, width);
+	}
 }
 
 /*

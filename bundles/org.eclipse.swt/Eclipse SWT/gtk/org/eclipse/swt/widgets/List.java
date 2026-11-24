@@ -825,8 +825,18 @@ public int getItemHeight () {
 public String [] getItems () {
 	checkWidget();
 	int count = GTK.gtk_tree_model_iter_n_children (modelHandle, 0);
-	long [] ptr = new long [1];
 	String [] result = new String [count];
+	if ((style & SWT.VIRTUAL) != 0) {
+		/*
+		 * Each row is read when its turn comes and requested only if it is still unanswered then: one SetData
+		 * may answer several rows. A listener may also shrink or dispose the list meanwhile.
+		 */
+		for (int index=0; index<count; index++) {
+			result [index] = !isDisposed () && index < GTK.gtk_tree_model_iter_n_children (modelHandle, 0) ? getItem (index) : "";
+		}
+		return result;
+	}
+	long [] ptr = new long [1];
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	for (int index=0; index<count; index++) {
 		GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
@@ -840,14 +850,6 @@ public String [] getItems () {
 		}
 	}
 	OS.g_free (iter);
-	if ((style & SWT.VIRTUAL) != 0) {
-		/* rows that were never answered are requested now, in order; a listener may shrink the list meanwhile */
-		for (int index=0; index<count; index++) {
-			if (result [index] == null) {
-				result [index] = !isDisposed () && index < GTK.gtk_tree_model_iter_n_children (modelHandle, 0) ? requestItem (index) : "";
-			}
-		}
-	}
 	return result;
 }
 
@@ -1381,6 +1383,15 @@ public int indexOf (String string, int start) {
     if (string == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
     }
+	if ((style & SWT.VIRTUAL) != 0 && start >= 0) {
+		/* the rows are read from start up to the match, each requested only when it is reached */
+		for (int i=start; !isDisposed () && i<GTK.gtk_tree_model_iter_n_children (modelHandle, 0); i++) {
+			if (getItem (i).equals (string)) {
+				return i;
+			}
+		}
+		return -1;
+	}
 	String [] items = getItems ();
 	for (int i=start; i<items.length; i++) {
         if (items [i].equals(string)) {

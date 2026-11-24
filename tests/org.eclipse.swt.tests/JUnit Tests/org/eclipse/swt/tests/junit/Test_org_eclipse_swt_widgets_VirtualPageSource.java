@@ -552,6 +552,31 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		assertTrue (fetches.get () > 0);
 	}
 
+	@Test
+	public void test_columnlessTableWidensToTheLoadedText () {
+		/* rows drawn from the block store still widen a table without columns, as SetData rows widen it */
+		String wide = "a row of text much wider than the first column of a table without columns would be ".repeat (2);
+		Table lazy = new Table (shell, SWT.VIRTUAL | SWT.BORDER);
+		lazy.setItemCount (10_000);
+		VirtualPageSource source = new VirtualPageSource (64, 16, 1, VirtualPageSource.NONE, request -> {
+			for (int i = request.getStart (), end = i + request.getCount (); i < end; i++) request.setText (i, 0, i == 3 ? wide : cell (i, 0));
+		});
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		assertTrue (source.isLoaded (VirtualPageSource.ROOT, 3), "the first block is loaded");
+		GC gc = new GC (lazy);
+		int textWidth;
+		try {
+			textWidth = gc.textExtent (wide).x;
+		} finally {
+			gc.dispose ();
+		}
+		int preferred = lazy.computeSize (SWT.DEFAULT, SWT.DEFAULT).x;
+		assertTrue (preferred >= textWidth, "the preferred width covers the widest loaded row: " + preferred + " < " + textWidth);
+		assertEquals (wide, lazy.getItem (3).getText ());
+	}
+
 	/* ------------------------------------------------------------------ Tree */
 
 	private static final int ROOTS = 40;

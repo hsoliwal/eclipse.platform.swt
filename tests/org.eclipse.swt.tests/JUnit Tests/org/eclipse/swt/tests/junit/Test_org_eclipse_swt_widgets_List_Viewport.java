@@ -123,6 +123,31 @@ public class Test_org_eclipse_swt_widgets_List_Viewport {
 	}
 
 	@Test
+	public void getItemsAndIndexOfRequestOnlyTheRowsStillUnanswered () {
+		java.util.List<Integer> asked = new ArrayList<> ();
+		List list = new List (shell, SWT.SINGLE | SWT.VIRTUAL | SWT.V_SCROLL);
+		list.setBounds (5, 5, 260, 300);
+		int page = 50;
+		/* one request answers the whole page of the row asked for */
+		list.addListener (SWT.SetData, event -> {
+			asked.add (event.index);
+			int first = event.index / page * page;
+			for (int i = first, end = Math.min (list.getItemCount (), first + page); i < end; i++) list.setItem (i, "item " + i);
+		});
+		list.setItemCount (4 * page);
+		String [] items = list.getItems ();
+		assertEquals ("item 0", items [0]);
+		assertEquals ("item " + (4 * page - 1), items [4 * page - 1]);
+		assertEquals (java.util.List.of (0, page, 2 * page, 3 * page), asked, "getItems sends one SetData per page");
+		list.clearAll ();
+		asked.clear ();
+		assertEquals (2 * page + 20, list.indexOf ("item " + (2 * page + 20), page + 10));
+		assertEquals (java.util.List.of (page + 10, 2 * page), asked, "indexOf reads the rows from start up to the match");
+		assertEquals (-1, list.indexOf ("absent", 4 * page - 1));
+		assertEquals (java.util.List.of (page + 10, 2 * page, 4 * page - 1), asked, "a miss reads only the rows from start on");
+	}
+
+	@Test
 	public void virtualAndPlainListsAnswerTheSameForTheSameItems () {
 		String [] items = new String [500];
 		for (int i = 0; i < items.length; i++) items [i] = (i % 7 == 0 ? "" : "w" + (i % 13)) + (i % 5 == 0 ? "\0tail" : "");
