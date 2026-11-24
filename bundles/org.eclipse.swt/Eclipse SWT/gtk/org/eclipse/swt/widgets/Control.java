@@ -3326,7 +3326,7 @@ public void setBorderRelief (int relief) {
         if (provider == 0) SWT.error(SWT.ERROR_NO_HANDLES);
         try {
             GTK.gtk_style_context_add_provider(context, provider,
-                    GTK.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+                    GTK.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 1);
         } finally {
             // After successful attachment the GtkStyleContext owns the ref.
             OS.g_object_unref(provider);
@@ -3335,7 +3335,11 @@ public void setBorderRelief (int relief) {
     }
     String declaration = NativeBorderRelief.gtkDeclaration(relief);
     if (nativeBorderProvider != 0) {
-        byte[] css = Converter.wcsToMbcs(declaration.isEmpty() ? "" : "* { " + declaration + " }", true);
+        // Match this native frame's CSS node, including GtkFrame and GtkScrolledWindow.
+        // Explicit Control relief outranks constructor-only Group shadow styling.
+        String selector = display.gtk_widget_class_get_css_name(borderWidget);
+        byte[] css = Converter.wcsToMbcs(
+                declaration.isEmpty() ? "" : selector + " { " + declaration + " }", true);
         if (GTK.GTK4) {
             GTK4.gtk_css_provider_load_from_data(nativeBorderProvider, css, -1);
         } else {

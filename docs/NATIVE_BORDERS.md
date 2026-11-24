@@ -98,3 +98,40 @@ Java compilation does not establish native platform acceptance, and neither
 do portable transport tests. Each backend still needs its own native build
 plus runtime checks of rendering, themes, DPI and printing. The Win32
 custom-frame and printing paths above have no dedicated pixel tests yet.
+
+## GTK explicit relief CSS precedence (review candidate, 2026-11-24)
+
+GTK4 `Group(SWT.SHADOW_IN)` installs a native `frame` CSS declaration at
+`GTK_STYLE_PROVIDER_PRIORITY_APPLICATION` (600). The existing explicit
+`Control.setBorderRelief` provider originally used the wildcard `*` at
+the same priority. Native GTK3 experiments show the observed edge can then
+depend on provider insertion order; that is not a deterministic explicit
+setter override.
+
+The proposed correction stays in the existing GTK `Control` owner:
+
+- Add the existing `nativeBorderProvider` to the border-owning widget's
+  `GtkStyleContext` at `GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 1`,
+  below user CSS priority. Do not add another provider or widget.
+- Match that existing widget's CSS class name through the already-bound
+  `display.gtk_widget_class_get_css_name(borderWidget)`, preserving
+  `Scrollable.borderHandle()` and the direct `Text` / `Spinner` owners.
+- Retain `NativeBorderRelief.gtkDeclaration`, the independent color
+  provider, `SWT.DEFAULT` clearing, `SHADOW_NONE`, disposal, native
+  widget identity, bounds, public APIs and earlier GTK3/GTK4 mappings.
+
+The paired Synexia source-sealed snapshot is PR #19063, CI admission
+PR #19105, and GTK3 component qualification PR #19155. The
+exact canonical receiver files are `Control.java`, the existing
+GTK `AllGTKTests.java` suite selector and the new original-owner
+`Test_GtkNativeBorderRelief.java`. This draft applies only those three
+postimages, with no JNI change or extra rendering layer.
+
+**Acceptance HOLD:** Native GTK3 C-library testing passed 345 component
+assertions with real GtkFrame/GtkScrolledWindow across three installed
+themes, but full SWT Java21/25 compilation, OpenRewrite executed LST
+fixed point, real SWT GTK3/GTK4 JUnit, X11/Wayland screen pixels, color
+and layout parity, provider refcount/lifetime, JNI and Maya regression
+have not been established for this receiver revision. A merge requires
+actual source-bound CI and platform execution, not this document or
+a successful source-hash comparison.
