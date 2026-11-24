@@ -731,7 +731,9 @@ final class StyledTextApiOps {
 	/**
 	 * SHA-256 prefix of the control's own rendering with the caret hidden: the harness render
 	 * ({@link ViewportDifferential#render}, WM_PRINT on win32), which is synchronous; Control.print
-	 * captures the composited surface on win32 and was not stable between captures.
+	 * captures the composited surface on win32 and was not stable between captures. GTK overlay
+	 * scroll bars, which are drawn inside the client area and fade on a timer after each scroll, are
+	 * left out of the capture ({@link ViewportDifferential#renderWithoutOverlayScrollBars}).
 	 */
 	static String pixels(StyledText t) {
 		Caret caret = t.getCaret();
@@ -740,7 +742,7 @@ final class StyledTextApiOps {
 			caret.setVisible(false);
 		}
 		try {
-			ImageData data = ViewportDifferential.render(t);
+			ImageData data = ViewportDifferential.renderWithoutOverlayScrollBars(t);
 			// client area only: borders and scrollbars carry hover/focus theme state of the desktop
 			Rectangle trim = t.computeTrim(0, 0, 0, 0);
 			Rectangle client = t.getClientArea();
