@@ -70,11 +70,12 @@ static void testNativeClientGeometry(void) {
 	check(parent.clientView.clipsToBounds, "native child pixels are clipped to their parent's client area");
 	SWTUIKitView *child = [[SWTUIKitView alloc] initWithFrame:CGRectMake(3, 4, 20, 10)];
 	child.style = SWT(BORDER);
+	check(child.borderRelief == SWT(DEFAULT), "new native view keeps the original SWT.BORDER relief");
 	[parent.clientView addSubview:child];
 	[child layoutSubviews];
 	check(CGPointEqualToPoint([child convertPoint:CGPointMake(1, 1) toView:parent], CGPointMake(5, 6)),
 		"nested native client origin includes parent and child borders");
-	check(CGPointEqualToPoint(swtClientPoint(CGPointMake(7, 9), child.style), CGPointMake(6, 8)),
+	check(CGPointEqualToPoint(swtClientPoint(CGPointMake(7, 9), child.style, child.borderRelief), CGPointMake(6, 8)),
 		"pointer coordinates use the actual native client origin");
 	SWTUIKitGraphics *gc = graphics();
 	CGImageRef snapshot = CGBitmapContextCreateImage(gc.image.context);
@@ -88,7 +89,7 @@ static void testNativeClientGeometry(void) {
 	parent.snapshot = snapshot;
 	check(parent.snapshot != NULL, "positive client accepts a new native presentation after an empty extent");
 	CGImageRelease(snapshot);
-	swtDrawBorder(gc.image.context, CGRectMake(8, 8, 10, 10), SWT(BORDER));
+	swtDrawBorder(gc.image.context, CGRectMake(8, 8, 10, 10), SWT(BORDER), SWT(DEFAULT));
 	check(area(gc) == 36, "native border is four non-overlapping one-point bands");
 	const uint32_t *data = pixels(gc);
 	for (int i = 0; i < TEST_SIZE * TEST_SIZE; i++)
