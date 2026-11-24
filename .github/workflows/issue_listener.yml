@@ -1,18 +1,27 @@
 name: Issue Listener
 
-# Donor workflow from the 2026-10-31 superset merge ff0ee9c5. The donor's own
-# copy (SampadSikder/eclipse.platform.swt, blob fa17bdf6) indents everything
-# after `name:` by six spaces, so `on:` and `jobs:` could not parse and every
-# push here produced a "workflow file issue" failure run. The job below is
-# only dedented; its steps are unchanged.
+# Donor workflow. It entered master in the 2026-10-31 superset merge 8b86e2b2,
+# which merged SampadSikder/eclipse.platform.swt donor head 7b6b1123 ("Adding
+# issue listener workflow"); PR #307 brought that merge into master. The
+# donor's copy (blob fa17bdf6) indents everything after `name:` by six spaces,
+# so `on:` and `jobs:` could not parse and every push here produced a
+# "workflow file issue" failure run. The job below is only dedented; its steps
+# are unchanged.
 #
-# The donor trigger was `on: issues: types: [opened]`. It posted each new
+# The donor trigger was `on: issues: types: [opened]`. It is not restored,
+# because both targets of the job belong to the donor: it posts each new
 # issue's URL, title and body to the donor's ngrok research backend, then
-# commented on the donor's fork. Neither target belongs to this repository:
-# GITHUB_TOKEN cannot comment on another repository, and the hard-coded donor
-# commit is not in master's history. So issues are not forwarded to a third
-# party automatically: the workflow runs only when dispatched by hand, until
-# the owner retargets or removes it.
+# comments on SampadSikder/eclipse.platform.swt, which this repository's
+# GITHUB_TOKEN cannot write to. Issues are also disabled on this repository
+# today, so that trigger would not fire. The workflow runs only when
+# dispatched by hand, until the owner retargets or removes it.
+#
+# The hard-coded donor commit b1256577 (COMMIT_ID) is in master's history: it
+# is the parent of donor head 7b6b1123. `git show` on it fails only because
+# actions/checkout@v4 fetches at depth 1, so a dispatched run stops at that
+# line, before either curl call. Restoring the trigger would also need
+# `fetch-depth: 0` on the checkout and "$RESPONSE" quoted in the second curl:
+# unquoted, the backend's response is word-split into extra curl arguments.
 on:
   workflow_dispatch:
 
