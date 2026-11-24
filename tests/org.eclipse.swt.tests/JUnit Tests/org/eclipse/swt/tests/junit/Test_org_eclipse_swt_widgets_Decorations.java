@@ -29,6 +29,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageGcDrawer;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Decorations;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Widget;
@@ -195,6 +196,16 @@ protected void setWidget(Widget w) {
     }
 	decorations = (Decorations)w;
 	super.setWidget(w);
+}
+
+/*
+ * The scroll damage tests inherited from Test_org_eclipse_swt_widgets_Canvas scroll a new Canvas of a given style. A
+ * Canvas cannot replace the Decorations under test (in Test_org_eclipse_swt_widgets_Shell, the shell that is the parent
+ * of every control), so they scroll a Canvas child of the shell, as in the Canvas tests; the check disposes it.
+ */
+@Override
+protected Canvas newScrollCanvas(int style) {
+	return new Canvas(shell, style);
 }
 
 // this method must be private or protected so the auto-gen tool keeps it
