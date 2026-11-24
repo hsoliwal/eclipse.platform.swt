@@ -47,7 +47,8 @@ public class Test_org_eclipse_swt_widgets_List_HiddenBar {
 
 	@AfterEach
 	public void tearDown () {
-		shell.dispose ();
+		/* null when the platform assumption of setUp did not hold */
+		if (shell != null) shell.dispose ();
 	}
 
 	private String bar () {

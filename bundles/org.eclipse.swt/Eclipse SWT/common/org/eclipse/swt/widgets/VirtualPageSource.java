@@ -1022,6 +1022,14 @@ public final class VirtualPageSource {
 		display.asyncExec (frameRunnable);
 	}
 
+	/**
+	 * The host's top row moved without a paint to tell (a platform that scrolls on its next frame,
+	 * such as GTK's setTopIndex): the next frame plans the window. Caller is the UI thread.
+	 */
+	void windowChanged () {
+		if (host != null && !host.isDisposed ()) scheduleFrame ();
+	}
+
 	/** Answers a request from the swap store when the block was swapped out; any thread. */
 	private boolean restore (Request request) {
 		if (spill == null) return false;

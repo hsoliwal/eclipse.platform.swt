@@ -111,6 +111,10 @@ public class Table extends Composite {
 	TableItem [] items;
 	VirtualItemStorage<TableItem> virtualItems;
 	VirtualViewportPlanner virtualViewport;
+	/* The VirtualPageSource feeding this VIRTUAL table through its host hooks (pageSourceHost), or null */
+	VirtualPageSource pageSource;
+	/** Facade-free answers given in paint callbacks (proof counter). */
+	int pagePaintAnswers;
 	TableColumn [] columns;
 	TableItem currentItem;
 	TableColumn sortColumn;
@@ -132,6 +136,10 @@ public class Table extends Composite {
 	boolean defaultSelectionPending;
 
 	private long headerCSSProvider;
+
+	static {
+		VirtualPageSource.tableHost = Table::pageSourceHost;
+	}
 
 	static final int CHECKED_COLUMN = 0;
 	static final int GRAYED_COLUMN = 1;
@@ -215,6 +223,11 @@ TableItem _getItem (int index) {
     }
 	item = new TableItem (this, SWT.NONE, index, false);
 	virtualItems.put (index, item);
+	/*
+	 * With a page source, paint creates no facades (answerPageCell), so a facade created here is for a
+	 * caller's API: fill it now from the source, as the classic paint-time SetData would have.
+	 */
+	if (pageSource != null && !pageSource.paintRequest && currentItem == null) checkData (item);
 	return item;
 }
 
@@ -1655,9 +1668,14 @@ static int checkStyle (int style) {
 @Override
 long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
 	virtualCallbackDepth++;
+	/* a SetData sent while a row is drawn is a paint request: the page source answers it without waiting */
+	VirtualPageSource source = pageSource;
+	boolean paintRequest = source != null && source.paintRequest;
+	if (source != null) source.paintRequest = true;
 	try {
 		return virtualCellDataProc (tree_column, cell, tree_model, iter, data);
 	} finally {
+		if (source != null) source.paintRequest = paintRequest;
 		virtualCallbackDepth--;
 		if (usesBoundedVirtualView () && virtualViewport != null && (virtualViewChanged
 				|| virtualViewport.paintStart () != virtualViewStart
@@ -1684,6 +1702,7 @@ long virtualCellDataProc (long tree_column, long cell, long tree_model, long ite
 	if (usesBoundedVirtualView () && tree_model == virtualViewModel) index [0] += virtualViewStart;
 	GTK.gtk_tree_path_free (path);
 	if (index [0] < 0 || index [0] >= itemCount) return 0;
+	if (pageSource != null && answerPageCell (tree_column, cell, index [0])) return 0;
 	TableItem item = _getItem (index[0]);
     if (item == null || item.isDisposed()) {
         return 0;
@@ -1866,7 +1885,9 @@ boolean checkData (TableItem item) {
         return true;
     }
 	if ((style & SWT.VIRTUAL) != 0) {
-		item.pinVirtualFacade ();
+		/* A page source keeps no reference to the facade, so it stays transient. */
+		VirtualPageSource source = pageSource;
+		if (source == null) item.pinVirtualFacade ();
 		item.setCachedState (true);
 		Event event = new Event ();
 		event.item = item;
@@ -1896,9 +1917,108 @@ boolean checkData (TableItem item) {
         if (item.isDisposed()) {
             return false;
         }
+		/* A row answered with a placeholder is asked again until its block is loaded. */
+		if (source != null && source == pageSource && source.answeredPlaceholder) item.setCachedState (false);
 	}
 	return true;
 }
+
+/*
+ * VirtualPageSource hooks of a VIRTUAL table (the SetData path): paint answers rows without a facade
+ * from the source's block store, facades stay transient and are released outside the source's window,
+ * and a block that arrives re-asks its rows.
+ */
+VirtualPageHost pageSourceHost () {
+	return new VirtualPageHost () {
+		@Override
+		public void pageSourceAttached (VirtualPageSource source) {
+			pageSource = source;
+		}
+
+		@Override
+		public void pageSourceRefresh (Item parent, int start, int end) {
+			refreshPageRows (start, end);
+		}
+
+		@Override
+		public int pageSourceRelease (int keepStart, int keepEnd) {
+			return releasePageFacades (keepStart, keepEnd);
+		}
+
+		@Override
+		public void pageSourceChildrenLoading (Item parent, boolean loading) {
+		}
+	};
+}
+
+/** Paint callbacks that would hand an item to application code need a facade. */
+boolean pagePaintNeedsFacade () {
+	return hooks (SWT.MeasureItem) || hooks (SWT.EraseItem) || hooks (SWT.PaintItem);
+}
+
+/*
+ * Answers a cell of a row without a facade from the page source (text) with the default attributes
+ * of a row, as the facade would: unchecked (a checked or grayed row keeps its facade, see
+ * releasePageFacades), no image, default colours and font. Returns false when a facade exists or is
+ * needed, so the classic path runs.
+ */
+boolean answerPageCell (long tree_column, long cell, int index) {
+	if (!usesVirtualNativeModel () || virtualItems == null || virtualItems.get (index) != null || pagePaintNeedsFacade ()) return false;
+	pagePaintAnswers++;
+	if (GTK.GTK_IS_CELL_RENDERER_TOGGLE (cell)) {
+		OS.g_object_set (cell, OS.active, false, 0);
+		OS.g_object_set (cell, OS.inconsistent, false, 0);
+		return true;
+	}
+	OS.g_object_set (cell, OS.cell_background_rgba, (GdkRGBA) null, 0);
+	if (GTK.GTK_IS_CELL_RENDERER_PIXBUF (cell)) {
+		OS.g_object_set (cell, OS.pixbuf, 0L, 0);
+		return true;
+	}
+	if (GTK.GTK_IS_CELL_RENDERER_TEXT (cell)) {
+		GTK.gtk_cell_renderer_set_fixed_size (cell, -1, -1);
+		int column = 0;
+		for (int i = 0; i < columnCount; i++) {
+			if (columns [i] != null && columns [i].handle == tree_column) {
+				column = i;
+				break;
+			}
+		}
+		String string = pageSource.paintText (index, column);
+		OS.g_object_set (cell, OS.text, Converter.wcsToMbcs (string == null ? pageSource.placeholder () : string, true), 0);
+		OS.g_object_set (cell, OS.foreground_rgba, (GdkRGBA) null, 0);
+		OS.g_object_set (cell, OS.font_desc, 0L, 0);
+	}
+	return true;
+}
+
+/* A block arrived: its rows are asked again (facades) and drawn again (rows without a facade). */
+void refreshPageRows (int start, int end) {
+	if (virtualItems == null || isDisposed ()) return;
+	end = Math.min (end, itemCount - 1);
+	if (start < 0 || start > end) return;
+	for (int i = start; i <= end; i++) {
+		TableItem item = virtualItems.get (i);
+		if (item != null && item != currentItem && !item.isDisposed ()) item.setCachedState (false);
+	}
+	if (currentItem == null) GTK.gtk_widget_queue_draw (handle);
+}
+
+/*
+ * Releases the transient facades outside [keepStart, keepEnd). A facade is kept when its state is
+ * not reproducible from the source: pinned by the API, dirty, or checked or grayed (this platform
+ * keeps those bits in the facade's storage entry).
+ */
+int releasePageFacades (int keepStart, int keepEnd) {
+	if (virtualItems == null || pageSource == null || currentItem != null || isDisposed ()) return 0;
+	long keep = VirtualItemState.PINNED | VirtualItemState.DIRTY | VirtualItemState.CHECKED | VirtualItemState.GRAYED;
+	return virtualItems.releaseOutside (keepStart, keepEnd, keep, RELEASE_FACADE);
+}
+
+/* Shared, allocation-free release action for transient facades. */
+static final java.util.function.Consumer<TableItem> RELEASE_FACADE = item -> {
+	if (!item.isDisposed ()) item.release (false);
+};
 
 @Override
 protected void checkSubclass () {
@@ -6813,6 +6933,7 @@ public void setTopIndex (int index) {
 	checkWidget();
 	if (usesBoundedVirtualView ()) {
 		if (index >= 0 && index < itemCount) revealVirtualIndex (index, true);
+		if (pageSource != null) pageSource.windowChanged ();
 		return;
 	}
     if (!(0 <= index && index < itemCount)) {
@@ -6843,6 +6964,8 @@ public void setTopIndex (int index) {
     if (iter != 0) {
         OS.g_free(iter);
     }
+	/* GTK scrolls on its next frame: the page source plans the new window now, not at that paint */
+	if (pageSource != null) pageSource.windowChanged ();
 }
 
 /**

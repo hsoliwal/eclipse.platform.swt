@@ -706,31 +706,35 @@ String requestItem (int index) {
 
 /*
  * VIRTUAL: the cell data function of the text renderer. A row whose text is not set yet is requested when it
- * is on screen; GtkTreeView also measures rows that are not shown, and those stay unrequested.
+ * is on screen. GtkTreeView also measures rows that are not shown: those stay unrequested and are measured as
+ * the empty string, as an unset row of a plain list.
  */
 @Override
 long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
-	if ((style & SWT.VIRTUAL) == 0 || inSetData || tree_model != modelHandle) return 0;
+	if ((style & SWT.VIRTUAL) == 0 || tree_model != modelHandle) return 0;
 	long [] ptr = new long [1];
 	GTK.gtk_tree_model_get (tree_model, iter, TEXT_COLUMN, ptr, -1);
 	if (ptr [0] != 0) {
 		OS.g_free (ptr [0]);
 		return 0;
 	}
-	if (!GTK.gtk_widget_get_mapped (handle)) return 0;
-	long path = GTK.gtk_tree_model_get_path (tree_model, iter);
-	if (path == 0) return 0;
-	int [] index = {-1};
-	long indices = GTK.gtk_tree_path_get_indices (path);
-	if (indices != 0) C.memmove (index, indices, 4);
-	GdkRectangle row = new GdkRectangle (), visible = new GdkRectangle ();
-	GTK.gtk_tree_view_get_background_area (handle, path, 0, row);
-	GTK.gtk_tree_path_free (path);
-	GTK.gtk_tree_view_get_visible_rect (handle, visible);
-	/* the background area is in bin window coordinates, whose origin is the top of the visible rows */
-	if (index [0] < 0 || row.y + row.height <= 0 || row.y >= visible.height) return 0;
-	String string = requestItem (index [0]);
-	if (isDisposed ()) return 0;
+	String string = "";
+	if (!inSetData && GTK.gtk_widget_get_mapped (handle)) {
+		long path = GTK.gtk_tree_model_get_path (tree_model, iter);
+		if (path == 0) return 0;
+		int [] index = {-1};
+		long indices = GTK.gtk_tree_path_get_indices (path);
+		if (indices != 0) C.memmove (index, indices, 4);
+		GdkRectangle row = new GdkRectangle (), visible = new GdkRectangle ();
+		GTK.gtk_tree_view_get_background_area (handle, path, 0, row);
+		GTK.gtk_tree_path_free (path);
+		GTK.gtk_tree_view_get_visible_rect (handle, visible);
+		/* the background area is in bin window coordinates, whose origin is the top of the visible rows */
+		if (index [0] >= 0 && row.y + row.height > 0 && row.y < visible.height) {
+			string = requestItem (index [0]);
+			if (isDisposed ()) return 0;
+		}
+	}
 	OS.g_object_set (cell, OS.text, Converter.wcsToMbcs (string, true), 0);
 	return 0;
 }

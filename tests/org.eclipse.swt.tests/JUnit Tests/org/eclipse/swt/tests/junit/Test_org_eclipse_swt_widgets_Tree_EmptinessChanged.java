@@ -53,7 +53,8 @@ public class Test_org_eclipse_swt_widgets_Tree_EmptinessChanged {
 
 	@AfterEach
 	public void tearDown () {
-		shell.dispose ();
+		/* null when the platform assumption of setUp did not hold */
+		if (shell != null) shell.dispose ();
 	}
 
 	private void step (String expected, Runnable action, String label) {
