@@ -38,6 +38,11 @@ public class Test_M3SortFilterWidgets {
 	Shell shell;
 	int [] numbers;
 	String [] names;
+	/*
+	 * the column image of test_headerClicksSortWithShiftAndShowPriorities, disposed by tearDown too: an assertion that
+	 * fails before the test's own dispose must not leave it to the suite's resource leak check
+	 */
+	Image own;
 
 	@BeforeEach
 	public void setUp () {
@@ -57,6 +62,7 @@ public class Test_M3SortFilterWidgets {
 	@AfterEach
 	public void tearDown () {
 		shell.dispose ();
+		if (own != null) own.dispose ();
 		drain ();
 	}
 
@@ -124,7 +130,7 @@ public class Test_M3SortFilterWidgets {
 	@Test
 	public void test_headerClicksSortWithShiftAndShowPriorities () {
 		Table table = table (SWT.NONE);
-		Image own = new Image (display, 8, 8);
+		own = new Image (display, 8, 8);
 		table.getColumn (2).setImage (own);
 		ColumnSort sort = sort (null);
 		bind (table, sort);

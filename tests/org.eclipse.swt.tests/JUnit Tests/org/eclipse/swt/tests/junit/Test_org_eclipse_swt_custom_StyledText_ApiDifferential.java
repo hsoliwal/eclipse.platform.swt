@@ -52,6 +52,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.function.Executable;
 
 /**
  * Differential API proof: every StyledText API operation of the shared catalogue
@@ -132,25 +133,48 @@ public class Test_org_eclipse_swt_custom_StyledText_ApiDifferential {
 		}
 	}
 
+	/**
+	 * The steps run in one fixed order (listener ops, the catalogue, remove-listener ops) on the two
+	 * shared widgets, so each widget's state is the result of every earlier step. A failure message names
+	 * its step as <code>step n/total id</code>: steps 1 to n of that order are the exact operation sequence.
+	 */
 	@TestFactory
 	Stream<DynamicTest> differential() {
-		List<DynamicTest> tests = new ArrayList<>();
+		List<String> ids = new ArrayList<>();
+		List<Executable> bodies = new ArrayList<>();
 		for (ListenerOp l : listenerOps()) {
-			tests.add(DynamicTest.dynamicTest("diff:" + l.id, () -> both(l.id, l.action)));
+			add(ids, bodies, l.id, () -> both(l.id, l.action));
 		}
 		for (StyledTextApiOps.Op op : StyledTextApiOps.catalogue()) {
 			if (op.id().equals("setContent-custom")) {
-				tests.add(DynamicTest.dynamicTest("diff:accessibility", () -> compare("accessibility", StyledTextApiOps::accessibility)));
-				tests.add(DynamicTest.dynamicTest("diff:dropTargetEffect", () -> compare("dropTargetEffect", StyledTextApiOps::dropEffect)));
-				tests.add(DynamicTest.dynamicTest("diff:rtf-html-writers", () -> compare("rtf-html-writers", Test_org_eclipse_swt_custom_StyledText_ApiDifferential::writers)));
-				tests.add(DynamicTest.dynamicTest("diff:printOptions", () -> compare("printOptions", Test_org_eclipse_swt_custom_StyledText_ApiDifferential::printing)));
+				add(ids, bodies, "accessibility", () -> compare(StyledTextApiOps::accessibility));
+				add(ids, bodies, "dropTargetEffect", () -> compare(StyledTextApiOps::dropEffect));
+				add(ids, bodies, "rtf-html-writers", () -> compare(Test_org_eclipse_swt_custom_StyledText_ApiDifferential::writers));
+				add(ids, bodies, "printOptions", () -> compare(Test_org_eclipse_swt_custom_StyledText_ApiDifferential::printing));
 			}
-			tests.add(DynamicTest.dynamicTest("diff:" + op.id(), () -> both(op.id(), op.action())));
+			add(ids, bodies, op.id(), () -> both(op.id(), op.action()));
 		}
 		for (ListenerOp l : removeListenerOps()) {
-			tests.add(DynamicTest.dynamicTest("diff:" + l.id, () -> both(l.id, l.action)));
+			add(ids, bodies, l.id, () -> both(l.id, l.action));
+		}
+		List<DynamicTest> tests = new ArrayList<>();
+		for (int i = 0; i < ids.size(); i++) {
+			String label = "step " + (i + 1) + "/" + ids.size() + " " + ids.get(i);
+			Executable body = bodies.get(i);
+			tests.add(DynamicTest.dynamicTest("diff:" + ids.get(i), () -> {
+				step = label;
+				body.execute();
+			}));
 		}
 		return tests.stream();
+	}
+
+	/** Label of the running step: its position in the fixed order of {@link #differential()} and its id. */
+	private static String step = "";
+
+	private static void add(List<String> ids, List<Executable> bodies, String id, Executable body) {
+		ids.add(id);
+		bodies.add(body);
 	}
 
 	private static void both(String id, Consumer<StyledText> action) {
@@ -158,12 +182,12 @@ public class Test_org_eclipse_swt_custom_StyledText_ApiDifferential {
 		gapLog.clear();
 		RuntimeException pagedError = run(paged, action);
 		RuntimeException gapError = run(gap, action);
-		assertEquals(gapError == null ? null : gapError.getClass(), pagedError == null ? null : pagedError.getClass(), id + " exception");
+		assertEquals(gapError == null ? null : gapError.getClass(), pagedError == null ? null : pagedError.getClass(), step + " exception");
 		if (!id.startsWith("autoscroll-")) {
 			// autoscroll ticks are timer-driven, so their event count is timing-dependent; state is restored and compared
-			assertEquals(String.join("\n", gapLog), String.join("\n", pagedLog), id + " events");
+			assertEquals(String.join("\n", gapLog), String.join("\n", pagedLog), step + " events");
 		}
-		assertEquals(StyledTextApiOps.snapshot(gap, true, true), StyledTextApiOps.snapshot(paged, true, true), id + " state");
+		assertEquals(StyledTextApiOps.snapshot(gap, true, true), StyledTextApiOps.snapshot(paged, true, true), step + " state");
 	}
 
 	private static RuntimeException run(StyledText t, Consumer<StyledText> action) {
@@ -181,14 +205,14 @@ public class Test_org_eclipse_swt_custom_StyledText_ApiDifferential {
 		String apply(StyledText t);
 	}
 
-	private static void compare(String id, Probe probe) {
+	private static void compare(Probe probe) {
 		String a = probe.apply(gap);
 		flush(gap);
 		String b = probe.apply(paged);
 		flush(paged);
-		assertNotNull(a, id);
-		assertEquals(a, b, id);
-		assertEquals(StyledTextApiOps.snapshot(gap, true, true), StyledTextApiOps.snapshot(paged, true, true), id + " state");
+		assertNotNull(a, step);
+		assertEquals(a, b, step);
+		assertEquals(StyledTextApiOps.snapshot(gap, true, true), StyledTextApiOps.snapshot(paged, true, true), step + " state");
 	}
 
 	/** RTF and HTML clipboard writers (StyledTextWriterBase subclasses) over a styled selection. */

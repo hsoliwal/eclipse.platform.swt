@@ -21,6 +21,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Caret;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.jupiter.api.AfterEach;
@@ -99,6 +100,12 @@ public class Test_org_eclipse_swt_custom_StyledText_SameTabs {
 		assertTrue(text.getLineCount() > 1000);
 	}
 
+	/**
+	 * The text's pixels as shown on the screen, without the caret cell. The platform draws the caret into the
+	 * window on its own schedule, not as part of the text layout: GTK3 draws it in the paint that follows a caret
+	 * visibility change (setTabs places the caret again) and not in a later full repaint, so a screen capture
+	 * may hold it or not whatever the tab width is.
+	 */
 	private int[] pixels() {
 		Rectangle size = text.getBounds();
 		Image shot = new Image(display, size.width, size.height);
@@ -110,6 +117,17 @@ public class Test_org_eclipse_swt_custom_StyledText_SameTabs {
 		int[] all = new int[size.width * size.height];
 		for (int y = 0; y < size.height; y++) {
 			data.getPixels(0, y, size.width, all, y * size.width);
+		}
+		Caret caret = text.getCaret();
+		if (caret != null) {
+			Rectangle cell = caret.getBounds();
+			int right = Math.min(size.width, cell.x + Math.max(1, cell.width));
+			int bottom = Math.min(size.height, cell.y + Math.max(1, cell.height));
+			for (int y = Math.max(0, cell.y); y < bottom; y++) {
+				for (int x = Math.max(0, cell.x); x < right; x++) {
+					all[y * size.width + x] = 0;
+				}
+			}
 		}
 		return all;
 	}

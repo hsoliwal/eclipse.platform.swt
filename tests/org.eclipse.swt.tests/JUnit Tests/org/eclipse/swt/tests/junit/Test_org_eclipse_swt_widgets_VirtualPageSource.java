@@ -508,6 +508,7 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 
 	@Test
 	public void test_treeBulkChildCountIsBatchedWithPreciseDamageOnly () throws Exception {
+		Assumptions.assumeTrue (SwtTestUtil.isWindows, "expands the nodes through the win32 tree view (TVM_EXPAND) and reads the win32 Tree's page batches: win32 only");
 		Tree lazy = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
 		VirtualPageSource source = treeSource (false, null, null);
 		source.attach (lazy);
@@ -644,6 +645,7 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		long facadesBefore = Arrays.stream (itemsBefore).filter (Objects::nonNull).count ();
 		long hItem = (long) field (node, "handle");
 		long hTree = (long) field (lazy, "handle");
+		Assumptions.assumeTrue (SwtTestUtil.isWindows, "expands the node through the win32 tree view (TVM_EXPAND) and reads its placeholder child as a win32 TVITEM: win32 only");
 		Class<?> os = Class.forName ("org.eclipse.swt.internal.win32.OS");
 		Method send = os.getMethod ("SendMessage", long.class, int.class, long.class, long.class);
 		int tvmExpand = os.getField ("TVM_EXPAND").getInt (null);
