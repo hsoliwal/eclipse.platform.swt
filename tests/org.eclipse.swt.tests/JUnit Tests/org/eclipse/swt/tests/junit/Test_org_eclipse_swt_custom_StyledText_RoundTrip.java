@@ -113,6 +113,7 @@ public class Test_org_eclipse_swt_custom_StyledText_RoundTrip {
 		flush(t);
 		t.setTopIndex(0);
 		flush(t);
+		StyledTextApiOps.diagTag = "RoundTrip-before-wrap" + wrap;
 		String before = StyledTextApiOps.snapshot(t, true, true) + " caretLoc=" + t.getCaret().getLocation();
 
 		long builds = counter(t, "layoutBuilds");
@@ -120,6 +121,7 @@ public class Test_org_eclipse_swt_custom_StyledText_RoundTrip {
 		flush(t);
 		t.setTopIndex(0);
 		flush(t);
+		StyledTextApiOps.diagTag = "RoundTrip-after-wrap" + wrap;
 		String after = StyledTextApiOps.snapshot(t, true, true) + " caretLoc=" + t.getCaret().getLocation();
 		assertTrue(counter(t, "layoutBuilds") - builds > 20, "the layouts of the top lines were rebuilt after eviction");
 		assertEquals(before, after, "API values and pixels reproduce after eviction");

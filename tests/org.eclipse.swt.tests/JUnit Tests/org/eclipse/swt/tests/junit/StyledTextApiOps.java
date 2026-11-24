@@ -755,6 +755,7 @@ final class StyledTextApiOps {
 				}
 			}
 			String hash = HexFormat.of().formatHex(sha.digest(), 0, 8);
+			diagDump(t, data, hash, "print");
 			String dump = System.getProperty("swt.styledtext.dumpPixels");
 			if (dump != null) {
 				org.eclipse.swt.graphics.ImageLoader loader = new org.eclipse.swt.graphics.ImageLoader();
@@ -768,6 +769,38 @@ final class StyledTextApiOps {
 			if (caret != null) {
 				caret.setVisible(visible);
 			}
+		}
+	}
+
+	/** DIAGNOSTIC ONLY (not for merge): tag of the operation whose state is being captured. */
+	static String diagTag = "";
+	private static int diagSeq;
+
+	/** DIAGNOSTIC ONLY (not for merge): saves a capture and its scroll bar/geometry facts under target/surefire-reports/st-pixels. */
+	static void diagDump(org.eclipse.swt.widgets.Control t, ImageData data, String hash, String kind) {
+		try {
+			java.io.File dir = new java.io.File(System.getProperty("basedir", System.getProperty("user.dir")), "target/surefire-reports/st-pixels");
+			dir.mkdirs();
+			String content = t instanceof StyledText st ? st.getContent().getClass().getSimpleName() : t.getClass().getSimpleName();
+			String name = String.format("%04d-%s-%s-%s-%s", ++diagSeq, kind, diagTag.replaceAll("[^A-Za-z0-9_.-]", "_"), content, hash);
+			org.eclipse.swt.graphics.ImageLoader loader = new org.eclipse.swt.graphics.ImageLoader();
+			loader.data = new ImageData[] { data };
+			loader.save(new java.io.File(dir, name + ".png").getPath(), SWT.IMAGE_PNG);
+			StringBuilder line = new StringBuilder(name).append('\t').append(System.nanoTime() / 1000000);
+			if (t instanceof org.eclipse.swt.widgets.Scrollable s) {
+				line.append("\tmode=").append(s.getScrollbarsMode()).append("\tclient=").append(s.getClientArea())
+						.append("\ttrim=").append(s.computeTrim(0, 0, 0, 0)).append("\tsize=").append(s.getSize());
+				for (org.eclipse.swt.widgets.ScrollBar b : new org.eclipse.swt.widgets.ScrollBar[] { s.getVerticalBar(), s.getHorizontalBar() }) {
+					line.append("\tbar=").append(b == null ? "-" : b.getVisible() + "/" + b.getSelection() + "/" + b.getMaximum() + "/" + b.getThumb() + " track=" + b.getThumbTrackBounds() + " thumb=" + b.getThumbBounds());
+				}
+			}
+			if (t instanceof StyledText st) {
+				line.append("\ttop=").append(st.getTopPixel()).append("\tfocus=").append(st.isFocusControl()).append("\tactive=").append(st.getDisplay().getActiveShell() == st.getShell());
+			}
+			java.nio.file.Files.writeString(new java.io.File(dir, "meta.tsv").toPath(), line.append('\n').toString(), java.nio.charset.StandardCharsets.UTF_8,
+					java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+		} catch (Exception | Error e) {
+			e.printStackTrace();
 		}
 	}
 

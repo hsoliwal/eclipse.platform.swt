@@ -154,6 +154,7 @@ public class Test_org_eclipse_swt_custom_StyledText_ApiDifferential {
 	}
 
 	private static void both(String id, Consumer<StyledText> action) {
+		StyledTextApiOps.diagTag = id;
 		pagedLog.clear();
 		gapLog.clear();
 		RuntimeException pagedError = run(paged, action);
@@ -182,6 +183,7 @@ public class Test_org_eclipse_swt_custom_StyledText_ApiDifferential {
 	}
 
 	private static void compare(String id, Probe probe) {
+		StyledTextApiOps.diagTag = id;
 		String a = probe.apply(gap);
 		flush(gap);
 		String b = probe.apply(paged);

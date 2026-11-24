@@ -107,6 +107,8 @@ public class Test_org_eclipse_swt_custom_StyledText_SameTabs {
 		gc.dispose();
 		ImageData data = shot.getImageData();
 		shot.dispose();
+		StyledTextApiOps.diagTag = "SameTabs";
+		StyledTextApiOps.diagDump(text, data, Integer.toHexString(java.util.Arrays.hashCode(data.data)), "copyArea");
 		int[] all = new int[size.width * size.height];
 		for (int y = 0; y < size.height; y++) {
 			data.getPixels(0, y, size.width, all, y * size.width);
