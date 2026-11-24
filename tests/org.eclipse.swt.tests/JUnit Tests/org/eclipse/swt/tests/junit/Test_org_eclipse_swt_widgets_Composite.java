@@ -255,13 +255,17 @@ public void test_nativeBorderReliefGtkGroupShadowOverride() {
 @Test
 public void test_nativeBorderReliefGtk3FrameFollowsRegion() {
 	if (!SwtTestUtil.isGTK3()) return;
-	Composite child = new Composite(shell, SWT.NONE);
+	// Own Shell without a layout: subclasses give the fixture shell a FillLayout, which would resize the child.
+	Shell regionShell = new Shell(shell.getDisplay());
+	Composite child = new Composite(regionShell, SWT.NONE);
 	org.eclipse.swt.graphics.Region region = new org.eclipse.swt.graphics.Region();
 	try {
+		regionShell.setSize(200, 150);
 		child.setBounds(10, 10, 120, 80);
 		region.add(0, 0, 60, 80);
 		child.setRegion(region);
-		shell.open();
+		regionShell.open();
+		assertEquals(new Point(120, 80), child.getSize());
 		org.eclipse.swt.graphics.ImageData plain = ViewportDifferential.render(child);
 		child.setBorderRelief(SWT.SHADOW_IN);
 		assertTrue(child.getBorderWidth() > 0, "visible relief needs native trim");
@@ -277,7 +281,7 @@ public void test_nativeBorderReliefGtk3FrameFollowsRegion() {
 					"the relief frame must not show outside the region at " + p[0] + "," + p[1]);
 		}
 	} finally {
-		child.dispose();
+		regionShell.dispose();
 		region.dispose();
 	}
 }
