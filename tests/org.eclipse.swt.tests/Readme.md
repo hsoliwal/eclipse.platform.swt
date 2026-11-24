@@ -25,16 +25,18 @@ The matrix executes Java 21 and Java 25. Its API/Javadoc profiles remain on the
 Java 25 legs because the current parent configures that documentation toolchain.
 A Java source compile and a native JUnit run are recorded as different gates.
 
-This bundle is compiled on every platform, so its sources must not use a
-platform's internal types (`org.eclipse.swt.internal.win32`,
+This bundle is compiled on every platform (GTK, win32 and Cocoa), so its sources
+must not use a platform's internal types (`org.eclipse.swt.internal.win32`,
 `org.eclipse.swt.internal.ole.win32`, win32-only render types such as
-`BackBuffer`, or win32-only fields such as `Widget.nativeZoom`). A test of the
-win32 implementation belongs in `tests/org.eclipse.swt.tests.win32` and its
+`BackBuffer`) or a field that one port lacks (`Widget.nativeZoom` of win32, or
+`Control.handle`, which Cocoa controls do not have). A test of the win32
+implementation belongs in `tests/org.eclipse.swt.tests.win32` and its
 `AllWin32Tests` suite (built only on Windows), as the GTK and Cocoa tests belong
 in their bundles; it may use the helpers this bundle exports
-(`org.eclipse.swt.tests.junit`, for example `ViewportDifferential`). A neutral
-test that only needs to look at a win32 internal reads it reflectively behind an
-assumption, as `ViewportDifferential` does.
+(`org.eclipse.swt.tests.junit`, for example `ViewportDifferential` and the
+suites' resource leak check `SuiteResourceLeakCheck`). A neutral test that only
+needs to look at a platform internal reads it reflectively behind an assumption,
+as `ViewportDifferential` does.
 
 ## Enhanced M3 API discovery
 

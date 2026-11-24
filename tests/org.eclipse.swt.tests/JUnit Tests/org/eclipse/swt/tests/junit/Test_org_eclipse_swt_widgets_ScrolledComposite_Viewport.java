@@ -180,6 +180,14 @@ public class Test_org_eclipse_swt_widgets_ScrolledComposite_Viewport {
 		assertEquals ("", events.toString (), "no event when the logical bounds do not change");
 	}
 
+	/*
+	 * the control's native window handle: the public field Control.handle of the win32 port (this class assumes win32),
+	 * read reflectively so that this test compiles on every platform (Cocoa controls have no handle field)
+	 */
+	static long handle (Control control) throws ReflectiveOperationException {
+		return Control.class.getField ("handle").getLong (control);
+	}
+
 	/* the screen pixel at a point of a control (the shell is on top and the pointer parked) */
 	RGB screenPixel (Control control, int x, int y) {
 		Point p = control.toDisplay (x, y);
@@ -206,7 +214,7 @@ public class Test_org_eclipse_swt_widgets_ScrolledComposite_Viewport {
 		Object device = pointType.getConstructor ().newInstance ();
 		pointType.getField ("x").setInt (device, screen.x);
 		pointType.getField ("y").setInt (device, screen.y);
-		os.getMethod ("ScreenToClient", long.class, pointType).invoke (null, content.handle, device);
+		os.getMethod ("ScreenToClient", long.class, pointType).invoke (null, handle (content), device);
 		GC gc = new GC (content);
 		try {
 			/* the GC maps the logical point onto that device point: window origin = device origin + logical - device */
@@ -245,13 +253,13 @@ public class Test_org_eclipse_swt_widgets_ScrolledComposite_Viewport {
 		caret.setBounds (40, HEIGHT - 80, 2, 16);
 		Class<?> os = Class.forName ("org.eclipse.swt.internal.win32.OS"), pointType = Class.forName ("org.eclipse.swt.internal.win32.POINT");
 		/* keyboard focus within this thread, without activating the shell (the desktop may refuse activation) */
-		os.getMethod ("SetFocus", long.class).invoke (null, content.handle);
+		os.getMethod ("SetFocus", long.class).invoke (null, handle (content));
 		ViewportDifferential.settle (display, 100);
 		Assumptions.assumeTrue (content.isFocusControl (), "the content did not get the keyboard focus");
 		assertEquals (new Rectangle (40, HEIGHT - 80, 2, 16), caret.getBounds ());
 		Object point = pointType.getConstructor ().newInstance ();
 		os.getMethod ("GetCaretPos", pointType).invoke (null, point);
-		os.getMethod ("ClientToScreen", long.class, pointType).invoke (null, content.handle, point);
+		os.getMethod ("ClientToScreen", long.class, pointType).invoke (null, handle (content), point);
 		Point screen = new Point (pointType.getField ("x").getInt (point), pointType.getField ("y").getInt (point));
 		assertEquals (content.toDisplay (40, HEIGHT - 80), screen, "the native caret is where the logical caret location is shown");
 	}
