@@ -1,46 +1,67 @@
 name: Issue Listener
 
-      on:
-        issues:
-          types: [opened]
+# Donor workflow. It entered master in the 2026-10-31 superset merge 8b86e2b2,
+# which merged SampadSikder/eclipse.platform.swt donor head 7b6b1123 ("Adding
+# issue listener workflow"); PR #307 brought that merge into master. The
+# donor's copy (blob fa17bdf6) indents everything after `name:` by six spaces,
+# so `on:` and `jobs:` could not parse and every push here produced a
+# "workflow file issue" failure run. The job below is only dedented; its steps
+# are unchanged.
+#
+# The donor trigger was `on: issues: types: [opened]`. It is not restored,
+# because both targets of the job belong to the donor: it posts each new
+# issue's URL, title and body to the donor's ngrok research backend, then
+# comments on SampadSikder/eclipse.platform.swt, which this repository's
+# GITHUB_TOKEN cannot write to. Issues are also disabled on this repository
+# today, so that trigger would not fire. The workflow runs only when
+# dispatched by hand, until the owner retargets or removes it.
+#
+# The hard-coded donor commit b1256577 (COMMIT_ID) is in master's history: it
+# is the parent of donor head 7b6b1123. `git show` on it fails only because
+# actions/checkout@v4 fetches at depth 1, so a dispatched run stops at that
+# line, before either curl call. Restoring the trigger would also need
+# `fetch-depth: 0` on the checkout and "$RESPONSE" quoted in the second curl:
+# unquoted, the backend's response is word-split into extra curl arguments.
+on:
+  workflow_dispatch:
 
-      jobs:
-        post_issue_to_backend:
-          runs-on: ubuntu-latest
-          steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+jobs:
+  post_issue_to_backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-            - name: Post issue to backend
-              env:
-                ISSUE_URL: ${{ github.event.issue.html_url }}
-                ISSUE_SUMMARY: ${{ github.event.issue.title }}
-                ISSUE_DESCRIPTION: ${{ github.event.issue.body }}
-                COMMIT_ID: "b125657720d39e5a20fc2120479e6d608e774527"
-              run: |
-                COMMIT=$(git rev-parse HEAD)
-                COMMIT_TIMESTAMP_RAW=$(git show -s --format=%ct b125657720d39e5a20fc2120479e6d608e774527)
-                REPORT_TIMESTAMP_RAW=$(date +%s)
+      - name: Post issue to backend
+        env:
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_SUMMARY: ${{ github.event.issue.title }}
+          ISSUE_DESCRIPTION: ${{ github.event.issue.body }}
+          COMMIT_ID: "b125657720d39e5a20fc2120479e6d608e774527"
+        run: |
+          COMMIT=$(git rev-parse HEAD)
+          COMMIT_TIMESTAMP_RAW=$(git show -s --format=%ct b125657720d39e5a20fc2120479e6d608e774527)
+          REPORT_TIMESTAMP_RAW=$(date +%s)
 
-                COMMIT_TIMESTAMP=$(date -d @${COMMIT_TIMESTAMP_RAW} +"%Y-%m-%d %H:%M:%S")
-                REPORT_TIMESTAMP=$(date -d @${REPORT_TIMESTAMP_RAW} +"%Y-%m-%d %H:%M:%S")
+          COMMIT_TIMESTAMP=$(date -d @${COMMIT_TIMESTAMP_RAW} +"%Y-%m-%d %H:%M:%S")
+          REPORT_TIMESTAMP=$(date -d @${REPORT_TIMESTAMP_RAW} +"%Y-%m-%d %H:%M:%S")
 
-                RESPONSE=$(curl -X POST https://ffa3-103-198-136-205.ngrok-free.app/api/v2/issues \
-                -H "Content-Type: application/json" \
-                -d '{
-                  "issueURL": "'"$ISSUE_URL"'",
-                  "issueSummary": "'"$ISSUE_SUMMARY"'",
-                  "issueDescription": "'"$ISSUE_DESCRIPTION"'",
-                  "commit": "'"$COMMIT"'",
-                  "commitTimestamp": "'"$COMMIT_TIMESTAMP"'",
-                  "reportTimestamp": "'"$REPORT_TIMESTAMP"'"
-                }')
+          RESPONSE=$(curl -X POST https://ffa3-103-198-136-205.ngrok-free.app/api/v2/issues \
+          -H "Content-Type: application/json" \
+          -d '{
+            "issueURL": "'"$ISSUE_URL"'",
+            "issueSummary": "'"$ISSUE_SUMMARY"'",
+            "issueDescription": "'"$ISSUE_DESCRIPTION"'",
+            "commit": "'"$COMMIT"'",
+            "commitTimestamp": "'"$COMMIT_TIMESTAMP"'",
+            "reportTimestamp": "'"$REPORT_TIMESTAMP"'"
+          }')
 
-                echo "Backend response: $RESPONSE"
+          echo "Backend response: $RESPONSE"
 
-                curl -X POST https://api.github.com/repos/SampadSikder/eclipse.platform.swt/issues/${{ github.event.issue.number }}/comments \
-                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                -H "Content-Type: application/json" \
-                -d '{
-                  "body": "Issue processed successfully. Backend response: '$RESPONSE'"
-                }'
+          curl -X POST https://api.github.com/repos/SampadSikder/eclipse.platform.swt/issues/${{ github.event.issue.number }}/comments \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "body": "Issue processed successfully. Backend response: '$RESPONSE'"
+          }'
