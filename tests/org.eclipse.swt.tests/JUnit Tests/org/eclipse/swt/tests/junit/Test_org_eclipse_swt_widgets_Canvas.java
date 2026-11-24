@@ -103,28 +103,49 @@ public void test_scroll_withOverlayRetainsTheFullRedrawWorkaround() throws Inter
 	assertScrollDamageAndPixels(SWT.H_SCROLL | SWT.V_SCROLL, true);
 }
 
-private void assertScrollDamageAndPixels(int style, boolean overlay) throws InterruptedException {
+/*
+ * The Canvas that the scroll damage tests scroll: a new Canvas of the given style, made the widget under test. A
+ * subclass whose widget under test a Canvas cannot replace answers a Canvas child instead, see
+ * Test_org_eclipse_swt_widgets_Decorations.
+ */
+protected Canvas newScrollCanvas(int style) {
 	setWidget(new Canvas(shell, style));
-	if ((style & (SWT.H_SCROLL | SWT.V_SCROLL)) != 0) {
-		canvas.setScrollbarsMode(overlay ? SWT.SCROLLBAR_OVERLAY : SWT.NONE);
-		if (overlay) {
-			assumeTrue((canvas.getScrollbarsMode() & SWT.SCROLLBAR_OVERLAY) != 0,
-					"GTK_OVERLAY_SCROLLING=0 disables the overlay case");
-		} else {
-			assertEquals(SWT.NONE, canvas.getScrollbarsMode());
+	return canvas;
+}
+
+private void assertScrollDamageAndPixels(int style, boolean overlay) throws InterruptedException {
+	Canvas scrolled = newScrollCanvas(style);
+	try {
+		assertScrollDamageAndPixels(scrolled, style, overlay);
+	} finally {
+		// a Canvas child that newScrollCanvas did not make the widget under test belongs to this check
+		if (scrolled != canvas) {
+			scrolled.dispose();
 		}
 	}
-	canvas.setBounds(10, 10, 160, 128);
+}
+
+private void assertScrollDamageAndPixels(Canvas scrolled, int style, boolean overlay) throws InterruptedException {
+	if ((style & (SWT.H_SCROLL | SWT.V_SCROLL)) != 0) {
+		scrolled.setScrollbarsMode(overlay ? SWT.SCROLLBAR_OVERLAY : SWT.NONE);
+		if (overlay) {
+			assumeTrue((scrolled.getScrollbarsMode() & SWT.SCROLLBAR_OVERLAY) != 0,
+					"GTK_OVERLAY_SCROLLING=0 disables the overlay case");
+		} else {
+			assertEquals(SWT.NONE, scrolled.getScrollbarsMode());
+		}
+	}
+	scrolled.setBounds(10, 10, 160, 128);
 	Color[] colors = {
-		canvas.getDisplay().getSystemColor(SWT.COLOR_RED),
-		canvas.getDisplay().getSystemColor(SWT.COLOR_GREEN),
-		canvas.getDisplay().getSystemColor(SWT.COLOR_BLUE),
-		canvas.getDisplay().getSystemColor(SWT.COLOR_YELLOW),
-		canvas.getDisplay().getSystemColor(SWT.COLOR_CYAN)
+		scrolled.getDisplay().getSystemColor(SWT.COLOR_RED),
+		scrolled.getDisplay().getSystemColor(SWT.COLOR_GREEN),
+		scrolled.getDisplay().getSystemColor(SWT.COLOR_BLUE),
+		scrolled.getDisplay().getSystemColor(SWT.COLOR_YELLOW),
+		scrolled.getDisplay().getSystemColor(SWT.COLOR_CYAN)
 	};
 	int[] contentOffset = {0};
 	List<Rectangle> painted = new ArrayList<>();
-	canvas.addPaintListener(event -> {
+	scrolled.addPaintListener(event -> {
 		painted.add(new Rectangle(event.x, event.y, event.width, event.height));
 		for (int y = event.y; y < event.y + event.height; y++) {
 			event.gc.setBackground(colors[Math.floorMod(y + contentOffset[0], colors.length)]);
@@ -132,15 +153,15 @@ private void assertScrollDamageAndPixels(int style, boolean overlay) throws Inte
 		}
 	});
 	shell.open();
-	canvas.redraw();
+	scrolled.redraw();
 	SwtTestUtil.processEvents(200, null);
-	assertScrollPixels(contentOffset[0], colors, overlay);
-	Rectangle client = canvas.getClientArea();
+	assertScrollPixels(scrolled, contentOffset[0], colors, overlay);
+	Rectangle client = scrolled.getClientArea();
 	for (int deltaY : new int[] {-24, 24}) {
 		painted.clear();
 		contentOffset[0] -= deltaY;
-		canvas.scroll(0, deltaY, 0, 0, client.width, client.height, false);
-		canvas.update();
+		scrolled.scroll(0, deltaY, 0, 0, client.width, client.height, false);
+		scrolled.update();
 		SwtTestUtil.processEvents(200, null);
 		assertFalse(painted.isEmpty(), "the newly exposed band must be painted");
 		if (overlay) {
@@ -153,15 +174,15 @@ private void assertScrollDamageAndPixels(int style, boolean overlay) throws Inte
 						"scroll without overlays must repaint only the exposed band: " + painted);
 			}
 		}
-		assertScrollPixels(contentOffset[0], colors, overlay);
+		assertScrollPixels(scrolled, contentOffset[0], colors, overlay);
 	}
 }
 
-private void assertScrollPixels(int contentOffset, Color[] colors, boolean overlay) {
-	Rectangle client = canvas.getClientArea();
-	Image capture = new Image(canvas.getDisplay(), client.width, client.height);
+private void assertScrollPixels(Canvas scrolled, int contentOffset, Color[] colors, boolean overlay) {
+	Rectangle client = scrolled.getClientArea();
+	Image capture = new Image(scrolled.getDisplay(), client.width, client.height);
 	ImageData pixels;
-	GC gc = new GC(canvas);
+	GC gc = new GC(scrolled);
 	try {
 		gc.copyArea(capture, 0, 0);
 		pixels = capture.getImageData();

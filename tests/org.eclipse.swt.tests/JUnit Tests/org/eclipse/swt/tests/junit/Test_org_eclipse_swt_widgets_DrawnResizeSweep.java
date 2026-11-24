@@ -68,6 +68,7 @@ public class Test_org_eclipse_swt_widgets_DrawnResizeSweep {
 	}
 
 	void sweep (Control control) throws Exception {
+		Test_org_eclipse_swt_widgets_DrawnDeltaRepaint.assumeDrawnModePlatform ();
 		Assumptions.assumeTrue (plane (control) != null, "a drawn mode (custom, m3, gpu) only");
 		control.setBounds (5, 5, 300, 300);
 		shell.open ();

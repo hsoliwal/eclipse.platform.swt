@@ -44,6 +44,12 @@ final class HeaderDecoration {
 	private int [] directions = new int [0], priorities = new int [0];
 	private boolean [] filtered = new boolean [0];
 	private final Map<Integer, Image> images = new HashMap<> ();
+	/*
+	 * Set by the control's Dispose event, which released the images. A listener of the same event that runs later (a
+	 * FilterPopup installed after this decoration closes its open popup and marks the columns) changes no column image:
+	 * an image made then would never be disposed.
+	 */
+	private boolean disposed;
 
 	private HeaderDecoration (Composite control) {
 		this.control = control;
@@ -85,6 +91,7 @@ final class HeaderDecoration {
 	}
 
 	private void update (int column) {
+		if (disposed) return;
 		Item item = Columns.column (control, column);
 		Object original = item.getData (ORIGINAL);
 		int code = code (column);
@@ -139,6 +146,7 @@ final class HeaderDecoration {
 	}
 
 	private void dispose () {
+		disposed = true;
 		for (Image image : images.values ()) image.dispose ();
 		images.clear ();
 	}

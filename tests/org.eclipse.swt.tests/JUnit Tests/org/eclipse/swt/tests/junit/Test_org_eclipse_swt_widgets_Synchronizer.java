@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FrameListener;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Synchronizer;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
@@ -46,6 +47,21 @@ import org.junit.jupiter.api.Timeout;
 public class Test_org_eclipse_swt_widgets_Synchronizer {
 
 	private static final int TIMEOUT_MS = 20_000;
+
+	/*
+	 * Test isolation, as in Test_org_eclipse_swt_widgets_Display: the withDisplay tests construct their own Display,
+	 * which SWT refuses while another Display exists (GTK and Cocoa: any other Display, "Not implemented [multiple
+	 * displays]"; win32: one bound to this thread). Earlier classes in the same JVM (any widget test via new Shell())
+	 * leave the default Display behind, so start this class on a thread with no Display. Each test disposes the Display
+	 * it uses.
+	 */
+	@BeforeAll
+	public static void releaseDisplayOfThisThread() {
+		Display current = Display.getCurrent();
+		if (current != null && !current.isDisposed()) {
+			current.dispose();
+		}
+	}
 
 	/** A model patch's request for another frame must survive completion of the current frame. */
 	@Test
