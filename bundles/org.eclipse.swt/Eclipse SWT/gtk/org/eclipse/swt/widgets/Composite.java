@@ -584,6 +584,11 @@ long gtk_draw (long widget, long cairo) {
 	if (backgroundImage == null) {
 		GTK.gtk_render_background(context, cairo, 0, 0, width, height);
 	}
+	if (widget == handle && swtFixedReliefInPixels () > 0) {
+		// GTK3 SwtFixed has no CSS box: paint the relief border GTK computed for it,
+		// in GTK's own order (background, border, then content and children).
+		GTK.gtk_render_frame(context, cairo, 0, 0, width, height);
+	}
     // If fixClipHandle is set: iterate through the children of widget
     // and set their clips to be that of their allocation
     if (widget == fixClipHandle) {
@@ -990,9 +995,47 @@ Rectangle getClientAreaInPixels () {
 		GTK.gtk_widget_get_allocation (clientHandle, allocation);
 		int width = (state & ZERO_WIDTH) != 0 ? 0 : allocation.width;
 		int height = (state & ZERO_HEIGHT) != 0 ? 0 : allocation.height;
+		int relief = swtFixedReliefInPixels ();
+		if (relief > 0) {
+			// The painted relief is trim: keep the client area inside it, as computeTrim does.
+			return new Rectangle (relief, relief, Math.max (0, width - 2 * relief),
+					Math.max (0, height - 2 * relief));
+		}
 		return new Rectangle (0, 0, width, height);
 	}
 	return super.getClientAreaInPixels();
+}
+
+/**
+ * Returns the native relief trim that this Composite itself paints and keeps
+ * out of its client area, or 0. GTK3's SwtFixed is a plain GtkContainer
+ * without a CSS box, so GTK neither draws nor allocates the CSS border that
+ * {@link #setBorderRelief(int)} gives it; GtkFrame, GtkScrolledWindow and
+ * every GTK4 widget do both natively and return 0 here. For the SwtFixed
+ * owner the width is the same native CSS border metric that
+ * {@link #getBorderWidth()} reports, and the border is drawn with
+ * gtk_render_frame from that widget's own style context.
+ */
+int swtFixedReliefInPixels () {
+	if (GTK.GTK4 || !hasVisibleBorderRelief () || (state & CANVAS) == 0) return 0;
+	if (scrolledHandle != 0 || handle == 0 || clientHandle () != handle || borderHandle () != handle) return 0;
+	if (OS.G_OBJECT_TYPE (handle) != display.gtk_fixed_get_type ()) return 0;
+	return nativeBorderReliefInPixels ();
+}
+
+@Override
+int reliefClientTrimInPixels () {
+	return scrolledHandle == 0 ? swtFixedReliefInPixels () : super.reliefClientTrimInPixels ();
+}
+
+@Override
+void borderReliefTrimChanged () {
+	super.borderReliefTrimChanged ();
+	// The client area moved with the trim; lay the children out inside it again.
+	if (layout != null) {
+		markLayout (false, false);
+		updateLayout (false);
+	}
 }
 
 /**

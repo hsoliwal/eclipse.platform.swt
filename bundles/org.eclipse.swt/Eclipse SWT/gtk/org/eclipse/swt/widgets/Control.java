@@ -3319,6 +3319,7 @@ public void setBorderRelief (int relief) {
     if (relief == nativeBorderRelief) return;
     long borderWidget = borderHandle();
     if (borderWidget == 0) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
+    int previousBorderWidth = getBorderWidthInPixels();
     if (nativeBorderProvider == 0 && relief != SWT.DEFAULT) {
         long context = GTK.gtk_widget_get_style_context(borderWidget);
         if (context == 0) SWT.error(SWT.ERROR_NOT_IMPLEMENTED);
@@ -3349,6 +3350,45 @@ public void setBorderRelief (int relief) {
     nativeBorderRelief = relief;
     GTK.gtk_widget_queue_resize(borderWidget);
     GTK.gtk_widget_queue_draw(borderWidget);
+    if (previousBorderWidth != getBorderWidthInPixels()) borderReliefTrimChanged();
+}
+
+/**
+ * Returns whether an explicit relief currently draws a visible native edge.
+ * SWT.DEFAULT (the original theme border) and SWT.SHADOW_NONE do not.
+ */
+boolean hasVisibleBorderRelief () {
+	return nativeBorderRelief != SWT.DEFAULT && nativeBorderRelief != SWT.SHADOW_NONE;
+}
+
+/**
+ * Returns the native trim of an explicit visible relief: the CSS border width
+ * that GTK computes for the style context of {@link #borderHandle()}. It is
+ * the metric with which GtkFrame, GtkScrolledWindow and every GTK4 widget
+ * render and allocate their CSS box, so it follows the per-widget relief rule
+ * and any higher-priority user CSS rather than a hard-coded width.
+ * SWT.DEFAULT and SWT.SHADOW_NONE add no trim, so a reset restores the
+ * pre-existing border width exactly.
+ */
+int nativeBorderReliefInPixels () {
+	if (!hasVisibleBorderRelief ()) return 0;
+	long borderWidget = borderHandle ();
+	if (borderWidget == 0) return 0;
+	long context = GTK.gtk_widget_get_style_context (borderWidget);
+	if (context == 0) return 0;
+	GtkBorder border = new GtkBorder ();
+	gtk_style_context_get_border (context, GTK.gtk_widget_get_state_flags (borderWidget), border);
+	/* SWT exposes one symmetric border width; report the widest native side. */
+	return Math.max (Math.max (border.left, border.right), Math.max (border.top, border.bottom));
+}
+
+/**
+ * Called after an explicit relief changed this Control's native trim. As on
+ * win32, the ancestors are asked to lay the Control out again because its
+ * preferred size (computeSize/computeTrim) now includes the new trim.
+ */
+void borderReliefTrimChanged () {
+	requestLayout ();
 }
 
 /**
@@ -3389,7 +3429,7 @@ public int getBorderWidth () {
 
 int getBorderWidthInPixels () {
 	checkWidget();
-	return nativeBorderRelief == SWT.SHADOW_NONE || nativeBorderRelief == SWT.DEFAULT ? 0 : 2;
+	return nativeBorderReliefInPixels ();
 }
 
 int getClientWidth () {
