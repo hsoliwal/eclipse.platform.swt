@@ -97,6 +97,15 @@ public class Test_M3SortFilterWidgets {
 		return sort;
 	}
 
+	/*
+	 * Whether a mark covers (x, y). Image data with alpha (GTK reads images back from cairo surfaces) stores a
+	 * transparent pixel as colour 0, the pixel value of a black foreground, so there the alpha tells; otherwise the
+	 * pixel differs from the empty corner.
+	 */
+	static boolean painted (ImageData data, int empty, int x, int y) {
+		return data.alphaData != null ? data.getAlpha (x, y) != 0 : data.getPixel (x, y) != empty;
+	}
+
 	static void click (Item column, boolean shift) {
 		Event event = new Event ();
 		event.stateMask = shift ? SWT.SHIFT : 0;
@@ -138,9 +147,9 @@ public class Test_M3SortFilterWidgets {
 		assertEquals (20, data.width);
 		assertEquals (10, data.height);
 		int empty = data.getPixel (0, 0);
-		assertNotEquals (empty, data.getPixel (3, 3), "arrow apex");
-		assertNotEquals (empty, data.getPixel (9, 2), "digit 2 top");
-		assertEquals (empty, data.getPixel (16, 5), "no filter mark");
+		assertTrue (painted (data, empty, 3, 3), "arrow apex");
+		assertTrue (painted (data, empty, 9, 2), "digit 2 top");
+		assertFalse (painted (data, empty, 16, 5), "no filter mark");
 		assertEquals (40, mark.getImageData (200).width);
 		click (table.getColumn (2), true);
 		click (table.getColumn (2), true);

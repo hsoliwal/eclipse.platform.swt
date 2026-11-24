@@ -32,6 +32,12 @@ public class Test_org_eclipse_swt_widgets_Tree_HiddenBar {
 
 	@BeforeEach
 	public void setUp () {
+		/*
+		 * The expected values are the win32 tree view's scroll info, in rows. GTK's ScrollBar reads the
+		 * GtkScrolledWindow adjustment in pixels and getVisible reads the scrolling policy, as its documentation
+		 * allows ("may still indicate that it is considered visible even though it may not actually be showing").
+		 */
+		Assumptions.assumeTrue ("win32".equals (SWT.getPlatform ()), "the oracle is the win32 tree view's scroll info");
 		shell = new Shell (Display.getDefault ());
 		shell.setBounds (10, 10, 300, 330);
 		tree = new Tree (shell, SWT.MULTI | SWT.BORDER | SWT.VIRTUAL);

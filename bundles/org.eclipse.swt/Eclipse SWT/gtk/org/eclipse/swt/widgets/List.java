@@ -29,12 +29,19 @@ import org.eclipse.swt.internal.gtk4.*;
  * when a string is selected.  A list may be single or multi select.
  * <dl>
  * <dt><b>Styles:</b></dt>
- * <dd>SINGLE, MULTI, NO_SEARCH</dd>
+ * <dd>SINGLE, MULTI, NO_SEARCH, VIRTUAL</dd>
  * <dt><b>Events:</b></dt>
- * <dd>Selection, DefaultSelection</dd>
+ * <dd>Selection, DefaultSelection, SetData, EmptinessChanged</dd>
  * </dl>
  * <p>
  * Note: Only one of SINGLE and MULTI may be specified.
+ * </p><p>
+ * Style <code>VIRTUAL</code>: items added with <code>add</code> or
+ * <code>setItems</code> behave as in a plain list; items created by
+ * <code>setItemCount</code> or emptied by <code>clear</code> are requested
+ * with an <code>SWT.SetData</code> event (<code>event.index</code> is the row)
+ * when they are first drawn or read, and the listener answers with
+ * <code>setItem(event.index, text)</code>.
  * </p><p>
  * IMPORTANT: This class is <em>not</em> intended to be subclassed.
  * </p>
@@ -53,6 +60,8 @@ public class List extends Scrollable {
 	static final int TEXT_COLUMN = 0;
 	double cachedAdjustment, currentAdjustment;
 	boolean rowActivated, defaultSelectionPending;
+	/* VIRTUAL: an SWT.SetData request is being answered (requestItem) */
+	boolean inSetData;
 
 /**
  * Constructs a new instance of this class given its parent
@@ -88,6 +97,12 @@ public List (Composite parent, int style) {
 	viewportRuntime.initializeOrigin (0, 0);
 }
 
+@Override
+void _addListener (int eventType, Listener listener) {
+	if (eventType == SWT.EmptinessChanged) Emptiness.watch (this);
+	super._addListener (eventType, listener);
+}
+
 /**
  * Adds the argument to the end of the receiver's list.
  * <p>
@@ -107,6 +122,11 @@ public List (Composite parent, int style) {
  * @see #add(String,int)
  */
 public void add (String string) {
+	addItem (string);
+	Emptiness.changed (this);
+}
+
+void addItem (String string) {
 	checkWidget();
     if (string == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -148,6 +168,11 @@ public void add (String string) {
  * @see #add(String)
  */
 public void add (String string, int index) {
+	insertItem (string, index);
+	Emptiness.changed (this);
+}
+
+void insertItem (String string, int index) {
 	checkWidget();
     if (string == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -230,13 +255,16 @@ static int checkStyle (int style) {
  */
 public void clear (int index) {
 	checkWidget ();
-	/*
-	* This platform keeps the items of a VIRTUAL list natively (no owner-data
-	* viewport yet, see .m3/swt-list-combo-viewport-20261013/DESIGN.md); the
-	* item text is cleared.
-	*/
 	if (!(0 <= index && index < getItemCount ())) {
 		error (SWT.ERROR_INVALID_RANGE);
+	}
+	if ((style & SWT.VIRTUAL) != 0) {
+		/* the GtkListStore keeps the row; its text is forgotten (NULL) until SWT.SetData answers it again */
+		long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+		GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
+		GTK.gtk_list_store_set (modelHandle, iter, TEXT_COLUMN, (byte []) null, -1);
+		OS.g_free (iter);
+		return;
 	}
 	setItem (index, "");
 }
@@ -260,6 +288,16 @@ public void clear (int index) {
 public void clearAll () {
 	checkWidget ();
 	int count = getItemCount ();
+	if ((style & SWT.VIRTUAL) != 0) {
+		long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+		if (count > 0 && GTK.gtk_tree_model_get_iter_first (modelHandle, iter)) {
+			do {
+				GTK.gtk_list_store_set (modelHandle, iter, TEXT_COLUMN, (byte []) null, -1);
+			} while (GTK.gtk_tree_model_iter_next (modelHandle, iter));
+		}
+		OS.g_free (iter);
+		return;
+	}
 	for (int i = 0; i < count; i++) {
 		setItem (i, "");
 	}
@@ -305,6 +343,10 @@ void createHandle (int index) {
     }
 	GTK.gtk_tree_view_column_pack_start (columnHandle, textRenderer, true);
 	GTK.gtk_tree_view_column_add_attribute (columnHandle, textRenderer, OS.text, TEXT_COLUMN);
+	if ((style & SWT.VIRTUAL) != 0) {
+		/* a row whose text is not set yet is requested when it is drawn (cellDataProc) */
+		GTK.gtk_tree_view_column_set_cell_data_func (columnHandle, textRenderer, display.cellDataProc, handle, 0);
+	}
 	GTK.gtk_tree_view_column_set_min_width (columnHandle, 0);
 	GTK.gtk_tree_view_insert_column (handle, columnHandle, index);
 
@@ -616,13 +658,81 @@ public String getItem (int index) {
 	GTK.gtk_tree_model_get (modelHandle, iter, 0, ptr, -1);
 	OS.g_free (iter);
     if (ptr [0] == 0) {
-        return null;
+        return (style & SWT.VIRTUAL) != 0 ? requestItem (index) : null;
     }
 	int length = C.strlen (ptr [0]);
 	byte[] buffer2 = new byte [length];
 	C.memmove (buffer2, ptr [0], length);
 	OS.g_free (ptr [0]);
 	return new String (Converter.mbcsToWcs (buffer2));
+}
+
+/*
+ * VIRTUAL: a row created by setItemCount or emptied by clear holds no text (NULL in the GtkListStore) until
+ * SWT.SetData answers it, the first time the row is drawn or read. SetData is sent once per row and never
+ * re-entrantly; a row the listener leaves unset reads as the empty string from then on.
+ */
+String requestItem (int index) {
+	if (!inSetData) {
+		Event event = new Event ();
+		event.index = index;
+		inSetData = true;
+		try {
+			sendEvent (SWT.SetData, event);
+		} finally {
+			inSetData = false;
+		}
+		if (isDisposed () || index >= GTK.gtk_tree_model_iter_n_children (modelHandle, 0)) {
+			return "";
+		}
+	}
+	long [] ptr = new long [1];
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
+	GTK.gtk_tree_model_get (modelHandle, iter, TEXT_COLUMN, ptr, -1);
+	String string = "";
+	if (ptr [0] != 0) {
+		int length = C.strlen (ptr [0]);
+		byte [] buffer = new byte [length];
+		C.memmove (buffer, ptr [0], length);
+		OS.g_free (ptr [0]);
+		string = new String (Converter.mbcsToWcs (buffer));
+	} else if (!inSetData) {
+		GTK.gtk_list_store_set (modelHandle, iter, TEXT_COLUMN, Converter.wcsToMbcs ("", true), -1);
+	}
+	OS.g_free (iter);
+	return string;
+}
+
+/*
+ * VIRTUAL: the cell data function of the text renderer. A row whose text is not set yet is requested when it
+ * is on screen; GtkTreeView also measures rows that are not shown, and those stay unrequested.
+ */
+@Override
+long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
+	if ((style & SWT.VIRTUAL) == 0 || inSetData || tree_model != modelHandle) return 0;
+	long [] ptr = new long [1];
+	GTK.gtk_tree_model_get (tree_model, iter, TEXT_COLUMN, ptr, -1);
+	if (ptr [0] != 0) {
+		OS.g_free (ptr [0]);
+		return 0;
+	}
+	if (!GTK.gtk_widget_get_mapped (handle)) return 0;
+	long path = GTK.gtk_tree_model_get_path (tree_model, iter);
+	if (path == 0) return 0;
+	int [] index = {-1};
+	long indices = GTK.gtk_tree_path_get_indices (path);
+	if (indices != 0) C.memmove (index, indices, 4);
+	GdkRectangle row = new GdkRectangle (), visible = new GdkRectangle ();
+	GTK.gtk_tree_view_get_background_area (handle, path, 0, row);
+	GTK.gtk_tree_path_free (path);
+	GTK.gtk_tree_view_get_visible_rect (handle, visible);
+	/* the background area is in bin window coordinates, whose origin is the top of the visible rows */
+	if (index [0] < 0 || row.y + row.height <= 0 || row.y >= visible.height) return 0;
+	String string = requestItem (index [0]);
+	if (isDisposed ()) return 0;
+	OS.g_object_set (cell, OS.text, Converter.wcsToMbcs (string, true), 0);
+	return 0;
 }
 
 /**
@@ -717,6 +827,14 @@ public String [] getItems () {
 		}
 	}
 	OS.g_free (iter);
+	if ((style & SWT.VIRTUAL) != 0) {
+		/* rows that were never answered are requested now, in order; a listener may shrink the list meanwhile */
+		for (int index=0; index<count; index++) {
+			if (result [index] == null) {
+				result [index] = !isDisposed () && index < GTK.gtk_tree_model_iter_n_children (modelHandle, 0) ? requestItem (index) : "";
+			}
+		}
+	}
 	return result;
 }
 
@@ -1323,6 +1441,11 @@ void releaseWidget () {
  * </ul>
  */
 public void remove (int index) {
+	removeIndex (index);
+	Emptiness.changed (this);
+}
+
+void removeIndex (int index) {
 	checkWidget();
 	if (!(0 <= index && index < GTK.gtk_tree_model_iter_n_children (modelHandle, 0)))  {
 		error (SWT.ERROR_INVALID_RANGE);
@@ -1353,6 +1476,11 @@ public void remove (int index) {
  * </ul>
  */
 public void remove (int start, int end) {
+	removeSpan (start, end);
+	Emptiness.changed (this);
+}
+
+void removeSpan (int start, int end) {
 	checkWidget();
     if (start > end) {
         return;
@@ -1416,6 +1544,11 @@ public void remove (String string) {
  * </ul>
  */
 public void remove (int [] indices) {
+	removeIndices (indices);
+	Emptiness.changed (this);
+}
+
+void removeIndices (int [] indices) {
 	checkWidget();
     if (indices == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -1456,6 +1589,11 @@ public void remove (int [] indices) {
  * </ul>
  */
 public void removeAll () {
+	removeAllItems ();
+	Emptiness.changed (this);
+}
+
+void removeAllItems () {
 	checkWidget();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
@@ -1747,6 +1885,16 @@ public void setItem (int index, String string) {
  * @since 3.137
  */
 public void setItemCount (int count) {
+	/* the shrinking path removes through the public method: one announcement, at the end */
+	Emptiness.hold (this);
+	try {
+		setCount (count);
+	} finally {
+		Emptiness.release (this);
+	}
+}
+
+void setCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
 	int itemCount = getItemCount ();
@@ -1761,7 +1909,10 @@ public void setItemCount (int count) {
 	 * Preserve the existing GtkListStore and its per-row inserted signals:
 	 * only eliminate repeated conversion and native GtkTreeIter allocation.
 	 * The GTK model still owns each logical row; this is not sparse storage.
+	 * The rows of a VIRTUAL receiver keep no text (NULL) until SWT.SetData
+	 * answers them (requestItem).
 	 */
+	boolean virtual = (style & SWT.VIRTUAL) != 0;
 	byte [] empty = Converter.wcsToMbcs ("", true);
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	if (iter == 0) error (SWT.ERROR_ITEM_NOT_ADDED);
@@ -1769,7 +1920,7 @@ public void setItemCount (int count) {
 		for (int i = itemCount; i < count; i++) {
 			checkWidget ();
 			GTK.gtk_list_store_append (modelHandle, iter);
-			GTK.gtk_list_store_set (modelHandle, iter, TEXT_COLUMN, empty, -1);
+			if (!virtual) GTK.gtk_list_store_set (modelHandle, iter, TEXT_COLUMN, empty, -1);
 		}
 	} finally {
 		OS.g_free (iter);
@@ -1791,6 +1942,11 @@ public void setItemCount (int count) {
  * </ul>
  */
 public void setItems (String... items) {
+	setAllItems (items);
+	Emptiness.changed (this);
+}
+
+void setAllItems (String... items) {
 	checkWidget();
     if (items == null) {
         error(SWT.ERROR_NULL_ARGUMENT);

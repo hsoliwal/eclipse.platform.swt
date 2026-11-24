@@ -66,7 +66,7 @@ import org.eclipse.swt.internal.gtk4.*;
  * <dt><b>Styles:</b></dt>
  * <dd>SINGLE, MULTI, CHECK, FULL_SELECTION, HIDE_SELECTION, VIRTUAL, NO_SCROLL, NO_SEARCH</dd>
  * <dt><b>Events:</b></dt>
- * <dd>Selection, DefaultSelection, SetData, MeasureItem, EraseItem, PaintItem</dd>
+ * <dd>Selection, DefaultSelection, SetData, MeasureItem, EraseItem, PaintItem, EmptinessChanged</dd>
  * </dl>
  * <p>
  * Note: Only one of the styles SINGLE, and MULTI may be specified.
@@ -191,6 +191,7 @@ public Table (Composite parent, int style) {
 
 @Override
 void _addListener (int eventType, Listener listener) {
+	if (eventType == SWT.EmptinessChanged) Emptiness.watch (this);
 	super._addListener (eventType, listener);
 	if (!ownerDraw) {
 		switch (eventType) {
@@ -2508,6 +2509,11 @@ void createItem (TableColumn column, int index) {
 }
 
 void createItem (TableItem item, int index) {
+	createTableItem (item, index);
+	m3StructureChanged ();
+}
+
+void createTableItem (TableItem item, int index) {
     if (!(0 <= index && index <= itemCount)) {
         error(SWT.ERROR_INVALID_RANGE);
     }
@@ -2943,6 +2949,11 @@ void destroyItem (TableColumn column) {
 }
 
 void destroyItem (TableItem item) {
+	destroyTableItem (item);
+	m3StructureChanged ();
+}
+
+void destroyTableItem (TableItem item) {
 	int index;
 	if ((style & SWT.VIRTUAL) != 0) {
 		index = virtualItems.indexOfIdentity (item);
@@ -3564,6 +3575,11 @@ private int nativeTopIndex () {
 public int getItemCount () {
 	checkWidget ();
 	return itemCount;
+}
+
+/* M3 seam after a structural change: the emptiness crossing */
+void m3StructureChanged () {
+	Emptiness.changed (this);
 }
 
 /* Residency seam: no residency lanes on this platform; every row is resident, facades unknown */
@@ -4939,6 +4955,11 @@ void releaseWidget () {
  * </ul>
  */
 public void remove (int index) {
+	removeIndex (index);
+	m3StructureChanged ();
+}
+
+void removeIndex (int index) {
 	checkWidget();
     if (!(0 <= index && index < itemCount)) {
         error(SWT.ERROR_ITEM_NOT_REMOVED);
@@ -4999,6 +5020,11 @@ public void remove (int index) {
  * </ul>
  */
 public void remove (int start, int end) {
+	removeSpan (start, end);
+	m3StructureChanged ();
+}
+
+void removeSpan (int start, int end) {
 	checkWidget();
     if (start > end) {
         return;
@@ -5064,6 +5090,11 @@ public void remove (int start, int end) {
  * </ul>
  */
 public void remove (int [] indices) {
+	removeIndices (indices);
+	m3StructureChanged ();
+}
+
+void removeIndices (int [] indices) {
 	checkWidget();
     if (indices == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -5144,6 +5175,11 @@ public void remove (int [] indices) {
  * </ul>
  */
 public void removeAll () {
+	removeAllItems ();
+	m3StructureChanged ();
+}
+
+void removeAllItems () {
 	checkWidget();
 	checkSetDataInProcessBeforeRemoval(0, itemCount);
 	if (usesVirtualNativeModel ()) {
@@ -6326,6 +6362,16 @@ public void setHeaderVisible (boolean show) {
  * @since 3.0
  */
 public void setItemCount (int count) {
+	/* the stock path creates items through createItem: one announcement, at the end, with the final count */
+	Emptiness.hold (this);
+	try {
+		setCount (count);
+	} finally {
+		Emptiness.release (this);
+	}
+}
+
+void setCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
     if (count == itemCount) {

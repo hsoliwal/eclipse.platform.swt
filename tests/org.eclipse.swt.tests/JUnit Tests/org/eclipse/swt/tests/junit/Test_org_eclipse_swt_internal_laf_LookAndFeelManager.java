@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.*;
+import java.util.function.BooleanSupplier;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
@@ -142,6 +143,26 @@ public class Test_org_eclipse_swt_internal_laf_LookAndFeelManager {
 		ViewportDifferential.drain (display);
 	}
 
+	/*
+	 * GTK paints on its frame clock, after update () has returned: dispatches until the paints the condition expects
+	 * have arrived (at most two seconds), then a little longer, so that a paint that should not happen would have had
+	 * the same frames to show up. On a platform whose update () paints synchronously the condition already holds.
+	 */
+	void awaitPaints (BooleanSupplier painted) {
+		long end = System.currentTimeMillis () + 2000;
+		while (!painted.getAsBoolean () && System.currentTimeMillis () < end) {
+			if (!display.readAndDispatch ()) {
+				try {
+					Thread.sleep (5);
+				} catch (InterruptedException e) {
+					Thread.currentThread ().interrupt ();
+					return;
+				}
+			}
+		}
+		ViewportDifferential.settle (display, 50);
+	}
+
 	@Test
 	public void selectionAndListeners () {
 		LookAndFeelManager.reset ();
@@ -174,6 +195,7 @@ public class Test_org_eclipse_swt_internal_laf_LookAndFeelManager {
 		canvas (row, paintsRow);
 		canvas (grid, paintsGrid);
 		drain ();
+		awaitPaints (() -> paintsSelection.get () > 0 && paintsRow.get () > 0 && paintsGrid.get () > 0);
 		assertEquals (3, LookAndFeelManager.installed (display));
 		assertEquals ("test-m3-a", selection.defaults.name ());
 		int layoutsBefore = layouts, selectionPaints = paintsSelection.get (), rowPaints = paintsRow.get (), gridPaints = paintsGrid.get ();
@@ -181,6 +203,7 @@ public class Test_org_eclipse_swt_internal_laf_LookAndFeelManager {
 		LookAndFeelManager.setLookAndFeel ("test-m3-b");
 		ViewportDifferential.drain (display);
 		shell.update ();
+		awaitPaints (() -> paintsSelection.get () > selectionPaints && paintsRow.get () > rowPaints);
 		assertEquals (2, selection.installs, "installed again: it paints with the changed selection colour");
 		assertEquals (1, selection.uninstalls);
 		assertEquals (0xFF123456, selection.defaults.color (SELECTION, 0));
@@ -275,6 +298,7 @@ public class Test_org_eclipse_swt_internal_laf_LookAndFeelManager {
 		Canvas other = canvas (new Probe (new int [] {GRID}, ComponentUI.NO_KEYS), otherPaints);
 		Canvas plain = new Canvas (shell, SWT.NONE);
 		drain ();
+		awaitPaints (() -> readerPaints.get () > 0 && otherPaints.get () > 0);
 		int readerBefore = readerPaints.get (), otherBefore = otherPaints.get ();
 		layouts = 0;
 		LookAndFeelManager.override (reader, SELECTION, 0xFF0000FF);
@@ -282,6 +306,7 @@ public class Test_org_eclipse_swt_internal_laf_LookAndFeelManager {
 		LookAndFeelManager.override (plain, SELECTION, 0xFF0000FF);
 		ViewportDifferential.drain (display);
 		shell.update ();
+		awaitPaints (() -> readerPaints.get () > readerBefore);
 		assertTrue (readerPaints.get () > readerBefore);
 		assertEquals (otherBefore, otherPaints.get ());
 		assertEquals (0, layouts);

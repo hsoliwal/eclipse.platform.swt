@@ -24,7 +24,10 @@ import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
 
-/** Tests of {@link ColumnChooser} on real Table and Tree widgets (the shell is never opened). */
+/**
+ * Tests of {@link ColumnChooser} on real Table and Tree widgets. The shell is opened only where a test needs the
+ * table laid out: GTK sends a column's <code>SWT.Move</code> from the size allocation of its header.
+ */
 @SuppressWarnings ("nls")
 public class Test_org_eclipse_swt_internal_ColumnChooser {
 
@@ -105,13 +108,33 @@ public class Test_org_eclipse_swt_internal_ColumnChooser {
 
 	@Test
 	void theOrderFollowsTheArrangementAndTheUser () {
+		/* the header moves reach the binding as SWT.Move, which GTK sends once the moved headers are laid out */
+		shell.open ();
 		new ColumnChooser (table, arrangement);
 		arrangement.move (3, 0);
 		assertArrayEquals (new int [] {3, 0, 1, 2}, table.getColumnOrder ());
+		dispatchUntil (() -> false, 200);
 		changes.clear ();
 		table.setColumnOrder (new int [] {2, 3, 0, 1});
-		assertArrayEquals (new int [] {2, 3, 0, 1}, arrangement.getOrder (), "a header move sets the arrangement's order");
+		int [] moved = {2, 3, 0, 1};
+		dispatchUntil (() -> Arrays.equals (moved, arrangement.getOrder ()), 2000);
+		assertArrayEquals (moved, arrangement.getOrder (), "a header move sets the arrangement's order");
 		assertFalse (changes.isEmpty ());
+	}
+
+	/* dispatches events until the condition holds or the time runs out */
+	void dispatchUntil (java.util.function.BooleanSupplier condition, int millis) {
+		long end = System.currentTimeMillis () + millis;
+		while (!condition.getAsBoolean () && System.currentTimeMillis () < end) {
+			if (!display.readAndDispatch ()) {
+				try {
+					Thread.sleep (5);
+				} catch (InterruptedException e) {
+					Thread.currentThread ().interrupt ();
+					return;
+				}
+			}
+		}
 	}
 
 	@Test

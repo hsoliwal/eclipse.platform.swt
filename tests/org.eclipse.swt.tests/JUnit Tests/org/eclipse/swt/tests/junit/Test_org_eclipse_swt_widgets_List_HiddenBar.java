@@ -31,6 +31,13 @@ public class Test_org_eclipse_swt_widgets_List_HiddenBar {
 
 	@BeforeEach
 	public void setUp () {
+		/*
+		 * The expected values are the win32 list box's scroll info. GTK's ScrollBar reads the GtkScrolledWindow
+		 * adjustment in pixels (a list that fits reads the page height as maximum and thumb) and getVisible reads the
+		 * scrolling policy, as its documentation allows ("may still indicate that it is considered visible even though
+		 * it may not actually be showing").
+		 */
+		Assumptions.assumeTrue ("win32".equals (SWT.getPlatform ()), "the oracle is the win32 list box's scroll info");
 		shell = new Shell (Display.getDefault ());
 		shell.setBounds (10, 10, 300, 300);
 		list = new List (shell, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL);

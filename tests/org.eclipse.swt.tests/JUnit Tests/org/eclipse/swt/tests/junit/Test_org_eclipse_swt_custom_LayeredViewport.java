@@ -3586,9 +3586,8 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertEquals(new RGB(0, 0, 0), rgb(pixels(), 10, 10));
         // -1 - Long.MAX_VALUE is exactly Long.MIN_VALUE without subtraction
         // overflow. An abs-based guard wrongly admits a 0px store translation.
-        viewport.setOrigin(Long.MAX_VALUE, 0);
-        viewport.update();
-        SwtTestUtil.processEvents();
+        // GTK paints on its frame clock after update(): observe the paint, as every other pan here does.
+        panAndPaint(Long.MAX_VALUE, 0);
         assertEquals(new RGB(255, 255, 255), rgb(pixels(), 10, 10));
     }
 

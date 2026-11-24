@@ -371,7 +371,12 @@ public CoolBar getParent () {
  */
 public Point getPreferredSize () {
 	checkWidget();
-	return parent.fixPoint(preferredWidth, preferredHeight);
+	/*
+	 * An item whose ideal size was never set reports at least the grabber trim, the floor
+	 * setPreferredSize keeps (as the native rebar reports its band margin), so that
+	 * setPreferredSize (getPreferredSize ()) leaves the ideal size unchanged.
+	 */
+	return parent.fixPoint(Math.max (preferredWidth, MINIMUM_WIDTH), preferredHeight);
 }
 /**
  * Returns a point describing the receiver's size. The
