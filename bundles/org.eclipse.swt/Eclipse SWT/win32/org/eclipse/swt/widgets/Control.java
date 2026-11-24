@@ -6570,23 +6570,29 @@ LRESULT WM_NCPAINT (long wParam, long lParam) {
 	long dc = OS.GetWindowDC(handle);
 	if (dc != 0) {
 		try {
-			RECT rect = new RECT();
-			if (OS.GetWindowRect(handle, rect)) {
-				rect.right -= rect.left;
-				rect.bottom -= rect.top;
-				rect.left = rect.top = 0;
-				int inset = Math.max(0, getBorderWidthInPixels());
-				if (inset > 0 && rect.right > inset * 2 && rect.bottom > inset * 2) {
-					OS.ExcludeClipRect(dc, inset, inset, rect.right - inset, rect.bottom - inset);
-				}
-				OS.DrawEdge(dc, rect, effectiveBorderReliefForPaint() == SWT.SHADOW_ETCHED_IN
-						? OS.EDGE_ETCHED : OS.EDGE_BUMP, OS.BF_RECT);
-			}
+			drawControlEtchedRelief(dc);
 		} finally {
 			OS.ReleaseDC(handle, dc);
 		}
 	}
 	return result;
+}
+
+/* The Control-level etched relief kernel shared by WM_NCPAINT (window DC) and
+ * WM_PRINT (caller DC). It replaces only the existing non-client ring. */
+private void drawControlEtchedRelief(long dc) {
+	RECT rect = new RECT();
+	if (OS.GetWindowRect(handle, rect)) {
+		rect.right -= rect.left;
+		rect.bottom -= rect.top;
+		rect.left = rect.top = 0;
+		int inset = Math.max(0, getBorderWidthInPixels());
+		if (inset > 0 && rect.right > inset * 2 && rect.bottom > inset * 2) {
+			OS.ExcludeClipRect(dc, inset, inset, rect.right - inset, rect.bottom - inset);
+		}
+		OS.DrawEdge(dc, rect, effectiveBorderReliefForPaint() == SWT.SHADOW_ETCHED_IN
+				? OS.EDGE_ETCHED : OS.EDGE_BUMP, OS.BF_RECT);
+	}
 }
 
 LRESULT WM_NOTIFY (long wParam, long lParam) {
@@ -6611,7 +6617,25 @@ LRESULT WM_PASTE (long wParam, long lParam) {
 }
 
 LRESULT WM_PRINT (long wParam, long lParam) {
-	return wmPrint (handle, wParam, lParam);
+	LRESULT result = wmPrint (handle, wParam, lParam);
+	// Printing mirrors WM_NCPAINT: direct Composite/Canvas print their bevel in
+	// Composite.wmPrint; other controls print the Control-level etched relief.
+	if (usesCompositeBevelPainter() || isDisposed() || (lParam & OS.PRF_NONCLIENT) == 0
+			|| !NativeBorderRelief.isEtched(effectiveBorderReliefForPaint())
+			|| borderHandle() != handle) return result;
+	// The native procedure skips a hidden HWND under PRF_CHECKVISIBLE; so does the relief.
+	if ((lParam & OS.PRF_CHECKVISIBLE) != 0 && !OS.IsWindowVisible(handle)) return result;
+	if (result == null) result = new LRESULT(callWindowProc(handle, OS.WM_PRINT, wParam, lParam));
+	if (isDisposed()) return result;
+	// The caller owns this HDC: restore its clipping after drawing the ring.
+	int saved = OS.SaveDC(wParam);
+	if (saved == 0) return result;
+	try {
+		drawControlEtchedRelief(wParam);
+	} finally {
+		OS.RestoreDC(wParam, saved);
+	}
+	return result;
 }
 
 LRESULT WM_PRINTCLIENT (long wParam, long lParam) {
