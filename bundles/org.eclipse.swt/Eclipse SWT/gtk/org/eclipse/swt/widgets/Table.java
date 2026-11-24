@@ -2023,13 +2023,15 @@ boolean pageRowShown (long path) {
  * A block arrived: its rows are asked again (facades) and drawn again (rows without a facade). In a table
  * without columns, column 0 is fixed width and grows only through setScrollWidth, which the rows drawn
  * without a facade never reach: their loaded widths are measured here, as calculateWidth measures a row,
- * and the widest is applied once the source's queue drains (pageSourceSettled).
+ * and the widest is applied once the source's queue drains (pageSourceSettled). With MeasureItem,
+ * EraseItem or PaintItem hooked every row is drawn through a facade, whose paint widens the column
+ * (setScrollWidth); measuring here would create, and MeasureItem pin, a facade for every arrived row.
  */
 void refreshPageRows (int start, int end) {
 	if (virtualItems == null || isDisposed ()) return;
 	end = Math.min (end, itemCount - 1);
 	if (start < 0 || start > end) return;
-	if (columnCount == 0 && currentItem == null && usesVirtualNativeModel ()) {
+	if (columnCount == 0 && currentItem == null && usesVirtualNativeModel () && !pagePaintNeedsFacade ()) {
 		long column = GTK.gtk_tree_view_get_column (handle, 0);
 		long iter = column == 0 ? 0 : OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 		if (iter != 0) {

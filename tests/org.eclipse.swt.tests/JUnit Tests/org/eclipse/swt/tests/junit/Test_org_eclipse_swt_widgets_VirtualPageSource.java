@@ -577,6 +577,25 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		assertEquals (wide, lazy.getItem (3).getText ());
 	}
 
+	@Test
+	public void test_columnlessOwnerDrawnTableMeasuresOnlyTheRowsItDraws () throws Exception {
+		/* MeasureItem needs facades: only the rows painted get them, not every row of the arrived blocks */
+		Table lazy = new Table (shell, SWT.VIRTUAL | SWT.BORDER);
+		java.util.List<Integer> measured = new ArrayList<> ();
+		lazy.addListener (SWT.MeasureItem, event -> measured.add (lazy.indexOf ((TableItem) event.item)));
+		lazy.setItemCount (10_000);
+		VirtualPageSource source = tableSource (64, 1, null);
+		source.setOverscanBlocks (2);
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		assertTrue (source.isLoaded (VirtualPageSource.ROOT, 64), "an overscan block below the screen arrived");
+		int facades = materialized (lazy);
+		assertTrue (facades < 64, "facades only for the rows drawn, fewer than one block: " + facades);
+		assertFalse (measured.isEmpty (), "the drawn rows were measured");
+		for (int index : measured) assertTrue (index >= 0 && index < 64, "MeasureItem only for rows on screen, not row " + index);
+	}
+
 	/* ------------------------------------------------------------------ Tree */
 
 	private static final int ROOTS = 40;
