@@ -787,7 +787,7 @@
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/ViewportRuntime.java",
-      "sha256": "c1e37f58419f91318f7ad3f7a826e6d420e8c5fb53f70247d6326ec8a3db1f9d"
+      "sha256": "660fa8d3014aa3a6b295fc6f7fbb7de981e350a795631f43728e62ba83785b74"
     },
     {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/PackedHeapGrowth.java",
