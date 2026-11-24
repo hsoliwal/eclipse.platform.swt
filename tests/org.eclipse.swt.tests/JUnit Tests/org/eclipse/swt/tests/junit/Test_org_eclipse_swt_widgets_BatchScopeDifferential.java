@@ -18,7 +18,6 @@ import java.io.*;
 import java.util.Random;
 
 import org.eclipse.swt.*;
-import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
 
 /**
