@@ -4299,7 +4299,18 @@ void cairoClipRegion (long cairo) {
 	GDK.gdk_cairo_region(cairo, actualRegion);
 	Cairo.cairo_clip(cairo);
 	Cairo.cairo_paint(cairo);
-	eventRegion = actualRegion;
+	if (eventRegion == 0) {
+		eventRegion = actualRegion;
+	} else {
+		/*
+		 * Replace the contents of the existing eventRegion instead of leaking it on
+		 * every draw. The object stays the same, because a paint GC may still hold
+		 * it as its regionSet: (E & A) | A == A.
+		 */
+		Cairo.cairo_region_intersect(eventRegion, actualRegion);
+		Cairo.cairo_region_union(eventRegion, actualRegion);
+		Cairo.cairo_region_destroy(actualRegion);
+	}
 }
 
 

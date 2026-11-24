@@ -1065,17 +1065,32 @@ void drawSwtFixedRelief (long cairo) {
 	int width = (state & ZERO_WIDTH) != 0 ? 0 : allocation.width;
 	int height = (state & ZERO_HEIGHT) != 0 ? 0 : allocation.height;
 	if (width <= 0 || height <= 0) return;
-	if (drawRegion) {
-		cairoClipRegion (cairo);
+	if (drawRegion && regionHandle != 0) {
+		// Only the visible shape set by setRegion shows the frame. No region is allocated here.
+		GDK.gdk_cairo_region (cairo, regionHandle);
+		Cairo.cairo_clip (cairo);
 	}
 	GTK.gtk_render_frame (GTK.gtk_widget_get_style_context (handle), cairo, 0, 0, width, height);
 }
 
 @Override
 long windowProc (long handle, long arg0, long user_data) {
-	long result = super.windowProc (handle, arg0, user_data);
 	// DRAW is connected after GTK's own handler, i.e. after the children are drawn.
-	if ((int) user_data == DRAW && handle == this.handle && !isDisposed ()) {
+	if ((int) user_data != DRAW || handle != this.handle || !hasVisibleBorderRelief ()) {
+		return super.windowProc (handle, arg0, user_data);
+	}
+	/*
+	 * The inherited DRAW path may repaint a setRegion() control and leave the cairo
+	 * clipped to the hidden area outside the region; the frame needs the original clip.
+	 */
+	Cairo.cairo_save (arg0);
+	long result;
+	try {
+		result = super.windowProc (handle, arg0, user_data);
+	} finally {
+		Cairo.cairo_restore (arg0);
+	}
+	if (!isDisposed ()) {
 		drawSwtFixedRelief (arg0);
 	}
 	return result;
