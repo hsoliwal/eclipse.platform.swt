@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.tests.junit;
+package org.eclipse.swt.tests.win32.widgets;
 
 import org.eclipse.swt.internal.*;
 import org.eclipse.swt.internal.win32.*;

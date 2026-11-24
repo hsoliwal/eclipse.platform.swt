@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.tests.junit;
+package org.eclipse.swt.tests.win32.widgets;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Array;
@@ -29,7 +29,8 @@ import org.eclipse.swt.internal.ole.win32.COM;
 import org.eclipse.swt.internal.ole.win32.IUnknown;
 import org.eclipse.swt.internal.ole.win32.VARIANT;
 import org.eclipse.swt.internal.win32.*;
-import org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_ViewportDifferential.Scene;
+import org.eclipse.swt.tests.junit.ViewportDifferential;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Table_ViewportDifferential.Scene;
 import org.eclipse.swt.widgets.*;
 
 /**

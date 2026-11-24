@@ -121,7 +121,6 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_internal_SwtLog.class, //
 			Test_org_eclipse_swt_internal_ViewportReporter.class, //
 			Test_org_eclipse_swt_internal_VisibilityGate.class, //
-			Test_org_eclipse_swt_internal_VisibilityGate_box.class, //
 			Test_org_eclipse_swt_internal_WidgetMode.class, //
 			Test_org_eclipse_swt_internal_WidgetModeAllWidgets.class, //
 			Test_org_eclipse_swt_internal_gpu_RetainedPlanes.class, //
@@ -143,7 +142,6 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_internal_render_GlyphCache.class, //
 			Test_org_eclipse_swt_internal_render_Glyphs.class, //
 			Test_org_eclipse_swt_internal_render_LongCache.class, //
-			Test_org_eclipse_swt_internal_render_M3Canvas.class, //
 			Test_org_eclipse_swt_internal_render_RowPaintKey.class, //
 			Test_org_eclipse_swt_internal_render_RowRenderer.class, //
 			Test_org_eclipse_swt_internal_render_RowSnapshots.class, //
@@ -152,7 +150,6 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_internal_render_ThreadRole.class, //
 			Test_org_eclipse_swt_internal_render_ThreadRoleBasic.class, //
 			Test_org_eclipse_swt_internal_render_VectorGlyphs.class, //
-			Test_org_eclipse_swt_internal_render_Win32Backends.class, //
 	})
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)

@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.tests.junit;
+package org.eclipse.swt.tests.win32;
 
 import static org.junit.jupiter.api.Assertions.*;
 

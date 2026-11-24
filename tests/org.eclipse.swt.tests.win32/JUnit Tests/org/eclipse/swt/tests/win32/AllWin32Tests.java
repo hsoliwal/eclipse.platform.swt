@@ -18,8 +18,23 @@ import org.eclipse.swt.graphics.ImageWin32Tests;
 import org.eclipse.swt.tests.win32.widgets.TestTableTooltip;
 import org.eclipse.swt.tests.win32.widgets.TestTreeColumn;
 import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Composite;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Control_batch;
 import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Display;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_DrawnRenderThread;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_List_Viewport;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_List_ViewportAcceptance;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Table_StockItems;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Table_Viewport;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Table_ViewportArms;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Table_ViewportBranches;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Table_ViewportDifferential;
 import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Tree;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Tree_NativeWork;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Tree_Viewport;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Tree_ViewportCoverage;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Tree_ViewportEdges;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Tree_ViewportHandles;
 import org.junit.platform.suite.api.SelectClasses;
 import org.junit.platform.suite.api.Suite;
 
@@ -33,7 +48,26 @@ import org.junit.platform.suite.api.Suite;
 		TestTreeColumn.class, //
 		TestTableTooltip.class, //
 		Win32DPIUtilTests.class, //
-		NativeRegionBatchWin32Tests.class })
+		NativeRegionBatchWin32Tests.class, //
+		// win32 tests moved out of the platform-neutral org.eclipse.swt.tests (AllWidgetTests, AllNonBrowserTests)
+		Test_org_eclipse_swt_widgets_Control_batch.class, //
+		Test_org_eclipse_swt_widgets_DrawnRenderThread.class, //
+		Test_org_eclipse_swt_widgets_List_Viewport.class, //
+		Test_org_eclipse_swt_widgets_List_ViewportAcceptance.class, //
+		Test_org_eclipse_swt_widgets_Table_StockItems.class, //
+		Test_org_eclipse_swt_widgets_Table_Viewport.class, //
+		Test_org_eclipse_swt_widgets_Table_ViewportArms.class, //
+		Test_org_eclipse_swt_widgets_Table_ViewportBranches.class, //
+		Test_org_eclipse_swt_widgets_Table_ViewportDifferential.class, //
+		Test_org_eclipse_swt_widgets_Tree_NativeWork.class, //
+		Test_org_eclipse_swt_widgets_Tree_Viewport.class, //
+		Test_org_eclipse_swt_widgets_Tree_ViewportCoverage.class, //
+		Test_org_eclipse_swt_widgets_Tree_ViewportDeltas.class, //
+		Test_org_eclipse_swt_widgets_Tree_ViewportEdges.class, //
+		Test_org_eclipse_swt_widgets_Tree_ViewportHandles.class, //
+		Test_org_eclipse_swt_internal_VisibilityGate_box.class, //
+		Test_org_eclipse_swt_internal_render_M3Canvas.class, //
+		Test_org_eclipse_swt_internal_render_Win32Backends.class })
 public class AllWin32Tests {
 
 }

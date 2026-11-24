@@ -143,7 +143,6 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_Combo_ViewportDifferential.class, //
 		Test_org_eclipse_swt_widgets_Control.class, //
 		Test_org_eclipse_swt_widgets_Control_PartVisibility.class, //
-		Test_org_eclipse_swt_widgets_Control_batch.class, //
 		Test_org_eclipse_swt_widgets_CoolBar_Coverage.class, //
 		Test_org_eclipse_swt_widgets_CoolBar_ViewportDifferential.class, //
 		Test_org_eclipse_swt_widgets_CoolItem.class, //
@@ -154,7 +153,6 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_Display_PostKeyStateGtk.class, //
 		Test_org_eclipse_swt_widgets_DrawnDeltaRepaint.class, //
 		Test_org_eclipse_swt_widgets_DrawnHiddenViewport.class, //
-		Test_org_eclipse_swt_widgets_DrawnRenderThread.class, //
 		Test_org_eclipse_swt_widgets_DrawnResizeSweep.class, //
 		Test_org_eclipse_swt_widgets_ExpandBar_Coverage.class, //
 		Test_org_eclipse_swt_widgets_ExpandBar_Hover.class, //
@@ -165,7 +163,6 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_Item.class, //
 		Test_org_eclipse_swt_widgets_List_HiddenBar.class, //
 		Test_org_eclipse_swt_widgets_List_Viewport.class, //
-		Test_org_eclipse_swt_widgets_List_ViewportAcceptance.class, //
 		Test_org_eclipse_swt_widgets_List_ViewportDifferential.class, //
 		Test_org_eclipse_swt_widgets_List_Virtual.class, //
 		Test_org_eclipse_swt_widgets_ScrollBar_GeometryDifferential.class, //
@@ -176,12 +173,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_Table_ReentrantPaint.class, //
 		Test_org_eclipse_swt_widgets_Table_SameLines.class, //
 		Test_org_eclipse_swt_widgets_Table_SetItemCount.class, //
-		Test_org_eclipse_swt_widgets_Table_StockItems.class, //
-		Test_org_eclipse_swt_widgets_Table_Viewport.class, //
-		Test_org_eclipse_swt_widgets_Table_ViewportArms.class, //
-		Test_org_eclipse_swt_widgets_Table_ViewportBranches.class, //
 		Test_org_eclipse_swt_widgets_Table_ViewportDeltas.class, //
-		Test_org_eclipse_swt_widgets_Table_ViewportDifferential.class, //
 		Test_org_eclipse_swt_widgets_Text_OptimizationBench.class, //
 		Test_org_eclipse_swt_widgets_Text_SameEditable.class, //
 		Test_org_eclipse_swt_widgets_Text_ScaleOracle.class, //
@@ -193,14 +185,8 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_Tree_EmptinessChanged.class, //
 		Test_org_eclipse_swt_widgets_Tree_HiddenBar.class, //
 		Test_org_eclipse_swt_widgets_Tree_KeyCollapse.class, //
-		Test_org_eclipse_swt_widgets_Tree_NativeWork.class, //
 		Test_org_eclipse_swt_widgets_Tree_UpstreamIssues.class, //
-		Test_org_eclipse_swt_widgets_Tree_Viewport.class, //
-		Test_org_eclipse_swt_widgets_Tree_ViewportCoverage.class, //
-		Test_org_eclipse_swt_widgets_Tree_ViewportDeltas.class, //
 		Test_org_eclipse_swt_widgets_Tree_ViewportDifferential.class, //
-		Test_org_eclipse_swt_widgets_Tree_ViewportEdges.class, //
-		Test_org_eclipse_swt_widgets_Tree_ViewportHandles.class, //
 		Test_org_eclipse_swt_widgets_Tree_ViewportSelection.class, //
 		Test_org_eclipse_swt_widgets_ViewportPaintGraph.class, //
 		Test_org_eclipse_swt_widgets_VirtualPageSource_ScaleClassic.class, //

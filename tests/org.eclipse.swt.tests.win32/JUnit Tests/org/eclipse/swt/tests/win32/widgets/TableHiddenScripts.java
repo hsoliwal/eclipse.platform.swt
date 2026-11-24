@@ -12,15 +12,16 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.tests.junit;
+package org.eclipse.swt.tests.win32.widgets;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.tests.junit.ViewportDifferential;
 import org.eclipse.swt.widgets.*;
-import org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_ViewportDifferential.Scene;
+import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Table_ViewportDifferential.Scene;
 
 /**
  * The HIDDEN script of the Table differential (brief rule 24, hidden viewports; user 2026-10-20: "if the viewport

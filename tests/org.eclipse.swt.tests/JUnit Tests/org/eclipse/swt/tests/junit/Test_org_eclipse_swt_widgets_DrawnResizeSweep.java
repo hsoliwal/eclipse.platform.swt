@@ -63,7 +63,8 @@ public class Test_org_eclipse_swt_widgets_DrawnResizeSweep {
 	static int creations (Object plane) throws ReflectiveOperationException {
 		Field buffer = Class.forName ("org.eclipse.swt.widgets.DrawnPlane").getDeclaredField ("buffer");
 		buffer.setAccessible (true);
-		return ((BackBuffer) buffer.get (plane)).creations;
+		/* the plane's win32 BackBuffer, read reflectively like the plane itself so that this test compiles on every platform */
+		return Class.forName ("org.eclipse.swt.internal.render.BackBuffer").getField ("creations").getInt (buffer.get (plane));
 	}
 
 	void sweep (Control control) throws Exception {

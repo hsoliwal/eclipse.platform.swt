@@ -12,7 +12,7 @@
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
-package org.eclipse.swt.tests.junit;
+package org.eclipse.swt.tests.win32.widgets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,6 +20,7 @@ import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.tests.junit.ViewportDifferential;
 import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
 
