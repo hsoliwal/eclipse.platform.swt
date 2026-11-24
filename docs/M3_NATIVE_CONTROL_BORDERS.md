@@ -58,8 +58,9 @@ These properties are independent from widget-level Group shadow styles.
     `fillNativeReliefBand` (L1350-1354) fills each band with
     `NSBezierPath.fillRect`. No `CALayer` border is used.
   - `SWT.SHADOW_NONE` is always refused (L1792): this API cannot remove the
-    native bezel. `SWT.DEFAULT` always succeeds and repaints the plain bezel
-    (L1793-1799).
+    native bezel. `SWT.DEFAULT` always succeeds: with a visible relief active it clears the relief
+    and repaints the plain bezel (L1793-1799); when the relief is already
+    `SWT.DEFAULT` it returns early and does nothing (L1791).
   - Frames that can take relief are `Scrollable`s created with `SWT.BORDER`
     whose `scrollView` gets the `NSBezelBorder` type. These include a
     `Composite`/`Canvas` (`Composite.java` L339-350), `Table` (`Table.java`

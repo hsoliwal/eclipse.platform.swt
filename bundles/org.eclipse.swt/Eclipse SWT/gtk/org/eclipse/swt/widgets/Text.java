@@ -970,6 +970,15 @@ int getBorderWidthInPixels () {
 }
 
 /**
+ * A single-line GtkEntry owns its own frame; a multi-line Text keeps the
+ * Scrollable frame owner (its GtkScrolledWindow).
+ */
+@Override
+long borderHandle () {
+	return (style & SWT.MULTI) != 0 ? super.borderHandle () : handle;
+}
+
+/**
  * Returns the line number of the caret.
  * <p>
  * The line number of the caret is returned.
