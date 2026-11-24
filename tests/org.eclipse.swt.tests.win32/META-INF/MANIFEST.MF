@@ -4,7 +4,8 @@ Bundle-Name: Eclipse SWT Tests Windows/win32
 Bundle-SymbolicName: org.eclipse.swt.tests.win32
 Bundle-Version: 3.109.0.qualifier
 Bundle-Vendor: Eclipse.org
-Require-Bundle: org.eclipse.swt
+Require-Bundle: org.eclipse.swt,
+ org.eclipse.swt.tests
 Eclipse-BundleShape: dir
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Automatic-Module-Name: org.eclipse.swt.tests.win32

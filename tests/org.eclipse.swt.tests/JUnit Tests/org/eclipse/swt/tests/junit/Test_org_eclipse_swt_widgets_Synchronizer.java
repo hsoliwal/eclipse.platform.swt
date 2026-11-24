@@ -28,15 +28,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FrameListener;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Synchronizer;
-import org.eclipse.swt.widgets.FrameListener;
 import org.eclipse.swt.widgets.Synchronizer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;

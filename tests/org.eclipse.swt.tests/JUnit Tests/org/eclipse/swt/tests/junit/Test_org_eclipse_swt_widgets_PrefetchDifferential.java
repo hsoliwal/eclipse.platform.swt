@@ -17,7 +17,6 @@ package org.eclipse.swt.tests.junit;
 import java.io.*;
 
 import org.eclipse.swt.*;
-import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
 
 /**

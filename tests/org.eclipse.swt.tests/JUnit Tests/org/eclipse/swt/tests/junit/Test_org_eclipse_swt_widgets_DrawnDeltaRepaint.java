@@ -52,7 +52,8 @@ public class Test_org_eclipse_swt_widgets_DrawnDeltaRepaint {
 		shell.dispose ();
 	}
 
-	static FrameLog log (Control control) {
+	/* public: also read by the win32 bundle's Test_org_eclipse_swt_widgets_DrawnRenderThread */
+	public static FrameLog log (Control control) {
 		try {
 			Field plane = control.getClass ().getDeclaredField ("drawnPlane");
 			plane.setAccessible (true);

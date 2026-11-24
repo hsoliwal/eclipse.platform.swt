@@ -19,10 +19,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.eclipse.swt.graphics.Resource;
 import org.eclipse.swt.tests.junit.AllNonBrowserTests.NonBrowserTestSuite;
 import org.junit.platform.suite.api.AfterSuite;
 import org.junit.platform.suite.api.BeforeSuite;
@@ -121,7 +118,6 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_internal_SwtLog.class, //
 			Test_org_eclipse_swt_internal_ViewportReporter.class, //
 			Test_org_eclipse_swt_internal_VisibilityGate.class, //
-			Test_org_eclipse_swt_internal_VisibilityGate_box.class, //
 			Test_org_eclipse_swt_internal_WidgetMode.class, //
 			Test_org_eclipse_swt_internal_WidgetModeAllWidgets.class, //
 			Test_org_eclipse_swt_internal_gpu_RetainedPlanes.class, //
@@ -143,7 +139,6 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_internal_render_GlyphCache.class, //
 			Test_org_eclipse_swt_internal_render_Glyphs.class, //
 			Test_org_eclipse_swt_internal_render_LongCache.class, //
-			Test_org_eclipse_swt_internal_render_M3Canvas.class, //
 			Test_org_eclipse_swt_internal_render_RowPaintKey.class, //
 			Test_org_eclipse_swt_internal_render_RowRenderer.class, //
 			Test_org_eclipse_swt_internal_render_RowSnapshots.class, //
@@ -152,7 +147,6 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_internal_render_ThreadRole.class, //
 			Test_org_eclipse_swt_internal_render_ThreadRoleBasic.class, //
 			Test_org_eclipse_swt_internal_render_VectorGlyphs.class, //
-			Test_org_eclipse_swt_internal_render_Win32Backends.class, //
 	})
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)
@@ -160,48 +154,15 @@ public class AllNonBrowserTests {
 		//
 	}
 
-	private static List<Error> leakedResources;
-
+	/* the resource leak check, shared with the win32 bundle's AllWin32Tests: see SuiteResourceLeakCheck */
 	@BeforeSuite
 	public static void beforeSuite() {
-		// Set up ResourceTracked to detect any leaks
-		leakedResources = new ArrayList<> ();
-		Resource.setNonDisposeHandler (error -> {
-			// Can't 'Assert.fail()' here, because Handler is called on
-			// some other thread and Exception will simply be ignored.
-			// Workaround: collect errors and report later.
-			leakedResources.add (error);
-		});
+		SuiteResourceLeakCheck.beforeSuite ();
 	}
 
-	/*
-	 * It would be easier to understand if errors here were reported
-	 * through  a test and not through @AfterSuite, but this is a
-	 * suite class and not a test class, so it can't have tests.
-	 */
 	@AfterSuite
 	public static void afterSuite() {
-		// Run GC in order do detect any outstanding leaks
-		System.gc ();
-		// And wait a bit to let Resource.ResourceTracker, that is
-		// queued to another thread, do its job. It is unfortunate that
-		// there is no simple better way to wait except waiting some
-		// fixed timeout.
-		try {
-			Thread.sleep (100);
-		} catch (InterruptedException e) {
-			// Just ignore
-		}
-
-		for (Error leak : leakedResources) {
-			leak.printStackTrace ();
-		}
-
-		if (0 != leakedResources.size ()) {
-			// In order to help tools to filter fail reason out of entire log, throw the first leak.
-			String hint = leakedResources.size () + " leaks found, the first is:";
-			throw new AssertionError(hint, leakedResources.get (0));
-		}
+		SuiteResourceLeakCheck.afterSuite ();
 	}
 
 	/*

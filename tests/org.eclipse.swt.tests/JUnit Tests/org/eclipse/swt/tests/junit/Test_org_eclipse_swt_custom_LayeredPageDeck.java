@@ -14,7 +14,6 @@ import org.eclipse.swt.custom.LayeredTransitions;
 import org.eclipse.swt.custom.LayeredViewport;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.internal.ViewportTweenMath;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;

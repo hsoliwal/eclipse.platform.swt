@@ -170,7 +170,9 @@ public void testImageTransfer_fromImage() throws InterruptedException {
 public void testImageTransfer_fromCopiedImage() throws InterruptedException {
 	final Image image = createTestImage();
 	try {
-		final ImageData drag = new Image(shell.getDisplay(), image, SWT.IMAGE_COPY).getImageData();
+		final Image copiedImage = new Image(shell.getDisplay(), image, SWT.IMAGE_COPY);
+		final ImageData drag = copiedImage.getImageData();
+		copiedImage.dispose();
 		final ImageData drop = testTransferRoundtrip(ImageTransfer.getInstance(), drag);
 		assertImageDataEqualsIgnoringAlphaInData(drag, drop);
 	} finally {

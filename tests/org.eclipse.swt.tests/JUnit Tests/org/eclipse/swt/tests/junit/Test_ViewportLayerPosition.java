@@ -7,7 +7,6 @@ package org.eclipse.swt.tests.junit;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Random;
 
 import org.eclipse.swt.internal.ViewportRuntime.LayerPosition;

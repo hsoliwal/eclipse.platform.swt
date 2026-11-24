@@ -16,14 +16,10 @@ package org.eclipse.swt.tests.junit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.accessibility.Accessible;
-import org.eclipse.swt.accessibility.AccessibleEvent;
-import org.eclipse.swt.accessibility.AccessibleListener;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Shell;
@@ -36,6 +32,12 @@ import org.junit.jupiter.api.Test;
  * are drawn or read, and a virtual list answers every API call like a plain
  * list holding the same items. The item count is 200,000 by default and
  * 10,000,000 with {@code -Dswt.list.scaleTest=true}.
+ * <p>
+ * This class holds the platform-neutral part, the public answers. The win32 part (the
+ * List's item store, scroll bar and accessibility read through win32 messages and private
+ * fields) is <code>org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_List_Viewport</code>
+ * in org.eclipse.swt.tests.win32.
+ * </p>
  */
 public class Test_org_eclipse_swt_widgets_List_Viewport {
 	static final int COUNT = Boolean.getBoolean ("swt.list.scaleTest") ? 10_000_000 : 200_000;
@@ -96,45 +98,6 @@ public class Test_org_eclipse_swt_widgets_List_Viewport {
 	}
 
 	@Test
-	public void setItemCountMaterializesOnlyPaintedRows () {
-		int [] setData = {0};
-		List list = virtualList (SWT.MULTI, setData);
-		list.setItemCount (COUNT);
-		shell.open ();
-		paint (list);
-		settle ();
-		assertEquals (COUNT, list.getItemCount ());
-		int first = setData [0];
-		int top = list.getTopIndex ();
-		Object store = field (list, "itemStore");
-		for (int row = top; row < top + 28; row++) {
-			assertTrue (isMaterialized (store, row), "visible and overscan row " + row + " is requested after the debounce");
-		}
-		assertTrue (first > 0 && first <= MATERIALIZED_BOUND, "rows materialized by the first paint: " + first);
-		list.setTopIndex (COUNT - 1);
-		paint (list);
-		settle ();
-		assertTrue (list.getTopIndex () > COUNT - MATERIALIZED_BOUND, "top " + list.getTopIndex ());
-		int afterScroll = setData [0];
-		assertTrue (afterScroll - first <= MATERIALIZED_BOUND, "rows materialized by scroll-to-end: " + (afterScroll - first));
-		assertEquals ("item " + (COUNT / 2), list.getItem (COUNT / 2));
-		assertEquals (afterScroll + 1, setData [0], "a read materializes exactly the row it names");
-		assertEquals ("item " + (COUNT / 2), list.getItem (COUNT / 2));
-		assertEquals (afterScroll + 1, setData [0], "a materialized row is not requested again");
-		assertTrue (repeated.isEmpty (), "SetData once per row per residency, repeated: " + repeated);
-	}
-
-	private static boolean isMaterialized (Object store, int row) {
-		try {
-			java.lang.reflect.Method method = store.getClass ().getDeclaredMethod ("isMaterialized", int.class);
-			method.setAccessible (true);
-			return (Boolean) method.invoke (store, row);
-		} catch (ReflectiveOperationException e) {
-			throw new IllegalStateException (e);
-		}
-	}
-
-	@Test
 	public void selectionAndRemovalShiftLikeAPlainList () {
 		int [] setData = {0};
 		List list = virtualList (SWT.MULTI, setData);
@@ -157,58 +120,6 @@ public class Test_org_eclipse_swt_widgets_List_Viewport {
 		list.setItemCount (5);
 		assertEquals (5, list.getItemCount ());
 		assertEquals (0, list.getSelectionCount ());
-	}
-
-	@Test
-	public void setItemsKeepsOneReferencePerItemAndAnswersExactly () {
-		String [] items = new String [COUNT];
-		for (int i = 0; i < COUNT; i++) items [i] = "row " + i;
-		int [] setData = {0};
-		List list = virtualList (SWT.SINGLE, setData);
-		long t0 = System.nanoTime ();
-		list.setItems (items);
-		long millis = (System.nanoTime () - t0) / 1_000_000;
-		assertEquals (COUNT, list.getItemCount ());
-		assertEquals ("row " + (COUNT - 1), list.getItem (COUNT - 1));
-		assertEquals (COUNT - 1, list.indexOf ("row " + (COUNT - 1)));
-		assertEquals (0, setData [0], "items given by setItems never ask for SetData");
-		list.setSelection (COUNT - 2);
-		assertEquals (COUNT - 2, list.getSelectionIndex ());
-		list.add ("head", 0);
-		assertEquals (COUNT - 1, list.getSelectionIndex (), "single selection shifts on insert");
-		list.remove (0);
-		assertEquals (COUNT - 2, list.getSelectionIndex (), "single selection shifts on remove");
-		assertTrue (millis < 5_000, "setItems took " + millis + " ms");
-		Object store = field (list, "itemStore");
-		assertNotNull (store);
-		String [] stored = (String []) field (store, "items");
-		assertTrue (stored.length < COUNT + COUNT / 2 + 16, "store capacity " + stored.length);
-	}
-
-	@Test
-	public void bulkChangesFreezeOnlyTheContentArea () {
-		int [] setData = {0};
-		List list = virtualList (SWT.MULTI, setData);
-		shell.open ();
-		String [] items = new String [5000];
-		for (int i = 0; i < items.length; i++) items [i] = "bulk " + i;
-		list.setItems (items);
-		assertEquals (0, ((Integer) field (list, "storeBits")) & (1 << 5), "the content freeze ends with the bulk change");
-		org.eclipse.swt.internal.win32.SCROLLINFO info = new org.eclipse.swt.internal.win32.SCROLLINFO ();
-		info.cbSize = org.eclipse.swt.internal.win32.SCROLLINFO.sizeof;
-		info.fMask = org.eclipse.swt.internal.win32.OS.SIF_RANGE;
-		org.eclipse.swt.internal.win32.OS.GetScrollInfo (list.handle, org.eclipse.swt.internal.win32.OS.SB_VERT, info);
-		assertEquals (items.length - 1, info.nMax, "the scroll bar follows the bulk change");
-		list.remove (100, 4000);
-		assertEquals (0, ((Integer) field (list, "storeBits")) & (1 << 5));
-		assertEquals ("bulk 4001", list.getItem (100));
-	}
-
-	@Test
-	public void plainListKeepsTheNativeStrings () {
-		List list = new List (shell, SWT.MULTI);
-		list.setItems ("a", "b");
-		assertNull (field (list, "itemStore"), "a list without SWT.VIRTUAL has no Java item store");
 	}
 
 	@Test
@@ -305,38 +216,5 @@ public class Test_org_eclipse_swt_widgets_List_Viewport {
 		}
 		assertTrue (colors.size () >= 3, "print rendered the rows (distinct colours: " + colors.size () + ")");
 		return Integer.toHexString (Arrays.hashCode (data.data));
-	}
-
-	@Test
-	public void accessibleNamesComeFromTheItemStore () throws Exception {
-		int [] setData = {0};
-		List list = virtualList (SWT.SINGLE, setData);
-		list.setItemCount (100);
-		shell.open ();
-		paint (list);
-		org.eclipse.swt.internal.win32.OS.SendMessage (list.handle, org.eclipse.swt.internal.win32.OS.WM_GETOBJECT, 0, org.eclipse.swt.internal.win32.OS.OBJID_CLIENT);
-		Accessible accessible = list.getAccessible ();
-		@SuppressWarnings ("unchecked")
-		java.util.List<AccessibleListener> listeners = new ArrayList<> ((java.util.List<AccessibleListener>) field (accessible, "accessibleListeners"));
-		assertFalse (listeners.isEmpty (), "the owner-data list names its rows");
-		AccessibleEvent event = new AccessibleEvent (accessible);
-		event.childID = 42;
-		for (AccessibleListener listener : listeners) listener.getName (event);
-		assertEquals ("item 42", event.result);
-	}
-
-	static Object field (Object target, String name) {
-		for (Class<?> type = target.getClass (); type != null; type = type.getSuperclass ()) {
-			try {
-				Field field = type.getDeclaredField (name);
-				field.setAccessible (true);
-				return field.get (target);
-			} catch (NoSuchFieldException e) {
-				// superclass
-			} catch (IllegalAccessException e) {
-				throw new IllegalStateException (e);
-			}
-		}
-		throw new IllegalStateException ("no field " + name + " in " + target.getClass () + " " + Arrays.toString (new Object [0]));
 	}
 }

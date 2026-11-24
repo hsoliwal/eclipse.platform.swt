@@ -86,7 +86,7 @@ public class Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom {
 		 * glyphs follow the window's DPI (its native zoom), the density of the native rows: a forced swt.autoScale above the
 		 * monitor's neither enlarges nor scales them, as it does not the native expanders and check boxes.
 		 */
-		int glyphZoom = tree.nativeZoom;
+		int glyphZoom = nativeZoom (tree);
 		ImageData chevron = new GlyphCache (4, Glyphs.rasterizer (glyph -> theme.border)).get (Glyphs.CHEVRON_DOWN, 16, glyphZoom, 0);
 		int found = find (capture, chevron, 0, row0.y - 1, row0.x, row0.y + row0.height + 1);
 		LOG.info (() -> "glyph zoom " + zoom + " " + laf + " " + mode + ": chevron " + chevron.width + " px found at x " + found + " in " + file);
@@ -105,6 +105,18 @@ public class Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom {
 		assertEquals (inactive, fill, "swt #3659: the unfocused selection of " + laf + " is not Tree.selectionInactiveBackground: " + file);
 		assertNotEquals (background, inactive, "the look and feel distinguishes the inactive selection");
 		shell.dispose ();
+	}
+
+	/*
+	 * the window's native zoom: the public field Widget.nativeZoom of the win32 port, read reflectively so that this test
+	 * compiles on every platform (a port without the field fails here; it is not skipped)
+	 */
+	static int nativeZoom (Widget widget) {
+		try {
+			return Widget.class.getField ("nativeZoom").getInt (widget);
+		} catch (ReflectiveOperationException e) {
+			throw new AssertionError ("Widget.nativeZoom is not available on " + SWT.getPlatform (), e);
+		}
 	}
 
 	/* item bounds (points) in the capture's device pixels */

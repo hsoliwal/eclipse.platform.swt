@@ -17,7 +17,6 @@ package org.eclipse.swt.tests.junit;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.eclipse.swt.internal.ItemRange;
-import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
 
 /**
