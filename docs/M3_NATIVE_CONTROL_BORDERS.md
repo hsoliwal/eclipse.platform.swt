@@ -36,10 +36,37 @@ These properties are independent from widget-level Group shadow styles.
   respectively. This provider is **separate** from the already owned
   foreground/background CSS provider, so color changes cannot wipe a border.
   Clearing uses an empty CSS provider; context ownership handles its disposal.
-- **Cocoa:** API is present for compile-time parity; rendering a true
-  *two-tone native bevel* is not implemented. All non-default values
-  reject with `SWT.ERROR_NOT_IMPLEMENTED` rather than silently painting a
-  flat CALayer border and claiming it is a bevel.
+- **Cocoa:** two-tone relief is drawn only over an existing `NSScrollView`
+  bezel. On any other frame a visible relief fails with
+  `SWT.ERROR_NOT_IMPLEMENTED` before any state changes. Line numbers below
+  refer to
+  `bundles/org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/widgets/Control.java`
+  at master `c269ea222f1b`:
+  - `setBorderRelief` (L1788-1819) accepts `SHADOW_IN`, `SHADOW_OUT`,
+    `SHADOW_ETCHED_IN` and `SHADOW_ETCHED_OUT` only on a `Scrollable` created
+    with `SWT.BORDER` (L1800-1803) whose `scrollView` has the
+    `OS.NSBezelBorder` border type (L1804-1807). It measures the bezel trim
+    with `NSScrollView.frameSizeForContentSize(..., OS.NSBezelBorder)`. It
+    refuses a zero trim, and refuses an etched style when the trim is under
+    two points per side (L1808-1814). The `scrollView` peer, its border type,
+    `computeTrim` and the client area stay native.
+  - `drawRect` (L1308-1348) runs after AppKit has painted that same
+    `scrollView`. It fills the bezel bands with `NSColor.controlShadowColor`
+    and `controlHighlightColor` (L1330): one ring for inset/outset, and two
+    rings with opposite shading for the etched styles (L1325-1344).
+    `fillNativeReliefBand` (L1350-1354) fills each band with
+    `NSBezierPath.fillRect`. No `CALayer` border is used.
+  - `SWT.SHADOW_NONE` is always refused (L1792): this API cannot remove the
+    native bezel. `SWT.DEFAULT` always succeeds and repaints the plain bezel
+    (L1793-1799).
+  - Frames that can take relief: a bordered `Composite`/`Canvas`
+    (`Composite.java` L339-349) and bordered `Table`, `Tree`, `List`,
+    multi-line `Text` and non-`SWT.SMOOTH` `ToolBar`. Refused: controls
+    without `SWT.BORDER`, a `SWT.SMOOTH` `ToolBar` (an `NSToolbar`),
+    single-line `Text` (an `NSTextField` with no `scrollView`), `Link`
+    (a `Control`, not a `Scrollable`, even though its bordered peer is an
+    `NSScrollView` bezel), and any other control whose `scrollView` is
+    missing or does not have the `NSBezelBorder` type.
 - **Android:** the original `AndroidPlatform.PeerView` performs two-tone native
   inset/outset/groove/ridge drawing in `onDraw`, with two logical-pixel trim,
   density-rounded view padding and UI-thread native peer updates. The default
@@ -88,8 +115,11 @@ unmodified until the first explicit call to `setBorderRelief`.
   changing a child Control border must not re-order its native visual.
 - Lifecycle/disposal/reentrancy, keyboard focus, accessibility, JUnit/PDE/Tycho,
   source/binary signature comparison and resource leak checks.
-- Cocoa AppKit bevel drawing remains unsupported rather than silently falling
-  back to a flat line. Android/iOS native screenshot/instrumentation acceptance
+- Cocoa has no pixel proof for its bezel-band relief. Gates: AppKit
+  screenshots of inset, outset, both etched cases and reset on each accepted
+  bezel frame, in light/dark appearance at 1x and 2x scale, with the focus
+  ring, plus a JUnit check that every refused frame leaves `getBorderRelief()`
+  unchanged. Android/iOS native screenshot/instrumentation acceptance
   and regenerated `javac -h` JNI registration verification remain outstanding.
 
 ## Follow-up: one owner for Composite/Canvas border APIs
@@ -130,8 +160,13 @@ merged Win32 compatibility contract (SWT #532):
 - On GTK3/GTK4 and Android/iOS, `setBevelBorder` is a compatibility alias
   of the already-implemented `Control.setBorderRelief`. A single GTK CSS
   provider or mobile view remains the rendering owner.
-- Desktop Cocoa still throws `SWT.ERROR_NOT_IMPLEMENTED` for non-default
-  visible relief; aliasing the API must **not** claim AppKit bevel rendering.
+- On desktop Cocoa, `setBevelBorder` (`Composite.java` L116-127) passes the
+  four visible bevels to `Control.setBorderRelief`, and maps `SWT.NONE` and
+  `SWT.SHADOW_NONE` to `SWT.DEFAULT`. So a bordered `Composite`/`Canvas`
+  gets the same relief painted over its `NSScrollView` bezel, and a
+  borderless one still throws `SWT.ERROR_NOT_IMPLEMENTED`. `getBevelBorder`
+  (L105-109) reports `SWT.NONE` for `SWT.DEFAULT`. The alias adds no AppKit
+  border type: the relief is SWT-painted bands over the existing bezel.
 - Subclasses keep their original behavior: Win32's `setBevelBorder` still
   refuses non-direct `Composite/Canvas` subclasses; the inherited
   `setBorderRelief` remains independently usable.
