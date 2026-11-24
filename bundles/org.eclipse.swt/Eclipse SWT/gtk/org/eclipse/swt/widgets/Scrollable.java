@@ -263,7 +263,8 @@ boolean hasScrolledFrame () {
  * native allocation that getClientArea reports.
  */
 int reliefClientTrimInPixels () {
-	return scrolledHandle != 0 && !hasScrolledFrame () ? nativeBorderReliefInPixels () : 0;
+	if (scrolledHandle == 0 || !hasVisibleBorderRelief () || hasScrolledFrame ()) return 0;
+	return nativeBorderReliefInPixels ();
 }
 
 /**
