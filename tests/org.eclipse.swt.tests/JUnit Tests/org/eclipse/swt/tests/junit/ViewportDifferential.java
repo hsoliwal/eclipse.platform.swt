@@ -603,6 +603,45 @@ public final class ViewportDifferential<S> {
 		return data;
 	}
 
+	/**
+	 * {@link #render(Control)} without the scroll bars that GTK draws inside the client area. With overlay
+	 * scrolling ({@link Scrollable#getScrollbarsMode()} has {@link SWT#SCROLLBAR_OVERLAY}, the GTK default) a
+	 * scroll bar is an indicator over the client area that fades in on the frame clock after every change of the
+	 * scroll position and fades out about two seconds later, so its pixels in a capture depend on when the
+	 * capture is taken, and a crop to the client area does not remove them. They are made transparent for this
+	 * synchronous capture and get their opacity back afterwards. Without overlay scroll bars, and on other
+	 * platforms, this is {@link #render(Control)}: scroll bars outside the client area are left to the caller's
+	 * client-area crop.
+	 */
+	public static ImageData renderWithoutOverlayScrollBars (Scrollable control) {
+		if (!"gtk".equals (SWT.getPlatform ()) || (control.getScrollbarsMode () & SWT.SCROLLBAR_OVERLAY) == 0) {
+			return render (control);
+		}
+		ScrollBar [] bars = {control.getVerticalBar (), control.getHorizontalBar ()};
+		double [] opacity = new double [bars.length];
+		try {
+			Class<?> gtk = Class.forName ("org.eclipse.swt.internal.gtk.GTK");
+			Method getOpacity = gtk.getMethod ("gtk_widget_get_opacity", long.class);
+			Method setOpacity = gtk.getMethod ("gtk_widget_set_opacity", long.class, double.class);
+			int hidden = 0;
+			try {
+				for (; hidden < bars.length; hidden++) {
+					if (bars [hidden] == null) continue;
+					long handle = field (Widget.class, bars [hidden], "handle");
+					opacity [hidden] = (Double) getOpacity.invoke (null, handle);
+					setOpacity.invoke (null, handle, 0.0);
+				}
+				return render (control);
+			} finally {
+				for (int i = 0; i < hidden; i++) {
+					if (bars [i] != null) setOpacity.invoke (null, field (Widget.class, bars [i], "handle"), opacity [i]);
+				}
+			}
+		} catch (ReflectiveOperationException e) {
+			throw new AssertionError ("GTK overlay scroll bars cannot be left out of the capture", e);
+		}
+	}
+
 	/** win32 <code>SendMessage</code> to a control's handle (tests that call it assume win32). */
 	public static long send (Control control, int message, long wParam, long lParam) {
 		try {

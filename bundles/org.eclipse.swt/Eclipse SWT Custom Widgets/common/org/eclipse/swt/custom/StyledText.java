@@ -10413,6 +10413,11 @@ public void setLineSpacingProvider(StyledTextLineSpacingProvider lineSpacingProv
 				// call reset cache for the first line which have changed to recompute scrollbars
 				resetCache(firstLine, 0);
 			}
+		} else {
+			// variable line heights already measured carry the previous spacing; without a reset a line takes the
+			// new spacing only when its layout is rebuilt (at its next paint), so the line pixels would depend on
+			// which lines have been painted since this call
+			resetCache(0, content.getLineCount());
 		}
 	}
 	setCaretLocations();
