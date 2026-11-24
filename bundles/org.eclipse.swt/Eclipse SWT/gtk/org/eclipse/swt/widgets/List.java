@@ -40,8 +40,8 @@ import org.eclipse.swt.internal.gtk4.*;
  * <code>setItems</code> behave as in a plain list; items created by
  * <code>setItemCount</code> or emptied by <code>clear</code> are requested
  * with an <code>SWT.SetData</code> event (<code>event.index</code> is the row)
- * when they are first drawn or read, and the listener answers with
- * <code>setItem(event.index, text)</code>.
+ * when they are first drawn or read (on GTK4, when they are read), and the
+ * listener answers with <code>setItem(event.index, text)</code>.
  * </p><p>
  * IMPORTANT: This class is <em>not</em> intended to be subclassed.
  * </p>
@@ -343,10 +343,6 @@ void createHandle (int index) {
     }
 	GTK.gtk_tree_view_column_pack_start (columnHandle, textRenderer, true);
 	GTK.gtk_tree_view_column_add_attribute (columnHandle, textRenderer, OS.text, TEXT_COLUMN);
-	if ((style & SWT.VIRTUAL) != 0) {
-		/* a row whose text is not set yet is requested when it is drawn (cellDataProc) */
-		GTK.gtk_tree_view_column_set_cell_data_func (columnHandle, textRenderer, display.cellDataProc, handle, 0);
-	}
 	GTK.gtk_tree_view_column_set_min_width (columnHandle, 0);
 	GTK.gtk_tree_view_insert_column (handle, columnHandle, index);
 
@@ -669,7 +665,7 @@ public String getItem (int index) {
 
 /*
  * VIRTUAL: a row created by setItemCount or emptied by clear holds no text (NULL in the GtkListStore) until
- * SWT.SetData answers it, the first time the row is drawn or read. SetData is sent once per row and never
+ * SWT.SetData answers it, the first time the row is drawn (GTK3, requestShownRows) or read. SetData is sent once per row and never
  * re-entrantly; a row the listener leaves unset reads as the empty string from then on.
  */
 String requestItem (int index) {
@@ -705,38 +701,51 @@ String requestItem (int index) {
 }
 
 /*
- * VIRTUAL: the cell data function of the text renderer. A row whose text is not set yet is requested when it
- * is on screen. GtkTreeView also measures rows that are not shown: those stay unrequested and are measured as
- * the empty string, as an unset row of a plain list.
+ * VIRTUAL: on GTK3 the tree view's draw handler runs before GtkTreeView draws (EXPOSE_EVENT_INVERSE), so the
+ * rows on screen whose text is not set yet are requested then and drawn with their text. GtkTreeView also
+ * measures rows that are not shown; a cell data function would call into Java for every one of them, so none is
+ * used. (GTK4 draws through snapshot and has no such handler: there a row is requested when it is read.)
  */
 @Override
-long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
-	if ((style & SWT.VIRTUAL) == 0 || tree_model != modelHandle) return 0;
+long windowProc (long handle, long arg0, long user_data) {
+	if ((int) user_data == EXPOSE_EVENT_INVERSE && handle == this.handle && (style & SWT.VIRTUAL) != 0) requestShownRows ();
+	return super.windowProc (handle, arg0, user_data);
+}
+
+void requestShownRows () {
+	if (inSetData || GTK.gtk_tree_model_iter_n_children (modelHandle, 0) == 0) return;
+	GdkRectangle visible = new GdkRectangle ();
+	GTK.gtk_tree_view_get_visible_rect (handle, visible);
+	int first = rowAtBinY (0);
+	if (first < 0) return;
+	int last = rowAtBinY (Math.max (0, visible.height - 1));
+	if (last < 0) last = GTK.gtk_tree_model_iter_n_children (modelHandle, 0) - 1;
 	long [] ptr = new long [1];
-	GTK.gtk_tree_model_get (tree_model, iter, TEXT_COLUMN, ptr, -1);
-	if (ptr [0] != 0) {
-		OS.g_free (ptr [0]);
-		return 0;
-	}
-	String string = "";
-	if (!inSetData && GTK.gtk_widget_get_mapped (handle)) {
-		long path = GTK.gtk_tree_model_get_path (tree_model, iter);
-		if (path == 0) return 0;
-		int [] index = {-1};
-		long indices = GTK.gtk_tree_path_get_indices (path);
-		if (indices != 0) C.memmove (index, indices, 4);
-		GdkRectangle row = new GdkRectangle (), visible = new GdkRectangle ();
-		GTK.gtk_tree_view_get_background_area (handle, path, 0, row);
-		GTK.gtk_tree_path_free (path);
-		GTK.gtk_tree_view_get_visible_rect (handle, visible);
-		/* the background area is in bin window coordinates, whose origin is the top of the visible rows */
-		if (index [0] >= 0 && row.y + row.height > 0 && row.y < visible.height) {
-			string = requestItem (index [0]);
-			if (isDisposed ()) return 0;
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	try {
+		for (int index = first; index <= last && !isDisposed () && index < GTK.gtk_tree_model_iter_n_children (modelHandle, 0); index++) {
+			GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
+			GTK.gtk_tree_model_get (modelHandle, iter, TEXT_COLUMN, ptr, -1);
+			if (ptr [0] != 0) {
+				OS.g_free (ptr [0]);
+				continue;
+			}
+			requestItem (index);
 		}
+	} finally {
+		OS.g_free (iter);
 	}
-	OS.g_object_set (cell, OS.text, Converter.wcsToMbcs (string, true), 0);
-	return 0;
+}
+
+/* The row at a y in bin window coordinates (the top of the visible rows is 0), or -1. */
+int rowAtBinY (int y) {
+	long [] path = new long [1];
+	if (!GTK.gtk_tree_view_get_path_at_pos (handle, 1, y, path, null, null, null) || path [0] == 0) return -1;
+	int [] index = {-1};
+	long indices = GTK.gtk_tree_path_get_indices (path [0]);
+	if (indices != 0) C.memmove (index, indices, 4);
+	GTK.gtk_tree_path_free (path [0]);
+	return index [0];
 }
 
 /**
