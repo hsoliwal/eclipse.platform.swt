@@ -56,14 +56,18 @@ public class ImageWin32Tests {
 	public void testImageDataForDifferentFractionalZoomsShouldBeDifferent() {
 		ImageGcDrawer noOpGcDrawer = (gc, height, width) -> {};
 		Image image = new Image(display, noOpGcDrawer, 10, 10);
-		int zoom1 = 125;
-		int zoom2 = 150;
-		ImageData imageDataAtZoom1 = image.getImageData(zoom1);
-		ImageData imageDataAtZoom2 = image.getImageData(zoom2);
-		assertNotEquals(imageDataAtZoom1.height, imageDataAtZoom2.height,
-				"ImageData::height should not be the same for imageData at different zoom levels");
-		assertNotEquals(imageDataAtZoom1.width, imageDataAtZoom2.width,
-				"ImageData::width should not be the same for imageData at different zoom levels");
+		try {
+			int zoom1 = 125;
+			int zoom2 = 150;
+			ImageData imageDataAtZoom1 = image.getImageData(zoom1);
+			ImageData imageDataAtZoom2 = image.getImageData(zoom2);
+			assertNotEquals(imageDataAtZoom1.height, imageDataAtZoom2.height,
+					"ImageData::height should not be the same for imageData at different zoom levels");
+			assertNotEquals(imageDataAtZoom1.width, imageDataAtZoom2.width,
+					"ImageData::width should not be the same for imageData at different zoom levels");
+		} finally {
+			image.dispose();
+		}
 	}
 
 	@Test
@@ -157,6 +161,7 @@ public class ImageWin32Tests {
 			}
 			image.dispose();
 			targetCanvasGc.dispose();
+			targetCanvas.dispose();
 			gc.dispose();
 		}
 	}
@@ -196,7 +201,9 @@ public class ImageWin32Tests {
 		Image image = new Image(display, width, height);
 		fillImage(image, color);
 		ImageData imageData = image.getImageData();
-		ImageData recreatedImageData = new Image(display, imageData).getImageData();
+		Image recreatedImage = new Image(display, imageData);
+		ImageData recreatedImageData = recreatedImage.getImageData();
+		recreatedImage.dispose();
 		assertImageDataEqualsIgnoringAlphaInData(imageData, recreatedImageData);
 		image.dispose();
 	}
@@ -211,7 +218,9 @@ public class ImageWin32Tests {
 		Image image = new Image(display, width, height);
 		fillImage(image, color);
 		ImageData imageData = image.getImageData();
-		ImageData copiedImageData = new Image(display, image, SWT.IMAGE_COPY).getImageData();
+		Image copiedImage = new Image(display, image, SWT.IMAGE_COPY);
+		ImageData copiedImageData = copiedImage.getImageData();
+		copiedImage.dispose();
 		assertImageDataEqualsIgnoringAlphaInData(imageData, copiedImageData);
 		image.dispose();
 	}

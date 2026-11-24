@@ -15,6 +15,7 @@
 package org.eclipse.swt.tests.win32;
 
 import org.eclipse.swt.graphics.ImageWin32Tests;
+import org.eclipse.swt.tests.junit.SuiteResourceLeakCheck;
 import org.eclipse.swt.tests.win32.widgets.TestTableTooltip;
 import org.eclipse.swt.tests.win32.widgets.TestTreeColumn;
 import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Composite;
@@ -35,6 +36,8 @@ import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Tree_Vie
 import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Tree_ViewportDeltas;
 import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Tree_ViewportEdges;
 import org.eclipse.swt.tests.win32.widgets.Test_org_eclipse_swt_widgets_Tree_ViewportHandles;
+import org.junit.platform.suite.api.AfterSuite;
+import org.junit.platform.suite.api.BeforeSuite;
 import org.junit.platform.suite.api.SelectClasses;
 import org.junit.platform.suite.api.Suite;
 
@@ -70,6 +73,19 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_internal_render_Win32Backends.class })
 public class AllWin32Tests {
 
+	/*
+	 * the resource leak check of AllNonBrowserTests (org.eclipse.swt.tests), for every class of this suite: the classes
+	 * that moved here from that suite ran under it before
+	 */
+	@BeforeSuite
+	public static void beforeSuite() {
+		SuiteResourceLeakCheck.beforeSuite ();
+	}
+
+	@AfterSuite
+	public static void afterSuite() {
+		SuiteResourceLeakCheck.afterSuite ();
+	}
 }
 
 /** Native update-region verification for SWT's existing Win32 viewport. */
