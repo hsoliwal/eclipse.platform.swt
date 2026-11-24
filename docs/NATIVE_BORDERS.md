@@ -27,8 +27,7 @@ do that. On Win32, `SWT.SHADOW_NONE` removes the whole native edge,
 including `WS_BORDER`, as the Win32 row below and the Win32 sections of
 [M3_NATIVE_CONTROL_BORDERS.md](M3_NATIVE_CONTROL_BORDERS.md) describe.
 Those Win32 sections also describe the interaction with
-`Composite.setBevelBorder(int)`. That file's Cocoa notes are out of date,
-and the Cocoa row below follows master's code. This page keeps the
+`Composite.setBevelBorder(int)`. Both files now describe master's Cocoa bezel-band relief. This page keeps the
 user-facing notes of SWT #534 that hold under master's code, and documents
 the Win32 and GTK frame-owner details added together with it.
 
