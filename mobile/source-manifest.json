@@ -706,6 +706,10 @@
       "sha256": "5829ae00e5c167f862588182f48a3eec89b5d2a358de6966f21e682c53de330a"
     },
     {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/mobile/MobileScale.java",
+      "sha256": "8782184c9ca31cc1bdd77e92cc373bfe252d6a9fbd0ce855695c37c38f8191b8"
+    },
+    {
       "path": "bundles/org.eclipse.swt/Eclipse SWT/mobile/org/eclipse/swt/internal/NativeImageLoader.java",
       "sha256": "2da612fac5ece9b425ca1d6ccad02d544a4941db4555a08c9aa592e97c40ae37"
     },
@@ -834,7 +838,7 @@
       },
       {
         "path": "bundles/org.eclipse.swt/Eclipse SWT/android/org/eclipse/swt/internal/android/AndroidPlatform.java",
-        "sha256": "d5b91dd5f75c2d157b6c78e5a52ff6096b4d0e5ce248c5cbf546b6fe0c9b1b26"
+        "sha256": "a9e3c9725a19bb7b4b3861877e37518733813b12ae5e8b856f85ab8b31d2f9f9"
       },
       {
         "path": "bundles/org.eclipse.swt/Eclipse SWT/android/org/eclipse/swt/internal/android/SwtActivity.java",
@@ -918,6 +922,10 @@
     {
       "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileCanvasLayersContractJUnitTest.java",
       "sha256": "c3c26a525e08872bf4dbb42d56cdd4a6064e9c389153d3e6a01d8f5a07a143b9"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests.mobile/src/org/eclipse/swt/tests/mobile/MobileScaleContractJUnitTest.java",
+      "sha256": "ceb5fd0dc31834a9badc7e9852d616deceaca6301adf972af0f7d6b19fae5b09"
     }
   ]
 }

@@ -55,6 +55,7 @@ import android.widget.FrameLayout;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.accessibility.ACC;
 import org.eclipse.swt.internal.mobile.MobilePlatform;
+import org.eclipse.swt.internal.mobile.MobileScale;
 
 /** Android OS binding. Each SWT Control owns one actual Android view. */
 public final class AndroidPlatform implements MobilePlatform {
@@ -421,13 +422,12 @@ public final class AndroidPlatform implements MobilePlatform {
 		Bitmap target = ui(() -> {
 			if (!active || !root.isShown() || !root.hasWindowFocus()) throw new IllegalStateException("Visible focused Android window required");
 			int[] location = new int[2]; root.getLocationInWindow(location);
-			int left = Math.addExact(location[0] + root.getPaddingLeft(), physical(x));
-			int top = Math.addExact(location[1] + root.getPaddingTop(), physical(y));
-			int right = Math.addExact(left, physical(width));
-			int bottom = Math.addExact(top, physical(height));
-			if (x < 0 || y < 0 || right > location[0] + root.getWidth() - root.getPaddingRight() || bottom > location[1] + root.getHeight() - root.getPaddingBottom()) throw new IllegalArgumentException("Capture outside visible SWT window");
+			// displayBounds() rounds the content box to logical pixels; that whole reported area is capturable.
+			int[] source = MobileScale.captureSource(density, location[0] + root.getPaddingLeft(), location[1] + root.getPaddingTop(),
+					location[0] + root.getWidth() - root.getPaddingRight(), location[1] + root.getHeight() - root.getPaddingBottom(),
+					x, y, width, height);
 			Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-			try { PixelCopy.request(activity.getWindow(), new Rect(left, top, right, bottom), bitmap,
+			try { PixelCopy.request(activity.getWindow(), new Rect(source[0], source[1], source[2], source[3]), bitmap,
 				result -> { status[0] = result; completed.countDown();
 					if (abandoned.get() && recycled.compareAndSet(false, true)) bitmap.recycle(); }, main); }
 			catch (RuntimeException | Error failure) { bitmap.recycle(); throw failure; }
@@ -449,8 +449,8 @@ public final class AndroidPlatform implements MobilePlatform {
 	}
 	@Override public Graphics graphics(long image) { checkThread(); return new AndroidGraphics(images.get(image)); }
 
-	private int physical(int logical) { return Math.round(logical * density); }
-	private int logical(int physical) { return Math.round(physical / density); }
+	private int physical(int logical) { return MobileScale.physical(logical, density); }
+	private int logical(int physical) { return MobileScale.logical(physical, density); }
 	private void callback(Runnable task) { try { task.run(); } catch (Throwable failure) { callbackFailure.compareAndSet(null, failure); } }
 	private <T> T ui(Callable<T> task) {
 		if (Looper.myLooper() == Looper.getMainLooper()) {
