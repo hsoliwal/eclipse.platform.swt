@@ -20,14 +20,17 @@ panel.setBorderRelief(SWT.DEFAULT);    // Restore the original platform edge.
 platform.
 
 The full contract is in [native-border-relief.md](native-border-relief.md),
-which is reconciled with master's code, including what `SWT.DEFAULT` and
-`SWT.SHADOW_NONE` do and each backend's limits. The Win32 interaction with
-`Composite.setBevelBorder(int)` is described in the Win32 sections of
-[M3_NATIVE_CONTROL_BORDERS.md](M3_NATIVE_CONTROL_BORDERS.md); that file's
-Cocoa notes are out of date, and the Cocoa row below follows master's code.
-This page keeps the user-facing notes of SWT #534 that hold under that
-contract, and documents the Win32 and GTK frame-owner details added together
-with it.
+whose backend table is reconciled with master's code. Its "API and
+precedence" section says that `SWT.SHADOW_NONE` removes only the
+supplemental relief and that `WS_BORDER` may remain; master's code does not
+do that. On Win32, `SWT.SHADOW_NONE` removes the whole native edge,
+including `WS_BORDER`, as the Win32 row below and the Win32 sections of
+[M3_NATIVE_CONTROL_BORDERS.md](M3_NATIVE_CONTROL_BORDERS.md) describe.
+Those Win32 sections also describe the interaction with
+`Composite.setBevelBorder(int)`. That file's Cocoa notes are out of date,
+and the Cocoa row below follows master's code. This page keeps the
+user-facing notes of SWT #534 that hold under master's code, and documents
+the Win32 and GTK frame-owner details added together with it.
 
 ## Method values, not constructor styles
 
@@ -48,7 +51,7 @@ control's allocation.
 
 | Backend | Frame owner and rendering |
 | --- | --- |
-| Win32 | The control's existing HWND. `Control` saves the original edge bits on the first override. `SHADOW_IN` selects `WS_EX_CLIENTEDGE` and `SHADOW_OUT` selects `WS_EX_WINDOWEDGE`. Direct `Composite` and `Canvas` use `WS_EX_CLIENTEDGE` with their existing `DrawEdge` bevel painter. The etched values select `WS_EX_CLIENTEDGE` and draw `OS.DrawEdge` (`EDGE_ETCHED` / `EDGE_BUMP`) after the native non-client paint. `SHADOW_NONE` removes the native edge. `getBorderWidth()` reports the selected edge, and a layout is requested only when that width changes. |
+| Win32 | The control's existing HWND. `Control` saves the original edge bits on the first override. `SHADOW_IN` selects `WS_EX_CLIENTEDGE` and `SHADOW_OUT` selects `WS_EX_WINDOWEDGE`. Direct `Composite` and `Canvas` use `WS_EX_CLIENTEDGE` with their existing `DrawEdge` bevel painter. The etched values select `WS_EX_CLIENTEDGE` and draw `OS.DrawEdge` (`EDGE_ETCHED` / `EDGE_BUMP`) after the native non-client paint. `SHADOW_NONE` removes the whole native edge: the extended edge bits and `WS_BORDER`. `getBorderWidth()` reports the selected edge, and a layout is requested only when that width changes. |
 | GTK 3 and GTK 4 | A per-Control CSS provider, separate from the colour provider, attached to `borderHandle()`. That is the `GtkScrolledWindow` for a `Scrollable` that has one (for example a bordered or scrolling `Composite` or `Canvas`, `Table`, `Tree` and multi-line `Text`), and the `GtkEntry` / `GtkSpinButton` itself for single-line `Text` and `Spinner`. |
 | Cocoa | Relief is drawn over the existing `NSScrollView` bezel of a bordered `Scrollable`. The etched values need at least two points of bezel on each side. `SHADOW_NONE` and other frame types refuse with `SWT.ERROR_NOT_IMPLEMENTED`. |
 | Mobile (Android, iOS) | Delegated to `MobilePlatform.setBorderRelief`. A transport that does not support a value refuses it with `SWT.ERROR_NOT_IMPLEMENTED`. |
