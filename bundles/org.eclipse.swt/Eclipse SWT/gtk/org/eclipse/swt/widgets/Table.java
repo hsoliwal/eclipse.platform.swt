@@ -115,6 +115,8 @@ public class Table extends Composite {
 	VirtualPageSource pageSource;
 	/** Facade-free answers given in paint callbacks (proof counter). */
 	int pagePaintAnswers;
+	/* getItemHeight measures the first row through the cell data functions: not a paint of that row */
+	boolean pageMeasuring;
 	TableColumn [] columns;
 	TableItem currentItem;
 	TableColumn sortColumn;
@@ -1699,10 +1701,12 @@ long virtualCellDataProc (long tree_column, long cell, long tree_model, long ite
 		return 0;
 	}
 	C.memmove (index, pathIndices, 4);
+	/* with a page source, only a row on screen is a paint request; a row measured elsewhere asks nothing */
+	boolean pageShown = pageSource == null || pageRowShown (path);
 	if (usesBoundedVirtualView () && tree_model == virtualViewModel) index [0] += virtualViewStart;
 	GTK.gtk_tree_path_free (path);
 	if (index [0] < 0 || index [0] >= itemCount) return 0;
-	if (pageSource != null && answerPageCell (tree_column, cell, index [0])) return 0;
+	if (pageSource != null && answerPageCell (tree_column, cell, index [0], pageShown)) return 0;
 	TableItem item = _getItem (index[0]);
     if (item == null || item.isDisposed()) {
         return 0;
@@ -1735,7 +1739,7 @@ long virtualCellDataProc (long tree_column, long cell, long tree_model, long ite
     }
 
 	boolean setData = false;
-	if ((style & SWT.VIRTUAL) != 0 && !item.isCachedState ()) {
+	if ((style & SWT.VIRTUAL) != 0 && !item.isCachedState () && pageShown) {
 		lastIndexOf = index[0];
 		setData = checkData (item);
         if (!setData || isDisposed() || item.isDisposed()) {
@@ -1962,7 +1966,7 @@ boolean pagePaintNeedsFacade () {
  * releasePageFacades), no image, default colours and font. Returns false when a facade exists or is
  * needed, so the classic path runs.
  */
-boolean answerPageCell (long tree_column, long cell, int index) {
+boolean answerPageCell (long tree_column, long cell, int index, boolean shown) {
 	if (!usesVirtualNativeModel () || virtualItems == null || virtualItems.get (index) != null || pagePaintNeedsFacade ()) return false;
 	pagePaintAnswers++;
 	if (GTK.GTK_IS_CELL_RENDERER_TOGGLE (cell)) {
@@ -1984,12 +1988,25 @@ boolean answerPageCell (long tree_column, long cell, int index) {
 				break;
 			}
 		}
-		String string = pageSource.paintText (index, column);
+		/* a row on screen asks for its block (paintText); a measured row reads what is loaded (rowText) */
+		String string = shown ? pageSource.paintText (index, column) : pageSource.rowText (index, column);
 		OS.g_object_set (cell, OS.text, Converter.wcsToMbcs (string == null ? pageSource.placeholder () : string, true), 0);
 		OS.g_object_set (cell, OS.foreground_rgba, (GdkRGBA) null, 0);
 		OS.g_object_set (cell, OS.font_desc, 0L, 0);
 	}
 	return true;
+}
+
+/*
+ * Whether the row of a view path is on screen: the table is mapped, the cell data call is not getItemHeight's
+ * measurement, and the row's background area meets the visible rows (bin window coordinates).
+ */
+boolean pageRowShown (long path) {
+	if (pageMeasuring || !GTK.gtk_widget_get_mapped (handle)) return false;
+	GdkRectangle row = new GdkRectangle (), visible = new GdkRectangle ();
+	GTK.gtk_tree_view_get_background_area (handle, path, 0, row);
+	GTK.gtk_tree_view_get_visible_rect (handle, visible);
+	return row.y + row.height > 0 && row.y < visible.height;
 }
 
 /* A block arrived: its rows are asked again (facades) and drawn again (rows without a facade). */
@@ -3808,7 +3825,13 @@ public int getItemHeight () {
 		int columnCount = Math.max(1, this.columnCount);
 		for (int i = 0; i < columnCount; i++) {
 			long column = GTK.gtk_tree_view_get_column(handle, i);
-			GTK.gtk_tree_view_column_cell_set_cell_data(column, modelHandle, iter, false, false);
+			boolean measuring = pageMeasuring;
+			pageMeasuring = true;
+			try {
+				GTK.gtk_tree_view_column_cell_set_cell_data(column, modelHandle, iter, false, false);
+			} finally {
+				pageMeasuring = measuring;
+			}
 			int[] h = new int[1];
 			if (GTK.GTK4) {
 				GTK4.gtk_tree_view_column_cell_get_size(column, null, null, null, h);
