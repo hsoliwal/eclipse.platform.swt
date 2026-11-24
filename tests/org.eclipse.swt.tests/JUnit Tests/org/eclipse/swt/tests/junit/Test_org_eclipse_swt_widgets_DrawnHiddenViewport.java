@@ -82,6 +82,7 @@ public class Test_org_eclipse_swt_widgets_DrawnHiddenViewport {
 	}
 
 	void gate (Control control, Deltas deltas) {
+		Test_org_eclipse_swt_widgets_DrawnDeltaRepaint.assumeDrawnModePlatform ();
 		Assumptions.assumeTrue (Test_org_eclipse_swt_widgets_DrawnDeltaRepaint.log (control) != null, "a drawn mode (custom, m3, gpu) only");
 		control.setBounds (5, 5, 340, 380);
 		shell.open ();

@@ -52,6 +52,15 @@ public class Test_org_eclipse_swt_widgets_DrawnDeltaRepaint {
 		shell.dispose ();
 	}
 
+	/*
+	 * The drawn modes (custom, m3, gpu) and their plane, the field drawnPlane read below, belong to the win32 Tree, Table
+	 * and List: no other platform's widget declares the field, so the drawn-mode tests skip there before reading it. On
+	 * win32 a missing field still fails the test.
+	 */
+	static void assumeDrawnModePlatform () {
+		Assumptions.assumeTrue (SwtTestUtil.isWindows, "the drawn modes (custom, m3, gpu) and their drawnPlane are implemented by the win32 Tree, Table and List only");
+	}
+
 	/* public: also read by the win32 bundle's Test_org_eclipse_swt_widgets_DrawnRenderThread */
 	public static FrameLog log (Control control) {
 		try {
@@ -69,6 +78,7 @@ public class Test_org_eclipse_swt_widgets_DrawnDeltaRepaint {
 
 	/* applies each delta, drains its paints, and answers the deltas that repainted all the rows */
 	List<String> deltas (Control control, Map<String, Runnable> deltas) {
+		assumeDrawnModePlatform ();
 		Assumptions.assumeTrue (log (control) != null, "a drawn mode (custom, m3, gpu) only");
 		shell.open ();
 		ViewportDifferential.settle (display, 300);

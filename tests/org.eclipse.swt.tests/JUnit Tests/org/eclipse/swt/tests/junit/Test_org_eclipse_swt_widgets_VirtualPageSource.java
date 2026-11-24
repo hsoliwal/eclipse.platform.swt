@@ -508,6 +508,7 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 
 	@Test
 	public void test_treeBulkChildCountIsBatchedWithPreciseDamageOnly () throws Exception {
+		Assumptions.assumeTrue (SwtTestUtil.isWindows, "expands the nodes through the win32 tree view (TVM_EXPAND) and reads the win32 Tree's page batches: win32 only");
 		Tree lazy = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
 		VirtualPageSource source = treeSource (false, null, null);
 		source.attach (lazy);
@@ -629,6 +630,7 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 
 	@Test
 	public void test_treeUnknownChildrenFetchedOnExpandWithMaskBitPlaceholder () throws Exception {
+		Assumptions.assumeTrue (SwtTestUtil.isWindows, "expands the node through the win32 tree view (TVM_EXPAND) and reads its placeholder child as a win32 TVITEM: win32 only");
 		Tree oracle = oracleTree ();
 		Tree lazy = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
 		CountDownLatch gate = new CountDownLatch (1);
