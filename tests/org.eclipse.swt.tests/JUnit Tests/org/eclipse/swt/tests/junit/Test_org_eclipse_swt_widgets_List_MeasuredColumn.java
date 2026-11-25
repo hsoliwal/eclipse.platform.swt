@@ -279,6 +279,110 @@ public class Test_org_eclipse_swt_widgets_List_MeasuredColumn {
 		}
 	}
 
+	private static int laneMeasured (List list) {
+		Object lane = get (list, "widths");
+		try {
+			java.lang.reflect.Method count = lane.getClass ().getDeclaredMethod ("count");
+			java.lang.reflect.Method pending = lane.getClass ().getDeclaredMethod ("pendingCount");
+			count.setAccessible (true);
+			pending.setAccessible (true);
+			return (Integer) count.invoke (lane) - (Integer) pending.invoke (lane);
+		} catch (ReflectiveOperationException e) {
+			throw new AssertionError (e);
+		}
+	}
+
+	/**
+	 * Intended difference from the stock column: the width is the widest current row, so it shrinks when that row
+	 * is removed, shortened or replaced (as on win32). The stock GROW_ONLY column never shrinks.
+	 */
+	@Test
+	public void theWidthShrinksWhenTheWidestRowLeaves () {
+		for (int style : new int [] {SWT.SINGLE | SWT.V_SCROLL, SWT.MULTI | SWT.V_SCROLL | SWT.VIRTUAL, SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL}) {
+			List narrow = list (style, true, false);
+			narrow.setItems ("short", "mid row");
+			int narrowWidth = narrow.computeSize (SWT.DEFAULT, SWT.DEFAULT).x;
+			List empty = list (style, true, false);
+			int emptyWidth = empty.computeSize (SWT.DEFAULT, SWT.DEFAULT).x;
+			List list = list (style, true, false);
+			list.setItems ("short", "a row much wider than the other two rows", "mid row");
+			int wide = list.computeSize (SWT.DEFAULT, SWT.DEFAULT).x;
+			assertTrue (wide > narrowWidth, "the wide row widens the list: " + wide + " against " + narrowWidth);
+			list.remove (1);
+			assertEquals (narrowWidth, list.computeSize (SWT.DEFAULT, SWT.DEFAULT).x, "remove");
+			list.setItem (0, "a row much wider than the other two rows");
+			assertEquals (wide, list.computeSize (SWT.DEFAULT, SWT.DEFAULT).x, "a wider setItem");
+			list.setItem (0, "short");
+			assertEquals (narrowWidth, list.computeSize (SWT.DEFAULT, SWT.DEFAULT).x, "a shorter setItem");
+			list.setItems ("a row much wider than the other two rows");
+			list.setItems ("short", "mid row");
+			assertEquals (narrowWidth, list.computeSize (SWT.DEFAULT, SWT.DEFAULT).x, "setItems");
+			list.removeAll ();
+			assertEquals (emptyWidth, list.computeSize (SWT.DEFAULT, SWT.DEFAULT).x, "removeAll");
+			narrow.dispose ();
+			empty.dispose ();
+			list.dispose ();
+		}
+	}
+
+	/**
+	 * setSelection far away (deselect, the cursor's clamp and showSelection) goes to the row at once: a VIRTUAL
+	 * list requests the rows at each destination, not the rows an animated scroll would pass.
+	 */
+	@Test
+	public void setSelectionGoesToTheRowAtOnce () {
+		for (int style : new int [] {SWT.SINGLE, SWT.MULTI}) {
+			int [] setData = {0};
+			List list = list (style | SWT.V_SCROLL | SWT.VIRTUAL, true, false);
+			fill (list, true, setData);
+			paint (list);
+			drainUntilIdle (1000);
+			int visible = visibleRows (list);
+			int before = setData [0];
+			for (int target : new int [] {ROWS / 2, ROWS - 3, 7}) {
+				if (style == SWT.SINGLE) list.setSelection (target);
+				else list.setSelection (new int [] {target, target + 1});
+				paint (list);
+				drainUntilIdle (1000);
+				int top = list.getTopIndex ();
+				assertTrue (top <= target && target < top + visible, "row " + target + " is shown, top " + top);
+			}
+			int requested = setData [0] - before;
+			assertTrue (requested <= 3 * visible, "SetData for three destinations: " + requested + ", visible at most " + visible);
+			list.dispose ();
+		}
+	}
+
+	/**
+	 * computeSize of a list longer than EXACT_WIDTH_ROWS measures one window of rows from the top row on, not every
+	 * row: a refill costs a bounded measurement. A row beyond the window counts once it has been measured, here
+	 * when the list scrolls to it; a plain and a VIRTUAL list holding the same items answer the same.
+	 */
+	@Test
+	public void computeSizeOfALongListMeasuresOneWindow () {
+		String [] items = items (ROWS);
+		items [ROWS / 2] = "a row far wider than any other row of this list, beyond the first window";
+		List plain = list (SWT.SINGLE | SWT.V_SCROLL, true, false);
+		List virtual = list (SWT.SINGLE | SWT.V_SCROLL | SWT.VIRTUAL, true, false);
+		for (List list : new List [] {plain, virtual}) list.setItems (items);
+		int exact = (Integer) getStatic ("EXACT_WIDTH_ROWS");
+		int first = plain.computeSize (SWT.DEFAULT, SWT.DEFAULT).x;
+		assertEquals (first, virtual.computeSize (SWT.DEFAULT, SWT.DEFAULT).x, "plain and VIRTUAL");
+		int measured = laneMeasured (plain);
+		assertTrue (measured <= exact + visibleRows (plain), "rows measured by computeSize: " + measured);
+		for (List list : new List [] {plain, virtual}) {
+			list.setTopIndex (ROWS / 2 - 2);
+			paint (list);
+			drainUntilIdle (1000);
+		}
+		int scrolled = plain.computeSize (SWT.DEFAULT, SWT.DEFAULT).x;
+		assertEquals (scrolled, virtual.computeSize (SWT.DEFAULT, SWT.DEFAULT).x, "plain and VIRTUAL after scrolling");
+		assertTrue (scrolled > first, "the wide row counts once measured: " + scrolled + " against " + first);
+		assertTrue (laneMeasured (plain) <= 2 * (exact + visibleRows (plain)), "rows measured: " + laneMeasured (plain));
+		plain.dispose ();
+		virtual.dispose ();
+	}
+
 	/* computeSize's height once GtkTreeView has validated the shown rows (its preferred height counts validated rows) */
 	private int validatedHeight (List list) {
 		paint (list);
@@ -318,9 +422,12 @@ public class Test_org_eclipse_swt_widgets_List_MeasuredColumn {
 	 * native rows (one GtkListStore row per item in both modes) and the ints the width lane holds. The exact
 	 * computeSize of a plain 1,000,000-row list (a renderer measurement per row) is not timed here; it scales
 	 * from 100,000 rows. The rows GtkTreeView measures are counted in aShownListMeasuresOnlyTheRowsOnScreen.
+	 * It builds lists of up to 1,000,000 rows in twelve configurations and asserts nothing about time, so it runs
+	 * only with <code>-Dswt.list.measure.report=true</code>.
 	 */
 	@Test
 	public void reportFillSettleScrollAndSizeTimes () {
+		assumeTrue (Boolean.getBoolean ("swt.list.measure.report"), "report only: run with -Dswt.list.measure.report=true");
 		String [] largest = items (1_000_000);
 		for (int count : new int [] {10_000, 100_000, 1_000_000}) {
 			String [] items = count == largest.length ? largest : java.util.Arrays.copyOf (largest, count);

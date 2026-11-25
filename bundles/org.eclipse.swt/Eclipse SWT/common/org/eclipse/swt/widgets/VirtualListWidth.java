@@ -34,7 +34,8 @@ import java.util.function.*;
  * {@link #measurePending(IntFunction)} measures every pending slot (an exact
  * size query), and {@link #maxMeasured()} answers from measured slots only.
  * {@link #maxWidth()} requires that no slot is pending. A lane whose every
- * slot is unmeasured is kept as a count only. {@link #setWidth(int, int)} and
+ * slot is unmeasured is kept as a count only. {@link #setWidth(int, int)},
+ * {@link #measureRangeWith(int, int, IntUnaryOperator)} and
  * {@link #measurePendingWith(IntUnaryOperator)} take widths the caller measured
  * itself, for a platform that measures a native row in place (GTK List). Lazy measurements occupy a sorted
  * primitive row-ID/width directory, never a logical-count-sized array. Existing
@@ -303,6 +304,57 @@ final class VirtualListWidth {
 			pending--;
 			track (width);
 		}
+	}
+
+	/**
+	 * Measures the pending slots of {@code start..end - 1} with a caller-supplied measurement, in increasing order:
+	 * a bounded window, for example the rows on screen. A lane kept as a count stays sparse; the new widths are
+	 * merged into its sorted row directory in one pass, never into a logical-count-sized array.
+	 */
+	void measureRangeWith (int start, int end, IntUnaryOperator widthAt) {
+		if (start < 0 || end > count || start > end) throw new IllegalArgumentException ("invalid range");
+		if (pending == 0 || start == end) return;
+		if (!uniform) {
+			for (int i = start; i < end && pending != 0; i++) {
+				if (widths [i] != UNMEASURED) continue;
+				int width = widthAt.applyAsInt (i);
+				if (width < 0) throw new IllegalArgumentException ("negative width");
+				widths [i] = width;
+				pending--;
+				track (width);
+			}
+			return;
+		}
+		int from = sparseLowerBound (start), to = sparseLowerBound (end);
+		int window = end - start - (to - from);
+		if (window == 0) return;
+		int [] newRows = new int [window], newWidths = new int [window];
+		for (int i = start, at = from, added = 0; i < end; i++) {
+			if (at < to && measuredRows [at] == i) {
+				at++;
+				continue;
+			}
+			int width = widthAt.applyAsInt (i);
+			if (width < 0) throw new IllegalArgumentException ("negative width");
+			newRows [added] = i;
+			newWidths [added++] = width;
+		}
+		ensureSparse (Math.addExact (measuredSize, window));
+		System.arraycopy (measuredRows, to, measuredRows, to + window, measuredSize - to);
+		System.arraycopy (widths, to, widths, to + window, measuredSize - to);
+		/* merge the kept slots of the window and the new ones from the back */
+		for (int kept = to - 1, fresh = window - 1, at = to + window - 1; fresh >= 0; at--) {
+			if (kept >= from && measuredRows [kept] > newRows [fresh]) {
+				measuredRows [at] = measuredRows [kept];
+				widths [at] = widths [kept--];
+			} else {
+				measuredRows [at] = newRows [fresh];
+				widths [at] = newWidths [fresh--];
+			}
+		}
+		measuredSize += window;
+		pending -= window;
+		for (int width : newWidths) track (width);
 	}
 
 	/* Explicit whole-size query only: preserve sparse measurements when becoming dense. */

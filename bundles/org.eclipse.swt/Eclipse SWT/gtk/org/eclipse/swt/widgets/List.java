@@ -69,17 +69,27 @@ public class List extends Scrollable {
 	 * tree view runs in fixed-height mode and measures only the rows it shows, instead of measuring every row
 	 * in the background. The column is FIXED and its width comes from the width lane (VirtualListWidth, one
 	 * int per measured row, nothing for a row never measured). A row is measured with the column's own text
-	 * renderer, so its width is the one the stock column would request:
-	 * - computeSize measures every row still unmeasured (an exact size, as on win32), once;
+	 * renderer, so its width is the one the stock column requests for it:
+	 * - computeSize measures every row still unmeasured, once, while the list has at most EXACT_WIDTH_ROWS rows
+	 *   (an exact size); a longer list measures one window of EXACT_WIDTH_ROWS rows from the top row on and
+	 *   answers the widest row measured so far, so a refill costs one bounded window (measureForSize);
 	 * - an H_SCROLL list measures the rows it shows (GTK3 pre-draw), and, while it has at most
 	 *   EXACT_WIDTH_ROWS rows, every row after each change, so its horizontal range stays exact.
+	 * The width is the widest current row: it shrinks after remove, a shorter setItem, setItems or removeAll. The
+	 * stock GROW_ONLY column never shrinks (GtkTreeView resets only AUTOSIZE columns when rows change), so the two
+	 * agree for a fresh fill and the measured column is narrower after such edits, as the win32 List is.
+	 * setTopIndex, showSelection and the cursor a selection sets go to their row at once instead of animating
+	 * (scrollAtOnce).
 	 * An item with a line break leaves fixed-height mode (variableRows) until setItems or removeAll replace
 	 * every row, so a multi-line row keeps its stock height. The GtkListStore still holds one native row per
 	 * item: a sparse model needs a custom GtkTreeModel, which in turn needs a type-ahead search hook
 	 * (gtk_tree_view_set_search_equal_func) that SWT's GTK bindings lack.
 	 */
 	static boolean measuredColumns = !GTK.GTK4 && WidgetMode.of ("List", WidgetMode.VIEWPORT) == WidgetMode.VIEWPORT;
-	/* rows up to which an H_SCROLL list keeps every width measured (win32 List.STORE_EXACT_EXTENT_LIMIT) */
+	/*
+	 * rows up to which computeSize is exact and an H_SCROLL list keeps every width measured (win32 keeps a VIRTUAL
+	 * list's horizontal extent exact up to the same STORE_EXACT_EXTENT_LIMIT, and to its measured rows beyond)
+	 */
 	static final int EXACT_WIDTH_ROWS = 4096;
 	/* the width lane; null with the stock column */
 	VirtualListWidth widths;
@@ -453,8 +463,7 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
     }
 	GTK.gtk_widget_realize(handle);
 	if (widths != null && wHint == SWT.DEFAULT) {
-		/* the exact width: every row not measured yet is measured once, and the column takes the widest */
-		measurePendingRows ();
+		measureForSize ();
 		updateMeasuredColumn ();
 	}
 	Point size = computeNativeSize (handle, wHint, hHint, changed);
@@ -859,6 +868,40 @@ void measurePendingRows () {
 	}
 }
 
+/*
+ * computeSize's rows: every row up to EXACT_WIDTH_ROWS rows (an exact width), else the window of EXACT_WIDTH_ROWS
+ * rows from the top row on (the first rows of a list not shown yet), so a refill of a long list costs one bounded
+ * window and not a renderer measurement per row. The answer is then the widest row measured so far.
+ */
+void measureForSize () {
+	int count = widths.count ();
+	if (count <= EXACT_WIDTH_ROWS) {
+		measurePendingRows ();
+		return;
+	}
+	int first = Math.min (Math.max (0, rowAtBinY (0)), count - EXACT_WIDTH_ROWS);
+	measureRowRange (first, first + EXACT_WIDTH_ROWS);
+}
+
+/* Measures the unmeasured rows of start..end - 1, stepping one native row cursor through the store. */
+void measureRowRange (int start, int end) {
+	if (widths.pendingCount () == 0 || start >= end) return;
+	ensureStyleFingerprint ();
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+	int [] at = {-1};
+	try {
+		widths.measureRangeWith (start, end, index -> {
+			boolean next = at [0] >= 0 && index == at [0] + 1 && GTK.gtk_tree_model_iter_next (modelHandle, iter);
+			if (!next) GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
+			at [0] = index;
+			return measureRow (iter);
+		});
+	} finally {
+		OS.g_free (iter);
+	}
+}
+
 /* H_SCROLL: the rows on screen are measured before they are drawn, so the horizontal range covers them. */
 void measureShownRows () {
 	int count = widths.count ();
@@ -869,18 +912,7 @@ void measureShownRows () {
 	if (first < 0) return;
 	int last = rowAtBinY (Math.max (0, visible.height - 1));
 	if (last < 0) last = count - 1;
-	ensureStyleFingerprint ();
-	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
-	try {
-		boolean valid = GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, first);
-		for (int index = first; valid && index <= last && index < count; index++) {
-			if (widths.widthOf (index) == VirtualListWidth.UNMEASURED) widths.setWidth (index, measureRow (iter));
-			valid = GTK.gtk_tree_model_iter_next (modelHandle, iter);
-		}
-	} finally {
-		OS.g_free (iter);
-	}
+	measureRowRange (first, Math.min (count, last + 1));
 	updateMeasuredColumn ();
 }
 
@@ -2008,6 +2040,7 @@ public void select (int index) {
 	if ((style & SWT.SINGLE) != 0) {
 		long path = GTK.gtk_tree_model_get_path (modelHandle, iter);
 		GTK.gtk_tree_view_set_cursor (handle, path, 0, false);
+		if (widths != null) showRowAtOnce (path, index);
 		GTK.gtk_tree_path_free (path);
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
@@ -2056,6 +2089,7 @@ public void select (int start, int end) {
 		if ((style & SWT.SINGLE) != 0) {
 			long path = GTK.gtk_tree_model_get_path (modelHandle, iter);
 			GTK.gtk_tree_view_set_cursor (handle, path, 0, false);
+			if (widths != null) showRowAtOnce (path, index);
 			GTK.gtk_tree_path_free (path);
 		}
 	}
@@ -2108,6 +2142,7 @@ public void select (int [] indices) {
 		if ((style & SWT.SINGLE) != 0) {
 			long path = GTK.gtk_tree_model_get_path (modelHandle, iter);
 			GTK.gtk_tree_view_set_cursor (handle, path, 0, false);
+			if (widths != null) showRowAtOnce (path, index);
 			GTK.gtk_tree_path_free (path);
 		}
 	}
@@ -2152,6 +2187,7 @@ void selectFocusIndex (int index) {
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_tree_view_set_cursor (handle, path, 0, false);
+	if (widths != null) showRowAtOnce (path, index);
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_tree_path_free (path);
 	OS.g_free (iter);
@@ -2525,29 +2561,57 @@ public void setTopIndex (int index) {
 	GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
 	long path = GTK.gtk_tree_model_get_path (modelHandle, iter);
 	GTK.gtk_tree_view_scroll_to_cell (handle, path, 0, true, 0, 0);
-	if (widths != null && !variableRows) jumpToRow (path, index, vAdjustment);
+	int y = fixedRowY (path, index, new GdkRectangle ());
+	if (y >= 0) {
+		scrollAtOnce (y);
+		/* unclamped, the row is on top: getTopIndex answers index, as it does while a stock scroll is pending */
+		if (GTK.gtk_adjustment_get_value (vAdjustment) == y) cachedAdjustment = y;
+	}
 	GTK.gtk_tree_path_free (path);
 	OS.g_free (iter);
 	viewportRuntime.scrollTo (0, index);
 }
 
 /*
- * Measured column: GtkTreeView animates scroll_to_cell when no row waits for validation, which in fixed-height
- * mode is always (the stock column's pending validation kept the scroll immediate). setTopIndex goes straight to
- * the point GtkTreeView aims at (the top of the row's background area), so the rows on the way are neither drawn
- * nor, in a VIRTUAL list, requested. Only once fixed-height mode has measured its row, so that every row above
- * has that height; until then scroll_to_cell has deferred the scroll and positions the row itself.
+ * Measured column: the tree y of the row's background area, once fixed-height mode has measured its row so that
+ * every row above has that height (the row's y is index times the height); -1 before that, in variable-row mode,
+ * with the stock column, or off screen. Until then GtkTreeView defers a scroll to the row and places the row
+ * itself, without animation, when it validates the rows.
  */
-void jumpToRow (long path, int index, long vAdjustment) {
-	if (!GTK.gtk_widget_get_realized (handle) || !GTK.gtk_widget_get_visible (handle)) return;
-	GdkRectangle area = new GdkRectangle ();
+int fixedRowY (long path, int index, GdkRectangle area) {
+	if (widths == null || variableRows || !GTK.gtk_widget_get_mapped (handle)) return -1;
 	GTK.gtk_tree_view_get_background_area (handle, path, 0, area);
 	int [] tx = new int [1], ty = new int [1];
 	GTK.gtk_tree_view_convert_bin_window_to_tree_coords (handle, area.x, area.y, tx, ty);
-	if (area.height <= 0 || ty [0] != (long) index * area.height) return;
-	GTK.gtk_adjustment_set_value (vAdjustment, ty [0]);
-	/* unclamped, the row is on top: getTopIndex answers index, as it does while a stock scroll is pending */
-	if (GTK.gtk_adjustment_get_value (vAdjustment) == ty [0]) cachedAdjustment = ty [0];
+	return area.height > 0 && ty [0] == (long) index * area.height ? ty [0] : -1;
+}
+
+/*
+ * Measured column: GtkTreeView animates scroll_to_cell and the cursor's clamp on the frame clock whenever no row
+ * waits for validation. The stock column animated too once its rows were validated; right after a fill of a long
+ * list its pending validation disabled the animation and the scroll jumped. In fixed-height mode no row waits, so
+ * every scroll would animate: the frames draw the rows on the way and, in a VIRTUAL list, request them, and an
+ * allocation during the animation can stop it short (GTK Table, SWT #599). The programmatic scrolls therefore go
+ * at once to the point GtkTreeView aims at: gtk_adjustment_set_value ends the animation and sets the value.
+ */
+void scrollAtOnce (int y) {
+	GTK.gtk_adjustment_set_value (GTK.gtk_scrollable_get_vadjustment (handle), y);
+}
+
+/*
+ * Measured column: after scroll_to_cell (use_align false) or the cursor's clamp, go at once to their target: the
+ * least scroll that shows the row's background area (gtk_tree_view_scroll_to_cell); nothing when it is shown.
+ */
+void showRowAtOnce (long path, int index) {
+	GdkRectangle area = new GdkRectangle ();
+	int y = fixedRowY (path, index, area);
+	if (y < 0) return;
+	GdkRectangle visible = new GdkRectangle ();
+	GTK.gtk_tree_view_get_visible_rect (handle, visible);
+	int target = visible.y;
+	if (y < visible.y) target = y;
+	if (y + area.height > visible.y + visible.height) target = y + area.height - visible.height;
+	if (target != visible.y) scrollAtOnce (target);
 }
 
 /**
@@ -2572,6 +2636,7 @@ public void showSelection () {
 
 	GTK.gtk_widget_realize (handle);
 	GTK.gtk_tree_view_scroll_to_cell (handle, path, 0, false, 0, 0);
+	if (widths != null) showRowAtOnce (path, index);
 
 	/*
 	 * Reverting the code for bug 459072. With gtk_tree_view_scroll_to_cell, there are some pending gtk events.
