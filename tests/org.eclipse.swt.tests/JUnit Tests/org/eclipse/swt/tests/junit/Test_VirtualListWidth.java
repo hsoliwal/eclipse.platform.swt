@@ -207,6 +207,95 @@ public class Test_VirtualListWidth {
 		assertEquals (UNMEASURED, intCall ("widthOf", INT, 400));
 	}
 
+	/**
+	 * Widths the caller measured itself (GTK List measures a native row in place): {@code setWidth} records one slot
+	 * like {@code set}, {@code measureRangeWith} measures the pending slots of a window and {@code measurePendingWith}
+	 * every pending slot, in increasing order and never a measured one, answered like the oracle under seeded edits
+	 * of a uniform (sparse) and a dense lane.
+	 */
+	@Test
+	public void callerMeasuredWidthsAnswerLikeAPlainList () {
+		Class<?> [] intOperator = {IntUnaryOperator.class};
+		for (int seed = 0; seed < 8; seed++) {
+			Random random = new Random (seed);
+			call ("setAllUnmeasured", INT, 0);
+			oracle.clear ();
+			for (int step = 0; step < 300; step++) {
+				int count = oracle.size ();
+				switch (random.nextInt (count == 0 ? 2 : 9)) {
+					case 0 -> { /* lazy slots, as a List grows */
+						int at = random.nextInt (count + 1), inserted = random.nextInt (40);
+						call ("insertUnmeasured", INT_INT, at, inserted);
+						for (int i = 0; i < inserted; i++) oracle.add (at, null);
+					}
+					case 1 -> { /* a whole new lane, as setItems */
+						int next = random.nextInt (50);
+						call ("setAllUnmeasured", INT, next);
+						oracle.clear ();
+						for (int i = 0; i < next; i++) oracle.add (null);
+					}
+					case 2 -> { /* a shown row measured in place */
+						int at = random.nextInt (count), width = random.nextInt (90);
+						call ("setWidth", INT_INT, at, width);
+						oracle.set (at, width);
+					}
+					case 3 -> { /* an exact size query: every pending slot, in order, through one cursor */
+						java.util.List<Integer> asked = new ArrayList<> ();
+						call ("measurePendingWith", intOperator, (IntUnaryOperator) row -> {
+							asked.add (row);
+							return row % 37;
+						});
+						java.util.List<Integer> expected = new ArrayList<> ();
+						for (int i = 0; i < count; i++) {
+							if (oracle.get (i) == null) {
+								expected.add (i);
+								oracle.set (i, i % 37);
+							}
+						}
+						assertEquals (expected, asked, "measurePendingWith asks for the pending slots only, in order");
+					}
+					case 5, 6 -> { /* a bounded window, as computeSize past the exact limit or the rows on screen */
+						int start = random.nextInt (count + 1), end = start + random.nextInt (count - start + 1);
+						java.util.List<Integer> asked = new ArrayList<> ();
+						call ("measureRangeWith", new Class<?> [] {int.class, int.class, IntUnaryOperator.class}, start, end, (IntUnaryOperator) row -> {
+							asked.add (row);
+							return row % 41;
+						});
+						java.util.List<Integer> expected = new ArrayList<> ();
+						for (int i = start; i < end; i++) {
+							if (oracle.get (i) == null) {
+								expected.add (i);
+								oracle.set (i, i % 41);
+							}
+						}
+						assertEquals (expected, asked, "measureRangeWith asks for the window's pending slots only, in order");
+					}
+					case 4 -> { /* a changed row is measured again later */
+						int at = random.nextInt (count);
+						call ("setUnmeasured", INT, at);
+						oracle.set (at, null);
+					}
+					default -> { /* rows removed */
+						int start = random.nextInt (count), removed = random.nextInt (Math.min (8, count - start) + 1);
+						call ("remove", INT_INT, start, removed);
+						oracle.subList (start, start + removed).clear ();
+					}
+				}
+				verify ();
+			}
+		}
+		call ("setAllUnmeasured", INT, 3);
+		assertThrows (IllegalArgumentException.class, () -> call ("setWidth", INT_INT, 3, 1));
+		assertThrows (IllegalArgumentException.class, () -> call ("setWidth", INT_INT, 0, -1));
+		assertThrows (IllegalArgumentException.class, () -> call ("measurePendingWith", intOperator, (IntUnaryOperator) row -> -1));
+		Class<?> [] range = {int.class, int.class, IntUnaryOperator.class};
+		assertThrows (IllegalArgumentException.class, () -> call ("measureRangeWith", range, 0, 4, (IntUnaryOperator) row -> 1));
+		assertThrows (IllegalArgumentException.class, () -> call ("measureRangeWith", range, 2, 1, (IntUnaryOperator) row -> 1));
+		call ("setAllUnmeasured", INT, 3);
+		assertThrows (IllegalArgumentException.class, () -> call ("measureRangeWith", range, 0, 3, (IntUnaryOperator) row -> -1));
+		assertEquals (3, intCall ("pendingCount", NONE), "a refused window leaves a sparse lane unchanged");
+	}
+
 	/** The error contract: invalid indexes and ranges, a null item and a negative width are refused unchanged. */
 	@Test
 	public void invalidArgumentsAreRefused () {
