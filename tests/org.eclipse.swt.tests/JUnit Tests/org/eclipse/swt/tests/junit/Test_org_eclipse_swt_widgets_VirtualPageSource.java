@@ -141,6 +141,12 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 	}
 
 	private static ImageData capture (Control control) {
+		/*
+		 * GTK draws its overlay scroll bar over the client area and fades it in and out on the frame clock after every
+		 * scroll, so it is left out of the capture there (ViewportDifferential.renderWithoutOverlayScrollBars, as in the
+		 * StyledText captures): the pixels compared are the rows.
+		 */
+		if (SwtTestUtil.isGTK && control instanceof Scrollable scrollable) return ViewportDifferential.renderWithoutOverlayScrollBars (scrollable);
 		Point size = control.getSize ();
 		Image image = new Image (control.getDisplay (), size.x, size.y);
 		GC gc = new GC (image);
@@ -169,16 +175,7 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 	}
 
 	private static String pixelHash (Control control) throws Exception {
-		Point size = control.getSize ();
-		Image image = new Image (control.getDisplay (), size.x, size.y);
-		GC gc = new GC (image);
-		try {
-			control.print (gc);
-		} finally {
-			gc.dispose ();
-		}
-		ImageData data = image.getImageData ();
-		image.dispose ();
+		ImageData data = capture (control);
 		MessageDigest digest = MessageDigest.getInstance ("SHA-256");
 		digest.update (data.data);
 		return HexFormat.of ().formatHex (digest.digest ()).substring (0, 16);
@@ -504,6 +501,50 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		long after = Arrays.stream ((Object []) field (lazy, "items")).filter (Objects::nonNull).count ();
 		assertTrue (after <= 2, "only the API item (and nothing for its painted children): " + after);
 		assertEquals ("n3.0", node.getItem (0).getText ());
+	}
+
+	@Test
+	public void test_treeOfManyRootsRequestsOnlyTheVisibleBlocksAndPaintsWithoutFacades () throws Exception {
+		Assumptions.assumeFalse (SwtTestUtil.isCocoa, "the cocoa Tree registers no VirtualPageHost: it paints every row through a TreeItem");
+		/* each original widget is its own viewport: residency and requests follow the rows on screen, not the 100,000 roots */
+		int roots = 100_000, blockSize = 16;
+		java.util.List<Integer> rootRequests = Collections.synchronizedList (new ArrayList<> ());
+		AtomicInteger childRequests = new AtomicInteger ();
+		Tree lazy = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
+		VirtualPageSource source = new VirtualPageSource (blockSize, 32, 1, VirtualPageSource.TREE, request -> {
+			if (request.getParentKey () != VirtualPageSource.ROOT) {
+				childRequests.incrementAndGet ();
+				return;
+			}
+			rootRequests.add (request.getStart ());
+			request.setTotal (roots);
+			for (int i = request.getStart (), end = Math.min (roots, i + request.getCount ()); i < end; i++) {
+				request.setText (i, 0, "n" + i);
+				request.setKey (i, i);
+				request.setChildCount (i, i % 3 == 0 ? 2 : 0);
+			}
+		});
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		lazy.redraw ();
+		lazy.update ();
+		drain (source);
+		assertEquals (roots, lazy.getItemCount ());
+		long facades = Arrays.stream ((Object []) field (lazy, "items")).filter (Objects::nonNull).count ();
+		assertEquals (0, facades, "rows painted without TreeItems");
+		assertTrue ((int) field (lazy, "pagePaintAnswers") > 0, "rows were answered from the block store");
+		int visible = lazy.getClientArea ().height / Math.max (1, lazy.getItemHeight ()) + 1;
+		java.util.List<Integer> requested = new ArrayList<> (rootRequests);
+		assertFalse (requested.isEmpty ());
+		for (int start : requested) {
+			assertTrue (start < visible + blockSize, "only blocks of rows on screen were requested (" + visible + " rows visible): " + requested);
+		}
+		assertTrue (requested.size () <= visible / blockSize + 2, "one request per block on screen: " + requested);
+		assertEquals (0, childRequests.get (), "no children were requested for collapsed nodes");
+		assertEquals ("n7", lazy.getItem (7).getText (), "an API read answers from the store");
+		facades = Arrays.stream ((Object []) field (lazy, "items")).filter (Objects::nonNull).count ();
+		assertTrue (facades <= 1, "only the item the API asked for: " + facades);
 	}
 
 	@Test

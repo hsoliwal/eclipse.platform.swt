@@ -146,8 +146,29 @@ public class Tree extends Composite {
 	 * the model or send events to the application.
 	 */
 	boolean clearingModel;
+	/* The VirtualPageSource feeding this VIRTUAL tree through its host hooks (pageSourceHost), or null */
+	VirtualPageSource pageSource;
+	/** Facade-free answers given in paint callbacks (proof counter). */
+	int pagePaintAnswers;
+	/* calculateWidth measures a page-source row through the cell data functions: not a paint of that row */
+	boolean pageMeasuring;
+	/* Widest page-source row of a tree without columns measured since the last settle (applied when the queue drains). */
+	int pageWidest;
+	/*
+	 * Rows drawn without a facade that have children but no native child yet, as (parent facade or null, index):
+	 * after the paint each gets one native child row, so GTK draws its expander (applyPageExpanders).
+	 */
+	TreeItem [] pageExpanderParents = new TreeItem [8];
+	int [] pageExpanderIndices = new int [8];
+	int pageExpanderCount;
+	boolean pageExpandersScheduled;
+	Runnable pageExpanderRunnable;
 
 	private long headerCSSProvider;
+
+	static {
+		VirtualPageSource.treeHost = Tree::pageSourceHost;
+	}
 
 	static final int ID_COLUMN = 0;
 	static final int CHECKED_COLUMN = 1;
@@ -517,6 +538,13 @@ void pinVirtualFacade (TreeItem item) {
 TreeItem exposeVirtualItem (TreeItem item) {
     if (item != null && virtualTopology != null) {
         pinVirtualFacade(item);
+		/*
+		 * With a page source, paint creates no facades (answerPageCell), so a facade handed to a caller is
+		 * filled now from the source, as the classic paint-time SetData would already have filled it.
+		 */
+		if (pageSource != null && !pageSource.paintRequest && currentItem == null && !item.isDisposed () && !item.isCachedState ()) {
+			checkData (item);
+		}
     }
 	return item;
 }
@@ -2156,9 +2184,14 @@ static int checkStyle (int style) {
 @Override
 long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
 	virtualCallbackDepth++;
+	/* a SetData sent while a row is drawn is a paint request: the page source answers it without waiting */
+	VirtualPageSource source = pageSource;
+	boolean paintRequest = source != null && source.paintRequest;
+	if (source != null) source.paintRequest = true;
 	try {
 		return virtualCellDataProc (tree_column, cell, tree_model, iter, data);
 	} finally {
+		if (source != null) source.paintRequest = paintRequest;
 		virtualCallbackDepth--;
 		if (usesBoundedVirtualView () && virtualViewport != null
 				&& virtualResidencyGeneration != virtualViewport.generation ()) scheduleVirtualResidency ();
@@ -2174,6 +2207,7 @@ long virtualCellDataProc (long tree_column, long cell, long tree_model, long ite
 	 * See https://github.com/eclipse-platform/eclipse.platform.swt/issues/3329
 	 */
 	if (clearingModel) return 0;
+	if (pageSource != null && answerPageCell (tree_column, cell, iter)) return 0;
 	TreeItem item = _getItem (iter);
 	if (usesBoundedVirtualView ()) OS.g_object_set (cell, Converter.wcsToMbcs ("visible", true), item != null, 0);
 	if (item == null || item.isDisposed()) return 0;
@@ -2332,6 +2366,7 @@ boolean checkData (TreeItem item) {
         return true;
     }
 	if ((style & SWT.VIRTUAL) != 0) {
+		VirtualPageSource source = pageSource;
 		pinVirtualFacade (item);
 		virtualFlag (item, VirtualItemState.CACHED, true);
 		TreeItem parentItem = item.getParentItem ();
@@ -2363,8 +2398,279 @@ boolean checkData (TreeItem item) {
         if (item.isDisposed()) {
             return false;
         }
+		/* A row answered with a placeholder is asked again until its block is loaded. */
+		if (source != null && source == pageSource && source.answeredPlaceholder) virtualFlag (item, VirtualItemState.CACHED, false);
 	}
 	return true;
+}
+
+/*
+ * VirtualPageSource hooks of a VIRTUAL tree in the native store model (the SetData and expand paths): paint
+ * answers rows without a facade from the source's block store, a facade handed to a caller is filled at once
+ * (exposeVirtualItem), and a block that arrives re-asks its facades and redraws. As on win32 the tree keeps its
+ * facades (pageSourceRelease releases none). A tree in the logical native model (usesVirtualNativeModel) gets no
+ * host: the source then works through the public API (SetData and clear), as on a platform without hooks.
+ */
+VirtualPageHost pageSourceHost () {
+	if (usesVirtualNativeModel ()) return null;
+	return new VirtualPageHost () {
+		@Override
+		public void pageSourceAttached (VirtualPageSource source) {
+			pageSource = source;
+		}
+
+		@Override
+		public void pageSourceRefresh (Item parent, int start, int end) {
+			refreshPageRows ((TreeItem) parent, start, end);
+		}
+
+		@Override
+		public int pageSourceRelease (int keepStart, int keepEnd) {
+			return 0;
+		}
+
+		@Override
+		public void pageSourceChildrenLoading (Item parent, boolean loading) {
+			if (!(parent instanceof TreeItem item) || item.isDisposed ()) return;
+			virtualFlag (item, VirtualItemState.CHILDREN_LOADING, loading);
+			if (!loading) virtualFlag (item, VirtualItemState.CHILDREN_KNOWN, true);
+			if (!isDisposed ()) GTK.gtk_widget_queue_draw (handle);
+		}
+
+		@Override
+		public void pageSourceSettled () {
+			if (pageWidest > 0 && !isDisposed ()) {
+				applyPageScrollWidth (pageWidest);
+				pageWidest = 0;
+			}
+		}
+	};
+}
+
+/** Paint callbacks that would hand an item to application code need a facade. */
+boolean pagePaintNeedsFacade () {
+	return hooks (SWT.MeasureItem) || hooks (SWT.EraseItem) || hooks (SWT.PaintItem);
+}
+
+/** The id of a native row (its id column): -1 for a row that never had a facade. */
+int pageRowId (long iter) {
+	int [] value = new int [1];
+	GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, value, -1);
+	return value [0];
+}
+
+/** The facade of a native row, or null when the row has none. */
+TreeItem pageFacade (long iter) {
+	int id = pageRowId (iter);
+	return id >= 0 && id < items.length ? items [id] : null;
+}
+
+/*
+ * Answers a cell of a row without a facade from the page source, with the default attributes of a row, as the
+ * facade would: unchecked, no image, default colours and font, the loaded text (or the placeholder; the first child
+ * of a node whose children are loading reads the source's loading text). A row on screen asks for its block; a row
+ * only measured reads what is loaded. A row on screen that has children gets its native expander after the paint
+ * (queuePageExpander), and one near the end of the native rows grows them (requestPageFrontier). Returns false when
+ * the row or its parent row has a facade-dependent state, or a paint listener needs a facade: the classic path runs.
+ */
+boolean answerPageCell (long tree_column, long cell, long iter) {
+	if ((style & SWT.VIRTUAL) == 0 || usesVirtualNativeModel () || virtualTopology == null || pagePaintNeedsFacade ()) return false;
+	/* only a row that never had a facade: a row with an id keeps its state (check bits, ...) with that id */
+	if (pageRowId (iter) != -1) return false;
+	long path = GTK.gtk_tree_model_get_path (modelHandle, iter);
+	if (path == 0) return false;
+	TreeItem parent = null;
+	int index;
+	boolean shown;
+	try {
+		int depth = GTK.gtk_tree_path_get_depth (path);
+		if (depth <= 0) return false;
+		int [] indices = new int [depth];
+		C.memmove (indices, GTK.gtk_tree_path_get_indices (path), 4L * depth);
+		index = indices [depth - 1];
+		shown = pageRowShown (path);
+		if (depth > 1) {
+			long parentIter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+			if (parentIter == 0) return false;
+			try {
+				if (!GTK.gtk_tree_model_iter_parent (modelHandle, parentIter, iter)) return false;
+				parent = pageFacade (parentIter);
+			} finally {
+				OS.g_free (parentIter);
+			}
+			/* a row whose parent row has no facade is not reached through the page source's nodes */
+			if (parent == null || parent.isDisposed ()) return false;
+		}
+	} finally {
+		GTK.gtk_tree_path_free (path);
+	}
+	pagePaintAnswers++;
+	if (GTK.GTK_IS_CELL_RENDERER_TOGGLE (cell)) {
+		OS.g_object_set (cell, OS.active, false, 0);
+		OS.g_object_set (cell, OS.inconsistent, false, 0);
+		return true;
+	}
+	OS.g_object_set (cell, OS.cell_background_rgba, (GdkRGBA) null, 0);
+	if (GTK.GTK_IS_CELL_RENDERER_PIXBUF (cell)) {
+		OS.g_object_set (cell, OS.pixbuf, 0L, 0);
+		return true;
+	}
+	if (!GTK.GTK_IS_CELL_RENDERER_TEXT (cell)) return true;
+	GTK.gtk_cell_renderer_set_fixed_size (cell, -1, -1);
+	int column = 0;
+	for (int i = 0; i < columnCount; i++) {
+		if (columns [i] != null && columns [i].handle == tree_column) {
+			column = i;
+			break;
+		}
+	}
+	String string;
+	if (parent != null && index == 0 && virtualFlag (parent, VirtualItemState.CHILDREN_LOADING)) {
+		string = pageSource.loadingText ();
+	} else if (shown && !pageMeasuring) {
+		string = pageSource.treePaintText (parent, index, column);
+		if (string != null && pageSource.treePaintExpandable (parent, index)) queuePageExpander (parent, index);
+		requestPageFrontier (parent, index);
+	} else {
+		string = pageSource.treeRowText (parent, index, column);
+	}
+	OS.g_object_set (cell, OS.text, Converter.wcsToMbcs (string == null ? pageSource.placeholder () : string, true), 0);
+	OS.g_object_set (cell, OS.foreground_rgba, (GdkRGBA) null, 0);
+	OS.g_object_set (cell, OS.font_desc, 0L, 0);
+	return true;
+}
+
+/*
+ * Whether the row of a model path is on screen: the tree is mapped, the cell data call is not a measurement, and
+ * the row's background area meets the visible rows (bin window coordinates).
+ */
+boolean pageRowShown (long path) {
+	if (pageMeasuring || !GTK.gtk_widget_get_mapped (handle)) return false;
+	GdkRectangle row = new GdkRectangle (), visible = new GdkRectangle ();
+	GTK.gtk_tree_view_get_background_area (handle, path, 0, row);
+	GTK.gtk_tree_view_get_visible_rect (handle, visible);
+	return row.y + row.height > 0 && row.y < visible.height;
+}
+
+void queuePageExpander (TreeItem parent, int index) {
+	for (int i = 0; i < pageExpanderCount; i++) {
+		if (pageExpanderParents [i] == parent && pageExpanderIndices [i] == index) return;
+	}
+	if (pageExpanderCount == pageExpanderIndices.length) {
+		pageExpanderParents = Arrays.copyOf (pageExpanderParents, pageExpanderCount * 2);
+		pageExpanderIndices = Arrays.copyOf (pageExpanderIndices, pageExpanderCount * 2);
+	}
+	pageExpanderParents [pageExpanderCount] = parent;
+	pageExpanderIndices [pageExpanderCount++] = index;
+	if (pageExpandersScheduled) return;
+	pageExpandersScheduled = true;
+	if (pageExpanderRunnable == null) pageExpanderRunnable = this::applyPageExpanders;
+	display.asyncExec (pageExpanderRunnable);
+}
+
+/*
+ * After the paint (the model must not change while GtkTreeView draws): each queued row that still has no facade and
+ * no native child gets one native child row without an id, as a collapsed branch's frontier holds one (setItemCount),
+ * so GTK draws its expander without a TreeItem. Its facade, created when the row is expanded or read, then counts
+ * that row as resident.
+ */
+void applyPageExpanders () {
+	pageExpandersScheduled = false;
+	int count = pageExpanderCount;
+	pageExpanderCount = 0;
+	if (isDisposed () || pageSource == null) {
+		Arrays.fill (pageExpanderParents, 0, count, null);
+		return;
+	}
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	long child = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	try {
+		if (iter == 0 || child == 0) return;
+		for (int i = 0; i < count; i++) {
+			TreeItem parent = pageExpanderParents [i];
+			if (parent != null && parent.isDisposed ()) continue;
+			long parentIter = parent == null ? 0 : parent.handle;
+			if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, parentIter, pageExpanderIndices [i])) continue;
+			if (pageRowId (iter) != -1 || GTK.gtk_tree_model_iter_children (modelHandle, child, iter)) continue;
+			GTK.gtk_tree_store_insert_after (modelHandle, child, iter, 0);
+			GTK.gtk_tree_store_set (modelHandle, child, ID_COLUMN, -1, -1);
+		}
+	} finally {
+		Arrays.fill (pageExpanderParents, 0, count, null);
+		if (iter != 0) OS.g_free (iter);
+		if (child != 0) OS.g_free (child);
+	}
+}
+
+/*
+ * The frontier of rows drawn without a facade: a row near the end of its parent's native rows grows them by one
+ * chunk after the paint, as requestVirtualFrontier does for a facade.
+ */
+void requestPageFrontier (TreeItem parent, int index) {
+	int parentId = parent == null ? VirtualTreeTopology.ROOT : virtualItemId (parent);
+	if (!virtualTopology.childCountKnown (parentId)) return;
+	int logicalCount = virtualTopology.childCount (parentId);
+	int resident = GTK.gtk_tree_model_iter_n_children (modelHandle, parent == null ? 0 : parent.handle);
+	if (resident >= logicalCount || index < Math.max (0, resident - VIRTUAL_FRONTIER_TRIGGER)) return;
+	int key = parentId + 1;
+	if (!virtualFrontierPending.add (key)) return;
+	display.asyncExec (() -> {
+		virtualFrontierPending.remove (key);
+		if (isDisposed () || virtualTopology == null || !virtualTopology.childCountKnown (parentId)) return;
+		long currentParent = 0;
+		if (parent != null) {
+			if (parent.isDisposed () || !parent.getExpanded ()) return;
+			currentParent = parent.handle;
+		}
+		int current = GTK.gtk_tree_model_iter_n_children (modelHandle, currentParent);
+		ensureVirtualNativeChildren (currentParent, Math.min (virtualTopology.childCount (parentId), current + VIRTUAL_FRONTIER_CHUNK));
+	});
+}
+
+/*
+ * A block arrived for rows [start, end] of parent: its facades are asked again and the rows drawn again (rows
+ * without a facade read the store when drawn). In a tree without columns, column 0 is fixed width and grows only
+ * through setScrollWidth, which rows drawn without a facade never reach: their loaded widths are measured here, as
+ * calculateWidth measures a row, and the widest is applied once the source's queue drains (pageSourceSettled).
+ */
+void refreshPageRows (TreeItem parent, int start, int end) {
+	if (isDisposed () || usesVirtualNativeModel () || (parent != null && parent.isDisposed ())) return;
+	long parentIter = parent == null ? 0 : parent.handle;
+	end = Math.min (end, GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter) - 1);
+	if (start < 0 || start > end) return;
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	if (iter == 0) return;
+	try {
+		boolean measure = columnCount == 0 && currentItem == null && !pagePaintNeedsFacade ();
+		long column = measure ? GTK.gtk_tree_view_get_column (handle, 0) : 0;
+		boolean valid = GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, parentIter, start);
+		for (int i = start; valid && i <= end; i++, valid = GTK.gtk_tree_model_iter_next (modelHandle, iter)) {
+			TreeItem item = pageFacade (iter);
+			if (item != null) {
+				if (item != currentItem && !item.isDisposed ()) virtualFlag (item, VirtualItemState.CACHED, false);
+			} else if (column != 0 && pageSource.treeRowText (parent, i, 0) != null) {
+				boolean measuring = pageMeasuring;
+				pageMeasuring = true;
+				try {
+					pageWidest = Math.max (pageWidest, calculateWidth (column, iter, false));
+				} finally {
+					pageMeasuring = measuring;
+				}
+			}
+		}
+	} finally {
+		OS.g_free (iter);
+	}
+	if (currentItem == null) GTK.gtk_widget_queue_draw (handle);
+}
+
+/* Same arithmetic as setScrollWidth (long, TreeItem) for a measured row width. */
+void applyPageScrollWidth (int width) {
+	if (columnCount != 0) return;
+	long column = GTK.gtk_tree_view_get_column (handle, 0);
+	if (column != 0 && GTK.gtk_tree_view_column_get_fixed_width (column) < width) {
+		GTK.gtk_tree_view_column_set_fixed_width (column, width);
+	}
 }
 
 @Override
@@ -4721,41 +5027,20 @@ public TreeItem getTopItem () {
 
 TreeItem _getCachedTopItem() {
 	/*
-	 *  Check to see if the selected item is also the topItem. If it is, that means topItem is
-	 *  in sync with the GTK view. If not, the real top item should be the last selected item, which is caused
-	 *  by setSelection().
+	 * The vertical adjustment still has the value cached by setTopItem (before GTK scrolls on its next frame), or the
+	 * initial 0 when setTopItem was never called. The item setTopItem asked for is the top row, or becomes it when GTK
+	 * scrolls; it already is when no scroll was needed. Without one, an unscrolled tree's top row is its first item.
+	 * The selection does not tell the top row: a selected row that is already on screen is not scrolled to the top
+	 * (setSelection only shows it), and answering it reported a row lower down as the top row.
 	 */
-	long treeSelect = GTK.gtk_tree_view_get_selection(handle);
-	long list = GTK.gtk_tree_selection_get_selected_rows(treeSelect, null);
-	TreeItem treeSelection = null;
-	if (list != 0) {
-		long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-		long data = OS.g_list_data (list);
-		if (GTK.gtk_tree_model_get_iter (viewModel (), iter, data)) {
-			treeSelection = _getItem (iter);
-		}
-		OS.g_free (iter);
-		GTK.gtk_tree_path_free (data);
-		if (topItem == treeSelection) {
-			return topItem;
-		}
-		else {
-			return treeSelection;
-		}
-	} else {
-		if (topItem == null) {
-			// if topItem isn't set and there is nothing selected, topItem is the first item on the Tree
-			TreeItem item = null;
-			long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof());
-			if (GTK.gtk_tree_model_get_iter_first (modelHandle, iter)) {
-				item = _getItem (iter);
-			}
-			OS.g_free (iter);
-			return item;
-		} else {
-			return topItem;
-		}
+	if (topItem != null) return topItem;
+	TreeItem item = null;
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof());
+	if (GTK.gtk_tree_model_get_iter_first (modelHandle, iter)) {
+		item = _getItem (iter);
 	}
+	OS.g_free (iter);
+	return item;
 }
 
 @Override
@@ -5107,6 +5392,11 @@ long gtk_changed (long widget) {
 	captureVirtualSelection ();
 	notifyVirtualAccessibleSelection ();
 	notifyVirtualAccessibleFocus ();
+	/*
+	 * With a page source the rows are drawn without facades; a selection change that no listener receives (such as
+	 * GTK selecting the cursor row of a SINGLE tree when it takes focus) creates none.
+	 */
+	if (pageSource != null && !hooks (SWT.Selection) && !filters (SWT.Selection)) return 0;
 	TreeItem item = getFocusItem ();
 	if (item != null) {
 		pinVirtualFacade (item);
@@ -5240,7 +5530,8 @@ long gtk_row_has_child_toggled (long model, long path, long iter) {
 	*/
 	int [] index = new int [1];
 	GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, index, -1);
-    if (index [0] >= items.length) {
+	/* a row without an id (never a facade, such as a page-source row given its expander child) has no expanded state */
+    if (index [0] < 0 || index [0] >= items.length) {
         return 0;
     }
 	TreeItem item = items [index [0]];
@@ -5392,10 +5683,9 @@ long gtk_test_collapse_row (long tree, long iter, long path) {
 		}
 		return 1;
 	}
-	int [] index = new int [1];
-	GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, index, -1);
-	TreeItem item = items [index [0]];
-	pinVirtualFacade (item);
+	/* a row expanded without its facade (GTK's recursive expand of a page-source row) gets one here */
+	TreeItem item = exposeVirtualItem (_getItem (iter));
+	if (item == null || item.isDisposed ()) return 1;
 	Event event = new Event ();
 	event.item = item;
 	boolean oldModelChanged = modelChanged;
@@ -5458,10 +5748,12 @@ long gtk_test_expand_row (long tree, long iter, long path) {
 		}
 		return 1;
 	}
-	int [] index = new int [1];
-	GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, index, -1);
-	TreeItem item = items [index [0]];
-	pinVirtualFacade (item);
+	/*
+	 * A row the page source drew has no facade yet (its id is -1): expanding it creates the facade, which
+	 * exposeVirtualItem fills (its child count) before its children are restored and the Expand listeners run.
+	 */
+	TreeItem item = exposeVirtualItem (_getItem (iter));
+	if (item == null || item.isDisposed ()) return 1;
 	restoreVirtualChildren (item);
 	Event event = new Event ();
 	event.item = item;

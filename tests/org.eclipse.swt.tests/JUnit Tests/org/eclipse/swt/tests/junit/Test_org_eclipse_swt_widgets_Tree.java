@@ -2697,6 +2697,31 @@ public void test_setTopItemLorg_eclipse_swt_widgets_TreeItem() {
 	}
 }
 
+/**
+ * getTopItem answers the row at the top of the tree, not the selected row. On GTK it answered the selected row while
+ * the vertical adjustment had the value cached by setTopItem (or its initial 0), although the first row was at the top.
+ */
+@Test
+public void test_getTopItemIsTheTopRowNotTheSelection() {
+	tree.removeAll();
+	TreeItem[] items = new TreeItem[30];
+	for (int i = 0; i < items.length; i++) {
+		items[i] = new TreeItem(tree, SWT.NONE);
+		items[i].setText("item " + i);
+	}
+	tree.setSize(200, 200);
+	shell.open();
+	SwtTestUtil.processEvents();
+	tree.setSelection(items[4]);
+	SwtTestUtil.processEvents();
+	assertTrue(items[4].getBounds().y + items[4].getBounds().height <= tree.getClientArea().height, "fixture: the selected row is on screen without scrolling");
+	assertSame(items[0], tree.getTopItem(), "an unscrolled tree with a selected row on screen");
+	tree.setTopItem(items[0]);
+	SwtTestUtil.processEvents();
+	assertSame(items[0], tree.getTopItem(), "setTopItem of the row already at the top, with another row selected");
+	assertTrue(items[0].getBounds().y < tree.getItemHeight(), "the first row is the top row on screen: " + items[0].getBounds());
+}
+
 @Test
 public void test_showItemLorg_eclipse_swt_widgets_TreeItem() {
 	assertThrows(IllegalArgumentException.class, () -> tree.showItem(null), "No exception thrown for item == null");
