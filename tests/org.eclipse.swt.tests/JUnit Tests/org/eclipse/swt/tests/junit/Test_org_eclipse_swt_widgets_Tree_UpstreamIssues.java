@@ -33,12 +33,22 @@ import org.junit.jupiter.api.*;
  * <li>eclipse.platform.swt#208: UI freezes in <code>setItemCount</code>. Stock win32 inserts or deletes one native
  * item per row; the viewport keeps the count in a lane and materializes only the rows in view.</li>
  * </ul>
+ * <p>
+ * On GTK3 the Tree that keeps the count and the child order in lanes is the logical native model
+ * (<code>org.eclipse.swt.internal.gtk.virtualTreeLogicalNativeModel</code>, qualified in
+ * <code>docs/viewport-resource-budgets.md</code>), so these tests create their tree in that model there. The default
+ * GTK3 model keeps a native prefix of rows (a <code>GtkTreeStore</code> frontier): a distant <code>getItem</code>
+ * inserts every native row up to it, and shrinking the count removes them one by one. That cost is the documented
+ * unresolved scope of the default model ("Scope and unresolved work" in the same document), not something these
+ * tests can show to be fixed.
+ * </p>
  */
 public class Test_org_eclipse_swt_widgets_Tree_UpstreamIssues {
 	static final Logger LOG = Logger.getLogger (Test_org_eclipse_swt_widgets_Tree_UpstreamIssues.class.getName ());
 	/* a budget stock SWT misses by one or two orders of magnitude and the viewport meets by two */
 	static final long BUDGET_MS = 250;
 	static final int CHILDREN = 200_000, ROOTS = 1_000_000;
+	static final String GTK_LOGICAL_MODEL = "org.eclipse.swt.internal.gtk.virtualTreeLogicalNativeModel";
 
 	Display display;
 	Shell shell;
@@ -49,7 +59,15 @@ public class Test_org_eclipse_swt_widgets_Tree_UpstreamIssues {
 		display = Display.getDefault ();
 		shell = new Shell (display);
 		shell.setBounds (20, 20, 320, 420);
-		tree = new Tree (shell, SWT.MULTI | SWT.BORDER | SWT.VIRTUAL);
+		/* GTK3: the lane-keeping logical native model (see the class comment); the property is read when the tree is created */
+		String previous = System.getProperty (GTK_LOGICAL_MODEL);
+		if (SwtTestUtil.isGTK) System.setProperty (GTK_LOGICAL_MODEL, "true");
+		try {
+			tree = new Tree (shell, SWT.MULTI | SWT.BORDER | SWT.VIRTUAL);
+		} finally {
+			if (previous == null) System.clearProperty (GTK_LOGICAL_MODEL);
+			else System.setProperty (GTK_LOGICAL_MODEL, previous);
+		}
 		tree.setBounds (5, 5, 300, 380);
 		tree.addListener (SWT.SetData, event -> {
 			TreeItem item = (TreeItem) event.item;

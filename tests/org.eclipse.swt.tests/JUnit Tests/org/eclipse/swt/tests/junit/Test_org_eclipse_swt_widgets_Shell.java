@@ -1059,7 +1059,10 @@ public void test_Issue450_NoShellActivateOnSetFocus() {
                 // Not reproducible on my machine. Not reproducible on GitHub builder.
                 // Only seems to occur on Eclipse builder, not sure what's different there.
                 // Anyways, this is out of scope of this test, so just ask to activate.
-                if (SwtTestUtil.isCocoa) {
+                // On GTK the window manager chooses the window that gets the focus when the
+                // active Shell closes: openbox, the window manager of the GTK receiver's test
+                // run, gave it to another visible Shell (one an earlier test left open).
+                if (SwtTestUtil.isCocoa || SwtTestUtil.isGTK) {
                     shell2.forceActive();
                 }
 			},

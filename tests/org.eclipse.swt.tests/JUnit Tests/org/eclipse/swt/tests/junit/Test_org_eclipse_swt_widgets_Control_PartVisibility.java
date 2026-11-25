@@ -100,6 +100,35 @@ public class Test_org_eclipse_swt_widgets_Control_PartVisibility {
 		log.clear ();
 	}
 
+	/*
+	 * Minimizes or restores the shell and waits for the platform to report it. GTK asks the window manager, and
+	 * the shell learns its new state (and sends Iconify or Deiconify) only when the window manager answers, after
+	 * the queue has drained: events are dispatched until then, at most five seconds. Platforms that change the
+	 * state synchronously (win32) have sent the event before setMinimized returns.
+	 */
+	void minimize (boolean minimized) {
+		int type = minimized ? SWT.Iconify : SWT.Deiconify;
+		boolean [] arrived = {false};
+		Listener listener = e -> arrived [0] = true;
+		shell.addListener (type, listener);
+		try {
+			shell.setMinimized (minimized);
+			long end = System.currentTimeMillis () + 5000;
+			while (!arrived [0] && System.currentTimeMillis () < end) {
+				if (!display.readAndDispatch ()) {
+					try {
+						Thread.sleep (5);
+					} catch (InterruptedException e) {
+						Thread.currentThread ().interrupt ();
+						return;
+					}
+				}
+			}
+		} finally {
+			shell.removeListener (type, listener);
+		}
+	}
+
 	static final int V = PartVisibilityEvent.VISIBILITY, Z = PartVisibilityEvent.SIZE, M = PartVisibilityEvent.MINIMIZE,
 		R = PartVisibilityEvent.REPARENT, C = PartVisibilityEvent.CONTAINER;
 
@@ -226,9 +255,9 @@ public class Test_org_eclipse_swt_widgets_Control_PartVisibility {
 		Control leaf = nest (shell, depth, "leaf");
 		open ();
 		assertTrue (leaf.isPartVisible ());
-		expect (() -> shell.setMinimized (true), "leaf hidden " + M + " shell");
+		expect (() -> minimize (true), "leaf hidden " + M + " shell");
 		assertFalse (leaf.isPartVisible ());
-		expect (() -> shell.setMinimized (false), "leaf visible " + M + " shell");
+		expect (() -> minimize (false), "leaf visible " + M + " shell");
 		expect (() -> shell.setVisible (false), "leaf hidden " + V + " shell");
 		expect (() -> shell.setVisible (true), "leaf visible " + V + " shell");
 	}

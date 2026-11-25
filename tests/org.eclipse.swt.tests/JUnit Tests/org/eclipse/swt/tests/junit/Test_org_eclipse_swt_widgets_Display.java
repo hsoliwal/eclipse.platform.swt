@@ -48,7 +48,6 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Synchronizer;
-import org.eclipse.test.Screenshots;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -1242,7 +1241,7 @@ public void test_setCursorLocationII(TestInfo info) {
 		Point actual = display.getCursorLocation();
 		if (!BUG_492569 && SwtTestUtil.isX11()) {
 			if (!location.equals(actual)) {
-				Screenshots.takeScreenshot(getClass(), info.getDisplayName()); // Bug 528968 This call causes crash on Wayland.
+				System.out.println(SwtTestUtil.takeScreenshot(getClass(), info.getDisplayName())); // Bug 528968 This call causes crash on Wayland.
 				fail("\nExpected:"+location.toString()+"  Actual:"+actual.toString());
 			}
 		} else {
@@ -1273,7 +1272,7 @@ public void test_setCursorLocationLorg_eclipse_swt_graphics_Point(TestInfo info)
 		Point actual = display.getCursorLocation();
 		if (!BUG_492569 && SwtTestUtil.isX11()) {
 			if (!location.equals(actual)) {
-				Screenshots.takeScreenshot(getClass(), info.getDisplayName()); // Bug 528968 This call causes crash on Wayland.
+				System.out.println(SwtTestUtil.takeScreenshot(getClass(), info.getDisplayName())); // Bug 528968 This call causes crash on Wayland.
 				fail("\nExpected:"+location.toString()+"  Actual:"+actual.toString());
 			}
 		} else {

@@ -928,12 +928,20 @@ public void test_OpenWindowListener_open_sameBrowser() throws IOException {
 			opened.set(true);
 			event.browser = browser;
 		});
+		/*
+		 * waitForPassCondition polls on a background thread, and Browser.getUrl () may only be called on the
+		 * UI thread (it throws "Invalid thread access" elsewhere, which ended the poll): the URL is read on
+		 * the UI thread whenever the location changes or a load completes, and the poll reads that value.
+		 */
+		AtomicReference<String> shownUrl = new AtomicReference<>("");
+		browser.addLocationListener(changedAdapter(event -> shownUrl.set(browser.getUrl())));
+		browser.addProgressListener(completedAdapter(event -> shownUrl.set(browser.getUrl())));
 
 		shell.open();
 		browser.setText("<html><script type='text/javascript'>window.open('" + url + "')</script>"
 				+ "<body>This test opens a new window in the same browser.</body></html>");
 
-		boolean passed = waitForPassCondition(() -> opened.get() && browser.getUrl().startsWith(url));
+		boolean passed = waitForPassCondition(() -> opened.get() && shownUrl.get().startsWith(url));
 		assertTrue(passed, "Test timed out. Opened: " + opened.get() + ", URL: " + browser.getUrl());
 	}
 }
