@@ -119,6 +119,13 @@ public class Table extends Composite {
 	boolean pageMeasuring;
 	/* Widest page-source row of a table without columns measured since the last settle (applied when the queue drains). */
 	int pageWidest;
+	/*
+	 * Parent-owned per-row check bits of a VIRTUAL table in the native model (lanes LANE_CHECKED and LANE_GRAYED,
+	 * one bit per logical row, allocated on the first set bit): they survive the release of a transient facade.
+	 */
+	VirtualBitLanes rowLanes;
+	static final int LANE_CHECKED = 0;
+	static final int LANE_GRAYED = 1;
 	TableColumn [] columns;
 	TableItem currentItem;
 	TableColumn sortColumn;
@@ -253,6 +260,42 @@ TableItem materializedItem (int position) {
 
 int materializedIndex (int position) {
 	return (style & SWT.VIRTUAL) != 0 ? virtualItems.indexAt (position) : position;
+}
+
+/* Parent-owned check bit of a materialized row of a VIRTUAL native-model table (TableItem's check state). */
+boolean virtualRowBit (TableItem item, int lane) {
+	if (rowLanes == null) return false;
+	int index = virtualItems.indexOfIdentity (item);
+	return index >= 0 && rowLanes.get (lane, index);
+}
+
+void virtualRowBit (TableItem item, int lane, boolean value) {
+	int index = virtualItems.indexOfIdentity (item);
+	if (index < 0) throw new IllegalStateException ("materialized item is not in storage");
+	if (rowLanes == null) {
+		if (!value) return;
+		rowLanes = new VirtualBitLanes (2);
+		rowLanes.setLength (itemCount);
+	}
+	rowLanes.set (lane, index, value);
+}
+
+/* Check bit of a row by index, with or without a facade (answerPageCell). */
+boolean virtualRowBit (int index, int lane) {
+	return rowLanes != null && rowLanes.get (lane, index);
+}
+
+/*
+ * Table.clear resets the check bits of the rows it clears (TableItem.clear); a row whose facade was released keeps its
+ * bits only in the lanes, so they are reset here for the rows in [start, end] without a facade.
+ */
+void clearRowLanes (int start, int end) {
+	if (rowLanes == null || !usesVirtualNativeModel () || start > end) return;
+	for (int lane = LANE_CHECKED; lane <= LANE_GRAYED; lane++) {
+		for (int index = rowLanes.nextSet (lane, start); index >= 0 && index <= end; index = rowLanes.nextSet (lane, index + 1)) {
+			if (virtualItems.get (index) == null) rowLanes.set (lane, index, false);
+		}
+	}
 }
 
 void virtualItemChanged (TableItem item) {
@@ -1623,6 +1666,12 @@ void resetVirtualNativeModel (int newCount, int start, int removed, int inserted
 		itemCount = newCount;
 		return;
 	}
+	/* the check lanes shift with the rows (itemCount is still the old count here) */
+	if (rowLanes != null) {
+		if (removed > 0) rowLanes.remove (start, removed);
+		if (inserted > 0) rowLanes.insert (start, inserted);
+		rowLanes.setLength (newCount);
+	}
 	if (usesBoundedVirtualView ()) {
 		if (removed > 0) virtualViewport.remove (start, removed);
 		if (inserted > 0) virtualViewport.insert (start, inserted);
@@ -1972,16 +2021,16 @@ boolean pagePaintNeedsFacade () {
 
 /*
  * Answers a cell of a row without a facade from the page source (text) with the default attributes
- * of a row, as the facade would: unchecked (a checked or grayed row keeps its facade, see
- * releasePageFacades), no image, default colours and font. Returns false when a facade exists or is
- * needed, so the classic path runs.
+ * of a row, as the facade would: the check bits from the parent's lanes (rowLanes), no image, default
+ * colours and font. Returns false when a facade exists or is needed, so the classic path runs.
  */
 boolean answerPageCell (long tree_column, long cell, int index, boolean shown) {
 	if (!usesVirtualNativeModel () || virtualItems == null || virtualItems.get (index) != null || pagePaintNeedsFacade ()) return false;
 	pagePaintAnswers++;
 	if (GTK.GTK_IS_CELL_RENDERER_TOGGLE (cell)) {
-		OS.g_object_set (cell, OS.active, false, 0);
-		OS.g_object_set (cell, OS.inconsistent, false, 0);
+		boolean checked = virtualRowBit (index, LANE_CHECKED);
+		OS.g_object_set (cell, OS.active, checked, 0);
+		OS.g_object_set (cell, OS.inconsistent, checked && virtualRowBit (index, LANE_GRAYED), 0);
 		return true;
 	}
 	OS.g_object_set (cell, OS.cell_background_rgba, (GdkRGBA) null, 0);
@@ -2073,12 +2122,14 @@ void applyPageScrollWidth (int width) {
 
 /*
  * Releases the transient facades outside [keepStart, keepEnd). A facade is kept when its state is
- * not reproducible from the source: pinned by the API, dirty, or checked or grayed (this platform
- * keeps those bits in the facade's storage entry).
+ * not reproducible from the source: pinned by the API or dirty. The check bits of the native model
+ * live in the parent's lanes (rowLanes) and survive the release; without the native model (GTK4) they
+ * live in the facade's storage entry, so a checked or grayed facade is kept there.
  */
 int releasePageFacades (int keepStart, int keepEnd) {
 	if (virtualItems == null || pageSource == null || currentItem != null || isDisposed ()) return 0;
-	long keep = VirtualItemState.PINNED | VirtualItemState.DIRTY | VirtualItemState.CHECKED | VirtualItemState.GRAYED;
+	long keep = VirtualItemState.PINNED | VirtualItemState.DIRTY;
+	if (!usesVirtualNativeModel ()) keep |= VirtualItemState.CHECKED | VirtualItemState.GRAYED;
 	return virtualItems.releaseOutside (keepStart, keepEnd, keep, RELEASE_FACADE);
 }
 
@@ -2180,6 +2231,8 @@ public void clear (int index) {
 	TableItem item = _getItem (index, false);
     if (item != null) {
         item.clear();
+    } else {
+        clearRowLanes (index, index);
     }
 }
 /**
@@ -2221,6 +2274,7 @@ public void clear (int start, int end) {
                 item.clear();
             }
 		});
+		clearRowLanes (start, end);
 	} else {
 		for (int i=start; i<=end; i++) {
 			TableItem item = items [i];
@@ -2269,6 +2323,8 @@ public void clear (int [] indices) {
 		TableItem item = _getItem (indices [i], false);
         if (item != null) {
             item.clear();
+        } else {
+            clearRowLanes (indices [i], indices [i]);
         }
 	}
 }
@@ -2296,6 +2352,7 @@ public void clearAll () {
             item.clear();
         }
 	}
+	clearRowLanes (0, itemCount - 1);
 }
 
 @Override
