@@ -141,6 +141,12 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 	}
 
 	private static ImageData capture (Control control) {
+		/*
+		 * GTK draws its overlay scroll bar over the client area and fades it in and out on the frame clock after every
+		 * scroll, so it is left out of the capture there (ViewportDifferential.renderWithoutOverlayScrollBars, as in the
+		 * StyledText captures): the pixels compared are the rows.
+		 */
+		if (SwtTestUtil.isGTK && control instanceof Scrollable scrollable) return ViewportDifferential.renderWithoutOverlayScrollBars (scrollable);
 		Point size = control.getSize ();
 		Image image = new Image (control.getDisplay (), size.x, size.y);
 		GC gc = new GC (image);
@@ -169,16 +175,7 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 	}
 
 	private static String pixelHash (Control control) throws Exception {
-		Point size = control.getSize ();
-		Image image = new Image (control.getDisplay (), size.x, size.y);
-		GC gc = new GC (image);
-		try {
-			control.print (gc);
-		} finally {
-			gc.dispose ();
-		}
-		ImageData data = image.getImageData ();
-		image.dispose ();
+		ImageData data = capture (control);
 		MessageDigest digest = MessageDigest.getInstance ("SHA-256");
 		digest.update (data.data);
 		return HexFormat.of ().formatHex (digest.digest ()).substring (0, 16);
@@ -504,6 +501,155 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		long after = Arrays.stream ((Object []) field (lazy, "items")).filter (Objects::nonNull).count ();
 		assertTrue (after <= 2, "only the API item (and nothing for its painted children): " + after);
 		assertEquals ("n3.0", node.getItem (0).getText ());
+	}
+
+	@Test
+	public void test_treeOfManyRootsRequestsOnlyTheVisibleBlocksAndPaintsWithoutFacades () throws Exception {
+		Assumptions.assumeFalse (SwtTestUtil.isCocoa, "the cocoa Tree registers no VirtualPageHost: it paints every row through a TreeItem");
+		/* each original widget is its own viewport: residency and requests follow the rows on screen, not the 100,000 roots */
+		int roots = 100_000, blockSize = 16;
+		java.util.List<Integer> rootRequests = Collections.synchronizedList (new ArrayList<> ());
+		AtomicInteger childRequests = new AtomicInteger ();
+		Tree lazy = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
+		VirtualPageSource source = new VirtualPageSource (blockSize, 32, 1, VirtualPageSource.TREE, request -> {
+			if (request.getParentKey () != VirtualPageSource.ROOT) {
+				childRequests.incrementAndGet ();
+				return;
+			}
+			rootRequests.add (request.getStart ());
+			request.setTotal (roots);
+			for (int i = request.getStart (), end = Math.min (roots, i + request.getCount ()); i < end; i++) {
+				request.setText (i, 0, "n" + i);
+				request.setKey (i, i);
+				request.setChildCount (i, i % 3 == 0 ? 2 : 0);
+			}
+		});
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		lazy.redraw ();
+		lazy.update ();
+		drain (source);
+		assertEquals (roots, lazy.getItemCount ());
+		long facades = Arrays.stream ((Object []) field (lazy, "items")).filter (Objects::nonNull).count ();
+		assertEquals (0, facades, "rows painted without TreeItems");
+		assertTrue ((int) field (lazy, "pagePaintAnswers") > 0, "rows were answered from the block store");
+		int visible = lazy.getClientArea ().height / Math.max (1, lazy.getItemHeight ()) + 1;
+		java.util.List<Integer> requested = new ArrayList<> (rootRequests);
+		assertFalse (requested.isEmpty ());
+		for (int start : requested) {
+			assertTrue (start < visible + blockSize, "only blocks of rows on screen were requested (" + visible + " rows visible): " + requested);
+		}
+		assertTrue (requested.size () <= visible / blockSize + 2, "one request per block on screen: " + requested);
+		assertEquals (0, childRequests.get (), "no children were requested for collapsed nodes");
+		assertEquals ("n7", lazy.getItem (7).getText (), "an API read answers from the store");
+		facades = Arrays.stream ((Object []) field (lazy, "items")).filter (Objects::nonNull).count ();
+		assertTrue (facades <= 1, "only the item the API asked for: " + facades);
+	}
+
+	/* Moves the GtkTreeView cursor to a root row through GTK, as a click or an arrow key does (GTK only). */
+	private static void gtkSetCursor (Tree tree, int row) throws Exception {
+		Class<?> gtk = Class.forName ("org.eclipse.swt.internal.gtk.GTK");
+		long path = (long) gtk.getMethod ("gtk_tree_path_new").invoke (null);
+		try {
+			gtk.getMethod ("gtk_tree_path_append_index", long.class, int.class).invoke (null, path, row);
+			gtk.getMethod ("gtk_tree_view_set_cursor", long.class, long.class, long.class, boolean.class).invoke (null, (long) field (tree, "handle"), path, 0L, false);
+		} finally {
+			gtk.getMethod ("gtk_tree_path_free", long.class).invoke (null, path);
+		}
+	}
+
+	private static long facades (Tree tree) throws Exception {
+		return Arrays.stream ((Object []) field (tree, "items")).filter (Objects::nonNull).count ();
+	}
+
+	@Test
+	public void test_treeUserSelectionOfARowWithoutAFacadeCarriesItsFilledItem () throws Exception {
+		Assumptions.assumeTrue (SwtTestUtil.isGTK, "moves the GtkTreeView cursor through GTK (gtk_tree_view_set_cursor): GTK only");
+		Assumptions.assumeFalse (SwtTestUtil.isGTK4 (), "presses Return through Display.post, which GTK4 does not implement (it answers false): GTK3 only");
+		Tree lazy = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
+		VirtualPageSource source = treeSource (true, null, null);
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		assertEquals (0, facades (lazy), "fixture: rows painted without TreeItems");
+		/* nobody listens: GTK selects the cursor row and no TreeItem is created */
+		gtkSetCursor (lazy, 2);
+		drain (source);
+		assertEquals (0, facades (lazy), "a selection change no listener receives creates no TreeItem");
+		java.util.List<Event> selections = new ArrayList<> (), defaults = new ArrayList<> ();
+		Listener selection = selections::add;
+		lazy.addListener (SWT.Selection, selection);
+		lazy.addListener (SWT.DefaultSelection, defaults::add);
+		/* a click or arrow key onto a row drawn without a facade: Selection carries its item, filled from the source */
+		gtkSetCursor (lazy, 5);
+		drain (source);
+		assertEquals (1, selections.size (), "one Selection for the new cursor row");
+		TreeItem selected = (TreeItem) selections.get (0).item;
+		assertNotNull (selected, "the Selection carries the row's item");
+		assertEquals ("n5", selected.getText ());
+		assertSame (selected, lazy.getItem (5));
+		assertEquals (1, facades (lazy), "only the selected row got a TreeItem");
+		/* Return on a row drawn without a facade: DefaultSelection carries its item too */
+		lazy.removeListener (SWT.Selection, selection);
+		gtkSetCursor (lazy, 7);
+		drain (source);
+		assertEquals (1, facades (lazy), "fixture: no Selection listener, so row 7 still has no TreeItem");
+		lazy.setFocus ();
+		SwtTestUtil.forceActiveForPost (shell);
+		for (int type : new int [] {SWT.KeyDown, SWT.KeyUp}) {
+			Event key = new Event ();
+			key.type = type;
+			key.keyCode = SWT.CR;
+			key.character = SWT.CR;
+			assertTrue (display.post (key));
+		}
+		SwtTestUtil.processEvents (5000, () -> !defaults.isEmpty ());
+		assertEquals (1, defaults.size (), "one DefaultSelection for Return");
+		TreeItem activated = (TreeItem) defaults.get (0).item;
+		assertNotNull (activated, "the DefaultSelection carries the row's item");
+		assertEquals ("n7", activated.getText ());
+		assertSame (activated, lazy.getItem (7));
+	}
+
+	@Test
+	public void test_treeWheelScrollingCreatesNoTreeItems () throws Exception {
+		Assumptions.assumeTrue (SwtTestUtil.isGTK, "moves the GtkTreeView adjustment and runs the top-row sync of the GTK wheel handler (Tree.gtk_scroll_event calls syncVirtualTopRowFromNative): GTK only");
+		/* scrolling is not an API call: residency stays the rows a caller or a listener asked for, here none */
+		int roots = 100_000;
+		Tree lazy = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
+		VirtualPageSource source = new VirtualPageSource (64, 32, 1, VirtualPageSource.TREE, request -> {
+			request.setTotal (roots);
+			for (int i = request.getStart (), end = Math.min (roots, i + request.getCount ()); i < end; i++) {
+				request.setText (i, 0, "n" + i);
+				request.setKey (i, i);
+				request.setChildCount (i, 0);
+			}
+		});
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		Method sync = Tree.class.getDeclaredMethod ("syncVirtualTopRowFromNative");
+		sync.setAccessible (true);
+		Method topRow = Tree.class.getDeclaredMethod ("virtualViewportTopRow");
+		topRow.setAccessible (true);
+		ScrollBar bar = lazy.getVerticalBar ();
+		int itemHeight = Math.max (1, lazy.getItemHeight ());
+		for (int step = 0; step < 6; step++) {
+			/* to the end of the native rows: painting the rows there grows them by a chunk (the frontier) */
+			bar.setSelection (bar.getMaximum () - bar.getThumb ());
+			/* GTK paints on its frame clock: dispatch for a few frames, then let the source settle */
+			for (long end = System.currentTimeMillis () + 200; System.currentTimeMillis () < end;) {
+				if (!display.readAndDispatch ()) Thread.sleep (5);
+			}
+			drain (source);
+			sync.invoke (lazy);
+			assertEquals (0, facades (lazy), "no TreeItem after wheel step " + step);
+			long expected = bar.getSelection () / itemHeight;
+			long top = (long) topRow.invoke (lazy);
+			assertTrue (Math.abs (top - expected) <= 1, "the viewport's top row " + top + " follows the native top row near " + expected);
+		}
+		assertTrue (bar.getSelection () / itemHeight > 256, "the scroll went past the first chunk of native rows: " + bar.getSelection () / itemHeight);
 	}
 
 	@Test

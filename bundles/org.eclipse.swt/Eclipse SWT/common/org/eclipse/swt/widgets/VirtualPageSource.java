@@ -585,6 +585,23 @@ public final class VirtualPageSource {
 		return text == null ? "" : text;
 	}
 
+	/**
+	 * Text of a tree row if its block is loaded, else null; never requests anything. The parent's key
+	 * must already be known (its facade was filled); otherwise null.
+	 */
+	String treeRowText (TreeItem parent, int index, int column) {
+		int parentKey = ROOT;
+		if (parent != null) {
+			int node = nodeIndex (parent);
+			if (node < 0) return null;
+			parentKey = nodeKeys [node];
+		}
+		if (index < 0 || column < 0 || column >= cache.columns ()) return null;
+		int slot = cache.find (parentKey, index / blockSize);
+		if (slot < 0 || cache.state (slot) != VirtualBlockStore.LOADED) return null;
+		return cache.text (slot, index - cache.firstRow (slot), column);
+	}
+
 	/** Whether a loaded tree row has children (known or UNKNOWN). */
 	boolean treePaintExpandable (TreeItem parent, int index) {
 		int parentKey = parent == null ? ROOT : keyOf (parent);
