@@ -26,10 +26,13 @@ import java.util.Random;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -326,7 +329,21 @@ public class Test_org_eclipse_swt_custom_StyledText_HeightExtent {
 		scrolled.setOrigin(0, size.y / 2);
 		t.redraw();
 		drain(display);
-		t.update();
+		// the paint of the band the parent shows, sent to the paint listener: when the platform delivers
+		// its own expose events (and how much of the widget they cover) is not part of what is tested
+		int shownY = -t.getLocation().y;
+		int shown = t.getLineIndex(shownY + 1);
+		Image band = new Image(display, 200, 300);
+		GC gc = new GC(band);
+		Event paint = new Event();
+		paint.gc = gc;
+		paint.x = 0;
+		paint.y = shownY;
+		paint.width = 200;
+		paint.height = 300;
+		t.notifyListeners(SWT.Paint, paint);
+		gc.dispose();
+		band.dispose();
 		Object renderer = field(t, "renderer");
 		TextLayout[] slots = (TextLayout[]) field(renderer, "slotLayout");
 		int visible = Math.min(clientHeight, displayHeight) / lineHeight + 1;
@@ -340,7 +357,6 @@ public class Test_org_eclipse_swt_custom_StyledText_HeightExtent {
 		}
 		assertTrue(live <= bound, "live layouts " + live + ", bound " + bound);
 		// the middle of the document is on screen: its layouts are the cached ones
-		int shown = t.getLineIndex(-t.getLocation().y + 1);
 		int[] slotLine = (int[]) field(renderer, "slotLine");
 		boolean resident = false;
 		for (int line : slotLine) {
