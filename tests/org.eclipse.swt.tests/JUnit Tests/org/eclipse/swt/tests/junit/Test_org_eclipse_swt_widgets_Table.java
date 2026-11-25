@@ -941,6 +941,211 @@ private static void assumeForkVirtualStore(Table table) {
 	}
 }
 
+/** A VIRTUAL table as an application creates it: no bounded-view property, whatever the test JVM was given. */
+private Table newDefaultGtkTable(int style) {
+	String property = "org.eclipse.swt.internal.gtk.virtualTableBoundedView";
+	String previous = System.getProperty(property);
+	System.clearProperty(property);
+	try {
+		return new Table(shell, style);
+	} finally {
+		if (previous != null) System.setProperty(property, previous);
+	}
+}
+
+private static int virtualFacadeCount(Table table) throws Exception {
+	Field storageField = Table.class.getDeclaredField("virtualItems");
+	storageField.setAccessible(true);
+	Object storage = storageField.get(table);
+	Method size = storage.getClass().getDeclaredMethod("size");
+	size.setAccessible(true);
+	return (Integer) size.invoke(storage);
+}
+
+/**
+ * Native rows attached to the GtkTreeView, TableItem facades and the cells and rows painted by one redraw, each
+ * measured on its own: residency is sampled from the native model and the item store, paint from PaintItem events.
+ */
+private static int[] virtualTableResidency(Table table, int[] cells, java.util.Set<TableItem> rows) throws Exception {
+	SwtTestUtil.processEvents(200, null);
+	cells[0] = 0;
+	rows.clear();
+	table.redraw();
+	SwtTestUtil.processEvents(200, null);
+	return new int[] {attachedGtkTableRows(table), virtualFacadeCount(table), cells[0], rows.size(), table.getTopIndex()};
+}
+
+@Test
+public void test_virtualGtkDefaultTableAttachesOnlyVisibleRowsAtFirstPaintJumpPagingAndEnd() throws Exception {
+	if (!isGtk3()) return;
+	int rows = 200_000, overscan = 8;
+	int shells = shell.getDisplay().getShells().length;
+	int shellChildren = shell.getChildren().length;
+	StringBuilder report = new StringBuilder();
+	/* "false" is the full logical model (one GtkTreeView row per logical row): the control of this measurement */
+	for (String mode : new String[] {"false", null}) {
+		Table virtualTable = mode == null ? newDefaultGtkTable(SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL)
+				: newGtkViewportTable(SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL, mode);
+		String name = mode == null ? "default" : "full-model control";
+		virtualTable.setBounds(0, 0, 360, 220);
+		int[] filled = {0}, painted = {0};
+		java.util.Set<TableItem> paintedRows = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+		virtualTable.addListener(SWT.SetData, event -> {
+			filled[0]++;
+			((TableItem) event.item).setText("row " + event.index);
+		});
+		virtualTable.addListener(SWT.PaintItem, event -> {
+			painted[0]++;
+			paintedRows.add((TableItem) event.item);
+		});
+		virtualTable.setItemCount(rows);
+		shell.setSize(400, 280);
+		shell.open();
+		int itemHeight = Math.max(1, virtualTable.getItemHeight());
+		int visible = (virtualTable.getClientArea().height + itemHeight - 1) / itemHeight;
+		assertTrue(visible > 0 && visible < 64, name + ": visible rows " + visible);
+		int nativeBound = visible + 2 * overscan + 2;
+		int steps = 0, maxPainted = 0;
+		String[] phases = {"first paint", "jump", "paging", "end"};
+		TableItem jumpItem = null;
+		for (String phase : phases) {
+			switch (phase) {
+				case "first paint" -> steps++;
+				case "jump" -> {
+					virtualTable.setTopIndex(rows / 2);
+					steps++;
+				}
+				case "paging" -> {
+					ScrollBar bar = virtualTable.getVerticalBar();
+					for (int page = 0; page < 5; page++) {
+						bar.setSelection(bar.getSelection() + bar.getPageIncrement());
+						SwtTestUtil.processEvents(100, null);
+						steps++;
+					}
+				}
+				case "end" -> {
+					virtualTable.setTopIndex(rows - 1);
+					SwtTestUtil.processEvents(100, null);
+					virtualTable.showItem(virtualTable.getItem(rows - 1));
+					steps += 2;
+				}
+				default -> throw new IllegalStateException(phase);
+			}
+			int[] sample = virtualTableResidency(virtualTable, painted, paintedRows);
+			report.append("VIRTUAL-TABLE-RESIDENCY ").append(name).append(' ').append(phase).append(": rows=").append(rows)
+					.append(" visible=").append(visible).append(" nativeRows=").append(sample[0]).append(" items=").append(sample[1])
+					.append(" paintedCells=").append(sample[2]).append(" paintedRows=").append(sample[3]).append(" top=")
+					.append(sample[4]).append(" setData=").append(filled[0]).append('\n');
+			maxPainted = Math.max(maxPainted, sample[3]);
+			assertTrue(sample[3] <= visible + 2, name + " " + phase + ": a redraw paints the visible rows only: " + report);
+			if (mode == null) {
+				assertTrue(sample[0] > 0 && sample[0] <= nativeBound,
+						name + " " + phase + ": the GtkTreeView holds the visible rows plus overscan, not one row per logical row: " + report);
+			} else {
+				assertEquals(rows, sample[0], name + " " + phase + ": the control attaches every logical row: " + report);
+			}
+			assertTrue(sample[1] <= steps * nativeBound,
+					name + " " + phase + ": TableItems exist only for rows that were on screen: " + report);
+			switch (phase) {
+				case "jump" -> {
+					assertEquals(rows / 2, sample[4], name + ": jump top row");
+					jumpItem = virtualTable.getItem(rows / 2);
+				}
+				case "paging" -> assertTrue(sample[4] > rows / 2 + 4 * (visible / 2), name + ": paging advances the top row: " + report);
+				case "end" -> assertTrue(sample[4] >= rows - visible - 1 && sample[4] < rows, name + ": end top row: " + report);
+				default -> { }
+			}
+			assertEquals(0, virtualTable.getChildren().length, name + ": no child control in the table");
+			assertEquals(shellChildren + 1, shell.getChildren().length, name + ": no other control in the shell");
+			assertEquals(shells, shell.getDisplay().getShells().length, name + ": no extra shell");
+		}
+		assertTrue(maxPainted > 0, name + ": the frames painted rows: " + report);
+		assertSame(jumpItem, virtualTable.getItem(rows / 2), name + ": item identity is kept across the window changes");
+		assertEquals("row " + (rows - 1), virtualTable.getItem(rows - 1).getText());
+		virtualTable.dispose();
+	}
+	System.out.print(report);
+}
+
+@Test
+public void test_virtualGtkDefaultTableKeepsItsSelectionWhenFocusArrivesAwayFromIt() throws Exception {
+	if (!isGtk3()) return;
+	Table virtualTable = newDefaultGtkTable(SWT.VIRTUAL | SWT.SINGLE | SWT.V_SCROLL);
+	virtualTable.setBounds(0, 0, 360, 220);
+	virtualTable.setItemCount(200_000);
+	shell.setSize(400, 280);
+	shell.open();
+	virtualTable.setSelection(5);
+	SwtTestUtil.processEvents(200, null);
+	virtualTable.setTopIndex(150_000);
+	SwtTestUtil.processEvents(200, null);
+	List<Integer> selected = new ArrayList<>();
+	virtualTable.addListener(SWT.Selection, event -> selected.add(virtualTable.indexOf((TableItem) event.item)));
+	table.setFocus();
+	SwtTestUtil.processEvents(100, null);
+	virtualTable.setFocus();
+	SwtTestUtil.processEvents(200, null);
+	assertArrayEquals(new int[] {5}, virtualTable.getSelectionIndices(),
+			"taking focus away from the selected row must not select another row");
+	assertEquals(List.of(), selected, "taking focus is not a user selection");
+	assertEquals(150_000, virtualTable.getTopIndex());
+	assertEquals(5, virtualTable.indexOf(virtualTable.getSelection()[0]));
+}
+
+@Test
+public void test_virtualGtkDefaultTableReportsProgrammaticScrollOnItsVerticalBar() throws Exception {
+	if (!isGtk3()) return;
+	Table virtualTable = newDefaultGtkTable(SWT.VIRTUAL | SWT.V_SCROLL);
+	virtualTable.setBounds(0, 0, 360, 220);
+	virtualTable.setItemCount(200_000);
+	shell.setSize(400, 280);
+	shell.open();
+	SwtTestUtil.processEvents(200, null);
+	ScrollBar bar = virtualTable.getVerticalBar();
+	int[] events = {0};
+	bar.addListener(SWT.Selection, event -> events[0]++);
+	virtualTable.setTopIndex(100_000);
+	SwtTestUtil.processEvents(200, null);
+	assertEquals(100_000, virtualTable.getTopIndex());
+	assertTrue(events[0] > 0, "the vertical bar reports a programmatic scroll, as GTK's own adjustment does");
+	assertTrue(bar.getSelection() >= 100_000L * Math.max(1, virtualTable.getItemHeight()) - bar.getThumb());
+	int page = bar.getPageIncrement();
+	assertTrue(page > 0 && page < bar.getThumb(), "GTK's page step is nine tenths of the page: " + page + " of " + bar.getThumb());
+}
+
+@Test
+public void test_virtualGtkDefaultTableKeyboardAndSelectionFollowGtkRules() throws Exception {
+	if (!isGtk3()) return;
+	Table virtualTable = newDefaultGtkTable(SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL);
+	requireBoundedGtkView(virtualTable);
+	virtualTable.setBounds(0, 0, 360, 220);
+	virtualTable.setItemCount(200_000);
+	Class<?> gdk = Class.forName("org.eclipse.swt.internal.gtk.GDK");
+	Method navigate = Table.class.getDeclaredMethod("virtualNavigate", int.class, int.class);
+	navigate.setAccessible(true);
+	int up = gdk.getField("GDK_Up").getInt(null), down = gdk.getField("GDK_Down").getInt(null);
+	int shiftMask = gdk.getField("GDK_SHIFT_MASK").getInt(null);
+	virtualTable.setSelection(0);
+	virtualTable.select(new int[] {3, 7});
+	int[] events = {0};
+	virtualTable.addListener(SWT.Selection, event -> events[0]++);
+	navigate.invoke(virtualTable, up, 0);
+	assertArrayEquals(new int[] {0, 3, 7}, virtualTable.getSelectionIndices(),
+			"Up on the first row changes nothing, as GtkTreeView only rings the bell");
+	assertEquals(0, events[0]);
+	/* gtk_tree_selection_select_path moves the anchor: Shift+Down extends from the row selected last */
+	virtualTable.setSelection(5);
+	virtualTable.select(10);
+	navigate.invoke(virtualTable, down, shiftMask);
+	assertArrayEquals(new int[] {6, 7, 8, 9, 10}, virtualTable.getSelectionIndices());
+	assertEquals(1, events[0]);
+	virtualTable.selectAll();
+	assertFalse(virtualTable.isSelected(-1), "an index out of range is not selected");
+	assertFalse(virtualTable.isSelected(200_000), "an index out of range is not selected");
+	assertFalse(virtualTable.isSelected(Integer.MAX_VALUE), "an index out of range is not selected");
+	assertTrue(virtualTable.isSelected(199_999));
+}
+
 @Test
 public void test_virtualDndProjectionPinsSparseTableFacade() throws Exception {
 	Table virtualTable = new Table(shell, SWT.VIRTUAL | SWT.V_SCROLL);
