@@ -589,11 +589,16 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		source.attach (lazy);
 		shell.open ();
 		drain (source);
-		assertTrue (source.isLoaded (VirtualPageSource.ROOT, 64), "an overscan block below the screen arrived");
+		assertTrue (source.isLoaded (VirtualPageSource.ROOT, 64) && source.isLoaded (VirtualPageSource.ROOT, 128), "the overscan blocks below the screen arrived");
 		int facades = materialized (lazy);
 		assertTrue (facades < 64, "facades only for the rows drawn, fewer than one block: " + facades);
 		assertFalse (measured.isEmpty (), "the drawn rows were measured");
-		for (int index : measured) assertTrue (index >= 0 && index < 64, "MeasureItem only for rows on screen, not row " + index);
+		/*
+		 * The rows of the arrived overscan blocks are not on screen: no MeasureItem for them. (A platform may measure
+		 * a row of its own choosing to size its rows: GTK's fixed-height mode measured row 2047 of these 10,000, far
+		 * below these blocks.)
+		 */
+		for (int index : measured) assertFalse (index >= 64 && index < 192, "no MeasureItem for row " + index + " of an overscan block below the screen");
 	}
 
 	/* ------------------------------------------------------------------ Tree */
