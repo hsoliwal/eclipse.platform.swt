@@ -183,6 +183,87 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 
 	/* ------------------------------------------------------------------ Table */
 
+	/*
+	 * PROBE ONLY (probe branch, not part of the pull request): the two page-source scenarios whose results differed
+	 * with GTK's bounded virtual view on. A reproduced difference is reported as a skipped test with its measurements;
+	 * otherwise the test passes and prints them.
+	 */
+	private static Table probeBoundedTable (Composite parent, int columns, int rows) {
+		String key = "org.eclipse.swt.internal.gtk.virtualTableBoundedView";
+		String previous = System.getProperty (key);
+		System.setProperty (key, "true");
+		try {
+			return table (parent, columns, rows);
+		} finally {
+			if (previous == null) System.clearProperty (key);
+			else System.setProperty (key, previous);
+		}
+	}
+
+	@Test
+	public void probe_boundedTableTopRowsMatchSynchronousSetData () throws Exception {
+		int rows = 100_000, columns = 3;
+		Table oracle = probeBoundedTable (shell, columns, rows);
+		oracle.addListener (SWT.SetData, e -> {
+			TableItem item = (TableItem) e.item;
+			for (int c = 0; c < columns; c++) item.setText (c, cell (e.index, c));
+		});
+		Table lazy = probeBoundedTable (shell, columns, rows);
+		VirtualPageSource source = tableSource (64, columns, null);
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		StringBuilder report = new StringBuilder ();
+		boolean differs = false;
+		for (int top : new int [] {0, 500, 50_000, 99_990, 1_234}) {
+			oracle.setTopIndex (top);
+			lazy.setTopIndex (top);
+			drain (source);
+			report.append (" [top ").append (top).append (": oracle ").append (oracle.getTopIndex ()).append (" extent ")
+					.append (field (oracle, "virtualRowExtent")).append (" body ").append (field (oracle, "virtualBodyExtent"))
+					.append (" height ").append (oracle.getItemHeight ()).append ("; lazy ").append (lazy.getTopIndex ())
+					.append (" extent ").append (field (lazy, "virtualRowExtent")).append (" body ").append (field (lazy, "virtualBodyExtent"))
+					.append (" height ").append (lazy.getItemHeight ()).append (']');
+			differs |= oracle.getTopIndex () != lazy.getTopIndex ();
+		}
+		System.out.println ("PROBE-BOUNDED-TOP-ROWS differs=" + differs + report);
+		Assumptions.assumeFalse (differs, "REPRODUCED bounded top-row difference:" + report);
+	}
+
+	@Test
+	public void probe_boundedTableReleasedFacadesRepaintIdentically () throws Exception {
+		int rows = 1_000_000, columns = 2;
+		Table lazy = probeBoundedTable (shell, columns, rows);
+		VirtualPageSource source = tableSource (32, columns, null);
+		source.setOverscanBlocks (1);
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		lazy.setTopIndex (40);
+		drain (source);
+		TableItem probe = lazy.getItem (45);
+		probe.setChecked (true);
+		lazy.getItem (46).setGrayed (true);
+		lazy.getItem (46).setChecked (true);
+		unpin (lazy, probe);
+		unpin (lazy, lazy.getItem (46));
+		String checkedHash = pixelHash (lazy);
+		ImageData checkedImage = capture (lazy);
+		for (int top = 1_000; top < 600_000; top += 97_000) {
+			lazy.setTopIndex (top);
+			drain (source);
+		}
+		lazy.setTopIndex (40);
+		drain (source);
+		ImageData again = capture (lazy);
+		String hash = pixelHash (lazy);
+		String report = diffSpan (checkedImage, again) + " itemHeight=" + lazy.getItemHeight () + " header=" + lazy.getHeaderHeight ()
+				+ " top=" + lazy.getTopIndex () + " released=" + source.getCount (VirtualPageSource.RELEASED)
+				+ " probeDisposed=" + probe.isDisposed ();
+		System.out.println ("PROBE-BOUNDED-HEADER-PIXELS identical=" + checkedHash.equals (hash) + " " + report);
+		Assumptions.assumeTrue (checkedHash.equals (hash), "REPRODUCED bounded pixel difference: " + report);
+	}
+
 	@Test
 	public void test_tableResultsIdenticalToSynchronousSetData () {
 		int rows = 100_000, columns = 3;
