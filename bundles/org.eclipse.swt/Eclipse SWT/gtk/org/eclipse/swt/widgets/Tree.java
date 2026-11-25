@@ -4324,6 +4324,15 @@ GdkRGBA getContextColorGdkRGBA () {
 }
 
 TreeItem getFocusItem () {
+	return getFocusItem (false);
+}
+
+/*
+ * The item of the cursor row. A row that the page source drew without a facade (id -1) has none: with materialize,
+ * one is created and filled from the source (exposeVirtualItem), because the event about to be sent carries the row's
+ * item; without it, the answer is null, as for any row without a facade.
+ */
+TreeItem getFocusItem (boolean materialize) {
 	if (usesBoundedVirtualView ()) {
 		if (virtualFocusId < 0 || !virtualTopology.contains (virtualFocusId)) {
 			TreeItem nativeFocus = virtualNativeCursorItem ();
@@ -4343,7 +4352,9 @@ TreeItem getFocusItem () {
 		GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, index, -1);
         if (index [0] != -1) {
             item = items [index [0]];
-        } //TODO should we be creating this item when index is -1?
+        } else if (materialize) {
+			item = exposeVirtualItem (_getItem (iter));
+		}
 	}
 	OS.g_free (iter);
 	GTK.gtk_tree_path_free (path [0]);
@@ -5017,7 +5028,13 @@ public TreeItem getTopItem () {
 	}
 	OS.g_free (iter);
 	GTK.gtk_tree_path_free (path [0]);
+	/*
+	 * The cache only bridges setTopItem until GTK has scrolled: once the adjustment has moved, the cached value is
+	 * where the view was before that scroll, not where topItem is at the top. It no longer applies, so a later scroll
+	 * back to that value reads the native top row too.
+	 */
 	topItem = item;
+	cachedAdjustment = Double.NaN;
 	if (virtualViewport != null && item != null) {
 		updateVirtualViewportGeometry ();
 		virtualViewport.setTopMaterializedId (virtualItemId (item));
@@ -5027,9 +5044,11 @@ public TreeItem getTopItem () {
 
 TreeItem _getCachedTopItem() {
 	/*
-	 * The vertical adjustment still has the value cached by setTopItem (before GTK scrolls on its next frame), or the
-	 * initial 0 when setTopItem was never called. The item setTopItem asked for is the top row, or becomes it when GTK
-	 * scrolls; it already is when no scroll was needed. Without one, an unscrolled tree's top row is its first item.
+	 * The vertical adjustment still has the value setTopItem cached before GTK scrolls (on its next frame), or the
+	 * initial 0 when setTopItem was never called. getTopItem drops the cache when it reads a moved adjustment; a scroll
+	 * away and back to the cached value with no getTopItem call in between still finds it. The item setTopItem asked
+	 * for is the top row, or becomes it when GTK scrolls; it already is when no scroll was needed. Without one, an
+	 * unscrolled tree's top row is its first item.
 	 * The selection does not tell the top row: a selected row that is already on screen is not scrolled to the top
 	 * (setSelection only shows it), and answering it reported a row lower down as the top row.
 	 */
@@ -5323,7 +5342,9 @@ long gtk3_key_press_event (long widget, long event) {
 void sendTreeDefaultSelection() {
 
 	//Note, similar DefaultSelectionHandling in SWT List/Table/Tree
-	TreeItem treeItem = getFocusItem ();
+	/* as for Selection (gtk_changed): no facade for nobody, a filled one for a listener */
+	if (pageSource != null && !hooks (SWT.DefaultSelection) && !filters (SWT.DefaultSelection)) return;
+	TreeItem treeItem = getFocusItem (pageSource != null);
     if (treeItem == null) {
         return;
     }
@@ -5397,7 +5418,8 @@ long gtk_changed (long widget) {
 	 * GTK selecting the cursor row of a SINGLE tree when it takes focus) creates none.
 	 */
 	if (pageSource != null && !hooks (SWT.Selection) && !filters (SWT.Selection)) return 0;
-	TreeItem item = getFocusItem ();
+	/* a listener receives the row's item: a row drawn without a facade gets one now, filled from the source */
+	TreeItem item = getFocusItem (pageSource != null);
 	if (item != null) {
 		pinVirtualFacade (item);
 		Event event = new Event ();
@@ -5808,7 +5830,8 @@ long gtk_toggled (long renderer, long pathStr) {
 	TreeItem item = null;
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof());
 	if (GTK.gtk_tree_model_get_iter (viewModel (), iter, path)) {
-		item = _getItem (iter);
+		/* a row drawn without a facade gets one, filled from the source before its check state toggles */
+		item = exposeVirtualItem (_getItem (iter));
 	}
 	OS.g_free (iter);
 	GTK.gtk_tree_path_free (path);

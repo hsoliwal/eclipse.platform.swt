@@ -547,6 +547,70 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		assertTrue (facades <= 1, "only the item the API asked for: " + facades);
 	}
 
+	/* Moves the GtkTreeView cursor to a root row through GTK, as a click or an arrow key does (GTK only). */
+	private static void gtkSetCursor (Tree tree, int row) throws Exception {
+		Class<?> gtk = Class.forName ("org.eclipse.swt.internal.gtk.GTK");
+		long path = (long) gtk.getMethod ("gtk_tree_path_new").invoke (null);
+		try {
+			gtk.getMethod ("gtk_tree_path_append_index", long.class, int.class).invoke (null, path, row);
+			gtk.getMethod ("gtk_tree_view_set_cursor", long.class, long.class, long.class, boolean.class).invoke (null, (long) field (tree, "handle"), path, 0L, false);
+		} finally {
+			gtk.getMethod ("gtk_tree_path_free", long.class).invoke (null, path);
+		}
+	}
+
+	private static long facades (Tree tree) throws Exception {
+		return Arrays.stream ((Object []) field (tree, "items")).filter (Objects::nonNull).count ();
+	}
+
+	@Test
+	public void test_treeUserSelectionOfARowWithoutAFacadeCarriesItsFilledItem () throws Exception {
+		Assumptions.assumeTrue (SwtTestUtil.isGTK, "moves the GtkTreeView cursor through GTK (gtk_tree_view_set_cursor): GTK only");
+		Tree lazy = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
+		VirtualPageSource source = treeSource (true, null, null);
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		assertEquals (0, facades (lazy), "fixture: rows painted without TreeItems");
+		/* nobody listens: GTK selects the cursor row and no TreeItem is created */
+		gtkSetCursor (lazy, 2);
+		drain (source);
+		assertEquals (0, facades (lazy), "a selection change no listener receives creates no TreeItem");
+		java.util.List<Event> selections = new ArrayList<> (), defaults = new ArrayList<> ();
+		Listener selection = selections::add;
+		lazy.addListener (SWT.Selection, selection);
+		lazy.addListener (SWT.DefaultSelection, defaults::add);
+		/* a click or arrow key onto a row drawn without a facade: Selection carries its item, filled from the source */
+		gtkSetCursor (lazy, 5);
+		drain (source);
+		assertEquals (1, selections.size (), "one Selection for the new cursor row");
+		TreeItem selected = (TreeItem) selections.get (0).item;
+		assertNotNull (selected, "the Selection carries the row's item");
+		assertEquals ("n5", selected.getText ());
+		assertSame (selected, lazy.getItem (5));
+		assertEquals (1, facades (lazy), "only the selected row got a TreeItem");
+		/* Return on a row drawn without a facade: DefaultSelection carries its item too */
+		lazy.removeListener (SWT.Selection, selection);
+		gtkSetCursor (lazy, 7);
+		drain (source);
+		assertEquals (1, facades (lazy), "fixture: no Selection listener, so row 7 still has no TreeItem");
+		lazy.setFocus ();
+		SwtTestUtil.forceActiveForPost (shell);
+		for (int type : new int [] {SWT.KeyDown, SWT.KeyUp}) {
+			Event key = new Event ();
+			key.type = type;
+			key.keyCode = SWT.CR;
+			key.character = SWT.CR;
+			assertTrue (display.post (key));
+		}
+		SwtTestUtil.processEvents (5000, () -> !defaults.isEmpty ());
+		assertEquals (1, defaults.size (), "one DefaultSelection for Return");
+		TreeItem activated = (TreeItem) defaults.get (0).item;
+		assertNotNull (activated, "the DefaultSelection carries the row's item");
+		assertEquals ("n7", activated.getText ());
+		assertSame (activated, lazy.getItem (7));
+	}
+
 	@Test
 	public void test_treeBulkChildCountIsBatchedWithPreciseDamageOnly () throws Exception {
 		Assumptions.assumeTrue (SwtTestUtil.isWindows, "expands the nodes through the win32 tree view (TVM_EXPAND) and reads the win32 Tree's page batches: win32 only");
