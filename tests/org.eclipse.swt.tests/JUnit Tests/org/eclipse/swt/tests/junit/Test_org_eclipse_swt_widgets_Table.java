@@ -1057,6 +1057,43 @@ public void test_virtualGtkBoundedTableAttachesOnlyVisibleRowsAtFirstPaintJumpPa
 }
 
 @Test
+public void test_virtualGtkBoundedTableAsksOnlyVisibleRowsWhenTheFocusRowScrollsAway() throws Exception {
+	if (!isGtk3()) return;
+	int rows = 200_000;
+	Table virtualTable = newGtkViewportTable(SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL, "true");
+	requireBoundedGtkView(virtualTable);
+	virtualTable.setBounds(0, 0, 360, 220);
+	int[] filled = {0};
+	virtualTable.addListener(SWT.SetData, event -> {
+		filled[0]++;
+		((TableItem) event.item).setText("row " + event.index);
+	});
+	virtualTable.setItemCount(rows);
+	shell.setSize(400, 280);
+	shell.open();
+	virtualTable.setSelection(5); // the focus row, which every following window leaves out
+	SwtTestUtil.processEvents(200, null);
+	int itemHeight = Math.max(1, virtualTable.getItemHeight());
+	int visible = (virtualTable.getClientArea().height + itemHeight - 1) / itemHeight;
+	StringBuilder report = new StringBuilder();
+	for (int top : new int[] {1_000, 50_000, 50_000 + visible, 120_000, rows - 1}) {
+		int asked = filled[0], items = virtualFacadeCount(virtualTable);
+		virtualTable.setTopIndex(top);
+		SwtTestUtil.processEvents(200, null);
+		asked = filled[0] - asked;
+		items = virtualFacadeCount(virtualTable) - items;
+		report.append("VIRTUAL-TABLE-FOCUS-AWAY top=").append(virtualTable.getTopIndex()).append(" visible=").append(visible)
+				.append(" setData=").append(asked).append(" newItems=").append(items).append(" nativeRows=")
+				.append(attachedGtkTableRows(virtualTable)).append('\n');
+		assertTrue(asked <= visible + 2, "a window change with the focus row away asks the rows on screen, not the overscan rows: " + report);
+		assertTrue(items <= visible + 2, "a window change with the focus row away creates TableItems for the rows on screen only: " + report);
+	}
+	assertArrayEquals(new int[] {5}, virtualTable.getSelectionIndices());
+	assertEquals("row 5", virtualTable.getItem(5).getText());
+	System.out.print(report);
+}
+
+@Test
 public void test_virtualGtkBoundedTableKeepsItsSelectionWhenFocusArrivesAwayFromIt() throws Exception {
 	if (!isGtk3()) return;
 	Table virtualTable = newGtkViewportTable(SWT.VIRTUAL | SWT.SINGLE | SWT.V_SCROLL, "true");

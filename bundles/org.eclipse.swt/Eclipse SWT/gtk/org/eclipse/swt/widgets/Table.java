@@ -820,17 +820,18 @@ void restoreVirtualSelection () {
 	}
 	int cursorRow = virtualCursorRow ();
 	if (pageSource == null && GTK.gtk_widget_get_realized (handle) && cursorRow >= 0) {
-		/* GTK may measure the attached rows while setting its cursor. A SetData
-		 * provider can dispose the widget, so mediate that finite window before
-		 * entering GTK instead of destroying its tree from a native callback. */
+		/*
+		 * GTK may ask for the cursor row while setting its cursor. A SetData provider can dispose the widget, so that
+		 * row is asked before entering GTK instead of from a native callback. The other attached rows are asked when
+		 * they are painted, as in the full-model table: an overscan row, which fixed-height paint never asks for, or a
+		 * window replaced before its next paint gets no SetData and no facade.
+		 */
 		int start = virtualViewStart, count = virtualViewCount;
 		long generation = virtualModelGeneration;
-		for (int row = 0; row < count; row++) {
-			if (!checkData (_getItem (start + row))) return;
-			if (virtualViewSnapshotChanged (generation, start, count)) {
-				scheduleVirtualView ();
-				return;
-			}
+		if (cursorRow < itemCount && !checkData (_getItem (cursorRow))) return;
+		if (virtualViewSnapshotChanged (generation, start, count)) {
+			scheduleVirtualView ();
+			return;
 		}
 	}
 	long selection = OS.g_object_ref (GTK.gtk_tree_view_get_selection (handle));
@@ -2160,15 +2161,15 @@ boolean answerPageCell (long tree_column, long cell, int index, boolean shown) {
 	return true;
 }
 
-/*
- * Whether the row of a view path is on screen: the table is mapped, the cell data call is not getItemHeight's
- * measurement, and the row's background area meets the visible rows (bin window coordinates).
- */
 /* A logical row of the bounded view is on screen (pageRowShown). */
 boolean virtualRowShown (int index) {
 	return !pageMeasuring && virtualViewport != null && GTK.gtk_widget_get_mapped (handle) && virtualAccessibleRowShowing (index);
 }
 
+/*
+ * Whether the row of a view path is on screen: the table is mapped, the cell data call is not getItemHeight's
+ * measurement, and the row's background area meets the visible rows (bin window coordinates).
+ */
 boolean pageRowShown (long path) {
 	if (pageMeasuring || !GTK.gtk_widget_get_mapped (handle)) return false;
 	GdkRectangle row = new GdkRectangle (), visible = new GdkRectangle ();

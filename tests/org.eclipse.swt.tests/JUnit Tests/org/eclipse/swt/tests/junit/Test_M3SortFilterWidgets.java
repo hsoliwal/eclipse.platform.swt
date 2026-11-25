@@ -182,6 +182,40 @@ public class Test_M3SortFilterWidgets {
 		own.dispose ();
 	}
 
+	/*
+	 * The rows a sort asks for again with GTK's bounded virtual view (org.eclipse.swt.internal.gtk.virtualTableBoundedView,
+	 * which attaches only the visible rows plus overscan to the GtkTreeView): the rows on screen, as with the whole model
+	 * attached, not the overscan rows. The property is read by the Table only on GTK3; elsewhere this is the test below.
+	 */
+	@Test
+	public void test_boundedVirtualTableAsksOnlyForResidentRows () {
+		String key = "org.eclipse.swt.internal.gtk.virtualTableBoundedView";
+		String previous = System.getProperty (key);
+		System.setProperty (key, "true");
+		Table table;
+		try {
+			table = table (SWT.NONE);
+		} finally {
+			if (previous == null) System.clearProperty (key);
+			else System.setProperty (key, previous);
+		}
+		ColumnFilter filter = new ColumnFilter (3, ROWS, this::cell);
+		ColumnSort sort = sort (filter);
+		fills [0] = 0;
+		RowBinding binding = bind (table, sort);
+		shell.open ();
+		drain ();
+		int visible = table.getClientArea ().height / table.getItemHeight () + 2;
+		assertTrue (fills [0] <= visible * 2, "fills " + fills [0]);
+		fills [0] = 0;
+		sort.toggle (1, false);
+		drain ();
+		table.getItem (0).getText ();
+		assertTrue (fills [0] <= visible * 2, "fills after sort " + fills [0]);
+		assertEquals (cell (sort.map (0), 1), table.getItem (0).getText (1));
+		binding.dispose ();
+	}
+
 	@Test
 	public void test_virtualTableAsksOnlyForResidentRows () {
 		Table table = table (SWT.NONE);
