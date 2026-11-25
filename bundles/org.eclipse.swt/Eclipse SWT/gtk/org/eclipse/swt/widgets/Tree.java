@@ -5027,41 +5027,20 @@ public TreeItem getTopItem () {
 
 TreeItem _getCachedTopItem() {
 	/*
-	 *  Check to see if the selected item is also the topItem. If it is, that means topItem is
-	 *  in sync with the GTK view. If not, the real top item should be the last selected item, which is caused
-	 *  by setSelection().
+	 * The vertical adjustment still has the value cached by setTopItem (before GTK scrolls on its next frame), or the
+	 * initial 0 when setTopItem was never called. The item setTopItem asked for is the top row, or becomes it when GTK
+	 * scrolls; it already is when no scroll was needed. Without one, an unscrolled tree's top row is its first item.
+	 * The selection does not tell the top row: a selected row that is already on screen is not scrolled to the top
+	 * (setSelection only shows it), and answering it reported a row lower down as the top row.
 	 */
-	long treeSelect = GTK.gtk_tree_view_get_selection(handle);
-	long list = GTK.gtk_tree_selection_get_selected_rows(treeSelect, null);
-	TreeItem treeSelection = null;
-	if (list != 0) {
-		long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-		long data = OS.g_list_data (list);
-		if (GTK.gtk_tree_model_get_iter (viewModel (), iter, data)) {
-			treeSelection = _getItem (iter);
-		}
-		OS.g_free (iter);
-		GTK.gtk_tree_path_free (data);
-		if (topItem == treeSelection) {
-			return topItem;
-		}
-		else {
-			return treeSelection;
-		}
-	} else {
-		if (topItem == null) {
-			// if topItem isn't set and there is nothing selected, topItem is the first item on the Tree
-			TreeItem item = null;
-			long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof());
-			if (GTK.gtk_tree_model_get_iter_first (modelHandle, iter)) {
-				item = _getItem (iter);
-			}
-			OS.g_free (iter);
-			return item;
-		} else {
-			return topItem;
-		}
+	if (topItem != null) return topItem;
+	TreeItem item = null;
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof());
+	if (GTK.gtk_tree_model_get_iter_first (modelHandle, iter)) {
+		item = _getItem (iter);
 	}
+	OS.g_free (iter);
+	return item;
 }
 
 @Override
