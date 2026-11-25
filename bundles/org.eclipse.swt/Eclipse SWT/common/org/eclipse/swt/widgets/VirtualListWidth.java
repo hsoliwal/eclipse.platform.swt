@@ -34,7 +34,9 @@ import java.util.function.*;
  * {@link #measurePending(IntFunction)} measures every pending slot (an exact
  * size query), and {@link #maxMeasured()} answers from measured slots only.
  * {@link #maxWidth()} requires that no slot is pending. A lane whose every
- * slot is unmeasured is kept as a count only. Lazy measurements occupy a sorted
+ * slot is unmeasured is kept as a count only. {@link #setWidth(int, int)} and
+ * {@link #measurePendingWith(IntUnaryOperator)} take widths the caller measured
+ * itself, for a platform that measures a native row in place (GTK List). Lazy measurements occupy a sorted
  * primitive row-ID/width directory, never a logical-count-sized array. Existing
  * dense eager input remains dense. Only an explicit measurePending full-size
  * query materializes all slots; it still measures every pending row in order.</p>
@@ -259,6 +261,47 @@ final class VirtualListWidth {
 		materialize ();
 		for (int i = 0; i < count && pending != 0; i++) {
 			if (widths [i] == UNMEASURED) measure (i, textAt.apply (i));
+		}
+	}
+
+	/**
+	 * Records a width the caller measured itself (for example a native row measured in place) for one slot,
+	 * as {@link #set(int, String)} records a measured string.
+	 */
+	void setWidth (int index, int width) {
+		checkIndex (index);
+		if (width < 0) throw new IllegalArgumentException ("negative width");
+		if (uniform) {
+			setSparse (index, width);
+			return;
+		}
+		int old = widths [index];
+		widths [index] = width;
+		if (old == UNMEASURED) {
+			pending--;
+			track (width);
+			return;
+		}
+		if (old == width) return;
+		untrack (old);
+		track (width);
+	}
+
+	/**
+	 * Measures every pending slot with a caller-supplied measurement: {@code widthAt} receives the pending slots
+	 * in increasing order (a native row cursor can step from one to the next) and answers their widths. Like
+	 * {@link #measurePending(IntFunction)}, this is an explicit full-size query.
+	 */
+	void measurePendingWith (IntUnaryOperator widthAt) {
+		if (pending == 0) return;
+		materialize ();
+		for (int i = 0; i < count && pending != 0; i++) {
+			if (widths [i] != UNMEASURED) continue;
+			int width = widthAt.applyAsInt (i);
+			if (width < 0) throw new IllegalArgumentException ("negative width");
+			widths [i] = width;
+			pending--;
+			track (width);
 		}
 	}
 

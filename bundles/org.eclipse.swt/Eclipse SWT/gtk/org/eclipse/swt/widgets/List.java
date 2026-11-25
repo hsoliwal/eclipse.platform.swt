@@ -10,7 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Hitesh Soliwal (Synexia) - viewport mode, shared style policy
+ *     Hitesh Soliwal (Synexia) - viewport mode, shared style policy, measured column
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
@@ -62,6 +62,38 @@ public class List extends Scrollable {
 	boolean rowActivated, defaultSelectionPending;
 	/* VIRTUAL: an SWT.SetData request is being answered (requestItem) */
 	boolean inSetData;
+
+	/*
+	 * Measured column (GTK3 default; -Dswt.widget.mode.List=original, or the global swt.widget.mode, keeps the
+	 * stock autosized column). The rows of a List are single lines in one font, so they share one height: the
+	 * tree view runs in fixed-height mode and measures only the rows it shows, instead of measuring every row
+	 * in the background. The column is FIXED and its width comes from the width lane (VirtualListWidth, one
+	 * int per measured row, nothing for a row never measured). A row is measured with the column's own text
+	 * renderer, so its width is the one the stock column would request:
+	 * - computeSize measures every row still unmeasured (an exact size, as on win32), once;
+	 * - an H_SCROLL list measures the rows it shows (GTK3 pre-draw), and, while it has at most
+	 *   EXACT_WIDTH_ROWS rows, every row after each change, so its horizontal range stays exact.
+	 * An item with a line break leaves fixed-height mode (variableRows) until setItems or removeAll replace
+	 * every row, so a multi-line row keeps its stock height. The GtkListStore still holds one native row per
+	 * item: a sparse model needs a custom GtkTreeModel, which in turn needs a type-ahead search hook
+	 * (gtk_tree_view_set_search_equal_func) that SWT's GTK bindings lack.
+	 */
+	static boolean measuredColumns = !GTK.GTK4 && WidgetMode.of ("List", WidgetMode.VIEWPORT) == WidgetMode.VIEWPORT;
+	/* rows up to which an H_SCROLL list keeps every width measured (win32 List.STORE_EXACT_EXTENT_LIMIT) */
+	static final int EXACT_WIDTH_ROWS = 4096;
+	/* the width lane; null with the stock column */
+	VirtualListWidth widths;
+	long columnHandle, textRenderer;
+	/* fixed width last given to the column; padding of a row; width of an empty row; -1 when unknown */
+	int columnWidth = -1, rowPadding = -1, emptyWidth = -1;
+	/* renderer measurements of a probe text when the lane was last measured, to notice a style change */
+	int styleFingerprint;
+	boolean fingerprinted, variableRows;
+	GtkRequisition measureSize;
+	/* test seam: when set before a List is created, count the rows the tree view itself measures or draws */
+	static boolean nativeMeasureProbe;
+	java.util.BitSet probedRows;
+	long probeCalls;
 
 /**
  * Constructs a new instance of this class given its parent
@@ -136,9 +168,11 @@ void addItem (String string) {
     if (iter == 0) {
         error(SWT.ERROR_ITEM_NOT_ADDED);
     }
+	if (widths != null) checkLineBreak (string);
 	GTK.gtk_list_store_append (modelHandle, iter);
 	GTK.gtk_list_store_set (modelHandle, iter, TEXT_COLUMN, buffer, -1);
 	OS.g_free (iter);
+	if (widths != null) rowsInserted (widths.count (), 1);
 }
 
 /**
@@ -190,6 +224,7 @@ void insertItem (String string, int index) {
 	* Feature in GTK.  It is much faster to append to a list store
 	* than to insert at the end using gtk_list_store_insert().
 	*/
+	if (widths != null) checkLineBreak (string);
 	if (index == count) {
 		GTK.gtk_list_store_append (modelHandle, iter);
 	} else {
@@ -197,6 +232,7 @@ void insertItem (String string, int index) {
 	}
 	GTK.gtk_list_store_set (modelHandle, iter, TEXT_COLUMN, buffer, -1);
 	OS.g_free (iter);
+	if (widths != null) rowsInserted (index, 1);
 }
 
 /**
@@ -264,6 +300,10 @@ public void clear (int index) {
 		GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
 		GTK.gtk_list_store_set (modelHandle, iter, TEXT_COLUMN, (byte []) null, -1);
 		OS.g_free (iter);
+		if (widths != null) {
+			widths.setUnmeasured (index);
+			updateMeasuredColumn ();
+		}
 		return;
 	}
 	setItem (index, "");
@@ -296,6 +336,10 @@ public void clearAll () {
 			} while (GTK.gtk_tree_model_iter_next (modelHandle, iter));
 		}
 		OS.g_free (iter);
+		if (widths != null) {
+			widths.setAllUnmeasured (count);
+			updateMeasuredColumn ();
+		}
 		return;
 	}
 	for (int i = 0; i < count; i++) {
@@ -333,18 +377,29 @@ void createHandle (int index) {
     if (handle == 0) {
         error(SWT.ERROR_NO_HANDLES);
     }
-	long textRenderer = GTK.gtk_cell_renderer_text_new ();
+	textRenderer = GTK.gtk_cell_renderer_text_new ();
     if (textRenderer == 0) {
         error(SWT.ERROR_NO_HANDLES);
     }
-	long columnHandle = GTK.gtk_tree_view_column_new ();
+	columnHandle = GTK.gtk_tree_view_column_new ();
     if (columnHandle == 0) {
         error(SWT.ERROR_NO_HANDLES);
     }
 	GTK.gtk_tree_view_column_pack_start (columnHandle, textRenderer, true);
 	GTK.gtk_tree_view_column_add_attribute (columnHandle, textRenderer, OS.text, TEXT_COLUMN);
 	GTK.gtk_tree_view_column_set_min_width (columnHandle, 0);
+	boolean measured = measuredColumns;
+	if (measured) {
+		/* fixed-height mode requires FIXED columns; the width lane gives the width (updateMeasuredColumn) */
+		GTK.gtk_tree_view_column_set_sizing (columnHandle, GTK.GTK_TREE_VIEW_COLUMN_FIXED);
+		GTK.gtk_tree_view_column_set_fixed_width (columnHandle, 0);
+	}
+	if (nativeMeasureProbe) {
+		probedRows = new java.util.BitSet ();
+		GTK.gtk_tree_view_column_set_cell_data_func (columnHandle, textRenderer, display.cellDataProc, handle, 0);
+	}
 	GTK.gtk_tree_view_insert_column (handle, columnHandle, index);
+	if (measured) OS.g_object_set (handle, OS.fixed_height_mode, true, 0);
 
 	if (GTK.GTK4) {
 		OS.swt_fixed_add(fixedHandle, scrolledHandle);
@@ -379,6 +434,7 @@ void createHandle (int index) {
 	// In GTK 3 font description is inherited from parent widget which is not how SWT has always worked,
 	// reset to default font to get the usual behavior
 	setFontDescription(defaultFont().handle);
+	if (measured) widths = new VirtualListWidth (this::measureText);
 }
 
 @Override
@@ -396,6 +452,11 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
         hHint = 0;
     }
 	GTK.gtk_widget_realize(handle);
+	if (widths != null && wHint == SWT.DEFAULT) {
+		/* the exact width: every row not measured yet is measured once, and the column takes the widest */
+		measurePendingRows ();
+		updateMeasuredColumn ();
+	}
 	Point size = computeNativeSize (handle, wHint, hHint, changed);
     if (size.x == 0 && wHint == SWT.DEFAULT) {
         size.x = DEFAULT_WIDTH;
@@ -702,13 +763,18 @@ String requestItem (int index) {
 
 /*
  * VIRTUAL: on GTK3 the tree view's draw handler runs before GtkTreeView draws (EXPOSE_EVENT_INVERSE), so the
- * rows on screen whose text is not set yet are requested then and drawn with their text. GtkTreeView also
- * measures rows that are not shown; a cell data function would call into Java for every one of them, so none is
- * used. (GTK4 draws through snapshot and has no such handler: there a row is requested when it is read.)
+ * rows on screen whose text is not set yet are requested then and drawn with their text. With the stock column
+ * GtkTreeView also measures rows that are not shown; a cell data function would call into Java for every one of
+ * them, so none is used. (GTK4 draws through snapshot and has no such handler: there a row is requested when it
+ * is read.) The same handler measures the shown rows of an H_SCROLL list with the measured column
+ * (measureShownRows).
  */
 @Override
 long windowProc (long handle, long arg0, long user_data) {
-	if ((int) user_data == EXPOSE_EVENT_INVERSE && handle == this.handle && (style & SWT.VIRTUAL) != 0) requestShownRows ();
+	if ((int) user_data == EXPOSE_EVENT_INVERSE && handle == this.handle) {
+		if ((style & SWT.VIRTUAL) != 0) requestShownRows ();
+		if (widths != null && (style & SWT.H_SCROLL) != 0 && !isDisposed ()) measureShownRows ();
+	}
 	return super.windowProc (handle, arg0, user_data);
 }
 
@@ -746,6 +812,213 @@ int rowAtBinY (int y) {
 	if (indices != 0) C.memmove (index, indices, 4);
 	GTK.gtk_tree_path_free (path [0]);
 	return index [0];
+}
+
+/* Measured column: rows entered the width lane at index, unmeasured. */
+void rowsInserted (int index, int inserted) {
+	widths.insertUnmeasured (index, inserted);
+	updateMeasuredColumn ();
+}
+
+void rowsRemoved (int start, int removed) {
+	widths.remove (start, removed);
+	updateMeasuredColumn ();
+}
+
+/* Measured column: the column's fixed width follows the widest measured row (an H_SCROLL list measures more first). */
+void updateMeasuredColumn () {
+	if (widths == null) return;
+	int count = widths.count ();
+	if ((style & SWT.H_SCROLL) != 0 && count <= EXACT_WIDTH_ROWS) measurePendingRows ();
+	/* the stock column requests its widest row plus the padding of a row */
+	int width = count == 0 ? 0 : widths.maxMeasured () + rowPadding ();
+	if (width != columnWidth) {
+		columnWidth = width;
+		GTK.gtk_tree_view_column_set_fixed_width (columnHandle, width);
+	}
+}
+
+/* Measures every row of the width lane not measured yet, stepping one native row cursor through the store. */
+void measurePendingRows () {
+	if (widths == null || widths.pendingCount () == 0) return;
+	int count = GTK.gtk_tree_model_iter_n_children (modelHandle, 0);
+	if (count != widths.count ()) widths.setAllUnmeasured (count);
+	ensureStyleFingerprint ();
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+	int [] at = {-1};
+	try {
+		widths.measurePendingWith (index -> {
+			boolean next = at [0] >= 0 && index == at [0] + 1 && GTK.gtk_tree_model_iter_next (modelHandle, iter);
+			if (!next) GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
+			at [0] = index;
+			return measureRow (iter);
+		});
+	} finally {
+		OS.g_free (iter);
+	}
+}
+
+/* H_SCROLL: the rows on screen are measured before they are drawn, so the horizontal range covers them. */
+void measureShownRows () {
+	int count = widths.count ();
+	if (count == 0 || widths.pendingCount () == 0) return;
+	GdkRectangle visible = new GdkRectangle ();
+	GTK.gtk_tree_view_get_visible_rect (handle, visible);
+	int first = rowAtBinY (0);
+	if (first < 0) return;
+	int last = rowAtBinY (Math.max (0, visible.height - 1));
+	if (last < 0) last = count - 1;
+	ensureStyleFingerprint ();
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+	try {
+		boolean valid = GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, first);
+		for (int index = first; valid && index <= last && index < count; index++) {
+			if (widths.widthOf (index) == VirtualListWidth.UNMEASURED) widths.setWidth (index, measureRow (iter));
+			valid = GTK.gtk_tree_model_iter_next (modelHandle, iter);
+		}
+	} finally {
+		OS.g_free (iter);
+	}
+	updateMeasuredColumn ();
+}
+
+/*
+ * The width the column's text renderer asks for the row: its text goes to the renderer as the "text" attribute
+ * would put it (no cell data function runs). An unanswered VIRTUAL row (NULL) and an empty row measure as "".
+ */
+int measureRow (long iter) {
+	long [] ptr = new long [1];
+	GTK.gtk_tree_model_get (modelHandle, iter, TEXT_COLUMN, ptr, -1);
+	if (ptr [0] == 0) return emptyRowWidth ();
+	try {
+		if (C.strlen (ptr [0]) == 0) return emptyRowWidth ();
+		OS.g_object_set (textRenderer, OS.text, ptr [0], 0);
+	} finally {
+		OS.g_free (ptr [0]);
+	}
+	return rendererWidth ();
+}
+
+/* The lane's measure function: the width the column's text renderer asks for a string. */
+int measureText (String string) {
+	OS.g_object_set (textRenderer, OS.text, Converter.wcsToMbcs (string, true), 0);
+	return rendererWidth ();
+}
+
+int emptyRowWidth () {
+	if (emptyWidth < 0) emptyWidth = measureText ("");
+	return emptyWidth;
+}
+
+int rendererWidth () {
+	if (measureSize == null) measureSize = new GtkRequisition ();
+	GTK.gtk_cell_renderer_get_preferred_size (textRenderer, handle, measureSize, null);
+	return Math.max (0, measureSize.width);
+}
+
+/*
+ * What the stock column adds to the renderer's width of a row: the padding of the "cell" style, which the
+ * cell area adds to each renderer (gtk_cell_area_request_renderer), and the horizontal-separator GtkTreeView
+ * adds to a column that is not the expander column (validate_row).
+ */
+int rowPadding () {
+	if (rowPadding < 0) {
+		long context = GTK.gtk_widget_get_style_context (handle);
+		GTK.gtk_style_context_save (context);
+		GTK.gtk_style_context_add_class (context, GTK.GTK_STYLE_CLASS_CELL);
+		GtkBorder padding = new GtkBorder ();
+		gtk_style_context_get_padding (context, GTK.gtk_widget_get_state_flags (handle), padding);
+		GTK.gtk_style_context_restore (context);
+		int separator = 4;
+		if (!GTK.GTK4) {
+			int [] value = new int [1];
+			GTK3.gtk_widget_style_get (handle, OS.horizontal_separator, value, 0);
+			separator = value [0];
+		}
+		rowPadding = Math.max (0, padding.left + padding.right) + Math.max (0, separator);
+	}
+	return rowPadding;
+}
+
+/* Style changes the lane must notice: the row padding, an empty row and a probe text, as measured now. */
+int measureStyleFingerprint () {
+	rowPadding = emptyWidth = -1;
+	return (rowPadding () * 31 + emptyRowWidth ()) * 31 + measureText ("Mg");
+}
+
+void ensureStyleFingerprint () {
+	if (fingerprinted) return;
+	styleFingerprint = measureStyleFingerprint ();
+	fingerprinted = true;
+}
+
+/* A font or style change: every width is measured again on demand. */
+void invalidateWidths () {
+	if (widths == null) return;
+	rowPadding = emptyWidth = -1;
+	fingerprinted = false;
+	widths.setAllUnmeasured (widths.count ());
+	updateMeasuredColumn ();
+}
+
+/* The native row ends at its first NUL; a line break before it makes the row taller than one line. */
+static boolean hasLineBreak (String string) {
+	for (int i = 0, length = string.length (); i < length; i++) {
+		switch (string.charAt (i)) {
+			case '\0':
+				return false;
+			case '\n': case '\r': case '\u000B': case '\u000C': case '\u0085': case '\u2028': case '\u2029':
+				return true;
+		}
+	}
+	return false;
+}
+
+/* Before a multi-line text enters the store, so GtkTreeView measures that row's height. */
+void checkLineBreak (String string) {
+	if (!variableRows && hasLineBreak (string)) setVariableRows (true);
+}
+
+/*
+ * Fixed-height mode while every row is one line. Leaving it keeps the heights of the rows already there (one
+ * line each); GtkTreeView measures the rows added or changed from then on, as the stock column does. It is
+ * entered again only while the store is empty (setItems, removeAll).
+ */
+void setVariableRows (boolean variable) {
+	variableRows = variable;
+	OS.g_object_set (handle, OS.fixed_height_mode, !variable, 0);
+}
+
+@Override
+void setFontDescription (long font) {
+	super.setFontDescription (font);
+	invalidateWidths ();
+}
+
+@Override
+long gtk_style_updated (long widget) {
+	long result = super.gtk_style_updated (widget);
+	if (widget == handle && widths != null && fingerprinted && styleFingerprint != measureStyleFingerprint ()) invalidateWidths ();
+	return result;
+}
+
+/* Test seam (nativeMeasureProbe): records each row the tree view measures or draws. */
+@Override
+long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
+	if (probedRows != null) {
+		probeCalls++;
+		long path = GTK.gtk_tree_model_get_path (tree_model, iter);
+		if (path != 0) {
+			int [] index = {-1};
+			long indices = GTK.gtk_tree_path_get_indices (path);
+			if (indices != 0) C.memmove (index, indices, 4);
+			GTK.gtk_tree_path_free (path);
+			if (index [0] >= 0) probedRows.set (index [0]);
+		}
+	}
+	return 0;
 }
 
 /**
@@ -1447,6 +1720,7 @@ void releaseWidget () {
         OS.g_object_unref(modelHandle);
     }
 	modelHandle = 0;
+	widths = null;
 	TreeViewPressSelection.dispose (handle);
 }
 
@@ -1481,6 +1755,7 @@ void removeIndex (int index) {
 	GTK.gtk_list_store_remove (modelHandle, iter);
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	OS.g_free (iter);
+	if (widths != null) rowsRemoved (index, 1);
 }
 
 /**
@@ -1522,6 +1797,7 @@ void removeSpan (int start, int end) {
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	OS.g_free (iter);
+	if (widths != null) rowsRemoved (start, end - start + 1);
 }
 
 /**
@@ -1602,6 +1878,38 @@ void removeIndices (int [] indices) {
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	OS.g_free (iter);
+	if (widths != null) removeLaneIndices (newIndices);
+}
+
+/*
+ * The width lane drops the removed rows (sorted from the largest down, duplicates allowed) one run of
+ * consecutive rows at a time. Many scattered rows in a long lane forget every width instead: each run
+ * shifts the lane once, and a forgotten width is measured again on demand.
+ */
+void removeLaneIndices (int [] sorted) {
+	int runs = 0;
+	for (int i = 0, last = -2; i < sorted.length; i++) {
+		if (sorted [i] == last) continue;
+		if (sorted [i] != last - 1) runs++;
+		last = sorted [i];
+	}
+	if (runs > 32 && widths.count () > EXACT_WIDTH_ROWS) {
+		widths.setAllUnmeasured (GTK.gtk_tree_model_iter_n_children (modelHandle, 0));
+	} else {
+		int high = -1, low = -1;
+		for (int i = 0; i < sorted.length; i++) {
+			int index = sorted [i];
+			if (index == low) continue;
+			if (index == low - 1) {
+				low = index;
+				continue;
+			}
+			if (high >= 0) widths.remove (low, high - low + 1);
+			high = low = index;
+		}
+		if (high >= 0) widths.remove (low, high - low + 1);
+	}
+	updateMeasuredColumn ();
 }
 
 /**
@@ -1623,6 +1931,11 @@ void removeAllItems () {
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_list_store_clear (modelHandle);
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+	if (widths != null) {
+		widths.setAllUnmeasured (0);
+		if (variableRows) setVariableRows (false);
+		updateMeasuredColumn ();
+	}
 }
 
 /**
@@ -1886,8 +2199,13 @@ public void setItem (int index, String string) {
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
 	byte [] buffer = Converter.wcsToMbcs (string, true);
+	if (widths != null) checkLineBreak (string);
 	GTK.gtk_list_store_set (modelHandle, iter, TEXT_COLUMN, buffer, -1);
 	OS.g_free (iter);
+	if (widths != null) {
+		widths.setUnmeasured (index);
+		updateMeasuredColumn ();
+	}
 }
 
 /**
@@ -1934,7 +2252,8 @@ void setCount (int count) {
 	 * only eliminate repeated conversion and native GtkTreeIter allocation.
 	 * The GTK model still owns each logical row; this is not sparse storage.
 	 * The rows of a VIRTUAL receiver keep no text (NULL) until SWT.SetData
-	 * answers them (requestItem).
+	 * answers them (requestItem). The width lane counts the added rows as
+	 * unmeasured, with no per-row work.
 	 */
 	boolean virtual = (style & SWT.VIRTUAL) != 0;
 	byte [] empty = Converter.wcsToMbcs ("", true);
@@ -1948,6 +2267,7 @@ void setCount (int count) {
 		}
 	} finally {
 		OS.g_free (iter);
+		if (widths != null && !isDisposed ()) rowsInserted (itemCount, GTK.gtk_tree_model_iter_n_children (modelHandle, 0) - itemCount);
 	}
 }
 
@@ -1975,15 +2295,22 @@ void setAllItems (String... items) {
     if (items == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
     }
+	boolean lineBreaks = false;
 	for (int i=0; i<items.length; i++) {
         if (items [i] == null) {
             error(SWT.ERROR_INVALID_ARGUMENT);
         }
+		if (widths != null && !lineBreaks) lineBreaks = hasLineBreak (items [i]);
 	}
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_list_store_clear (modelHandle);
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+	if (widths != null) {
+		/* every row is replaced: the row-height mode follows the new items, chosen while the store is empty */
+		widths.setAllUnmeasured (0);
+		if (lineBreaks != variableRows) setVariableRows (lineBreaks);
+	}
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
     if (iter == 0) {
         error(SWT.ERROR_ITEM_NOT_ADDED);
@@ -1995,6 +2322,10 @@ void setAllItems (String... items) {
 		GTK.gtk_list_store_set (modelHandle, iter, TEXT_COLUMN, buffer, -1);
 	}
 	OS.g_free (iter);
+	if (widths != null) {
+		widths.setAllUnmeasured (items.length);
+		updateMeasuredColumn ();
+	}
 }
 
 @Override
