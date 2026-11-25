@@ -419,9 +419,11 @@ public class Test_org_eclipse_swt_widgets_List_MeasuredColumn {
 	/**
 	 * Report only: setItems / setItemCount, showing (first paint until the event loop is idle, at most 5 s), scrolling and
 	 * computeSize times at 10,000, 100,000 and 1,000,000 rows, with the measured and the stock column, plus the
-	 * native rows (one GtkListStore row per item in both modes) and the ints the width lane holds. The exact
-	 * computeSize of a plain 1,000,000-row list (a renderer measurement per row) is not timed here; it scales
-	 * from 100,000 rows. The rows GtkTreeView measures are counted in aShownListMeasuresOnlyTheRowsOnScreen.
+	 * native rows (one GtkListStore row per item in both modes) and the ints the width lane holds. With the measured
+	 * column, computeSize is exact (every row measured once) up to EXACT_WIDTH_ROWS (4,096) rows; past that it measures
+	 * one window of 4,096 rows from the top row on, so its 100,000- and 1,000,000-row times are the cost of that
+	 * window and do not scale with the row count. The stock column's computeSize answers what GTK validated within
+	 * 10 ms. The rows GtkTreeView measures are counted in aShownListMeasuresOnlyTheRowsOnScreen.
 	 * It builds lists of up to 1,000,000 rows in twelve configurations and asserts nothing about time, so it runs
 	 * only with <code>-Dswt.list.measure.report=true</code>.
 	 */
@@ -459,12 +461,9 @@ public class Test_org_eclipse_swt_widgets_List_MeasuredColumn {
 					}
 					long scrollUs = (System.nanoTime () - t1) / 1000L / tops.length;
 					drainUntilIdle (2000);
-					String size = "skipped";
-					if (!(measured && !virtual && count == largest.length)) {
-						long t2 = System.nanoTime ();
-						Point point = list.computeSize (SWT.DEFAULT, SWT.DEFAULT);
-						size = (System.nanoTime () - t2) / 1_000_000L + "ms/" + point.x;
-					}
+					long t2 = System.nanoTime ();
+					Point point = list.computeSize (SWT.DEFAULT, SWT.DEFAULT);
+					String size = (System.nanoTime () - t2) / 1_000_000L + "ms/" + point.x;
 					Object lane = get (list, "widths");
 					System.out.println ("GTK_LIST_TIMES mode=" + (measured ? "measured" : "stock") + " kind=" + (virtual ? "virtual" : "plain")
 						+ " rows=" + count + " fillMs=" + fillMs + " showUntilIdleMs=" + (settleMs < 0 ? ">5000" : settleMs)
