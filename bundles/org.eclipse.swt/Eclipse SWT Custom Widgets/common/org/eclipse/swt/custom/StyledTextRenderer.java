@@ -305,21 +305,46 @@ void calculate(int startLine, int lineCount) {
 			lastHeight = store.height(i);
 			continue;
 		}
-		int width = store.width(i), height = store.height(i);
-		if (width == UNMEASURED || height == UNMEASURED) {
-			TextLayout layout = getTextLayout(i);
-			Rectangle rect = layout.getBounds();
-			width = rect.width + hTrim;
-			height = rect.height;
-			//FLLDCIM: MASKS - sizes and the wrapped bit are ints in the line store (window)
-			store.setSize(i, width, height, layout.getLineCount() > 1 ? StyledTextLineStore.WRAPPED : 0);
-			averageLineHeight += (height - Math.round(averageLineHeight)) / ++linesInAverageLineHeight;
-			disposeTextLayout(layout);
-		}
-		lastHeight = height;
-		if (width > maxWidth) {
-			maxWidth = width;
-			maxWidthLineIndex = i;
+		measureLine(i, hTrim);
+	}
+}
+/** One step of {@link #calculate(int, int)}: measures line i when it has no size, then tracks its height and width. */
+private void measureLine(int i, int hTrim) {
+	int width = store.width(i), height = store.height(i);
+	if (width == UNMEASURED || height == UNMEASURED) {
+		TextLayout layout = getTextLayout(i);
+		Rectangle rect = layout.getBounds();
+		width = rect.width + hTrim;
+		height = rect.height;
+		store.noteTrim(hTrim);
+		//FLLDCIM: MASKS - sizes and the wrapped bit are ints in the line store (window)
+		store.setSize(i, width, height, (layout.getLineCount() > 1 ? StyledTextLineStore.WRAPPED : 0) | StyledTextLineStore.spacingBits(layout.getSpacing()));
+		averageLineHeight += (height - Math.round(averageLineHeight)) / ++linesInAverageLineHeight;
+		disposeTextLayout(layout);
+	}
+	lastHeight = height;
+	if (width > maxWidth) {
+		maxWidth = width;
+		maxWidthLineIndex = i;
+	}
+}
+/**
+ * Measures the lines of [start, end) whose layouts are resident in the slots;
+ * no new layout is shaped. The other lines keep no size until measured.
+ */
+void calculateResident(int start, int end) {
+	if (slotLayout == null) {
+		return;
+	}
+	// the trim is read once, as one calculate over the range does (a call per line costs a caret query each)
+	int hTrim = styledText.leftMargin + styledText.rightMargin + styledText.getCaretWidth();
+	if (store.windowed) {
+		store.follow(Math.max(0, styledText.topIndex));
+	}
+	int capacity = slotLayout.length;
+	for (int i = Math.max(Math.max(0, start), slotTop), last = Math.min(Math.min(end, lineCount), slotTop + capacity); i < last; i++) {
+		if (cachedSlot(i) != -1) {
+			measureLine(i, hTrim);
 		}
 	}
 }
@@ -1104,8 +1129,12 @@ int getLineHeight(int lineIndex, boolean exact) {
 				return Math.round(averageLineHeight);
 			}
 		} else {
-			height = getLineHeight() + getLineSpacing(lineIndex) + getLineVerticalIndent(lineIndex);
+			int spacing = getLineSpacing(lineIndex);
+			height = getLineHeight() + spacing + getLineVerticalIndent(lineIndex);
 			store.setHeight(lineIndex, height);
+			// a negative provider spacing is not one a layout uses (it takes the widget's): the estimate is
+			// recorded with the layout's spacing, so laying the line out does not reset it (as before)
+			store.recordSpacing(lineIndex, spacing >= 0 ? spacing : layoutSpacing(lineIndex));
 		}
 	}
 	return height;
@@ -1436,20 +1465,28 @@ TextLayout getTextLayout(int lineIndex) {
 		return getTextLayout(lineIndex, styledText.getOrientation(), styledText.getWrapWidth(), styledText.lineSpacing);
 	}
 	// Compute line spacing for the given line index.
-	int newLineSpacing = styledText.lineSpacing;
-	Integer spacing = lineSpacingProvider.getLineSpacing(lineIndex);
-	if (spacing != null && spacing.intValue() >= 0) {
-		newLineSpacing = spacing;
-	}
+	int newLineSpacing = layoutSpacing(lineIndex);
 	// Check if line spacing has not changed
 	if (isSameLineSpacing(lineIndex, newLineSpacing)) {
 		return getTextLayout(lineIndex, styledText.getOrientation(), styledText.getWrapWidth(), newLineSpacing);
 	}
-	// Get text layout with original StyledText line spacing.
-	TextLayout layout = getTextLayout(lineIndex, styledText.getOrientation(), styledText.getWrapWidth(),
-			styledText.lineSpacing);
-	if (layout.getSpacing() != newLineSpacing) {
-		layout.setSpacing(newLineSpacing);
+	boolean changed;
+	TextLayout layout;
+	if (cachedSlot(lineIndex) == -1 && styledText.clientAreaHeight > residencyHeight()) {
+		//FLLDCIM: VIEWPORT - taller than the display, most lines have no slot (base kept every line resident):
+		// such a line is compared with the spacing its size was measured (or its height estimated) with, and
+		// laying it out resets it only when that spacing changed
+		layout = getTextLayout(lineIndex, styledText.getOrientation(), styledText.getWrapWidth(), newLineSpacing);
+		changed = store.spacingChanged(lineIndex, newLineSpacing);
+	} else {
+		// Get text layout with original StyledText line spacing.
+		layout = getTextLayout(lineIndex, styledText.getOrientation(), styledText.getWrapWidth(), styledText.lineSpacing);
+		changed = layout.getSpacing() != newLineSpacing;
+		if (changed) {
+			layout.setSpacing(newLineSpacing);
+		}
+	}
+	if (changed) {
 		if (lineSpacingComputing) {
 			return layout;
 		}
@@ -1461,12 +1498,21 @@ TextLayout getTextLayout(int lineIndex) {
 			lineSpacingComputing = true;
 			styledText.resetCache(lineIndex, 1);
 			styledText.setCaretLocations();
-			styledText.redraw();
+			styledText.redrawAfterSpacingChange();
 		} finally {
 			lineSpacingComputing = false;
 		}
 	}
 	return layout;
+}
+/** The line spacing a layout of the line gets: the provider's, when it gives one of at least 0, else the widget's. */
+int layoutSpacing(int lineIndex) {
+	int lineSpacing = styledText.lineSpacing;
+	Integer spacing = lineSpacingProvider.getLineSpacing(lineIndex);
+	if (spacing != null && spacing.intValue() >= 0) {
+		lineSpacing = spacing;
+	}
+	return lineSpacing;
 }
 boolean isSameLineSpacing(int lineIndex, int newLineSpacing) {
 	int slot = cachedSlot(lineIndex);
@@ -1488,6 +1534,23 @@ int cachedSlot(int lineIndex) {
 	int slot = lineIndex % capacity;
 	return slotLine[slot] == lineIndex && slotLayout[slot] != null ? slot : -1;
 }
+/** Lines visible in {@link #residencyHeight()}, at the default line height. */
+int residencyVisible() {
+	return Math.max(1, residencyHeight() / Math.max(1, getLineHeight()) + 1);
+}
+/** Number of layout slots: the visible lines plus one viewport of overscan above and below. */
+int residencySlots() {
+	return Math.max(MIN_SLOTS, 3 * residencyVisible());
+}
+/**
+ * First line of the slot window: one viewport above the top line, or above the
+ * first line of the last paint for a widget taller than the display.
+ */
+int residencyTop() {
+	// a widget taller than the display shows the part its parent scrolled to: the slots follow the painted lines
+	int anchor = styledText.clientAreaHeight > residencyHeight() ? paintTop : styledText.topIndex;
+	return Math.max(0, anchor - residencyVisible());
+}
 /**
  * Places the slot window at the top line minus one viewport and sizes the ring to
  * visible lines plus one viewport of overscan above and below (grows at once,
@@ -1496,9 +1559,7 @@ int cachedSlot(int lineIndex) {
  * the display anchors the window at the first line of its last paint.
  */
 void syncSlots() {
-	int residency = residencyHeight();
-	int visible = Math.max(1, residency / Math.max(1, getLineHeight()) + 1);
-	int needed = Math.max(MIN_SLOTS, 3 * visible);
+	int needed = residencySlots();
 	// the outermost getTextLayout is depth 1; a nested build must not drop the outer one's slot
 	if (slotLayout == null || layoutDepth <= 1 && (needed > slotLayout.length || 2 * needed < slotLayout.length)) {
 		disposeSlots();
@@ -1516,9 +1577,7 @@ void syncSlots() {
 		moveBullet = new Bullet[needed];
 		moveBulletIndex = new int[needed];
 	}
-	// a widget taller than the display shows the part its parent scrolled to: the slots follow the painted lines
-	int anchor = styledText.clientAreaHeight > residency ? paintTop : styledText.topIndex;
-	slotTop = Math.max(0, anchor - visible);
+	slotTop = residencyTop();
 }
 void disposeSlots() {
 	if (slotLayout != null) {

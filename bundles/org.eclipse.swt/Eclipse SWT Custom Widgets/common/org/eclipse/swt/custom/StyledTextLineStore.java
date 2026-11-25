@@ -56,6 +56,11 @@ final class StyledTextLineStore {
 	static final int LINE_STYLE = ALIGNMENT | INDENT | VERTICAL_INDENT | WRAP_INDENT | JUSTIFY | TABSTOPS;
 	/* Transient bits of a line in the size window. */
 	static final int DIRTY_LAYOUT = 1 << 16, WRAPPED = 1 << 17, HAS_STYLE = 1 << 18, DIRTY_PAINT = 1 << 19;
+	/**
+	 * Low bits of a line's {@link #lineBits}: the line spacing its size was measured
+	 * with, plus one; 0 = not recorded (cleared with the size).
+	 */
+	static final int SPACING_MASK = 0xFFFF;
 
 	/** Kinds with a value array, in bit order; JUSTIFY keeps its value in JUSTIFY_ON. */
 	static final int KIND_COUNT = 9;
@@ -98,6 +103,13 @@ final class StyledTextLineStore {
 	int negativeHeights;
 	long[] blockHeight = new long[0], heightTree = new long[1];
 	int[] blockInts = new int[0], noHeightTree = new int[1], noWidthTree = new int[1];
+	/**
+	 * Horizontal trim (margins and caret width) that the measured widths include:
+	 * {@link #UNMEASURED} while no width is kept, {@link #MIXED_TRIM} once widths of
+	 * two trims coexist (until every size is reset).
+	 */
+	int sizeTrim = UNMEASURED;
+	static final int MIXED_TRIM = -2;
 	/** Height prefix of the block found by the last {@link #findHeightBlock(long)}. */
 	private long searchSum;
 
@@ -568,6 +580,43 @@ void setSize(int line, int lineWidth, int lineHeight, int bits) {
 		lineBits[i] = (lineBits[i] & DIRTY_PAINT) | bits;
 	}
 }
+/** Notes the trim a width is measured with (see {@link #sizeTrim}). */
+void noteTrim(int trim) {
+	if (sizeTrim != trim) {
+		sizeTrim = sizeTrim == UNMEASURED ? trim : MIXED_TRIM;
+	}
+}
+/** Whether {@code line} has a measured size whose width includes exactly {@code trim}. */
+boolean measuredWithTrim(int line, int trim) {
+	return sizeTrim == trim && width(line) != UNMEASURED && height(line) != UNMEASURED;
+}
+/** The {@link #SPACING_MASK} bits recording {@code spacing} (0 when it does not fit). */
+static int spacingBits(int spacing) {
+	return spacing >= 0 && spacing < SPACING_MASK ? spacing + 1 : 0;
+}
+/** Records the line spacing the height of {@code line} was computed with. */
+void recordSpacing(int line, int spacing) {
+	int i = line - sizeBase;
+	if (i >= 0 && i < lineBits.length) {
+		lineBits[i] = (lineBits[i] & ~SPACING_MASK) | spacingBits(spacing);
+	}
+}
+/**
+ * Whether the size of {@code line} may not be what a layout with line spacing
+ * {@code spacing} gives: its size was measured, or its height estimated, with
+ * another spacing or with none recorded, or the line is outside the window. A line
+ * with no size has nothing measured to be stale.
+ */
+boolean spacingChanged(int line, int spacing) {
+	int i = line - sizeBase;
+	if (i < 0 || i >= lineBits.length) {
+		return true;
+	}
+	if (width[i] == UNMEASURED && height[i] == UNMEASURED) {
+		return false;
+	}
+	return (lineBits[i] & SPACING_MASK) - 1 != spacing;
+}
 void setHeight(int line, int lineHeight) {
 	int i = line - sizeBase;
 	if (i >= 0 && i < height.length) {
@@ -591,6 +640,7 @@ void unmarkLines(int start, int end, int bits) {
 }
 void resetAllSizes() {
 	extentValid = false;
+	sizeTrim = UNMEASURED;
 	Arrays.fill(width, UNMEASURED);
 	Arrays.fill(height, UNMEASURED);
 	Arrays.fill(lineBits, DIRTY_LAYOUT);
@@ -598,6 +648,9 @@ void resetAllSizes() {
 /** Marks lines [start, end) unmeasured (the part inside the window). */
 void resetSizes(int start, int end) {
 	int from = Math.max(0, start - sizeBase), to = Math.min(width.length, end - sizeBase);
+	if (from == 0 && to >= Math.min(width.length, lineCount - sizeBase)) {
+		sizeTrim = UNMEASURED; // every size of the window is reset
+	}
 	if (from < to) {
 		if (extentValid) {
 			if (to - from > 4 * BLOCK) {

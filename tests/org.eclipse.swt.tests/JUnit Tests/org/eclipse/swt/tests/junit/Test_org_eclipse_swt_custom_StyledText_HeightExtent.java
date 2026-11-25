@@ -26,6 +26,7 @@ import java.util.Random;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.custom.StyledTextLineSpacingProvider;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -363,6 +364,109 @@ public class Test_org_eclipse_swt_custom_StyledText_HeightExtent {
 			resident |= line >= shown && line < shown + 3;
 		}
 		assertTrue(resident, "a layout of the lines shown from " + shown + " is resident");
+	}
+
+	/**
+	 * redraw() of a StyledText taller than the display resets every client-area line,
+	 * measures the lines whose layouts are resident at once (at most one slot band)
+	 * and leaves the others to the idle pass. computeSize answers the same before,
+	 * just after and after the idle pass.
+	 */
+	@Test
+	public void test_redrawOfAWidgetTallerThanTheDisplayMeasuresAtMostOneBand() throws Exception {
+		StyledText t = tallWidget(null);
+		Display display = t.getDisplay();
+		ScrolledComposite scrolled = (ScrolledComposite) t.getParent();
+		scrolled.setOrigin(0, t.getSize().y / 2);
+		paintShownBand(t);
+		drain(display);
+		Object renderer = field(t, "renderer");
+		// one slot band: the lines a display can show plus one viewport of overscan above and below
+		int visible = Math.min(t.getClientArea().height, display.getClientArea().height) / t.getLineHeight() + 1;
+		int band = Math.max(64, 3 * visible);
+		Point before = t.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+		long builds = (Long) field(renderer, "layoutBuilds");
+		t.redraw();
+		long synchronous = (Long) field(renderer, "layoutBuilds") - builds;
+		assertTrue(synchronous <= band, "layouts built by redraw() " + synchronous + " for " + t.getLineCount() + " lines, slot band " + band);
+		assertEquals(before, t.computeSize(SWT.DEFAULT, SWT.DEFAULT), "computeSize while the idle pass runs");
+		drain(display);
+		Object store = field(renderer, "store");
+		Method width = method(store.getClass(), "width", int.class);
+		for (int i = 0; i < t.getLineCount(); i++) {
+			assertNotEquals(UNMEASURED, (int) (Integer) width.invoke(store, i), "line " + i + " measured by the idle pass");
+		}
+		assertEquals(before, t.computeSize(SWT.DEFAULT, SWT.DEFAULT), "computeSize after the idle pass");
+	}
+
+	/**
+	 * With a line spacing provider, painting lines that are not resident (the parent
+	 * scrolled to a band not shown before) lays out those lines only: it neither
+	 * resets the sizes of the widget nor re-measures it.
+	 */
+	@Test
+	public void test_parentScrollOfASpacingProviderWidgetDoesNotRemeasureTheWidget() throws Exception {
+		StyledText t = tallWidget(line -> line % 3 == 0 ? Integer.valueOf(2) : null);
+		Display display = t.getDisplay();
+		ScrolledComposite scrolled = (ScrolledComposite) t.getParent();
+		scrolled.setOrigin(0, t.getSize().y / 4);
+		paintShownBand(t);
+		drain(display); // the idle pass measures every line
+		Object renderer = field(t, "renderer");
+		Object store = field(renderer, "store");
+		Method width = method(store.getClass(), "width", int.class);
+		scrolled.setOrigin(0, t.getSize().y * 3 / 4); // a band no paint has shown
+		long builds = (Long) field(renderer, "layoutBuilds");
+		int painted = paintShownBand(t);
+		long built = (Long) field(renderer, "layoutBuilds") - builds;
+		assertTrue(built <= 2L * painted + 8, "layouts built to paint " + painted + " lines: " + built);
+		for (int i = 0; i < t.getLineCount(); i++) {
+			assertNotEquals(UNMEASURED, (int) (Integer) width.invoke(store, i), "line " + i + " keeps its size");
+		}
+	}
+
+	/** A StyledText sized to its whole content in a ScrolledComposite, taller than the display. */
+	private StyledText tallWidget(StyledTextLineSpacingProvider spacing) {
+		shell = new Shell();
+		shell.setLayout(new FillLayout());
+		ScrolledComposite scrolled = new ScrolledComposite(shell, SWT.V_SCROLL);
+		StyledText t = new StyledText(scrolled, SWT.MULTI);
+		scrolled.setContent(t);
+		Display display = t.getDisplay();
+		int displayHeight = display.getClientArea().height;
+		int lineHeight = t.getLineHeight();
+		int lines = Math.min(18_000 / lineHeight, Math.max(600, 8 * displayHeight / lineHeight));
+		StringBuilder text = new StringBuilder();
+		for (int i = 0; i < lines; i++) {
+			text.append("line ").append(i).append(" with some words").append(i + 1 < lines ? "\n" : "");
+		}
+		t.setText(text.toString());
+		if (spacing != null) {
+			t.setLineSpacingProvider(spacing);
+		}
+		t.setSize(t.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+		shell.setBounds(30, 30, 400, 300);
+		shell.open();
+		drain(display);
+		assertTrue(t.getClientArea().height > displayHeight, "the widget is taller than the display");
+		return t;
+	}
+
+	/** Sends the paint of the 300 pixels the parent shows to the paint listener; answers the lines painted. */
+	private static int paintShownBand(StyledText t) {
+		int shownY = -t.getLocation().y;
+		Image band = new Image(t.getDisplay(), 200, 300);
+		GC gc = new GC(band);
+		Event paint = new Event();
+		paint.gc = gc;
+		paint.x = 0;
+		paint.y = shownY;
+		paint.width = 200;
+		paint.height = 300;
+		t.notifyListeners(SWT.Paint, paint);
+		gc.dispose();
+		band.dispose();
+		return t.getLineIndex(shownY + 300) - t.getLineIndex(shownY) + 1;
 	}
 
 	private static void drain(Display display) {

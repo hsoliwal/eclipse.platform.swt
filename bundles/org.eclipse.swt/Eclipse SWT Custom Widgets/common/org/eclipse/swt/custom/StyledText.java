@@ -1361,7 +1361,21 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 			maxHeight = Math.max(maxHeight, hHint);
 		}
 		int measured = 0;
+		// taller than the display, a line's measured size is its layout's bounds (the layouts are no longer all
+		// resident; a resident layout was only reused while the size it gave was current): no shaping per line
+		boolean measuredSizes = !wordWrap && clientAreaHeight > renderer.residencyHeight();
+		int trim = leftMargin + rightMargin + getCaretWidth();
 		for (int lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+			if (measuredSizes && renderer.store.measuredWithTrim(lineIndex, trim)) {
+				//FLLDCIM: VIEWPORT - the size lane answers for a measured line
+				measured++;
+				height += renderer.store.height(lineIndex);
+				width = Math.max(width, renderer.store.width(lineIndex) - trim);
+				if ((isFixedLineHeight() || estimate) && height > maxHeight) {
+					break;
+				}
+				continue;
+			}
 			TextLayout layout = renderer.getTextLayout(lineIndex);
 			measured++;
 			int wrapWidth = layout.getWidth();
@@ -8084,10 +8098,31 @@ public void redraw() {
 	int itemCount = getPartialBottomIndex() - topIndex + 1;
 	renderer.reset(topIndex, itemCount);
 	if (!defer(DEFER_LAYOUT)) {
-		renderer.calculate(topIndex, itemCount);
+		if (clientAreaHeight > renderer.residencyHeight()) {
+			//FLLDCIM: VIEWPORT - taller than the display: the lines whose layouts are resident are measured now,
+			// the other lines of the client area in idle slices (every size in the range is reset all the same)
+			renderer.calculateResident(topIndex, topIndex + itemCount);
+			renderer.calculateIdle();
+		} else {
+			renderer.calculate(topIndex, itemCount);
+		}
 	}
 	setScrollBars(false);
 	doMouseLinkCursor();
+}
+/**
+ * Redraws after the renderer found a line whose spacing changed (and reset that
+ * line's size): {@link #redraw()}, except on a widget taller than the display,
+ * where every other line is checked against its own recorded spacing when it is
+ * laid out, so only a repaint is needed (no reset of the whole client area).
+ */
+void redrawAfterSpacingChange() {
+	if (clientAreaHeight > renderer.residencyHeight()) {
+		//FLLDCIM: VIEWPORT - one line's spacing changed: repaint, no reset of the other lines
+		super.redraw();
+		return;
+	}
+	redraw();
 }
 /**
  * Causes the rectangular area of the receiver specified by
