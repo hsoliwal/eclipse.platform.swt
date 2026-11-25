@@ -22,6 +22,7 @@ import java.util.Arrays;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.List;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -85,6 +86,34 @@ public class Test_org_eclipse_swt_widgets_List_Viewport {
 					Thread.currentThread ().interrupt ();
 					return;
 				}
+			}
+		}
+	}
+
+	/*
+	 * Waits until the list's vertical scroll position has settled before its pixels are captured. GTK moves to a new
+	 * top index on its frame clock and animates the move (gtk_tree_view_scroll_to_cell scrolls through an animated
+	 * adjustment); a frame clock that falls behind can still be moving when settle's fixed time ends. The position
+	 * must stay unchanged for 300 ms (at most 5 s); platforms that scroll at once settle after the first 300 ms.
+	 */
+	private void settleScroll (List list) {
+		ScrollBar bar = list.getVerticalBar ();
+		long now = System.currentTimeMillis (), deadline = now + 5_000, stableSince = now;
+		int last = bar == null ? 0 : bar.getSelection ();
+		while (now < deadline && now - stableSince < 300) {
+			if (!display.readAndDispatch ()) {
+				try {
+					Thread.sleep (5);
+				} catch (InterruptedException e) {
+					Thread.currentThread ().interrupt ();
+					return;
+				}
+			}
+			now = System.currentTimeMillis ();
+			int selection = bar == null ? 0 : bar.getSelection ();
+			if (selection != last) {
+				last = selection;
+				stableSince = now;
 			}
 		}
 	}
@@ -193,6 +222,7 @@ public class Test_org_eclipse_swt_widgets_List_Viewport {
 			list.setTopIndex (1000);
 			paint (list);
 			settle ();
+			settleScroll (list);
 			String before = state (list) + " pixels=" + pixelHash (list);
 			int callsBefore = setData [0];
 			list.setTopIndex (COUNT - 1);
@@ -205,6 +235,7 @@ public class Test_org_eclipse_swt_widgets_List_Viewport {
 			list.setTopIndex (1000);
 			paint (list);
 			settle ();
+			settleScroll (list);
 			String after = state (list) + " pixels=" + pixelHash (list);
 			assertEquals (before, after, "scroll away and back must reproduce API state and pixels");
 			assertTrue (callsAway - callsBefore <= 2 * MATERIALIZED_BOUND, "SetData for two away pages: " + (callsAway - callsBefore));
