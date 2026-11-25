@@ -504,6 +504,50 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 	}
 
 	@Test
+	public void test_treeOfManyRootsRequestsOnlyTheVisibleBlocksAndPaintsWithoutFacades () throws Exception {
+		Assumptions.assumeFalse (SwtTestUtil.isCocoa, "the cocoa Tree registers no VirtualPageHost: it paints every row through a TreeItem");
+		/* each original widget is its own viewport: residency and requests follow the rows on screen, not the 100,000 roots */
+		int roots = 100_000, blockSize = 16;
+		java.util.List<Integer> rootRequests = Collections.synchronizedList (new ArrayList<> ());
+		AtomicInteger childRequests = new AtomicInteger ();
+		Tree lazy = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
+		VirtualPageSource source = new VirtualPageSource (blockSize, 32, 1, VirtualPageSource.TREE, request -> {
+			if (request.getParentKey () != VirtualPageSource.ROOT) {
+				childRequests.incrementAndGet ();
+				return;
+			}
+			rootRequests.add (request.getStart ());
+			request.setTotal (roots);
+			for (int i = request.getStart (), end = Math.min (roots, i + request.getCount ()); i < end; i++) {
+				request.setText (i, 0, "n" + i);
+				request.setKey (i, i);
+				request.setChildCount (i, i % 3 == 0 ? 2 : 0);
+			}
+		});
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		lazy.redraw ();
+		lazy.update ();
+		drain (source);
+		assertEquals (roots, lazy.getItemCount ());
+		long facades = Arrays.stream ((Object []) field (lazy, "items")).filter (Objects::nonNull).count ();
+		assertEquals (0, facades, "rows painted without TreeItems");
+		assertTrue ((int) field (lazy, "pagePaintAnswers") > 0, "rows were answered from the block store");
+		int visible = lazy.getClientArea ().height / Math.max (1, lazy.getItemHeight ()) + 1;
+		java.util.List<Integer> requested = new ArrayList<> (rootRequests);
+		assertFalse (requested.isEmpty ());
+		for (int start : requested) {
+			assertTrue (start < visible + blockSize, "only blocks of rows on screen were requested (" + visible + " rows visible): " + requested);
+		}
+		assertTrue (requested.size () <= visible / blockSize + 2, "one request per block on screen: " + requested);
+		assertEquals (0, childRequests.get (), "no children were requested for collapsed nodes");
+		assertEquals ("n7", lazy.getItem (7).getText (), "an API read answers from the store");
+		facades = Arrays.stream ((Object []) field (lazy, "items")).filter (Objects::nonNull).count ();
+		assertTrue (facades <= 1, "only the item the API asked for: " + facades);
+	}
+
+	@Test
 	public void test_treeBulkChildCountIsBatchedWithPreciseDamageOnly () throws Exception {
 		Assumptions.assumeTrue (SwtTestUtil.isWindows, "expands the nodes through the win32 tree view (TVM_EXPAND) and reads the win32 Tree's page batches: win32 only");
 		Tree lazy = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
