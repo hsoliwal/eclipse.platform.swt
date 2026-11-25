@@ -51,6 +51,43 @@ def inspect_source(root: Path) -> list[str]:
     return issues
 
 
+def testcase_outcome(case: ET.Element) -> str:
+    """One testcase can report several XML failure elements; it has one outcome,
+    with error > failure > skipped precedence."""
+    if case.find("error") is not None:
+        return "errors"
+    if case.find("failure") is not None:
+        return "failures"
+    if case.find("skipped") is not None:
+        return "skipped"
+    return "passed"
+
+
+def surefire_name_counts(cases: list[ET.Element]) -> dict:
+    """Counters as Maven Surefire declares them on one <testsuite> report.
+
+    Surefire keys the run history of a report by testcase name alone and
+    declares one result per name, while it still writes every run as its own
+    <testcase>: any error wins, then any failure, then any pass; a name whose
+    runs were all skipped counts as skipped. Names repeat when a run is
+    reported twice (skipped, then executed) and when a suite report holds
+    several classes with same-named tests, such as an inherited parameterized
+    method run by two subclasses.
+    """
+    outcomes: dict[str, set[str]] = {}
+    for case in cases:
+        outcomes.setdefault(case.get("name"), set()).add(testcase_outcome(case))
+    counts = dict(tests=len(outcomes), failures=0, errors=0, skipped=0)
+    for seen in outcomes.values():
+        if "errors" in seen:
+            counts["errors"] += 1
+        elif "failures" in seen:
+            counts["failures"] += 1
+        elif "passed" not in seen:
+            counts["skipped"] += 1
+    return counts
+
+
 def junit_report(path: Path, seen_files: set[tuple[int, int]] | None = None) -> dict:
     """Count executed JUnit testcases, refusing fabricated/inconsistent suite totals.
 
@@ -87,14 +124,9 @@ def junit_report(path: Path, seen_files: set[tuple[int, int]] | None = None) -> 
         for case in cases:
             if not case.get("name"):
                 raise ValueError("JUnit testcase has no name: " + str(file))
-            # One testcase can report several XML failure elements; count the
-            # testcase once, with error > failure > skipped precedence.
-            if case.find("error") is not None:
-                counts["errors"] += 1
-            elif case.find("failure") is not None:
-                counts["failures"] += 1
-            elif case.find("skipped") is not None:
-                counts["skipped"] += 1
+            outcome = testcase_outcome(case)
+            if outcome != "passed":
+                counts[outcome] += 1
         # Validate reported counters at the outermost scope only. Nested suites
         # can report roll-up counts and must not be counted a second time.
         summary = root.attrib
@@ -104,12 +136,21 @@ def junit_report(path: Path, seen_files: set[tuple[int, int]] | None = None) -> 
                 summary = {key: str(sum(int(suite.get(key, "0"))
                                         for suite in suites))
                            for key in counts}
+        declared = {key: int(summary[key]) for key in counts if key in summary}
+        # A single Surefire <testsuite> may instead declare one merged result
+        # per testcase name (see surefire_name_counts). Accept that only when
+        # every declared counter matches it; totals stay per <testcase>.
+        per_name = None
+        if root.tag == "testsuite" and root.find(".//testsuite") is None:
+            per_name = surefire_name_counts(cases)
+            if any(declared[key] != per_name[key] for key in declared):
+                per_name = None
         for key, computed in counts.items():
-            if key in summary:
-                declared = int(summary[key])
-                if declared < 0 or declared != computed:
+            if key in declared:
+                value = declared[key]
+                if value < 0 or (value != computed and per_name is None):
                     raise ValueError(f"JUnit {key} counter mismatch: {file} "
-                                     f"declared={declared} observed={computed}")
+                                     f"declared={value} observed={computed}")
             totals[key] += computed
         totals["reports"] += 1
         totals["files"].append({"path": file.relative_to(path).as_posix() if path.is_dir() else file.name,

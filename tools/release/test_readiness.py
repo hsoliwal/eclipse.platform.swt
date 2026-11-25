@@ -118,6 +118,48 @@ class ReadinessTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "no executed testcases"):
             gate.junit_report(no_cases)
 
+    def test_surefire_per_name_counters_are_accepted(self):
+        # Surefire merges the runs of one testcase name: a run reported skipped
+        # and then executed declares tests=2 skipped=0 for three <testcase>s.
+        rerun = self.write("TEST-rerun.xml",
+                           '<testsuite tests="2" failures="0" errors="0" skipped="0">'
+                           '<testcase classname="A" name="first"/>'
+                           '<testcase classname="A" name="again"><skipped/></testcase>'
+                           '<testcase classname="A" name="again"/>'
+                           '</testsuite>')
+        report = gate.junit_report(rerun)
+        self.assertEqual((3, 1, 0), (report["tests"], report["skipped"], report["failures"]))
+        # A suite report with an inherited parameterized method run by two
+        # subclasses declares each shared name once.
+        inherited = self.write("TEST-suite.xml",
+                               '<testsuite tests="3" failures="1" errors="0" skipped="1">'
+                               '<testcase classname="Suite$A" name="draw[1]"/>'
+                               '<testcase classname="Suite$B" name="draw[1]"><failure/></testcase>'
+                               '<testcase classname="Suite$A" name="draw[2]"><skipped/></testcase>'
+                               '<testcase classname="Suite$B" name="draw[2]"><skipped/></testcase>'
+                               '<testcase classname="Other" name="only"/>'
+                               '</testsuite>')
+        report = gate.junit_report(inherited)
+        self.assertEqual((5, 1, 2, 0), (report["tests"], report["failures"],
+                                        report["skipped"], report["errors"]))
+
+    def test_per_name_counters_must_match_on_every_key(self):
+        cases = ('<testcase classname="A" name="again"><skipped/></testcase>'
+                 '<testcase classname="A" name="again"/>')
+        for declared in ('tests="1" skipped="1"',   # per-name tests, per-testcase skipped
+                         'tests="0" skipped="0"',   # deflated below the per-name count
+                         'tests="3" skipped="0"',   # inflated above both
+                         'tests="1" failures="1"',  # a failure that did not happen
+                         'tests="-1"'):
+            path = self.write("TEST-mixed.xml", f'<testsuite {declared}>{cases}</testsuite>')
+            with self.subTest(declared=declared), self.assertRaisesRegex(ValueError, "counter mismatch"):
+                gate.junit_report(path)
+        aggregate = self.write("TEST-aggregate-names.xml",
+                               '<testsuites tests="1" skipped="0"><testsuite>'
+                               f'{cases}</testsuite></testsuites>')
+        with self.assertRaisesRegex(ValueError, "counter mismatch"):
+            gate.junit_report(aggregate)
+
     def test_nested_aggregate_suite_does_not_double_count(self):
         path = self.write("TEST-aggregate.xml",
                           '<testsuites tests="2" failures="0" skipped="1">'
