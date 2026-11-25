@@ -43,6 +43,25 @@ final class VirtualItemStorage<T> {
 	 */
 	private long [] stateMasks = new long [4];
 	private int size;
+	/*
+	 * Identity index: two parent-owned lanes (references and logical indices), no object per entry.
+	 * An open-addressing table maps a materialized value to its logical index, so the identity
+	 * queries (indexOfIdentity, stateOfIdentity, flagOfIdentity), which the widgets ask for the
+	 * items they paint, cost a few table slots and one binary search instead of a scan over every
+	 * materialized entry. The table is built by the first identity query once the store holds more
+	 * than IDENTITY_SCAN entries; put, truncate and releaseOutside keep it in step; an edit that
+	 * shifts logical indices (insert, remove, removeRange, which already visit every shifted entry)
+	 * or outgrows the table leaves it to be rebuilt by the next query. A value stored at two
+	 * logical indices blocks the table until the next edit, and the queries keep the original
+	 * first-match scan.
+	 */
+	private static final int IDENTITY_SCAN = 16;
+	private Object [] identityKeys;
+	private int [] identityIndices;
+	private int identityCount;
+	private boolean identityValid, identityBlocked;
+	/** Proof counters: entries compared or table slots probed by identity queries, and table builds. */
+	long identityProbes, identityBuilds;
 
 	int size () {
 		return size;
@@ -68,7 +87,13 @@ final class VirtualItemStorage<T> {
 		Objects.requireNonNull (value, "value");
 		int position = Arrays.binarySearch (indices, 0, size, index);
 		if (position >= 0) {
+			Object old = values [position];
 			values [position] = value;
+			if (old != value) {
+				identityRemoved (old);
+				identityBlocked = false;
+				identityAdded (value, index);
+			}
 			return;
 		}
 		position = -position - 1;
@@ -80,6 +105,7 @@ final class VirtualItemStorage<T> {
 		values [position] = value;
 		stateMasks [position] = 0;
 		size++;
+		identityAdded (value, index);
 	}
 
 	void insert (int index, T value) {
@@ -102,7 +128,13 @@ final class VirtualItemStorage<T> {
 		indices [position] = index;
 		values [position] = value;
 		stateMasks [position] = 0;
+		boolean shifted = position < size;
 		size++;
+		if (shifted) {
+			invalidateIdentity ();
+		} else {
+			identityAdded (value, index);
+		}
 	}
 
 	@SuppressWarnings ("unchecked")
@@ -129,6 +161,12 @@ final class VirtualItemStorage<T> {
         for (int i = position; i < size; i++) {
             indices [i]--;
         }
+		if (position < size) {
+			invalidateIdentity ();
+		} else if (removed != null) {
+			identityRemoved (removed);
+			identityBlocked = false;
+		}
 		return removed;
 	}
 
@@ -147,6 +185,14 @@ final class VirtualItemStorage<T> {
         }
 		int removedCount = right - left;
 		int tail = size - right;
+		if (tail > 0) {
+			invalidateIdentity ();
+		} else {
+			for (int i = left; i < right; i++) {
+				identityRemoved (values [i]);
+			}
+			identityBlocked = false;
+		}
 		if (tail > 0) {
 			System.arraycopy (indices, right, indices, left, tail);
 			System.arraycopy (values, right, values, left, tail);
@@ -170,6 +216,10 @@ final class VirtualItemStorage<T> {
         for (int i = firstRemoved; i < size; i++) {
             removed.accept(valueAt(i));
         }
+		for (int i = firstRemoved; i < size; i++) {
+			identityRemoved (values [i]);
+		}
+		identityBlocked = false;
 		Arrays.fill (values, firstRemoved, size, null);
 		Arrays.fill (stateMasks, firstRemoved, size, 0L);
 		size = firstRemoved;
@@ -183,6 +233,11 @@ final class VirtualItemStorage<T> {
 		Arrays.fill (values, 0, size, null);
 		Arrays.fill (stateMasks, 0, size, 0L);
 		size = 0;
+		/* an empty store keeps no identity lanes; a later query of a grown store builds them again */
+		identityKeys = null;
+		identityIndices = null;
+		identityCount = 0;
+		identityValid = identityBlocked = false;
 	}
 
 	void forEach (Consumer<? super T> consumer) {
@@ -212,6 +267,7 @@ final class VirtualItemStorage<T> {
 			int index = indices [i];
 			if ((index < keepStart || index >= keepEnd) && (stateMasks [i] & keepMask) == 0) {
 				released.accept (valueAt (i));
+				identityRemoved (values [i]);
 				dropped++;
 				continue;
 			}
@@ -225,6 +281,7 @@ final class VirtualItemStorage<T> {
 		Arrays.fill (values, kept, size, null);
 		Arrays.fill (stateMasks, kept, size, 0L);
 		size = kept;
+		if (dropped > 0) identityBlocked = false;
 		return dropped;
 	}
 
@@ -293,12 +350,145 @@ final class VirtualItemStorage<T> {
 	}
 
 	private int positionOfIdentity (T value) {
+		if (value != null && size > IDENTITY_SCAN && (identityValid || buildIdentity ())) {
+			int index = identityLookup (value);
+			if (index < 0) {
+				return -1;
+			}
+			int position = Arrays.binarySearch (indices, 0, size, index);
+			if (position >= 0 && values [position] == value) {
+				return position;
+			}
+			/* not reached while the table follows every edit; answer from the scan and rebuild later */
+			invalidateIdentity ();
+		}
 		for (int i = 0; i < size; i++) {
+			identityProbes++;
             if (values [i] == value) {
                 return i;
             }
 		}
 		return -1;
+	}
+
+	/* ---------------------------------------------------------------- identity index */
+
+	/** Builds the identity table from the entries; false (table blocked) when a value is stored twice. */
+	private boolean buildIdentity () {
+		if (identityBlocked) {
+			return false;
+		}
+		int length = identityLength (size);
+		if (identityKeys == null || identityKeys.length < length || identityKeys.length > 4 * length) {
+			identityKeys = new Object [length];
+			identityIndices = new int [length];
+		} else {
+			Arrays.fill (identityKeys, null);
+		}
+		identityCount = 0;
+		identityBuilds++;
+		for (int i = 0; i < size; i++) {
+			if (!identityInsert (values [i], indices [i])) {
+				identityValid = false;
+				identityBlocked = true;
+				return false;
+			}
+		}
+		identityValid = true;
+		return true;
+	}
+
+	/* A power of two at least twice the entries (load at most one half). */
+	private static int identityLength (int entries) {
+		long length = Long.highestOneBit (Math.max (IDENTITY_SCAN, 2L * entries - 1)) << 1;
+		return (int) Math.min (length, 1 << 30);
+	}
+
+	private static int identitySlot (Object key, int mask) {
+		int h = System.identityHashCode (key);
+		h ^= h >>> 16;
+		h *= 0x85ebca6b;
+		h ^= h >>> 13;
+		return h & mask;
+	}
+
+	/* Inserts a key that is absent; false when the key is already in the table. */
+	private boolean identityInsert (Object key, int index) {
+		int mask = identityKeys.length - 1;
+		for (int slot = identitySlot (key, mask);; slot = (slot + 1) & mask) {
+			Object k = identityKeys [slot];
+			if (k == null) {
+				identityKeys [slot] = key;
+				identityIndices [slot] = index;
+				identityCount++;
+				return true;
+			}
+			if (k == key) {
+				return false;
+			}
+		}
+	}
+
+	/* The logical index of a key, or -1; counts the slots probed. */
+	private int identityLookup (Object key) {
+		int mask = identityKeys.length - 1;
+		for (int slot = identitySlot (key, mask);; slot = (slot + 1) & mask) {
+			identityProbes++;
+			Object k = identityKeys [slot];
+			if (k == key) {
+				return identityIndices [slot];
+			}
+			if (k == null) {
+				return -1;
+			}
+		}
+	}
+
+	/* An entry was added without shifting another one. */
+	private void identityAdded (Object key, int index) {
+		if (!identityValid) {
+			return;
+		}
+		if (2L * (identityCount + 1) > identityKeys.length) {
+			identityValid = false; // outgrown: the next query builds a larger table
+			return;
+		}
+		if (!identityInsert (key, index)) {
+			identityValid = false;
+			identityBlocked = true;
+		}
+	}
+
+	/* An entry left without shifting another one: backward-shift deletion keeps every probe chain intact. */
+	private void identityRemoved (Object key) {
+		if (!identityValid) {
+			return;
+		}
+		int mask = identityKeys.length - 1;
+		int hole = identitySlot (key, mask);
+		while (identityKeys [hole] != key) {
+			if (identityKeys [hole] == null) {
+				identityValid = false;
+				return;
+			}
+			hole = (hole + 1) & mask;
+		}
+		for (int next = (hole + 1) & mask; identityKeys [next] != null; next = (next + 1) & mask) {
+			int home = identitySlot (identityKeys [next], mask);
+			if (((next - home) & mask) >= ((next - hole) & mask)) {
+				identityKeys [hole] = identityKeys [next];
+				identityIndices [hole] = identityIndices [next];
+				hole = next;
+			}
+		}
+		identityKeys [hole] = null;
+		identityCount--;
+	}
+
+	/* Logical indices moved: the next identity query rebuilds the table. */
+	private void invalidateIdentity () {
+		identityValid = false;
+		identityBlocked = false;
 	}
 
 	private int lowerBound (int index) {

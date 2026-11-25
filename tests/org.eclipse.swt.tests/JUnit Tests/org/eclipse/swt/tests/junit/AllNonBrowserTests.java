@@ -105,6 +105,7 @@ public class AllNonBrowserTests {
 			Test_ViewportScrollBarGeometry.class, //
 			Test_ViewportSelectionShifts.class, //
 			Test_VirtualCellLanes.class, //
+			Test_VirtualItemStorage.class, //
 			Test_VirtualListModel.class, //
 			Test_VirtualListWidth.class, //
 			Test_VirtualRowExtents.class, //
