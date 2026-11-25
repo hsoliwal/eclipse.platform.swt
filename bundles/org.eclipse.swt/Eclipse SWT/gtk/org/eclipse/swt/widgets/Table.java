@@ -66,7 +66,7 @@ import org.eclipse.swt.internal.gtk4.*;
  * <dt><b>Styles:</b></dt>
  * <dd>SINGLE, MULTI, CHECK, FULL_SELECTION, HIDE_SELECTION, VIRTUAL, NO_SCROLL, NO_SEARCH</dd>
  * <dt><b>Events:</b></dt>
- * <dd>Selection, DefaultSelection, SetData, MeasureItem, EraseItem, PaintItem</dd>
+ * <dd>Selection, DefaultSelection, SetData, MeasureItem, EraseItem, PaintItem, EmptinessChanged</dd>
  * </dl>
  * <p>
  * Note: Only one of the styles SINGLE, and MULTI may be specified.
@@ -111,6 +111,14 @@ public class Table extends Composite {
 	TableItem [] items;
 	VirtualItemStorage<TableItem> virtualItems;
 	VirtualViewportPlanner virtualViewport;
+	/* The VirtualPageSource feeding this VIRTUAL table through its host hooks (pageSourceHost), or null */
+	VirtualPageSource pageSource;
+	/** Facade-free answers given in paint callbacks (proof counter). */
+	int pagePaintAnswers;
+	/* getItemHeight measures the first row through the cell data functions: not a paint of that row */
+	boolean pageMeasuring;
+	/* Widest page-source row of a table without columns measured since the last settle (applied when the queue drains). */
+	int pageWidest;
 	TableColumn [] columns;
 	TableItem currentItem;
 	TableColumn sortColumn;
@@ -132,6 +140,10 @@ public class Table extends Composite {
 	boolean defaultSelectionPending;
 
 	private long headerCSSProvider;
+
+	static {
+		VirtualPageSource.tableHost = Table::pageSourceHost;
+	}
 
 	static final int CHECKED_COLUMN = 0;
 	static final int GRAYED_COLUMN = 1;
@@ -191,6 +203,7 @@ public Table (Composite parent, int style) {
 
 @Override
 void _addListener (int eventType, Listener listener) {
+	if (eventType == SWT.EmptinessChanged) Emptiness.watch (this);
 	super._addListener (eventType, listener);
 	if (!ownerDraw) {
 		switch (eventType) {
@@ -214,6 +227,11 @@ TableItem _getItem (int index) {
     }
 	item = new TableItem (this, SWT.NONE, index, false);
 	virtualItems.put (index, item);
+	/*
+	 * With a page source, paint creates no facades (answerPageCell), so a facade created here is for a
+	 * caller's API: fill it now from the source, as the classic paint-time SetData would have.
+	 */
+	if (pageSource != null && !pageSource.paintRequest && currentItem == null) checkData (item);
 	return item;
 }
 
@@ -1654,9 +1672,14 @@ static int checkStyle (int style) {
 @Override
 long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
 	virtualCallbackDepth++;
+	/* a SetData sent while a row is drawn is a paint request: the page source answers it without waiting */
+	VirtualPageSource source = pageSource;
+	boolean paintRequest = source != null && source.paintRequest;
+	if (source != null) source.paintRequest = true;
 	try {
 		return virtualCellDataProc (tree_column, cell, tree_model, iter, data);
 	} finally {
+		if (source != null) source.paintRequest = paintRequest;
 		virtualCallbackDepth--;
 		if (usesBoundedVirtualView () && virtualViewport != null && (virtualViewChanged
 				|| virtualViewport.paintStart () != virtualViewStart
@@ -1680,9 +1703,12 @@ long virtualCellDataProc (long tree_column, long cell, long tree_model, long ite
 		return 0;
 	}
 	C.memmove (index, pathIndices, 4);
+	/* with a page source, only a row on screen is a paint request; a row measured elsewhere asks nothing */
+	boolean pageShown = pageSource == null || pageRowShown (path);
 	if (usesBoundedVirtualView () && tree_model == virtualViewModel) index [0] += virtualViewStart;
 	GTK.gtk_tree_path_free (path);
 	if (index [0] < 0 || index [0] >= itemCount) return 0;
+	if (pageSource != null && answerPageCell (tree_column, cell, index [0], pageShown)) return 0;
 	TableItem item = _getItem (index[0]);
     if (item == null || item.isDisposed()) {
         return 0;
@@ -1715,7 +1741,7 @@ long virtualCellDataProc (long tree_column, long cell, long tree_model, long ite
     }
 
 	boolean setData = false;
-	if ((style & SWT.VIRTUAL) != 0 && !item.isCachedState ()) {
+	if ((style & SWT.VIRTUAL) != 0 && !item.isCachedState () && pageShown) {
 		lastIndexOf = index[0];
 		setData = checkData (item);
         if (!setData || isDisposed() || item.isDisposed()) {
@@ -1865,7 +1891,9 @@ boolean checkData (TableItem item) {
         return true;
     }
 	if ((style & SWT.VIRTUAL) != 0) {
-		item.pinVirtualFacade ();
+		/* A page source keeps no reference to the facade, so it stays transient. */
+		VirtualPageSource source = pageSource;
+		if (source == null) item.pinVirtualFacade ();
 		item.setCachedState (true);
 		Event event = new Event ();
 		event.item = item;
@@ -1895,9 +1923,169 @@ boolean checkData (TableItem item) {
         if (item.isDisposed()) {
             return false;
         }
+		/* A row answered with a placeholder is asked again until its block is loaded. */
+		if (source != null && source == pageSource && source.answeredPlaceholder) item.setCachedState (false);
 	}
 	return true;
 }
+
+/*
+ * VirtualPageSource hooks of a VIRTUAL table (the SetData path): paint answers rows without a facade
+ * from the source's block store, facades stay transient and are released outside the source's window,
+ * and a block that arrives re-asks its rows.
+ */
+VirtualPageHost pageSourceHost () {
+	return new VirtualPageHost () {
+		@Override
+		public void pageSourceAttached (VirtualPageSource source) {
+			pageSource = source;
+		}
+
+		@Override
+		public void pageSourceRefresh (Item parent, int start, int end) {
+			refreshPageRows (start, end);
+		}
+
+		@Override
+		public int pageSourceRelease (int keepStart, int keepEnd) {
+			return releasePageFacades (keepStart, keepEnd);
+		}
+
+		@Override
+		public void pageSourceChildrenLoading (Item parent, boolean loading) {
+		}
+
+		@Override
+		public void pageSourceSettled () {
+			if (pageWidest > 0 && !isDisposed ()) {
+				applyPageScrollWidth (pageWidest);
+				pageWidest = 0;
+			}
+		}
+	};
+}
+
+/** Paint callbacks that would hand an item to application code need a facade. */
+boolean pagePaintNeedsFacade () {
+	return hooks (SWT.MeasureItem) || hooks (SWT.EraseItem) || hooks (SWT.PaintItem);
+}
+
+/*
+ * Answers a cell of a row without a facade from the page source (text) with the default attributes
+ * of a row, as the facade would: unchecked (a checked or grayed row keeps its facade, see
+ * releasePageFacades), no image, default colours and font. Returns false when a facade exists or is
+ * needed, so the classic path runs.
+ */
+boolean answerPageCell (long tree_column, long cell, int index, boolean shown) {
+	if (!usesVirtualNativeModel () || virtualItems == null || virtualItems.get (index) != null || pagePaintNeedsFacade ()) return false;
+	pagePaintAnswers++;
+	if (GTK.GTK_IS_CELL_RENDERER_TOGGLE (cell)) {
+		OS.g_object_set (cell, OS.active, false, 0);
+		OS.g_object_set (cell, OS.inconsistent, false, 0);
+		return true;
+	}
+	OS.g_object_set (cell, OS.cell_background_rgba, (GdkRGBA) null, 0);
+	if (GTK.GTK_IS_CELL_RENDERER_PIXBUF (cell)) {
+		OS.g_object_set (cell, OS.pixbuf, 0L, 0);
+		return true;
+	}
+	if (GTK.GTK_IS_CELL_RENDERER_TEXT (cell)) {
+		GTK.gtk_cell_renderer_set_fixed_size (cell, -1, -1);
+		int column = 0;
+		for (int i = 0; i < columnCount; i++) {
+			if (columns [i] != null && columns [i].handle == tree_column) {
+				column = i;
+				break;
+			}
+		}
+		/* a row on screen asks for its block (paintText); a measured row reads what is loaded (rowText) */
+		String string = shown ? pageSource.paintText (index, column) : pageSource.rowText (index, column);
+		OS.g_object_set (cell, OS.text, Converter.wcsToMbcs (string == null ? pageSource.placeholder () : string, true), 0);
+		OS.g_object_set (cell, OS.foreground_rgba, (GdkRGBA) null, 0);
+		OS.g_object_set (cell, OS.font_desc, 0L, 0);
+	}
+	return true;
+}
+
+/*
+ * Whether the row of a view path is on screen: the table is mapped, the cell data call is not getItemHeight's
+ * measurement, and the row's background area meets the visible rows (bin window coordinates).
+ */
+boolean pageRowShown (long path) {
+	if (pageMeasuring || !GTK.gtk_widget_get_mapped (handle)) return false;
+	GdkRectangle row = new GdkRectangle (), visible = new GdkRectangle ();
+	GTK.gtk_tree_view_get_background_area (handle, path, 0, row);
+	GTK.gtk_tree_view_get_visible_rect (handle, visible);
+	return row.y + row.height > 0 && row.y < visible.height;
+}
+
+/*
+ * A block arrived: its rows are asked again (facades) and drawn again (rows without a facade). In a table
+ * without columns, column 0 is fixed width and grows only through setScrollWidth, which the rows drawn
+ * without a facade never reach: their loaded widths are measured here, as calculateWidth measures a row,
+ * and the widest is applied once the source's queue drains (pageSourceSettled). With MeasureItem,
+ * EraseItem or PaintItem hooked every row is drawn through a facade, whose paint widens the column
+ * (setScrollWidth); measuring here would create, and MeasureItem pin, a facade for every arrived row.
+ */
+void refreshPageRows (int start, int end) {
+	if (virtualItems == null || isDisposed ()) return;
+	end = Math.min (end, itemCount - 1);
+	if (start < 0 || start > end) return;
+	if (columnCount == 0 && currentItem == null && usesVirtualNativeModel () && !pagePaintNeedsFacade ()) {
+		long column = GTK.gtk_tree_view_get_column (handle, 0);
+		long iter = column == 0 ? 0 : OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+		if (iter != 0) {
+			boolean measuring = pageMeasuring;
+			pageMeasuring = true;
+			try {
+				for (int i = start; i <= end; i++) {
+					if (pageSource.rowText (i, 0) == null) continue;
+					if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, i)) break;
+					pageWidest = Math.max (pageWidest, calculateWidth (column, iter));
+				}
+			} finally {
+				pageMeasuring = measuring;
+				OS.g_free (iter);
+			}
+		}
+	}
+	for (int i = start; i <= end; i++) {
+		TableItem item = virtualItems.get (i);
+		if (item != null && item != currentItem && !item.isDisposed ()) item.setCachedState (false);
+	}
+	if (currentItem == null) GTK.gtk_widget_queue_draw (handle);
+}
+
+/* Same arithmetic as setScrollWidth (long, TableItem) for a measured row width; maxWidth also feeds computeSize. */
+void applyPageScrollWidth (int width) {
+	if (columnCount != 0) return;
+	long column = GTK.gtk_tree_view_get_column (handle, 0);
+	if (column == 0) return;
+	if (usesBoundedHorizontalView ()) {
+		if (maxWidth < width) { maxWidth = width; virtualColumnsChanged (); }
+		return;
+	}
+	if (maxWidth < width) maxWidth = width;
+	if (GTK.gtk_tree_view_column_get_fixed_width (column) < width) {
+		GTK.gtk_tree_view_column_set_fixed_width (column, width);
+	}
+}
+
+/*
+ * Releases the transient facades outside [keepStart, keepEnd). A facade is kept when its state is
+ * not reproducible from the source: pinned by the API, dirty, or checked or grayed (this platform
+ * keeps those bits in the facade's storage entry).
+ */
+int releasePageFacades (int keepStart, int keepEnd) {
+	if (virtualItems == null || pageSource == null || currentItem != null || isDisposed ()) return 0;
+	long keep = VirtualItemState.PINNED | VirtualItemState.DIRTY | VirtualItemState.CHECKED | VirtualItemState.GRAYED;
+	return virtualItems.releaseOutside (keepStart, keepEnd, keep, RELEASE_FACADE);
+}
+
+/* Shared, allocation-free release action for transient facades. */
+static final java.util.function.Consumer<TableItem> RELEASE_FACADE = item -> {
+	if (!item.isDisposed ()) item.release (false);
+};
 
 @Override
 protected void checkSubclass () {
@@ -2508,6 +2696,11 @@ void createItem (TableColumn column, int index) {
 }
 
 void createItem (TableItem item, int index) {
+	createTableItem (item, index);
+	m3StructureChanged ();
+}
+
+void createTableItem (TableItem item, int index) {
     if (!(0 <= index && index <= itemCount)) {
         error(SWT.ERROR_INVALID_RANGE);
     }
@@ -2943,6 +3136,11 @@ void destroyItem (TableColumn column) {
 }
 
 void destroyItem (TableItem item) {
+	destroyTableItem (item);
+	m3StructureChanged ();
+}
+
+void destroyTableItem (TableItem item) {
 	int index;
 	if ((style & SWT.VIRTUAL) != 0) {
 		index = virtualItems.indexOfIdentity (item);
@@ -3566,6 +3764,11 @@ public int getItemCount () {
 	return itemCount;
 }
 
+/* M3 seam after a structural change: the emptiness crossing */
+void m3StructureChanged () {
+	Emptiness.changed (this);
+}
+
 /* Residency seam: no residency lanes on this platform; every row is resident, facades unknown */
 int [] m3ResidentRange () {
 	return null;
@@ -3672,7 +3875,13 @@ public int getItemHeight () {
 		int columnCount = Math.max(1, this.columnCount);
 		for (int i = 0; i < columnCount; i++) {
 			long column = GTK.gtk_tree_view_get_column(handle, i);
-			GTK.gtk_tree_view_column_cell_set_cell_data(column, modelHandle, iter, false, false);
+			boolean measuring = pageMeasuring;
+			pageMeasuring = true;
+			try {
+				GTK.gtk_tree_view_column_cell_set_cell_data(column, modelHandle, iter, false, false);
+			} finally {
+				pageMeasuring = measuring;
+			}
 			int[] h = new int[1];
 			if (GTK.GTK4) {
 				GTK4.gtk_tree_view_column_cell_get_size(column, null, null, null, h);
@@ -4939,6 +5148,11 @@ void releaseWidget () {
  * </ul>
  */
 public void remove (int index) {
+	removeIndex (index);
+	m3StructureChanged ();
+}
+
+void removeIndex (int index) {
 	checkWidget();
     if (!(0 <= index && index < itemCount)) {
         error(SWT.ERROR_ITEM_NOT_REMOVED);
@@ -4999,6 +5213,11 @@ public void remove (int index) {
  * </ul>
  */
 public void remove (int start, int end) {
+	removeSpan (start, end);
+	m3StructureChanged ();
+}
+
+void removeSpan (int start, int end) {
 	checkWidget();
     if (start > end) {
         return;
@@ -5064,6 +5283,11 @@ public void remove (int start, int end) {
  * </ul>
  */
 public void remove (int [] indices) {
+	removeIndices (indices);
+	m3StructureChanged ();
+}
+
+void removeIndices (int [] indices) {
 	checkWidget();
     if (indices == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -5144,6 +5368,11 @@ public void remove (int [] indices) {
  * </ul>
  */
 public void removeAll () {
+	removeAllItems ();
+	m3StructureChanged ();
+}
+
+void removeAllItems () {
 	checkWidget();
 	checkSetDataInProcessBeforeRemoval(0, itemCount);
 	if (usesVirtualNativeModel ()) {
@@ -6326,6 +6555,16 @@ public void setHeaderVisible (boolean show) {
  * @since 3.0
  */
 public void setItemCount (int count) {
+	/* the stock path creates items through createItem: one announcement, at the end, with the final count */
+	Emptiness.hold (this);
+	try {
+		setCount (count);
+	} finally {
+		Emptiness.release (this);
+	}
+}
+
+void setCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
     if (count == itemCount) {
@@ -6767,6 +7006,7 @@ public void setTopIndex (int index) {
 	checkWidget();
 	if (usesBoundedVirtualView ()) {
 		if (index >= 0 && index < itemCount) revealVirtualIndex (index, true);
+		if (pageSource != null) pageSource.windowChanged ();
 		return;
 	}
     if (!(0 <= index && index < itemCount)) {
@@ -6797,6 +7037,8 @@ public void setTopIndex (int index) {
     if (iter != 0) {
         OS.g_free(iter);
     }
+	/* GTK scrolls on its next frame: the page source plans the new window now, not at that paint */
+	if (pageSource != null) pageSource.windowChanged ();
 }
 
 /**

@@ -31,7 +31,7 @@ import org.eclipse.swt.*;
  * <p>
  * The widgets call {@link #watch(Control)} when a listener of the event is added, and the seams below
  * after their structural changes. A <code>Tree</code> keeps its own rules for the event (first item
- * created, last item disposed) and does not use this class. The win32 widgets send the event.
+ * created, last item disposed) and does not use this class. The win32 and GTK widgets send the event.
  * </p>
  */
 final class Emptiness {

@@ -66,6 +66,33 @@ public class Test_org_eclipse_swt_internal_ViewportReporter {
 		return event;
 	}
 
+	/*
+	 * Minimizes or restores the shell. GTK asks the window manager, and the shell learns the new state (and sends
+	 * Iconify or Deiconify) when the window manager answers: events are dispatched until then (at most two seconds).
+	 */
+	void minimize (boolean minimized) {
+		int type = minimized ? SWT.Iconify : SWT.Deiconify;
+		boolean [] arrived = {false};
+		Listener listener = e -> arrived [0] = true;
+		shell.addListener (type, listener);
+		try {
+			shell.setMinimized (minimized);
+			long end = System.currentTimeMillis () + 2000;
+			while (!arrived [0] && System.currentTimeMillis () < end) {
+				if (!display.readAndDispatch ()) {
+					try {
+						Thread.sleep (5);
+					} catch (InterruptedException e) {
+						Thread.currentThread ().interrupt ();
+						return;
+					}
+				}
+			}
+		} finally {
+			shell.removeListener (type, listener);
+		}
+	}
+
 	void none () {
 		ViewportDifferential.drain (display);
 		assertEquals (0, events.size (), () -> "events " + events);
@@ -146,10 +173,10 @@ public class Test_org_eclipse_swt_internal_ViewportReporter {
 		viewport.setVisible (true);
 		window (single (), 9999, 10008, new int [] {9999, 10008}, new int [] {0, 9}, true, ViewportEvent.SCROLL | ViewportEvent.VISIBILITY);
 		/* showing again with nothing changed still reports the window once, with VISIBILITY */
-		shell.setMinimized (true);
+		minimize (true);
 		ViewportDifferential.drain (display);
 		none ();
-		shell.setMinimized (false);
+		minimize (false);
 		window (single (), 9999, 10008, NONE, NONE, false, ViewportEvent.VISIBILITY);
 	}
 

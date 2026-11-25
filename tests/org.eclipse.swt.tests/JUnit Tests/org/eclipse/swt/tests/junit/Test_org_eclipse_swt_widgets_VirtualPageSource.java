@@ -552,6 +552,55 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		assertTrue (fetches.get () > 0);
 	}
 
+	@Test
+	public void test_columnlessTableWidensToTheLoadedText () {
+		/* rows drawn from the block store still widen a table without columns, as SetData rows widen it */
+		String wide = "a row of text much wider than the first column of a table without columns would be ".repeat (2);
+		Table lazy = new Table (shell, SWT.VIRTUAL | SWT.BORDER);
+		lazy.setItemCount (10_000);
+		VirtualPageSource source = new VirtualPageSource (64, 16, 1, VirtualPageSource.NONE, request -> {
+			for (int i = request.getStart (), end = i + request.getCount (); i < end; i++) request.setText (i, 0, i == 3 ? wide : cell (i, 0));
+		});
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		assertTrue (source.isLoaded (VirtualPageSource.ROOT, 3), "the first block is loaded");
+		GC gc = new GC (lazy);
+		int textWidth;
+		try {
+			textWidth = gc.textExtent (wide).x;
+		} finally {
+			gc.dispose ();
+		}
+		int preferred = lazy.computeSize (SWT.DEFAULT, SWT.DEFAULT).x;
+		assertTrue (preferred >= textWidth, "the preferred width covers the widest loaded row: " + preferred + " < " + textWidth);
+		assertEquals (wide, lazy.getItem (3).getText ());
+	}
+
+	@Test
+	public void test_columnlessOwnerDrawnTableMeasuresOnlyTheRowsItDraws () throws Exception {
+		/* MeasureItem needs facades: only the rows painted get them, not every row of the arrived blocks */
+		Table lazy = new Table (shell, SWT.VIRTUAL | SWT.BORDER);
+		java.util.List<Integer> measured = new ArrayList<> ();
+		lazy.addListener (SWT.MeasureItem, event -> measured.add (lazy.indexOf ((TableItem) event.item)));
+		lazy.setItemCount (10_000);
+		VirtualPageSource source = tableSource (64, 1, null);
+		source.setOverscanBlocks (2);
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		assertTrue (source.isLoaded (VirtualPageSource.ROOT, 64) && source.isLoaded (VirtualPageSource.ROOT, 128), "the overscan blocks below the screen arrived");
+		int facades = materialized (lazy);
+		assertTrue (facades < 64, "facades only for the rows drawn, fewer than one block: " + facades);
+		assertFalse (measured.isEmpty (), "the drawn rows were measured");
+		/*
+		 * The rows of the arrived overscan blocks are not on screen: no MeasureItem for them. (A platform may measure
+		 * a row of its own choosing to size its rows: GTK's fixed-height mode measured row 2047 of these 10,000, far
+		 * below these blocks.)
+		 */
+		for (int index : measured) assertFalse (index >= 64 && index < 192, "no MeasureItem for row " + index + " of an overscan block below the screen");
+	}
+
 	/* ------------------------------------------------------------------ Tree */
 
 	private static final int ROOTS = 40;

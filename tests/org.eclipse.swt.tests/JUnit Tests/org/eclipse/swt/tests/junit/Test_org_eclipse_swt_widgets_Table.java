@@ -2935,6 +2935,8 @@ public void test_clear$I_resetsOnlyTheGivenRows() {
 		}
 		table.getItem(0).setImageIndent(2);
 		table.getItem(5).setImageIndent(2);
+		/* setImageIndent is deprecated as "not supported on most platforms"; GTK keeps no indent (getImageIndent reads 0) */
+		assumeTrue(table.getItem(0).getImageIndent() == 2, "this platform does not support the image indent");
 		table.setBounds(0, 0, 200, 300);
 		shell.open();
 		/* paint now: the native rows are asked for their data, which is what clear resets */

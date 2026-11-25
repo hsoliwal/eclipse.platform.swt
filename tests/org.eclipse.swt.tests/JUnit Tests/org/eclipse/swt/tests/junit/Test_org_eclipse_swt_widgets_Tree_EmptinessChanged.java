@@ -35,6 +35,12 @@ public class Test_org_eclipse_swt_widgets_Tree_EmptinessChanged {
 
 	@BeforeEach
 	public void setUp () {
+		/*
+		 * The expected events follow the win32 Tree's item ids (TreeEmptinessOracle above). The GTK and cocoa Trees
+		 * send their own stock events, detail 0 when the first top-level item is created and detail 1 when the last
+		 * one goes, which Test_EmptinessChanged.test_treeKeepsTheStockRules checks on every platform.
+		 */
+		Assumptions.assumeTrue ("win32".equals (SWT.getPlatform ()), "the oracle is the win32 Tree's item-id allocation");
 		shell = new Shell (Display.getDefault ());
 		shell.setBounds (10, 10, 300, 330);
 		tree = new Tree (shell, SWT.MULTI | SWT.BORDER | SWT.VIRTUAL);
@@ -47,7 +53,8 @@ public class Test_org_eclipse_swt_widgets_Tree_EmptinessChanged {
 
 	@AfterEach
 	public void tearDown () {
-		shell.dispose ();
+		/* null when the platform assumption of setUp did not hold */
+		if (shell != null) shell.dispose ();
 	}
 
 	private void step (String expected, Runnable action, String label) {
