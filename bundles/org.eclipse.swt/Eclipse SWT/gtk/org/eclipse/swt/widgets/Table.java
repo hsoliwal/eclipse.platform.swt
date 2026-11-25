@@ -7090,12 +7090,32 @@ public void setTopIndex (int index) {
 	}
 	long path = GTK.gtk_tree_model_get_path (modelHandle, itemHandle);
 	GTK.gtk_tree_view_scroll_to_cell (handle, path, 0, true, 0f, 0f);
+	if (usesVirtualNativeModel ()) scrollToRowNow (path);
 	GTK.gtk_tree_path_free (path);
     if (iter != 0) {
         OS.g_free(iter);
     }
 	/* GTK scrolls on its next frame: the page source plans the new window now, not at that paint */
 	if (pageSource != null) pageSource.windowChanged ();
+}
+
+/*
+ * gtk_tree_view_scroll_to_cell animates its scroll on the frame clock, and an allocation during the animation
+ * (Control.forceResize from getClientArea, print, a page source's frame) ends it where it is: the rows on screen stay
+ * a few pixels below the old top row while getTopIndex answers the new one. The rows of a VIRTUAL table in the native
+ * model have one fixed height, so once the table is on screen and the row's geometry is known, the vertical adjustment
+ * moves to the row at once. A row without geometry yet (rows not measured since the model was set) is left to GTK,
+ * which scrolls to it, without animation, when it validates the rows.
+ */
+void scrollToRowNow (long path) {
+	if (!GTK.gtk_widget_get_mapped (handle)) return;
+	long vAdjustment = GTK.gtk_scrollable_get_vadjustment (handle);
+	if (vAdjustment == 0) return;
+	GdkRectangle row = new GdkRectangle ();
+	GTK.gtk_tree_view_get_background_area (handle, path, 0, row);
+	if (row.height <= 0) return;
+	/* the background area is in bin window coordinates: relative to the current scroll position */
+	GTK.gtk_adjustment_set_value (vAdjustment, GTK.gtk_adjustment_get_value (vAdjustment) + row.y);
 }
 
 /**

@@ -81,35 +81,6 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		fail ("source did not become idle");
 	}
 
-	/*
-	 * Waits until the vertical scroll position of a control has settled before its pixels are captured. GTK moves
-	 * to a new top index on its frame clock and animates the move (gtk_tree_view_scroll_to_cell scrolls through an
-	 * animated adjustment), so when the event queue first drains the native view can still show the old rows
-	 * although getTopIndex already answers the new one: the position must stay unchanged for 300 ms (at most 5 s).
-	 * Platforms that scroll at once settle after the first 300 ms.
-	 */
-	private void settleScroll (Scrollable scrollable) {
-		ScrollBar bar = scrollable.getVerticalBar ();
-		long now = System.currentTimeMillis (), deadline = now + 5_000, stableSince = now;
-		int last = bar == null ? 0 : bar.getSelection ();
-		while (now < deadline && now - stableSince < 300) {
-			if (!display.readAndDispatch ()) {
-				try {
-					Thread.sleep (5);
-				} catch (InterruptedException e) {
-					Thread.currentThread ().interrupt ();
-					return;
-				}
-			}
-			now = System.currentTimeMillis ();
-			int selection = bar == null ? 0 : bar.getSelection ();
-			if (selection != last) {
-				last = selection;
-				stableSince = now;
-			}
-		}
-	}
-
 	private void flush () {
 		for (int i = 0; i < 5; i++) {
 			while (display.readAndDispatch ()) {
@@ -285,8 +256,6 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		drain (source);
 		lazy.setTopIndex (40);
 		drain (source);
-		settleScroll (lazy);
-		drain (source);
 		String before = pixelHash (lazy);
 		TableItem probe = lazy.getItem (45);
 		probe.setChecked (true);
@@ -305,8 +274,6 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		assertTrue (source.getCount (VirtualPageSource.RELEASED) > 0, "facades were released");
 		assertTrue (probe.isDisposed (), "unpinned facade released after it scrolled out");
 		lazy.setTopIndex (40);
-		drain (source);
-		settleScroll (lazy);
 		drain (source);
 		ImageData again = capture (lazy);
 		assertEquals (checkedHash, pixelHash (lazy), "pixels identical after release and re-creation: " + diffSpan (checkedImage, again)
