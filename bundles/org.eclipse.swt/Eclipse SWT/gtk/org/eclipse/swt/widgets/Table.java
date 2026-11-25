@@ -4687,8 +4687,9 @@ long gtk3_key_press_event (long widget, long event) {
 		boolean unselectAll = control && ((mask & GDK.GDK_SHIFT_MASK) != 0 && (key [0] == 'a' || key [0] == 'A') || key [0] == '\\');
 		boolean selectAll = unselectAll || control && (key [0] == 'a' || key [0] == 'A' || key [0] == '/');
 		boolean cursorRowKey = switch (key [0]) {
-			case GDK.GDK_space, GDK.GDK_KP_Space -> (style & SWT.CHECK) == 0;
-			case GDK.GDK_Return, GDK.GDK_ISO_Enter, GDK.GDK_KP_Enter -> true;
+			/* Space of a CHECK table toggles the selected rows below and never reaches GTK; KP_Space does */
+			case GDK.GDK_space -> (style & SWT.CHECK) == 0;
+			case GDK.GDK_KP_Space, GDK.GDK_Return, GDK.GDK_ISO_Enter, GDK.GDK_KP_Enter -> true;
 			default -> false;
 		};
 		if (cursorRowKey && virtualCursorDetached ()) {
