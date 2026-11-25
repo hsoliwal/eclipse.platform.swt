@@ -941,18 +941,6 @@ private static void assumeForkVirtualStore(Table table) {
 	}
 }
 
-/** A VIRTUAL table as an application creates it: no bounded-view property, whatever the test JVM was given. */
-private Table newDefaultGtkTable(int style) {
-	String property = "org.eclipse.swt.internal.gtk.virtualTableBoundedView";
-	String previous = System.getProperty(property);
-	System.clearProperty(property);
-	try {
-		return new Table(shell, style);
-	} finally {
-		if (previous != null) System.setProperty(property, previous);
-	}
-}
-
 private static int virtualFacadeCount(Table table) throws Exception {
 	Field storageField = Table.class.getDeclaredField("virtualItems");
 	storageField.setAccessible(true);
@@ -976,17 +964,18 @@ private static int[] virtualTableResidency(Table table, int[] cells, java.util.S
 }
 
 @Test
-public void test_virtualGtkDefaultTableAttachesOnlyVisibleRowsAtFirstPaintJumpPagingAndEnd() throws Exception {
+public void test_virtualGtkBoundedTableAttachesOnlyVisibleRowsAtFirstPaintJumpPagingAndEnd() throws Exception {
 	if (!isGtk3()) return;
 	int rows = 200_000, overscan = 8;
 	int shells = shell.getDisplay().getShells().length;
 	int shellChildren = shell.getChildren().length;
 	StringBuilder report = new StringBuilder();
 	/* "false" is the full logical model (one GtkTreeView row per logical row): the control of this measurement */
-	for (String mode : new String[] {"false", null}) {
-		Table virtualTable = mode == null ? newDefaultGtkTable(SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL)
-				: newGtkViewportTable(SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL, mode);
-		String name = mode == null ? "default" : "full-model control";
+	for (String mode : new String[] {"false", "true"}) {
+		Table virtualTable = newGtkViewportTable(SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL, mode);
+		boolean bounded = "true".equals(mode);
+		if (bounded) requireBoundedGtkView(virtualTable);
+		String name = bounded ? "bounded view" : "full-model control";
 		virtualTable.setBounds(0, 0, 360, 220);
 		int[] filled = {0}, painted = {0};
 		java.util.Set<TableItem> paintedRows = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
@@ -1038,7 +1027,7 @@ public void test_virtualGtkDefaultTableAttachesOnlyVisibleRowsAtFirstPaintJumpPa
 					.append(sample[4]).append(" setData=").append(filled[0]).append('\n');
 			maxPainted = Math.max(maxPainted, sample[3]);
 			assertTrue(sample[3] <= visible + 2, name + " " + phase + ": a redraw paints the visible rows only: " + report);
-			if (mode == null) {
+			if (bounded) {
 				assertTrue(sample[0] > 0 && sample[0] <= nativeBound,
 						name + " " + phase + ": the GtkTreeView holds the visible rows plus overscan, not one row per logical row: " + report);
 			} else {
@@ -1068,9 +1057,10 @@ public void test_virtualGtkDefaultTableAttachesOnlyVisibleRowsAtFirstPaintJumpPa
 }
 
 @Test
-public void test_virtualGtkDefaultTableKeepsItsSelectionWhenFocusArrivesAwayFromIt() throws Exception {
+public void test_virtualGtkBoundedTableKeepsItsSelectionWhenFocusArrivesAwayFromIt() throws Exception {
 	if (!isGtk3()) return;
-	Table virtualTable = newDefaultGtkTable(SWT.VIRTUAL | SWT.SINGLE | SWT.V_SCROLL);
+	Table virtualTable = newGtkViewportTable(SWT.VIRTUAL | SWT.SINGLE | SWT.V_SCROLL, "true");
+	requireBoundedGtkView(virtualTable);
 	virtualTable.setBounds(0, 0, 360, 220);
 	virtualTable.setItemCount(200_000);
 	shell.setSize(400, 280);
@@ -1093,9 +1083,10 @@ public void test_virtualGtkDefaultTableKeepsItsSelectionWhenFocusArrivesAwayFrom
 }
 
 @Test
-public void test_virtualGtkDefaultTableReportsProgrammaticScrollOnItsVerticalBar() throws Exception {
+public void test_virtualGtkBoundedTableReportsProgrammaticScrollOnItsVerticalBar() throws Exception {
 	if (!isGtk3()) return;
-	Table virtualTable = newDefaultGtkTable(SWT.VIRTUAL | SWT.V_SCROLL);
+	Table virtualTable = newGtkViewportTable(SWT.VIRTUAL | SWT.V_SCROLL, "true");
+	requireBoundedGtkView(virtualTable);
 	virtualTable.setBounds(0, 0, 360, 220);
 	virtualTable.setItemCount(200_000);
 	shell.setSize(400, 280);
@@ -1114,9 +1105,9 @@ public void test_virtualGtkDefaultTableReportsProgrammaticScrollOnItsVerticalBar
 }
 
 @Test
-public void test_virtualGtkDefaultTableKeyboardAndSelectionFollowGtkRules() throws Exception {
+public void test_virtualGtkBoundedTableKeyboardAndSelectionFollowGtkRules() throws Exception {
 	if (!isGtk3()) return;
-	Table virtualTable = newDefaultGtkTable(SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL);
+	Table virtualTable = newGtkViewportTable(SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL, "true");
 	requireBoundedGtkView(virtualTable);
 	virtualTable.setBounds(0, 0, 360, 220);
 	virtualTable.setItemCount(200_000);
@@ -1130,6 +1121,7 @@ public void test_virtualGtkDefaultTableKeyboardAndSelectionFollowGtkRules() thro
 	int[] events = {0};
 	virtualTable.addListener(SWT.Selection, event -> events[0]++);
 	navigate.invoke(virtualTable, up, 0);
+	SwtTestUtil.processEvents(); // keyboard Selection events are posted
 	assertArrayEquals(new int[] {0, 3, 7}, virtualTable.getSelectionIndices(),
 			"Up on the first row changes nothing, as GtkTreeView only rings the bell");
 	assertEquals(0, events[0]);
@@ -1137,6 +1129,7 @@ public void test_virtualGtkDefaultTableKeyboardAndSelectionFollowGtkRules() thro
 	virtualTable.setSelection(5);
 	virtualTable.select(10);
 	navigate.invoke(virtualTable, down, shiftMask);
+	SwtTestUtil.processEvents();
 	assertArrayEquals(new int[] {6, 7, 8, 9, 10}, virtualTable.getSelectionIndices());
 	assertEquals(1, events[0]);
 	virtualTable.selectAll();
@@ -1144,6 +1137,19 @@ public void test_virtualGtkDefaultTableKeyboardAndSelectionFollowGtkRules() thro
 	assertFalse(virtualTable.isSelected(200_000), "an index out of range is not selected");
 	assertFalse(virtualTable.isSelected(Integer.MAX_VALUE), "an index out of range is not selected");
 	assertTrue(virtualTable.isSelected(199_999));
+}
+
+@Test
+public void test_virtualGtkBoundedTableLeavesTheWidgetTableWhenDisposed() throws Exception {
+	if (!isGtk3()) return;
+	Table virtualTable = newGtkViewportTable(SWT.VIRTUAL, "true");
+	requireBoundedGtkView(virtualTable);
+	virtualTable.setItemCount(1_000);
+	org.eclipse.swt.widgets.Display display = shell.getDisplay();
+	virtualTable.dispose();
+	for (org.eclipse.swt.widgets.Widget registered : getWidgetTable(display)) {
+		assertFalse(registered == virtualTable, "a disposed bounded table keeps no native handle in the display's widget table");
+	}
 }
 
 @Test

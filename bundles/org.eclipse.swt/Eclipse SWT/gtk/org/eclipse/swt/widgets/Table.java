@@ -168,9 +168,10 @@ public class Table extends Composite {
 	static final byte [] VIRTUAL_MODEL_ITEM_COUNT =
 			Converter.wcsToMbcs ("swt-item-count", true);
 	/*
-	 * A GTK3 VIRTUAL table attaches only its visible rows plus overscan to the GtkTreeView (the bounded view), so the
-	 * native view keeps no node per logical row and a count change does not rebuild one. "false" attaches the whole
-	 * logical model instead: one GtkTreeView node per row, the behaviour before the bounded view became the default.
+	 * "true" makes a GTK3 VIRTUAL table attach only its visible rows plus overscan to the GtkTreeView (the bounded
+	 * view), so the native view keeps no node per logical row and a count change does not rebuild one. By default the
+	 * whole logical model is attached (one GtkTreeView node per row) until the bounded view passes the full-model
+	 * table's tests as the default.
 	 */
 	static final String VIRTUAL_BOUNDED_VIEW_PROPERTY =
 			"org.eclipse.swt.internal.gtk.virtualTableBoundedView";
@@ -354,7 +355,7 @@ boolean usesVirtualNativeModel () {
 boolean boundedVirtualViewEnabled () {
 	if (!usesVirtualNativeModel ()) return false;
 	if (virtualBoundedView == null) {
-		virtualBoundedView = Boolean.valueOf (System.getProperty (VIRTUAL_BOUNDED_VIEW_PROPERTY, "true"));
+		virtualBoundedView = Boolean.valueOf (System.getProperty (VIRTUAL_BOUNDED_VIEW_PROPERTY, "false"));
 	}
 	return virtualBoundedView.booleanValue ();
 }
@@ -868,12 +869,9 @@ void restoreVirtualSelection () {
 	notifyVirtualAccessibleFocus ();
 }
 
-/*
- * The row GtkTreeView's cursor marks: the logical focus row or, without one, the first selected row, where GTK puts the
- * cursor of a tree view that takes focus without one. -1 when there is neither.
- */
+/* The row GtkTreeView's cursor marks: the logical focus row, -1 without one (GTK then has no cursor, as before). */
 int virtualCursorReference () {
-	return virtualFocusIndex >= 0 ? virtualFocusIndex : firstVirtualSelectionIndex ();
+	return virtualFocusIndex;
 }
 
 /*
@@ -4693,7 +4691,7 @@ long gtk3_key_press_event (long widget, long event) {
 			default -> false;
 		};
 		if (cursorRowKey && virtualCursorDetached ()) {
-			/* as below: Enter sends the DefaultSelection before the key event */
+			/* the focus row is not attached. As below, Enter sends the DefaultSelection before the key event */
 			if (key [0] == GDK.GDK_Return && (mask & (GDK.GDK_SUPER_MASK | GDK.GDK_META_MASK | GDK.GDK_HYPER_MASK | GDK.GDK_MOD1_MASK)) == 0) {
 				sendTreeDefaultSelection ();
 				if (isDisposed ()) return 1;
@@ -5319,12 +5317,14 @@ void releaseChildren (boolean destroy) {
 void releaseWidget () {
 	releaseVirtualAccessibleChildren ();
 	disconnectVirtualAdjustments ();
-	if (virtualViewModel != 0) OS.g_object_unref (virtualViewModel);
 	if (virtualHorizontalAdjustment != 0) OS.g_object_unref (virtualHorizontalAdjustment);
 	virtualHorizontalAdjustment = horizontalAdjustment = 0;
 	if (virtualViewAdjustment != 0) OS.g_object_unref (virtualViewAdjustment);
-	virtualViewModel = virtualViewAdjustment = verticalAdjustment = 0;
+	virtualViewAdjustment = verticalAdjustment = 0;
+	/* deregister (super.releaseWidget) removes the window model from the display's widget table: release it after */
 	super.releaseWidget ();
+	if (virtualViewModel != 0) OS.g_object_unref (virtualViewModel);
+	virtualViewModel = 0;
     if (modelHandle != 0) {
         OS.g_object_unref(modelHandle);
     }
