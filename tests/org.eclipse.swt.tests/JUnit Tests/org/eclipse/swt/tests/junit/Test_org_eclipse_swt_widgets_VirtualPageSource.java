@@ -141,6 +141,12 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 	}
 
 	private static ImageData capture (Control control) {
+		/*
+		 * GTK draws its overlay scroll bar over the client area and fades it in and out on the frame clock after every
+		 * scroll, so it is left out of the capture there (ViewportDifferential.renderWithoutOverlayScrollBars, as in the
+		 * StyledText captures): the pixels compared are the rows.
+		 */
+		if (SwtTestUtil.isGTK && control instanceof Scrollable scrollable) return ViewportDifferential.renderWithoutOverlayScrollBars (scrollable);
 		Point size = control.getSize ();
 		Image image = new Image (control.getDisplay (), size.x, size.y);
 		GC gc = new GC (image);
@@ -169,16 +175,7 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 	}
 
 	private static String pixelHash (Control control) throws Exception {
-		Point size = control.getSize ();
-		Image image = new Image (control.getDisplay (), size.x, size.y);
-		GC gc = new GC (image);
-		try {
-			control.print (gc);
-		} finally {
-			gc.dispose ();
-		}
-		ImageData data = image.getImageData ();
-		image.dispose ();
+		ImageData data = capture (control);
 		MessageDigest digest = MessageDigest.getInstance ("SHA-256");
 		digest.update (data.data);
 		return HexFormat.of ().formatHex (digest.digest ()).substring (0, 16);
