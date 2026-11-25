@@ -54,7 +54,9 @@ final class VirtualItemStorage<T> {
 	 * moved entry already) or outgrows the table leaves it to be rebuilt by the next query. A value
 	 * stored at two logical indices blocks the table until the next edit, and the queries keep the
 	 * original first-match scan; so do identity queries nested in releaseOutside's callbacks, which
-	 * run while kept entries move down. A table that stops following the entries drops its lanes at
+	 * run while kept entries move down (compacting counts the loops in progress, nested ones
+	 * included: no edit made from a callback can let a query build the table over a half-moved
+	 * store). A table that stops following the entries drops its lanes at
 	 * once (identityKeys is non-null only while identityValid, outside releaseOutside's loop), so it
 	 * never keeps an entry that left the store reachable, nor arrays sized for an earlier peak.
 	 */
@@ -63,6 +65,8 @@ final class VirtualItemStorage<T> {
 	private int [] identityIndices;
 	private int identityCount;
 	private boolean identityValid, identityBlocked;
+	/* releaseOutside compaction loops in progress (a callback may nest one): no table is built meanwhile */
+	private int compacting;
 	/** Proof counters: entries compared or table slots probed by identity queries, and table builds. */
 	long identityProbes, identityBuilds;
 
@@ -271,6 +275,12 @@ final class VirtualItemStorage<T> {
 		identityBlocked = true;
 		int kept = 0;
 		int dropped = 0;
+		/*
+		 * The block alone is not enough: an edit made from a callback (put, remove, removeRange,
+		 * truncate, insert, a nested releaseOutside) clears it, and the next nested query would build
+		 * the table over the half-moved entries.
+		 */
+		compacting++;
 		try {
 			for (int i = 0; i < size; i++) {
 				int index = indices [i];
@@ -292,6 +302,7 @@ final class VirtualItemStorage<T> {
 			Arrays.fill (stateMasks, kept, size, 0L);
 			size = kept;
 		} finally {
+			compacting--;
 			if (called) {
 				/* entries left or moved, and a callback may have edited the store: the next query rebuilds */
 				dropIdentity ();
@@ -395,7 +406,7 @@ final class VirtualItemStorage<T> {
 
 	/** Builds the identity table from the entries; false (table blocked) when a value is stored twice. */
 	private boolean buildIdentity () {
-		if (identityBlocked) {
+		if (identityBlocked || compacting > 0) {
 			return false;
 		}
 		int length = identityLength (size);

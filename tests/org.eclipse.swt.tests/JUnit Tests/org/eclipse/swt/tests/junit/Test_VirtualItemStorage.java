@@ -234,25 +234,53 @@ public class Test_VirtualItemStorage {
 					assertEquals (oracle.releaseOutside (index, end, keep), storage.releaseOutside (index, end, keep), "released at step " + step);
 				} else if (op < 76) {
 					/*
-					 * The first release callback (an item's Dispose listener, say) materializes a facade
-					 * after the last entry, or not, and throws: nothing was dropped or moved yet.
+					 * The first release callback (an item's Dispose listener, say) edits the store, asks
+					 * about an entry, and throws: nothing was dropped or moved by the outer loop yet.
 					 */
 					int end = index + random.nextInt (60);
-					boolean edit = random.nextBoolean ();
-					int late = (oracle.entries.isEmpty () ? 0 : oracle.entries.lastKey () + 1) + random.nextInt (4);
+					List<Integer> keys = new ArrayList<> (oracle.entries.keySet ());
+					int last = keys.isEmpty () ? -1 : keys.get (keys.size () - 1);
+					int kind = keys.isEmpty () ? (random.nextBoolean () ? 0 : 7) : random.nextInt (8);
+					int late = last + 1 + random.nextInt (4);
+					int key = keys.isEmpty () ? 0 : keys.get (random.nextInt (keys.size ()));
+					int cut = random.nextInt (last + 2);
+					int nestedEnd = cut + random.nextInt (60);
+					long nestedKeep = 1L << random.nextInt (3);
+					Object probe = pool.isEmpty () ? value : pool.get (random.nextInt (pool.size ()));
 					boolean [] ran = {false};
+					int [] answered = {-2};
 					try {
 						storage.call (Storage.RELEASE_OUTSIDE, index, end, 0L, (Consumer<Object>) v -> {
 							ran [0] = true;
-							if (edit) storage.put (late, value);
+							switch (kind) {
+								case 0 -> storage.put (late, value);
+								case 1 -> storage.remove (last);
+								case 2 -> storage.truncate (cut);
+								case 3 -> storage.put (key, value);
+								case 4 -> storage.removeRange (Math.min (cut, last + 1), last + 1);
+								case 5 -> storage.remove (key);
+								case 6 -> storage.releaseOutside (cut, nestedEnd, nestedKeep);
+								default -> { /* no edit */ }
+							}
+							answered [0] = storage.indexOfIdentity (probe);
 							throw new IllegalStateException ("release callback");
 						});
 					} catch (IllegalStateException e) {
 						assertTrue (ran [0], "only a callback throws");
 					}
-					if (ran [0] && edit) {
-						oracle.put (late, value);
-						pool.add (value);
+					if (ran [0]) {
+						switch (kind) {
+							case 0 -> oracle.put (late, value);
+							case 1 -> oracle.remove (last);
+							case 2 -> oracle.truncate (cut);
+							case 3 -> oracle.put (key, value);
+							case 4 -> oracle.removeRange (Math.min (cut, last + 1), last + 1);
+							case 5 -> oracle.remove (key);
+							case 6 -> oracle.releaseOutside (cut, nestedEnd, nestedKeep);
+							default -> { /* no edit */ }
+						}
+						if (kind == 0 || kind == 3) pool.add (value);
+						assertEquals (oracle.indexOf (probe), answered [0], "query from a release callback at step " + step + ", edit " + kind);
 					}
 				} else if (op < 98) {
 					if (!oracle.entries.isEmpty ()) {
@@ -418,6 +446,52 @@ public class Test_VirtualItemStorage {
 				assertEquals (50, storage.indexOfIdentity (late));
 			} else {
 				assertEquals (-1, storage.indexOfIdentity (late));
+			}
+		}
+	}
+
+	/*
+	 * An edit made from a release callback (remove of the last entry, truncate, a replacing put,
+	 * removeRange without a tail, a shifting remove, a nested releaseOutside) followed by a query
+	 * must not let the table be built over the half-moved entries: a later callback's state write to
+	 * a kept entry that was copied down reaches the slot that survives, as with the first-match scan.
+	 */
+	@Test
+	public void aReleaseCallbackThatEditsTheStoreKeepsLaterStateWrites () {
+		String [] edits = {"remove last", "truncate", "replacing put", "removeRange without tail", "shifting remove", "nested releaseOutside"};
+		for (int kind = 0; kind < edits.length; kind++) {
+			Storage storage = new Storage ();
+			Object [] items = new Object [40];
+			for (int i = 0; i < items.length; i++) {
+				items [i] = new Object ();
+				storage.put (i, items [i]);
+			}
+			/* the pin keeps items [12], outside the window, and builds the table */
+			storage.flagOfIdentity (items [12], 1L, true);
+			int edit = kind;
+			int [] calls = {0};
+			storage.call (Storage.RELEASE_OUTSIDE, 0, 10, 1L, (Consumer<Object>) v -> {
+				if (calls [0]++ == 0) {
+					switch (edit) {
+						case 0 -> storage.remove (39);
+						case 1 -> storage.truncate (30);
+						case 2 -> storage.put (20, new Object ());
+						case 3 -> storage.removeRange (35, 40);
+						case 4 -> storage.remove (30);
+						default -> storage.releaseOutside (0, 38, 1L);
+					}
+					assertEquals (5, storage.indexOfIdentity (items [5]));
+				} else if (v == items [13]) {
+					/* items [12] was copied to slot 10; its old slot 12 still holds it */
+					storage.flagOfIdentity (items [12], 2L, true);
+				}
+			});
+			assertEquals (3L, storage.stateOfIdentity (items [12]), edits [kind] + ": the write from the later callback survives");
+			assertEquals (12, storage.indexOfIdentity (items [12]), edits [kind]);
+			assertEquals (11, storage.size (), edits [kind]);
+			for (int i = 0; i < 10; i++) {
+				assertEquals (i, storage.indexOfIdentity (items [i]), edits [kind]);
+				assertEquals (0L, storage.stateOfIdentity (items [i]), edits [kind]);
 			}
 		}
 	}
