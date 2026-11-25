@@ -156,16 +156,25 @@ void setCachedState (boolean value) {
 	parent.virtualItems.flagOfIdentity (this, VirtualItemState.CACHED, value);
 }
 
+/*
+ * The check bits of a VIRTUAL item: in the native model they are the parent's row lanes (Table.rowLanes), which
+ * outlive a released facade; otherwise they are flags of the facade's storage entry.
+ */
 boolean isCheckedState () {
     if ((parent.style & SWT.VIRTUAL) == 0) {
         return _getChecked();
     }
+	if (parent.usesVirtualNativeModel ()) return parent.virtualRowBit (this, Table.LANE_CHECKED);
 	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.CHECKED);
 }
 
 void setCheckedState (boolean value) {
 	if ((parent.style & SWT.VIRTUAL) == 0) {
 		GTK.gtk_list_store_set (parent.modelHandle, handle, Table.CHECKED_COLUMN, value, -1);
+		return;
+	}
+	if (parent.usesVirtualNativeModel ()) {
+		parent.virtualRowBit (this, Table.LANE_CHECKED, value);
 		return;
 	}
 	parent.virtualItems.flagOfIdentity (this, VirtualItemState.CHECKED, value);
@@ -175,12 +184,17 @@ boolean isGrayedState () {
     if ((parent.style & SWT.VIRTUAL) == 0) {
         return grayed;
     }
+	if (parent.usesVirtualNativeModel ()) return parent.virtualRowBit (this, Table.LANE_GRAYED);
 	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.GRAYED);
 }
 
 void setGrayedState (boolean value) {
 	if ((parent.style & SWT.VIRTUAL) == 0) {
 		grayed = value;
+		return;
+	}
+	if (parent.usesVirtualNativeModel ()) {
+		parent.virtualRowBit (this, Table.LANE_GRAYED, value);
 		return;
 	}
 	parent.virtualItems.flagOfIdentity (this, VirtualItemState.GRAYED, value);
