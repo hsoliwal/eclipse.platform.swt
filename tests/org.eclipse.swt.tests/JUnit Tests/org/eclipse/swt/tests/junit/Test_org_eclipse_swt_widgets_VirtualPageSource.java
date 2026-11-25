@@ -184,6 +184,34 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		return HexFormat.of ().formatHex (digest.digest ()).substring (0, 16);
 	}
 
+	/* probe-only diagnostics */
+	private static void diag (String step, Table table) {
+		Object nativeTop;
+		try {
+			Method m = Table.class.getDeclaredMethod ("nativeTopIndex");
+			m.setAccessible (true);
+			nativeTop = m.invoke (table);
+		} catch (Exception e) {
+			nativeTop = e;
+		}
+		System.out.println ("DIAG " + step + ": top=" + table.getTopIndex () + " nativeTop=" + nativeTop + " itemHeight=" + table.getItemHeight ()
+				+ " header=" + table.getHeaderHeight () + " client=" + table.getClientArea () + " size=" + table.getSize () + " visible=" + table.isVisible ());
+	}
+
+	private static void diagSave (String name, ImageData data) {
+		try {
+			java.io.File dir = new java.io.File (System.getProperty ("user.home"), "surefire-reports");
+			dir.mkdirs ();
+			ImageLoader loader = new ImageLoader ();
+			loader.data = new ImageData [] {data};
+			java.io.File file = new java.io.File (dir, "diag-vps-" + name + ".png");
+			loader.save (file.getPath (), SWT.IMAGE_PNG);
+			System.out.println ("DIAG saved " + file);
+		} catch (Throwable t) {
+			System.out.println ("DIAG save failed " + t);
+		}
+	}
+
 	/* ------------------------------------------------------------------ Table */
 
 	@Test
@@ -256,15 +284,23 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		drain (source);
 		lazy.setTopIndex (40);
 		drain (source);
+		diag ("after setTopIndex(40)", lazy);
 		String before = pixelHash (lazy);
+		diagSave ("before", capture (lazy));
 		TableItem probe = lazy.getItem (45);
 		probe.setChecked (true);
 		lazy.getItem (46).setGrayed (true);
 		lazy.getItem (46).setChecked (true);
 		unpin (lazy, probe);
 		unpin (lazy, lazy.getItem (46));
+		diag ("after setChecked", lazy);
+		System.out.println ("DIAG bounds45=" + probe.getBounds () + " checked45=" + probe.getChecked () + " bounds46=" + lazy.getItem (46).getBounds ());
 		String checkedHash = pixelHash (lazy);
 		ImageData checkedImage = capture (lazy);
+		diagSave ("checked", checkedImage);
+		flush ();
+		diag ("after flush", lazy);
+		diagSave ("checked-after-flush", capture (lazy));
 		assertNotEquals (before, checkedHash, "check marks are drawn");
 		for (int top = 1_000; top < 600_000; top += 97_000) {
 			lazy.setTopIndex (top);
