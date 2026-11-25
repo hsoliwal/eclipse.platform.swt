@@ -2232,8 +2232,8 @@ public void clear (int index) {
     if (item != null) {
         item.clear();
     } else {
-		clearRowLanes (index, index);
-	}
+        clearRowLanes (index, index);
+    }
 }
 /**
  * Removes the items from the receiver which are between the given
@@ -2324,8 +2324,8 @@ public void clear (int [] indices) {
         if (item != null) {
             item.clear();
         } else {
-			clearRowLanes (indices [i], indices [i]);
-		}
+            clearRowLanes (indices [i], indices [i]);
+        }
 	}
 }
 /**

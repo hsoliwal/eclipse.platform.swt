@@ -2408,10 +2408,11 @@ boolean checkData (TreeItem item) {
  * VirtualPageSource hooks of a VIRTUAL tree in the native store model (the SetData and expand paths): paint
  * answers rows without a facade from the source's block store, a facade handed to a caller is filled at once
  * (exposeVirtualItem), and a block that arrives re-asks its facades and redraws. As on win32 the tree keeps its
- * facades (pageSourceRelease releases none). The logical native model (usesVirtualNativeModel) keeps the classic
- * path: its rows are answered through their facades.
+ * facades (pageSourceRelease releases none). A tree in the logical native model (usesVirtualNativeModel) gets no
+ * host: the source then works through the public API (SetData and clear), as on a platform without hooks.
  */
 VirtualPageHost pageSourceHost () {
+	if (usesVirtualNativeModel ()) return null;
 	return new VirtualPageHost () {
 		@Override
 		public void pageSourceAttached (VirtualPageSource source) {
