@@ -94,6 +94,12 @@ class StyledTextRenderer {
 	StyledTextLineStore store = new StyledTextLineStore();
 	/** Display client height for the viewport-mode cap; read once, refreshed on Resize (no read per layout). */
 	int displayHeight;
+	/** First line of the last paint: anchors the layout slots of a widget taller than the display. */
+	int paintTop;
+	/** Sum of the line heights read by the last {@link #walkForward} or {@link #walkBackward}. */
+	long walkSum;
+	/** Height of the line the last walk stopped at. */
+	int walkStop;
 	/** Height of the line measured last by {@link #calculate(int, int)}, stored or not. */
 	int lastHeight;
 	int maxWidth;
@@ -290,7 +296,15 @@ void calculate(int startLine, int lineCount) {
 	if (store.windowed) {
 		store.follow(Math.max(0, styledText.topIndex));
 	}
+	boolean skipSettled = lineCount > 2 * StyledTextLineStore.BLOCK;
 	for (int i = startLine; i < endLine; i++) {
+		if (skipSettled && (i & (StyledTextLineStore.BLOCK - 1)) == 0 && i + StyledTextLineStore.BLOCK <= endLine
+				&& store.extentCovers(endLine) && store.blockSettled(i >> StyledTextLineStore.BLOCK_SHIFT, maxWidth)) {
+			//FLLDCIM: VIEWPORT - a block of measured lines none of which is wider than the content changes nothing here
+			i += StyledTextLineStore.BLOCK - 1;
+			lastHeight = store.height(i);
+			continue;
+		}
 		int width = store.width(i), height = store.height(i);
 		if (width == UNMEASURED || height == UNMEASURED) {
 			TextLayout layout = getTextLayout(i);
@@ -312,6 +326,142 @@ void calculate(int startLine, int lineCount) {
 /** True when line i has no current width or height (never allocates). */
 boolean needsMeasure(int i) {
 	return store.width(i) == UNMEASURED || store.height(i) == UNMEASURED;
+}
+/** First line at or after {@code from} that {@link #needsMeasure(int) needs a measure}, else the line count. */
+int nextToMeasure(int from) {
+	if (store.extentCovers(lineCount)) {
+		return Math.min(store.nextUnmeasured(from, lineCount, true), store.nextUnmeasured(from, lineCount, false));
+	}
+	int i = from;
+	while (i < lineCount && !needsMeasure(i)) {
+		i++;
+	}
+	return i;
+}
+/**
+ * Sum of the heights of lines [from, to) as a loop calling
+ * {@link #getLineHeight(int, boolean)} on each line in ascending order computes
+ * it, with the same side effects: lines without a height are measured (exact) or
+ * estimated one by one in that order; the measured runs between them come from the
+ * height extent. Outside exact mode it is that loop.
+ */
+long sumLineHeights(int from, int to, boolean exact) {
+	long sum = 0;
+	int i = from;
+	while (i < to) {
+		if (!store.extentCovers(to)) {
+			for (; i < to; i++) {
+				sum += getLineHeight(i, exact);
+			}
+			break;
+		}
+		//FLLDCIM: VIEWPORT - prefix extent instead of a loop over the measured lines
+		if (!exact && styledText != null && styledText.isWordWrap()) {
+			// wrapped lines are variable: each line without a height is estimated at the average, storing nothing
+			return sum + store.heightSum(i, to) + (long) store.noHeightCount(i, to) * Math.round(averageLineHeight);
+		}
+		int next = store.nextUnmeasured(i, to, false);
+		sum += store.heightSum(i, next);
+		if (next == to) {
+			break;
+		}
+		sum += getLineHeight(next, exact);
+		i = next + 1;
+	}
+	return sum;
+}
+/**
+ * Ascending walk from {@code from}: the smallest line L in [from, end) whose
+ * height sum over [from, L] exceeds {@code budget}, else {@code end}. Line
+ * heights are read as by {@link #getLineHeight(int, boolean)} in ascending order
+ * up to L (lines without a height are measured or estimated, in that order);
+ * {@link #walkSum} is the sum read and {@link #walkStop} the height of L.
+ */
+int walkForward(int from, int end, long budget, boolean exact) {
+	long sum = 0;
+	int i = from, result = end;
+	while (i < end) {
+		if (!store.extentSearchable(end)) {
+			for (; i < end; i++) {
+				int height = getLineHeight(i, exact);
+				sum += height;
+				if (sum > budget) {
+					walkStop = height;
+					result = i;
+					break;
+				}
+			}
+			break;
+		}
+		int next = store.nextUnmeasured(i, end, false);
+		int hit = store.firstExceeding(i, next, budget - sum);
+		if (hit != -1) {
+			sum += store.heightSum(i, hit + 1);
+			walkStop = store.height(hit);
+			result = hit;
+			break;
+		}
+		sum += store.heightSum(i, next);
+		if (next == end) {
+			break;
+		}
+		int height = getLineHeight(next, exact);
+		sum += height;
+		if (sum > budget) {
+			walkStop = height;
+			result = next;
+			break;
+		}
+		i = next + 1;
+	}
+	walkSum = sum;
+	return result;
+}
+/**
+ * Descending walk from {@code to - 1}: the largest line L in [stop, to) whose
+ * height sum over [L, to) exceeds {@code budget}, else {@code stop - 1}. Line
+ * heights are read as by {@link #getLineHeight(int, boolean)} in descending order
+ * down to L; {@link #walkSum} is the sum read and {@link #walkStop} the height of L.
+ */
+int walkBackward(int to, int stop, long budget, boolean exact) {
+	long sum = 0;
+	int i = to, result = stop - 1;
+	while (i > stop) {
+		if (!store.extentSearchable(i)) {
+			for (; i > stop; i--) {
+				int height = getLineHeight(i - 1, exact);
+				sum += height;
+				if (sum > budget) {
+					walkStop = height;
+					result = i - 1;
+					break;
+				}
+			}
+			break;
+		}
+		int previous = store.previousUnmeasured(stop, i);
+		int hit = store.lastExceeding(previous + 1, i, budget - sum);
+		if (hit != -1) {
+			sum += store.heightSum(hit, i);
+			walkStop = store.height(hit);
+			result = hit;
+			break;
+		}
+		sum += store.heightSum(previous + 1, i);
+		if (previous < stop) {
+			break;
+		}
+		int height = getLineHeight(previous, exact);
+		sum += height;
+		if (sum > budget) {
+			walkStop = height;
+			result = previous;
+			break;
+		}
+		i = previous;
+	}
+	walkSum = sum;
+	return result;
 }
 /**
  * Places the size window: the whole document in exact mode, the visible lines
@@ -369,12 +519,11 @@ void calculateIdle () {
 			}
 			int i;
 			long start = System.currentTimeMillis();
-			for (i = 0; i < lineCount; i++) {
-				if (needsMeasure(i)) {
-					calculate(i, 1);
-                    if (System.currentTimeMillis() - start > IDLE_TIME) {
-                        break;
-                    }
+			//FLLDCIM: VIEWPORT - the next line to measure from the extent counts, no scan of the measured lines
+			for (i = nextToMeasure(0); i < lineCount; i = nextToMeasure(i + 1)) {
+				calculate(i, 1);
+				if (System.currentTimeMillis() - start > IDLE_TIME) {
+					break;
 				}
 			}
 			if (i < lineCount) {
@@ -498,6 +647,7 @@ private int paintHeight(int lineIndex, TextLayout layout) {
 }
 
 int drawLines(int startLine, int endLine, int begX, int begY, int endY, GC gc, Color widgetBackground, Color widgetForeground) {
+	paintTop = startLine;
 	//FLLDCIM: RETAINED - the selection plane reads the widget's packed {start, end} pairs; no copy per paint
 	final int[] selectionRanges = styledText.getBlockSelection() ? null : styledText.selection;
 	// When fixed line metrics is in effect, tall unicode characters
@@ -784,6 +934,19 @@ int viewportHeight () {
 	return height;
 }
 /**
+ * Height of the area whose layouts stay in the slots: the client area, capped by
+ * the display height in every mode, so a widget taller than the display (sized to
+ * its whole content, e.g. in a ScrolledComposite) keeps the layouts of a screenful
+ * of lines plus overscan, not one per line.
+ */
+int residencyHeight () {
+	//FLLDCIM: VIEWPORT - residency is bounded by what a screen can show, in exact mode too
+	if (displayHeight == 0) {
+		displayHeight = styledText.getDisplay().getClientArea().height;
+	}
+	return Math.min(styledText.clientAreaHeight, displayHeight);
+}
+/**
  * The idle measurement pass, synchronously (a caller asked for the extent of a
  * widget that deferred it while hidden): the window in viewport mode, every line
  * otherwise; then the scroll bars, as the asynchronous pass ends.
@@ -831,6 +994,19 @@ int getHeight () {
 	}
 	int totalHeight = 0;
 	int width = styledText.getWrapWidth();
+	if (store.extentCovers(lineCount)) {
+		//FLLDCIM: VIEWPORT - measured heights from the extent; only the lines without a height are estimated
+		totalHeight = (int) store.heightSum(0, lineCount);
+		if (width > 0) {
+			for (int i = store.nextUnmeasured(0, lineCount, false); i < lineCount; i = store.nextUnmeasured(i + 1, lineCount, false)) {
+				int length = content.getLine(i).length();
+				totalHeight += ((length * averageCharWidth / width) + 1) * defaultLineHeight;
+			}
+		} else {
+			totalHeight += store.noHeightCount(0, lineCount) * defaultLineHeight;
+		}
+		return totalHeight + styledText.topMargin + styledText.bottomMargin;
+	}
 	for (int i = 0; i < lineCount; i++) {
 		int height = store.height(i);
 		if (height == UNMEASURED) {
@@ -1315,10 +1491,13 @@ int cachedSlot(int lineIndex) {
 /**
  * Places the slot window at the top line minus one viewport and sizes the ring to
  * visible lines plus one viewport of overscan above and below (grows at once,
- * shrinks below half; only outside a layout build).
+ * shrinks below half; only outside a layout build). The viewport is the client
+ * area capped by the display ({@link #residencyHeight()}); a widget taller than
+ * the display anchors the window at the first line of its last paint.
  */
 void syncSlots() {
-	int visible = Math.max(1, viewportHeight() / Math.max(1, getLineHeight()) + 1);
+	int residency = residencyHeight();
+	int visible = Math.max(1, residency / Math.max(1, getLineHeight()) + 1);
 	int needed = Math.max(MIN_SLOTS, 3 * visible);
 	// the outermost getTextLayout is depth 1; a nested build must not drop the outer one's slot
 	if (slotLayout == null || layoutDepth <= 1 && (needed > slotLayout.length || 2 * needed < slotLayout.length)) {
@@ -1337,7 +1516,9 @@ void syncSlots() {
 		moveBullet = new Bullet[needed];
 		moveBulletIndex = new int[needed];
 	}
-	slotTop = Math.max(0, styledText.topIndex - visible);
+	// a widget taller than the display shows the part its parent scrolled to: the slots follow the painted lines
+	int anchor = styledText.clientAreaHeight > residency ? paintTop : styledText.topIndex;
+	slotTop = Math.max(0, anchor - visible);
 }
 void disposeSlots() {
 	if (slotLayout != null) {
