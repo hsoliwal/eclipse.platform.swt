@@ -835,6 +835,7 @@ public void test_virtualGtkTableColumnPackReadsSparsePopulatedStorage() throws E
 public void test_virtualFacadeIdentityQueriesStayBoundedWithManyMaterializedRows() throws Exception {
 	final int count = 50_000;
 	Table virtualTable = new Table(shell, SWT.VIRTUAL | SWT.MULTI);
+	assumeForkVirtualStore(virtualTable);
 	virtualTable.setBounds(0, 0, 300, 300);
 	virtualTable.addListener(SWT.SetData, event -> ((TableItem) event.item).setText("row " + event.index));
 	virtualTable.setItemCount(count);
@@ -842,7 +843,10 @@ public void test_virtualFacadeIdentityQueriesStayBoundedWithManyMaterializedRows
 	for (int i = 0; i < count; i++) {
 		items[i] = virtualTable.getItem(i);
 	}
-	Object storage = tableInternal(virtualTable, "virtualItems");
+	Field store = Table.class.getDeclaredField("virtualItems");
+	store.setAccessible(true);
+	Object storage = store.get(virtualTable);
+	assertNotNull(storage, "a VIRTUAL Table keeps its facades in a VirtualItemStorage");
 	Field probes = storage.getClass().getDeclaredField("identityProbes");
 	Field builds = storage.getClass().getDeclaredField("identityBuilds");
 	probes.setAccessible(true);
