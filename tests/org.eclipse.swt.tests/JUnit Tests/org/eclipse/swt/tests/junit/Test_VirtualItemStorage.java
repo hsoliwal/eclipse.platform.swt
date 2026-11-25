@@ -474,11 +474,11 @@ public class Test_VirtualItemStorage {
 				if (calls [0]++ == 0) {
 					switch (edit) {
 						case 0 -> storage.remove (39);
-						case 1 -> storage.truncate (30);
+						case 1 -> storage.truncate (39);
 						case 2 -> storage.put (20, new Object ());
 						case 3 -> storage.removeRange (35, 40);
 						case 4 -> storage.remove (30);
-						default -> storage.releaseOutside (0, 38, 1L);
+						default -> storage.releaseOutside (0, 39, 1L);
 					}
 					assertEquals (5, storage.indexOfIdentity (items [5]));
 				} else if (v == items [13]) {
