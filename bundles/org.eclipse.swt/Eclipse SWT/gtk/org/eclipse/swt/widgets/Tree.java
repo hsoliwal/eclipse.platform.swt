@@ -5624,6 +5624,16 @@ void syncVirtualTopRowFromNative () {
         if (!GTK.gtk_tree_model_get_iter(viewModel (), iter, path [0])) {
             return;
         }
+		/*
+		 * A row the page source drew without a facade (id -1) gets none just to follow a scroll (the wheel handler
+		 * calls this on every scroll): its coordinate gives the viewport's top row, so the facades stay those that
+		 * a caller or a listener asked for.
+		 */
+		if (pageSource != null && pageRowId (iter) == -1) {
+			long row = pageVisibleRow (path [0], iter);
+			if (row >= 0) virtualViewport.setTopRow (row);
+			return;
+		}
 		TreeItem item = _getItem (iter);
         if (item == null || item.isDisposed()) {
             return;
@@ -5634,6 +5644,34 @@ void syncVirtualTopRowFromNative () {
 		OS.g_free (iter);
 		GTK.gtk_tree_path_free (path [0]);
 	}
+}
+
+/*
+ * The visible row of a native row that has no facade: its index under its parent, a root or a row with a facade (a row
+ * without one is never expanded), through the visible projection. -1 when the parent has no facade or its child count
+ * is not known in the topology.
+ */
+long pageVisibleRow (long path, long iter) {
+	int depth = GTK.gtk_tree_path_get_depth (path);
+	if (depth <= 0) return -1;
+	int [] indices = new int [depth];
+	C.memmove (indices, GTK.gtk_tree_path_get_indices (path), 4L * depth);
+	int parentId = VirtualTreeTopology.ROOT;
+	if (depth > 1) {
+		long parentIter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+		if (parentIter == 0) return -1;
+		try {
+			if (!GTK.gtk_tree_model_iter_parent (modelHandle, parentIter, iter)) return -1;
+			TreeItem parent = pageFacade (parentIter);
+			if (parent == null || parent.isDisposed ()) return -1;
+			parentId = virtualItemId (parent);
+		} finally {
+			OS.g_free (parentIter);
+		}
+	}
+	int index = indices [depth - 1];
+	if (!virtualTopology.childCountKnown (parentId) || index >= virtualTopology.childCount (parentId)) return -1;
+	return virtualProjection.visibleIndexOfCoordinate (parentId, index);
 }
 
 long virtualViewportTopRow () {

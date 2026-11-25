@@ -566,6 +566,7 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 	@Test
 	public void test_treeUserSelectionOfARowWithoutAFacadeCarriesItsFilledItem () throws Exception {
 		Assumptions.assumeTrue (SwtTestUtil.isGTK, "moves the GtkTreeView cursor through GTK (gtk_tree_view_set_cursor): GTK only");
+		Assumptions.assumeFalse (SwtTestUtil.isGTK4 (), "presses Return through Display.post, which GTK4 does not implement (it answers false): GTK3 only");
 		Tree lazy = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
 		VirtualPageSource source = treeSource (true, null, null);
 		source.attach (lazy);
@@ -609,6 +610,46 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		assertNotNull (activated, "the DefaultSelection carries the row's item");
 		assertEquals ("n7", activated.getText ());
 		assertSame (activated, lazy.getItem (7));
+	}
+
+	@Test
+	public void test_treeWheelScrollingCreatesNoTreeItems () throws Exception {
+		Assumptions.assumeTrue (SwtTestUtil.isGTK, "moves the GtkTreeView adjustment and runs the top-row sync of the GTK wheel handler (Tree.gtk_scroll_event calls syncVirtualTopRowFromNative): GTK only");
+		/* scrolling is not an API call: residency stays the rows a caller or a listener asked for, here none */
+		int roots = 100_000;
+		Tree lazy = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
+		VirtualPageSource source = new VirtualPageSource (64, 32, 1, VirtualPageSource.TREE, request -> {
+			request.setTotal (roots);
+			for (int i = request.getStart (), end = Math.min (roots, i + request.getCount ()); i < end; i++) {
+				request.setText (i, 0, "n" + i);
+				request.setKey (i, i);
+				request.setChildCount (i, 0);
+			}
+		});
+		source.attach (lazy);
+		shell.open ();
+		drain (source);
+		Method sync = Tree.class.getDeclaredMethod ("syncVirtualTopRowFromNative");
+		sync.setAccessible (true);
+		Method topRow = Tree.class.getDeclaredMethod ("virtualViewportTopRow");
+		topRow.setAccessible (true);
+		ScrollBar bar = lazy.getVerticalBar ();
+		int itemHeight = Math.max (1, lazy.getItemHeight ());
+		for (int step = 0; step < 6; step++) {
+			/* to the end of the native rows: painting the rows there grows them by a chunk (the frontier) */
+			bar.setSelection (bar.getMaximum () - bar.getThumb ());
+			/* GTK paints on its frame clock: dispatch for a few frames, then let the source settle */
+			for (long end = System.currentTimeMillis () + 200; System.currentTimeMillis () < end;) {
+				if (!display.readAndDispatch ()) Thread.sleep (5);
+			}
+			drain (source);
+			sync.invoke (lazy);
+			assertEquals (0, facades (lazy), "no TreeItem after wheel step " + step);
+			long expected = bar.getSelection () / itemHeight;
+			long top = (long) topRow.invoke (lazy);
+			assertTrue (Math.abs (top - expected) <= 1, "the viewport's top row " + top + " follows the native top row near " + expected);
+		}
+		assertTrue (bar.getSelection () / itemHeight > 256, "the scroll went past the first chunk of native rows: " + bar.getSelection () / itemHeight);
 	}
 
 	@Test
