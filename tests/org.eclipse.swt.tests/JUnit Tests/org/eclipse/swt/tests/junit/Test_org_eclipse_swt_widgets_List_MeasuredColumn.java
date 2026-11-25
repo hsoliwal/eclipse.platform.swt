@@ -221,9 +221,10 @@ public class Test_org_eclipse_swt_widgets_List_MeasuredColumn {
 	/**
 	 * computeSize answers the stock column's width (the widest row as the column's own renderer measures it, plus
 	 * the row padding), once the stock column has measured every row; and a plain and a VIRTUAL list holding the
-	 * same items answer the same, before and after edits. With items of one script the height is the stock one
-	 * too; text drawn with a taller fallback font can make stock rows taller, while every row of the measured
-	 * column has the height of the row GtkTreeView measures for fixed-height mode.
+	 * same items answer the same, before and after edits. Only the width is compared with the stock column: its
+	 * height is GtkTreeView's preferred height, which on GTK3 counts the rows validated when that size was last
+	 * requested (a 1,000-row stock list answered 14 rows' height after the probe run), while the measured column
+	 * answers every row at the height fixed-height mode measured.
 	 */
 	@Test
 	public void computeSizeIsTheStockWidthAndEqualForPlainAndVirtual () {
@@ -237,7 +238,9 @@ public class Test_org_eclipse_swt_widgets_List_MeasuredColumn {
 		stockAscii.dispose ();
 		List measuredAscii = list (SWT.SINGLE | SWT.V_SCROLL, true, false);
 		measuredAscii.setItems (ascii);
-		assertEquals (stockAsciiSize, measuredAscii.computeSize (SWT.DEFAULT, SWT.DEFAULT), "one script: the stock size");
+		Point measuredAsciiSize = measuredAscii.computeSize (SWT.DEFAULT, SWT.DEFAULT);
+		assertEquals (stockAsciiSize.x, measuredAsciiSize.x, "one script: the stock width");
+		System.out.println ("GTK_LIST_COMPUTE_SIZE ascii stock=" + stockAsciiSize + " measured=" + measuredAsciiSize);
 		measuredAscii.dispose ();
 		String [] items = new String [2000];
 		String [] samples = {"i", "MMMMMMMMMM", "a mixed Row 123", "\u05e9\u05dc\u05d5\u05dd world", "\u65e5\u672c\u8a9e\u306e\u884c", "e\u0301e\u0301", "", "tab\there", "x\0hidden tail that is not drawn"};
@@ -276,6 +279,13 @@ public class Test_org_eclipse_swt_widgets_List_MeasuredColumn {
 		}
 	}
 
+	/* computeSize's height once GtkTreeView has validated the shown rows (its preferred height counts validated rows) */
+	private int validatedHeight (List list) {
+		paint (list);
+		drainUntilIdle (2000);
+		return list.computeSize (SWT.DEFAULT, SWT.DEFAULT).y;
+	}
+
 	/**
 	 * An item with a line break keeps its taller row (fixed-height mode is left), and setItems or removeAll with
 	 * single-line items return to fixed-height mode.
@@ -284,14 +294,15 @@ public class Test_org_eclipse_swt_widgets_List_MeasuredColumn {
 	public void aLineBreakKeepsTheTallerRowUntilEveryRowIsReplaced () {
 		List list = list (SWT.SINGLE | SWT.V_SCROLL, true);
 		list.setItems ("one", "two", "three");
-		int single = list.computeSize (SWT.DEFAULT, SWT.DEFAULT).y;
+		int single = validatedHeight (list);
 		assertFalse ((Boolean) get (list, "variableRows"));
 		list.setItems ("one", "two\nlines", "three");
 		assertTrue ((Boolean) get (list, "variableRows"));
-		assertTrue (list.computeSize (SWT.DEFAULT, SWT.DEFAULT).y > single, "the two-line row is taller");
+		int multi = validatedHeight (list);
+		assertTrue (multi > single, "the two-line row is taller: " + multi + " against " + single);
 		list.setItems ("one", "two", "three");
 		assertFalse ((Boolean) get (list, "variableRows"));
-		assertEquals (single, list.computeSize (SWT.DEFAULT, SWT.DEFAULT).y);
+		assertEquals (single, validatedHeight (list));
 		list.add ("x\0hidden\nbreak after the NUL is not stored");
 		assertFalse ((Boolean) get (list, "variableRows"), "the native row ends at the NUL");
 		list.add ("four\r\nlines");
@@ -302,7 +313,7 @@ public class Test_org_eclipse_swt_widgets_List_MeasuredColumn {
 	}
 
 	/**
-	 * Report only: setItems / setItemCount, settling (until the event loop is idle, at most 2 s), scrolling and
+	 * Report only: setItems / setItemCount, showing (first paint until the event loop is idle, at most 5 s), scrolling and
 	 * computeSize times at 10,000, 100,000 and 1,000,000 rows, with the measured and the stock column, plus the
 	 * native rows (one GtkListStore row per item in both modes) and the ints the width lane holds. The exact
 	 * computeSize of a plain 1,000,000-row list (a renderer measurement per row) is not timed here; it scales
@@ -328,8 +339,11 @@ public class Test_org_eclipse_swt_widgets_List_MeasuredColumn {
 					if (virtual) list.setItemCount (count);
 					else list.setItems (items);
 					long fillMs = (System.nanoTime () - t0) / 1_000_000L;
-					paint (list);
-					long settleMs = drainUntilIdle (2000);
+					/* the first paint and every idle step after it, GtkTreeView's background row validation included */
+					long t3 = System.nanoTime ();
+					list.redraw ();
+					list.update ();
+					long settleMs = drainUntilIdle (5000) < 0 ? -1 : (System.nanoTime () - t3) / 1_000_000L;
 					int [] tops = {count / 4, count / 2, 3 * count / 4, count - 1, 0};
 					long t1 = System.nanoTime ();
 					for (int top : tops) {
@@ -346,7 +360,7 @@ public class Test_org_eclipse_swt_widgets_List_MeasuredColumn {
 					}
 					Object lane = get (list, "widths");
 					System.out.println ("GTK_LIST_TIMES mode=" + (measured ? "measured" : "stock") + " kind=" + (virtual ? "virtual" : "plain")
-						+ " rows=" + count + " fillMs=" + fillMs + " settleMs=" + (settleMs < 0 ? ">2000" : settleMs)
+						+ " rows=" + count + " fillMs=" + fillMs + " showUntilIdleMs=" + (settleMs < 0 ? ">5000" : settleMs)
 						+ " scrollUsPerJump=" + scrollUs + " computeSize=" + size
 						+ " nativeRows=" + list.getItemCount () + " laneInts=" + laneInts (lane) + " setData=" + setData [0]);
 					assertEquals (count, list.getItemCount ());

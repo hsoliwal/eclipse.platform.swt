@@ -2525,9 +2525,29 @@ public void setTopIndex (int index) {
 	GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
 	long path = GTK.gtk_tree_model_get_path (modelHandle, iter);
 	GTK.gtk_tree_view_scroll_to_cell (handle, path, 0, true, 0, 0);
+	if (widths != null && !variableRows) jumpToRow (path, index, vAdjustment);
 	GTK.gtk_tree_path_free (path);
 	OS.g_free (iter);
 	viewportRuntime.scrollTo (0, index);
+}
+
+/*
+ * Measured column: GtkTreeView animates scroll_to_cell when no row waits for validation, which in fixed-height
+ * mode is always (the stock column's pending validation kept the scroll immediate). setTopIndex goes straight to
+ * the point GtkTreeView aims at (the top of the row's background area), so the rows on the way are neither drawn
+ * nor, in a VIRTUAL list, requested. Only once fixed-height mode has measured its row, so that every row above
+ * has that height; until then scroll_to_cell has deferred the scroll and positions the row itself.
+ */
+void jumpToRow (long path, int index, long vAdjustment) {
+	if (!GTK.gtk_widget_get_realized (handle) || !GTK.gtk_widget_get_visible (handle)) return;
+	GdkRectangle area = new GdkRectangle ();
+	GTK.gtk_tree_view_get_background_area (handle, path, 0, area);
+	int [] tx = new int [1], ty = new int [1];
+	GTK.gtk_tree_view_convert_bin_window_to_tree_coords (handle, area.x, area.y, tx, ty);
+	if (area.height <= 0 || ty [0] != (long) index * area.height) return;
+	GTK.gtk_adjustment_set_value (vAdjustment, ty [0]);
+	/* unclamped, the row is on top: getTopIndex answers index, as it does while a stock scroll is pending */
+	if (GTK.gtk_adjustment_get_value (vAdjustment) == ty [0]) cachedAdjustment = ty [0];
 }
 
 /**
