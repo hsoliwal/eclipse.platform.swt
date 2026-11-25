@@ -396,6 +396,44 @@ public class Test_org_eclipse_swt_widgets_Composite {
 		}
 	}
 
+	/**
+	 * The same native non-client edge atom serves WM_NCPAINT and WM_PRINT.
+	 * Zero/tiny HWND geometry must not expand its DrawEdge ring into the
+	 * caller-owned client area or leave the print HDC clipped afterwards.
+	 */
+	@Test
+	public void test_nativeReliefTinyFrameKeepsPrintDCUnchanged() {
+		Composite control = new Composite(shell, SWT.BORDER);
+		try {
+			control.setBevelBorder(SWT.SHADOW_OUT);
+			shell.setSize(240, 160);
+			shell.open();
+			Image image = new Image(display, 128, 96);
+			GC gc = new GC(image);
+			try {
+				gc.setBackground(display.getSystemColor(SWT.COLOR_MAGENTA));
+				for (int extent : new int[] {0, 1, 2, 3, 4}) {
+					control.setSize(extent, extent);
+					gc.fillRectangle(image.getBounds());
+					int untouched = OS.GetPixel(gc.handle, 80, 60);
+					var initialClip = gc.getClipping();
+					assertTrue(untouched != -1);
+					OS.SendMessage(control.handle, OS.WM_PRINT, gc.handle,
+							OS.PRF_NONCLIENT);
+					assertEquals(initialClip, gc.getClipping(),
+								"Tiny native bevel must restore caller HDC clip");
+					assertEquals(untouched, OS.GetPixel(gc.handle, 80, 60),
+								"Tiny HWND must not draw outside its frame");
+				}
+			} finally {
+				gc.dispose();
+				image.dispose();
+			}
+		} finally {
+			control.dispose();
+		}
+	}
+
 	private static boolean isComposited(Control control) {
 		return (OS.GetWindowLong(control.handle, OS.GWL_EXSTYLE) & OS.WS_EX_COMPOSITED) != 0;
 	}
