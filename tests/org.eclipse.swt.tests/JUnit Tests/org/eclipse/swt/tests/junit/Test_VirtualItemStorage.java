@@ -299,13 +299,57 @@ public class Test_VirtualItemStorage {
 			}
 			assertTrue (storage.builds () - builds <= 3, count + " added facades rebuilt the table " + (storage.builds () - builds) + " times");
 
-			/* releasing facades outside a window keeps the table too */
+			/* releasing facades outside a window moves the kept ones: one rebuild, then queries are table probes again */
 			builds = storage.builds ();
 			storage.releaseOutside (0, 3 * (count / 2), 0L);
 			assertEquals (count / 2, storage.size ());
 			assertEquals (3 * (count / 4), storage.indexOfIdentity (items [count / 4]));
 			assertEquals (-1, storage.indexOfIdentity (items [count - 1]));
-			assertEquals (builds, storage.builds (), "releaseOutside keeps the table in step");
+			assertTrue (storage.builds () - builds <= 1, "releaseOutside rebuilt the table " + (storage.builds () - builds) + " times");
+			builds = storage.builds ();
+			assertEquals (0, storage.releaseOutside (0, 3 * (count / 2), 0L));
+			assertEquals (3 * (count / 8), storage.indexOfIdentity (items [count / 8]));
+			assertEquals (builds, storage.builds (), "a releaseOutside that drops nothing keeps the table");
+		}
+	}
+
+	/*
+	 * releaseOutside copies each kept entry down before it overwrites the old slot. A release
+	 * callback that changes the state of a kept entry must reach the slot that survives, as the
+	 * first-match scan did.
+	 */
+	@Test
+	public void stateWrittenFromAReleaseCallbackSurvivesTheCompaction () {
+		Storage storage = new Storage ();
+		int count = 200;
+		Object [] items = new Object [count];
+		for (int i = 0; i < count; i++) {
+			items [i] = new Object ();
+			storage.put (i, items [i]);
+			if (i % 2 == 1) storage.flagOfIdentity (items [i], 1L, true);
+		}
+		assertEquals (1L, storage.stateOfIdentity (items [1]));
+		int [] calls = {0};
+		long [] written = {1L};
+		/* the even entries are dropped; the odd ones are copied to half their position */
+		int dropped = (Integer) storage.call (Storage.RELEASE_OUTSIDE, count, count, 1L, (Consumer<Object>) v -> {
+			int i = 2 * calls [0]++;
+			/* items [51] was copied to slot 25 at i == 51; its old slot 51 still holds it until i == 102 */
+			if (i > 51 && i < 102) {
+				long bit = 1L << (i / 2);
+				storage.flagOfIdentity (items [51], bit, true);
+				written [0] |= bit;
+			}
+		});
+		assertEquals (count / 2, dropped);
+		assertEquals (count / 2, storage.size ());
+		assertEquals (written [0], storage.stateOfIdentity (items [51]), "every bit written from the callbacks survives");
+		for (int i = 1; i < count; i += 2) {
+			if (i != 51) assertEquals (1L, storage.stateOfIdentity (items [i]), "state of entry " + i);
+			assertEquals (i, storage.indexOfIdentity (items [i]));
+		}
+		for (int i = 0; i < count; i += 2) {
+			assertEquals (-1, storage.indexOfIdentity (items [i]));
 		}
 	}
 }

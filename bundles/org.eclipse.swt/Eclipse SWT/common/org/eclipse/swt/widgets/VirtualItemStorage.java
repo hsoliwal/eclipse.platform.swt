@@ -49,11 +49,12 @@ final class VirtualItemStorage<T> {
 	 * queries (indexOfIdentity, stateOfIdentity, flagOfIdentity), which the widgets ask for the
 	 * items they paint, cost a few table slots and one binary search instead of a scan over every
 	 * materialized entry. The table is built by the first identity query once the store holds more
-	 * than IDENTITY_SCAN entries; put, truncate and releaseOutside keep it in step; an edit that
-	 * shifts logical indices (insert, remove, removeRange, which already visit every shifted entry)
-	 * or outgrows the table leaves it to be rebuilt by the next query. A value stored at two
-	 * logical indices blocks the table until the next edit, and the queries keep the original
-	 * first-match scan.
+	 * than IDENTITY_SCAN entries; put and truncate keep it in step; an edit that moves entries
+	 * (insert, remove, removeRange, and releaseOutside when it drops an entry, which all visit every
+	 * moved entry already) or outgrows the table leaves it to be rebuilt by the next query. A value
+	 * stored at two logical indices blocks the table until the next edit, and the queries keep the
+	 * original first-match scan; so do identity queries nested in releaseOutside's callbacks, which
+	 * run while kept entries move down.
 	 */
 	private static final int IDENTITY_SCAN = 16;
 	private Object [] identityKeys;
@@ -261,27 +262,38 @@ final class VirtualItemStorage<T> {
 	 */
 	int releaseOutside (int keepStart, int keepEnd, long keepMask, Consumer<? super T> released) {
 		Objects.requireNonNull (released, "released");
+		/*
+		 * A callback may ask about a kept entry after it was copied down and before its old slot is
+		 * overwritten: only the first match (the scan's answer) is the slot that survives.
+		 */
+		boolean valid = identityValid, blocked = identityBlocked;
+		identityValid = false;
+		identityBlocked = true;
 		int kept = 0;
 		int dropped = 0;
-		for (int i = 0; i < size; i++) {
-			int index = indices [i];
-			if ((index < keepStart || index >= keepEnd) && (stateMasks [i] & keepMask) == 0) {
-				released.accept (valueAt (i));
-				identityRemoved (values [i]);
-				dropped++;
-				continue;
+		try {
+			for (int i = 0; i < size; i++) {
+				int index = indices [i];
+				if ((index < keepStart || index >= keepEnd) && (stateMasks [i] & keepMask) == 0) {
+					released.accept (valueAt (i));
+					dropped++;
+					continue;
+				}
+				if (kept != i) {
+					indices [kept] = indices [i];
+					values [kept] = values [i];
+					stateMasks [kept] = stateMasks [i];
+				}
+				kept++;
 			}
-			if (kept != i) {
-				indices [kept] = indices [i];
-				values [kept] = values [i];
-				stateMasks [kept] = stateMasks [i];
-			}
-			kept++;
+			Arrays.fill (values, kept, size, null);
+			Arrays.fill (stateMasks, kept, size, 0L);
+			size = kept;
+		} finally {
+			/* nothing dropped: no callback ran and no entry moved, so the table (or its block) still holds */
+			identityValid = dropped == 0 && valid;
+			identityBlocked = dropped == 0 && blocked;
 		}
-		Arrays.fill (values, kept, size, null);
-		Arrays.fill (stateMasks, kept, size, 0L);
-		size = kept;
-		if (dropped > 0) identityBlocked = false;
 		return dropped;
 	}
 
