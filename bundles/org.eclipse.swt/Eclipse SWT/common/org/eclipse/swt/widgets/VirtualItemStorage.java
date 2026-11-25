@@ -54,7 +54,9 @@ final class VirtualItemStorage<T> {
 	 * moved entry already) or outgrows the table leaves it to be rebuilt by the next query. A value
 	 * stored at two logical indices blocks the table until the next edit, and the queries keep the
 	 * original first-match scan; so do identity queries nested in releaseOutside's callbacks, which
-	 * run while kept entries move down.
+	 * run while kept entries move down. A table that stops following the entries drops its lanes at
+	 * once (identityKeys is non-null only while identityValid, outside releaseOutside's loop), so it
+	 * never keeps an entry that left the store reachable, nor arrays sized for an earlier peak.
 	 */
 	private static final int IDENTITY_SCAN = 16;
 	private Object [] identityKeys;
@@ -235,10 +237,8 @@ final class VirtualItemStorage<T> {
 		Arrays.fill (stateMasks, 0, size, 0L);
 		size = 0;
 		/* an empty store keeps no identity lanes; a later query of a grown store builds them again */
-		identityKeys = null;
-		identityIndices = null;
-		identityCount = 0;
-		identityValid = identityBlocked = false;
+		dropIdentity ();
+		identityBlocked = false;
 	}
 
 	void forEach (Consumer<? super T> consumer) {
@@ -266,7 +266,7 @@ final class VirtualItemStorage<T> {
 		 * A callback may ask about a kept entry after it was copied down and before its old slot is
 		 * overwritten: only the first match (the scan's answer) is the slot that survives.
 		 */
-		boolean valid = identityValid, blocked = identityBlocked;
+		boolean valid = identityValid, blocked = identityBlocked, called = false;
 		identityValid = false;
 		identityBlocked = true;
 		int kept = 0;
@@ -275,6 +275,8 @@ final class VirtualItemStorage<T> {
 			for (int i = 0; i < size; i++) {
 				int index = indices [i];
 				if ((index < keepStart || index >= keepEnd) && (stateMasks [i] & keepMask) == 0) {
+					/* set before the call: a callback that throws may already have changed the store */
+					called = true;
 					released.accept (valueAt (i));
 					dropped++;
 					continue;
@@ -290,9 +292,15 @@ final class VirtualItemStorage<T> {
 			Arrays.fill (stateMasks, kept, size, 0L);
 			size = kept;
 		} finally {
-			/* nothing dropped: no callback ran and no entry moved, so the table (or its block) still holds */
-			identityValid = dropped == 0 && valid;
-			identityBlocked = dropped == 0 && blocked;
+			if (called) {
+				/* entries left or moved, and a callback may have edited the store: the next query rebuilds */
+				dropIdentity ();
+				identityBlocked = false;
+			} else {
+				/* no callback ran and no entry moved: the table (or its block) still holds */
+				identityValid = valid;
+				identityBlocked = blocked;
+			}
 		}
 		return dropped;
 	}
@@ -391,17 +399,13 @@ final class VirtualItemStorage<T> {
 			return false;
 		}
 		int length = identityLength (size);
-		if (identityKeys == null || identityKeys.length < length || identityKeys.length > 4 * length) {
-			identityKeys = new Object [length];
-			identityIndices = new int [length];
-		} else {
-			Arrays.fill (identityKeys, null);
-		}
+		identityKeys = new Object [length];
+		identityIndices = new int [length];
 		identityCount = 0;
 		identityBuilds++;
 		for (int i = 0; i < size; i++) {
 			if (!identityInsert (values [i], indices [i])) {
-				identityValid = false;
+				dropIdentity ();
 				identityBlocked = true;
 				return false;
 			}
@@ -462,11 +466,11 @@ final class VirtualItemStorage<T> {
 			return;
 		}
 		if (2L * (identityCount + 1) > identityKeys.length) {
-			identityValid = false; // outgrown: the next query builds a larger table
+			dropIdentity (); // outgrown: the next query builds a larger table
 			return;
 		}
 		if (!identityInsert (key, index)) {
-			identityValid = false;
+			dropIdentity ();
 			identityBlocked = true;
 		}
 	}
@@ -480,7 +484,7 @@ final class VirtualItemStorage<T> {
 		int hole = identitySlot (key, mask);
 		while (identityKeys [hole] != key) {
 			if (identityKeys [hole] == null) {
-				identityValid = false;
+				dropIdentity ();
 				return;
 			}
 			hole = (hole + 1) & mask;
@@ -499,8 +503,16 @@ final class VirtualItemStorage<T> {
 
 	/* Logical indices moved: the next identity query rebuilds the table. */
 	private void invalidateIdentity () {
-		identityValid = false;
+		dropIdentity ();
 		identityBlocked = false;
+	}
+
+	/* The table no longer follows the entries: release its lanes and the references they hold. */
+	private void dropIdentity () {
+		identityKeys = null;
+		identityIndices = null;
+		identityCount = 0;
+		identityValid = false;
 	}
 
 	private int lowerBound (int index) {

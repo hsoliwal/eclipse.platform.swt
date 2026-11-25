@@ -15,8 +15,10 @@
 package org.eclipse.swt.tests.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -230,6 +232,28 @@ public class Test_VirtualItemStorage {
 					int end = index + random.nextInt (60);
 					long keep = 1L << random.nextInt (3);
 					assertEquals (oracle.releaseOutside (index, end, keep), storage.releaseOutside (index, end, keep), "released at step " + step);
+				} else if (op < 76) {
+					/*
+					 * The first release callback (an item's Dispose listener, say) materializes a facade
+					 * after the last entry, or not, and throws: nothing was dropped or moved yet.
+					 */
+					int end = index + random.nextInt (60);
+					boolean edit = random.nextBoolean ();
+					int late = (oracle.entries.isEmpty () ? 0 : oracle.entries.lastKey () + 1) + random.nextInt (4);
+					boolean [] ran = {false};
+					try {
+						storage.call (Storage.RELEASE_OUTSIDE, index, end, 0L, (Consumer<Object>) v -> {
+							ran [0] = true;
+							if (edit) storage.put (late, value);
+							throw new IllegalStateException ("release callback");
+						});
+					} catch (IllegalStateException e) {
+						assertTrue (ran [0], "only a callback throws");
+					}
+					if (ran [0] && edit) {
+						oracle.put (late, value);
+						pool.add (value);
+					}
 				} else if (op < 98) {
 					if (!oracle.entries.isEmpty ()) {
 						List<Object []> present = new ArrayList<> (oracle.entries.values ());
@@ -350,6 +374,104 @@ public class Test_VirtualItemStorage {
 		}
 		for (int i = 0; i < count; i += 2) {
 			assertEquals (-1, storage.indexOfIdentity (items [i]));
+		}
+	}
+
+	/*
+	 * A release callback that throws (GTK's Widget.release rethrows a Dispose listener's exception)
+	 * may already have changed the store, here by materializing a facade: the identity answers that
+	 * follow must still be the first-match scan's.
+	 */
+	@Test
+	public void aReleaseCallbackThatEditsAndThrowsLeavesTheAnswersExact () {
+		for (boolean edit : new boolean [] {true, false}) {
+			Storage storage = new Storage ();
+			Object [] items = new Object [20];
+			for (int i = 0; i < items.length; i++) {
+				items [i] = new Object ();
+				storage.put (i, items [i]);
+			}
+			assertEquals (0, storage.indexOfIdentity (items [0]));
+			Object late = new Object ();
+			int [] calls = {0};
+			IllegalStateException thrown = assertThrows (IllegalStateException.class,
+					() -> storage.call (Storage.RELEASE_OUTSIDE, 1, 100, 0L, (Consumer<Object>) v -> {
+						calls [0]++;
+						if (edit) storage.put (50, late);
+						throw new IllegalStateException ("dispose listener");
+					}));
+			assertEquals ("dispose listener", thrown.getMessage ());
+			assertEquals (1, calls [0]);
+			assertEquals (items.length + (edit ? 1 : 0), storage.size ());
+			for (int i = 0; i < items.length; i++) {
+				assertEquals (i, storage.indexOfIdentity (items [i]), "entry " + i);
+			}
+			if (edit) {
+				assertEquals (50, storage.indexOfIdentity (late));
+				assertEquals (0L, storage.stateOfIdentity (late));
+				storage.flagOfIdentity (late, 1L, true);
+				assertEquals (1L, storage.stateOfIdentity (late));
+				/* a later non-moving edit keeps answering from the store's entries */
+				Object later = new Object ();
+				storage.put (60, later);
+				assertEquals (60, storage.indexOfIdentity (later));
+				assertEquals (50, storage.indexOfIdentity (late));
+			} else {
+				assertEquals (-1, storage.indexOfIdentity (late));
+			}
+		}
+	}
+
+	/*
+	 * The identity table must not keep entries that left the store reachable, whether or not a later
+	 * query rebuilds it: after a release down to the scan threshold, after a remove (which moves
+	 * entries) followed by truncate (0), and after a release with no query afterwards.
+	 */
+	@Test
+	public void entriesThatLeaveTheStoreBecomeUnreachable () throws InterruptedException {
+		final int count = 10_000;
+		for (int scenario = 0; scenario < 3; scenario++) {
+			Storage storage = new Storage ();
+			Object [] items = new Object [count];
+			WeakReference<?> [] refs = new WeakReference<?> [count];
+			for (int i = 0; i < count; i++) {
+				items [i] = new Object ();
+				refs [i] = new WeakReference<> (items [i]);
+				storage.put (i, items [i]);
+			}
+			assertEquals (count - 1, storage.indexOfIdentity (items [count - 1]));
+			int keep;
+			if (scenario == 0) {
+				keep = 10;
+				storage.releaseOutside (0, keep, 0L);
+				for (int i = 0; i < keep; i++) {
+					assertEquals (i, storage.indexOfIdentity (items [i]));
+				}
+			} else if (scenario == 1) {
+				keep = 0;
+				storage.remove (0);
+				storage.truncate (0);
+			} else {
+				keep = 500;
+				storage.releaseOutside (0, keep, 0L);
+			}
+			assertEquals (keep, storage.size ());
+			for (int i = keep; i < count; i++) {
+				items [i] = null;
+			}
+			int reachable = count - keep;
+			for (int round = 0; round < 40 && reachable > 0; round++) {
+				System.gc ();
+				reachable = 0;
+				for (int i = keep; i < count; i++) {
+					if (refs [i].get () != null) reachable++;
+				}
+				if (reachable > 0) Thread.sleep (25);
+			}
+			assertEquals (0, reachable, "scenario " + scenario + ": entries that left the store are still reachable");
+			for (int i = 0; i < keep; i++) {
+				assertEquals (i, storage.indexOfIdentity (items [i]));
+			}
 		}
 	}
 }
