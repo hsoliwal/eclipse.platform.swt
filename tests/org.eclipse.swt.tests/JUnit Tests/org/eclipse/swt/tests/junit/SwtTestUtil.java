@@ -671,10 +671,32 @@ public static void waitShellActivate(Runnable trigger, Shell shell) {
     }
 
 	// Something went wrong? Get more info to diagnose
-	Screenshots.takeScreenshot(SwtTestUtil.class, "waitShellActivate-" + System.currentTimeMillis());
+	System.out.println(takeScreenshot(SwtTestUtil.class, "waitShellActivate-" + System.currentTimeMillis()));
 	dumpShellState(System.out);
 	assertEquals(shell.getDisplay().getActiveShell(), shell, "Shell did not activate");
 	fail("SWT.Activate was not received but Shell is (incorrectly?) reported active");
+}
+
+/**
+ * Takes a diagnostic screenshot with <code>org.eclipse.test.Screenshots</code> and describes where it was written,
+ * or why there is none.
+ * <p>
+ * A screenshot only explains a failure, so it must never replace it. When this Java runtime cannot load the
+ * <code>org.eclipse.test</code> bundle on the test classpath (for example its classes are compiled for Java 25,
+ * class file version 69, and the tests run on Java 21), the {@link LinkageError} is caught here and described in the
+ * returned text, and the caller goes on to report the failure it was diagnosing.
+ * </p>
+ *
+ * @param testClass the test class, which names the screenshot file
+ * @param name the test or step name, which names the screenshot file
+ * @return "Screenshot written to &lt;path&gt;", or the reason there is no screenshot
+ */
+public static String takeScreenshot(Class<?> testClass, String name) {
+	try {
+		return "Screenshot written to " + Screenshots.takeScreenshot(testClass, name);
+	} catch (LinkageError e) {
+		return "No screenshot: org.eclipse.test.Screenshots cannot be loaded by this Java runtime (" + e + ")";
+	}
 }
 
 /**

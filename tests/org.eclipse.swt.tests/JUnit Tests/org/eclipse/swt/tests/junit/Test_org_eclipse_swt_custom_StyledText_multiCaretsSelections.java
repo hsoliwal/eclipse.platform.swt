@@ -25,7 +25,6 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.test.Screenshots;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -61,8 +60,7 @@ public class Test_org_eclipse_swt_custom_StyledText_multiCaretsSelections {
 			// If this is an assumption failed or otherwise
 			// skipped test, don't take a screenshot
 			if (!(e instanceof IncompleteExecutionException)) {
-				String screenshot = Screenshots.takeScreenshot(context.getTestClass().get(), context.getDisplayName());
-				e.addSuppressed((new Throwable("Screenshot written to " + screenshot)));
+				e.addSuppressed(new Throwable(SwtTestUtil.takeScreenshot(context.getTestClass().get(), context.getDisplayName())));
 			}
 		});
 	};
