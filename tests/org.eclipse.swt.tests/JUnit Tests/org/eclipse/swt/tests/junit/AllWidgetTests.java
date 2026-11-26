@@ -162,6 +162,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_ExpandBar_ViewportDifferential.class, //
 		Test_org_eclipse_swt_widgets_Item.class, //
 		Test_org_eclipse_swt_widgets_List_HiddenBar.class, //
+		Test_org_eclipse_swt_widgets_List_MeasuredColumn.class, //
 		Test_org_eclipse_swt_widgets_List_Viewport.class, //
 		Test_org_eclipse_swt_widgets_List_ViewportDifferential.class, //
 		Test_org_eclipse_swt_widgets_List_Virtual.class, //

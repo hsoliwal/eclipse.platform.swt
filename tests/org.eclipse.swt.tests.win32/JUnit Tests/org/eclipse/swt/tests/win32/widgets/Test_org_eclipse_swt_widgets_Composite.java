@@ -187,6 +187,54 @@ public class Test_org_eclipse_swt_widgets_Composite {
 
 
 	/**
+	 * Control's etched GDI painter shares one native frame kernel between
+	 * WM_NCPAINT and WM_PRINT. Small native frames must not spill pixels
+	 * beyond the HWND or permanently modify the caller's clipping region.
+	 */
+	@Test
+	public void test_nativeControlEtchedTinyFramePrintKeepsCallerHdc() {
+		Button button = new Button(shell, SWT.PUSH);
+		try {
+			button.setBounds(10, 10, 96, 32);
+			shell.setSize(240, 160);
+			shell.open();
+			button.setBorderRelief(SWT.SHADOW_ETCHED_IN);
+			assertEquals(SWT.SHADOW_ETCHED_IN, button.getBorderRelief());
+			Image image = new Image(display, 144, 96);
+			GC gc = new GC(image);
+			try {
+				gc.setBackground(display.getSystemColor(SWT.COLOR_MAGENTA));
+				for (int extent : new int[] {0, 1, 2, 3, 4}) {
+					button.setSize(extent, extent);
+					gc.fillRectangle(image.getBounds());
+					int outsideBefore = OS.GetPixel(gc.handle, 80, 60);
+					assertTrue(outsideBefore != -1);
+					Region before = new Region(display);
+					Region after = new Region(display);
+					try {
+						gc.getClipping(before);
+						assertTrue(before.contains(80, 60));
+						OS.SendMessage(button.handle, OS.WM_PRINT, gc.handle, OS.PRF_NONCLIENT);
+						gc.getClipping(after);
+						assertTrue(after.contains(80, 60),
+								"Etched WM_PRINT must restore the caller's clipping region");
+						assertEquals(outsideBefore, OS.GetPixel(gc.handle, 80, 60),
+								"Custom edge must not write outside the native frame");
+					} finally {
+						after.dispose();
+						before.dispose();
+					}
+				}
+			} finally {
+				gc.dispose();
+				image.dispose();
+			}
+		} finally {
+			button.dispose();
+		}
+	}
+
+	/**
 	 * WM_PRINT receives a caller HDC, not a window DC. Verify actual
 	 * GDI border pixels, no client-pixel damage and a restored caller clip.
 	 */
@@ -388,6 +436,44 @@ public class Test_org_eclipse_swt_widgets_Composite {
 			} finally {
 				after.dispose();
 				before.dispose();
+				gc.dispose();
+				image.dispose();
+			}
+		} finally {
+			control.dispose();
+		}
+	}
+
+	/**
+	 * The same native non-client edge atom serves WM_NCPAINT and WM_PRINT.
+	 * Zero/tiny HWND geometry must not expand its DrawEdge ring into the
+	 * caller-owned client area or leave the print HDC clipped afterwards.
+	 */
+	@Test
+	public void test_nativeReliefTinyFrameKeepsPrintDCUnchanged() {
+		Composite control = new Composite(shell, SWT.BORDER);
+		try {
+			control.setBevelBorder(SWT.SHADOW_OUT);
+			shell.setSize(240, 160);
+			shell.open();
+			Image image = new Image(display, 128, 96);
+			GC gc = new GC(image);
+			try {
+				gc.setBackground(display.getSystemColor(SWT.COLOR_MAGENTA));
+				for (int extent : new int[] {0, 1, 2, 3, 4}) {
+					control.setSize(extent, extent);
+					gc.fillRectangle(image.getBounds());
+					int untouched = OS.GetPixel(gc.handle, 80, 60);
+					var initialClip = gc.getClipping();
+					assertTrue(untouched != -1);
+					OS.SendMessage(control.handle, OS.WM_PRINT, gc.handle,
+							OS.PRF_NONCLIENT);
+					assertEquals(initialClip, gc.getClipping(),
+								"Tiny native bevel must restore caller HDC clip");
+					assertEquals(untouched, OS.GetPixel(gc.handle, 80, 60),
+								"Tiny HWND must not draw outside its frame");
+				}
+			} finally {
 				gc.dispose();
 				image.dispose();
 			}

@@ -825,6 +825,55 @@ public void test_virtualGtkTableColumnPackReadsSparsePopulatedStorage() throws E
 	assertSame(distant, virtualTable.getItem(900_000));
 }
 
+/*
+ * The facades of a VIRTUAL Table live in its VirtualItemStorage. The Table asks that store about
+ * a facade by identity (indexOf, and the cached/checked/pinned state read for every painted row):
+ * with tens of thousands of materialized rows, each question must probe a few slots of the
+ * store's identity table, not compare every materialized facade.
+ */
+@Test
+public void test_virtualFacadeIdentityQueriesStayBoundedWithManyMaterializedRows() throws Exception {
+	final int count = 50_000;
+	Table virtualTable = new Table(shell, SWT.VIRTUAL | SWT.MULTI);
+	assumeForkVirtualStore(virtualTable);
+	virtualTable.setBounds(0, 0, 300, 300);
+	virtualTable.addListener(SWT.SetData, event -> ((TableItem) event.item).setText("row " + event.index));
+	virtualTable.setItemCount(count);
+	TableItem[] items = new TableItem[count];
+	for (int i = 0; i < count; i++) {
+		items[i] = virtualTable.getItem(i);
+	}
+	Field store = Table.class.getDeclaredField("virtualItems");
+	store.setAccessible(true);
+	Object storage = store.get(virtualTable);
+	assertNotNull(storage, "a VIRTUAL Table keeps its facades in a VirtualItemStorage");
+	Field probes = storage.getClass().getDeclaredField("identityProbes");
+	Field builds = storage.getClass().getDeclaredField("identityBuilds");
+	probes.setAccessible(true);
+	builds.setAccessible(true);
+	long before = probes.getLong(storage);
+	int queries = 0;
+	for (int i = 0; i < count; i += 50, queries++) {
+		assertEquals(i, virtualTable.indexOf(items[i]));
+	}
+	long perQuery = (probes.getLong(storage) - before) / queries;
+	assertTrue(perQuery <= 8, "indexOf probed " + perQuery + " slots per facade among " + count + " materialized facades");
+
+	shell.open();
+	virtualTable.setTopIndex(count / 2);
+	SwtTestUtil.processEvents();
+	long rebuilds = builds.getLong(storage);
+	before = probes.getLong(storage);
+	virtualTable.redraw();
+	virtualTable.update();
+	SwtTestUtil.processEvents();
+	long painted = probes.getLong(storage) - before;
+	assertTrue(painted < count / 4, "a paint of the visible rows probed " + painted + " slots; a scan compares up to " + count + " facades per question");
+	assertEquals(rebuilds, builds.getLong(storage), "a paint that adds no facade does not rebuild the identity table");
+	assertSame(items[count / 2], virtualTable.getItem(count / 2));
+	assertEquals(count / 2, virtualTable.indexOf(items[count / 2]));
+}
+
 @Test
 @SuppressWarnings("unchecked")
 public void test_virtualGtkBoundedTableAccessibleIncludesPartialBottomRow() throws Exception {

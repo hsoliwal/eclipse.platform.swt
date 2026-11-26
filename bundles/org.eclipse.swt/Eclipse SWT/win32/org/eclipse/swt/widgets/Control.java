@@ -6582,17 +6582,20 @@ LRESULT WM_NCPAINT (long wParam, long lParam) {
  * WM_PRINT (caller DC). It replaces only the existing non-client ring. */
 private void drawControlEtchedRelief(long dc) {
 	RECT rect = new RECT();
-	if (OS.GetWindowRect(handle, rect)) {
-		rect.right -= rect.left;
-		rect.bottom -= rect.top;
-		rect.left = rect.top = 0;
-		int inset = Math.max(0, getBorderWidthInPixels());
-		if (inset > 0 && rect.right > inset * 2 && rect.bottom > inset * 2) {
-			OS.ExcludeClipRect(dc, inset, inset, rect.right - inset, rect.bottom - inset);
-		}
-		OS.DrawEdge(dc, rect, effectiveBorderReliefForPaint() == SWT.SHADOW_ETCHED_IN
-				? OS.EDGE_ETCHED : OS.EDGE_BUMP, OS.BF_RECT);
-	}
+	if (!OS.GetWindowRect(handle, rect)) return;
+	int width = rect.right - rect.left;
+	int height = rect.bottom - rect.top;
+	if (width <= 0 || height <= 0) return;
+	int inset = Math.max(0, getBorderWidthInPixels());
+	/* The custom etched edge may only replace an existing non-client ring.
+	 * Do not paint a frame that cannot contain two native edge bands. */
+	if (inset <= 0 || width <= 2L * inset || height <= 2L * inset) return;
+	rect.left = rect.top = 0;
+	rect.right = width;
+	rect.bottom = height;
+	OS.ExcludeClipRect(dc, inset, inset, width - inset, height - inset);
+	OS.DrawEdge(dc, rect, effectiveBorderReliefForPaint() == SWT.SHADOW_ETCHED_IN
+			? OS.EDGE_ETCHED : OS.EDGE_BUMP, OS.BF_RECT);
 }
 
 LRESULT WM_NOTIFY (long wParam, long lParam) {

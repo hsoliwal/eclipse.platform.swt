@@ -1,6 +1,7 @@
 name: Maya packet ABI (portable + JNI)
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFramePacket*'
@@ -134,12 +135,13 @@ jobs:
               '_nRemoveLayer': '(JJ)V', '_nWaitForCommit': '(J)I', '_nDispose': '(J)V',
               '_nCapabilities': '(J)J', '_nApplyScene': '(J[J[F[II)I',
               '_nReadMetrics': '(J[J)I',
+              '_nSetSurfaceBudget': '(JJ)I', '_nReadSurfaceBudget': '(J[J)I',
           }
           descriptors = re.findall(r'Method:\s+(\S+)\s+\*\s+Signature:\s+(\S+)', header_text)
-          assert len(descriptors) == 13 and dict(descriptors) == expected_descriptors, descriptors
-          assert len(header) == 13, header
+          assert len(descriptors) == 15 and dict(descriptors) == expected_descriptors, descriptors
+          assert len(header) == 15, header
           assert header == exports == linked, (header ^ exports, header ^ linked)
-          print('Exact Java descriptors/header/export/linked JNI symbol closure: 13')
+          print('Exact Java descriptors/header/export/linked JNI symbol closure: 15')
           PY
 
   windows-compile:
