@@ -698,6 +698,67 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testNativeControlLayerRejectsDuplicateOwnerAndAllowsReattachment() {
+        Button control = new Button(viewport, SWT.PUSH);
+        Layer first = viewport.addControlLayer("remote desktop", control, 10, 20, 90, 40);
+        assertThrows(IllegalArgumentException.class,
+                () -> viewport.addControlLayer("duplicate", control, 40, 50, 80, 30));
+        assertEquals(1, viewport.getLayers().length,
+                "failed admission must not change the layer stack");
+        assertSame(control, viewport.getControl(first));
+        assertEquals(new Rectangle(10, 20, 90, 40), control.getBounds());
+        first.remove();
+        assertFalse(control.isDisposed(), "layer removal does not dispose an app-owned Control");
+        Layer second = viewport.addControlLayer("terminal panel", control, 50, 60, 120, 50);
+        assertSame(control, viewport.getControl(second));
+        assertEquals(new Rectangle(50, 60, 120, 50), control.getBounds());
+    }
+
+    @Test
+    public void testNativeControlResizeReentryUsesLatestBoundsAndVisibility() {
+        Button control = new Button(viewport, SWT.PUSH);
+        Layer layer = viewport.addControlLayer("terminal", control, 10, 10, 20, 20);
+        int[] depth = {0}, deepest = {0}, callbacks = {0};
+        control.addListener(SWT.Resize, event -> {
+            depth[0]++;
+            deepest[0] = Math.max(deepest[0], depth[0]);
+            try {
+                if (++callbacks[0] == 1) {
+                    layer.setWorldBounds(10, 10, 40, 30);
+                } else if (callbacks[0] == 2) {
+                    layer.setVisible(false);
+                }
+            } finally {
+                depth[0]--;
+            }
+        });
+        layer.setWorldBounds(10, 10, 30, 25);
+        for (int attempts = 0; attempts < 32 && (control.getVisible() || callbacks[0] < 2); attempts++) {
+            viewport.getDisplay().readAndDispatch();
+        }
+        assertEquals(1, deepest[0], "native resize handlers must not recurse through setBounds");
+        assertEquals(2, callbacks[0], "reentry updates geometry once then hides the panel");
+        assertEquals(new Rectangle(10, 10, 40, 30), control.getBounds());
+        assertFalse(control.getVisible(), "a stale outer callback must not re-show the hidden Control");
+    }
+
+    @Test
+    public void testNativeControlRemovalInsideResizeKeepsApplicationOwnership() {
+        Button control = new Button(viewport, SWT.PUSH);
+        Layer layer = viewport.addControlLayer("terminal", control, 10, 10, 20, 20);
+        int[] callbacks = {0};
+        control.addListener(SWT.Resize, event -> {
+            callbacks[0]++;
+            layer.remove();
+        });
+        layer.setWorldBounds(10, 10, 60, 40);
+        assertEquals(1, callbacks[0]);
+        assertEquals(0, viewport.getLayers().length);
+        assertFalse(control.isDisposed(), "detaching a layer does not dispose the native child");
+        assertEquals(new Rectangle(10, 10, 60, 40), control.getBounds());
+    }
+
+    @Test
     public void testControlLayersStackInLayerOrder() {
         org.eclipse.swt.widgets.Button a = new org.eclipse.swt.widgets.Button(viewport, SWT.PUSH);
         org.eclipse.swt.widgets.Button b = new org.eclipse.swt.widgets.Button(viewport, SWT.PUSH);
