@@ -1551,16 +1551,32 @@ public final class LayeredViewport extends Canvas {
         if (name == null || control == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
         if (control.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
         if (control.getParent() != this) SWT.error(SWT.ERROR_INVALID_PARENT);
-        // One native child has one live layer authority for bounds, visibility and Z order.
-        // Admission is rare; reuse the authoritative stack rather than an identity map.
-        for (int i = 0; i < count; i++) {
-            if (stack[i].control == control) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-        }
         Layer layer = append(name, x, y, width, height, null, null);
         layer.control = control;
         placeControl(layer);
         orderControls();
         return layer;
+    }
+
+    /**
+     * Adds a native child with an exclusive live logical layer owner. Unlike
+     * {@link #addControlLayer}, this opt-in API refuses a Control already
+     * registered in any live layer of this viewport. The original method
+     * continues to accept shared references for source/behavior compatibility.
+     * Removing a layer does not dispose its application-owned Control.
+     */
+    public Layer addExclusiveControlLayer(String name, Control control,
+            long x, long y, long width, long height) {
+        checkWidget();
+        if (name == null || control == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (control.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (control.getParent() != this) SWT.error(SWT.ERROR_INVALID_PARENT);
+        // Registration is infrequent: scan the authoritative layer array,
+        // without a second ownership index or per-frame allocation.
+        for (int i = 0; i < count; i++) {
+            if (stack[i].control == control) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        return addControlLayer(name, control, x, y, width, height);
     }
 
     /** The control of a control layer, or null for a painted layer. */

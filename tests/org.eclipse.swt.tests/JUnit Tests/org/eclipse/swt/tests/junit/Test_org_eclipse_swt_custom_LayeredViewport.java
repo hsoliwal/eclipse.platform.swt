@@ -700,16 +700,16 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     @Test
     public void testNativeControlLayerRejectsDuplicateOwnerAndAllowsReattachment() {
         Button control = new Button(viewport, SWT.PUSH);
-        Layer first = viewport.addControlLayer("remote desktop", control, 10, 20, 90, 40);
+        Layer first = viewport.addExclusiveControlLayer("remote desktop", control, 10, 20, 90, 40);
         assertThrows(IllegalArgumentException.class,
-                () -> viewport.addControlLayer("duplicate", control, 40, 50, 80, 30));
+                () -> viewport.addExclusiveControlLayer("duplicate", control, 40, 50, 80, 30));
         assertEquals(1, viewport.getLayers().length,
                 "failed admission must not change the layer stack");
         assertSame(control, viewport.getControl(first));
         assertEquals(new Rectangle(10, 20, 90, 40), control.getBounds());
         first.remove();
         assertFalse(control.isDisposed(), "layer removal does not dispose an app-owned Control");
-        Layer second = viewport.addControlLayer("terminal panel", control, 50, 60, 120, 50);
+        Layer second = viewport.addExclusiveControlLayer("terminal panel", control, 50, 60, 120, 50);
         assertSame(control, viewport.getControl(second));
         assertEquals(new Rectangle(50, 60, 120, 50), control.getBounds());
     }
@@ -812,6 +812,20 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
         assertEquals(0, show[0], "never publish obsolete Show before replaying the new projection");
         assertFalse(control.getVisible(), "the reentrant pan hides the native child");
         assertEquals(100000, viewport.getOriginX());
+    }
+
+    @Test
+    public void testNativeControlOriginalAdmissionKeepsSharedReferencesCompatible() {
+        Button control = new Button(viewport, SWT.PUSH);
+        Layer first = viewport.addControlLayer("legacy lower", control, 10, 20, 90, 40);
+        Layer second = viewport.addControlLayer("legacy upper", control, 50, 60, 120, 50);
+        assertEquals(2, viewport.getLayers().length,
+                "the existing admission API must retain its prior shared-Control behavior");
+        assertSame(control, viewport.getControl(first));
+        assertSame(control, viewport.getControl(second));
+        second.remove();
+        first.remove();
+        assertFalse(control.isDisposed(), "the caller still owns the shared child");
     }
 
     @Test
