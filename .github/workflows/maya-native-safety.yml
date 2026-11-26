@@ -1,6 +1,7 @@
 name: Maya native safety (portable)
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaComposition.cc'
