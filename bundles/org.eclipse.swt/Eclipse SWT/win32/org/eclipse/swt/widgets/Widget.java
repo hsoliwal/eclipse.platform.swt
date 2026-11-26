@@ -2646,18 +2646,20 @@ LRESULT wmPaint (long hwnd, long wParam, long lParam) {
 
 /**
  * Clip out the client rectangle before any custom/native non-client overlay.
- * Return false if geometry or DC is unsafe, or when GDI could not exclude
- * the client area. Screen painters release their window DC; print painters
+ * Return true only if GDI admits a nonempty drawable frame clip. Refuse
+ * invalid geometry, GDI ERROR and NULLREGION. Screen painters release
+ * their window DC; print painters
  * must restore their caller-owned DC separately.
  */
 static boolean excludeNativeFrameClientArea (long dc, int width, int height,
 		int insetX, int insetY) {
 	if (dc == 0 || insetX <= 0 || insetY <= 0
 			|| width <= 2L * insetX || height <= 2L * insetY) return false;
-	/* Win32 GDI ExcludeClipRect returns 0 (ERROR) if clipping failed.
-	 * Refuse drawing rather than repainting an entire client region. */
-	return OS.ExcludeClipRect (dc, insetX, insetY,
-			width - insetX, height - insetY) != 0;
+	/* ERROR (0) leaves clipping unsafe; NULLREGION (1) has no
+	 * drawable pixels. Skip the native overlay in both cases. */
+	int complexity = OS.ExcludeClipRect (dc, insetX, insetY,
+			width - insetX, height - insetY);
+	return complexity > OS.NULLREGION;
 }
 
 LRESULT wmPrint (long hwnd, long wParam, long lParam) {
