@@ -759,6 +759,39 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testNativeControlSiblingResizeReentryCoalescesViewportPlacement() {
+        Button desktop = new Button(viewport, SWT.PUSH);
+        Button terminal = new Button(viewport, SWT.PUSH);
+        viewport.addControlLayer("desktop", desktop, 0, 0, 40, 20);
+        viewport.addControlLayer("terminal", terminal, 100, 0, 40, 20);
+        int[] depth = {0}, maximumDepth = {0}, calls = {0};
+        org.eclipse.swt.widgets.Listener adjustZoom = event -> {
+            depth[0]++;
+            maximumDepth[0] = Math.max(maximumDepth[0], depth[0]);
+            try {
+                if (++calls[0] <= 6) {
+                    viewport.setZoom(1.0 + calls[0] * 0.125);
+                }
+            } finally {
+                depth[0]--;
+            }
+        };
+        desktop.addListener(SWT.Resize, adjustZoom);
+        terminal.addListener(SWT.Resize, adjustZoom);
+        viewport.setZoom(1.125);
+        for (int attempts = 0; attempts < 64
+                && (calls[0] < 6 || desktop.getBounds().width != 70
+                        || terminal.getBounds().x != 175); attempts++) {
+            if (!viewport.getDisplay().readAndDispatch()) viewport.update();
+        }
+        assertTrue(calls[0] >= 6, "both child Resize listeners must have been exercised");
+        assertEquals(1, maximumDepth[0], "one viewport fan-out cannot recursively nest sibling callbacks");
+        assertEquals(1.75, viewport.getZoom(), 0.000001, "last synchronous listener mutation wins");
+        assertEquals(new Rectangle(0, 0, 70, 35), desktop.getBounds());
+        assertEquals(new Rectangle(175, 0, 70, 35), terminal.getBounds());
+    }
+
+    @Test
     public void testControlLayersStackInLayerOrder() {
         org.eclipse.swt.widgets.Button a = new org.eclipse.swt.widgets.Button(viewport, SWT.PUSH);
         org.eclipse.swt.widgets.Button b = new org.eclipse.swt.widgets.Button(viewport, SWT.PUSH);

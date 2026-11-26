@@ -1450,6 +1450,9 @@ public final class LayeredViewport extends Canvas {
     private boolean nativeClientGeometryRefreshing;
     private boolean nativeClientGeometryPending;
     private boolean nativeClientGeometryQueued;
+    // A bounds callback on one child can re-enter a full sibling placement
+    // through setOrigin/setZoom. Keep that fan-out off the native call stack.
+    private boolean placingControls, controlsPlacementPending, controlsPlacementQueued;
 
     public LayeredViewport(Composite parent, int style) {
         super(parent, style | SWT.DOUBLE_BUFFERED);
@@ -2804,7 +2807,33 @@ public final class LayeredViewport extends Canvas {
 
     /* every control layer at its projected bounds */
     private void placeControls() {
-        for (Layer layer : orderSnapshot()) placeControl(layer);
+        if (isDisposed()) return;
+        if (placingControls) {
+            controlsPlacementPending = true;
+            return;
+        }
+        placingControls = true;
+        try {
+            int passes = 0;
+            do {
+                controlsPlacementPending = false;
+                for (Layer layer : orderSnapshot()) {
+                    if (isDisposed()) return;
+                    placeControl(layer);
+                }
+            } while (controlsPlacementPending && ++passes < 2);
+        } finally {
+            placingControls = false;
+        }
+        if (controlsPlacementPending && !controlsPlacementQueued && !isDisposed()) {
+            // One event-loop continuation, even when many children synchronously
+            // mutate the shared projection; no nested full-stack JNI traversal.
+            controlsPlacementQueued = true;
+            getDisplay().asyncExec(() -> {
+                controlsPlacementQueued = false;
+                if (!isDisposed()) placeControls();
+            });
+        }
     }
 
     /*
