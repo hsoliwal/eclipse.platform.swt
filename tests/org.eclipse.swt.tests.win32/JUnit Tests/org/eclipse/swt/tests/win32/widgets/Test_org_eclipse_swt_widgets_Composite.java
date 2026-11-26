@@ -482,6 +482,49 @@ public class Test_org_eclipse_swt_widgets_Composite {
 		}
 	}
 
+
+	/**
+	 * The ordinary Win32 WS_EX_CLIENTEDGE theme renderer shares the same
+	 * bounded native client exclusion as the Composite/Control bevel painters.
+	 * Degenerate HWND sizes and the native print path must not mutate the
+	 * caller's clipping state or paint outside the native HWND bounds.
+	 */
+	@Test
+	public void test_nativeThemedTinyFramePrintKeepsCallerHdc() {
+		Composite control = new Composite(shell, SWT.BORDER);
+		try {
+			shell.setSize(240, 160);
+			shell.open();
+			assertEquals(SWT.DEFAULT, control.getBorderRelief());
+			assertEquals(SWT.NONE, control.getBevelBorder());
+			assertTrue((OS.GetWindowLong(control.handle, OS.GWL_EXSTYLE)
+					& OS.WS_EX_CLIENTEDGE) != 0);
+			Image image = new Image(display, 128, 96);
+			GC gc = new GC(image);
+			try {
+				gc.setBackground(display.getSystemColor(SWT.COLOR_MAGENTA));
+				for (int extent : new int[] {0, 1, 2, 3, 4, 8, 12}) {
+					control.setSize(extent, extent);
+					gc.fillRectangle(image.getBounds());
+					int outsideBefore = OS.GetPixel(gc.handle, 80, 60);
+					assertTrue(outsideBefore != -1);
+					var originalClip = gc.getClipping();
+					OS.SendMessage(control.handle, OS.WM_PRINT, gc.handle,
+							OS.PRF_NONCLIENT | OS.PRF_CHECKVISIBLE);
+					assertEquals(originalClip, gc.getClipping(),
+							"Themed WM_PRINT must restore the caller's HDC clip");
+					assertEquals(outsideBefore, OS.GetPixel(gc.handle, 80, 60),
+							"Themed WM_PRINT must not spill beyond a tiny HWND");
+				}
+			} finally {
+				gc.dispose();
+				image.dispose();
+			}
+		} finally {
+			control.dispose();
+		}
+	}
+
 	private static boolean isComposited(Control control) {
 		return (OS.GetWindowLong(control.handle, OS.GWL_EXSTYLE) & OS.WS_EX_COMPOSITED) != 0;
 	}

@@ -2644,6 +2644,22 @@ LRESULT wmPaint (long hwnd, long wParam, long lParam) {
 	return new LRESULT (result);
 }
 
+/**
+ * Clip out the client rectangle before any custom/native non-client overlay.
+ * Return false if geometry or DC is unsafe, or when GDI could not exclude
+ * the client area. Screen painters release their window DC; print painters
+ * must restore their caller-owned DC separately.
+ */
+static boolean excludeNativeFrameClientArea (long dc, int width, int height,
+		int insetX, int insetY) {
+	if (dc == 0 || insetX <= 0 || insetY <= 0
+			|| width <= 2L * insetX || height <= 2L * insetY) return false;
+	/* Win32 GDI ExcludeClipRect returns 0 (ERROR) if clipping failed.
+	 * Refuse drawing rather than repainting an entire client region. */
+	return OS.ExcludeClipRect (dc, insetX, insetY,
+			width - insetX, height - insetY) != 0;
+}
+
 LRESULT wmPrint (long hwnd, long wParam, long lParam) {
 	/*
 	* Bug in Windows.  When WM_PRINT is used to print the contents
@@ -2686,12 +2702,12 @@ private LRESULT printThemedNonclientFrame (long hwnd, long hDC, long flags) {
 					rect.left = rect.top = 0;
 					rect.right = width;
 					rect.bottom = height;
-					int border = Math.max (0, getSystemMetrics (OS.SM_CXEDGE));
-					OS.ExcludeClipRect (hDC, border, border,
-							Math.max (border, width - border),
-							Math.max (border, height - border));
-					OS.DrawThemeBackground (display.hEditTheme (nativeZoom), hDC,
+					int insetX = getSystemMetrics (OS.SM_CXEDGE);
+					int insetY = getSystemMetrics (OS.SM_CYEDGE);
+					if (excludeNativeFrameClientArea (hDC, width, height, insetX, insetY)) {
+						OS.DrawThemeBackground (display.hEditTheme (nativeZoom), hDC,
 							OS.EP_EDITTEXT, OS.ETS_NORMAL, rect, null);
+					}
 				}
 			}
 		}
