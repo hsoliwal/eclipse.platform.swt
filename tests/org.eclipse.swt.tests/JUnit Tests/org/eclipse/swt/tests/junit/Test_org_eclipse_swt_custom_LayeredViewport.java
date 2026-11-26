@@ -792,6 +792,29 @@ public class Test_org_eclipse_swt_custom_LayeredViewport extends Test_org_eclips
     }
 
     @Test
+    public void testNativeSiblingPanCannotPublishStaleShowFromResizeCallback() {
+        Button control = new Button(viewport, SWT.PUSH);
+        Layer layer = viewport.addControlLayer("remote", control, 0, 0, 40, 20);
+        viewport.setOrigin(100000, 0);
+        assertFalse(control.getVisible());
+        layer.setWorldBounds(0, 0, 60, 30); // hidden: deferred native resize
+        int[] show = {0}, resize = {0};
+        control.addListener(SWT.Show, event -> show[0]++);
+        control.addListener(SWT.Resize, event -> {
+            resize[0]++;
+            viewport.setOrigin(100000, 0); // reenter full placement inside setBounds
+        });
+        viewport.setOrigin(0, 0); // initially in view, but listener moves it out
+        for (int attempts = 0; attempts < 32 && control.getVisible(); attempts++) {
+            if (!viewport.getDisplay().readAndDispatch()) viewport.update();
+        }
+        assertTrue(resize[0] >= 1, "native bounds must dispatch the adversarial Resize callback");
+        assertEquals(0, show[0], "never publish obsolete Show before replaying the new projection");
+        assertFalse(control.getVisible(), "the reentrant pan hides the native child");
+        assertEquals(100000, viewport.getOriginX());
+    }
+
+    @Test
     public void testControlLayersStackInLayerOrder() {
         org.eclipse.swt.widgets.Button a = new org.eclipse.swt.widgets.Button(viewport, SWT.PUSH);
         org.eclipse.swt.widgets.Button b = new org.eclipse.swt.widgets.Button(viewport, SWT.PUSH);

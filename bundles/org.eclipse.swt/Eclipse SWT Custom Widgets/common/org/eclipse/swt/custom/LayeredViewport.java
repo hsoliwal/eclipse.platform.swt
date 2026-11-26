@@ -2875,7 +2875,13 @@ public final class LayeredViewport extends Canvas {
                 // A synchronous native callback may remove/dispose the owner or
                 // change the projection. Never apply the outer stale visibility.
                 if (isDisposed() || layer.removed || control.isDisposed() || layer.control != control) return;
-                if (!layer.controlPlacementPending && control.getVisible() != shown) {
+                // A resize callback can re-enter setOrigin/setZoom while the
+                // full sibling traversal is active. Defer the outer visibility
+                // write until that new global projection is reconciled; never
+                // emit an obsolete transient Show/Hide native event.
+                if (!layer.controlPlacementPending
+                        && !(placingControls && controlsPlacementPending)
+                        && control.getVisible() != shown) {
                     control.setVisible(shown);
                 }
             } while (layer.controlPlacementPending && ++passes < 2);
