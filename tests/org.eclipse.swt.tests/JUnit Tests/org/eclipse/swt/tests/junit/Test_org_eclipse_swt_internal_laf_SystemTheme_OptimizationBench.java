@@ -25,7 +25,7 @@ import org.junit.jupiter.api.*;
 /**
  * Optimization pass bench of the OS light/dark switch (FlatLaf #204, docs/m3/allwidgets-viewport/OPTIMIZATION_LEDGER.tsv):
  * n canvases of 8 x 8 pixels in one shell, each with a delegate that paints with four colour keys and measures with
- * one metric key. The hot operation is the switch the {@link SystemTheme.Follower} makes when the preference changes
+ * one metric key. The hot operation is the switch the {@link org.eclipse.swt.internal.laf.SystemTheme.Follower} makes when the preference changes
  * (<code>setLookAndFeel</code> between <code>light</code> and <code>dark</code>, then the paint); the bench also
  * reports the follower's check when nothing changed, and counts the layouts and paints a switch causes (a cheap
  * repaint lays nothing out). Opt-in: <code>-Dswt.allwidgets.bench=true</code>; sizes
