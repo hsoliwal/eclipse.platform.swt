@@ -2093,13 +2093,17 @@ LRESULT WM_UPDATEUISTATE (long wParam, long lParam) {
 private void drawNativeBevelRing (long hwnd, long hDC, int edge) {
 	RECT rect = new RECT ();
 	if (!OS.GetWindowRect (hwnd, rect)) return;
-	rect.right -= rect.left;
-	rect.bottom -= rect.top;
-	rect.left = rect.top = 0;
+	int width = rect.right - rect.left;
+	int height = rect.bottom - rect.top;
+	if (width <= 0 || height <= 0) return;
 	int inset = getSystemMetrics (OS.SM_CXEDGE);
-	OS.ExcludeClipRect (hDC, inset, inset,
-			Math.max (inset, rect.right - inset),
-			Math.max (inset, rect.bottom - inset));
+	/* A frame too small for two edge bands has no safe client exclusion.
+	 * Refuse custom GDI painting rather than touching client pixels. */
+	if (inset <= 0 || width <= 2L * inset || height <= 2L * inset) return;
+	rect.left = rect.top = 0;
+	rect.right = width;
+	rect.bottom = height;
+	OS.ExcludeClipRect (hDC, inset, inset, width - inset, height - inset);
 	OS.DrawEdge (hDC, rect, edge, OS.BF_RECT);
 }
 
