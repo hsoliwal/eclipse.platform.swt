@@ -603,6 +603,30 @@ public void test_drawLineIIII() {
 	gc.drawLine(0,0,0,20);
 }
 
+/**
+ * Public GC antialias contract: a primitive stroke must not silently change
+ * the mode requested by its caller for subsequent drawing on the same GC.
+ * In particular, this catches a Cairo BEST override that survives drawLine().
+ * The original drawLine geometry/oracle tests remain unchanged.
+ */
+@Test
+public void test_drawLineAndPolylinePreserveAntialiasSetting() {
+    int[] requested = { SWT.DEFAULT, SWT.OFF, SWT.ON };
+    int[] afterLine = new int[requested.length];
+    int[] afterPolyline = new int[requested.length];
+    for (int i = 0; i < requested.length; i++) {
+        gc.setAntialias(requested[i]);
+        assertEquals(requested[i], gc.getAntialias(), "explicit mode must be observable before drawing");
+        gc.drawLine(10 + 2 * i, 10, 40, 40);
+        afterLine[i] = gc.getAntialias();
+        gc.drawPolyline(new int[] { 10, 50, 30, 45, 40, 10 });
+        afterPolyline[i] = gc.getAntialias();
+    }
+    assertAll("SWT GC antialias state after native primitives",
+            () -> assertArrayEquals(requested, afterLine, "drawLine must preserve requested mode"),
+            () -> assertArrayEquals(requested, afterPolyline, "drawPolyline must inherit requested mode"));
+}
+
 @Test
 public void test_drawOvalIIII() {
 	gc.drawOval(10, 0, 20, 30);
