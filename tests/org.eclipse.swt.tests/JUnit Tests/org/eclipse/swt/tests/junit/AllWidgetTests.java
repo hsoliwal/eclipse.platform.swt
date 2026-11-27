@@ -136,6 +136,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_custom_CTabFolder_ViewportDifferential.class, //
 		Test_org_eclipse_swt_custom_ScrolledComposite_OptimizationBench.class, //
 		Test_org_eclipse_swt_custom_StyledText_LineStore.class, //
+		Test_org_eclipse_swt_custom_StyledText_HeightExtent.class, //
 		Test_org_eclipse_swt_custom_StyledText_ViewportDifferential.class, //
 		Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport.class, //
 		Test_org_eclipse_swt_widgets_AllWidgets_ResizeSweep.class, //

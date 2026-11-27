@@ -33,6 +33,14 @@ import org.eclipse.swt.graphics.*;
  * <li>Sizes: width and height ints over a window of lines (the whole document in
  * exact mode, the visible lines plus overscan in viewport mode) with the
  * transient bits of the line (dirty layout, wrapped, has style, dirty paint).</li>
+ * <li>Extent (exact mode): per block of {@link #BLOCK} lines, the sum of the
+ * measured heights, the counts of lines without a height or a width, a width
+ * bound and the count of negative heights, with Fenwick trees over the sums
+ * and counts. Prefix heights, the next or previous unmeasured line and the line
+ * at a pixel distance cost O(log(lines / BLOCK) + BLOCK) instead of a loop over
+ * every line. The blocks follow every size write; an edit that changes the line
+ * count marks the blocks from the edit on for a rebuild on the next query (the
+ * same lines the size arrays move).</li>
  * </ul>
  * Plain Java (arrays and ints only), GWT-safe.
  */
@@ -48,6 +56,11 @@ final class StyledTextLineStore {
 	static final int LINE_STYLE = ALIGNMENT | INDENT | VERTICAL_INDENT | WRAP_INDENT | JUSTIFY | TABSTOPS;
 	/* Transient bits of a line in the size window. */
 	static final int DIRTY_LAYOUT = 1 << 16, WRAPPED = 1 << 17, HAS_STYLE = 1 << 18, DIRTY_PAINT = 1 << 19;
+	/**
+	 * Low bits of a line's {@link #lineBits}: the line spacing its size was measured
+	 * with, plus one; 0 = not recorded (cleared with the size).
+	 */
+	static final int SPACING_MASK = 0xFFFF;
 
 	/** Kinds with a value array, in bit order; JUSTIFY keeps its value in JUSTIFY_ON. */
 	static final int KIND_COUNT = 9;
@@ -74,6 +87,31 @@ final class StyledTextLineStore {
 	boolean windowed;
 	int sizeBase;
 	int[] width = new int[0], height = new int[0], lineBits = new int[0];
+	/* Extent of the size window (exact mode only: not windowed, base 0) */
+	//FLLDCIM: VIEWPORT - prefix extent over the height lane; blocks of BLOCK lines, Fenwick trees over the blocks
+	static final int BLOCK_SHIFT = 6, BLOCK = 1 << BLOCK_SHIFT;
+	/** Ints per block in {@link #blockInts}: lines without a height, without a width, width bound, negative heights. */
+	static final int BLOCK_INTS = 4, NO_HEIGHT = 0, NO_WIDTH = 1, MAX_WIDTH = 2, NEGATIVE = 3;
+	/** Width bound of a block that must be recomputed before use. */
+	static final int STALE = Integer.MIN_VALUE;
+	/** Whether the blocks describe the current arrays (else they are rebuilt on the next query). */
+	boolean extentValid;
+	int extentBlocks;
+	/** Blocks [dirtyFrom, dirtyTo) are recomputed from the arrays on the next query. */
+	int dirtyFrom = Integer.MAX_VALUE, dirtyTo;
+	/** Measured heights below zero in the window: searches by pixel distance need monotone sums. */
+	int negativeHeights;
+	long[] blockHeight = new long[0], heightTree = new long[1];
+	int[] blockInts = new int[0], noHeightTree = new int[1], noWidthTree = new int[1];
+	/**
+	 * Horizontal trim (margins and caret width) that the measured widths include:
+	 * {@link #UNMEASURED} while no width is kept, {@link #MIXED_TRIM} once widths of
+	 * two trims coexist (until every size is reset).
+	 */
+	int sizeTrim = UNMEASURED;
+	static final int MIXED_TRIM = -2;
+	/** Height prefix of the block found by the last {@link #findHeightBlock(long)}. */
+	private long searchSum;
 
 	StyledTextLineStore() {
 		Arrays.fill(lastWrite, -1);
@@ -534,14 +572,57 @@ int lineBits(int line) {
 void setSize(int line, int lineWidth, int lineHeight, int bits) {
 	int i = line - sizeBase;
 	if (i >= 0 && i < width.length) {
+		if (extentValid) {
+			extentChange(i, lineWidth, lineHeight);
+		}
 		width[i] = lineWidth;
 		height[i] = lineHeight;
 		lineBits[i] = (lineBits[i] & DIRTY_PAINT) | bits;
 	}
 }
+/** Notes the trim a width is measured with (see {@link #sizeTrim}). */
+void noteTrim(int trim) {
+	if (sizeTrim != trim) {
+		sizeTrim = sizeTrim == UNMEASURED ? trim : MIXED_TRIM;
+	}
+}
+/** Whether {@code line} has a measured size whose width includes exactly {@code trim}. */
+boolean measuredWithTrim(int line, int trim) {
+	return sizeTrim == trim && width(line) != UNMEASURED && height(line) != UNMEASURED;
+}
+/** The {@link #SPACING_MASK} bits recording {@code spacing} (0 when it does not fit). */
+static int spacingBits(int spacing) {
+	return spacing >= 0 && spacing < SPACING_MASK ? spacing + 1 : 0;
+}
+/** Records the line spacing the height of {@code line} was computed with. */
+void recordSpacing(int line, int spacing) {
+	int i = line - sizeBase;
+	if (i >= 0 && i < lineBits.length) {
+		lineBits[i] = (lineBits[i] & ~SPACING_MASK) | spacingBits(spacing);
+	}
+}
+/**
+ * Whether the size of {@code line} may not be what a layout with line spacing
+ * {@code spacing} gives: its size was measured, or its height estimated, with
+ * another spacing or with none recorded, or the line is outside the window. A line
+ * with no size has nothing measured to be stale.
+ */
+boolean spacingChanged(int line, int spacing) {
+	int i = line - sizeBase;
+	if (i < 0 || i >= lineBits.length) {
+		return true;
+	}
+	if (width[i] == UNMEASURED && height[i] == UNMEASURED) {
+		return false;
+	}
+	return (lineBits[i] & SPACING_MASK) - 1 != spacing;
+}
 void setHeight(int line, int lineHeight) {
 	int i = line - sizeBase;
 	if (i >= 0 && i < height.length) {
+		if (extentValid) {
+			extentChange(i, width[i], lineHeight);
+		}
 		height[i] = lineHeight;
 	}
 }
@@ -558,6 +639,8 @@ void unmarkLines(int start, int end, int bits) {
 	}
 }
 void resetAllSizes() {
+	extentValid = false;
+	sizeTrim = UNMEASURED;
 	Arrays.fill(width, UNMEASURED);
 	Arrays.fill(height, UNMEASURED);
 	Arrays.fill(lineBits, DIRTY_LAYOUT);
@@ -565,7 +648,19 @@ void resetAllSizes() {
 /** Marks lines [start, end) unmeasured (the part inside the window). */
 void resetSizes(int start, int end) {
 	int from = Math.max(0, start - sizeBase), to = Math.min(width.length, end - sizeBase);
+	if (from == 0 && to >= Math.min(width.length, lineCount - sizeBase)) {
+		sizeTrim = UNMEASURED; // every size of the window is reset
+	}
 	if (from < to) {
+		if (extentValid) {
+			if (to - from > 4 * BLOCK) {
+				markDirty(from >> BLOCK_SHIFT, ((to - 1) >> BLOCK_SHIFT) + 1);
+			} else {
+				for (int i = from; i < to; i++) {
+					extentChange(i, UNMEASURED, UNMEASURED);
+				}
+			}
+		}
 		Arrays.fill(width, from, to, UNMEASURED);
 		Arrays.fill(height, from, to, UNMEASURED);
 		for (int i = from; i < to; i++) {
@@ -614,6 +709,7 @@ void follow(int top) {
 	}
 }
 private void rebase(int base, int capacity) {
+	extentValid = false;
 	if (capacity == width.length) {
 		// same capacity: move the overlap in place (no allocation while scrolling)
 		int shift = base - sizeBase;
@@ -673,9 +769,11 @@ void shiftSizes(int startLine, int replaceLineCount, int newLineCount) {
 	int capacity = width.length, base = sizeBase;
 	if (startIndex <= base) {
 		sizeBase = base + delta; // edit above the window: its lines all move
+		extentValid = false;
 		return;
 	}
 	int low = Math.max(0, startLine - base);
+	markDirty(low >> BLOCK_SHIFT, extentBlocks); // the lines from the edit on move
 	int src = startIndex - base, dst = src + delta, length = capacity - src;
 	if (dst < 0) {
 		src -= dst;
@@ -703,6 +801,388 @@ private void invalidateSlots(int from, int to) {
 		Arrays.fill(height, from, to, UNMEASURED);
 		Arrays.fill(lineBits, from, to, DIRTY_LAYOUT);
 	}
+}
+/* ----------------------------------------------------------------- extent */
+/*
+ * The extent answers the sums the widget would otherwise compute with a loop over
+ * the height lane. A line without a height (UNMEASURED) adds 0 to the height sums
+ * and 1 to the count of lines without a height; callers handle those lines one by
+ * one (they measure or estimate them) and take the measured runs between them from
+ * the blocks. Valid only in exact mode, where the window is the whole document.
+ */
+/** Brings the blocks up to date; false when the window is not the whole document (viewport mode). */
+boolean ensureExtent() {
+	if (windowed || sizeBase != 0) {
+		return false;
+	}
+	int blocks = (height.length + BLOCK - 1) >> BLOCK_SHIFT;
+	if (!extentValid || blocks != extentBlocks) {
+		if (blockHeight.length != blocks) {
+			blockHeight = new long[blocks];
+			blockInts = new int[blocks * BLOCK_INTS];
+			heightTree = new long[blocks + 1];
+			noHeightTree = new int[blocks + 1];
+			noWidthTree = new int[blocks + 1];
+		} else {
+			Arrays.fill(blockInts, 0);
+		}
+		extentBlocks = blocks;
+		negativeHeights = 0;
+		dirtyFrom = 0;
+		dirtyTo = blocks;
+		extentValid = true;
+	}
+	if (dirtyFrom < dirtyTo) {
+		for (int b = dirtyFrom; b < dirtyTo; b++) {
+			recomputeBlock(b);
+		}
+		buildTrees();
+		dirtyFrom = Integer.MAX_VALUE;
+		dirtyTo = 0;
+	}
+	return true;
+}
+/** Whether the extent covers lines [0, to) (exact mode). */
+boolean extentCovers(int to) {
+	return to <= height.length && ensureExtent();
+}
+/** Whether lines [0, to) can be searched by pixel distance: covered, and no measured height is negative. */
+boolean extentSearchable(int to) {
+	return extentCovers(to) && negativeHeights == 0;
+}
+private void markDirty(int fromBlock, int toBlock) {
+	if (extentValid) {
+		dirtyFrom = Math.min(dirtyFrom, fromBlock);
+		dirtyTo = Math.max(dirtyTo, Math.min(toBlock, extentBlocks));
+	}
+}
+private void recomputeBlock(int b) {
+	int start = b << BLOCK_SHIFT, end = Math.min(height.length, start + BLOCK);
+	long sum = 0;
+	int noHeight = 0, noWidth = 0, negative = 0, bound = UNMEASURED;
+	for (int i = start; i < end; i++) {
+		int h = height[i], w = width[i];
+		if (h == UNMEASURED) {
+			noHeight++;
+		} else {
+			sum += h;
+			if (h < UNMEASURED) {
+				negative++;
+			}
+		}
+		if (w == UNMEASURED) {
+			noWidth++;
+		}
+		bound = Math.max(bound, w);
+	}
+	int p = b * BLOCK_INTS;
+	negativeHeights += negative - blockInts[p + NEGATIVE];
+	blockHeight[b] = sum;
+	blockInts[p + NO_HEIGHT] = noHeight;
+	blockInts[p + NO_WIDTH] = noWidth;
+	blockInts[p + MAX_WIDTH] = bound;
+	blockInts[p + NEGATIVE] = negative;
+}
+/** Builds the three Fenwick trees from the block values, in linear time. */
+private void buildTrees() {
+	int n = extentBlocks;
+	for (int i = 1; i <= n; i++) {
+		heightTree[i] = blockHeight[i - 1];
+		noHeightTree[i] = blockInts[(i - 1) * BLOCK_INTS + NO_HEIGHT];
+		noWidthTree[i] = blockInts[(i - 1) * BLOCK_INTS + NO_WIDTH];
+	}
+	for (int i = 1; i <= n; i++) {
+		int j = i + (i & -i);
+		if (j <= n) {
+			heightTree[j] += heightTree[i];
+			noHeightTree[j] += noHeightTree[i];
+			noWidthTree[j] += noWidthTree[i];
+		}
+	}
+}
+/** Applies one line's size change (window index {@code i}, before the arrays are written) to its block. */
+private void extentChange(int i, int newWidth, int newHeight) {
+	int b = i >> BLOCK_SHIFT;
+	if (b >= dirtyFrom && b < dirtyTo || b >= extentBlocks) {
+		return; // recomputed on the next query
+	}
+	int oldWidth = width[i], oldHeight = height[i];
+	int p = b * BLOCK_INTS;
+	long dh = known(newHeight) - known(oldHeight);
+	if (dh != 0) {
+		blockHeight[b] += dh;
+		for (int k = b + 1; k <= extentBlocks; k += k & -k) {
+			heightTree[k] += dh;
+		}
+	}
+	int dn = (newHeight == UNMEASURED ? 1 : 0) - (oldHeight == UNMEASURED ? 1 : 0);
+	if (dn != 0) {
+		blockInts[p + NO_HEIGHT] += dn;
+		add(noHeightTree, b, dn);
+	}
+	dn = (newWidth == UNMEASURED ? 1 : 0) - (oldWidth == UNMEASURED ? 1 : 0);
+	if (dn != 0) {
+		blockInts[p + NO_WIDTH] += dn;
+		add(noWidthTree, b, dn);
+	}
+	dn = (newHeight < UNMEASURED ? 1 : 0) - (oldHeight < UNMEASURED ? 1 : 0);
+	if (dn != 0) {
+		blockInts[p + NEGATIVE] += dn;
+		negativeHeights += dn;
+	}
+	int bound = blockInts[p + MAX_WIDTH];
+	if (bound != STALE) {
+		if (newWidth > bound) {
+			blockInts[p + MAX_WIDTH] = newWidth;
+		} else if (oldWidth == bound && newWidth < oldWidth) {
+			blockInts[p + MAX_WIDTH] = STALE; // the widest line may have shrunk: recomputed when asked
+		}
+	}
+}
+private void add(int[] tree, int b, int delta) {
+	for (int k = b + 1; k <= extentBlocks; k += k & -k) {
+		tree[k] += delta;
+	}
+}
+static long known(int height) {
+	return height == UNMEASURED ? 0 : height;
+}
+private long heightBlocks(int blocks) {
+	long sum = 0;
+	for (int k = blocks; k > 0; k -= k & -k) {
+		sum += heightTree[k];
+	}
+	return sum;
+}
+private static int countBlocks(int[] tree, int blocks) {
+	int sum = 0;
+	for (int k = blocks; k > 0; k -= k & -k) {
+		sum += tree[k];
+	}
+	return sum;
+}
+/** Largest block count k whose count prefix over blocks [0, k) is at most {@code target}. */
+private int findBlock(int[] tree, int target) {
+	int k = 0;
+	for (int step = Integer.highestOneBit(Math.max(1, extentBlocks)); step > 0; step >>= 1) {
+		int next = k + step;
+		if (next <= extentBlocks && tree[next] <= target) {
+			k = next;
+			target -= tree[next];
+		}
+	}
+	return k;
+}
+/** Largest block count k whose height prefix over blocks [0, k) is at most {@code target}; the prefix is left in {@link #searchSum}. */
+private int findHeightBlock(long target) {
+	int k = 0;
+	long sum = 0;
+	for (int step = Integer.highestOneBit(Math.max(1, extentBlocks)); step > 0; step >>= 1) {
+		int next = k + step;
+		if (next <= extentBlocks && sum + heightTree[next] <= target) {
+			k = next;
+			sum += heightTree[next];
+		}
+	}
+	searchSum = sum;
+	return k;
+}
+/**
+ * Sum of the measured heights of lines [0, line) (window indices); lines without
+ * a height add 0. Requires {@link #extentCovers(int) extentCovers(line)}.
+ */
+long heightPrefix(int line) {
+	int b = line >> BLOCK_SHIFT, start = b << BLOCK_SHIFT;
+	long sum;
+	if (line - start <= BLOCK / 2 || b >= extentBlocks) {
+		sum = heightBlocks(b);
+		for (int i = start; i < line; i++) {
+			sum += known(height[i]);
+		}
+	} else {
+		// nearer the end of the block: subtract the rest of the block
+		sum = heightBlocks(b + 1);
+		for (int i = line, end = Math.min(height.length, start + BLOCK); i < end; i++) {
+			sum -= known(height[i]);
+		}
+	}
+	return sum;
+}
+/** Sum of the measured heights of lines [from, to). */
+long heightSum(int from, int to) {
+	if (to - from <= BLOCK) {
+		long sum = 0;
+		for (int i = from; i < to; i++) {
+			sum += known(height[i]);
+		}
+		return sum;
+	}
+	return heightPrefix(to) - heightPrefix(from);
+}
+/** Number of lines in [from, to) without a height. */
+int noHeightCount(int from, int to) {
+	return from < to ? noHeightPrefix(to) - noHeightPrefix(from) : 0;
+}
+private int noHeightPrefix(int line) {
+	int b = line >> BLOCK_SHIFT, start = b << BLOCK_SHIFT;
+	int count = countBlocks(noHeightTree, b);
+	for (int i = start; i < line; i++) {
+		if (height[i] == UNMEASURED) {
+			count++;
+		}
+	}
+	return count;
+}
+/**
+ * First line in [from, to) without a height ({@code widthLane} false) or without
+ * a width (true), else {@code to}. Scans at most two blocks.
+ */
+int nextUnmeasured(int from, int to, boolean widthLane) {
+	if (from >= to) {
+		return to;
+	}
+	int[] lane = widthLane ? width : height;
+	int b = from >> BLOCK_SHIFT;
+	int end = Math.min(to, (b + 1) << BLOCK_SHIFT);
+	for (int i = from; i < end; i++) {
+		if (lane[i] == UNMEASURED) {
+			return i;
+		}
+	}
+	if (end >= to) {
+		return to;
+	}
+	int[] tree = widthLane ? noWidthTree : noHeightTree;
+	int k = findBlock(tree, countBlocks(tree, b + 1)); // the first later block holding such a line
+	int start = k << BLOCK_SHIFT;
+	if (k >= extentBlocks || start >= to) {
+		return to;
+	}
+	for (int i = start, last = Math.min(to, start + BLOCK); i < last; i++) {
+		if (lane[i] == UNMEASURED) {
+			return i;
+		}
+	}
+	return to;
+}
+/** Last line in [from, to) without a height, else {@code from - 1}. Scans at most two blocks. */
+int previousUnmeasured(int from, int to) {
+	if (from >= to) {
+		return from - 1;
+	}
+	int b = (to - 1) >> BLOCK_SHIFT, start = Math.max(from, b << BLOCK_SHIFT);
+	for (int i = to - 1; i >= start; i--) {
+		if (height[i] == UNMEASURED) {
+			return i;
+		}
+	}
+	if (start <= from) {
+		return from - 1;
+	}
+	int count = countBlocks(noHeightTree, b);
+	if (count == 0) {
+		return from - 1;
+	}
+	int k = findBlock(noHeightTree, count - 1); // the block holding the last such line before block b
+	int blockStart = k << BLOCK_SHIFT;
+	for (int i = Math.min(height.length, blockStart + BLOCK) - 1; i >= Math.max(from, blockStart); i--) {
+		if (height[i] == UNMEASURED) {
+			return i;
+		}
+	}
+	return from - 1;
+}
+/**
+ * Smallest line L in [from, to) whose height sum over [from, L] exceeds
+ * {@code rest}, else -1. Lines in [from, to) must all have a height; requires
+ * {@link #extentSearchable(int) extentSearchable(to)}.
+ */
+int firstExceeding(int from, int to, long rest) {
+	if (from >= to) {
+		return -1;
+	}
+	if (rest < 0) {
+		return from;
+	}
+	if (to - from <= BLOCK) {
+		long sum = 0;
+		for (int i = from; i < to; i++) {
+			sum += known(height[i]);
+			if (sum > rest) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	long target = heightPrefix(from) + rest;
+	// the line is in the block after the largest block prefix that is at most target
+	int k = findHeightBlock(target);
+	long sum = searchSum;
+	for (int i = k << BLOCK_SHIFT, end = Math.min(to, (k + 1) << BLOCK_SHIFT); i < end; i++) {
+		sum += known(height[i]);
+		if (sum > target) {
+			return i;
+		}
+	}
+	return -1;
+}
+/**
+ * Largest line L in [from, to) whose height sum over [L, to) exceeds
+ * {@code rest}, else -1. Lines in [from, to) must all have a height; requires
+ * {@link #extentSearchable(int) extentSearchable(to)}.
+ */
+int lastExceeding(int from, int to, long rest) {
+	if (from >= to) {
+		return -1;
+	}
+	if (rest < 0) {
+		return to - 1;
+	}
+	if (to - from <= BLOCK) {
+		long sum = 0;
+		for (int i = to - 1; i >= from; i--) {
+			sum += known(height[i]);
+			if (sum > rest) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	// the largest L with heightPrefix(L) <= heightPrefix(to) - rest - 1
+	long target = heightPrefix(to) - rest - 1;
+	if (target < 0) {
+		return -1;
+	}
+	int k = findHeightBlock(target);
+	long sum = searchSum;
+	int line = Math.min(to - 1, (k + 1) << BLOCK_SHIFT);
+	for (int i = k << BLOCK_SHIFT, end = Math.min(to, (k + 1) << BLOCK_SHIFT); i < end; i++) {
+		sum += known(height[i]);
+		if (sum > target) {
+			line = i;
+			break;
+		}
+	}
+	return line >= from ? line : -1;
+}
+/**
+ * Whether every line of block {@code b} has a width and a height and none is
+ * wider than {@code maxWidth}: a measuring pass over the block changes nothing.
+ */
+boolean blockSettled(int b, int maxWidth) {
+	int p = b * BLOCK_INTS;
+	if (blockInts[p + NO_WIDTH] != 0 || blockInts[p + NO_HEIGHT] != 0) {
+		return false;
+	}
+	int bound = blockInts[p + MAX_WIDTH];
+	if (bound == STALE) {
+		bound = UNMEASURED;
+		for (int i = b << BLOCK_SHIFT, end = Math.min(width.length, (b + 1) << BLOCK_SHIFT); i < end; i++) {
+			bound = Math.max(bound, width[i]);
+		}
+		blockInts[p + MAX_WIDTH] = bound;
+	}
+	return bound <= maxWidth;
 }
 /* ------------------------------------------------------------------- copy */
 /** A store with the same attributes (printing); sizes start unmeasured. */
@@ -734,6 +1214,8 @@ long footprintBytes() {
 	bytes += arrayBytes(patterns.length, 4) + arrayBytes(lastWrite.length, 4);
 	bytes += arrayBytes(objects.length, 4) + arrayBytes(objectRgba.length, 4) + arrayBytes(objectSlots.length, 4);
 	bytes += arrayBytes(width.length, 4) + arrayBytes(height.length, 4) + arrayBytes(lineBits.length, 4);
+	bytes += arrayBytes(blockHeight.length, 8) + arrayBytes(heightTree.length, 8) + arrayBytes(blockInts.length, 4);
+	bytes += arrayBytes(noHeightTree.length, 4) + arrayBytes(noWidthTree.length, 4);
 	return bytes;
 }
 static long arrayBytes(int length, int elementBytes) {

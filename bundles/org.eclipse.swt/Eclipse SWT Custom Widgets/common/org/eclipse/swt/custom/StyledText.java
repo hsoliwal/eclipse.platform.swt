@@ -1184,12 +1184,12 @@ void calculateTopIndex(int delta) {
 		if (delta >= 0) {
 			delta -= topIndexY;
 			int lineIndex = Math.max(0, topIndex);
-			while (lineIndex < lineCount) {
-                if (delta <= 0) {
-                    break;
-                }
-				delta -= renderer.getCachedLineHeight(lineIndex);
-				lineIndex++;
+			if (delta > 0 && lineIndex < lineCount) {
+				//FLLDCIM: VIEWPORT - the lines scrolled past are summed from the height extent
+				// the lines are consumed while delta stays positive: up to the first whose sum reaches delta
+				int reached = renderer.walkForward(lineIndex, lineCount, delta - 1L, false);
+				delta = (int) (delta - renderer.walkSum);
+				lineIndex = reached < lineCount ? reached + 1 : lineCount;
 			}
 			int lineHeight = 0;
 			if (lineExists(lineIndex)) {
@@ -1208,17 +1208,30 @@ void calculateTopIndex(int delta) {
 		} else {
 			delta -= topIndexY;
 			int lineIndex = topIndex;
-			while (lineIndex > 0) {
-				int previousLineIndex = lineIndex - 1;
-				int lineHeight = 0;
-				if (lineExists(previousLineIndex)) {
-					lineHeight = renderer.getCachedLineHeight(previousLineIndex);
+			if (lineIndex <= lineCount) {
+				//FLLDCIM: VIEWPORT - the lines scrolled past are summed from the height extent
+				// a line above is consumed while delta plus the heights consumed stays at most 0
+				int stopped = renderer.walkBackward(lineIndex, 0, -(long) delta, false);
+				if (stopped >= 0) {
+					delta = (int) (delta + renderer.walkSum - renderer.walkStop);
+					lineIndex = stopped + 1;
+				} else if (lineIndex > 0) {
+					delta = (int) (delta + renderer.walkSum);
+					lineIndex = 0;
 				}
-                if (delta + lineHeight > 0) {
-                    break;
-                }
-				delta += lineHeight;
-				lineIndex--;
+			} else {
+				while (lineIndex > 0) {
+					int previousLineIndex = lineIndex - 1;
+					int lineHeight = 0;
+					if (lineExists(previousLineIndex)) {
+						lineHeight = renderer.getCachedLineHeight(previousLineIndex);
+					}
+					if (delta + lineHeight > 0) {
+						break;
+					}
+					delta += lineHeight;
+					lineIndex--;
+				}
 			}
 			int lineHeight = 0;
 			if (lineExists(lineIndex)) {
@@ -1348,7 +1361,26 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 			maxHeight = Math.max(maxHeight, hHint);
 		}
 		int measured = 0;
+		// taller than the display, a line's measured size is its layout's bounds (the layouts are no longer all
+		// resident; a resident layout was only reused while the size it gave was current): no shaping per line,
+		// unless the line spacing provider now answers another spacing than the one the line was measured with
+		// (the provider is asked once per line, as laying the line out asks it); that line is laid out instead,
+		// which applies the new spacing as before
+		boolean measuredSizes = !wordWrap && clientAreaHeight > renderer.residencyHeight();
+		boolean spacingProvider = renderer.getLineSpacingProvider() != null;
+		int trim = leftMargin + rightMargin + getCaretWidth();
 		for (int lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+			if (measuredSizes && renderer.store.measuredWithTrim(lineIndex, trim)
+					&& (!spacingProvider || !renderer.store.spacingChanged(lineIndex, renderer.layoutSpacing(lineIndex)))) {
+				//FLLDCIM: VIEWPORT - the size lane answers for a measured line whose spacing is current
+				measured++;
+				height += renderer.store.height(lineIndex);
+				width = Math.max(width, renderer.store.width(lineIndex) - trim);
+				if ((isFixedLineHeight() || estimate) && height > maxHeight) {
+					break;
+				}
+				continue;
+			}
 			TextLayout layout = renderer.getTextLayout(lineIndex);
 			measured++;
 			int wrapWidth = layout.getWidth();
@@ -4279,16 +4311,13 @@ public int getLinePixel(int lineIndex) {
 		}
 	}
 	int height = topIndexY;
+	//FLLDCIM: VIEWPORT - measured heights from the prefix extent; unmeasured lines are measured in order
 	if (lineIndex > topIndex) {
-		for (int i = Math.max(topIndex, 0); i < Math.min(lineIndex, lineCount); i++) {
-			height += renderer.getLineHeight(i);
-		}
+		height += (int) renderer.sumLineHeights(Math.max(topIndex, 0), Math.min(lineIndex, lineCount), true);
 	} else {
 		int lastLineToConsider = Math.min(topIndex - 1, lineCount - 1);
 		int firstLineToConsider = Math.max(0, lineIndex);
-		for (int i = firstLineToConsider; i <= lastLineToConsider; i++) {
-			height -= renderer.getLineHeight(i);
-		}
+		height -= (int) renderer.sumLineHeights(firstLineToConsider, lastLineToConsider + 1, true);
 	}
 	return height + topMargin;
 }
@@ -4322,11 +4351,22 @@ public int getLineIndex(int y) {
 	}
 	int line = topIndex;
 	if (y < topIndexY) {
-		while (y < topIndexY && line > 0) {
-			y += renderer.getLineHeight(--line);
-		}
+		//FLLDCIM: VIEWPORT - the lines above the top line, nearest first, from the prefix extent
+		// stops at the first line whose height brings y to the top line's pixel, or at line 0
+		int reached = renderer.walkBackward(line, 0, (long) topIndexY - y - 1, true);
+		return reached >= 0 ? reached : Math.min(line, 0);
 	} else {
 		int lineCount = content.getLineCount();
+		if (lineExists(line) && line < lineCount - 1) {
+			//FLLDCIM: VIEWPORT - the lines below the top line from the prefix extent
+			// stops at the first line whose height takes y past the top line's pixel, or at the last line
+			int last = lineCount - 1;
+			int reached = renderer.walkForward(line, last, (long) y - topIndexY, true);
+			if (reached == last) {
+				renderer.getLineHeight(last); // the loop reads the height of the line it ends on
+			}
+			return reached;
+		}
 		int lineHeight = 0;
 		if (lineExists(line)) {
 			lineHeight = renderer.getLineHeight(line);
@@ -5518,18 +5558,13 @@ int getVerticalScrollOffset() {
 	}
 	if (verticalScrollOffset == -1 && offsetEstimated) {
 		// heights above the anchor from the cache (estimates for lines not yet re-measured)
-		long height = 0;
-		for (int i = 0; i < topIndex; i++) {
-			height += renderer.getCachedLineHeight(i);
-		}
+		long height = renderer.sumLineHeights(0, topIndex, false);
 		verticalScrollOffset = (int) Math.max(0, Math.min(Integer.MAX_VALUE, height - topIndexY));
 	}
 	if (verticalScrollOffset == -1) {
 		renderer.calculate(0, topIndex);
-		int height = 0;
-		for (int i = 0; i < topIndex; i++) {
-			height += renderer.getCachedLineHeight(i);
-		}
+		//FLLDCIM: VIEWPORT - the heights above the top line from the prefix extent
+		int height = (int) renderer.sumLineHeights(0, topIndex, false);
 		height -= topIndexY;
 		verticalScrollOffset = height;
 	}
@@ -8066,12 +8101,39 @@ public Runnable print(Printer printer, StyledTextPrintOptions options) {
 public void redraw() {
 	super.redraw();
 	int itemCount = getPartialBottomIndex() - topIndex + 1;
+	int maxLineIndex = renderer.maxWidthLineIndex;
 	renderer.reset(topIndex, itemCount);
 	if (!defer(DEFER_LAYOUT)) {
-		renderer.calculate(topIndex, itemCount);
+		if (clientAreaHeight > renderer.residencyHeight()) {
+			//FLLDCIM: VIEWPORT - taller than the display: the lines whose layouts are resident are measured now,
+			// the other lines of the client area in idle slices (every size in the range is reset all the same)
+			renderer.calculateResident(topIndex, topIndex + itemCount);
+			// the widest line too (one layout, as measureClientArea after resetCache): the content width, so the
+			// horizontal scroll bar's maximum and selection, does not drop while the idle pass runs
+			if (lineExists(maxLineIndex)) {
+				renderer.calculate(maxLineIndex, 1);
+			}
+			renderer.calculateIdle();
+		} else {
+			renderer.calculate(topIndex, itemCount);
+		}
 	}
 	setScrollBars(false);
 	doMouseLinkCursor();
+}
+/**
+ * Redraws after the renderer found a line whose spacing changed (and reset that
+ * line's size): {@link #redraw()}, except on a widget taller than the display,
+ * where every other line is checked against its own recorded spacing when it is
+ * laid out, so only a repaint is needed (no reset of the whole client area).
+ */
+void redrawAfterSpacingChange() {
+	if (clientAreaHeight > renderer.residencyHeight()) {
+		//FLLDCIM: VIEWPORT - one line's spacing changed: repaint, no reset of the other lines
+		super.redraw();
+		return;
+	}
+	redraw();
 }
 /**
  * Causes the rectangular area of the receiver specified by
