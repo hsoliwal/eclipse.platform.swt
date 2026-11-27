@@ -104,7 +104,7 @@ public class Table extends Composite {
 	int virtualFocusIndex = -1, virtualAnchorIndex = -1, virtualCallbackDepth;
 	double virtualPixelRemainder;
 	boolean reconcilingVirtualView, virtualViewScheduled, virtualViewChanged;
-	boolean updatingVirtualAdjustment, updatingVirtualGeometry, virtualViewRangeDirty;
+	boolean updatingVirtualAdjustment, updatingVirtualGeometry, virtualViewRangeDirty, virtualScrollBarMoved;
 	int itemCount, columnCount, lastIndexOf, sortDirection;
 	int selectionCountOnPress,selectionCountOnRelease;
 	long ignoreCell;
@@ -167,6 +167,12 @@ public class Table extends Composite {
 	static final int CELL_TYPES = CELL_SURFACE + 1;
 	static final byte [] VIRTUAL_MODEL_ITEM_COUNT =
 			Converter.wcsToMbcs ("swt-item-count", true);
+	/*
+	 * "true" makes a GTK3 VIRTUAL table attach only its visible rows plus overscan to the GtkTreeView (the bounded
+	 * view), so the native view keeps no node per logical row and a count change does not rebuild one. By default the
+	 * whole logical model is attached (one GtkTreeView node per row) until the bounded view passes the full-model
+	 * table's tests as the default.
+	 */
 	static final String VIRTUAL_BOUNDED_VIEW_PROPERTY =
 			"org.eclipse.swt.internal.gtk.virtualTableBoundedView";
 
@@ -316,6 +322,13 @@ void updateVirtualViewport () {
     }
 	if (usesBoundedVirtualView ()) {
 		updateVirtualViewportGeometry ();
+		/*
+		 * A hidden or zero-width table has no visible rows, as below. Its attached rows stay planned from the client
+		 * height (reconcileVirtualView re-reads the geometry), so it draws at once when it is shown again.
+		 */
+		if (!isDisposed () && !(isVisible () && getClientAreaInPixels ().width > 0)) {
+			virtualViewport.setUniformGeometry (itemCount, virtualRowExtent, 0, virtualViewport.firstVisible ());
+		}
 		return;
 	}
 	Rectangle client = getClientAreaInPixels ();
@@ -701,8 +714,9 @@ void updateVirtualLogicalAdjustment () {
 	updatingVirtualAdjustment = true;
 	OS.g_signal_handlers_block_matched (verticalAdjustment, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, VALUE_CHANGED);
 	try {
-		GTK.gtk_adjustment_configure (verticalAdjustment, value, 0, upper, virtualRowExtent,
-				Math.max (1, virtualViewport.visibleCount () - 1) * (double)virtualRowExtent, page);
+		double before = GTK.gtk_adjustment_get_value (verticalAdjustment);
+		GTK.gtk_adjustment_configure (verticalAdjustment, value, 0, upper, page * 0.1, page * 0.9, page);
+		if (GTK.gtk_adjustment_get_value (verticalAdjustment) != before) virtualScrollBarMoved = true;
 		long horizontal = GTK.gtk_scrolled_window_get_hadjustment (scrolledHandle);
 		int dirty = viewportLayers.scrollTo (usesBoundedHorizontalView () ? virtualHorizontalWindow ().origin ()
 				: horizontal != 0 ? GTK.gtk_adjustment_get_value (horizontal) : 0, value);
@@ -711,6 +725,19 @@ void updateVirtualLogicalAdjustment () {
 		OS.g_signal_handlers_unblock_matched (verticalAdjustment, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, VALUE_CHANGED);
 		updatingVirtualAdjustment = previous;
 	}
+}
+
+/*
+ * The logical adjustment is configured with the vertical bar's handler blocked (updateVirtualLogicalAdjustment), so
+ * that a re-projection does not re-enter the window replacement. A programmatic or keyboard scroll still moves the
+ * bar, which the full-model table reports with a Selection event of its vertical bar (GTK moves its adjustment): send
+ * it once the window is settled.
+ */
+void sendVirtualScrollBarSelection () {
+	if (!virtualScrollBarMoved || reconcilingVirtualView || isDisposed ()) return;
+	virtualScrollBarMoved = false;
+	ScrollBar bar = verticalBar;
+	if (bar != null && !bar.isDisposed ()) bar.gtk_value_changed (verticalAdjustment);
 }
 
 void alignVirtualViewAdjustment () {
@@ -791,19 +818,20 @@ void restoreVirtualSelection () {
 		scheduleVirtualView ();
 		return;
 	}
-	if (GTK.gtk_widget_get_realized (handle) && virtualFocusIndex >= virtualViewStart
-			&& virtualFocusIndex - virtualViewStart < virtualViewCount) {
-		/* GTK may measure the attached rows while setting its cursor. A SetData
-		 * provider can dispose the widget, so mediate that finite window before
-		 * entering GTK instead of destroying its tree from a native callback. */
+	int cursorRow = virtualCursorRow ();
+	if (pageSource == null && GTK.gtk_widget_get_realized (handle) && cursorRow >= 0) {
+		/*
+		 * GTK may ask for the cursor row while setting its cursor. A SetData provider can dispose the widget, so that
+		 * row is asked before entering GTK instead of from a native callback. The other attached rows are asked when
+		 * GTK paints them, as in the full-model table. The paint that follows a window replacement can still reach
+		 * overscan rows; a window replaced again before its next paint gets no SetData and no facade.
+		 */
 		int start = virtualViewStart, count = virtualViewCount;
 		long generation = virtualModelGeneration;
-		for (int row = 0; row < count; row++) {
-			if (!checkData (_getItem (start + row))) return;
-			if (virtualViewSnapshotChanged (generation, start, count)) {
-				scheduleVirtualView ();
-				return;
-			}
+		if (cursorRow < itemCount && !checkData (_getItem (cursorRow))) return;
+		if (virtualViewSnapshotChanged (generation, start, count)) {
+			scheduleVirtualView ();
+			return;
 		}
 	}
 	long selection = OS.g_object_ref (GTK.gtk_tree_view_get_selection (handle));
@@ -811,7 +839,7 @@ void restoreVirtualSelection () {
 	updatingVirtualAdjustment = true;
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	try {
-		long focus = virtualViewPath (virtualFocusIndex);
+		long focus = virtualViewPath (cursorRow);
 		if (focus != 0) {
 			try { GTK.gtk_tree_view_set_cursor (handle, focus, 0, false); }
 			finally { GTK.gtk_tree_path_free (focus); }
@@ -842,6 +870,34 @@ void restoreVirtualSelection () {
 	notifyVirtualAccessibleFocus ();
 }
 
+/* The row GtkTreeView's cursor marks: the logical focus row, -1 without one (GTK then has no cursor, as before). */
+int virtualCursorReference () {
+	return virtualFocusIndex;
+}
+
+/*
+ * The attached row that carries GtkTreeView's cursor (restoreVirtualSelection), or -1. Replacing the attached rows
+ * drops GTK's cursor, and a tree view without a cursor puts one on its first row when it takes focus and, in a SINGLE
+ * (browse) table, selects that row: a selection the user never made, reported as a Selection event. When the cursor
+ * reference is not attached, the cursor stays on the first fully visible attached row instead; keys that act on the
+ * cursor row first attach the reference (gtk3_key_press_event). The logical focus is unchanged.
+ */
+int virtualCursorRow () {
+	int reference = virtualCursorReference ();
+	if (reference < 0 || virtualViewCount <= 0) return -1;
+	if (reference >= virtualViewStart && reference - virtualViewStart < virtualViewCount) return reference;
+	long row = virtualViewport.firstVisible () + (virtualPixelRemainder > 0 ? 1L : 0L);
+	long last = Math.min ((long)itemCount, (long)virtualViewStart + virtualViewCount) - 1;
+	if (last < virtualViewStart) return -1;
+	return (int)Math.max (virtualViewStart, Math.min (row, last));
+}
+
+/* GtkTreeView's cursor is a stand-in: the cursor reference is a logical row that is not attached (virtualCursorRow). */
+boolean virtualCursorDetached () {
+	int reference = virtualCursorReference ();
+	return reference >= 0 && (reference < virtualViewStart || reference - virtualViewStart >= virtualViewCount);
+}
+
 void reconcileVirtualView () {
 	if (!usesBoundedVirtualView () || virtualViewport == null || reconcilingVirtualView || isDisposed ()) return;
 	if (currentItem != null || virtualCallbackDepth != 0 || updatingVirtualGeometry) {
@@ -867,6 +923,7 @@ void reconcileVirtualView () {
 		notifyVirtualAccessibleModel ();
 		notifyVirtualAccessibleFocus ();
 		notifyVirtualAccessibleStates ();
+		sendVirtualScrollBarSelection ();
 		return;
 	}
 	long selection = OS.g_object_ref (GTK.gtk_tree_view_get_selection (handle));
@@ -909,6 +966,7 @@ void reconcileVirtualView () {
 		notifyVirtualAccessibleModel ();
 		notifyVirtualAccessibleFocus ();
 		notifyVirtualAccessibleStates ();
+		sendVirtualScrollBarSelection ();
 	}
 }
 
@@ -972,7 +1030,7 @@ int firstVirtualSelectionIndex () {
 void virtualNavigate (int key, int mask) {
 	if (itemCount == 0) return;
 	int index = virtualFocusIndex >= 0 ? virtualFocusIndex : virtualViewport.firstVisible ();
-	int page = Math.max (1, virtualViewport.visibleCount () - 1);
+	int page = Math.max (1, (int)(0.9 * virtualBodyExtent / Math.max (1, virtualRowExtent)));
 	int next = switch (key) {
 		case GDK.GDK_Up, GDK.GDK_KP_Up -> Math.max (0, index - 1);
 		case GDK.GDK_Down, GDK.GDK_KP_Down -> Math.min (itemCount - 1, index + 1);
@@ -982,6 +1040,14 @@ void virtualNavigate (int key, int mask) {
 		case GDK.GDK_Page_Down, GDK.GDK_KP_Page_Down -> index + Math.min (itemCount - 1 - index, page);
 		default -> index;
 	};
+	boolean vertical = switch (key) {
+		case GDK.GDK_Up, GDK.GDK_KP_Up, GDK.GDK_Down, GDK.GDK_KP_Down -> true;
+		default -> false;
+	};
+	if (vertical && next == index && virtualFocusIndex >= 0) {
+		if (virtualCursorDetached ()) revealVirtualIndex (virtualFocusIndex, false);
+		return;
+	}
 	boolean control = (mask & GDK.GDK_CONTROL_MASK) != 0;
 	boolean shift = (mask & GDK.GDK_SHIFT_MASK) != 0 && (style & SWT.MULTI) != 0;
 	if (shift) {
@@ -1034,7 +1100,17 @@ void initializeVirtualAccessible () {
 	accessible.internal_setTableHeaderRows (1);
 	accessible.internal_setSelectedRowHandler (this::virtualAccessibleSelectedRowAt);
 	accessible.internal_setFocusHandler (this::setFocus);
-	accessible.internal_setSelectionHandlers (() -> { deselectAll (); return true; }, () -> { selectAll (); return true; });
+	accessible.internal_setSelectionHandlers (() -> {
+		boolean changed = getSelectionCount () > 0;
+		deselectAll ();
+		if (changed) sendVirtualAccessibleSelection ();
+		return true;
+	}, () -> {
+		boolean changed = (style & SWT.MULTI) != 0 && getSelectionCount () < itemCount;
+		selectAll ();
+		if (changed) sendVirtualAccessibleSelection ();
+		return true;
+	});
 	accessible.addAccessibleControlListener (new AccessibleControlAdapter () {
 		@Override public void getRole (AccessibleControlEvent event) { event.detail = ACC.ROLE_TABLE; }
 		@Override public void getChildCount (AccessibleControlEvent event) {
@@ -1053,7 +1129,7 @@ void initializeVirtualAccessible () {
 		@Override public void getChildAtPoint (AccessibleControlEvent event) {
 			Point point = toControl (event.x, event.y);
 			long [] path = new long [1], column = new long [1];
-			if (!GTK.gtk_tree_view_get_path_at_pos (handle, virtualNativeX (point.x), point.y - getHeaderHeight (), path, column, null, null)
+			if (!GTK.gtk_tree_view_get_path_at_pos (handle, virtualNativeX (point.x), point.y, path, column, null, null)
 					|| path [0] == 0) { event.childID = ACC.CHILDID_SELF; return; }
 			try {
 				int [] index = new int [1];
@@ -1093,13 +1169,17 @@ void initializeVirtualAccessible () {
 		}
 		@Override public void selectRow (AccessibleTableEvent event) {
 			if (event.row < 0 || event.row >= virtualAccessibleRowCount ()) return;
+			boolean changed = !isSelected (event.row) || ((style & SWT.SINGLE) != 0 && getSelectionCount () != 1);
 			select (event.row);
 			event.result = ACC.OK;
+			if (changed) sendVirtualAccessibleSelection ();
 		}
 		@Override public void deselectRow (AccessibleTableEvent event) {
 			if (event.row < 0 || event.row >= virtualAccessibleRowCount ()) return;
+			boolean changed = isSelected (event.row);
 			deselect (event.row);
 			event.result = ACC.OK;
+			if (changed) sendVirtualAccessibleSelection ();
 		}
 	});
 }
@@ -1209,7 +1289,7 @@ Accessible virtualAccessibleHeader (int visualColumn) {
 			GTK.gtk_tree_view_get_cell_area (handle, 0, nativeColumn, area);
 			if (usesBoundedHorizontalView ()) virtualLogicalCellArea (nativeColumn, area);
 			if (usesBoundedHorizontalView () && (style & SWT.MIRRORED) != 0) area.x = getClientWidth () - area.width - area.x;
-			Point point = toDisplay (area.x, 0);
+			Point point = toDisplay (area.x, -getHeaderHeight ());
 			event.x = point.x;
 			event.y = point.y;
 			event.width = column != null ? column.getWidth () : area.width;
@@ -1234,6 +1314,17 @@ Accessible virtualAccessibleCell (long row, int visualColumn) {
 	return row >= 0 && row < itemCount ? virtualAccessibleCell (getItem ((int)row), visualColumn) : null;
 }
 
+/* An assistive technology changed the selection: reported as GTK's own accessible does, through gtk_changed. */
+void sendVirtualAccessibleSelection () {
+	if (isDisposed ()) return;
+	notifyVirtualAccessibleSelection ();
+	TableItem item = getFocusItem ();
+	if (item == null) return;
+	Event event = new Event ();
+	event.item = item;
+	sendSelectionEvent (SWT.Selection, event, false);
+}
+
 Accessible virtualAccessibleCell (TableItem item, int visualColumn) {
 	if (item == null || item.isDisposed () || visualColumn < 0 || visualColumn >= virtualAccessibleColumnCount ()) return null;
 	int modelColumn = virtualAccessibleModelColumn (visualColumn);
@@ -1247,12 +1338,20 @@ Accessible virtualAccessibleCell (TableItem item, int visualColumn) {
 	cell.internal_setNativeStates (() -> virtualAccessibleCheckStates (item));
 	cell.internal_setFocusHandler (() -> {
 		if (item.isDisposed ()) return false;
-		virtualFocusIndex = virtualAnchorIndex = virtualItems.indexOfIdentity (item);
-		revealVirtualIndex (virtualItems.indexOfIdentity (item), false);
+		/* GTK's own accessible puts the cursor on the cell's row, which selects that row alone (set_cursor) */
+		int index = virtualItems.indexOfIdentity (item);
+		boolean changed = index >= 0 && !(getSelectionCount () == 1 && isSelected (index));
+		if (index >= 0) {
+			virtualViewport.selection ().clear ();
+			virtualViewport.selection ().setSelected (index, true);
+		}
+		virtualFocusIndex = virtualAnchorIndex = index;
+		revealVirtualIndex (index, false);
 		if (isDisposed () || item.isDisposed ()) return false;
 		restoreVirtualSelection ();
 		boolean focused = setFocus ();
 		notifyVirtualAccessibleFocus ();
+		if (changed && !isDisposed ()) sendVirtualAccessibleSelection ();
 		return focused;
 	});
 	cell.internal_setScrollHandlers (type -> virtualAccessibleScrollTo (item, column, type),
@@ -1292,7 +1391,7 @@ Accessible virtualAccessibleCell (TableItem item, int visualColumn) {
 			if (!virtualAccessibleRowShowing (row) || !virtualAccessibleColumnShowing (column)) {
 				event.x = event.y = Integer.MIN_VALUE;
 			} else {
-				Point screen = toDisplay (bounds.x, bounds.y + getHeaderHeight ());
+				Point screen = toDisplay (bounds.x, bounds.y);
 				event.x = screen.x;
 				event.y = screen.y;
 			}
@@ -1438,7 +1537,9 @@ boolean virtualAccessibleScrollToPoint (TableItem item, TableColumn column, Acce
 	if (isDisposed () || item.isDisposed ()) return false;
 	long row = virtualItems.indexOfIdentity (item);
 	if (row < 0) return false;
-	GTK.gtk_adjustment_set_value (verticalAdjustment, row * (double)virtualRowExtent - (local.y - (double)getHeaderHeight ()));
+	/* a point relative to the table's accessible includes the header; control coordinates start below it */
+	double rowY = point.detail == ATK.ATK_XY_PARENT ? local.y - (double)getHeaderHeight () : local.y;
+	GTK.gtk_adjustment_set_value (verticalAdjustment, row * (double)virtualRowExtent - rowY);
 	if (usesBoundedHorizontalView ()) {
 		int index = virtualAccessibleItemColumn (column);
 		VirtualViewportPlanner.HorizontalWindow window = virtualHorizontalWindow ();
@@ -1752,9 +1853,13 @@ long virtualCellDataProc (long tree_column, long cell, long tree_model, long ite
 		return 0;
 	}
 	C.memmove (index, pathIndices, 4);
-	/* with a page source, only a row on screen is a paint request; a row measured elsewhere asks nothing */
-	boolean pageShown = pageSource == null || pageRowShown (path);
 	if (usesBoundedVirtualView () && tree_model == virtualViewModel) index [0] += virtualViewStart;
+	/*
+	 * With a page source, only a row on screen is a paint request; a row measured elsewhere asks nothing. A bounded
+	 * view answers from its logical rows: GTK can draw a replaced window before it scrolled it to the logical top, and
+	 * a row measured through the whole logical model has a logical path.
+	 */
+	boolean pageShown = pageSource == null || (usesBoundedVirtualView () ? virtualRowShown (index [0]) : pageRowShown (path));
 	GTK.gtk_tree_path_free (path);
 	if (index [0] < 0 || index [0] >= itemCount) return 0;
 	if (pageSource != null && answerPageCell (tree_column, cell, index [0], pageShown)) return 0;
@@ -2054,6 +2159,11 @@ boolean answerPageCell (long tree_column, long cell, int index, boolean shown) {
 		OS.g_object_set (cell, OS.font_desc, 0L, 0);
 	}
 	return true;
+}
+
+/* A logical row of the bounded view is on screen (pageRowShown). */
+boolean virtualRowShown (int index) {
+	return !pageMeasuring && virtualViewport != null && GTK.gtk_widget_get_mapped (handle) && virtualAccessibleRowShowing (index);
 }
 
 /*
@@ -3738,6 +3848,12 @@ public TableItem getItem (Point point) {
 	if (getHeaderVisible() && GTK.GTK4) {
 		y -= getHeaderHeight();
 	}
+    if (usesBoundedVirtualView () && !usesBoundedHorizontalView ()) {
+		int index = virtualIndexAt (point.x, y);
+		TableItem item = index >= 0 ? _getItem (index) : null;
+		if (item != null) item.pinVirtualFacade ();
+		return item;
+    }
     if (usesBoundedHorizontalView () && (point.x < 0 || point.x >= getClientWidth () || y < 0 || y >= virtualBodyExtent)) return null;
     if (!GTK.gtk_tree_view_get_path_at_pos(handle, virtualNativeX (point.x), y, path, null, null, null)) {
         return null;
@@ -3760,6 +3876,23 @@ public TableItem getItem (Point point) {
 	}
 	GTK.gtk_tree_path_free (path [0]);
 	return item;
+}
+
+/*
+ * The logical row under a point of the bounded view, from its logical geometry (uniform rows in fixed-height mode):
+ * the attached rows may just have been replaced (setTopIndex) and not yet laid out by GTK. As
+ * gtk_tree_view_get_path_at_pos, it is -1 left of or above the rows, right of the horizontal extent and below the
+ * last row.
+ */
+int virtualIndexAt (int x, int y) {
+	if (x < 0 || y < 0 || itemCount == 0 || !GTK.gtk_widget_get_realized (handle)) return -1;
+	/* the tree view's horizontal adjustment: the scrolled window's (no bounded horizontal view here) */
+	long horizontal = GTK.gtk_scrolled_window_get_hadjustment (scrolledHandle);
+	if (horizontal != 0 && x > GTK.gtk_adjustment_get_upper (horizontal)) return -1;
+	if (virtualRowExtent <= 1) updateVirtualViewportGeometry ();
+	if (isDisposed ()) return -1;
+	long row = virtualViewport.firstVisible () + (long)Math.floor ((y + virtualPixelRemainder) / Math.max (1, virtualRowExtent));
+	return row < itemCount ? (int)row : -1;
 }
 
 /* Translate a native hit while GTK is still applying a programmatic virtual scroll.
@@ -4549,13 +4682,33 @@ long gtk3_key_press_event (long widget, long event) {
 					GDK.GDK_Page_Up, GDK.GDK_KP_Page_Up, GDK.GDK_Page_Down, GDK.GDK_KP_Page_Down -> true;
 			default -> false;
 		};
-		boolean selectAll = (mask & GDK.GDK_CONTROL_MASK) != 0 && (key [0] == 'a' || key [0] == 'A');
+		boolean control = (mask & GDK.GDK_CONTROL_MASK) != 0 && (style & SWT.MULTI) != 0;
+		boolean unselectAll = control && ((mask & GDK.GDK_SHIFT_MASK) != 0 && (key [0] == 'a' || key [0] == 'A') || key [0] == '\\');
+		boolean selectAll = unselectAll || control && (key [0] == 'a' || key [0] == 'A' || key [0] == '/');
+		boolean cursorRowKey = switch (key [0]) {
+			/* Space of a CHECK table toggles the selected rows below and never reaches GTK; KP_Space does */
+			case GDK.GDK_space -> (style & SWT.CHECK) == 0;
+			case GDK.GDK_KP_Space, GDK.GDK_Return, GDK.GDK_ISO_Enter, GDK.GDK_KP_Enter -> true;
+			default -> false;
+		};
+		if (cursorRowKey && virtualCursorDetached ()) {
+			/* the focus row is not attached. As below, Enter sends the DefaultSelection before the key event */
+			if (key [0] == GDK.GDK_Return && (mask & (GDK.GDK_SUPER_MASK | GDK.GDK_META_MASK | GDK.GDK_HYPER_MASK | GDK.GDK_MOD1_MASK)) == 0) {
+				sendTreeDefaultSelection ();
+				if (isDisposed ()) return 1;
+			}
+			long result = super.gtk3_key_press_event (widget, event);
+			if (result != 0 || isDisposed ()) return result;
+			/* GtkTreeView selects, toggles or activates its cursor row: attach the reference, so that it is the cursor row */
+			revealVirtualIndex (virtualCursorReference (), false);
+			return isDisposed () ? 1 : 0;
+		}
 		if (navigation || selectAll) {
 			long result = super.gtk3_key_press_event (widget, event);
 			if (result != 0 || isDisposed ()) return result;
 			if (navigation) virtualNavigate (key [0], mask);
 			else {
-				if ((mask & GDK.GDK_SHIFT_MASK) != 0) deselectAll (); else selectAll ();
+				if (unselectAll) deselectAll (); else selectAll ();
 				TableItem item = getFocusItem ();
 				if (item != null) { Event selected = new Event (); selected.item = item; sendSelectionEvent (SWT.Selection, selected, false); }
 			}
@@ -5030,7 +5183,7 @@ public int indexOf (TableItem item) {
  */
 public boolean isSelected (int index) {
 	checkWidget();
-	if (usesBoundedVirtualView ()) return virtualViewport.selection ().isSelected (index);
+	if (usesBoundedVirtualView ()) return index >= 0 && index < itemCount && virtualViewport.selection ().isSelected (index);
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	byte [] buffer = Converter.wcsToMbcs (Integer.toString (index), true);
 	long path = GTK.gtk_tree_path_new_from_string (buffer);
@@ -5165,12 +5318,14 @@ void releaseChildren (boolean destroy) {
 void releaseWidget () {
 	releaseVirtualAccessibleChildren ();
 	disconnectVirtualAdjustments ();
-	if (virtualViewModel != 0) OS.g_object_unref (virtualViewModel);
 	if (virtualHorizontalAdjustment != 0) OS.g_object_unref (virtualHorizontalAdjustment);
 	virtualHorizontalAdjustment = horizontalAdjustment = 0;
 	if (virtualViewAdjustment != 0) OS.g_object_unref (virtualViewAdjustment);
-	virtualViewModel = virtualViewAdjustment = verticalAdjustment = 0;
+	virtualViewAdjustment = verticalAdjustment = 0;
+	/* deregister (super.releaseWidget) removes the window model from the display's widget table: release it after */
 	super.releaseWidget ();
+	if (virtualViewModel != 0) OS.g_object_unref (virtualViewModel);
+	virtualViewModel = 0;
     if (modelHandle != 0) {
         OS.g_object_unref(modelHandle);
     }
@@ -6099,6 +6254,7 @@ public void select (int index) {
 	if (usesBoundedVirtualView ()) {
 		if (index >= 0 && index < itemCount) {
 			if ((style & SWT.SINGLE) != 0) virtualViewport.selection ().clear ();
+			else if (!virtualViewport.selection ().isSelected (index)) virtualAnchorIndex = index;
 			virtualViewport.selection ().setSelected (index, true);
 			restoreVirtualSelection ();
 		}
@@ -6230,6 +6386,7 @@ public void select (int [] indices) {
 		for (int index : indices) {
 			if (index < 0 || index >= itemCount) continue;
 			if ((style & SWT.SINGLE) != 0) virtualViewport.selection ().clear ();
+			else if (!virtualViewport.selection ().isSelected (index)) virtualAnchorIndex = index;
 			virtualViewport.selection ().setSelected (index, true);
 		}
 		restoreVirtualSelection ();
