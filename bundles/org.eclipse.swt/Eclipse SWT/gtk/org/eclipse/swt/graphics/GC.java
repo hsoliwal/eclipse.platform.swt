@@ -1096,12 +1096,25 @@ public void drawLine(int x1, int y1, int x2, int y2) {
 	checkGC(DRAW);
 	long cairo = data.cairo;
 	double xOffset = data.cairoXoffset, yOffset = data.cairoYoffset;
-	if (Cairo.cairo_version() >= Cairo.CAIRO_VERSION_ENCODE(1, 12, 0)) {
+	// Preserve the historical Bug 470115 BEST mode for this line only.
+	// Restore the caller's Cairo mode before subsequent drawing operations.
+	boolean bestWorkaround = Cairo.cairo_version() >= Cairo.CAIRO_VERSION_ENCODE(1, 12, 0);
+	int previousAntialias = bestWorkaround
+			? Cairo.cairo_get_antialias(cairo) : Cairo.CAIRO_ANTIALIAS_DEFAULT;
+	boolean changedAntialias = bestWorkaround
+			&& previousAntialias != Cairo.CAIRO_ANTIALIAS_BEST;
+	if (changedAntialias) {
 		Cairo.cairo_set_antialias(cairo, Cairo.CAIRO_ANTIALIAS_BEST);
 	}
-	Cairo.cairo_move_to(cairo, x1 + xOffset, y1 + yOffset);
-	Cairo.cairo_line_to(cairo, x2 + xOffset, y2 + yOffset);
-	Cairo.cairo_stroke(cairo);
+	try {
+		Cairo.cairo_move_to(cairo, x1 + xOffset, y1 + yOffset);
+		Cairo.cairo_line_to(cairo, x2 + xOffset, y2 + yOffset);
+		Cairo.cairo_stroke(cairo);
+	} finally {
+		if (changedAntialias) {
+			Cairo.cairo_set_antialias(cairo, previousAntialias);
+		}
+	}
 }
 
 /**
