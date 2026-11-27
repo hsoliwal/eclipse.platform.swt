@@ -696,6 +696,8 @@ public final class LayeredViewport extends Canvas {
         private boolean removed;
         /* a control layer's native child, placed at the layer's bounds; null for painted layers */
         private Control control;
+        /* Nested SWT Resize/Show callbacks must not re-enter native placement. */
+        private boolean controlPlacing, controlPlacementPending, controlPlacementQueued;
         /* native: asked to be composited by the window system; nativeLayer is its native handle (0 while painted) */
         private boolean nativeRequested;
         private long nativeLayer;
@@ -1448,6 +1450,9 @@ public final class LayeredViewport extends Canvas {
     private boolean nativeClientGeometryRefreshing;
     private boolean nativeClientGeometryPending;
     private boolean nativeClientGeometryQueued;
+    // A bounds callback on one child can re-enter a full sibling placement
+    // through setOrigin/setZoom. Keep that fan-out off the native call stack.
+    private boolean placingControls, controlsPlacementPending, controlsPlacementQueued;
 
     public LayeredViewport(Composite parent, int style) {
         super(parent, style | SWT.DOUBLE_BUFFERED);
@@ -1551,6 +1556,27 @@ public final class LayeredViewport extends Canvas {
         placeControl(layer);
         orderControls();
         return layer;
+    }
+
+    /**
+     * Adds a native child with an exclusive live logical layer owner. Unlike
+     * {@link #addControlLayer}, this opt-in API refuses a Control already
+     * registered in any live layer of this viewport. The original method
+     * continues to accept shared references for source/behavior compatibility.
+     * Removing a layer does not dispose its application-owned Control.
+     */
+    public Layer addExclusiveControlLayer(String name, Control control,
+            long x, long y, long width, long height) {
+        checkWidget();
+        if (name == null || control == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (control.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (control.getParent() != this) SWT.error(SWT.ERROR_INVALID_PARENT);
+        // Registration is infrequent: scan the authoritative layer array,
+        // without a second ownership index or per-frame allocation.
+        for (int i = 0; i < count; i++) {
+            if (stack[i].control == control) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        return addControlLayer(name, control, x, y, width, height);
     }
 
     /** The control of a control layer, or null for a painted layer. */
@@ -2797,7 +2823,33 @@ public final class LayeredViewport extends Canvas {
 
     /* every control layer at its projected bounds */
     private void placeControls() {
-        for (Layer layer : orderSnapshot()) placeControl(layer);
+        if (isDisposed()) return;
+        if (placingControls) {
+            controlsPlacementPending = true;
+            return;
+        }
+        placingControls = true;
+        try {
+            int passes = 0;
+            do {
+                controlsPlacementPending = false;
+                for (Layer layer : orderSnapshot()) {
+                    if (isDisposed()) return;
+                    placeControl(layer);
+                }
+            } while (controlsPlacementPending && ++passes < 2);
+        } finally {
+            placingControls = false;
+        }
+        if (controlsPlacementPending && !controlsPlacementQueued && !isDisposed()) {
+            // One event-loop continuation, even when many children synchronously
+            // mutate the shared projection; no nested full-stack JNI traversal.
+            controlsPlacementQueued = true;
+            getDisplay().asyncExec(() -> {
+                controlsPlacementQueued = false;
+                if (!isDisposed()) placeControls();
+            });
+        }
     }
 
     /*
@@ -2807,22 +2859,62 @@ public final class LayeredViewport extends Canvas {
     private void placeControl(Layer layer) {
         Control control = layer.control;
         if (isDisposed() || layer.removed || control == null || control.isDisposed()) return;
-        Rectangle area = getClientArea();
-        long ox = layerOriginX(layer), oy = layerOriginY(layer);
-        double left = device(layer.x, ox, layerScaleX(layer)), top = device(layer.y, oy, layerScaleY(layer));
-        double right = device(layer.right, ox, layerScaleX(layer)), bottom = device(layer.bottom, oy, layerScaleY(layer));
-        boolean shown = layer.visible && layer.opacity > 0 && right > area.x && left < (double) area.x + area.width
-                && bottom > area.y && top < (double) area.y + area.height;
-        if (shown) {
-            int x = clampPixel(Math.floor(left), area.x - CONTROL_MARGIN, area.x + area.width);
-            int y = clampPixel(Math.floor(top), area.y - CONTROL_MARGIN, area.y + area.height);
-            int x1 = clampPixel(Math.ceil(right), area.x, area.x + area.width + CONTROL_MARGIN);
-            int y1 = clampPixel(Math.ceil(bottom), area.y, area.y + area.height + CONTROL_MARGIN);
-            control.setBounds(x, y, x1 - x, y1 - y);
+        if (layer.controlPlacing) {
+            // setBounds and setVisible can synchronously invoke application
+            // callbacks which mutate pan, zoom, bounds, visibility or lifetime.
+            layer.controlPlacementPending = true;
+            return;
         }
-        // setBounds may dispatch application resize listeners.
-        if (isDisposed() || layer.removed || control.isDisposed() || layer.control != control) return;
-        if (control.getVisible() != shown) control.setVisible(shown);
+        layer.controlPlacing = true;
+        try {
+            int passes = 0;
+            do {
+                layer.controlPlacementPending = false;
+                control = layer.control;
+                if (isDisposed() || layer.removed || control == null || control.isDisposed()) return;
+                Rectangle area = getClientArea();
+                long ox = layerOriginX(layer), oy = layerOriginY(layer);
+                double left = device(layer.x, ox, layerScaleX(layer));
+                double top = device(layer.y, oy, layerScaleY(layer));
+                double right = device(layer.right, ox, layerScaleX(layer));
+                double bottom = device(layer.bottom, oy, layerScaleY(layer));
+                boolean shown = layer.visible && layer.opacity > 0
+                        && right > area.x && left < (double) area.x + area.width
+                        && bottom > area.y && top < (double) area.y + area.height;
+                if (shown) {
+                    int x = clampPixel(Math.floor(left), area.x - CONTROL_MARGIN, area.x + area.width);
+                    int y = clampPixel(Math.floor(top), area.y - CONTROL_MARGIN, area.y + area.height);
+                    int x1 = clampPixel(Math.ceil(right), area.x, area.x + area.width + CONTROL_MARGIN);
+                    int y1 = clampPixel(Math.ceil(bottom), area.y, area.y + area.height + CONTROL_MARGIN);
+                    control.setBounds(x, y, x1 - x, y1 - y);
+                }
+                // A synchronous native callback may remove/dispose the owner or
+                // change the projection. Never apply the outer stale visibility.
+                if (isDisposed() || layer.removed || control.isDisposed() || layer.control != control) return;
+                // A resize callback can re-enter setOrigin/setZoom while the
+                // full sibling traversal is active. Defer the outer visibility
+                // write until that new global projection is reconciled; never
+                // emit an obsolete transient Show/Hide native event.
+                if (!layer.controlPlacementPending
+                        && !(placingControls && controlsPlacementPending)
+                        && control.getVisible() != shown) {
+                    control.setVisible(shown);
+                }
+            } while (layer.controlPlacementPending && ++passes < 2);
+        } finally {
+            layer.controlPlacing = false;
+        }
+        if (layer.controlPlacementPending && !layer.controlPlacementQueued
+                && !isDisposed() && !layer.removed) {
+            // At most one outstanding continuation for this layer. This also
+            // avoids recursive native setters when user listeners keep changing
+            // geometry; the event loop reconciles the latest state.
+            layer.controlPlacementQueued = true;
+            getDisplay().asyncExec(() -> {
+                layer.controlPlacementQueued = false;
+                if (!isDisposed() && !layer.removed) placeControl(layer);
+            });
+        }
     }
 
     /* the native Z order of the control layers' controls follows the layers' order, bottom to top */
