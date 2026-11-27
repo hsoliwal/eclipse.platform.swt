@@ -34,6 +34,7 @@ import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -425,12 +426,72 @@ public class Test_org_eclipse_swt_custom_StyledText_HeightExtent {
 		}
 	}
 
+	/**
+	 * computeSize of a StyledText taller than the display, after its line spacing
+	 * provider changed its answer without a reset by the application, applies the
+	 * new spacing, as laying every line out did: before the change it is the size
+	 * the widget was given, after it the size given to the same widget built with
+	 * the new answer (both computed while the widgets were not yet taller than the
+	 * display, by laying every line out).
+	 */
+	@Test
+	public void test_computeSizeOfAWidgetTallerThanTheDisplayAppliesAChangedProviderSpacing() throws Exception {
+		int[] spacing = {6};
+		StyledTextLineSpacingProvider provider = line -> line % 3 == 0 ? Integer.valueOf(spacing[0]) : null;
+		Point changed = tallWidget(provider).getSize();
+		shell.dispose();
+		spacing[0] = 2;
+		StyledText t = tallWidget(provider);
+		Point sized = t.getSize();
+		assertNotEquals(changed, sized, "the provider's answer changes the size");
+		Display display = t.getDisplay();
+		paintShownBand(t);
+		drain(display); // every line is measured with the answer 2
+		assertEquals(sized, t.computeSize(SWT.DEFAULT, SWT.DEFAULT), "computeSize before the change");
+		spacing[0] = 6;
+		assertEquals(changed, t.computeSize(SWT.DEFAULT, SWT.DEFAULT), "computeSize after the change");
+		drain(display);
+		assertEquals(changed, t.computeSize(SWT.DEFAULT, SWT.DEFAULT), "computeSize after the idle pass");
+	}
+
+	/**
+	 * redraw() of a StyledText taller than the display keeps its content width while
+	 * the idle pass runs and after it: the horizontal scroll bar's maximum and
+	 * selection and the horizontal offset are those before the redraw, as when every
+	 * line was measured again at once. The widest line is not resident.
+	 */
+	@Test
+	public void test_redrawOfAWidgetTallerThanTheDisplayKeepsTheHorizontalScrollBar() throws Exception {
+		StyledText t = tallWidget(null, SWT.MULTI | SWT.H_SCROLL, true);
+		Display display = t.getDisplay();
+		paintShownBand(t); // the top band is resident, the widest line is near the end
+		drain(display);
+		t.setHorizontalPixel(200);
+		drain(display);
+		ScrollBar bar = t.getHorizontalBar();
+		int maximum = bar.getMaximum(), selection = bar.getSelection(), offset = t.getHorizontalPixel();
+		assertTrue(offset > 0 && maximum > t.getClientArea().width, "scrolled right: offset " + offset + ", maximum " + maximum);
+		t.redraw();
+		assertEquals(maximum, bar.getMaximum(), "bar maximum while the idle pass runs");
+		assertEquals(selection, bar.getSelection(), "bar selection while the idle pass runs");
+		assertEquals(offset, t.getHorizontalPixel(), "horizontal offset while the idle pass runs");
+		drain(display);
+		assertEquals(maximum, bar.getMaximum(), "bar maximum after the idle pass");
+		assertEquals(selection, bar.getSelection(), "bar selection after the idle pass");
+		assertEquals(offset, t.getHorizontalPixel(), "horizontal offset after the idle pass");
+	}
+
 	/** A StyledText sized to its whole content in a ScrolledComposite, taller than the display. */
 	private StyledText tallWidget(StyledTextLineSpacingProvider spacing) {
+		return tallWidget(spacing, SWT.MULTI, false);
+	}
+
+	/** As {@link #tallWidget(StyledTextLineSpacingProvider)}; a wide widget has one long line near the end and is 300 pixels wide. */
+	private StyledText tallWidget(StyledTextLineSpacingProvider spacing, int style, boolean wide) {
 		shell = new Shell();
 		shell.setLayout(new FillLayout());
 		ScrolledComposite scrolled = new ScrolledComposite(shell, SWT.V_SCROLL);
-		StyledText t = new StyledText(scrolled, SWT.MULTI);
+		StyledText t = new StyledText(scrolled, style);
 		scrolled.setContent(t);
 		Display display = t.getDisplay();
 		int displayHeight = display.getClientArea().height;
@@ -438,13 +499,21 @@ public class Test_org_eclipse_swt_custom_StyledText_HeightExtent {
 		int lines = Math.min(18_000 / lineHeight, Math.max(600, 8 * displayHeight / lineHeight));
 		StringBuilder text = new StringBuilder();
 		for (int i = 0; i < lines; i++) {
-			text.append("line ").append(i).append(" with some words").append(i + 1 < lines ? "\n" : "");
+			text.append("line ").append(i).append(" with some words");
+			if (wide && i == lines - 8) {
+				text.append(" and many more words".repeat(60));
+			}
+			text.append(i + 1 < lines ? "\n" : "");
 		}
 		t.setText(text.toString());
 		if (spacing != null) {
 			t.setLineSpacingProvider(spacing);
 		}
-		t.setSize(t.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+		Point size = t.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+		if (wide) {
+			size.x = 300;
+		}
+		t.setSize(size);
 		shell.setBounds(30, 30, 400, 300);
 		shell.open();
 		drain(display);

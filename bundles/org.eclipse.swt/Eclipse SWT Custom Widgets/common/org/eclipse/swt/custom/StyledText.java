@@ -1362,12 +1362,17 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 		}
 		int measured = 0;
 		// taller than the display, a line's measured size is its layout's bounds (the layouts are no longer all
-		// resident; a resident layout was only reused while the size it gave was current): no shaping per line
+		// resident; a resident layout was only reused while the size it gave was current): no shaping per line,
+		// unless the line spacing provider now answers another spacing than the one the line was measured with
+		// (the provider is asked once per line, as laying the line out asks it); that line is laid out instead,
+		// which applies the new spacing as before
 		boolean measuredSizes = !wordWrap && clientAreaHeight > renderer.residencyHeight();
+		boolean spacingProvider = renderer.getLineSpacingProvider() != null;
 		int trim = leftMargin + rightMargin + getCaretWidth();
 		for (int lineIndex = 0; lineIndex < lineCount; lineIndex++) {
-			if (measuredSizes && renderer.store.measuredWithTrim(lineIndex, trim)) {
-				//FLLDCIM: VIEWPORT - the size lane answers for a measured line
+			if (measuredSizes && renderer.store.measuredWithTrim(lineIndex, trim)
+					&& (!spacingProvider || !renderer.store.spacingChanged(lineIndex, renderer.layoutSpacing(lineIndex)))) {
+				//FLLDCIM: VIEWPORT - the size lane answers for a measured line whose spacing is current
 				measured++;
 				height += renderer.store.height(lineIndex);
 				width = Math.max(width, renderer.store.width(lineIndex) - trim);
@@ -8096,12 +8101,18 @@ public Runnable print(Printer printer, StyledTextPrintOptions options) {
 public void redraw() {
 	super.redraw();
 	int itemCount = getPartialBottomIndex() - topIndex + 1;
+	int maxLineIndex = renderer.maxWidthLineIndex;
 	renderer.reset(topIndex, itemCount);
 	if (!defer(DEFER_LAYOUT)) {
 		if (clientAreaHeight > renderer.residencyHeight()) {
 			//FLLDCIM: VIEWPORT - taller than the display: the lines whose layouts are resident are measured now,
 			// the other lines of the client area in idle slices (every size in the range is reset all the same)
 			renderer.calculateResident(topIndex, topIndex + itemCount);
+			// the widest line too (one layout, as measureClientArea after resetCache): the content width, so the
+			// horizontal scroll bar's maximum and selection, does not drop while the idle pass runs
+			if (lineExists(maxLineIndex)) {
+				renderer.calculate(maxLineIndex, 1);
+			}
 			renderer.calculateIdle();
 		} else {
 			renderer.calculate(topIndex, itemCount);
