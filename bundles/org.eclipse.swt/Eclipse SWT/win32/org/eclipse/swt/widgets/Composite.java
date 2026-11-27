@@ -2096,14 +2096,14 @@ private void drawNativeBevelRing (long hwnd, long hDC, int edge) {
 	int width = rect.right - rect.left;
 	int height = rect.bottom - rect.top;
 	if (width <= 0 || height <= 0) return;
-	int inset = getSystemMetrics (OS.SM_CXEDGE);
-	/* A frame too small for two edge bands has no safe client exclusion.
-	 * Refuse custom GDI painting rather than touching client pixels. */
-	if (inset <= 0 || width <= 2L * inset || height <= 2L * inset) return;
+	int insetX = getSystemMetrics (OS.SM_CXEDGE);
+	int insetY = getSystemMetrics (OS.SM_CYEDGE);
+	/* Separate native horizontal/vertical edge metrics; never draw over
+	 * client pixels when the frame or GDI clip is unavailable. */
+	if (!excludeNativeFrameClientArea (hDC, width, height, insetX, insetY)) return;
 	rect.left = rect.top = 0;
 	rect.right = width;
 	rect.bottom = height;
-	OS.ExcludeClipRect (hDC, inset, inset, width - inset, height - inset);
 	OS.DrawEdge (hDC, rect, edge, OS.BF_RECT);
 }
 

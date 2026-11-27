@@ -482,6 +482,105 @@ public class Test_org_eclipse_swt_widgets_Composite {
 		}
 	}
 
+
+	/**
+	 * The ordinary Win32 WS_EX_CLIENTEDGE theme renderer shares the same
+	 * bounded native client exclusion as the Composite/Control bevel painters.
+	 * Degenerate HWND sizes and the native print path must not mutate the
+	 * caller's clipping state or paint outside the native HWND bounds.
+	 */
+	@Test
+	public void test_nativeThemedTinyFramePrintKeepsCallerHdc() {
+		Composite control = new Composite(shell, SWT.BORDER);
+		try {
+			shell.setSize(240, 160);
+			shell.open();
+			assertEquals(SWT.DEFAULT, control.getBorderRelief());
+			assertEquals(SWT.NONE, control.getBevelBorder());
+			assertTrue((OS.GetWindowLong(control.handle, OS.GWL_EXSTYLE)
+					& OS.WS_EX_CLIENTEDGE) != 0);
+			Image image = new Image(display, 128, 96);
+			GC gc = new GC(image);
+			try {
+				gc.setBackground(display.getSystemColor(SWT.COLOR_MAGENTA));
+				for (int extent : new int[] {0, 1, 2, 3, 4, 8, 12}) {
+					control.setSize(extent, extent);
+					gc.fillRectangle(image.getBounds());
+					int outsideBefore = OS.GetPixel(gc.handle, 80, 60);
+					assertTrue(outsideBefore != -1);
+					var originalClip = gc.getClipping();
+					OS.SendMessage(control.handle, OS.WM_PRINT, gc.handle,
+							OS.PRF_NONCLIENT | OS.PRF_CHECKVISIBLE);
+					assertEquals(originalClip, gc.getClipping(),
+							"Themed WM_PRINT must restore the caller's HDC clip");
+					assertEquals(outsideBefore, OS.GetPixel(gc.handle, 80, 60),
+							"Themed WM_PRINT must not spill beyond a tiny HWND");
+				}
+			} finally {
+				gc.dispose();
+				image.dispose();
+			}
+		} finally {
+			control.dispose();
+		}
+	}
+
+
+	/**
+	 * Native GDI must report an empty caller clip, which all three original
+	 * Win32 non-client painters must preserve. Verify pixels after restoring
+	 * the offscreen image's full clipping rectangle.
+	 */
+	@Test
+	public void test_nativeNullClipSkipsNonclientPaintAndPreservesCallerDC() {
+		Composite themed = new Composite(shell, SWT.BORDER);
+		Composite bevel = new Composite(shell, SWT.BORDER);
+		Button etched = new Button(shell, SWT.PUSH);
+		try {
+			themed.setBounds(8, 8, 128, 72);
+			bevel.setBounds(8, 8, 128, 72);
+			etched.setBounds(8, 8, 128, 72);
+			bevel.setBevelBorder(SWT.SHADOW_OUT);
+			etched.setBorderRelief(SWT.SHADOW_ETCHED_IN);
+			shell.setSize(260, 180);
+			shell.open();
+			for (Control control : new Control[] {themed, bevel, etched}) {
+				assertTrue(OS.IsWindowVisible(control.handle));
+				Image image = new Image(display, 160, 96);
+				GC gc = new GC(image);
+				try {
+					gc.setBackground(display.getSystemColor(SWT.COLOR_MAGENTA));
+					gc.fillRectangle(image.getBounds());
+					int topBefore = OS.GetPixel(gc.handle, 64, 0);
+					int clientBefore = OS.GetPixel(gc.handle, 64, 36);
+					assertTrue(topBefore != -1 && clientBefore != -1);
+					gc.setClipping(0, 0, 0, 0);
+					var emptyBefore = gc.getClipping();
+					assertEquals(OS.NULLREGION, OS.GetClipBox(gc.handle, new RECT()),
+							"Fixture HDC must have no drawable clip");
+					OS.SendMessage(control.handle, OS.WM_PRINT, gc.handle,
+							OS.PRF_NONCLIENT | OS.PRF_CHECKVISIBLE);
+					assertEquals(OS.NULLREGION, OS.GetClipBox(gc.handle, new RECT()),
+							"WM_PRINT must preserve the empty native GDI clip");
+					assertEquals(emptyBefore, gc.getClipping(),
+							"WM_PRINT must restore caller-owned clipping");
+					gc.setClipping(image.getBounds());
+					assertEquals(topBefore, OS.GetPixel(gc.handle, 64, 0),
+							"Non-client print must not change pixels under NULLREGION");
+					assertEquals(clientBefore, OS.GetPixel(gc.handle, 64, 36),
+							"Native print must not change client pixels under NULLREGION");
+				} finally {
+					gc.dispose();
+					image.dispose();
+				}
+			}
+		} finally {
+			etched.dispose();
+			bevel.dispose();
+			themed.dispose();
+		}
+	}
+
 	private static boolean isComposited(Control control) {
 		return (OS.GetWindowLong(control.handle, OS.GWL_EXSTYLE) & OS.WS_EX_COMPOSITED) != 0;
 	}
