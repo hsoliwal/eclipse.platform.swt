@@ -2534,6 +2534,9 @@ void textChanging(TextChangingEvent event) {
 			if (!isViewportMode()) {
 				recomputeMaxWidth();
 			}
+		} else if (maxWidthLineIndex > startLine + replaceLineCount) {
+			//FLLDCIM: VIEWPORT - the widest line moves with the lines after the edit, as its size did (shiftSizes)
+			maxWidthLineIndex += delta;
 		}
 	}
 }

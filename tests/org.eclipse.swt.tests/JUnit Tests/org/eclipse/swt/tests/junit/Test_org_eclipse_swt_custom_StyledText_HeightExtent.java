@@ -458,16 +458,22 @@ public class Test_org_eclipse_swt_custom_StyledText_HeightExtent {
 	 * redraw() of a StyledText taller than the display keeps its content width while
 	 * the idle pass runs and after it: the horizontal scroll bar's maximum and
 	 * selection and the horizontal offset are those before the redraw, as when every
-	 * line was measured again at once. The widest line is not resident.
+	 * line was measured again at once. The widest line is not resident; in the second
+	 * case a line was inserted above it before the redraw (the widest line moved).
 	 */
-	@Test
-	public void test_redrawOfAWidgetTallerThanTheDisplayKeepsTheHorizontalScrollBar() throws Exception {
+	@ParameterizedTest(name = "line inserted above the widest line: {0}")
+	@ValueSource(booleans = {false, true})
+	public void test_redrawOfAWidgetTallerThanTheDisplayKeepsTheHorizontalScrollBar(boolean insertAbove) throws Exception {
 		StyledText t = tallWidget(null, SWT.MULTI | SWT.H_SCROLL, true);
 		Display display = t.getDisplay();
 		paintShownBand(t); // the top band is resident, the widest line is near the end
 		drain(display);
 		t.setHorizontalPixel(200);
 		drain(display);
+		if (insertAbove) {
+			t.replaceTextRange(t.getOffsetAtLine(5), 0, "an inserted line\n");
+			drain(display);
+		}
 		ScrollBar bar = t.getHorizontalBar();
 		int maximum = bar.getMaximum(), selection = bar.getSelection(), offset = t.getHorizontalPixel();
 		assertTrue(offset > 0 && maximum > t.getClientArea().width, "scrolled right: offset " + offset + ", maximum " + maximum);
