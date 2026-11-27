@@ -823,8 +823,8 @@ void restoreVirtualSelection () {
 		/*
 		 * GTK may ask for the cursor row while setting its cursor. A SetData provider can dispose the widget, so that
 		 * row is asked before entering GTK instead of from a native callback. The other attached rows are asked when
-		 * they are painted, as in the full-model table: an overscan row, which fixed-height paint never asks for, or a
-		 * window replaced before its next paint gets no SetData and no facade.
+		 * GTK paints them, as in the full-model table. The paint that follows a window replacement can still reach
+		 * overscan rows; a window replaced again before its next paint gets no SetData and no facade.
 		 */
 		int start = virtualViewStart, count = virtualViewCount;
 		long generation = virtualModelGeneration;
