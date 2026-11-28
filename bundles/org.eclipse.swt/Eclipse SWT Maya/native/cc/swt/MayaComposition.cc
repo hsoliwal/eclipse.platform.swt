@@ -504,8 +504,13 @@ jint applyNativeFrame(Composition *c, const View &view) noexcept {
                 } else if (sparseZ && insertionIndex < insertions.size()
                         && insertions[insertionIndex].layer == layer) {
                     Layer *lower = insertions[insertionIndex].lowerSibling;
+                    // Microsoft's AddVisual(TRUE, sibling) inserts ABOVE
+                    // that existing sibling. FALSE inserts below it and
+                    // previously inverted native sparse reorders while the
+                    // abstract C++ ordering oracle still passed.
                     hr = c->root->AddVisual(layer->visual,
-                            lower == nullptr ? TRUE : FALSE,
+                            swt_maya::CompositionFrameDelta<Layer>::ZInsertion::INSERT_ABOVE_REFERENCE
+                                    ? TRUE : FALSE,
                             lower == nullptr ? nullptr : lower->visual);
                     ++insertionIndex;
                 }

@@ -11,6 +11,22 @@
 namespace {
 struct Layer { int id; };
 using Frame = swt_maya::CompositionFrameDelta<Layer>;
+// Model the exact documented IDCompositionVisual::AddVisual arguments:
+//   TRUE + nullptr -> bottom; FALSE + nullptr -> top;
+//   TRUE + sibling -> above it; FALSE + sibling -> below it.
+// This helper intentionally accepts BOOL semantics, not a precomputed index.
+void addVisual(std::vector<Layer *> &screen, Layer *visual,
+        bool insertAbove, Layer *reference) {
+    auto at = reference == nullptr ? screen.end()
+            : std::find(screen.begin(), screen.end(), reference);
+    if (reference == nullptr) {
+        at = insertAbove ? screen.begin() : screen.end();
+    } else {
+        assert(at != screen.end());
+        if (insertAbove) ++at;
+    }
+    screen.insert(at, visual);
+}
 void apply(std::vector<Layer *> &screen, const std::vector<Layer *> &desired,
         const Frame &frame, Frame::ZPlan plan) {
     if (plan == Frame::ZPlan::Unchanged) {
@@ -18,7 +34,9 @@ void apply(std::vector<Layer *> &screen, const std::vector<Layer *> &desired,
         return;
     }
     if (plan == Frame::ZPlan::Full) {
-        screen = desired;
+        screen.clear();
+        for (Layer *visual : desired) addVisual(screen, visual, false, nullptr);
+        assert(screen == desired);
         return;
     }
     for (Layer *removed : frame.zRemovals()) {
@@ -27,13 +45,9 @@ void apply(std::vector<Layer *> &screen, const std::vector<Layer *> &desired,
         screen.erase(at);
     }
     for (const auto &insert : frame.zInsertions()) {
-        auto at = insert.lowerSibling
-                ? std::find(screen.begin(), screen.end(), insert.lowerSibling) : screen.end();
-        if (insert.lowerSibling) {
-            assert(at != screen.end());
-            ++at;
-        } else at = screen.begin();
-        screen.insert(at, insert.layer);
+        // The native COM call must consume this same planner-owned constant.
+        addVisual(screen, insert.layer,
+                Frame::ZInsertion::INSERT_ABOVE_REFERENCE, insert.lowerSibling);
     }
     assert(screen == desired);
 }
@@ -59,6 +73,14 @@ int main() {
     std::vector<Layer *> desired;
     for (int i = 1; i < 6; ++i) desired.push_back(&store[static_cast<std::size_t>(i)]);
     desired.push_back(&store[0]);
+    // Negative regression: the old Windows FALSE + non-null sibling
+    // compiles and reports success but produces the wrong native order.
+    std::vector<Layer *> incorrect = screen;
+    auto oldTop = std::find(incorrect.begin(), incorrect.end(), &store[0]);
+    assert(oldTop != incorrect.end());
+    incorrect.erase(oldTop);
+    addVisual(incorrect, &store[0], false, &store[5]);
+    assert(incorrect != desired);
     apply(screen, desired, frame, plan);
     frame.accept();
     std::uint32_t seed = 0x9E3779B9u;

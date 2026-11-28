@@ -47,6 +47,10 @@ public:
     // stable sibling subsequence, moving only the remaining native visuals.
     enum class ZPlan { Unchanged, Full, Sparse };
     struct ZInsertion {
+        // DirectComposition: TRUE + null means bottom; TRUE + lowerSibling
+        // means immediately above that sibling. A non-null FALSE is BELOW.
+        // One compile-time flag is shared by JNI and the portable COM oracle.
+        static constexpr bool INSERT_ABOVE_REFERENCE = true;
         LayerType *layer;
         LayerType *lowerSibling; // null means bottom of the parent stack
     };
