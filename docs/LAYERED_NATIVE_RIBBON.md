@@ -51,7 +51,7 @@ No claims of successful native visual execution are made in this changeset.
 
 ## Pin/slide native pixel sequence regression (2026-11-28)
 
-The pinned-header native test now **preserves the first pixel assertion**. Only
+All three selected Maya native tests now **preserve their first exact RGB assertions**. Only
 after a mismatch does it observe the same pixel for one bounded second. It
 always fails on a wrong first capture, reporting `MAYA_PIXEL_LATE` when the
 expected color later arrives, or `MAYA_PIXEL_PERSISTENT` if it does not.
