@@ -14,14 +14,14 @@ import org.eclipse.swt.internal.ViewportTweenMath;
 import org.eclipse.swt.widgets.Display;
 
 /**
- * UI-thread motion controller for layered viewport scenes. Native image layers
- * keep their existing DirectComposition representation when their one-to-one
- * image size is unchanged; SWT control layers move through native setBounds.
- * Other layers use the normal damage/backing-store path. No JNI ABI is added.
+ * UI-thread position and opacity animator for original layered SWT scenes.
+ * Native image layers retain DirectComposition visuals while moving or fading;
+ * other painted layers use the retained store. Native child Controls move
+ * through SWT bounds, but cannot be alpha-blended by this API. No new JNI ABI.
  *
- * <p>One timer drives all movements owned by this controller. A new movement
- * for an existing layer cancels its previous movement. Cancellation never
- * invokes completion callbacks; the viewport and application own all layers.</p>
+ * <p>One timer drives all translations or image-opacity fades owned by this
+ * controller. Each layer admits one animation at a time; replacing it cancels
+ * its completion callback. The viewport and caller still own the layers.</p>
  */
 public final class LayeredTransitions {
     public static final int LINEAR = ViewportTweenMath.LINEAR;
@@ -80,6 +80,7 @@ public final class LayeredTransitions {
                 bounds.width(), bounds.height(), durationMillis, easing, onComplete);
         if (durationMillis == 0 || (bounds.x() == x && bounds.y() == y)) {
             layer.setWorldBounds(x, y, bounds.width(), bounds.height());
+            cancelIdleTimer();
             if (onComplete != null) onComplete.run();
         } else {
             motion.running = true;
@@ -89,7 +90,55 @@ public final class LayeredTransitions {
         return motion;
     }
 
-    /** Cancel all this controller's movements; no completion callbacks run. */
+    /**
+     * Animate painted or native image opacity without changing Z or bounds.
+     * Native child Control layers are rejected: their fractional alpha cannot
+     * be represented by the existing SWT child-window presentation path.
+     */
+    public Motion fadeTo(Layer layer, int opacity, int durationMillis) {
+        return fadeTo(layer, opacity, durationMillis, EASE_OUT_CUBIC, null);
+    }
+
+    /** Animate opacity (0..255), with easing and an optional completion callback. */
+    public Motion fadeTo(Layer layer, int opacity, int durationMillis,
+            int easing, Runnable onComplete) {
+        checkOwner();
+        Objects.requireNonNull(layer, "layer");
+        if (opacity < 0 || opacity > 255 || durationMillis < 0
+                || durationMillis > MAX_DURATION_MILLIS
+                || easing < LINEAR || easing > EASE_IN_OUT_CUBIC) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        int z = layer.getZIndex();
+        Layer[] layers = viewport.getLayers();
+        if (z >= layers.length || layers[z] != layer || viewport.getControl(layer) != null) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        int from = layer.getOpacity();
+        Motion old = active.remove(layer);
+        if (old != null) old.running = false;
+        Motion motion = new Motion(layer, from, opacity, durationMillis, easing, onComplete);
+        if (durationMillis == 0 || from == opacity) {
+            layer.setOpacity(opacity);
+            cancelIdleTimer();
+            if (onComplete != null) onComplete.run();
+        } else {
+            motion.running = true;
+            active.put(layer, motion);
+            schedule();
+        }
+        return motion;
+    }
+
+    /** A synchronously completed/replaced final motion needs no queued UI tick. */
+    private void cancelIdleTimer() {
+        if (active.isEmpty() && scheduled && !display.isDisposed()) {
+            display.timerExec(-1, tick);
+            scheduled = false;
+        }
+    }
+
+    /** Cancel all this controller's animations; no completion callbacks run. */
     public void cancelAll() {
         checkOwner();
         for (Motion motion : active.values()) motion.running = false;
@@ -150,11 +199,17 @@ public final class LayeredTransitions {
                         continue;
                     }
                     long elapsed = Math.max(0, (now - motion.startNanos) / 1_000_000L);
-                    long x = ViewportTweenMath.position(motion.x0, motion.x1, elapsed,
-                            motion.durationMillis, motion.easing);
-                    long y = ViewportTweenMath.position(motion.y0, motion.y1, elapsed,
-                            motion.durationMillis, motion.easing);
-                    motion.layer.setWorldBounds(x, y, motion.width, motion.height);
+                    if (motion.opacityMotion) {
+                        int opacity = (int) ViewportTweenMath.position(motion.opacity0,
+                                motion.opacity1, elapsed, motion.durationMillis, motion.easing);
+                        motion.layer.setOpacity(opacity);
+                    } else {
+                        long x = ViewportTweenMath.position(motion.x0, motion.x1, elapsed,
+                                motion.durationMillis, motion.easing);
+                        long y = ViewportTweenMath.position(motion.y0, motion.y1, elapsed,
+                                motion.durationMillis, motion.easing);
+                        motion.layer.setWorldBounds(x, y, motion.width, motion.height);
+                    }
                     if (elapsed >= motion.durationMillis && motion.running) {
                         motion.running = false;
                         active.remove(motion.layer, motion);
@@ -198,11 +253,12 @@ public final class LayeredTransitions {
         scheduled = false;
     }
 
-    /** A cancellation handle for one movement; stopping it preserves its current position. */
+    /** Cancellation handle retaining the last published position or opacity. */
     public final class Motion {
         private final Layer layer;
         private final long x0, y0, x1, y1, width, height, startNanos;
-        private final int durationMillis, easing;
+        private final boolean opacityMotion;
+        private final int opacity0, opacity1, durationMillis, easing;
         private final Runnable onComplete;
         private boolean running;
 
@@ -215,6 +271,21 @@ public final class LayeredTransitions {
             this.y1 = y1;
             this.width = width;
             this.height = height;
+            this.opacityMotion = false;
+            this.opacity0 = this.opacity1 = 0;
+            this.durationMillis = durationMillis;
+            this.easing = easing;
+            this.onComplete = onComplete;
+            this.startNanos = System.nanoTime();
+        }
+
+        private Motion(Layer layer, int opacity0, int opacity1,
+                int durationMillis, int easing, Runnable onComplete) {
+            this.layer = layer;
+            this.x0 = this.y0 = this.x1 = this.y1 = this.width = this.height = 0L;
+            this.opacityMotion = true;
+            this.opacity0 = opacity0;
+            this.opacity1 = opacity1;
             this.durationMillis = durationMillis;
             this.easing = easing;
             this.onComplete = onComplete;
@@ -230,6 +301,7 @@ public final class LayeredTransitions {
             checkOwner();
             running = false;
             active.remove(layer, this);
+            cancelIdleTimer();
         }
     }
 }

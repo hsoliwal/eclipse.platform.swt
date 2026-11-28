@@ -49,6 +49,24 @@ IME/keyboard accessibility, focus handoff on fully hidden drawers, mouse
 capture, native handle/RSS disposal, and full recipe/Maven source seals.
 No claims of successful native visual execution are made in this changeset.
 
+## Shared opacity animation on native and painted image layers
+
+`LayeredTransitions.fadeTo(layer, opacity, millis, easing, onComplete)`
+animates 0..255 opacity through the existing one-timer SWT controller.
+Two image layers can cross-fade concurrently without another widget,
+backing store, texture owner or JNI symbol. Native DirectComposition image
+layers retain their visuals and publish effect-opacity deltas; painted
+layers invalidate their usual retained regions.
+
+A layer has one active animation: a new move cancels its fade and vice
+versa, preserving the last published value. A native child SWT Control
+has no per-pixel alpha in this layer model; opacity animation rejects
+such Controls instead of misrepresenting the visual result.
+
+Frames still originate on the SWT UI thread: this is not native OS-offloaded
+timeline execution. Win32/GTK/Cocoa pixel, accessibility, lifetime and
+performance gates remain prerequisites to release.
+
 ## Pin/slide native pixel sequence regression (2026-11-28)
 
 All three selected Maya native tests now **preserve their first exact RGB assertions**. Only
