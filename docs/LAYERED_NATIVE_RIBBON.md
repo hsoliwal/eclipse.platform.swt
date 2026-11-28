@@ -48,3 +48,30 @@ GTK3/GTK4 and Cocoa; run native pixel snapshots during in-flight animation,
 IME/keyboard accessibility, focus handoff on fully hidden drawers, mouse
 capture, native handle/RSS disposal, and full recipe/Maven source seals.
 No claims of successful native visual execution are made in this changeset.
+
+## Pin/slide native pixel sequence regression (2026-11-28)
+
+The pinned-header native test now **preserves the first pixel assertion**. Only
+after a mismatch does it observe the same pixel for one bounded second. It
+always fails on a wrong first capture, reporting `MAYA_PIXEL_LATE` when the
+expected color later arrives, or `MAYA_PIXEL_PERSISTENT` if it does not.
+The failure includes first/last RGB, sample count, elapsed time, pixel
+coordinates and scroll origin. Its one-pixel SWT Image is disposed on error.
+
+Run `tools/maya/run-native-layer-sequence.ps1` with the existing Windows Maya
+test rig to preserve logs from the original two methods, the pinned method,
+all three method selectors in one JVM, and the full current class. Repeat
+the matrix; require nonzero test discovery, zero failed/aborted tests,
+no JNI warnings, and a successful process exit. Command-line selector order
+does **not** guarantee JUnit execution order. Inspect the actual JUnit tree.
+
+```powershell
+& ./tools/maya/run-native-layer-sequence.ps1 `
+    -Runner '/f/m3-scratch/jni-lcd/run_maya.sh' `
+    -Tree 'F:/m3-scratch/maya-dcomp/tree' `
+    -ExtraClasspath 'F:/m3-scratch/layers/pin/natcls' `
+    -OutRoot 'F:/m3-scratch/maya-dcomp/native-sequence' -Iterations 3
+```
+
+This test-only diagnostic introduces no production Java API, JNI symbol,
+new native visual, widget owner or altered z-order policy.

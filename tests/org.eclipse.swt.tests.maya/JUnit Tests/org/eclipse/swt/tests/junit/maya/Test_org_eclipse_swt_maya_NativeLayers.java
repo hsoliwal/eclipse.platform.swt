@@ -93,15 +93,57 @@ public class Test_org_eclipse_swt_maya_NativeLayers {
 	private RGB screen(int x, int y) {
 		Point at = viewport.toDisplay(x, y);
 		Image pixel = new Image(display, 1, 1);
-		GC gc = new GC(display);
 		try {
-			gc.copyArea(pixel, at.x, at.y);
+			GC gc = new GC(display);
+			try {
+				gc.copyArea(pixel, at.x, at.y);
+			} finally {
+				gc.dispose();
+			}
+			ImageData data = pixel.getImageData();
+			return data.palette.getRGB(data.getPixel(0, 0));
 		} finally {
-			gc.dispose();
+			pixel.dispose(); // also release this native Image after a failing screen copy
 		}
-		ImageData data = pixel.getImageData();
-		pixel.dispose();
-		return data.palette.getRGB(data.getPixel(0, 0));
+	}
+
+	/**
+	 * An incorrect initial native pixel still fails this test. Follow-up bounded
+	 * sampling only distinguishes slow DWM presentation from persistent grey.
+	 * Neither a successful JNI call nor zero JNI warnings proves a visible pixel.
+	 */
+	private void assertPinnedPixelPresented(RGB expected, int x, int y) {
+		RGB first = screen(x, y);
+		if (expected.equals(first)) return;
+		RGB last = first;
+		int samples = 1;
+		long started = System.nanoTime();
+		long deadline = started + 1_000_000_000L;
+		boolean recovered = false;
+		while (System.nanoTime() < deadline && !display.isDisposed() && !shell.isDisposed()) {
+			for (int i = 0; i < 64 && display.readAndDispatch(); i++) {
+				// Limit the event batch even if a native widget keeps posting messages.
+			}
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException interrupted) {
+				Thread.currentThread().interrupt();
+				throw new AssertionError("interrupted while diagnosing native pixel readback", interrupted);
+			}
+			last = screen(x, y);
+			samples++;
+			if (expected.equals(last)) {
+				recovered = true;
+				break;
+			}
+		}
+		long elapsedMillis = (System.nanoTime() - started) / 1_000_000L;
+		assertEquals(expected, first, "MAYA_PIXEL_" + (recovered ? "LATE" : "PERSISTENT")
+				+ ": first screen pixel differs at (" + x + "," + y + ")"
+				+ "; first=" + first + "; last=" + last + "; samples=" + samples
+				+ "; follow-upMillis=" + elapsedMillis
+				+ "; origin=(" + viewport.getOriginX() + "," + viewport.getOriginY() + ")"
+				+ "; zero JNI warnings do not prove OS-composited pixels");
 	}
 
 	private static void assertNear(RGB expected, RGB actual) {
@@ -321,20 +363,20 @@ public class Test_org_eclipse_swt_maya_NativeLayers {
 		assertTrue(row.setNative(true), "maya composites the row");
 		assertTrue(header.setNative(true), "and the pinned header");
 		pump(300);
-		assertEquals(BLUE, screen(20, 70));
+		assertPinnedPixelPresented(BLUE, 20, 70));
 		viewport.setOrigin(0, 40); // the row scrolls up to 20..60, under the header at 0..40
 		pump(300);
-		assertEquals(RED, screen(20, 10), "the pinned header stays at the top");
-		assertEquals(RED, screen(20, 30), "above the row that scrolled under it");
-		assertEquals(BLUE, screen(20, 50), "the row moved up");
+		assertPinnedPixelPresented(RED, 20, 10), "the pinned header stays at the top");
+		assertPinnedPixelPresented(RED, 20, 30), "above the row that scrolled under it");
+		assertPinnedPixelPresented(BLUE, 20, 50), "the row moved up");
 		viewport.setOrigin(25, 40); // a horizontal pan moves both
 		pump(300);
-		assertEquals(RED, screen(10, 10));
-		assertEquals(WHITE, screen(20, 10), "the header followed the horizontal pan");
+		assertPinnedPixelPresented(RED, 10, 10));
+		assertPinnedPixelPresented(WHITE, 20, 10), "the header followed the horizontal pan");
 		assertTrue(header.isNative() && row.isNative(), "still composited by the window system");
 		header.setNative(false);
 		pump(300);
-		assertEquals(RED, screen(10, 10), "painted in the store, pinned in the same place");
-		assertEquals(WHITE, screen(20, 10));
+		assertPinnedPixelPresented(RED, 10, 10), "painted in the store, pinned in the same place");
+		assertPinnedPixelPresented(WHITE, 20, 10));
 	}
 }
