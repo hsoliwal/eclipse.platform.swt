@@ -218,3 +218,33 @@ the performance bottleneck.
 - GTK4 GSK drawing model: https://docs.gtk.org/gtk4/drawing-model.html
 - Android SurfaceControl: https://developer.android.com/reference/android/view/SurfaceControl
 - Apple Core Animation: https://developer.apple.com/documentation/quartzcore
+
+## Native sparse sibling Z order for ribbons, drawers and inspectors (candidate, 2026-11-28)
+
+The original DirectComposition visual tree already retains no-op frames,
+offset, opacity and scene transforms. A Z change previously detached the
+entire sibling list and reinserted every visual. The bounded native
+`CompositionFrameDelta::planZOrder` now retains the longest stable
+subsequence for up to 64 currently visible siblings, using a deterministic
+LIS of their previous indices. Moved/retired visuals are removed once and
+inserted relative to their already-placed lower sibling with the original
+DirectComposition visual owner. Rebuild-all is preserved for the initial
+frame, failure recovery, 65+ siblings or when sparse operations would cost
+as much as the full path. Existing `_nApply`, `_nApplyScene`, packed
+frames, typed handles, native `Commit` and failure invalidation stay intact.
+
+A six-layer reorder that moves one layer to the front requires one
+RemoveVisual and one AddVisual instead of RemoveAllVisuals plus six
+AddVisual calls; this is a **command-count reduction**, not a measured
+frame-latency or GPU performance claim. A portable C++17 differential
+oracle covers 75,000 deterministic frames, forced cache invalidation,
+visibility differences, and 65+ full-rebuild fallback. Native pixel
+qualification on Win32, including the unresolved combined Maya grey-pixel
+test, is still required. GTK4 GSK, Core Animation and Android NDK
+remain separate, capability-gated backends. Hierarchical native groups
+are not implemented by this flat sibling optimization.
+
+Donor categories: LeetCode #300 LIS and permutation editing, HackerRank
+array reordering, GeeksforGeeks LIS and minimum moves. Behavioral native
+references: Microsoft IDCompositionVisual AddVisual/RemoveVisual.
+No donor or challenge implementation has been copied.

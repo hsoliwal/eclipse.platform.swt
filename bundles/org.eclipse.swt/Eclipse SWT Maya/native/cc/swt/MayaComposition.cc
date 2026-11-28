@@ -431,9 +431,22 @@ jint applyNativeFrame(Composition *c, const View &view) noexcept {
                 c->frameDelta.includeVisible(lookupFrameLayer(value.handle));
             }
         }
-        const bool reorder = c->frameDelta.requiresRebuild();
+        using ZPlan = swt_maya::CompositionFrameDelta<Layer>::ZPlan;
+        const ZPlan plan = c->frameDelta.planZOrder();
+        const bool reorder = plan != ZPlan::Unchanged;
+        const bool fullZ = plan == ZPlan::Full;
+        const bool sparseZ = plan == ZPlan::Sparse;
         bool changed = reorder || c->pendingSurfaceCommit;
-        HRESULT hr = reorder ? c->root->RemoveAllVisuals() : S_OK;
+        HRESULT hr = fullZ ? c->root->RemoveAllVisuals() : S_OK;
+        if (sparseZ) {
+            // Remove moved/departed visuals only; unchanged siblings stay attached.
+            for (Layer *old : c->frameDelta.zRemovals()) {
+                if (FAILED(hr)) break;
+                hr = c->root->RemoveVisual(old->visual);
+            }
+        }
+        const auto &insertions = c->frameDelta.zInsertions();
+        std::size_t insertionIndex = 0;
         for (std::size_t i = 0; SUCCEEDED(hr) && i < count; i++) {
             const auto value = view.at(i);
             Layer *layer = lookupFrameLayer(value.handle);
@@ -483,11 +496,22 @@ jint applyNativeFrame(Composition *c, const View &view) noexcept {
                 hr = layer->visual->SetTransform(identity);
                 if (SUCCEEDED(hr)) hr = layer->visual->SetClip(static_cast<IDCompositionClip *>(nullptr));
             }
-            // Without a reference, insertAbove FALSE adds above the last
-            // sibling; the order is bottom-to-top in BOTH frame formats.
-            if (SUCCEEDED(hr) && reorder && value.visible != 0.0f)
-                hr = c->root->AddVisual(layer->visual, FALSE, nullptr);
+            // Attach only moved/new visuals for a sparse frame; each lower
+            // sibling has already survived or been inserted earlier in Z order.
+            if (SUCCEEDED(hr) && value.visible != 0.0f) {
+                if (fullZ) {
+                    hr = c->root->AddVisual(layer->visual, FALSE, nullptr);
+                } else if (sparseZ && insertionIndex < insertions.size()
+                        && insertions[insertionIndex].layer == layer) {
+                    Layer *lower = insertions[insertionIndex].lowerSibling;
+                    hr = c->root->AddVisual(layer->visual,
+                            lower == nullptr ? TRUE : FALSE,
+                            lower == nullptr ? nullptr : lower->visual);
+                    ++insertionIndex;
+                }
+            }
         }
+        if (SUCCEEDED(hr) && sparseZ && insertionIndex != insertions.size()) hr = E_FAIL;
 
         // A pending successful EndDraw is a changed native surface even
         // when Z, offsets and opacity are unchanged (merged dirty upload).
