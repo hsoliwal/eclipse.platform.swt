@@ -5,6 +5,7 @@
 #ifndef SWT_MAYA_COMPOSITION_DELTA_H
 #define SWT_MAYA_COMPOSITION_DELTA_H
 
+#include <array>
 #include <cstddef>
 #include <vector>
 
@@ -42,6 +43,91 @@ class CompositionFrameDelta {
     bool valid_ = false;
 
 public:
+    // Existing full rebuild remains the fallback. Sparse preserves the largest
+    // stable sibling subsequence, moving only the remaining native visuals.
+    enum class ZPlan { Unchanged, Full, Sparse };
+    struct ZInsertion {
+        LayerType *layer;
+        LayerType *lowerSibling; // null means bottom of the parent stack
+    };
+
+private:
+    std::vector<LayerType *> zRemovals_;
+    std::vector<ZInsertion> zInsertions_;
+    static constexpr std::size_t SPARSE_MAX = 64;
+
+public:
+    // JNI preflight must validate all handles/duplicate membership first.
+    // Small scenes use bounded O(N^2) identity search plus LIS; large scenes
+    // retain the original nonquadratic full-tree fallback.
+    ZPlan planZOrder() {
+        zRemovals_.clear();
+        zInsertions_.clear();
+        if (!requiresRebuild()) return ZPlan::Unchanged;
+        if (!valid_ || committed_.size() > SPARSE_MAX || requested_.size() > SPARSE_MAX)
+            return ZPlan::Full;
+
+        std::array<int, SPARSE_MAX> rank{};
+        std::array<int, SPARSE_MAX> predecessor{};
+        std::array<int, SPARSE_MAX> tails{};
+        std::array<unsigned char, SPARSE_MAX> keep{};
+        int length = 0;
+        for (std::size_t i = 0; i < requested_.size(); ++i) {
+            int prior = -1;
+            for (std::size_t j = 0; j < committed_.size(); ++j) {
+                if (committed_[j] == requested_[i]) {
+                    prior = static_cast<int>(j);
+                    break;
+                }
+            }
+            rank[i] = prior;
+            predecessor[i] = -1;
+            if (prior < 0) continue;
+            int lo = 0, hi = length;
+            while (lo < hi) {
+                int mid = lo + (hi - lo) / 2;
+                if (rank[static_cast<std::size_t>(tails[static_cast<std::size_t>(mid)])] < prior)
+                    lo = mid + 1;
+                else
+                    hi = mid;
+            }
+            if (lo > 0) predecessor[i] = tails[static_cast<std::size_t>(lo - 1)];
+            tails[static_cast<std::size_t>(lo)] = static_cast<int>(i);
+            if (lo == length) ++length;
+        }
+        if (length > 0) {
+            int i = tails[static_cast<std::size_t>(length - 1)];
+            while (i >= 0) {
+                keep[static_cast<std::size_t>(i)] = 1;
+                i = predecessor[static_cast<std::size_t>(i)];
+            }
+        }
+        for (LayerType *old : committed_) {
+            bool retained = false;
+            for (std::size_t i = 0; i < requested_.size(); ++i) {
+                if (requested_[i] == old && keep[i] != 0) {
+                    retained = true;
+                    break;
+                }
+            }
+            if (!retained) zRemovals_.push_back(old);
+        }
+        for (std::size_t i = 0; i < requested_.size(); ++i) {
+            if (keep[i] == 0)
+                zInsertions_.push_back({requested_[i], i == 0 ? nullptr : requested_[i - 1]});
+        }
+        // Original RemoveAllVisuals + N AddVisual wins when most slots moved.
+        if (zRemovals_.size() + zInsertions_.size() >= requested_.size() + 1) {
+            zRemovals_.clear();
+            zInsertions_.clear();
+            return ZPlan::Full;
+        }
+        return ZPlan::Sparse;
+    }
+
+    const std::vector<LayerType *> &zRemovals() const noexcept { return zRemovals_; }
+    const std::vector<ZInsertion> &zInsertions() const noexcept { return zInsertions_; }
+
     void begin() noexcept { requested_.clear(); }
 
     void includeVisible(LayerType *layer) { requested_.push_back(layer); }
@@ -65,6 +151,18 @@ public:
     // is dereferenced: the next admitted frame must rebuild its full order.
     void invalidate() noexcept { valid_ = false; }
 };
+
+// This is the exact insertion operation called by MayaComposition.cc.
+// The portable native oracle instantiates it against a mock COM visual
+// parent with the real IDCompositionVisual::AddVisual argument semantics.
+// TRUE + nullptr inserts at bottom; TRUE + lower sibling inserts above it.
+// A false flag with a non-null lower sibling puts the visual BEHIND it.
+// Header-only, C++17, no JNI/Win32 dependency or dynamic allocation.
+template<class ParentVisual, class ChildVisual>
+inline auto addVisualAboveLowerSibling(ParentVisual *parent, ChildVisual *visual,
+        ChildVisual *lowerSibling) -> decltype(parent->AddVisual(visual, true, lowerSibling)) {
+    return parent->AddVisual(visual, true, lowerSibling);
+}
 
 } // namespace swt_maya
 #endif

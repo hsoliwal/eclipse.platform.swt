@@ -37,6 +37,7 @@ on:
       - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_Composition.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionDeltaTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaSparseZDeltaOracle.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameDirect.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFramePacket.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameView.h'
@@ -81,6 +82,7 @@ on:
       - 'tests/org.eclipse.swt.tests.maya/JUnit Tests/org/eclipse/swt/tests/junit/maya/Test_org_eclipse_swt_maya_Composition.java'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionChecksTest.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaCompositionDeltaTest.cc'
+      - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/tests/MayaSparseZDeltaOracle.cc'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameDirect.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFramePacket.h'
       - 'bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt/MayaFrameView.h'
@@ -128,6 +130,17 @@ jobs:
             -fsanitize=address,undefined -fno-omit-frame-pointer \
             "$root/tests/MayaCompositionDeltaTest.cc" -o /tmp/maya-delta
           /tmp/maya-delta
+      - name: Native sparse Z-order differential and sanitizers
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='bundles/org.eclipse.swt/Eclipse SWT Maya/native/cc/swt'
+          for compiler in g++ clang++; do
+            "$compiler" -std=c++17 -O1 -g -Wall -Wextra -Werror -pedantic \
+              -fsanitize=address,undefined -fno-omit-frame-pointer \
+              "$root/tests/MayaSparseZDeltaOracle.cc" -o "/tmp/maya-sparse-z-${compiler}"
+            ASAN_OPTIONS=detect_leaks=1 "/tmp/maya-sparse-z-${compiler}"
+          done
       - name: Typed native handles, allocator ABA and concurrent Display issuance
         shell: bash
         run: |
