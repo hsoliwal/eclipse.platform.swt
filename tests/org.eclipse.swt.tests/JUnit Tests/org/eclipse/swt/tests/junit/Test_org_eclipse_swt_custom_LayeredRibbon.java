@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.LayeredRibbon;
 import org.eclipse.swt.custom.LayeredSlidePanel;
+import org.eclipse.swt.custom.LayeredTransitions;
 import org.eclipse.swt.custom.LayeredViewport;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
@@ -102,6 +103,82 @@ public class Test_org_eclipse_swt_custom_LayeredRibbon {
             org.eclipse.swt.SWTException error = assertThrows(org.eclipse.swt.SWTException.class,
                     () -> ribbon.tabs());
             assertEquals(SWT.ERROR_WIDGET_DISPOSED, error.code);
+        } finally {
+            if (!shell.isDisposed()) shell.dispose();
+            drain(display);
+        }
+    }
+
+
+    @Test
+    public void imageFadeAndCrossfadePreserveLayerIdentityAndExactEndpoints() {
+        Display display = Display.getDefault();
+        Shell shell = new Shell(display);
+        shell.setLayout(new FillLayout());
+        LayeredViewport viewport = new LayeredViewport(shell, SWT.NONE);
+        org.eclipse.swt.graphics.Image borrowed = new org.eclipse.swt.graphics.Image(display, 32, 32);
+        try {
+            LayeredViewport.Layer a = viewport.addImageLayer("a", borrowed, 0, 0);
+            LayeredViewport.Layer b = viewport.addImageLayer("b", borrowed, 0, 0);
+            LayeredTransitions animation = new LayeredTransitions(viewport);
+            shell.setSize(220, 150);
+            shell.open();
+            drain(display);
+            animation.fadeTo(b, 0, 0);
+            int[] completed = new int[2];
+            LayeredTransitions.Motion fadingOut = animation.fadeTo(a, 0, 60,
+                    LayeredTransitions.LINEAR, () -> completed[0]++);
+            LayeredTransitions.Motion fadingIn = animation.fadeTo(b, 255, 60,
+                    LayeredTransitions.EASE_IN_OUT_CUBIC, () -> completed[1]++);
+            assertTrue(fadingOut.isRunning());
+            assertTrue(fadingIn.isRunning());
+            assertEquals(2, animation.runningCount(), "same timer owns both image fades");
+            long deadline = System.nanoTime() + 2_000_000_000L;
+            while (animation.runningCount() > 0 && System.nanoTime() < deadline) {
+                drain(display);
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException failure) {
+                    Thread.currentThread().interrupt();
+                    fail("interrupted while awaiting native UI-timer completion");
+                }
+            }
+            assertEquals(0, animation.runningCount());
+            assertEquals(0, a.getOpacity());
+            assertEquals(255, b.getOpacity());
+            assertArrayEquals(new int[] {1, 1}, completed);
+            assertEquals(2, viewport.getLayers().length);
+            LayeredTransitions.Motion old = animation.fadeTo(a, 255, 1000,
+                    LayeredTransitions.LINEAR, () -> fail("cancelled fade completed"));
+            assertTrue(old.isRunning());
+            animation.fadeTo(a, 71, 0);
+            assertFalse(old.isRunning());
+            assertEquals(71, a.getOpacity());
+            assertEquals(0, animation.runningCount());
+            assertFalse(borrowed.isDisposed(), "caller owns the image");
+        } finally {
+            if (!shell.isDisposed()) shell.dispose();
+            borrowed.dispose();
+            drain(display);
+        }
+    }
+
+    @Test
+    public void nativeControlFadeIsRejectedRatherThanImpersonatingAlpha() {
+        Display display = Display.getDefault();
+        Shell shell = new Shell(display);
+        shell.setLayout(new FillLayout());
+        LayeredViewport viewport = new LayeredViewport(shell, SWT.NONE);
+        Composite child = new Composite(viewport, SWT.NONE);
+        try {
+            LayeredViewport.Layer nativeChild = viewport.addControlLayer(
+                    "child", child, 0, 0, 60, 30);
+            LayeredTransitions animation = new LayeredTransitions(viewport);
+            assertThrows(RuntimeException.class, () -> animation.fadeTo(nativeChild, 128, 100));
+            assertThrows(RuntimeException.class, () -> animation.fadeTo(nativeChild, 256, 100));
+            assertEquals(255, nativeChild.getOpacity());
+            assertEquals(0, animation.runningCount());
+            assertFalse(child.isDisposed());
         } finally {
             if (!shell.isDisposed()) shell.dispose();
             drain(display);
