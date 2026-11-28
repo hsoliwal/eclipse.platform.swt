@@ -47,10 +47,6 @@ public:
     // stable sibling subsequence, moving only the remaining native visuals.
     enum class ZPlan { Unchanged, Full, Sparse };
     struct ZInsertion {
-        // DirectComposition: TRUE + null means bottom; TRUE + lowerSibling
-        // means immediately above that sibling. A non-null FALSE is BELOW.
-        // One compile-time flag is shared by JNI and the portable COM oracle.
-        static constexpr bool INSERT_ABOVE_REFERENCE = true;
         LayerType *layer;
         LayerType *lowerSibling; // null means bottom of the parent stack
     };
@@ -155,6 +151,18 @@ public:
     // is dereferenced: the next admitted frame must rebuild its full order.
     void invalidate() noexcept { valid_ = false; }
 };
+
+// This is the exact insertion operation called by MayaComposition.cc.
+// The portable native oracle instantiates it against a mock COM visual
+// parent with the real IDCompositionVisual::AddVisual argument semantics.
+// TRUE + nullptr inserts at bottom; TRUE + lower sibling inserts above it.
+// A false flag with a non-null lower sibling puts the visual BEHIND it.
+// Header-only, C++17, no JNI/Win32 dependency or dynamic allocation.
+template<class ParentVisual, class ChildVisual>
+inline auto addVisualAboveLowerSibling(ParentVisual *parent, ChildVisual *visual,
+        ChildVisual *lowerSibling) -> decltype(parent->AddVisual(visual, true, lowerSibling)) {
+    return parent->AddVisual(visual, true, lowerSibling);
+}
 
 } // namespace swt_maya
 #endif

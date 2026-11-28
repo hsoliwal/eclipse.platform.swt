@@ -254,8 +254,10 @@ already-attached sibling, and `TRUE, nullptr` inserts at bottom. Using
 `FALSE` for a non-null lower sibling silently reverses this relationship.
 The portable oracle now models the actual BOOL/reference pair and contains
 a negative regression that proves the former flag produces the wrong order.
-The production COM call and the oracle share the planner's compile-time
-`INSERT_ABOVE_REFERENCE` flag. Native Win32 pixel/DWM qualification
+The production COM call and the oracle invoke the **same templated C++17
+`addVisualAboveLowerSibling` operation**, against a real COM parent and a
+portable mock parent, respectively; that removes the old source/model
+argument-direction divergence. Native Win32 pixel/DWM qualification
 remains mandatory; standalone source/model testing is not that result.
 
 No donor or challenge implementation has been copied.

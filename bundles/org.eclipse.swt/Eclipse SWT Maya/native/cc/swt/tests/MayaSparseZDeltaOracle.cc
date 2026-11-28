@@ -27,6 +27,14 @@ void addVisual(std::vector<Layer *> &screen, Layer *visual,
     }
     screen.insert(at, visual);
 }
+// Simulate the COM parent; invoke the identical C++ helper as production Maya.
+struct MockVisualParent {
+    std::vector<Layer *> &screen;
+    int AddVisual(Layer *visual, bool insertAbove, Layer *reference) {
+        addVisual(screen, visual, insertAbove, reference);
+        return 0;
+    }
+};
 void apply(std::vector<Layer *> &screen, const std::vector<Layer *> &desired,
         const Frame &frame, Frame::ZPlan plan) {
     if (plan == Frame::ZPlan::Unchanged) {
@@ -45,9 +53,10 @@ void apply(std::vector<Layer *> &screen, const std::vector<Layer *> &desired,
         screen.erase(at);
     }
     for (const auto &insert : frame.zInsertions()) {
-        // The native COM call must consume this same planner-owned constant.
-        addVisual(screen, insert.layer,
-                Frame::ZInsertion::INSERT_ABOVE_REFERENCE, insert.lowerSibling);
+        MockVisualParent parent{screen};
+        const int result = swt_maya::addVisualAboveLowerSibling(
+                &parent, insert.layer, insert.lowerSibling);
+        assert(result == 0);
     }
     assert(screen == desired);
 }
